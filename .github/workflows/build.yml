@@ -1,0 +1,28 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        # test against latest update of each major .NET version, as well as specific updates of LTS versions:
+        dotnet: [3.1.6]
+    name: dotnet ${{ matrix.dotnet }}
+    env:
+      OS: ${{ matrix.os }}
+      NET: ${{ matrix.dotnet-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ matrix.java }}
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
