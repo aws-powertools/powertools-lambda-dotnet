@@ -15,19 +15,17 @@ namespace Amazon.LambdaPowertools.Tracing.Tests
             _tracer = new Tracer();
         }
         
-        
-        [Obsolete]
         [CaptureMethod(service: "MyService", disabled:false, autoPatch: false, patchmodules: null)]
         private string ConfirmBooking(string bookingId)
         {
             var response =  AddConfirmation(bookingId);
             
             _tracer.PutMetadata("BookingConfirmation", response["requestId"]);
-            _tracer.PutMetadata("Booking confirmation", JSON);
+            _tracer.PutMetadata("Booking confirmation", "{}");
             _tracer.PutMetadata("", "");
             
             
-            return response;
+            return response.ToString();
         }
 
         private Dictionary<string,string> AddConfirmation(string bookingId)
