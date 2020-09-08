@@ -5,6 +5,10 @@ on:
     branches: [ develop ]
   pull_request:
     branches: [ develop ]
+    
+defaults:
+  run:
+    working-directory: ./libraries
 
 jobs:
   build:
