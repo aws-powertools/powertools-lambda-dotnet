@@ -8,8 +8,8 @@ namespace Amazon.LambdaPowertools.Logging
         /// Logging level for Logger, and also avialable as a logging key
         /// Default "INFO", env:LOG_LEVEL
         /// </summary>
-        string Level { get; }
-        
+        LogLevel Level { get; }
+
         /// <summary>
         /// Sampling rate for dynamically set log level as DEBUG for a given request
         /// Default 0.0, env:POWERTOOLS_LOGGER_SAMPLE_RATE
