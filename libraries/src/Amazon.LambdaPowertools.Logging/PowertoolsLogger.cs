@@ -8,7 +8,7 @@ namespace Amazon.LambdaPowertools.Logging
     public class PowertoolsLogger : ILogger
     {
         private readonly LoggerOptions _loggerOptions;
-        private bool ColdStart = true;
+        private static bool ColdStart = true;
         public PowertoolsLogger(LoggerOptions loggerOptions)
         {
             _loggerOptions = loggerOptions;
@@ -32,7 +32,7 @@ namespace Amazon.LambdaPowertools.Logging
                 Level = logLevel.ToString(),
                 Location = Assembly.GetCallingAssembly().FullName,
                 Message = formatter(state, exception),
-                SamplingRate = 0.0,
+                SamplingRate = _loggerOptions.SamplingRate,
                 Timestamp = DateTime.UtcNow.ToString("o")
             };
             
@@ -43,7 +43,7 @@ namespace Amazon.LambdaPowertools.Logging
 
         public bool IsEnabled(LogLevel logLevel)
         {
-            return logLevel == _loggerOptions.LogLevel;
+            return logLevel >= _loggerOptions.LogLevel;
         }
 
         public IDisposable BeginScope<TState>(TState state)
