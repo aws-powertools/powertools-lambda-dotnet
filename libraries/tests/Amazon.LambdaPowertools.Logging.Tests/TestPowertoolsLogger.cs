@@ -9,11 +9,15 @@ namespace Amazon.LambdaPowertools.Logging.Tests
 {
     public class TestPowertoolsLogger
     {
-        private Logger _logger;
+        private ILogger _logger;
         private readonly ITestOutputHelper _testOutput;
         public TestPowertoolsLogger(ITestOutputHelper testOutput)
         {
-            _logger = new Logger();
+            LoggerOptions loggerOptions = new LoggerOptions()
+            {
+                LogLevel = LogLevel.Information
+            };
+            _logger = new PowertoolsLogger(loggerOptions);
             _testOutput = testOutput;
         }
         
@@ -23,15 +27,25 @@ namespace Amazon.LambdaPowertools.Logging.Tests
 
 
         [Fact]
-        public void TestFunction()
+        public void TestLogInformationOutput()
         {
             var output = new StringWriter();
             Console.SetOut(output);
-            //LogLevel level = LogLevel.Debug;
-            _logger.Log("TEST");
+            _logger.LogInformation("TEST");
             
             _testOutput.WriteLine(output.ToString());
             Assert.Contains("\"Message\":\"TEST\"", output.ToString());
+        }
+        
+        [Fact]
+        public void TestLogDebugOutputShouldFail()
+        {
+            var output = new StringWriter();
+            Console.SetOut(output);
+            _logger.LogDebug("TEST");
+            
+            _testOutput.WriteLine(output.ToString());
+            Assert.Empty(output.ToString());
         }
             
         

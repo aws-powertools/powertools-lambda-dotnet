@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace Amazon.LambdaPowertools.Logging
 {
     public class LogEntry {
@@ -6,7 +8,7 @@ namespace Amazon.LambdaPowertools.Logging
         public string FunctionName { get; set; }
         public string FunctionMemorySize { get; set; }
         public string FunctionRequestId { get; set; }
-        public LogLevel Level { get; set; }
+        public string Level { get; set; }
         public string Location { get; set; }
         public string Message { get; set; }
         public double SamplingRate { get; set; }

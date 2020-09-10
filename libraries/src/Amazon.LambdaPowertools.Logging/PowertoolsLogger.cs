@@ -1,32 +1,55 @@
-// using System;
-// using Microsoft.Extensions.Logging;
-//
-// namespace Amazon.LambdaPowertools.Logging
-// {
-//     public class PowertoolsLogger : ILogger
-//     {
-//         // private readonly LoggerOptions _loggerOptions;
-//         // public PowertoolsLogger(LoggerOptions loggerOptions)
-//         // {
-//         //     _loggerOptions = loggerOptions;
-//         // }
-//         public PowertoolsLogger()
-//         {
-//         }
-//
-//         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-//         {
-//             Console.WriteLine(formatter);
-//         }
-//
-//         public bool IsEnabled(LogLevel logLevel)
-//         {
-//             throw new NotImplementedException();
-//         }
-//
-//         public IDisposable BeginScope<TState>(TState state)
-//         {
-//             throw new NotImplementedException();
-//         }
-//     }
-// }
+using System;
+using System.Reflection;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+
+namespace Amazon.LambdaPowertools.Logging
+{
+    public class PowertoolsLogger : ILogger
+    {
+        private readonly LoggerOptions _loggerOptions;
+        private bool ColdStart = true;
+        public PowertoolsLogger(LoggerOptions loggerOptions)
+        {
+            _loggerOptions = loggerOptions;
+        }
+        
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        {
+            if (!IsEnabled(logLevel))
+            {
+                return;
+            }
+            
+            LogEntry logEntry = new LogEntry()
+            {
+                ColdStart = ColdStart,
+                FunctionArn = "functionArn",
+                FunctionName = "functionName",
+                FunctionMemorySize = "FunctionMemorySize",
+                FunctionRequestId = "FunctionRequestId",
+                Level = logLevel.ToString(),
+                Location = Assembly.GetCallingAssembly().FullName,
+                Message = formatter(state, exception),
+                SamplingRate = 0.0,
+                Timestamp = DateTime.UtcNow.ToString("o")
+            };
+            
+            Console.WriteLine(JsonSerializer.Serialize(logEntry));
+            
+            //Console.WriteLine($"{logLevel.ToString()}, {eventId.ToString()}, {state.ToString()}, {exception.ToString()}, {formatter}");
+        }
+
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return logLevel == _loggerOptions.LogLevel;
+        }
+
+        public IDisposable BeginScope<TState>(TState state)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
+
