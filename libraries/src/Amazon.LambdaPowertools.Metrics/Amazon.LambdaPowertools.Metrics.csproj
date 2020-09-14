@@ -2,6 +2,11 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
+        <PackageId>Amazon.LambdaPowertools.Metrics</PackageId>
+        <Version>0.0.9</Version>
+        <Authors>awslabs</Authors>
+        <Company>Amazon</Company>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
 </Project>
