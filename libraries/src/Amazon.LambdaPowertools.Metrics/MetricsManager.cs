@@ -66,7 +66,7 @@ namespace Amazon.LambdaPowertools.Metrics
             }
         }
 
-        public void setNamespace(string metricsNamespace)
+        public void SetNamespace(string metricsNamespace)
         {
             _namespace = metricsNamespace;
         }
