@@ -175,7 +175,7 @@ namespace Amazon.LambdaPowertools.Metrics
             return metricDefintionSet;
         }
 
-        private string addToJson(string json, Dictionary<string, string> dimensions, Dictionary<string, dynamic> metadata, Dictionary<string, Metric> metrics)
+        private string AddToJson(string json, Dictionary<string, string> dimensions, Dictionary<string, dynamic> metadata, Dictionary<string, Metric> metrics)
         {
             string result = "";
             foreach (var item in dimensions)
