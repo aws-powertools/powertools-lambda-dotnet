@@ -143,7 +143,7 @@ namespace Amazon.LambdaPowertools.Metrics
 
             var json = JsonSerializer.Serialize(metricObj, typeof(MetricsWrapper));
 
-            string result = addToJson(json, _dimensions, _metadata, _metrics);
+            string result = AddToJson(json, _dimensions, _metadata, _metrics);
 
             Console.WriteLine(result);
 
