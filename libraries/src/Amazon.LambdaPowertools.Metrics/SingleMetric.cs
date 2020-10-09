@@ -19,7 +19,7 @@ namespace Amazon.LambdaPowertools.Metrics
         public override void AddMetric(Metric metric)
         {
             Metrics.Clear();
-            Metrics.Add(metric.Name, metric);
+            Metrics.Add(metric.Name, new List<Metric>{metric});
         }
     }
 }

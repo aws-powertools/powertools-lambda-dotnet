@@ -10,7 +10,7 @@ namespace Amazon.LambdaPowertools.Metrics
                         string metricsNamespace = null,
                         string serviceName = null,
                         Dictionary<string, string> dimensions = null,
-                        Dictionary<string, Metric> metrics = null,
+                        Dictionary<string, List<Metric>> metrics = null,
                         Dictionary<string, dynamic> metadata = null)
                         : base(metricsNamespace,
                                 serviceName,

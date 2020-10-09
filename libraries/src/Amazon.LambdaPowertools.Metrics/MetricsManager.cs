@@ -14,42 +14,41 @@ namespace Amazon.LambdaPowertools.Metrics
         public Dictionary<string, string> Dimensions
         {
             get { return _dimensions; }
-            set { _dimensions = value; }
         }
 
         [MaxLength(100)]
-        private Dictionary<string, Metric> _metrics;
-        public Dictionary<string, Metric> Metrics
+        private Dictionary<string, List<Metric>> _metrics;
+        public Dictionary<string, List<Metric>> Metrics
         {
             get { return _metrics; }
-            set { _metrics = value; }
         }
 
         private Dictionary<string, dynamic> _metadata;
-        private bool disposedValue;
-
+        
         public Dictionary<string, dynamic> Metadata
         {
             get { return _metadata; }
-            set { _metadata = value; }
         }
+
+        private bool disposedValue;
+        private static int _metricCount = 0;
 
         public MetricsManager(
                         string metricsNamespace = null,
                         string serviceName = null,
                         Dictionary<string, string> dimensions = null,
-                        Dictionary<string, Metric> metrics = null,
+                        Dictionary<string, List<Metric>> metrics = null,
                         Dictionary<string, dynamic> metadata = null)
         {
             PowertoolsSettings.SetNamespace(metricsNamespace);
             PowertoolsSettings.SetService(serviceName);
-            
+
             _dimensions = dimensions != null ? dimensions : new Dictionary<string, string>();
-            _metrics = metrics != null ? metrics : new Dictionary<string, Metric>();
+            _metrics = metrics != null ? metrics : new Dictionary<string, List<Metric>>();
             _metadata = metadata != null ? metadata : new Dictionary<string, dynamic>();
 
             if(!string.IsNullOrEmpty(PowertoolsSettings.Service)){
-                _dimensions.Add("service", PowertoolsSettings.Service);
+                AddDimension("service", PowertoolsSettings.Service);
             }
         }
 
@@ -74,21 +73,23 @@ namespace Amazon.LambdaPowertools.Metrics
         {
             if (_metrics.ContainsKey(metric.Name))
             {
-                Console.WriteLine($"Metric '{metric}' already exists. Skipping...");
-                return;
+                _metrics[metric.Name].Add(metric);
+                _metricCount++;
+            }
+            else {
+                _metrics.Add(metric.Name, new List<Metric>{metric});
+                _metricCount++;
             }
 
-            _metrics.Add(metric.Name, metric);
-
-            if (_metrics.Count == 100)
+            if (_metricCount == 100)
             {
                 Flush();
-                _metrics.Clear();
             }
         }
 
         public void AddMetadata(string key, dynamic value)
         {
+
             if (_metadata.ContainsKey(key))
             {
                 Console.WriteLine($"Metadata '{key}' already exists. Skipping...");
@@ -136,7 +137,7 @@ namespace Amazon.LambdaPowertools.Metrics
             return result;
         }
 
-        private List<MetricsDefinitionSet> ExtractMetricDefinitionSet(Dictionary<string, Metric> metrics)
+        private List<MetricsDefinitionSet> ExtractMetricDefinitionSet(Dictionary<string, List<Metric>> metrics)
         {
             List<MetricsDefinitionSet> metricDefinitionSet = new List<MetricsDefinitionSet>();
 
@@ -144,15 +145,15 @@ namespace Amazon.LambdaPowertools.Metrics
             {
                 metricDefinitionSet.Add(new MetricsDefinitionSet
                 {
-                    Name = item.Value.Name,
-                    Unit = item.Value.Unit
+                    Name = item.Value[0].Name,
+                    Unit = item.Value[0].Unit
                 });
             }
 
             return metricDefinitionSet;
         }
 
-        private string AddToJson(string json, Dictionary<string, string> dimensions, Dictionary<string, dynamic> metadata, Dictionary<string, Metric> metrics)
+        private string AddToJson(string json, Dictionary<string, string> dimensions, Dictionary<string, dynamic> metadata, Dictionary<string, List<Metric>> metrics)
         {
             string result = "";
             foreach (var item in dimensions)
@@ -167,7 +168,25 @@ namespace Amazon.LambdaPowertools.Metrics
 
             foreach (var item in metrics.Values)
             {
-                result += $",\"{item.Name}\": {item.Value}";
+                if(item.Count > 1){
+                    string resultArray = $",\"{item[0].Name}\": [";
+
+                    for (int i = 0; i < item.Count; i++)
+                    {
+                        if(i == item.Count - 1){
+                            resultArray += $"{item[i].Value}]";
+                        }
+                        else {
+                            resultArray += $"{item[i].Value},";
+                        }
+                    }
+
+                    result += resultArray;
+                }
+                else {
+                    result += $",\"{item[0].Name}\": {item[0].Value}";
+                }
+                
             }
 
             return $"{json.Remove(json.Length - 1)}{result}}}";
