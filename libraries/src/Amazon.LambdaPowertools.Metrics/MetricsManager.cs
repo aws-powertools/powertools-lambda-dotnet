@@ -150,7 +150,7 @@ namespace Amazon.LambdaPowertools.Metrics
             _metrics.Clear();
         }
 
-        private List<string> extractDimensions(Dictionary<string, string> dimensions)
+        private List<string> ExtractDimensions(Dictionary<string, string> dimensions)
         {
             List<string> result = new List<string>();
 
