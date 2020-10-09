@@ -133,9 +133,9 @@ namespace Amazon.LambdaPowertools.Metrics
                         new CloudWatchMetrics{
                             Namespace = Namespace,
                             Dimensions = new List<List<string>>{
-                                extractDimensions(Dimensions)
+                                ExtractDimensions(Dimensions)
                             },
-                            Metrics = extractMetricDefinitionSet(Metrics)
+                            Metrics = ExtractMetricDefinitionSet(Metrics)
                         }
                     }
                 }
@@ -161,18 +161,18 @@ namespace Amazon.LambdaPowertools.Metrics
 
         private List<MetricsDefinitionSet> ExtractMetricDefinitionSet(Dictionary<string, Metric> metrics)
         {
-            List<MetricsDefinitionSet> metricDefintionSet = new List<MetricsDefinitionSet>();
+            List<MetricsDefinitionSet> metricDefinitionSet = new List<MetricsDefinitionSet>();
 
             foreach (var item in metrics)
             {
-                metricDefintionSet.Add(new MetricsDefinitionSet
+                metricDefinitionSet.Add(new MetricsDefinitionSet
                 {
                     Name = item.Value.Name,
                     Unit = item.Value.Unit
                 });
             }
 
-            return metricDefintionSet;
+            return metricDefinitionSet;
         }
 
         private string AddToJson(string json, Dictionary<string, string> dimensions, Dictionary<string, dynamic> metadata, Dictionary<string, Metric> metrics)
