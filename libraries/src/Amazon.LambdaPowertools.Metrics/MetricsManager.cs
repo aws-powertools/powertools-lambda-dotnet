@@ -9,20 +9,6 @@ namespace Amazon.LambdaPowertools.Metrics
 
     public class MetricsManager : IDisposable
     {
-        private string _namespace;
-        public string Namespace
-        {
-            get { return _namespace; }
-            set { _namespace = value; }
-        }
-
-        private string _service;
-        public string Service
-        {
-            get { return _service; }
-            set { _service = value; }
-        }
-
         [MaxLength(9)]
         private Dictionary<string, string> _dimensions;
         public Dictionary<string, string> Dimensions
@@ -55,25 +41,16 @@ namespace Amazon.LambdaPowertools.Metrics
                         Dictionary<string, Metric> metrics = null,
                         Dictionary<string, dynamic> metadata = null)
         {
-            _namespace = !string.IsNullOrEmpty(metricsNamespace) ? metricsNamespace : Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE");
-            _service = !string.IsNullOrEmpty(serviceName) ? serviceName : Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME");
+            PowertoolsSettings.SetNamespace(metricsNamespace);
+            PowertoolsSettings.SetService(serviceName);
+            
             _dimensions = dimensions != null ? dimensions : new Dictionary<string, string>();
             _metrics = metrics != null ? metrics : new Dictionary<string, Metric>();
             _metadata = metadata != null ? metadata : new Dictionary<string, dynamic>();
 
-            if(!string.IsNullOrEmpty(_service)){
-                _dimensions.Add("service", _service);
+            if(!string.IsNullOrEmpty(PowertoolsSettings.Service)){
+                _dimensions.Add("service", PowertoolsSettings.Service);
             }
-        }
-
-        public void SetNamespace(string metricsNamespace)
-        {
-            _namespace = metricsNamespace;
-        }
-
-        public void SetService(string metricsService)
-        {
-            _service = metricsService;
         }
 
         public void AddDimension(string key, string value)
@@ -131,7 +108,7 @@ namespace Amazon.LambdaPowertools.Metrics
                     Timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                     CloudWatchMetrics = new List<CloudWatchMetrics>{
                         new CloudWatchMetrics{
-                            Namespace = Namespace,
+                            Namespace = PowertoolsSettings.Namespace,
                             Dimensions = new List<List<string>>{
                                 ExtractDimensions(Dimensions)
                             },
@@ -208,8 +185,6 @@ namespace Amazon.LambdaPowertools.Metrics
                 _dimensions = null;
                 _metrics = null;
                 _metadata = null;
-                _namespace=null;
-                _service=null;
                 disposedValue = true;
             }
         }

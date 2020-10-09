@@ -1,11 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <ItemGroup>
+      <ProjectReference Include="..\Amazon.LambdaPowertools\Amazon.LambdaPowertools.csproj" />
+    </ItemGroup>
+
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <PackageId>Amazon.LambdaPowertools.Metrics</PackageId>
-        <Version>0.0.9</Version>
-        <Authors>awslabs</Authors>
-        <Company>Amazon</Company>
+        <Version>0.0.12</Version>
+        <Authors>AWSLABS</Authors>
+        <Company>Amazon Web Services</Company>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
