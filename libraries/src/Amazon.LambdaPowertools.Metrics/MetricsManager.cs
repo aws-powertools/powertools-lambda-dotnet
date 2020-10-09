@@ -159,7 +159,7 @@ namespace Amazon.LambdaPowertools.Metrics
             return result;
         }
 
-        private List<MetricsDefinitionSet> extractMetricDefinitionSet(Dictionary<string, Metric> metrics)
+        private List<MetricsDefinitionSet> ExtractMetricDefinitionSet(Dictionary<string, Metric> metrics)
         {
             List<MetricsDefinitionSet> metricDefintionSet = new List<MetricsDefinitionSet>();
 
