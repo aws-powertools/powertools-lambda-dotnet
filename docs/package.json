@@ -7,7 +7,7 @@
         "@aws-amplify/analytics": "^3.2.7",
         "antd": "^4.2.4",
         "aws-amplify": "^3.0.24",
-        "gatsby": "^2.24.47",
+        "gatsby": "^2.24.82",
         "gatsby-plugin-antd": "^2.2.0",
         "gatsby-plugin-catch-links": "^2.3.2",
         "gatsby-plugin-sitemap": "^2.4.3",
