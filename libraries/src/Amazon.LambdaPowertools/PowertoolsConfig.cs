@@ -2,8 +2,11 @@
 
 namespace Amazon.LambdaPowertools
 {
-    public static class PowertoolsSettings
+    public static class PowertoolsConfig
     {
+        public static int MaxDimensions = 9;
+        public static int MaxMetrics = 100;
+
         private static string _namespace;
         public static string Namespace
         {

@@ -1,33 +1,30 @@
 ﻿using System;
 using Amazon.LambdaPowertools.Metrics.Model;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Amazon.LambdaPowertools.Metrics
 {
-    public class MetricsLogger : IMetricsLogger, IDisposable
+    public class MetricsLogger : IMetricsLogger
     {
         private MetricsContext _context;
-        private readonly ILogger _logger;
-        private bool _isColdStart = true;
+        private bool _isColdStart = true;        
 
-        public MetricsLogger() : this(NullLoggerFactory.Instance) { }
-        
+        public MetricsLogger() : this(new MetricsContext(),null, null, true) { }
 
-        public MetricsLogger(ILoggerFactory loggerFactory) : this(new MetricsContext(),null, null, loggerFactory) { }
+        public MetricsLogger(bool captureColdStart) : this(new MetricsContext(), null, null, captureColdStart) {}
 
-        public MetricsLogger(string metricsNamespace, string metricsService) : this(new MetricsContext(), metricsNamespace, metricsService, null) { }
+        public MetricsLogger(string metricsNamespace, string metricsService) : this(new MetricsContext(), metricsNamespace, metricsService, true) { }
 
-        public MetricsLogger(string metricsNamespace, string metricsService, ILoggerFactory loggerFactory) : this(new MetricsContext(), metricsNamespace, metricsService, loggerFactory) { }
+        public MetricsLogger(string metricsNamespace, string metricsService, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, metricsService, captureColdStart) { }
 
-
-        private MetricsLogger(MetricsContext metricsContext, string metricsNamespace, string metricsService, ILoggerFactory loggerFactory)
+        private MetricsLogger(MetricsContext metricsContext, string metricsNamespace, string metricsService, bool captureColdStart)
         {
-            _logger = loggerFactory != null ? loggerFactory.CreateLogger<MetricsLogger>() : null;
             _context = metricsContext;
 
-            CaptureColdStart();
             ConfigureContext(metricsNamespace, metricsService);
+
+            if(captureColdStart){
+                CaptureColdStart();
+            }
         }
 
         public MetricsLogger AddMetric(string key, double value, Unit unit = Unit.NONE)
@@ -48,15 +45,9 @@ namespace Amazon.LambdaPowertools.Metrics
             return this;
         }
 
-        public MetricsLogger AddDimension(DimensionSet dimension)
+        public MetricsLogger AddDimension(string key, string value)
         {
-            _context.AddDimension(dimension);
-            return this;
-        }
-
-        public MetricsLogger SetDimensions(params DimensionSet[] dimensions)
-        {
-            _context.SetDimensions(dimensions);
+            _context.AddDimension(new DimensionSet(key, value));
             return this;
         }
 
@@ -75,30 +66,66 @@ namespace Amazon.LambdaPowertools.Metrics
             _context.ClearMetrics();
         }
 
+        private void Flush(MetricsContext context)
+        {
+            var EMFPayload = context.Serialize();
 
-        //TODO: Improve cold start capture process. Eventually with SingleMetric option
+            Console.WriteLine(EMFPayload);
+        }
+
+        
         private void CaptureColdStart()
         {
             if (_isColdStart)
             {
-                _context.AddDimension("Cold Starts", PowertoolsConfig.Service);
                 _context.AddMetric("ColdStart", 1, Unit.COUNT);
 
                 Flush();
 
-                _context = new MetricsContext();
+                _context.ClearMetrics();
 
                 _isColdStart = false;
             }
         }
 
+        public void PushSingleMetric(string metricName, double value, Unit unit, string metricsNamespace = null, string serviceName = null){
+            using(var context = new MetricsContext()){
+                if(!string.IsNullOrEmpty(metricsNamespace)){
+                    context.SetNamespace(metricsNamespace);
+                }
+                else{
+                    context.SetNamespace(PowertoolsConfig.Namespace);
+                }
+
+                if (!string.IsNullOrEmpty(serviceName))
+                {
+                    context.AddDimension("ServiceName", serviceName);
+                }
+                else
+                {
+                    context.AddDimension("ServiceName", PowertoolsConfig.Service);
+                }
+
+                context.AddMetric(metricName, value, unit);
+
+                Flush(context);
+            }            
+        }
+
         private void ConfigureContext(string metricsNamespace, string metricsService)
         {
-            PowertoolsConfig.SetNamespace(metricsNamespace);
-            PowertoolsConfig.SetService(metricsService);
+            if (!string.IsNullOrEmpty(metricsNamespace))
+            {
+                PowertoolsConfig.SetNamespace(metricsNamespace);
+            }
+
+            if (!string.IsNullOrEmpty(metricsService))
+            {
+                PowertoolsConfig.SetService(metricsService);
+            }
 
             _context.SetNamespace(PowertoolsConfig.Namespace);
-            _context.AddDimension("Service", metricsService);
+            _context.AddDimension("ServiceName", PowertoolsConfig.Service);
         }
 
         public void Dispose()

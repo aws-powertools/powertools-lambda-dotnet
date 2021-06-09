@@ -1,14 +1,15 @@
-﻿using Amazon.LambdaPowertools.Metrics.Model;
+﻿using System;
+using Amazon.LambdaPowertools.Metrics.Model;
 
 namespace Amazon.LambdaPowertools.Metrics
 {
-    public interface IMetricsLogger
+    public interface IMetricsLogger : IDisposable
     {
         public MetricsLogger AddMetric(string key, double value, Unit unit);
         public MetricsLogger SetNamespace(string metricNamespace);
-        public MetricsLogger AddDimension(DimensionSet dimension);
-        public MetricsLogger SetDimensions(DimensionSet[] dimensions);
+        public MetricsLogger AddDimension(string key, string value);
         public MetricsLogger AddMetadata(string key, dynamic value);
+        public void PushSingleMetric(string metricName, double value, Unit unit, string serviceNamespace = null, string serviceName = null);
 
         public void Flush();
     }
