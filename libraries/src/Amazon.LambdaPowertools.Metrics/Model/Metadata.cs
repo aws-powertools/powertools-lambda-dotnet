@@ -28,13 +28,6 @@ namespace Amazon.LambdaPowertools.Metrics.Model
         internal void ClearMetrics()
         {
             _metricDirective.Metrics.Clear();
-
-            //CloudWatchMetrics = new List<MetricDirective>() {
-            //    new MetricDirective(PowertoolsConfig.Namespace,
-            //    new List<DimensionSet>{
-            //            new DimensionSet("ServiceName", PowertoolsConfig.Service)
-            //        })
-            //};
         }
 
         internal void AddMetric(string key, double value, Unit unit)
@@ -60,6 +53,11 @@ namespace Amazon.LambdaPowertools.Metrics.Model
         internal List<MetricDefinition> GetMetrics()
         {
             return _metricDirective.Metrics;
+        }
+
+        internal string GetNamespace()
+        {
+            return _metricDirective.Namespace;
         }
 
         internal void AddMetadata(string key, dynamic value)

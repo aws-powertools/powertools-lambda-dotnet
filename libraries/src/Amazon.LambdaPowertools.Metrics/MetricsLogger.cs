@@ -8,6 +8,9 @@ namespace Amazon.LambdaPowertools.Metrics
         private MetricsContext _context;
         private bool _isColdStart = true;        
 
+        /// <summary>
+        /// Creates Metrics Logger with no namespace or service name defined - requires that they are defined after initialization
+        /// </summary>
         public MetricsLogger() : this(new MetricsContext(),null, null, true) { }
 
         public MetricsLogger(bool captureColdStart) : this(new MetricsContext(), null, null, captureColdStart) {}
@@ -27,6 +30,14 @@ namespace Amazon.LambdaPowertools.Metrics
             }
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="unit"></param>
+        /// <returns></returns>
         public MetricsLogger AddMetric(string key, double value, Unit unit = Unit.NONE)
         {
             if(_context.GetMetrics().Count == 100)
@@ -71,6 +82,11 @@ namespace Amazon.LambdaPowertools.Metrics
             var EMFPayload = context.Serialize();
 
             Console.WriteLine(EMFPayload);
+        }
+
+        public string Serialize()
+        {        
+            return _context.Serialize();        
         }
 
         

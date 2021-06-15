@@ -8,6 +8,7 @@ namespace Amazon.LambdaPowertools.Metrics.Model
 {
     public class MetricDirective
     {
+        
         [JsonPropertyName("Namespace")]
         public string Namespace { get; private set; }
 

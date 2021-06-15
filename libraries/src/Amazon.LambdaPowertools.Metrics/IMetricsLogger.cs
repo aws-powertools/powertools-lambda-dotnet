@@ -11,6 +11,7 @@ namespace Amazon.LambdaPowertools.Metrics
         public MetricsLogger AddMetadata(string key, dynamic value);
         public void PushSingleMetric(string metricName, double value, Unit unit, string serviceNamespace = null, string serviceName = null);
 
+        public string Serialize();
         public void Flush();
     }
 }

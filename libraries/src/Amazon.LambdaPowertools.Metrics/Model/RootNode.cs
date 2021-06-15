@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -40,6 +41,11 @@ namespace Amazon.LambdaPowertools.Metrics.Model
 
         public string Serialize()
         {
+            if (string.IsNullOrEmpty(AWS.GetNamespace()))
+            {
+                throw new ArgumentNullException("namespace", "Namespace property is mandatory");
+            }
+
             return JsonSerializer.Serialize(this, typeof(RootNode));
         }
 

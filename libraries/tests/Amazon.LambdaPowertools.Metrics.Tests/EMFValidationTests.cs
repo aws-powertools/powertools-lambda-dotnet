@@ -6,36 +6,44 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
 {
     public class EMFValidationTests
     {
+        // LOGGER TESTS
+
+
+        // ROOT NODE TESTS
+
+
+        // METRIC DIRECTIVE TESTS
+
+
+        // METRIC DEFINITION TESTS
+
         [Fact]
-        public void CannotAddMoreThan100Metrics()
+        public void FlushesAfter100Metrics()
         {
             // Initialize
-            MetricsContext context = new MetricsContext();
+            MetricsLogger logger = new MetricsLogger("testNamespace", "testService");
+            for (int i = 0; i <= 100; i++)
+            {
+                logger.AddMetric($"Metric Name {i + 1}", i, Unit.COUNT);
+            }
 
+            var metricsOutput = logger.Serialize();
 
             // Assert
-            Assert.Throws<ArgumentOutOfRangeException>(() => {
-                for (int i = 0; i <= 100; i++)
-                {
-                    Console.WriteLine($"Adding Metric #{i + 1}");
-                    context.AddMetric($"Metric Name {i + 1}", i, Unit.COUNT);
-                }
-            });
+            Assert.Contains("{\"Namespace\":\"testNamespace\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"COUNT\"}],\"Dimensions\":[[\"ServiceName\"]]}", metricsOutput);
         }
 
         [Fact]
         public void CannotAddMoreThan9Dimensions()
         {
             // Initialize
-            MetricsContext context = new MetricsContext();
+            MetricsLogger logger = new MetricsLogger("testNamespace", "testService");
             
-
             // Assert
             Assert.Throws<ArgumentOutOfRangeException>(() => {
                 for (int i = 0; i <= 9; i++)
                 {
-                    Console.WriteLine($"Adding Dimension #{i + 1}");
-                    context.AddDimension($"Dimension Name {i + 1}", $"Dimension Value {i + 1}");
+                    logger.AddDimension($"Dimension Name {i + 1}", $"Dimension Value {i + 1}");
                 }
             });
         }
@@ -71,5 +79,28 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"MILLISECONDS\"}],\"Dimensions\":[[\"functionVersion\"]]}]},\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100}"
                 , result);
         }
+
+        [Fact]
+        public void ThrowOnSerializationWithoutNamespace()
+        {
+            // Initialize
+            MetricsLogger logger = new MetricsLogger(false);
+            logger.AddMetric("Time", 100, Unit.MILLISECONDS);
+       
+
+            // Assert
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                logger.Serialize();
+            });
+        }
+
+        [Fact]
+        public void DimensionsMustExistAsMembers()
+        {
+
+        }
+
+        
     }
 }

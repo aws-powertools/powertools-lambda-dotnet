@@ -64,7 +64,15 @@ namespace Amazon.LambdaPowertools.Metrics.Model
 
         public string Serialize()
         {
-            return _rootNode.Serialize();
+            try
+            {
+                return _rootNode.Serialize();
+            }
+            catch (ArgumentNullException)
+            {
+                throw;
+            }
+            
         }
 
         public void Dispose()
