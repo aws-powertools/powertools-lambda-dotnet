@@ -20,7 +20,7 @@ namespace Amazon.LambdaPowertools.Metrics.Model
 
         public Metadata()
         {
-            CloudWatchMetrics = new List<MetricDirective>() { new MetricDirective(PowertoolsConfig.Namespace) };
+            CloudWatchMetrics = new List<MetricDirective>() { new MetricDirective() };
             Timestamp = DateTime.Now;
             CustomMetadata = new Dictionary<string, dynamic>();
         }

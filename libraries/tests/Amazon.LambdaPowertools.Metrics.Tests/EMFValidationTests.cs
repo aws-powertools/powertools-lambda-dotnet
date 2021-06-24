@@ -38,9 +38,10 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
         {
             // Initialize
             MetricsLogger logger = new MetricsLogger("testNamespace", "testService");
-            
+
             // Assert
-            Assert.Throws<ArgumentOutOfRangeException>(() => {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
                 for (int i = 0; i <= 9; i++)
                 {
                     logger.AddDimension($"Dimension Name {i + 1}", $"Dimension Value {i + 1}");
@@ -89,9 +90,9 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
        
 
             // Assert
-            Assert.Throws<ArgumentNullException>(() =>
+            Assert.Throws<ArgumentNullException>("namespace", () =>
             {
-                logger.Serialize();
+                var res = logger.Serialize();
             });
         }
 

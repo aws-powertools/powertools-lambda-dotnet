@@ -22,10 +22,12 @@ namespace Amazon.LambdaPowertools.Metrics.Model
         [JsonIgnore]
         public List<DimensionSet> Dimensions { get; private set; }
 
+        public MetricDirective() : this(null, new List<MetricDefinition>(), new List<DimensionSet>()) { }
+
         public MetricDirective(string metricsNamespace) : this(metricsNamespace, new List<MetricDefinition>(), new List<DimensionSet>()) { }
 
         public MetricDirective(string metricsNamespace, List<DimensionSet> defaultDimensions) : this(metricsNamespace, new List<MetricDefinition>(), defaultDimensions) { }
-
+        
         private MetricDirective(string metricsNamespace, List<MetricDefinition> metrics, List<DimensionSet> defaultDimensions)
         {
             Namespace = metricsNamespace;

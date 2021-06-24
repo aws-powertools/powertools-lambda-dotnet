@@ -85,8 +85,15 @@ namespace Amazon.LambdaPowertools.Metrics
         }
 
         public string Serialize()
-        {        
-            return _context.Serialize();        
+        {
+            try
+            {
+                return _context.Serialize();
+            }
+            catch (ArgumentException)
+            {
+                throw;
+            }
         }
 
         
@@ -106,21 +113,8 @@ namespace Amazon.LambdaPowertools.Metrics
 
         public void PushSingleMetric(string metricName, double value, Unit unit, string metricsNamespace = null, string serviceName = null){
             using(var context = new MetricsContext()){
-                if(!string.IsNullOrEmpty(metricsNamespace)){
-                    context.SetNamespace(metricsNamespace);
-                }
-                else{
-                    context.SetNamespace(PowertoolsConfig.Namespace);
-                }
 
-                if (!string.IsNullOrEmpty(serviceName))
-                {
-                    context.AddDimension("ServiceName", serviceName);
-                }
-                else
-                {
-                    context.AddDimension("ServiceName", PowertoolsConfig.Service);
-                }
+                ConfigureContext(metricsNamespace, serviceName);
 
                 context.AddMetric(metricName, value, unit);
 
@@ -132,16 +126,21 @@ namespace Amazon.LambdaPowertools.Metrics
         {
             if (!string.IsNullOrEmpty(metricsNamespace))
             {
-                PowertoolsConfig.SetNamespace(metricsNamespace);
+                _context.SetNamespace(metricsNamespace);
+            }
+            else
+            {
+                // TODO Add support for lambda environment variables and .net core config variables
             }
 
             if (!string.IsNullOrEmpty(metricsService))
             {
-                PowertoolsConfig.SetService(metricsService);
+                _context.AddDimension("ServiceName", metricsService);
             }
-
-            _context.SetNamespace(PowertoolsConfig.Namespace);
-            _context.AddDimension("ServiceName", PowertoolsConfig.Service);
+            else
+            {
+                // TODO Add support for lambda environment variables and .net core config variables               
+            }
         }
 
         public void Dispose()
