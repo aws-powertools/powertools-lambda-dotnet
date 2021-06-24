@@ -128,18 +128,18 @@ namespace Amazon.LambdaPowertools.Metrics
             {
                 _context.SetNamespace(metricsNamespace);
             }
-            else
+            else if(!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE")))
             {
-                // TODO Add support for lambda environment variables and .net core config variables
+                _context.SetNamespace(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE"));
             }
 
             if (!string.IsNullOrEmpty(metricsService))
             {
                 _context.AddDimension("ServiceName", metricsService);
             }
-            else
+            else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME")))
             {
-                // TODO Add support for lambda environment variables and .net core config variables               
+                _context.AddDimension("ServiceName", Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME"));
             }
         }
 

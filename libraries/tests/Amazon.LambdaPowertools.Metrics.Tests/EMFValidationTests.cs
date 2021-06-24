@@ -21,7 +21,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
         public void FlushesAfter100Metrics()
         {
             // Initialize
-            MetricsLogger logger = new MetricsLogger("testNamespace", "testService");
+            MetricsLogger logger = new MetricsLogger("dotnet-powertools-test", "testService");
             for (int i = 0; i <= 100; i++)
             {
                 logger.AddMetric($"Metric Name {i + 1}", i, Unit.COUNT);
@@ -30,14 +30,14 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             var metricsOutput = logger.Serialize();
 
             // Assert
-            Assert.Contains("{\"Namespace\":\"testNamespace\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"COUNT\"}],\"Dimensions\":[[\"ServiceName\"]]}", metricsOutput);
+            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"COUNT\"}],\"Dimensions\":[[\"ServiceName\"]]}", metricsOutput);
         }
 
         [Fact]
         public void CannotAddMoreThan9Dimensions()
         {
             // Initialize
-            MetricsLogger logger = new MetricsLogger("testNamespace", "testService");
+            MetricsLogger logger = new MetricsLogger("dotnet-powertools-test", "testService");
 
             // Assert
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -99,7 +99,16 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
         [Fact]
         public void DimensionsMustExistAsMembers()
         {
+            // Initialize
+            MetricsLogger logger = new MetricsLogger("dotnet-powertools-test", "testService", false);
+            logger.AddDimension("functionVersion", "$LATEST");
 
+            // Assert
+            string result = logger.Serialize();
+            Assert.Contains("\"Dimensions\":[[\"ServiceName\"],[\"functionVersion\"]]"
+                , result);
+            Assert.Contains("\"ServiceName\":\"testService\",\"functionVersion\":\"$LATEST\""
+                , result);
         }
 
         
