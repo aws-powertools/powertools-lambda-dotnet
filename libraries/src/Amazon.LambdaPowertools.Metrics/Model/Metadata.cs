@@ -36,7 +36,7 @@ namespace Amazon.LambdaPowertools.Metrics.Model
         }   
 
         internal void SetNamespace(string metricNamespace)
-        {
+        {         
             _metricDirective.SetNamespace(metricNamespace);
         }
 

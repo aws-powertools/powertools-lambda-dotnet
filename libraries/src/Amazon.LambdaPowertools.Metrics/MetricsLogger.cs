@@ -30,8 +30,6 @@ namespace Amazon.LambdaPowertools.Metrics
             }
         }
 
-        public static string _metricsNamespace { get; private set; }
-
         /// <summary>
         /// 
         /// </summary>
@@ -55,14 +53,12 @@ namespace Amazon.LambdaPowertools.Metrics
         {
             _context.SetNamespace(metricNamespace);
 
-            _metricsNamespace = metricNamespace; // TODO REMOVE THIS HACK
-
             return this;
         }
 
         public string GetNamespace()
         {
-            return _metricsNamespace;
+            return _context.GetNamespace();
         }
 
         public MetricsLogger AddDimension(string key, string value)
@@ -136,12 +132,10 @@ namespace Amazon.LambdaPowertools.Metrics
             if (!string.IsNullOrEmpty(metricsNamespace))
             {
                 context.SetNamespace(metricsNamespace);
-                _metricsNamespace = metricsNamespace; // TODO REMOVE THIS HACK
             }
             else if(!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE")))
             {
                 context.SetNamespace(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE"));
-                _metricsNamespace = Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE"); // TODO REMOVE THIS HACK
             }
 
             if (!string.IsNullOrEmpty(metricsService))

@@ -41,6 +41,11 @@ namespace Amazon.LambdaPowertools.Metrics.Model
             _rootNode.AWS.SetNamespace(metricNamespace);
         }
 
+        internal string GetNamespace()
+        {
+            return _rootNode.AWS.GetNamespace();
+        }
+
         public void AddDimension(DimensionSet dimension)
         {
 
