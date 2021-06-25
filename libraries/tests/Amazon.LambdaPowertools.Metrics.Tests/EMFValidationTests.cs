@@ -6,17 +6,6 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
 {
     public class EMFValidationTests
     {
-        // LOGGER TESTS
-
-
-        // ROOT NODE TESTS
-
-
-        // METRIC DIRECTIVE TESTS
-
-
-        // METRIC DEFINITION TESTS
-
         [Fact]
         public void FlushesAfter100Metrics()
         {
@@ -27,6 +16,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
                 logger.AddMetric($"Metric Name {i + 1}", i, Unit.COUNT);
             }
 
+            // Execute
             var metricsOutput = logger.Serialize();
 
             // Assert
@@ -39,7 +29,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             // Initialize
             MetricsLogger logger = new MetricsLogger("dotnet-powertools-test", "testService");
 
-            // Assert
+            // Execute & Assert
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
                 for (int i = 0; i <= 9; i++)
@@ -59,8 +49,10 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             context.AddMetric("Time", 100, Unit.MILLISECONDS);
             context.AddMetric("Time", 200, Unit.MILLISECONDS);
 
-            // Assert
+            // Execute
             var metrics = context.GetMetrics();
+
+            // Assert
             Assert.Single(metrics);
             Assert.Equal(2, metrics[0].Values.Count);
         }
@@ -75,8 +67,10 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             context.AddMetric("Time", 100, Unit.MILLISECONDS);
             context.AddMetadata("env", "dev");
 
-            // Assert
+            // Execute 
             string result = context.Serialize();
+
+            // Assert
             Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"MILLISECONDS\"}],\"Dimensions\":[[\"functionVersion\"]]}]},\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100}"
                 , result);
         }
@@ -89,7 +83,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             logger.AddMetric("Time", 100, Unit.MILLISECONDS);
        
 
-            // Assert
+            // Execute & Assert
             Assert.Throws<ArgumentNullException>("namespace", () =>
             {
                 var res = logger.Serialize();
@@ -103,8 +97,10 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             MetricsLogger logger = new MetricsLogger("dotnet-powertools-test", "testService", false);
             logger.AddDimension("functionVersion", "$LATEST");
 
-            // Assert
+            // Execute
             string result = logger.Serialize();
+
+            // Assert
             Assert.Contains("\"Dimensions\":[[\"ServiceName\"],[\"functionVersion\"]]"
                 , result);
             Assert.Contains("\"ServiceName\":\"testService\",\"functionVersion\":\"$LATEST\""
