@@ -18,22 +18,19 @@ namespace Amazon.LambdaPowertools.Metrics.Web
             app.UseMetricsMiddleware((context, logger) =>
             {
                 CaptureColdStart(logger);
-
+                
                 var endpoint = context.GetEndpoint();
                 if(endpoint != null)
                 {
                    var actionDescriptor = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
 
-                   Console.WriteLine("Adding Controller and Action dimensions");
                    logger.AddDimension("Controller", actionDescriptor.ControllerName);
                    logger.AddDimension("Action", actionDescriptor.ActionName);
                 }
 
-                logger.AddDimension("StatusCode", $"{context.Response.StatusCode}");
-
                 // Include X-Ray trace if it is set
                 var xRayTraceId = context.Request.Headers["X-Amzn-Trace-Id"];
-                if(!String.IsNullOrEmpty(xRayTraceId) && xRayTraceId.Count > 0)
+                if(!string.IsNullOrEmpty(xRayTraceId) && xRayTraceId.Count > 0)
                 {
                    logger.AddMetadata("XRayTraceId", xRayTraceId[0]);
                 }
@@ -41,7 +38,7 @@ namespace Amazon.LambdaPowertools.Metrics.Web
                 // Include w3c trace id
                 logger.AddMetadata("TraceId", Activity.Current?.Id ?? context?.TraceIdentifier);
 
-                if (!String.IsNullOrEmpty(Activity.Current?.TraceStateString))
+                if (!string.IsNullOrEmpty(Activity.Current?.TraceStateString))
                 {
                    logger.AddMetadata("TraceState", Activity.Current.TraceStateString);
                 }
@@ -68,7 +65,9 @@ namespace Amazon.LambdaPowertools.Metrics.Web
         {
             if (_isColdStart)
             {
-                logger.PushSingleMetric("ColdStart", 1, Unit.COUNT);
+                string currentNamespace = logger.GetNamespace();
+
+                logger.PushSingleMetric("ColdStart", 1, Unit.COUNT,metricsNamespace: currentNamespace);
 
                 _isColdStart = false;
             }

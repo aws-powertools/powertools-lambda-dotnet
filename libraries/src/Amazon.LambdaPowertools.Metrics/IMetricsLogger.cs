@@ -9,7 +9,9 @@ namespace Amazon.LambdaPowertools.Metrics
         public MetricsLogger SetNamespace(string metricNamespace);
         public MetricsLogger AddDimension(string key, string value);
         public MetricsLogger AddMetadata(string key, dynamic value);
-        public void PushSingleMetric(string metricName, double value, Unit unit, string serviceNamespace = null, string serviceName = null);
+        public void PushSingleMetric(string metricName, double value, Unit unit, string metricsNamespace = null, string serviceName = null);
+
+        public string GetNamespace(); // TODO REMOVE THIS HACK
 
         public string Serialize();
         public void Flush();

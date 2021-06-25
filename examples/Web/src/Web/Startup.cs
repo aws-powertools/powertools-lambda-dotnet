@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Amazon.LambdaPowertools.Metrics.Web;
+using System;
 
 namespace Web
 {
@@ -21,11 +22,16 @@ namespace Web
         {
             services.AddControllers();
 
-            // var metricsNamespace = $"{Configuration.GetValue<string>("POWERTOOLS_METRICS_NAMESPACE")}";
-            // var metricsServiceName = $"{Configuration.GetValue<string>("POWERTOOLS_SERVICE_NAME")}";
-
-            // services.AddMetrics(metricsNamespace, metricsServiceName);
             services.AddMetrics();
+
+            //
+            // UNCOMMENT IF YOU WANT TO DEFINE THE NAMESPACE AND SERVICE NAME
+            // CAN USE VALUES COMING FROM CONFIGURATION FILE OR HARCODED VALUES
+            //
+            //var metricsNamespace = $"{Configuration.GetSection("LambdaPowertools").GetValue<string>("POWERTOOLS_METRICS_NAMESPACE")}";
+            //var metricsServiceName = $"{Configuration.GetSection("LambdaPowertools").GetValue<string>("POWERTOOLS_SERVICE_NAME")}";
+
+            //services.AddMetrics(metricsNamespace, metricsServiceName);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline

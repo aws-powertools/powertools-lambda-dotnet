@@ -23,13 +23,14 @@ namespace Amazon.LambdaPowertools.Metrics
         {
             _context = metricsContext;
 
-            ConfigureContext(metricsNamespace, metricsService);
+            ConfigureContext(in _context, metricsNamespace, metricsService);
 
             if(captureColdStart){
                 CaptureColdStart();
             }
         }
 
+        public static string _metricsNamespace { get; private set; }
 
         /// <summary>
         /// 
@@ -53,7 +54,15 @@ namespace Amazon.LambdaPowertools.Metrics
         public MetricsLogger SetNamespace(string metricNamespace)
         {
             _context.SetNamespace(metricNamespace);
+
+            _metricsNamespace = metricNamespace; // TODO REMOVE THIS HACK
+
             return this;
+        }
+
+        public string GetNamespace()
+        {
+            return _metricsNamespace;
         }
 
         public MetricsLogger AddDimension(string key, string value)
@@ -114,7 +123,7 @@ namespace Amazon.LambdaPowertools.Metrics
         public void PushSingleMetric(string metricName, double value, Unit unit, string metricsNamespace = null, string serviceName = null){
             using(var context = new MetricsContext()){
 
-                ConfigureContext(metricsNamespace, serviceName);
+                ConfigureContext(in context, metricsNamespace, serviceName);
 
                 context.AddMetric(metricName, value, unit);
 
@@ -122,24 +131,26 @@ namespace Amazon.LambdaPowertools.Metrics
             }            
         }
 
-        private void ConfigureContext(string metricsNamespace, string metricsService)
+        private void ConfigureContext(in MetricsContext context, string metricsNamespace, string metricsService)
         {
             if (!string.IsNullOrEmpty(metricsNamespace))
             {
-                _context.SetNamespace(metricsNamespace);
+                context.SetNamespace(metricsNamespace);
+                _metricsNamespace = metricsNamespace; // TODO REMOVE THIS HACK
             }
             else if(!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE")))
             {
-                _context.SetNamespace(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE"));
+                context.SetNamespace(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE"));
+                _metricsNamespace = Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE"); // TODO REMOVE THIS HACK
             }
 
             if (!string.IsNullOrEmpty(metricsService))
             {
-                _context.AddDimension("ServiceName", metricsService);
+                context.AddDimension("ServiceName", metricsService);
             }
             else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME")))
             {
-                _context.AddDimension("ServiceName", Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME"));
+                context.AddDimension("ServiceName", Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME"));
             }
         }
 
