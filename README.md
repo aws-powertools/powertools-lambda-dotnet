@@ -1,4 +1,6 @@
-## My Project
+## AWS Lambda Powertools for .NET
+
+[![Build .NET Core](https://github.com/t1agob/aws-lambda-powertools-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/t1agob/aws-lambda-powertools-dotnet/actions/workflows/build.yml)
 
 TODO: Fill this README out!
 
