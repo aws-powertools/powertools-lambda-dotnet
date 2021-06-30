@@ -13,7 +13,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             MetricsLogger logger = new MetricsLogger("dotnet-powertools-test", "testService");
             for (int i = 0; i <= 100; i++)
             {
-                logger.AddMetric($"Metric Name {i + 1}", i, Unit.COUNT);
+                logger.AddMetric($"Metric Name {i + 1}", i, MetricsUnit.COUNT);
             }
 
             // Execute
@@ -46,8 +46,8 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             MetricsContext context = new MetricsContext();
             context.SetNamespace("dotnet-powertools-test");
             context.AddDimension("functionVersion", "$LATEST");
-            context.AddMetric("Time", 100, Unit.MILLISECONDS);
-            context.AddMetric("Time", 200, Unit.MILLISECONDS);
+            context.AddMetric("Time", 100, MetricsUnit.MILLISECONDS);
+            context.AddMetric("Time", 200, MetricsUnit.MILLISECONDS);
 
             // Execute
             var metrics = context.GetMetrics();
@@ -64,7 +64,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             MetricsContext context = new MetricsContext();
             context.SetNamespace("dotnet-powertools-test");
             context.AddDimension("functionVersion", "$LATEST");
-            context.AddMetric("Time", 100, Unit.MILLISECONDS);
+            context.AddMetric("Time", 100, MetricsUnit.MILLISECONDS);
             context.AddMetadata("env", "dev");
 
             // Execute 
@@ -80,7 +80,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
         {
             // Initialize
             MetricsLogger logger = new MetricsLogger(false);
-            logger.AddMetric("Time", 100, Unit.MILLISECONDS);
+            logger.AddMetric("Time", 100, MetricsUnit.MILLISECONDS);
        
 
             // Execute & Assert
