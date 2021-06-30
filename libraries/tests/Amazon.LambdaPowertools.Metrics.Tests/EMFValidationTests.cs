@@ -20,7 +20,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             var metricsOutput = logger.Serialize();
 
             // Assert
-            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"COUNT\"}],\"Dimensions\":[[\"ServiceName\"]]}", metricsOutput);
+            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"COUNT\"}],\"Dimensions\":[[\"Service\"]]}", metricsOutput);
         }
 
         [Fact]
@@ -101,9 +101,9 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             string result = logger.Serialize();
 
             // Assert
-            Assert.Contains("\"Dimensions\":[[\"ServiceName\"],[\"functionVersion\"]]"
+            Assert.Contains("\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]"
                 , result);
-            Assert.Contains("\"ServiceName\":\"testService\",\"functionVersion\":\"$LATEST\""
+            Assert.Contains("\"Service\":\"testService\",\"functionVersion\":\"$LATEST\""
                 , result);
         }
 

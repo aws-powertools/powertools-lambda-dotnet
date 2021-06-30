@@ -9,9 +9,9 @@ namespace Amazon.LambdaPowertools.Metrics.Web
             services.AddScoped<IMetricsLogger>(ctx => new MetricsLogger(false));
         }
 
-        public static void AddMetrics(this IServiceCollection services, string metricsNamespace, string metricsServiceName)
+        public static void AddMetrics(this IServiceCollection services, string metricsNamespace, string serviceName)
         {
-            services.AddScoped<IMetricsLogger>(ctx => new MetricsLogger(metricsNamespace, metricsServiceName, false));
+            services.AddScoped<IMetricsLogger>(ctx => new MetricsLogger(metricsNamespace, serviceName, false));
         }
     }
 }

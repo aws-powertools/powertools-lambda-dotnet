@@ -29,9 +29,9 @@ namespace Web
             // CAN USE VALUES COMING FROM CONFIGURATION FILE OR HARCODED VALUES
             //
             //var metricsNamespace = $"{Configuration.GetSection("LambdaPowertools").GetValue<string>("POWERTOOLS_METRICS_NAMESPACE")}";
-            //var metricsServiceName = $"{Configuration.GetSection("LambdaPowertools").GetValue<string>("POWERTOOLS_SERVICE_NAME")}";
+            //var serviceName = $"{Configuration.GetSection("LambdaPowertools").GetValue<string>("POWERTOOLS_SERVICE_NAME")}";
 
-            //services.AddMetrics(metricsNamespace, metricsServiceName);
+            //services.AddMetrics(metricsNamespace, serviceName);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline

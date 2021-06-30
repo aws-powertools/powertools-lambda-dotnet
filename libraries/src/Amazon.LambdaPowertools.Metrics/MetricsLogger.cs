@@ -15,15 +15,15 @@ namespace Amazon.LambdaPowertools.Metrics
 
         public MetricsLogger(bool captureColdStart) : this(new MetricsContext(), null, null, captureColdStart) {}
 
-        public MetricsLogger(string metricsNamespace, string metricsService) : this(new MetricsContext(), metricsNamespace, metricsService, true) { }
+        public MetricsLogger(string metricsNamespace, string serviceName) : this(new MetricsContext(), metricsNamespace, serviceName, true) { }
 
-        public MetricsLogger(string metricsNamespace, string metricsService, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, metricsService, captureColdStart) { }
+        public MetricsLogger(string metricsNamespace, string serviceName, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, serviceName, captureColdStart) { }
 
-        private MetricsLogger(MetricsContext metricsContext, string metricsNamespace, string metricsService, bool captureColdStart)
+        private MetricsLogger(MetricsContext metricsContext, string metricsNamespace, string serviceName, bool captureColdStart)
         {
             _context = metricsContext;
 
-            ConfigureContext(in _context, metricsNamespace, metricsService);
+            ConfigureContext(in _context, metricsNamespace, serviceName);
 
             if(captureColdStart){
                 CaptureColdStart();
@@ -49,9 +49,9 @@ namespace Amazon.LambdaPowertools.Metrics
             return this;
         }
 
-        public MetricsLogger SetNamespace(string metricNamespace)
+        public MetricsLogger SetNamespace(string metricsNamespace)
         {
-            _context.SetNamespace(metricNamespace);
+            _context.SetNamespace(metricsNamespace);
 
             return this;
         }
@@ -127,7 +127,7 @@ namespace Amazon.LambdaPowertools.Metrics
             }            
         }
 
-        private void ConfigureContext(in MetricsContext context, string metricsNamespace, string metricsService)
+        private void ConfigureContext(in MetricsContext context, string metricsNamespace, string serviceName)
         {
             if (!string.IsNullOrEmpty(metricsNamespace))
             {
@@ -137,15 +137,9 @@ namespace Amazon.LambdaPowertools.Metrics
             {
                 context.SetNamespace(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE"));
             }
-
-            if (!string.IsNullOrEmpty(metricsService))
-            {
-                context.AddDimension("ServiceName", metricsService);
-            }
-            else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME")))
-            {
-                context.AddDimension("ServiceName", Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME"));
-            }
+            
+            PowertoolsConfig.Service = serviceName;
+            context.AddDimension("Service", PowertoolsConfig.Service);
         }
 
         public void Dispose()
