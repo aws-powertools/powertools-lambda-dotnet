@@ -6,22 +6,24 @@ namespace Amazon.LambdaPowertools.Metrics
     public class Metrics : IMetrics
     {
         private MetricsContext _context;
-        private bool _isColdStart = true;        
+        private bool _isColdStart = true;  
+        private bool _captureMetricsEvenIfEmpty;      
 
         /// <summary>
         /// Creates Metrics  with no namespace or service name defined - requires that they are defined after initialization
         /// </summary>
-        public Metrics() : this(new MetricsContext(),null, null, true) { }
+        public Metrics() : this(new MetricsContext(),null, null, true, false) { }
 
-        public Metrics(bool captureColdStart) : this(new MetricsContext(), null, null, captureColdStart) {}
+        public Metrics(bool captureColdStart) : this(new MetricsContext(), null, null, captureColdStart, false) {}
 
-        public Metrics(string metricsNamespace, string serviceName) : this(new MetricsContext(), metricsNamespace, serviceName, true) { }
+        public Metrics(string metricsNamespace, string serviceName) : this(new MetricsContext(), metricsNamespace, serviceName, true, false) { }
 
-        public Metrics(string metricsNamespace, string serviceName, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, serviceName, captureColdStart) { }
+        public Metrics(string metricsNamespace, string serviceName, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, serviceName, captureColdStart, false) { }
 
-        private Metrics(MetricsContext metricsContext, string metricsNamespace, string serviceName, bool captureColdStart)
+        private Metrics(MetricsContext metricsContext, string metricsNamespace, string serviceName, bool captureColdStart, bool captureMetricsEvenIfEmpty)
         {
             _context = metricsContext;
+            _captureMetricsEvenIfEmpty = captureMetricsEvenIfEmpty;
 
             ConfigureContext(in _context, metricsNamespace, serviceName);
 
@@ -75,11 +77,17 @@ namespace Amazon.LambdaPowertools.Metrics
 
         public void Flush()
         {
-            var EMFPayload = _context.Serialize();
+            if(_context.IsSerializable 
+                || _captureMetricsEvenIfEmpty){
+                var EMFPayload = _context.Serialize();
 
-            Console.WriteLine(EMFPayload);
+                Console.WriteLine(EMFPayload);
 
-            _context.ClearMetrics();
+                _context.ClearMetrics();
+            }
+            else {
+                Console.WriteLine("##WARNING## Metrics and Metadata have not been specified. No data will be sent to Cloudwatch Metrics.");
+            }
         }
 
         private void Flush(MetricsContext context)

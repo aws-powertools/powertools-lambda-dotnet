@@ -7,6 +7,11 @@ namespace Amazon.LambdaPowertools.Metrics.Model
     public class MetricsContext : IDisposable
     {
         private RootNode _rootNode;
+        internal bool IsSerializable {
+            get {
+                return !(GetMetrics().Count == 0 && _rootNode.AWS.CustomMetadata.Count == 0);
+            }
+        }
 
         public MetricsContext()
         {
