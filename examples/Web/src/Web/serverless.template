@@ -17,6 +17,12 @@
         "Policies": [
           "AWSLambda_FullAccess"
         ],
+        "Environment": {
+          "Variables": {
+            "POWERTOOLS_SERVICE_NAME": "lambda-example",
+            "POWERTOOLS_METRICS_NAMESPACE": "dotnet-lambdapowertools"
+          }
+        },
         "Events": {
           "ProxyResource": {
             "Type": "Api",

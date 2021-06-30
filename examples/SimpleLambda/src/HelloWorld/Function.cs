@@ -41,21 +41,21 @@ namespace HelloWorld
             using (var logger = new MetricsLogger("dotnet-lambdapowertools-single", "lambda-example"))
             {
                 logger.AddDimension("Metric Type", "Single");
-                logger.AddMetric("SingleExecution", 1, Unit.COUNT);
+                logger.AddMetric("SingleExecution", 1, MetricsUnit.COUNT);
             }
 
             _metricsLogger.AddDimension("Metric Type", "Aggregate");
             _metricsLogger.AddDimension("Method Execution Metrics", "getCallingIP");
-            _metricsLogger.AddMetric("ElapsedExecutionTime", 1234, Unit.MILLISECONDS);
+            _metricsLogger.AddMetric("ElapsedExecutionTime", 1234, MetricsUnit.MILLISECONDS);
 
             //watch = System.Diagnostics.Stopwatch.StartNew();
             //location = await GetCallingIP();
             //watch.Stop();
 
-            _metricsLogger.AddMetric("ElapsedExecutionTime", 456124, Unit.MILLISECONDS);
+            _metricsLogger.AddMetric("ElapsedExecutionTime", 456124, MetricsUnit.MILLISECONDS);
 
 
-            _metricsLogger.AddMetric("SuccessfulLocations", 1, Unit.COUNT);
+            _metricsLogger.AddMetric("SuccessfulLocations", 1, MetricsUnit.COUNT);
 
             _metricsLogger.Flush();
 

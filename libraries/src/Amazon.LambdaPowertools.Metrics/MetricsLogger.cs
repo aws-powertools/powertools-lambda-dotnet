@@ -37,7 +37,7 @@ namespace Amazon.LambdaPowertools.Metrics
         /// <param name="value"></param>
         /// <param name="unit"></param>
         /// <returns></returns>
-        public MetricsLogger AddMetric(string key, double value, Unit unit = Unit.NONE)
+        public MetricsLogger AddMetric(string key, double value, MetricsUnit unit = MetricsUnit.NONE)
         {
             if(_context.GetMetrics().Count == 100)
             {
@@ -106,7 +106,7 @@ namespace Amazon.LambdaPowertools.Metrics
         {
             if (_isColdStart)
             {
-                _context.AddMetric("ColdStart", 1, Unit.COUNT);
+                _context.AddMetric("ColdStart", 1, MetricsUnit.COUNT);
 
                 Flush();
 
@@ -116,7 +116,7 @@ namespace Amazon.LambdaPowertools.Metrics
             }
         }
 
-        public void PushSingleMetric(string metricName, double value, Unit unit, string metricsNamespace = null, string serviceName = null){
+        public void PushSingleMetric(string metricName, double value, MetricsUnit unit, string metricsNamespace = null, string serviceName = null){
             using(var context = new MetricsContext()){
 
                 ConfigureContext(in context, metricsNamespace, serviceName);

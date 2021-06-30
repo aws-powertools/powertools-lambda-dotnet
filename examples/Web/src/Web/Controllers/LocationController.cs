@@ -28,20 +28,20 @@ namespace Web.Controllers
         {
             try
             {
-                _metricsLogger.AddMetric("GetLocationCount", 1, Unit.COUNT);
+                _metricsLogger.AddMetric("GetLocationCount", 1, MetricsUnit.COUNT);
 
                 var watch = System.Diagnostics.Stopwatch.StartNew();
                 var ip = await GetCallingIP();
                 watch.Stop();
 
-                _metricsLogger.AddMetric("GetIPExecutionTime", watch.ElapsedMilliseconds, Unit.MILLISECONDS);
+                _metricsLogger.AddMetric("GetIPExecutionTime", watch.ElapsedMilliseconds, MetricsUnit.MILLISECONDS);
 
                 watch.Restart();
                 var locationInfo = await GetIPLocation(ip);
                 watch.Stop();
 
 
-                _metricsLogger.AddMetric("GetIPLocationInfoExecutionTime", watch.ElapsedMilliseconds, Unit.MILLISECONDS);
+                _metricsLogger.AddMetric("GetIPLocationInfoExecutionTime", watch.ElapsedMilliseconds, MetricsUnit.MILLISECONDS);
 
                 return JsonSerializer.Serialize(locationInfo, typeof(LocationInfo));
             }

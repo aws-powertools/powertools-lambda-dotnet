@@ -19,18 +19,18 @@ namespace Amazon.LambdaPowertools.Metrics.Model
         }
 
         [JsonPropertyName("Unit")]
-        public Unit Unit {
+        public MetricsUnit Unit {
             get;
             set;
         }
 
-        public MetricDefinition(string name, double value) : this(name, Unit.NONE, new List<double> { value })
+        public MetricDefinition(string name, double value) : this(name, MetricsUnit.NONE, new List<double> { value })
         {
         }
 
-        public MetricDefinition(string name, Unit unit, double value) : this(name, unit, new List<double> { value }) { }
+        public MetricDefinition(string name, MetricsUnit unit, double value) : this(name, unit, new List<double> { value }) { }
 
-        public MetricDefinition(string name, Unit unit, List<double> values)
+        public MetricDefinition(string name, MetricsUnit unit, List<double> values)
         {
             Name = name;
             Unit = unit;
