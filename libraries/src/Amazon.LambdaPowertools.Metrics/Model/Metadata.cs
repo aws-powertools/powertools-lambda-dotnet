@@ -30,7 +30,7 @@ namespace Amazon.LambdaPowertools.Metrics.Model
             _metricDirective.Metrics.Clear();
         }
 
-        internal void AddMetric(string key, double value, MetricsUnit unit)
+        internal void AddMetric(string key, double value, MetricUnit unit)
         {
             _metricDirective.AddMetric(key, value, unit);
         }   

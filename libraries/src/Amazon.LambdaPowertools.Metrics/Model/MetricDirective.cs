@@ -54,7 +54,7 @@ namespace Amazon.LambdaPowertools.Metrics.Model
             }
         }
 
-        public void AddMetric(string name, double value, MetricsUnit unit)
+        public void AddMetric(string name, double value, MetricUnit unit)
         {
             if (Metrics.Count < PowertoolsConfig.MaxMetrics)
             {

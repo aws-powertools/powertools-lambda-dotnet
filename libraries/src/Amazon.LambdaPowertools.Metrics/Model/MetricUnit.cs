@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Amazon.LambdaPowertools.Metrics.Model
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum MetricsUnit
+    public enum MetricUnit
     {
         [EnumMember(Value = "None")]
         NONE,

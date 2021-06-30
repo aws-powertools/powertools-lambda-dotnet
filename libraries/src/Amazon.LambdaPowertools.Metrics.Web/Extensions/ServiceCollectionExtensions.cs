@@ -6,12 +6,12 @@ namespace Amazon.LambdaPowertools.Metrics.Web
     {
         public static void AddMetrics(this IServiceCollection services)
         {
-            services.AddScoped<IMetricsLogger>(ctx => new MetricsLogger(false));
+            services.AddScoped<IMetrics>(ctx => new Metrics(false));
         }
 
         public static void AddMetrics(this IServiceCollection services, string metricsNamespace, string serviceName)
         {
-            services.AddScoped<IMetricsLogger>(ctx => new MetricsLogger(metricsNamespace, serviceName, false));
+            services.AddScoped<IMetrics>(ctx => new Metrics(metricsNamespace, serviceName, false));
         }
     }
 }

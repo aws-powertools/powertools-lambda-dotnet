@@ -31,7 +31,7 @@ namespace Amazon.LambdaPowertools.Metrics.Model
             _rootNode.AWS.ClearMetrics();
         }
 
-        public void AddMetric(string key, double value, MetricsUnit unit)
+        public void AddMetric(string key, double value, MetricUnit unit)
         {
             _rootNode.AWS.AddMetric(key, value, unit);
         }

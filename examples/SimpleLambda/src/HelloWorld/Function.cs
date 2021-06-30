@@ -18,7 +18,7 @@ namespace HelloWorld
     {
         private static readonly HttpClient client = new HttpClient();
 
-        private static MetricsLogger _metricsLogger = new MetricsLogger("dotnet-lambdapowertools", "lambda-example");
+        private static Metrics _metricsLogger = new Metrics("dotnet-lambdapowertools", "lambda-example");
 
         //private static async Task<string> GetCallingIP()
         //{
@@ -38,24 +38,24 @@ namespace HelloWorld
             //var location = await GetCallingIP();
             //watch.Stop();
 
-            using (var logger = new MetricsLogger("dotnet-lambdapowertools-single", "lambda-example"))
+            using (var logger = new Metrics("dotnet-lambdapowertools-single", "lambda-example"))
             {
                 logger.AddDimension("Metric Type", "Single");
-                logger.AddMetric("SingleExecution", 1, MetricsUnit.COUNT);
+                logger.AddMetric("SingleExecution", 1, MetricUnit.COUNT);
             }
 
             _metricsLogger.AddDimension("Metric Type", "Aggregate");
             _metricsLogger.AddDimension("Method Execution Metrics", "getCallingIP");
-            _metricsLogger.AddMetric("ElapsedExecutionTime", 1234, MetricsUnit.MILLISECONDS);
+            _metricsLogger.AddMetric("ElapsedExecutionTime", 1234, MetricUnit.MILLISECONDS);
 
             //watch = System.Diagnostics.Stopwatch.StartNew();
             //location = await GetCallingIP();
             //watch.Stop();
 
-            _metricsLogger.AddMetric("ElapsedExecutionTime", 456124, MetricsUnit.MILLISECONDS);
+            _metricsLogger.AddMetric("ElapsedExecutionTime", 456124, MetricUnit.MILLISECONDS);
 
 
-            _metricsLogger.AddMetric("SuccessfulLocations", 1, MetricsUnit.COUNT);
+            _metricsLogger.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
 
             _metricsLogger.Flush();
 

@@ -10,10 +10,10 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
         public void FlushesAfter100Metrics()
         {
             // Initialize
-            MetricsLogger logger = new MetricsLogger("dotnet-powertools-test", "testService");
+            Metrics logger = new Metrics("dotnet-powertools-test", "testService");
             for (int i = 0; i <= 100; i++)
             {
-                logger.AddMetric($"Metric Name {i + 1}", i, MetricsUnit.COUNT);
+                logger.AddMetric($"Metric Name {i + 1}", i, MetricUnit.COUNT);
             }
 
             // Execute
@@ -27,7 +27,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
         public void CannotAddMoreThan9Dimensions()
         {
             // Initialize
-            MetricsLogger logger = new MetricsLogger("dotnet-powertools-test", "testService");
+            Metrics logger = new Metrics("dotnet-powertools-test", "testService");
 
             // Execute & Assert
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -46,8 +46,8 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             MetricsContext context = new MetricsContext();
             context.SetNamespace("dotnet-powertools-test");
             context.AddDimension("functionVersion", "$LATEST");
-            context.AddMetric("Time", 100, MetricsUnit.MILLISECONDS);
-            context.AddMetric("Time", 200, MetricsUnit.MILLISECONDS);
+            context.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
+            context.AddMetric("Time", 200, MetricUnit.MILLISECONDS);
 
             // Execute
             var metrics = context.GetMetrics();
@@ -64,7 +64,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
             MetricsContext context = new MetricsContext();
             context.SetNamespace("dotnet-powertools-test");
             context.AddDimension("functionVersion", "$LATEST");
-            context.AddMetric("Time", 100, MetricsUnit.MILLISECONDS);
+            context.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
             context.AddMetadata("env", "dev");
 
             // Execute 
@@ -79,8 +79,8 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
         public void ThrowOnSerializationWithoutNamespace()
         {
             // Initialize
-            MetricsLogger logger = new MetricsLogger(false);
-            logger.AddMetric("Time", 100, MetricsUnit.MILLISECONDS);
+            Metrics logger = new Metrics(false);
+            logger.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
        
 
             // Execute & Assert
@@ -94,7 +94,7 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
         public void DimensionsMustExistAsMembers()
         {
             // Initialize
-            MetricsLogger logger = new MetricsLogger("dotnet-powertools-test", "testService", false);
+            Metrics logger = new Metrics("dotnet-powertools-test", "testService", false);
             logger.AddDimension("functionVersion", "$LATEST");
 
             // Execute
@@ -105,8 +105,6 @@ namespace Amazon.LambdaPowertools.Metrics.Tests
                 , result);
             Assert.Contains("\"Service\":\"testService\",\"functionVersion\":\"$LATEST\""
                 , result);
-        }
-
-        
+        }  
     }
 }

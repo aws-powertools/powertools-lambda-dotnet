@@ -3,23 +3,23 @@ using Amazon.LambdaPowertools.Metrics.Model;
 
 namespace Amazon.LambdaPowertools.Metrics
 {
-    public class MetricsLogger : IMetricsLogger
+    public class Metrics : IMetrics
     {
         private MetricsContext _context;
         private bool _isColdStart = true;        
 
         /// <summary>
-        /// Creates Metrics Logger with no namespace or service name defined - requires that they are defined after initialization
+        /// Creates Metrics  with no namespace or service name defined - requires that they are defined after initialization
         /// </summary>
-        public MetricsLogger() : this(new MetricsContext(),null, null, true) { }
+        public Metrics() : this(new MetricsContext(),null, null, true) { }
 
-        public MetricsLogger(bool captureColdStart) : this(new MetricsContext(), null, null, captureColdStart) {}
+        public Metrics(bool captureColdStart) : this(new MetricsContext(), null, null, captureColdStart) {}
 
-        public MetricsLogger(string metricsNamespace, string serviceName) : this(new MetricsContext(), metricsNamespace, serviceName, true) { }
+        public Metrics(string metricsNamespace, string serviceName) : this(new MetricsContext(), metricsNamespace, serviceName, true) { }
 
-        public MetricsLogger(string metricsNamespace, string serviceName, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, serviceName, captureColdStart) { }
+        public Metrics(string metricsNamespace, string serviceName, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, serviceName, captureColdStart) { }
 
-        private MetricsLogger(MetricsContext metricsContext, string metricsNamespace, string serviceName, bool captureColdStart)
+        private Metrics(MetricsContext metricsContext, string metricsNamespace, string serviceName, bool captureColdStart)
         {
             _context = metricsContext;
 
@@ -37,7 +37,7 @@ namespace Amazon.LambdaPowertools.Metrics
         /// <param name="value"></param>
         /// <param name="unit"></param>
         /// <returns></returns>
-        public MetricsLogger AddMetric(string key, double value, MetricsUnit unit = MetricsUnit.NONE)
+        public Metrics AddMetric(string key, double value, MetricUnit unit = MetricUnit.NONE)
         {
             if(_context.GetMetrics().Count == 100)
             {
@@ -49,7 +49,7 @@ namespace Amazon.LambdaPowertools.Metrics
             return this;
         }
 
-        public MetricsLogger SetNamespace(string metricsNamespace)
+        public Metrics SetNamespace(string metricsNamespace)
         {
             _context.SetNamespace(metricsNamespace);
 
@@ -61,13 +61,13 @@ namespace Amazon.LambdaPowertools.Metrics
             return _context.GetNamespace();
         }
 
-        public MetricsLogger AddDimension(string key, string value)
+        public Metrics AddDimension(string key, string value)
         {
             _context.AddDimension(new DimensionSet(key, value));
             return this;
         }
 
-        public MetricsLogger AddMetadata(string key, dynamic value)
+        public Metrics AddMetadata(string key, dynamic value)
         {
             _context.AddMetadata(key, value);
             return this;
@@ -106,7 +106,7 @@ namespace Amazon.LambdaPowertools.Metrics
         {
             if (_isColdStart)
             {
-                _context.AddMetric("ColdStart", 1, MetricsUnit.COUNT);
+                _context.AddMetric("ColdStart", 1, MetricUnit.COUNT);
 
                 Flush();
 
@@ -116,7 +116,7 @@ namespace Amazon.LambdaPowertools.Metrics
             }
         }
 
-        public void PushSingleMetric(string metricName, double value, MetricsUnit unit, string metricsNamespace = null, string serviceName = null){
+        public void PushSingleMetric(string metricName, double value, MetricUnit unit, string metricsNamespace = null, string serviceName = null){
             using(var context = new MetricsContext()){
 
                 ConfigureContext(in context, metricsNamespace, serviceName);

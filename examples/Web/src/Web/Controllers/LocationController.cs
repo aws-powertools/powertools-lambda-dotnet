@@ -13,10 +13,10 @@ namespace Web.Controllers
     [Route("api/[controller]")]
     public class LocationController : ControllerBase
     {
-        private readonly IMetricsLogger _metricsLogger;
+        private readonly IMetrics _metricsLogger;
         private static HttpClient _client;
 
-        public LocationController(IMetricsLogger metricsLogger)
+        public LocationController(IMetrics metricsLogger)
         {
             _metricsLogger = metricsLogger;
             _client = new HttpClient();
@@ -28,20 +28,20 @@ namespace Web.Controllers
         {
             try
             {
-                _metricsLogger.AddMetric("GetLocationCount", 1, MetricsUnit.COUNT);
+                _metricsLogger.AddMetric("GetLocationCount", 1, MetricUnit.COUNT);
 
                 var watch = System.Diagnostics.Stopwatch.StartNew();
                 var ip = await GetCallingIP();
                 watch.Stop();
 
-                _metricsLogger.AddMetric("GetIPExecutionTime", watch.ElapsedMilliseconds, MetricsUnit.MILLISECONDS);
+                _metricsLogger.AddMetric("GetIPExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
 
                 watch.Restart();
                 var locationInfo = await GetIPLocation(ip);
                 watch.Stop();
 
 
-                _metricsLogger.AddMetric("GetIPLocationInfoExecutionTime", watch.ElapsedMilliseconds, MetricsUnit.MILLISECONDS);
+                _metricsLogger.AddMetric("GetIPLocationInfoExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
 
                 return JsonSerializer.Serialize(locationInfo, typeof(LocationInfo));
             }

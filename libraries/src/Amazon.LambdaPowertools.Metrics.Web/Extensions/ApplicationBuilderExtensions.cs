@@ -49,25 +49,25 @@ namespace Amazon.LambdaPowertools.Metrics.Web
             });
         }
 
-        public static void UseMetricsMiddleware(this IApplicationBuilder app, Func<HttpContext, IMetricsLogger, Task> action)
+        public static void UseMetricsMiddleware(this IApplicationBuilder app, Func<HttpContext, IMetrics, Task> action)
         {
             app.Use(async (context, next) =>
             {
                 await next.Invoke();
                 
-                var logger = context.RequestServices.GetRequiredService<IMetricsLogger>();
+                var logger = context.RequestServices.GetRequiredService<IMetrics>();
 
                 await action(context, logger);
             });
         }
 
-        private static void CaptureColdStart(IMetricsLogger logger)
+        private static void CaptureColdStart(IMetrics logger)
         {
             if (_isColdStart)
             {
                 string currentNamespace = logger.GetNamespace();
 
-                logger.PushSingleMetric("ColdStart", 1, MetricsUnit.COUNT,metricsNamespace: currentNamespace);
+                logger.PushSingleMetric("ColdStart", 1, MetricUnit.COUNT,metricsNamespace: currentNamespace);
 
                 _isColdStart = false;
             }
