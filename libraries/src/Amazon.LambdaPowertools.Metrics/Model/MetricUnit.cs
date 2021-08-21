@@ -1,32 +1,64 @@
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+
 namespace Amazon.LambdaPowertools.Metrics.Model
 {
-    public class MetricUnit
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum MetricUnit
     {
-        public static readonly string Seconds = "Seconds";
-        public static readonly string Microseconds = "Microseconds";
-        public static readonly string Milliseconds = "Milliseconds";
-        public static readonly string Bytes = "Bytes";
-        public static readonly string Kilobytes = "Kilobytes";
-        public static readonly string Megabytes = "Megabytes";
-        public static readonly string Gigabytes = "Gigabytes";
-        public static readonly string Terabytes = "Terabytes";
-        public static readonly string Bits = "Bits";
-        public static readonly string Kilobits = "Kilobits";
-        public static readonly string Megabits = "Megabits";
-        public static readonly string Gigabits = "Gigabits";
-        public static readonly string Terabits = "Terabits";
-        public static readonly string Percent = "Percent";
-        public static readonly string Count = "Count";
-        public static readonly string BytesPerSecond = "Bytes/Second";
-        public static readonly string KilobytesPerSecond = "Kilobytes/Second";
-        public static readonly string MegabytesPerSecond = "Megabytes/Second";
-        public static readonly string GigabytesPerSecond = "Gigabytes/Second";
-        public static readonly string TerabytesPerSecond = "Terabytes/Second";
-        public static readonly string BitsPerSecond = "Bits/Second";
-        public static readonly string KilobitsPerSecond = "Kilobits/Second";
-        public static readonly string MegabitsPerSecond = "Megabits/Second";
-        public static readonly string GigabitsPerSecond = "Gigabits/Second";
-        public static readonly string TerabitsPerSecond = "Terabits/Second";
-        public static readonly string CountPerSecond = "Count/Second";
+        [EnumMember(Value = "None")]
+        NONE,
+        [EnumMember(Value = "Seconds")]
+        SECONDS,
+        [EnumMember(Value = "Microseconds")]
+        MICROSECONDS,
+        [EnumMember(Value = "Milliseconds")]
+        MILLISECONDS,
+        [EnumMember(Value = "Bytes")]
+        BYTES,
+        [EnumMember(Value = "Kilobytes")]
+        KILOBYTES,
+        [EnumMember(Value = "Megabytes")]
+        MEGABYTES,
+        [EnumMember(Value = "Gigabytes")]
+        GIGABYTES,
+        [EnumMember(Value = "Terabytes")]
+        TERABYTES,
+        [EnumMember(Value = "Bits")]
+        BITS,
+        [EnumMember(Value = "Kilobits")]
+        KILOBITS,
+        [EnumMember(Value = "Megabits")]
+        MEGABITS,
+        [EnumMember(Value = "Gigabits")]
+        GIGABITS,
+        [EnumMember(Value = "Terabits")]
+        TERABITS,
+        [EnumMember(Value = "Percent")]
+        PERCENT,
+        [EnumMember(Value = "Count")]
+        COUNT,
+        [EnumMember(Value = "Bytes/Second")]
+        BYTES_PER_SECOND,
+        [EnumMember(Value = "Kilobytes/Second")]
+        KILOBYTES_PER_SECOND,
+        [EnumMember(Value = "Megabytes/Second")]
+        MEGABYTES_PER_SECOND,
+        [EnumMember(Value = "Gigabytes/Second")]
+        GIGABYTES_PER_SECOND,
+        [EnumMember(Value = "Terabytes/Second")]
+        TERABYTES_PER_SECOND,
+        [EnumMember(Value = "Bits/Second")]
+        BITS_PER_SECOND,
+        [EnumMember(Value = "Kilobits/Second")]
+        KILOBITS_PER_SECOND,
+        [EnumMember(Value = "Megabits/Second")]
+        MEGABITS_PER_SECOND,
+        [EnumMember(Value = "Gigabits/Second")]
+        GIGABITS_PER_SECOND,
+        [EnumMember(Value = "Terabits/Second")]
+        TERABITS_PER_SECOND,
+        [EnumMember(Value = "Count/Second")]
+        COUNT_PER_SECOND
     }
 }
