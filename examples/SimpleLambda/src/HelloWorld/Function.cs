@@ -5,8 +5,8 @@ using System.Net.Http;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 
-using Amazon.LambdaPowertools.Metrics;
-using Amazon.LambdaPowertools.Metrics.Model;
+using AWS.Lambda.PowerTools.Metrics;
+using AWS.Lambda.PowerTools.Metrics.Model;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.

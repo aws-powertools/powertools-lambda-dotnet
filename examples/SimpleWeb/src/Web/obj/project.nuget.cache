@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "dgSpecHash": "yzxChWsS1ZxanZlxFBm8PSx8vGDbK4bfLH0NRlBbaoPqwOiK1dTHmMYVHaKtD7IRwe451xFuOHfPwB9Tgw6iTA==",
+  "success": true,
+  "projectFilePath": "/Users/sliedig/Dev/github.com/sliedig/aws-lambda-powertools-dotnet/examples/SimpleWeb/src/Web/SimpleWeb.csproj",
+  "expectedPackageFiles": [
+    "/Users/sliedig/.nuget/packages/amazon.lambda.apigatewayevents/2.4.0/amazon.lambda.apigatewayevents.2.4.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/amazon.lambda.applicationloadbalancerevents/2.1.0/amazon.lambda.applicationloadbalancerevents.2.1.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/amazon.lambda.aspnetcoreserver/6.0.1/amazon.lambda.aspnetcoreserver.6.0.1.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/amazon.lambda.core/2.0.0/amazon.lambda.core.2.0.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/amazon.lambda.logging.aspnetcore/3.1.0/amazon.lambda.logging.aspnetcore.3.1.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/amazon.lambda.serialization.systemtextjson/2.1.0/amazon.lambda.serialization.systemtextjson.2.1.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/microsoft.extensions.configuration.abstractions/2.1.0/microsoft.extensions.configuration.abstractions.2.1.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/microsoft.extensions.dependencyinjection/5.0.0/microsoft.extensions.dependencyinjection.5.0.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/5.0.0/microsoft.extensions.dependencyinjection.abstractions.5.0.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/microsoft.extensions.logging/5.0.0/microsoft.extensions.logging.5.0.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/microsoft.extensions.logging.abstractions/5.0.0/microsoft.extensions.logging.abstractions.5.0.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/microsoft.extensions.options/5.0.0/microsoft.extensions.options.5.0.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/microsoft.extensions.primitives/5.0.0/microsoft.extensions.primitives.5.0.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/system.diagnostics.diagnosticsource/5.0.0/system.diagnostics.diagnosticsource.5.0.0.nupkg.sha512",
+    "/Users/sliedig/.nuget/packages/system.io.pipelines/4.7.2/system.io.pipelines.4.7.2.nupkg.sha512"
+  ],
+  "logs": []
+}
