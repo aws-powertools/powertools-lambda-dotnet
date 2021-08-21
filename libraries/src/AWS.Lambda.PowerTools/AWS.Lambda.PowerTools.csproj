@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <PackageId>AWS.Lambda.PowerTools</PackageId>
+        <Version>0.0.1</Version>
+        <Authors>AWSLABS</Authors>
+        <Company>Amazon Web Services</Company>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+</Project>

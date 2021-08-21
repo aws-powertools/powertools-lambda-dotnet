@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "/Users/sliedig/.dotnet/store/|arch|/|tfm|",
+      "/Users/sliedig/.nuget/packages"
+    ]
+  }
+}

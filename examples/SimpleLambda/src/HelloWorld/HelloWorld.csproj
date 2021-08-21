@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\libraries\src\Amazon.LambdaPowertools.Metrics\Amazon.LambdaPowertools.Metrics.csproj" />
+    <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.PowerTools.Metrics\AWS.Lambda.PowerTools.Metrics.csproj" />
   </ItemGroup>
 </Project>
 
