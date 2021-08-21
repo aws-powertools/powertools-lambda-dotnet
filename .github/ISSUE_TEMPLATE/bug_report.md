@@ -35,12 +35,9 @@ assignees: ''
 ## Environment
 
 * **Powertools version used**:
-* **Packaging format (Layers, Maven/Gradle)**:
 * **AWS Lambda function runtime:**
 * **Debugging logs**
 
-> [How to enable debug mode](https://awslabs.github.io/aws-lambda-powertools-dotnet/#debug-mode)**
-
-```net
+```csharp
 # paste logs here
 ```

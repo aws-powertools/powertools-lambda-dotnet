@@ -4,7 +4,7 @@ about: Feature design and proposals
 title: 'RFC: '
 labels: RFC, triage
 assignees: ''
-
+approved by: ''
 ---
 
 ## Key information
@@ -13,6 +13,8 @@ assignees: ''
 * Related issue(s), if known:
 * Area: (i.e. Tracer, Metrics, Logger, etc.)
 * Meet [tenets](https://awslabs.github.io/aws-lambda-powertools-dotnet/#tenets): (Yes/no)
+* Approved by: ''
+* Reviewed by: ''
 
 ## Summary
 [summary]: #summary
@@ -31,7 +33,15 @@ assignees: ''
 
 > Explain the design in enough detail for somebody familiar with Powertools to understand it, and for somebody familiar with the implementation to implement it.
 
-> This should get into specifics and corner-cases, and include examples of how the feature is used. Any new terminology should be defined here.
+**If this feature should be available in other runtimes (e.g. Java, Typescript), how would this look like to ensure consistency?**
+
+## User Experience
+
+**How would customers use it?**
+
+**Any configuration or corner cases you'd expect?**
+
+**Demonstration of before and after on how the experience will be better**
 
 ## Drawbacks
 [drawbacks]: #drawbacks

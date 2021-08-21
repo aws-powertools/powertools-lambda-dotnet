@@ -2,11 +2,9 @@
 
 release-docs:
 	@echo "Rebuilding docs"
-	rm -rf site api
+	rm -rf site
 	@echo "Updating website docs"
 	poetry run mike deploy --push --update-aliases ${VERSION} ${ALIAS}
-	@echo "Building API docs"
-	@$(MAKE) build-docs-api
 
 build-docs-api:
 	poetry run pdoc --html --output-dir ./api/ ./aws_lambda_powertools --force

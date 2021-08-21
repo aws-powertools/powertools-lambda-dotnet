@@ -1,0 +1,45 @@
+##### Labeler ##########################################################################################################
+labelPRBasedOnFilePath:
+  area/logger:
+    - libraries/src/AWS.Lambda.PowerTools.Logging/*
+    - libraries/src/AWS.Lambda.PowerTools.Logging/**/*
+  area/tracer:
+    - libraries/src/AWS.Lambda.PowerTools.Tracing/*
+    - libraries/src/AWS.Lambda.PowerTools.Tracing/**/*
+  area/metrics:
+    - libraries/src/AWS.Lambda.PowerTools.Metrics/*
+    - libraries/src/AWS.Lambda.PowerTools.Metrics/**/*
+
+  documentation:
+    - docs/*
+    - docs/**/*
+    - mkdocs.yml
+
+  internal:
+    - .github/*
+    - .github/**/*
+    - .chglog/*
+    - .flake8
+    - .gitignore
+    - .pre-commit-config.yaml
+    - Makefile
+    - CONTRIBUTING.md
+    - CODE_OF_CONDUCT.md
+    - LICENSE
+
+  tests:
+    - libraries/tests/*
+    - libraries/tests/**/*
+
+
+##### Greetings ########################################################################################################
+firstPRWelcomeComment: >
+  Thanks a lot for your first contribution! Please check out our contributing guidelines and don't hesitate to ask whatever you need.
+
+# Comment to be posted to congratulate user on their first merged PR
+firstPRMergeComment: >
+  Awesome work, congrats on your first merged pull request and thank you for helping improve everyone's experience!
+
+# Comment to be posted to on first time issues
+firstIssueWelcomeComment: >
+  Thanks for opening your first issue here! We'll come back to you as soon as we can.

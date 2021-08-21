@@ -11,7 +11,7 @@
 * [ ] [Meet tenets criteria](https://awslabs.github.io/aws-lambda-powertools-dotnet/#tenets)
 * [ ] Update tests
 * [ ] Update docs
-* [ ] PR title follows [conventional commit semantics]()
+* [ ] PR title follows [conventional commit semantics](https://github.com/awslabs/aws-lambda-powertools-dotnet/blob/develop/.github/semantic.yml)
 
 ## Breaking change checklist
 
