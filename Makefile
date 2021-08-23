@@ -1,15 +1,13 @@
-.PHONY: target build build-docs build-docs-api build-docs-website
+.PHONY: build-docs build-docs-website docs-local docs-local-docker
 
-release-docs:
-	@echo "Rebuilding docs"
-	rm -rf site
-	@echo "Updating website docs"
-	poetry run mike deploy --push --update-aliases ${VERSION} ${ALIAS}
+build-docs:
+	@$(MAKE) build-docs-website
 
-build-docs-api:
-	poetry run pdoc --html --output-dir ./api/ ./aws_lambda_powertools --force
-	mv -f ./api/aws_lambda_powertools/* ./api/
-	rm -rf ./api/aws_lambda_powertools
+build-docs-website:
+	mkdir -p dist
+	docker build -t squidfunk/mkdocs-material ./docs/
+	docker run --rm -t -v ${PWD}:/docs squidfunk/mkdocs-material build
+	cp -R site/* dist/
 
 docs-local:
 	poetry run mkdocs serve
@@ -17,6 +15,3 @@ docs-local:
 docs-local-docker:
 	docker build -t squidfunk/mkdocs-material ./docs/
 	docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
-
-docs-api-local:
-	poetry run pdoc --http : aws_lambda_powertools
