@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace AWS.Lambda.PowerTools.Metrics.Model
 {
     public class RootNode
     {
-        [JsonPropertyName("_aws")]
+        [JsonProperty("_aws")]
         public Metadata AWS { get; } = new Metadata();
 
         [JsonExtensionData]
@@ -46,12 +45,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
                 throw new ArgumentNullException("namespace", "Namespace property is mandatory");
             }
 
-            return JsonSerializer.Serialize(this, typeof(RootNode));
+            return JsonConvert.SerializeObject(this);
         }
-
-
-       
-
 
     }
 }

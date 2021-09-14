@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json.Serialization;
 using AWS.Lambda.PowerTools.Metrics.Serializer;
+using Newtonsoft.Json;
 
 namespace AWS.Lambda.PowerTools.Metrics.Model
 {
@@ -10,7 +11,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
         [JsonConverter(typeof(UnixMillisecondDateTimeConverter))]
         public DateTime Timestamp { get; }
 
-        [JsonPropertyName("CloudWatchMetrics")]
+        [JsonProperty("CloudWatchMetrics")]
         public List<MetricDirective> CloudWatchMetrics { get; private set; }
 
         private MetricDirective _metricDirective { get { return CloudWatchMetrics[0]; } }

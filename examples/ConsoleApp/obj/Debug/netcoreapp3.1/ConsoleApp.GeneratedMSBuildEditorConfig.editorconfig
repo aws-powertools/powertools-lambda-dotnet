@@ -1,0 +1,3 @@
+is_global = true
+build_property.RootNamespace = ConsoleApp
+build_property.ProjectDir = /Users/tiagobar/Documents/GitHub/aws-lambda-powertools-dotnet/examples/ConsoleApp/

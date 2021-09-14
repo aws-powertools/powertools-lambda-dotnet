@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Net.Http;
@@ -14,12 +15,12 @@ using AWS.Lambda.PowerTools.Metrics.Model;
 
 namespace HelloWorld
 {
-    public class Function
+    public partial class Function
     {
         private static readonly HttpClient client = new HttpClient();
-
-        private static Metrics _metricsLogger = new Metrics("dotnet-lambdapowertools", "lambda-example");
-
+        
+        //private static Metrics _metricsLogger = new Metrics("dotnet-lambdapowertools", "lambda-example");
+        
         //private static async Task<string> GetCallingIP()
         //{
         //    client.DefaultRequestHeaders.Accept.Clear();
@@ -29,35 +30,36 @@ namespace HelloWorld
 
         //    return msg.Replace("\n", "");
         //}
-
+        
+        [Metrics]
         public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
-
+            
             // CAPTURE METHOD EXECUTION METRICS FOR GETCALLINGIP (TWICE - TO REPRESENT THIS SPECIFIC METRIC AS AN ARRAY)
             //var watch = System.Diagnostics.Stopwatch.StartNew();
             //var location = await GetCallingIP();
             //watch.Stop();
-
+            
             using (var logger = new Metrics("dotnet-lambdapowertools-single", "lambda-example"))
             {
                 logger.AddDimension("Metric Type", "Single");
                 logger.AddMetric("SingleExecution", 1, MetricUnit.COUNT);
             }
-
-            _metricsLogger.AddDimension("Metric Type", "Aggregate");
-            _metricsLogger.AddDimension("Method Execution Metrics", "getCallingIP");
-            _metricsLogger.AddMetric("ElapsedExecutionTime", 1234, MetricUnit.MILLISECONDS);
+            
+            Metrics.AddDimension("Metric Type", "Aggregate");
+            Metrics.AddDimension("Method Execution Metrics", "getCallingIP");
+            Metrics.AddMetric("ElapsedExecutionTime", 1234, MetricUnit.MILLISECONDS);
 
             //watch = System.Diagnostics.Stopwatch.StartNew();
             //location = await GetCallingIP();
             //watch.Stop();
 
-            _metricsLogger.AddMetric("ElapsedExecutionTime", 456124, MetricUnit.MILLISECONDS);
+            Metrics.AddMetric("ElapsedExecutionTime", 456124, MetricUnit.MILLISECONDS);
 
 
-            _metricsLogger.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
 
-            _metricsLogger.Flush();
+            Metrics.Flush();
 
             return new APIGatewayProxyResponse
             {
