@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Net.Http;
-
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 
@@ -31,6 +28,7 @@ namespace HelloWorld
         //    return msg.Replace("\n", "");
         //}
         
+        //[Metrics("hello-world", "lambda-example")]
         [Metrics]
         public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
