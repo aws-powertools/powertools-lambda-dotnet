@@ -16,8 +16,6 @@ namespace HelloWorld
     {
         private static readonly HttpClient client = new HttpClient();
         
-        //private static Metrics _metricsLogger = new Metrics("dotnet-lambdapowertools", "lambda-example");
-        
         //private static async Task<string> GetCallingIP()
         //{
         //    client.DefaultRequestHeaders.Accept.Clear();
@@ -28,7 +26,7 @@ namespace HelloWorld
         //    return msg.Replace("\n", "");
         //}
         
-        //[Metrics("hello-world", "lambda-example")]
+        //[Metrics("dotnet-lambdapowertools", "lambda-example")]
         [Metrics]
         public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
