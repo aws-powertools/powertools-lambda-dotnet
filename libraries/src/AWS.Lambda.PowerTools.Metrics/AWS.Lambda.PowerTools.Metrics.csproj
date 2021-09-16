@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-      <ProjectReference Include="..\AWS.Lambda.PowerTools.Generators\AWS.Lambda.PowerTools.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
       <ProjectReference Include="..\AWS.Lambda.PowerTools\AWS.Lambda.PowerTools.csproj" />
     </ItemGroup>
 
