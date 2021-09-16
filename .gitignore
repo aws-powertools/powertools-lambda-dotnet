@@ -6,5 +6,5 @@ docs/public
 .vscode
 
 AWS.Lambda.Powertools.sln.DotSettings.user
-[Oo]bj
-[Bb]in
+[Oo]bj/**
+[Bb]in/**
