@@ -4,17 +4,18 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <AWSProjectType>Lambda</AWSProjectType>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.2.0" />
     <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.3.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.PowerTools.Metrics\AWS.Lambda.PowerTools.Metrics.csproj" />
+    <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.PowerTools.Metrics\AWS.Lambda.PowerTools.Metrics.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
 </Project>
 

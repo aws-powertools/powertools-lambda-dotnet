@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace AWS.Lambda.PowerTools.Metrics.Serializer
 {
@@ -8,12 +7,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Serializer
     {
         private readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+        public override void WriteJson(JsonWriter writer, DateTime value, JsonSerializer serializer)
         {
             long ms;
             if(value is DateTime dateTime)
@@ -30,7 +24,13 @@ namespace AWS.Lambda.PowerTools.Metrics.Serializer
                 throw new JsonException("Invalid date");
             }
 
-            writer.WriteNumberValue(ms);
+            writer.WriteValue(ms);
+        }
+
+        public override DateTime ReadJson(JsonReader reader, Type objectType, DateTime existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }
