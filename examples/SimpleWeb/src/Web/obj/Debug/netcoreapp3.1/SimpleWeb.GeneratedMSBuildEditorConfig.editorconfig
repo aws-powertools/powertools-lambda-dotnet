@@ -1,3 +1,0 @@
-is_global = true
-build_property.RootNamespace = SimpleWeb
-build_property.ProjectDir = /Users/tiagobar/Documents/GitHub/aws-lambda-powertools-dotnet/examples/SimpleWeb/src/Web/
