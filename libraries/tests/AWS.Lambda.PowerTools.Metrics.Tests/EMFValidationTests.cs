@@ -20,7 +20,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             var metricsOutput = logger.Serialize();
 
             // Assert
-            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"COUNT\"}],\"Dimensions\":[[\"Service\"]]}", metricsOutput);
+            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]]}", metricsOutput);
         }
 
         [Fact]
@@ -71,7 +71,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             string result = context.Serialize();
 
             // Assert
-            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"MILLISECONDS\"}],\"Dimensions\":[[\"functionVersion\"]]}]},\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100}"
+            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}],\"Dimensions\":[[\"functionVersion\"]]}]},\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100.0}"
                 , result);
         }
 

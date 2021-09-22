@@ -20,8 +20,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
-    - name: Install dependencies
-      run: dotnet add libraries/src/AWS.Lambda.PowerTools.Metrics package Microsoft.CodeAnalysis --version 3.11.0.0 
     - name: Install solution dependencies
       run: dotnet restore
     - name: Build
