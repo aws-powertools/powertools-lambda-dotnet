@@ -1,38 +1,37 @@
-using System;
+﻿using System;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
-namespace AWS.Lambda.PowerTools.Metrics.Generator
+namespace AWS.Lambda.PowerTools.Generators
 {
     [Generator]
     public class MetricsGenerator : ISourceGenerator
     {
-//         private readonly string _metricsAttributeStub = $@"// This code was auto-generated
-// using System;
-//
-// namespace AWS.Lambda.PowerTools.Metrics
-// {{
-//     [AttributeUsage(AttributeTargets.Method)]
-//     public class MetricsAttribute : Attribute
-//     {{
-//         public MetricsAttribute() {{ }}
-//
-//         public MetricsAttribute(string serviceNamespace, string serviceName) {{ }}
-//     }}
-// }}
-// ";               
+         /*private readonly string _metricsAttributeStub = $@"// This code was auto-generated
+using System;
+
+namespace AWS.Lambda.PowerTools.Metrics
+{{
+    [AttributeUsage(AttributeTargets.Method)]
+    public class MetricsAttribute : Attribute
+    {{
+         public MetricsAttribute() {{ }}
+         public MetricsAttribute(string serviceNamespace, string serviceName) {{ }}
+    }}
+}}
+"; */              
         
         public void Initialize(GeneratorInitializationContext context)
         {
-            context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
+            context.RegisterForSyntaxNotifications(() => new MetricsSyntaxReceiver());
         
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
-            // context.AddSource("MetricsAttribute", _metricsAttributeStub);    
+            //context.AddSource("MetricsAttribute", _metricsAttributeStub);    
             
-            if (context.SyntaxReceiver is not SyntaxReceiver syntaxReceiver)                            
+            if (context.SyntaxReceiver is not MetricsSyntaxReceiver syntaxReceiver)                            
             {                                                                                           
                 throw new InvalidOperationException("We were given the wrong syntax receiver.");        
             }                                                                                           

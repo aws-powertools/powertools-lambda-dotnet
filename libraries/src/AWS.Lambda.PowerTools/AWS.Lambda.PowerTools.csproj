@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
         <PackageId>AWS.Lambda.PowerTools</PackageId>
         <Version>0.0.1</Version>
         <Authors>AWSLABS</Authors>
