@@ -26,8 +26,8 @@ namespace HelloWorld
         //    return msg.Replace("\n", "");
         //}
         
-        //[Metrics("dotnet-lambdapowertools", "lambda-example")]
-        [Metrics]
+        [Metrics("dotnet-lambdapowertools", "lambda-example")]
+        //[Metrics]
         public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             
@@ -45,7 +45,7 @@ namespace HelloWorld
             Metrics.AddDimension("Metric Type", "Aggregate");
             Metrics.AddDimension("Method Execution Metrics", "getCallingIP");
             Metrics.AddMetric("ElapsedExecutionTime", 1234, MetricUnit.MILLISECONDS);
-
+/*
             //watch = System.Diagnostics.Stopwatch.StartNew();
             //location = await GetCallingIP();
             //watch.Stop();
@@ -55,7 +55,7 @@ namespace HelloWorld
 
             Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
 
-            Metrics.Flush();
+            Metrics.Flush();*/
 
             return new APIGatewayProxyResponse
             {
