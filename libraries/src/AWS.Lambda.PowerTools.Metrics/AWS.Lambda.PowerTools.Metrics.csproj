@@ -24,6 +24,7 @@
 
     <PropertyGroup>
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <UsingToolMicrosoftNetCompilers>true</UsingToolMicrosoftNetCompilers>
     </PropertyGroup>
 
     <ItemGroup>
