@@ -22,6 +22,10 @@
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    </PropertyGroup>
+
     <ItemGroup>
       <Folder Include="Serializer\" />
     </ItemGroup>
