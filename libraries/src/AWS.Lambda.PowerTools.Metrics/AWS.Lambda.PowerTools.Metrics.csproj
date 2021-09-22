@@ -19,13 +19,13 @@
       <Folder Include="Serializer\" />
     </ItemGroup>
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
         <PackageId>AWS.Lambda.PowerTools.Metrics</PackageId>
         <Version>0.0.1</Version>
         <Authors>AWSLABS</Authors>
         <Company>Amazon Web Services</Company>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <LangVersion>9.0</LangVersion>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
 </Project>
