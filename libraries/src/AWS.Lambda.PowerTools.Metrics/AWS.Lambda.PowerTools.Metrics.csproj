@@ -5,19 +5,27 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.11.0" />
+      <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
       <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Serializer\" />
     </ItemGroup>
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <PackageId>AWS.Lambda.PowerTools.Metrics</PackageId>
         <Version>0.0.1</Version>
         <Authors>AWSLABS</Authors>
         <Company>Amazon Web Services</Company>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
 </Project>

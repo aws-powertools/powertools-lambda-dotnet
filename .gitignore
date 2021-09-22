@@ -3,3 +3,8 @@ docs/.cache
 docs/public
 
 .idea
+.vscode
+
+AWS.Lambda.Powertools.sln.DotSettings.user
+[Oo]bj/**
+[Bb]in/**

@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace AWS.Lambda.PowerTools.Metrics.Model
 {
     public class MetricDirective
     {
         
-        [JsonPropertyName("Namespace")]
+        [JsonProperty("Namespace")]
         public string Namespace { get; private set; }
-
-        [MaxLength(100)]
-        [JsonPropertyName("Metrics")]
+        
+        [JsonProperty("Metrics")]
         public List<MetricDefinition> Metrics
         {
             get; private set;
@@ -35,7 +33,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
             Dimensions = defaultDimensions;
         }
 
-        [JsonPropertyName("Dimensions")]
+        [JsonProperty("Dimensions")]
         public List<List<string>> AllDimensionKeys
         {
             get
@@ -104,7 +102,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
             {
                 foreach (var dimension in dimensionSet.Dimensions)
                 {
-                    dimensions.TryAdd(dimension.Key, dimension.Value);
+                    dimensions.Add(dimension.Key, dimension.Value);
                 }
             }
 

@@ -18,6 +18,7 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         public Metrics(string metricsNamespace, string serviceName) : this(new MetricsContext(), metricsNamespace, serviceName, true, false) { }
 
+        
         public Metrics(string metricsNamespace, string serviceName, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, serviceName, captureColdStart, false) { }
 
         private Metrics(MetricsContext metricsContext, string metricsNamespace, string serviceName, bool captureColdStart, bool captureMetricsEvenIfEmpty)

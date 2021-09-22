@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace AWS.Lambda.PowerTools.Metrics.Model
 {
     public class MetricDefinition
     {
-        [JsonPropertyName("Name")]
+        [JsonProperty("Name")]
         public string Name
         {
             get;
@@ -18,7 +18,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
             get;
         }
 
-        [JsonPropertyName("Unit")]
+        [JsonProperty("Unit")]
         public MetricUnit Unit {
             get;
             set;
