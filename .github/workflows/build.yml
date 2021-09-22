@@ -20,6 +20,8 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.x
+    - name: Install dependencies
+      run: dotnet add package Microsoft.CodeAnalysis --version 3.11.0.0
     - name: Install solution dependencies
       run: dotnet restore
     - name: Build
