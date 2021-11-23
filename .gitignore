@@ -4,6 +4,7 @@ docs/public
 
 .idea
 .vscode
+.vs/
 
 AWS.Lambda.Powertools.sln.DotSettings.user
 [Oo]bj/**

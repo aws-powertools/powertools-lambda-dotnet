@@ -1,5 +1,4 @@
 ﻿using System;
-using AWS.Lambda.PowerTools.Metrics.Model;
 
 namespace AWS.Lambda.PowerTools.Metrics
 {

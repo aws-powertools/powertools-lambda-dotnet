@@ -1,3 +1,4 @@
+/*
 using System;
 
 namespace AWS.Lambda.PowerTools.Metrics
@@ -6,7 +7,9 @@ namespace AWS.Lambda.PowerTools.Metrics
     public class MetricsAttribute : Attribute
     {
         public MetricsAttribute() { }
-
         public MetricsAttribute(string serviceNamespace, string serviceName) { }
     }
 }
+*/
+
+

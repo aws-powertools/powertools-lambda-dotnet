@@ -4,7 +4,7 @@ using Newtonsoft.Json.Serialization;
 using AWS.Lambda.PowerTools.Metrics.Serializer;
 using Newtonsoft.Json;
 
-namespace AWS.Lambda.PowerTools.Metrics.Model
+namespace AWS.Lambda.PowerTools.Metrics
 {
     public class Metadata
     {

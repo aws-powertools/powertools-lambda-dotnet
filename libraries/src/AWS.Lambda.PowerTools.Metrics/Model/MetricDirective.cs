@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO.Compression;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace AWS.Lambda.PowerTools.Metrics.Model
+namespace AWS.Lambda.PowerTools.Metrics
 {
     public class MetricDirective
     {
@@ -81,7 +83,16 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
         {
             if (Dimensions.Count < PowertoolsConfig.MaxDimensions)
             {
-                Dimensions.Add(dimension);
+
+                var matchingKeys = AllDimensionKeys.Where(x => x.Contains(dimension.DimensionKeys[0]));
+                if(!matchingKeys.Any())
+                {
+                    Dimensions.Add(dimension);
+                }
+                else
+                {
+                    Console.WriteLine($"WARN: Failed to Add dimension '{dimension.DimensionKeys[0]}'. Dimension already exists.");
+                }
             }
             else
             {
@@ -102,7 +113,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
             {
                 foreach (var dimension in dimensionSet.Dimensions)
                 {
-                    dimensions.Add(dimension.Key, dimension.Value);
+                    dimensions.TryAdd(dimension.Key, dimension.Value);
                 }
             }
 
