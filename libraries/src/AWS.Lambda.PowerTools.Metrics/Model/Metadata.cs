@@ -31,6 +31,10 @@ namespace AWS.Lambda.PowerTools.Metrics
             _metricDirective.Metrics.Clear();
         }
 
+        internal void ClearNonDefaultDimensions(){
+            _metricDirective.Dimensions.Clear();
+        }
+
         internal void AddMetric(string key, double value, MetricUnit unit)
         {
             _metricDirective.AddMetric(key, value, unit);
@@ -49,6 +53,10 @@ namespace AWS.Lambda.PowerTools.Metrics
         internal void SetDimensions(List<DimensionSet> dimensionSets)
         {
             _metricDirective.SetDimensions(dimensionSets);
+        }
+
+        internal void SetDefaultDimensions(List<DimensionSet> defaultDimensionSets){
+            _metricDirective.SetDefaultDimensions(defaultDimensionSets);
         }
 
         internal List<MetricDefinition> GetMetrics()

@@ -14,13 +14,17 @@ using AWS.Lambda.PowerTools.Metrics;
 
 namespace HelloWorld
 {
-    public partial class Function
+    public class Function
     {
         private static readonly HttpClient Client = new HttpClient();
-        private static readonly Metrics Metrics = new Metrics(true);
-    
+        private static Metrics Metrics = new Metrics(true);
+                                            // .WithDefaultDimensions(new Dictionary<string, string>{
+                                            //     {"CustomDefaultDimension", "CustomDefaultDimensionValue"}
+                                            // });
+
         private static async Task<string> GetCallingIp()
         {
+            //Metrics.PushSingleMetric("CallingIp",1,MetricUnit.COUNT,"dotnet-lambdapowertools","lambda-example");
             using (var metrics = new Metrics("dotnet-lambdapowertools", "lambda-example"))
             {
                 metrics.AddDimension("Metric Type", "Single");
@@ -34,7 +38,7 @@ namespace HelloWorld
 
             return msg.Replace("\n", "");
         }
-        
+
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             try
@@ -49,9 +53,9 @@ namespace HelloWorld
 
                 return new APIGatewayProxyResponse
                 {
-                    Body = JsonSerializer.Serialize(new {location}),
+                    Body = JsonSerializer.Serialize(new { location }),
                     StatusCode = 200,
-                    Headers = new Dictionary<string, string> {{"Content-Type", "application/json"}}
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
                 };
             }
             catch (Exception ex)
@@ -60,7 +64,7 @@ namespace HelloWorld
                 {
                     Body = JsonSerializer.Serialize(ex.Message),
                     StatusCode = 500,
-                    Headers = new Dictionary<string, string> {{"Content-Type", "application/json"}}
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
                 };
             }
             finally

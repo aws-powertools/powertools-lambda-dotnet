@@ -6,6 +6,8 @@ docs/public
 .vscode
 .vs/
 
+examples/SimpleLambda/.aws-sam
+
 AWS.Lambda.Powertools.sln.DotSettings.user
 [Oo]bj/**
 [Bb]in/**
