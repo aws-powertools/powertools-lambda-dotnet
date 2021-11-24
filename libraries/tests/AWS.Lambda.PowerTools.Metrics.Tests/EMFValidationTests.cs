@@ -109,5 +109,32 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             Assert.Contains("\"Service\":\"testService\",\"functionVersion\":\"$LATEST\""
                 , result);
         }  
+
+        [Fact]
+        public void ThrowOnMetricsWithoutParametersOrEnvVariables(){
+            // Arrange
+            Metrics logger = new Metrics();
+
+            // Act
+            Action act = () => logger.Serialize();
+
+            // Assert
+            SchemaValidationException exception = Assert.Throws<SchemaValidationException>(act);
+
+            Assert.Equal("EMF schema is invalid. 'namespace' is mandatory and not specified.", exception.Message);
+        }
+
+        [Fact]
+        public void CaptureColdStartOnSerialize(){
+            // Arrange
+            Metrics logger = new Metrics("dotnet-powertools-test", "testService", true);
+
+            // Act
+            string result = logger.Serialize();
+
+            // Assert
+            Assert.Contains("\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}]", result);
+            Assert.Contains("\"ColdStart\":1.0", result);
+        }
     }
 }

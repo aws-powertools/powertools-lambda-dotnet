@@ -134,9 +134,9 @@ namespace AWS.Lambda.PowerTools.Metrics
             {
                 _context.AddMetric("ColdStart", 1, MetricUnit.COUNT);
 
-                Flush();
+                // Flush();
 
-                _context.ClearMetrics();
+                // _context.ClearMetrics();
 
                 _isColdStart = false;
             }
