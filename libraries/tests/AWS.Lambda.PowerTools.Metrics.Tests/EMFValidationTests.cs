@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace AWS.Lambda.PowerTools.Metrics.Tests
@@ -135,6 +136,48 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Assert
             Assert.Contains("\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}]", result);
             Assert.Contains("\"ColdStart\":1.0", result);
+        }
+
+        [Fact]
+        public void SetAndGetMetricsNamespace(){
+            // Arrange
+            Metrics logger = new Metrics();
+            logger.SetNamespace("dotnet-powertools-test");
+
+            // Act
+            string result = logger.GetNamespace();
+
+            // Assert
+            Assert.Equal("dotnet-powertools-test", result);
+        }
+
+        [Fact]
+        public void AbleToAddMetadata(){
+            // Arrange
+            Metrics logger = new Metrics("dotnet-powertools-test", "testService");
+            logger.AddMetadata("test_metadata", "test_value");
+
+            // Act
+            string result = logger.Serialize();
+
+            // Assert
+            Assert.Contains("\"test_metadata\":\"test_value\"", result);
+        }
+
+        [Fact]
+        public void ValidInitializationWithDefaultDimensions(){
+            // Arrange
+            Metrics logger = new Metrics("dotnet-powertools-test", "testService")
+                            .WithDefaultDimensions(new Dictionary<string, string>
+                            {
+                                {"CustomDefaultDimension", "CustomDefaultDimensionValue"}
+                            });
+            // Act
+            string result = logger.Serialize();
+
+            // Assert
+            Assert.Contains("\"Dimensions\":[[\"CustomDefaultDimension\"]", result);
+            Assert.Contains("\"CustomDefaultDimension\":\"CustomDefaultDimensionValue\"", result);
         }
     }
 }
