@@ -13,7 +13,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         public string GetNamespace();
 
         public string Serialize();
-        public void Flush();
+        public void Flush(bool metricsOverflow);
     }
 }
     

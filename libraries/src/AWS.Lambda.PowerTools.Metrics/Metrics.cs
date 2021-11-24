@@ -45,7 +45,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         {
             if(_context.GetMetrics().Count == 100)
             {
-                Flush();
+                Flush(true);
             }
 
             _context.AddMetric(key, value, unit);
@@ -91,7 +91,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
 
-        public void Flush()
+        public void Flush(bool metricsOverflow = false)
         {
             if(_context.IsSerializable 
                 || _captureMetricsEvenIfEmpty){
@@ -100,7 +100,8 @@ namespace AWS.Lambda.PowerTools.Metrics
                 Console.WriteLine(EMFPayload);
 
                 _context.ClearMetrics();
-                _context.ClearNonDefaultDimensions();
+
+                if(!metricsOverflow){ _context.ClearNonDefaultDimensions(); }
             }
             else {
                 Console.WriteLine("##WARNING## Metrics and Metadata have not been specified. No data will be sent to Cloudwatch Metrics.");
