@@ -2,7 +2,16 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
-        <RootNamespace>Amazon.LambdaPowertools.Tracing</RootNamespace>
+        <RootNamespace>Amazon.Lambda.PowerTools.Tracing</RootNamespace>
     </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AWS.Lambda.PowerTools\AWS.Lambda.PowerTools.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AWSSDK.XRay" Version="3.7.0.103" />
+      <PackageReference Include="AWSXRayRecorder.Core" Version="2.10.1" />
+    </ItemGroup>
 
 </Project>

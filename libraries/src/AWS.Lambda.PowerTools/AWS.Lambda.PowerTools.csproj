@@ -10,4 +10,8 @@
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="AspectInjector" Version="2.6.0" />
+    </ItemGroup>
+
 </Project>
