@@ -71,19 +71,14 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
 
         public void OnEntry(AspectEventArgs eventArgs)
         {
-            Console.WriteLine($"OnEntry method {eventArgs.Name}");
-
             var segmentName = !string.IsNullOrWhiteSpace(_segmentName) ? _segmentName : $"## {eventArgs.Name}";
             var nameSpace = GetNamespace();
-            
-            Console.WriteLine($"BeginSubsegment method {eventArgs.Name}, SegmentName: {segmentName}, namespace: {nameSpace}");
-            
+           
             _xRayRecorder.BeginSubsegment(segmentName);
             _xRayRecorder.SetNamespace(nameSpace);
 
             if (_captureAnnotations)
             {
-                Console.WriteLine($"Capturing ColdStart for method: {eventArgs.Name}, ColdStart: {_isColdStart}");
                 _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
                 
                 _isColdStart = false;
@@ -91,21 +86,16 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
                 _isAnnotationsCaptured = true;
 
                 if (_powerToolsConfigurations.IsServiceNameDefined)
-                {
-                    Console.WriteLine($"Capturing ServiceName for method: {eventArgs.Name}, ServiceName: {_powerToolsConfigurations.ServiceName}");
                     _xRayRecorder.AddAnnotation("Service", _powerToolsConfigurations.ServiceName);
-                }
             }
         }
 
         public void OnSuccess(AspectEventArgs eventArgs, object result)
         {
-            Console.WriteLine($"OnSuccess method {eventArgs.Name}");
-
             if (CaptureResponse())
             {
                 var nameSpace = GetNamespace();
-                Console.WriteLine($"Capturing Response for method: {eventArgs.Name}, namespace: {nameSpace}");
+    
                 _xRayRecorder.AddMetadata
                 (
                     nameSpace: nameSpace,
@@ -117,13 +107,10 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
 
         public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
         {
-            Console.WriteLine($"OnException method {eventArgs.Name} --> {exception}");
-
             if (CaptureError())
             {
                 var nameSpace = GetNamespace();
-                Console.WriteLine($"Capturing Error for method: {eventArgs.Name}, namespace: {nameSpace}");
-                
+
                 _xRayRecorder.AddMetadata
                 (
                     nameSpace: nameSpace,
@@ -137,16 +124,11 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
 
         public void OnExit(AspectEventArgs eventArgs)
         {
-            Console.WriteLine($"OnExit method {eventArgs.Name}");
-
             if (_isAnnotationsCaptured)
                 _captureAnnotations = true;
 
             if (!_powerToolsConfigurations.IsSamLocal)
-            {
-                Console.WriteLine($"EndSubsegment method {eventArgs.Name}");
                 _xRayRecorder.EndSubsegment();
-            }
         }
     }
 }
