@@ -8,7 +8,7 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
     {
         private readonly string _segmentName;
         private readonly string _namespace;
-        private readonly TracingCaptureMode _tracingCaptureMode;
+        private readonly TracingCaptureMode _captureMode;
         private readonly IPowerToolsConfigurations _powerToolsConfigurations;
         private readonly IXRayRecorder _xRayRecorder;
         
@@ -20,14 +20,14 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
         (
             string segmentName,
             string @namespace,
-            TracingCaptureMode tracingCaptureMode,
+            TracingCaptureMode captureMode,
             IPowerToolsConfigurations powerToolsConfigurations,
             IXRayRecorder xRayRecorder
         )
         {
             _segmentName = segmentName;
             _namespace = @namespace;
-            _tracingCaptureMode = tracingCaptureMode;
+            _captureMode = captureMode;
             _powerToolsConfigurations = powerToolsConfigurations;
             _xRayRecorder = xRayRecorder;
         }
@@ -39,7 +39,7 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
 
         private bool CaptureResponse()
         {
-            switch (_tracingCaptureMode)
+            switch (_captureMode)
             {
                 case TracingCaptureMode.EnvironmentVariable:
                     return _powerToolsConfigurations.TracerCaptureResponse;
@@ -55,7 +55,7 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
 
         private bool CaptureError()
         {
-            switch (_tracingCaptureMode)
+            switch (_captureMode)
             {
                 case TracingCaptureMode.EnvironmentVariable:
                     return _powerToolsConfigurations.TracerCaptureError;

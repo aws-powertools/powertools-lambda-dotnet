@@ -9,7 +9,7 @@ namespace Amazon.Lambda.PowerTools.Tracing
     {
         public string SegmentName { get; set; } = "";
         public string Namespace { get; set; } = "";
-        public TracingCaptureMode TracingCaptureMode { get; set; } = TracingCaptureMode.EnvironmentVariable;
+        public TracingCaptureMode CaptureMode { get; set; } = TracingCaptureMode.EnvironmentVariable;
         
         private IMethodAspectAttribute _tracingHandler;
         private IMethodAspectAttribute TracingHandler =>
@@ -17,7 +17,7 @@ namespace Amazon.Lambda.PowerTools.Tracing
             (
                 SegmentName,
                 Namespace,
-                TracingCaptureMode,
+                CaptureMode,
                 PowerToolsConfigurations.Instance,
                 XRayRecorder.Instance
             );
