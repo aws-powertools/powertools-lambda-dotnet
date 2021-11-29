@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
 
@@ -15,7 +13,7 @@ namespace AWS.Lambda.PowerTools.Aspects
             OnEntry(eventArgs);
             try
             {
-                var result = base.WrapSync(target, GetArguments(eventArgs, args), eventArgs);
+                var result = base.WrapSync(target, args, eventArgs);
                 OnSuccess(eventArgs, result);
                 return result;
             }
@@ -34,7 +32,7 @@ namespace AWS.Lambda.PowerTools.Aspects
             OnEntry(eventArgs);
             try
             {
-                var result = await base.WrapSync(target, GetArguments(eventArgs, args), eventArgs);
+                var result = await base.WrapSync(target, args, eventArgs);
                 OnSuccess(eventArgs, result);
                 return result;
             }
@@ -46,37 +44,6 @@ namespace AWS.Lambda.PowerTools.Aspects
             {
                 OnExit(eventArgs);
             }
-        }
-
-        private object[] GetArguments(AspectEventArgs eventArgs, object[] args)
-        {
-            if (args is null || !args.Any())
-                return args;
-
-            var extraArg = GetExtraArgument(eventArgs);
-            if (extraArg is null)
-                return args;
-            
-            var parameters = ((MethodInfo) eventArgs.Method).GetParameters();
-            if (parameters.Length != args.Length) 
-                return args;
-
-            var argType = extraArg.GetType();
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                if (parameters[i].ParameterType == argType && args[i] is null)
-                {
-                    args[i] = extraArg;
-                    break;
-                }
-            }
-            
-            return args;
-        }
-        
-        protected virtual object GetExtraArgument(AspectEventArgs eventArgs)
-        {
-            return null;
         }
 
         public virtual void OnEntry(AspectEventArgs eventArgs)
