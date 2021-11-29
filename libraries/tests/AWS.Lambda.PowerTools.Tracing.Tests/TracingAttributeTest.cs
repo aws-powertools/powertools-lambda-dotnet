@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using Amazon.Lambda.PowerTools.Tracing;
 using Amazon.Lambda.PowerTools.Tracing.Internal;
+using AWS.Lambda.PowerTools.Aspects;
 using AWS.Lambda.PowerTools.Core;
-using AWS.Lambda.PowerTools.Events;
 using Moq;
 using Xunit;
 
@@ -18,23 +18,63 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
         public void OnEntry_WhenFirstCall_CapturesColdStart()
         {
             // Arrange
+            const bool isColdStart = true;
             var methodName = Guid.NewGuid().ToString();
             var configurations = new Mock<IPowerToolsConfigurations>();
-            var recorder = new Mock<IXRayRecorder>();
 
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder.Object);
+            var recorder1 = new Mock<IXRayRecorder>();
+            var recorder2 = new Mock<IXRayRecorder>();
+            var recorder3 = new Mock<IXRayRecorder>();
+            var recorder4 = new Mock<IXRayRecorder>();
+
+            var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+                configurations.Object, recorder1.Object);
+            var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+                configurations.Object, recorder2.Object);
+            var handler3 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+                configurations.Object, recorder3.Object);
+            var handler4 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+                configurations.Object, recorder4.Object);
+
             var eventArgs = new AspectEventArgs {Name = methodName};
 
             // Act
-            handler.OnEntry(eventArgs);
+            // Cold Start Execution
+            handler1.OnEntry(eventArgs);
+            handler2.OnEntry(eventArgs);
+            handler2.OnExit(eventArgs);
+            handler1.OnExit(eventArgs);
+
+            // Warm Start Execution
+            handler3.OnEntry(eventArgs);
+            handler4.OnEntry(eventArgs);
+            handler4.OnExit(eventArgs);
+            handler3.OnExit(eventArgs);
 
             // Assert
-            recorder.Verify(v =>
+            recorder1.Verify(v =>
                 v.AddAnnotation(
                     It.Is<string>(i => i == "ColdStart"),
-                    It.Is<bool>(i => i)
+                    It.Is<bool>(i => i == isColdStart)
                 ), Times.Once);
+
+            recorder2.Verify(v =>
+                v.AddAnnotation(
+                    It.IsAny<string>(),
+                    It.IsAny<bool>()
+                ), Times.Never);
+
+            recorder3.Verify(v =>
+                v.AddAnnotation(
+                    It.Is<string>(i => i == "ColdStart"),
+                    It.Is<bool>(i => i == !isColdStart)
+                ), Times.Once);
+
+            recorder4.Verify(v =>
+                v.AddAnnotation(
+                    It.IsAny<string>(),
+                    It.IsAny<bool>()
+                ), Times.Never);
         }
     }
 

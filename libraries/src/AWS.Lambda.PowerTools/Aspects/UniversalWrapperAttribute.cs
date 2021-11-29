@@ -1,10 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using AWS.Lambda.PowerTools.Events;
 
-namespace AWS.Lambda.PowerTools.Attributes
+namespace AWS.Lambda.PowerTools.Aspects
 {
-    public abstract class BaseUniversalWrapperAttribute : Attribute
+    public abstract class UniversalWrapperAttribute : Attribute
     {       
         protected internal virtual T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
         {

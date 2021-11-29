@@ -1,11 +1,10 @@
 using System;
-using AWS.Lambda.PowerTools.Attributes;
+using AWS.Lambda.PowerTools.Aspects;
 using AWS.Lambda.PowerTools.Core;
-using AWS.Lambda.PowerTools.Events;
 
 namespace Amazon.Lambda.PowerTools.Tracing.Internal
 {
-    internal class TracingAspectHandler : IBaseMethodAspectAttribute
+    internal class TracingAspectHandler : IMethodAspectAttribute
     {
         private readonly string _segmentName;
         private readonly string _namespace;

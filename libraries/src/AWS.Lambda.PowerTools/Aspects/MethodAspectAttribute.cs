@@ -2,11 +2,13 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using AWS.Lambda.PowerTools.Events;
+using AspectInjector.Broker;
 
-namespace AWS.Lambda.PowerTools.Attributes
+namespace AWS.Lambda.PowerTools.Aspects
 {
-    public abstract class BaseMethodAspectAttribute : BaseUniversalWrapperAttribute, IBaseMethodAspectAttribute
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+    [Injection(typeof(UniversalWrapperAspect), Inherited = true)]
+    public abstract class MethodAspectAttribute : UniversalWrapperAttribute, IMethodAspectAttribute
     {
         protected internal sealed override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
         {

@@ -1,9 +1,8 @@
 using System;
-using AWS.Lambda.PowerTools.Events;
 
-namespace AWS.Lambda.PowerTools.Attributes
+namespace AWS.Lambda.PowerTools.Aspects
 {
-    public interface IBaseMethodAspectAttribute
+    public interface IMethodAspectAttribute
     {
         void OnEntry(AspectEventArgs eventArgs);
         void OnSuccess(AspectEventArgs eventArgs, object result);

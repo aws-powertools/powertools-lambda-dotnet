@@ -1,8 +1,7 @@
 using System;
 using Amazon.Lambda.PowerTools.Tracing.Internal;
-using AWS.Lambda.PowerTools.Attributes;
+using AWS.Lambda.PowerTools.Aspects;
 using AWS.Lambda.PowerTools.Core;
-using AWS.Lambda.PowerTools.Events;
 
 namespace Amazon.Lambda.PowerTools.Tracing
 {
@@ -12,8 +11,8 @@ namespace Amazon.Lambda.PowerTools.Tracing
         public string Namespace { get; set; } = "";
         public TracingCaptureMode TracingCaptureMode { get; set; } = TracingCaptureMode.EnvironmentVariable;
         
-        private IBaseMethodAspectAttribute _tracingHandler;
-        private IBaseMethodAspectAttribute TracingHandler =>
+        private IMethodAspectAttribute _tracingHandler;
+        private IMethodAspectAttribute TracingHandler =>
             _tracingHandler ??= new TracingAspectHandler
             (
                 SegmentName,

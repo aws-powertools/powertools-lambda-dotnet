@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace AWS.Lambda.PowerTools.Events
+namespace AWS.Lambda.PowerTools.Aspects
 {
     public class AspectEventArgs : EventArgs
     {

@@ -4,32 +4,23 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using AWS.Lambda.PowerTools.Attributes;
-using AWS.Lambda.PowerTools.Events;
+using AspectInjector.Broker;
 
 namespace AWS.Lambda.PowerTools.Aspects
 {
-    public abstract class BaseUniversalWrapperAspect
+    [Aspect(Scope.Global)]
+    public class UniversalWrapperAspect
     {
-        private delegate object Handler(Func<object[], object> next, object[] args, AspectEventArgs eventArgs);
-
-        private static readonly Dictionary<MethodBase, Handler> _delegateCache = new Dictionary<MethodBase, Handler>();
-
-        private static readonly MethodInfo _asyncGenericHandler =
-            typeof(BaseUniversalWrapperAttribute).GetMethod(nameof(BaseUniversalWrapperAttribute.WrapAsync), BindingFlags.NonPublic | BindingFlags.Instance);
-
-        private static readonly MethodInfo _syncGenericHandler =
-            typeof(BaseUniversalWrapperAttribute).GetMethod(nameof(BaseUniversalWrapperAttribute.WrapSync), BindingFlags.NonPublic | BindingFlags.Instance);
-
-        protected object BaseHandle(
-            object instance,
-            Type type,
-            MethodBase method,
-            Func<object[], object> target,
-            string name,
-            object[] args,
-            Type returnType,
-            Attribute[] triggers)
+        [Advice(Kind.Around, Targets = Target.Method)]
+        public object Handle(
+            [Argument(Source.Instance)] object instance,
+            [Argument(Source.Type)] Type type,
+            [Argument(Source.Metadata)] MethodBase method,
+            [Argument(Source.Target)] Func<object[], object> target,
+            [Argument(Source.Name)] string name,
+            [Argument(Source.Arguments)] object[] args,
+            [Argument(Source.ReturnType)] Type returnType,
+            [Argument(Source.Triggers)] Attribute[] triggers)
         {
             var eventArgs = new AspectEventArgs
             {
@@ -42,12 +33,22 @@ namespace AWS.Lambda.PowerTools.Aspects
                 Triggers = triggers
             };
 
-            var wrappers = triggers.OfType<BaseUniversalWrapperAttribute>().ToArray();
+            var wrappers = triggers.OfType<UniversalWrapperAttribute>().ToArray();
             var handler = GetMethodHandler(method, returnType, wrappers);
             return handler(target, args, eventArgs);
         }
+        
+        private delegate object Handler(Func<object[], object> next, object[] args, AspectEventArgs eventArgs);
 
-        private static Handler CreateMethodHandler(Type returnType, IEnumerable<BaseUniversalWrapperAttribute> wrappers)
+        private static readonly Dictionary<MethodBase, Handler> _delegateCache = new Dictionary<MethodBase, Handler>();
+
+        private static readonly MethodInfo _asyncGenericHandler =
+            typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapAsync), BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private static readonly MethodInfo _syncGenericHandler =
+            typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapSync), BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private static Handler CreateMethodHandler(Type returnType, IEnumerable<UniversalWrapperAttribute> wrappers)
         {
             var targetParam = Expression.Parameter(typeof(Func<object[], object>), "orig");
             var eventArgsParam = Expression.Parameter(typeof(AspectEventArgs), "event");
@@ -84,7 +85,7 @@ namespace AWS.Lambda.PowerTools.Aspects
             return handlerCompiled;
         }
 
-        private static Handler GetMethodHandler(MethodBase method, Type returnType, IEnumerable<BaseUniversalWrapperAttribute> wrappers)
+        private static Handler GetMethodHandler(MethodBase method, Type returnType, IEnumerable<UniversalWrapperAttribute> wrappers)
         {
             if (!_delegateCache.TryGetValue(method, out var handler))
             {
