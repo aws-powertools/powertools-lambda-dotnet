@@ -33,6 +33,9 @@ namespace AWS.Lambda.PowerTools.Core
         public string ServiceName =>
             GetEnvironmentVariableOrDefault(Constants.SERVICE_NAME_ENV, "service_undefined");
 
+        public bool IsServiceNameDefined =>
+            !string.IsNullOrWhiteSpace(GetEnvironmentVariable(Constants.SERVICE_NAME_ENV));
+
         public bool TracerCaptureResponse =>
             GetEnvironmentVariableOrDefault(Constants.TRACER_CAPTURE_RESPONSE_ENV, true);
         

@@ -3,6 +3,7 @@ namespace AWS.Lambda.PowerTools.Core
     public interface IPowerToolsConfigurations
     {
         string ServiceName { get; }
+        bool IsServiceNameDefined { get; }
         bool TracerCaptureResponse{ get; }
         bool TracerCaptureError{ get; }
         bool IsSamLocal{ get; }

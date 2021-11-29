@@ -13,20 +13,20 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
         private readonly IXRayRecorder _xRayRecorder;
         
         private static bool _isColdStart = true;
-        private static bool _captureColdStart = true;
-        private bool _isColdStartCaptured;
+        private static bool _captureAnnotations = true;
+        private bool _isAnnotationsCaptured;
 
         internal TracingAspectHandler
         (
             string segmentName,
-            string @namespace,
+            string nameSpace,
             TracingCaptureMode captureMode,
             IPowerToolsConfigurations powerToolsConfigurations,
             IXRayRecorder xRayRecorder
         )
         {
             _segmentName = segmentName;
-            _namespace = @namespace;
+            _namespace = nameSpace;
             _captureMode = captureMode;
             _powerToolsConfigurations = powerToolsConfigurations;
             _xRayRecorder = xRayRecorder;
@@ -81,13 +81,20 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
             _xRayRecorder.BeginSubsegment(segmentName);
             _xRayRecorder.SetNamespace(nameSpace);
 
-            if (_captureColdStart)
+            if (_captureAnnotations)
             {
                 Console.WriteLine($"Capturing ColdStart for method: {eventArgs.Name}, ColdStart: {_isColdStart}");
                 _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
+                
                 _isColdStart = false;
-                _captureColdStart = false;
-                _isColdStartCaptured = true;
+                _captureAnnotations = false;
+                _isAnnotationsCaptured = true;
+
+                if (_powerToolsConfigurations.IsServiceNameDefined)
+                {
+                    Console.WriteLine($"Capturing ServiceName for method: {eventArgs.Name}, ServiceName: {_powerToolsConfigurations.ServiceName}");
+                    _xRayRecorder.AddAnnotation("Service", _powerToolsConfigurations.ServiceName);
+                }
             }
         }
 
@@ -132,8 +139,8 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
         {
             Console.WriteLine($"OnExit method {eventArgs.Name}");
 
-            if (_isColdStartCaptured)
-                _captureColdStart = true;
+            if (_isAnnotationsCaptured)
+                _captureAnnotations = true;
 
             if (!_powerToolsConfigurations.IsSamLocal)
             {

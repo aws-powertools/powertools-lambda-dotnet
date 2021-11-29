@@ -215,6 +215,59 @@ namespace AWS.Lambda.PowerTools.Tests.Core
             
             Assert.Equal(result, serviceName);
         }
+
+        #endregion
+        
+        #region IsServiceNameDefined Tests
+        
+        [Fact]
+        public void IsServiceNameDefined_WhenEnvironmentHasValue_ReturnsTrue()
+        {
+            // Arrange
+            var serviceName = Guid.NewGuid().ToString();
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            systemWrapper.Setup(c =>
+                c.GetEnvironmentVariable(Constants.SERVICE_NAME_ENV)
+            ).Returns(serviceName);
+            
+            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            
+            // Act
+            var result = configurations.IsServiceNameDefined;
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.GetEnvironmentVariable(
+                    It.Is<string>(i => i == Constants.SERVICE_NAME_ENV)
+                ), Times.Once);
+            
+            Assert.True(result);
+        }
+        
+        [Fact]
+        public void IsServiceNameDefined_WhenEnvironmentDoesNotHaveValue_ReturnsFalse()
+        {
+            // Arrange
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            systemWrapper.Setup(c =>
+                c.GetEnvironmentVariable(Constants.SERVICE_NAME_ENV)
+            ).Returns(string.Empty);
+            
+            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            
+            // Act
+            var result = configurations.IsServiceNameDefined;
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.GetEnvironmentVariable(
+                    It.Is<string>(i => i == Constants.SERVICE_NAME_ENV)
+                ), Times.Once);
+            
+            Assert.False(result);
+        }
         
         #endregion
         

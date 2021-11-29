@@ -20,7 +20,20 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             const bool isColdStart = true;
             var methodName = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var serviceName = Guid.NewGuid().ToString();
+            
+            var configurations1 = new Mock<IPowerToolsConfigurations>();
+            configurations1.Setup(c =>
+                c.IsServiceNameDefined
+            ).Returns(true);
+            configurations1.Setup(c =>
+                c.ServiceName
+            ).Returns(serviceName);
+            
+            var configurations2 = new Mock<IPowerToolsConfigurations>();
+            configurations2.Setup(c =>
+                c.IsServiceNameDefined
+            ).Returns(false);
 
             var recorder1 = new Mock<IXRayRecorder>();
             var recorder2 = new Mock<IXRayRecorder>();
@@ -28,13 +41,13 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder4 = new Mock<IXRayRecorder>();
 
             var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder1.Object);
+                configurations1.Object, recorder1.Object);
             var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder2.Object);
+                configurations1.Object, recorder2.Object);
             var handler3 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder3.Object);
+                configurations2.Object, recorder3.Object);
             var handler4 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder4.Object);
+                configurations2.Object, recorder4.Object);
 
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -57,11 +70,23 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
                     It.Is<string>(i => i == "ColdStart"),
                     It.Is<bool>(i => i == isColdStart)
                 ), Times.Once);
+            
+            recorder1.Verify(v =>
+                v.AddAnnotation(
+                    It.Is<string>(i => i == "Service"),
+                    It.Is<string>(i => i == serviceName)
+                ), Times.Once);
 
             recorder2.Verify(v =>
                 v.AddAnnotation(
                     It.IsAny<string>(),
                     It.IsAny<bool>()
+                ), Times.Never);
+            
+            recorder2.Verify(v =>
+                v.AddAnnotation(
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
                 ), Times.Never);
 
             recorder3.Verify(v =>
@@ -69,11 +94,23 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
                     It.Is<string>(i => i == "ColdStart"),
                     It.Is<bool>(i => i == !isColdStart)
                 ), Times.Once);
+            
+            recorder3.Verify(v =>
+                v.AddAnnotation(
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                ), Times.Never);
 
             recorder4.Verify(v =>
                 v.AddAnnotation(
                     It.IsAny<string>(),
                     It.IsAny<bool>()
+                ), Times.Never);
+            
+            recorder3.Verify(v =>
+                v.AddAnnotation(
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
                 ), Times.Never);
         }
     }
