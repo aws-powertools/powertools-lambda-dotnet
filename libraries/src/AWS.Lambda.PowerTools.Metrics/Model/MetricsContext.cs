@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AWS.Lambda.PowerTools.Metrics.Model
+namespace AWS.Lambda.PowerTools.Metrics
 {
     public class MetricsContext : IDisposable
     {
@@ -36,6 +36,11 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
             _rootNode.AWS.ClearMetrics();
         }
 
+        internal void ClearNonDefaultDimensions()
+        {
+            _rootNode.AWS.ClearNonDefaultDimensions();
+        }
+
         public void AddMetric(string key, double value, MetricUnit unit)
         {
             _rootNode.AWS.AddMetric(key, value, unit);
@@ -53,13 +58,16 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
 
         public void AddDimension(DimensionSet dimension)
         {
-
             _rootNode.AWS.AddDimensionSet(dimension);
         }
 
         public void AddDimension(string key, string value)
         {
             _rootNode.AWS.AddDimensionSet(new DimensionSet(key, value));
+        }
+
+        public void SetDefaultDimensions(List<DimensionSet> defaultDimensions){
+            _rootNode.AWS.SetDefaultDimensions(defaultDimensions);
         }
 
         public void SetDimensions(params DimensionSet[] dimensions)

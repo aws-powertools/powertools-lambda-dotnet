@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO.Compression;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace AWS.Lambda.PowerTools.Metrics.Model
+namespace AWS.Lambda.PowerTools.Metrics
 {
     public class MetricDirective
     {
@@ -20,6 +22,9 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
         [JsonIgnore]
         public List<DimensionSet> Dimensions { get; private set; }
 
+        [JsonIgnore]
+        public List<DimensionSet> DefaultDimensions {get; private set; }
+
         public MetricDirective() : this(null, new List<MetricDefinition>(), new List<DimensionSet>()) { }
 
         public MetricDirective(string metricsNamespace) : this(metricsNamespace, new List<MetricDefinition>(), new List<DimensionSet>()) { }
@@ -30,7 +35,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
         {
             Namespace = metricsNamespace;
             Metrics = metrics;
-            Dimensions = defaultDimensions;
+            Dimensions = new List<DimensionSet>();
+            DefaultDimensions = defaultDimensions;
         }
 
         [JsonProperty("Dimensions")]
@@ -38,19 +44,28 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
         {
             get
             {
+                var defaultKeys = DefaultDimensions
+                    .Where(d => d.DimensionKeys.Any())
+                    .Select(s => s.DimensionKeys)
+                    .ToList();
+
                 var keys = Dimensions
                     .Where(d => d.DimensionKeys.Any())
                     .Select(s => s.DimensionKeys)
                     .ToList();
 
-                if(keys.Count == 0)
+                defaultKeys.AddRange(keys);
+
+                if(defaultKeys.Count == 0)
                 {
-                    keys.Add(new List<string>());
+                    defaultKeys.Add(new List<string>());
                 }
 
-                return keys;
+                return defaultKeys;
             }
         }
+
+        
 
         public void AddMetric(string name, double value, MetricUnit unit)
         {
@@ -81,7 +96,15 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
         {
             if (Dimensions.Count < PowertoolsConfig.MaxDimensions)
             {
-                Dimensions.Add(dimension);
+                var matchingKeys = AllDimensionKeys.Where(x => x.Contains(dimension.DimensionKeys[0]));
+                if(!matchingKeys.Any())
+                {
+                    Dimensions.Add(dimension);
+                }
+                else
+                {
+                    Console.WriteLine($"WARN: Failed to Add dimension '{dimension.DimensionKeys[0]}'. Dimension already exists.");
+                }
             }
             else
             {
@@ -94,15 +117,28 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
             Dimensions = dimensions;
         }
 
+        internal void SetDefaultDimensions(List<DimensionSet> defaultDimensions)
+        {
+            DefaultDimensions = defaultDimensions;
+        }
         
         internal Dictionary<string, string> ExpandAllDimensionSets()
         {
             var dimensions = new Dictionary<string, string>();
+
+            foreach (DimensionSet dimensionSet in DefaultDimensions)
+            {
+                foreach (var dimension in dimensionSet.Dimensions)
+                {
+                    dimensions.TryAdd(dimension.Key, dimension.Value);
+                }
+            }
+
             foreach (DimensionSet dimensionSet in Dimensions)
             {
                 foreach (var dimension in dimensionSet.Dimensions)
                 {
-                    dimensions.Add(dimension.Key, dimension.Value);
+                    dimensions.TryAdd(dimension.Key, dimension.Value);
                 }
             }
 

@@ -1,5 +1,6 @@
 ﻿using System;
-using AWS.Lambda.PowerTools.Metrics.Model;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace AWS.Lambda.PowerTools.Metrics
 {
@@ -12,11 +13,11 @@ namespace AWS.Lambda.PowerTools.Metrics
         /// <summary>
         /// Creates Metrics  with no namespace or service name defined - requires that they are defined after initialization
         /// </summary>
-        public Metrics() : this(new MetricsContext(),null, null, true, false) { }
+        public Metrics() : this(new MetricsContext(),null, null, false, false) { }
 
         public Metrics(bool captureColdStart) : this(new MetricsContext(), null, null, captureColdStart, false) {}
 
-        public Metrics(string metricsNamespace, string serviceName) : this(new MetricsContext(), metricsNamespace, serviceName, true, false) { }
+        public Metrics(string metricsNamespace, string serviceName) : this(new MetricsContext(), metricsNamespace, serviceName, false, false) { }
 
         
         public Metrics(string metricsNamespace, string serviceName, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, serviceName, captureColdStart, false) { }
@@ -44,7 +45,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         {
             if(_context.GetMetrics().Count == 100)
             {
-                Flush();
+                Flush(true);
             }
 
             _context.AddMetric(key, value, unit);
@@ -76,7 +77,21 @@ namespace AWS.Lambda.PowerTools.Metrics
             return this;
         }
 
-        public void Flush()
+        public Metrics WithDefaultDimensions(Dictionary<string, string> defaultDimensions){
+            
+            List<DimensionSet> defaultDimensionsList = new List<DimensionSet>();
+            foreach (var item in defaultDimensions)
+            {
+                defaultDimensionsList.Add(new DimensionSet(item.Key, item.Value));
+            }
+            
+            _context.SetDefaultDimensions(defaultDimensionsList);
+
+            return this;
+        }
+
+
+        public void Flush(bool metricsOverflow = false)
         {
             if(_context.IsSerializable 
                 || _captureMetricsEvenIfEmpty){
@@ -85,6 +100,8 @@ namespace AWS.Lambda.PowerTools.Metrics
                 Console.WriteLine(EMFPayload);
 
                 _context.ClearMetrics();
+
+                if(!metricsOverflow){ _context.ClearNonDefaultDimensions(); }
             }
             else {
                 Console.WriteLine("##WARNING## Metrics and Metadata have not been specified. No data will be sent to Cloudwatch Metrics.");
@@ -116,10 +133,6 @@ namespace AWS.Lambda.PowerTools.Metrics
             if (_isColdStart)
             {
                 _context.AddMetric("ColdStart", 1, MetricUnit.COUNT);
-
-                Flush();
-
-                _context.ClearMetrics();
 
                 _isColdStart = false;
             }

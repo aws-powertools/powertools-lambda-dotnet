@@ -28,5 +28,14 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test --no-restore --verbosity normal
+    - name: Test & Code Coverage
+      run: dotnet test --collect:"XPlat Code Coverage" -r ./codecov --no-restore --verbosity normal
+    - name: Codecov
+      uses: codecov/codecov-action@v2.1.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: unittests
+        fail_ci_if_error: true
+        name: codecov-lambda-powertools-dotnet
+        verbose: true
+        directory: ./codecov

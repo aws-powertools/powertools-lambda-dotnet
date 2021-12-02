@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AWS.Lambda.PowerTools.Metrics;
-using AWS.Lambda.PowerTools.Metrics.Model;
 using Microsoft.AspNetCore.Mvc;
 using Web.Models;
 
@@ -13,12 +12,12 @@ namespace Web.Controllers
     [Route("api/[controller]")]
     public class LocationController : ControllerBase
     {
-        private readonly IMetrics _metricsLogger;
+        private readonly IMetrics Metrics;
         private static HttpClient _client;
 
         public LocationController(IMetrics metricsLogger)
         {
-            _metricsLogger = metricsLogger;
+            Metrics = metricsLogger;
             _client = new HttpClient();
         }
 
@@ -28,20 +27,20 @@ namespace Web.Controllers
         {
             try
             {
-                _metricsLogger.AddMetric("GetLocationCount", 1, MetricUnit.COUNT);
+                Metrics.AddMetric("GetLocationCount", 1, MetricUnit.COUNT);
 
                 var watch = System.Diagnostics.Stopwatch.StartNew();
                 var ip = await GetCallingIP();
                 watch.Stop();
 
-                _metricsLogger.AddMetric("GetIPExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
+                Metrics.AddMetric("GetIPExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
 
                 watch.Restart();
                 var locationInfo = await GetIPLocation(ip);
                 watch.Stop();
 
 
-                _metricsLogger.AddMetric("GetIPLocationInfoExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
+                Metrics.AddMetric("GetIPLocationInfoExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
 
                 return JsonSerializer.Serialize(locationInfo, typeof(LocationInfo));
             }
@@ -56,7 +55,7 @@ namespace Web.Controllers
             _client.DefaultRequestHeaders.Accept.Clear();
             _client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
 
-            var msg = await _client.GetStringAsync("http://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext: false);
+            var msg = await _client.GetStringAsync("https://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext: false);
 
             return msg.Replace("\n", "");
         }

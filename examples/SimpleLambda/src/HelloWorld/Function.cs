@@ -1,10 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 
 using AWS.Lambda.PowerTools.Metrics;
-using AWS.Lambda.PowerTools.Metrics.Model;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -12,57 +14,63 @@ using AWS.Lambda.PowerTools.Metrics.Model;
 
 namespace HelloWorld
 {
-    public partial class Function
+    public class Function
     {
-        private static readonly HttpClient client = new HttpClient();
-        
-        //private static async Task<string> GetCallingIP()
-        //{
-        //    client.DefaultRequestHeaders.Accept.Clear();
-        //    client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+        private static readonly HttpClient Client = new HttpClient();
+        private static Metrics Metrics = new Metrics(true);
+                                            // .WithDefaultDimensions(new Dictionary<string, string>{
+                                            //     {"CustomDefaultDimension", "CustomDefaultDimensionValue"}
+                                            // });
 
-        //    var msg = await client.GetStringAsync("http://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext: false);
-
-        //    return msg.Replace("\n", "");
-        //}
-        
-        [Metrics("dotnet-lambdapowertools", "lambda-example")]
-        //[Metrics]
-        public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        private static async Task<string> GetCallingIp()
         {
-            
-            // CAPTURE METHOD EXECUTION METRICS FOR GETCALLINGIP (TWICE - TO REPRESENT THIS SPECIFIC METRIC AS AN ARRAY)
-            //var watch = System.Diagnostics.Stopwatch.StartNew();
-            //var location = await GetCallingIP();
-            //watch.Stop();
-            
-            using (var logger = new Metrics("dotnet-lambdapowertools-single", "lambda-example"))
+            //Metrics.PushSingleMetric("CallingIp",1,MetricUnit.COUNT,"dotnet-lambdapowertools","lambda-example");
+            using (var metrics = new Metrics("dotnet-lambdapowertools", "lambda-example"))
             {
-                logger.AddDimension("Metric Type", "Single");
-                logger.AddMetric("SingleExecution", 1, MetricUnit.COUNT);
+                metrics.AddDimension("Metric Type", "Single");
+                metrics.AddMetric("CallingIp", 1, MetricUnit.COUNT);
             }
-            
-            Metrics.AddDimension("Metric Type", "Aggregate");
-            Metrics.AddDimension("Method Execution Metrics", "getCallingIP");
-            Metrics.AddMetric("ElapsedExecutionTime", 1234, MetricUnit.MILLISECONDS);
-/*
-            //watch = System.Diagnostics.Stopwatch.StartNew();
-            //location = await GetCallingIP();
-            //watch.Stop();
 
-            Metrics.AddMetric("ElapsedExecutionTime", 456124, MetricUnit.MILLISECONDS);
+            Client.DefaultRequestHeaders.Accept.Clear();
+            Client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
 
+            var msg = await Client.GetStringAsync("https://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext: false);
 
-            Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
+            return msg.Replace("\n", "");
+        }
 
-            Metrics.Flush();*/
-
-            return new APIGatewayProxyResponse
+        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            try
             {
-                Body = $"",
-                StatusCode = 200,
-                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
-            };
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                var location = await GetCallingIp();
+                watch.Stop();
+
+                Metrics.AddDimension("Metric Type", "Aggregate");
+                Metrics.AddMetric("ElapsedExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
+                Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
+
+                return new APIGatewayProxyResponse
+                {
+                    Body = JsonSerializer.Serialize(new { location }),
+                    StatusCode = 200,
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new APIGatewayProxyResponse
+                {
+                    Body = JsonSerializer.Serialize(ex.Message),
+                    StatusCode = 500,
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                };
+            }
+            finally
+            {
+                Metrics.Flush();
+            }
         }
     }
 }

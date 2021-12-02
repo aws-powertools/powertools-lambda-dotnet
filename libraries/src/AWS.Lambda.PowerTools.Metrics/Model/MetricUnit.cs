@@ -2,7 +2,7 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace AWS.Lambda.PowerTools.Metrics.Model
+namespace AWS.Lambda.PowerTools.Metrics
 {
     [JsonConverter(typeof(StringEnumConverter))]
     public enum MetricUnit

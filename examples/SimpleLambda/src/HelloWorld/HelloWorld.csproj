@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <AWSProjectType>Lambda</AWSProjectType>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>default</LangVersion>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.PowerTools.Metrics\AWS.Lambda.PowerTools.Metrics.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.PowerTools.Metrics\AWS.Lambda.PowerTools.Metrics.csproj" />
   </ItemGroup>
 </Project>
 

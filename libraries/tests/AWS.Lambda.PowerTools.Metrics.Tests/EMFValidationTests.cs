@@ -1,5 +1,5 @@
 using System;
-using AWS.Lambda.PowerTools.Metrics.Model;
+using System.Collections.Generic;
 using Xunit;
 
 namespace AWS.Lambda.PowerTools.Metrics.Tests
@@ -9,14 +9,14 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
         [Fact]
         public void FlushesAfter100Metrics()
         {
-            // Initialize
+            // Arrange
             Metrics logger = new Metrics("dotnet-powertools-test", "testService");
             for (int i = 0; i <= 100; i++)
             {
                 logger.AddMetric($"Metric Name {i + 1}", i, MetricUnit.COUNT);
             }
 
-            // Execute
+            // Act
             var metricsOutput = logger.Serialize();
 
             // Assert
@@ -26,30 +26,33 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
         [Fact]
         public void CannotAddMoreThan9Dimensions()
         {
-            // Initialize
+            // Arrange
             Metrics logger = new Metrics("dotnet-powertools-test", "testService");
 
-            // Execute & Assert
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            // Act
+            Action act = () =>
             {
                 for (int i = 0; i <= 9; i++)
                 {
                     logger.AddDimension($"Dimension Name {i + 1}", $"Dimension Value {i + 1}");
                 }
-            });
+            };
+
+            // Assert
+            Assert.Throws<ArgumentOutOfRangeException>(act);
         }
 
         [Fact]
         public void SingleMetricSupportsMoreThanOneValue()
         {
-            // Initialize
+            // Arrange
             MetricsContext context = new MetricsContext();
             context.SetNamespace("dotnet-powertools-test");
             context.AddDimension("functionVersion", "$LATEST");
             context.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
             context.AddMetric("Time", 200, MetricUnit.MILLISECONDS);
 
-            // Execute
+            // Act
             var metrics = context.GetMetrics();
 
             // Assert
@@ -60,14 +63,14 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
         [Fact]
         public void ValidateEMFWithDimensionMetricAndMetadata()
         {
-            // Initialize
+            // Arrange
             MetricsContext context = new MetricsContext();
             context.SetNamespace("dotnet-powertools-test");
             context.AddDimension("functionVersion", "$LATEST");
             context.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
             context.AddMetadata("env", "dev");
 
-            // Execute 
+            // Act 
             string result = context.Serialize();
 
             // Assert
@@ -78,26 +81,27 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
         [Fact]
         public void ThrowOnSerializationWithoutNamespace()
         {
-            // Initialize
+            // Arrange
             Metrics logger = new Metrics(false);
             logger.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
        
+            // Act
+            Action act = () => logger.Serialize();
 
-            // Execute & Assert
-            Assert.Throws<ArgumentNullException>("namespace", () =>
-            {
-                var res = logger.Serialize();
-            });
+            // Assert
+            SchemaValidationException exception = Assert.Throws<SchemaValidationException>(act);
+
+            Assert.Equal("EMF schema is invalid. 'namespace' is mandatory and not specified.", exception.Message);
         }
 
         [Fact]
         public void DimensionsMustExistAsMembers()
         {
-            // Initialize
+            // Arrange
             Metrics logger = new Metrics("dotnet-powertools-test", "testService", false);
             logger.AddDimension("functionVersion", "$LATEST");
 
-            // Execute
+            // Act
             string result = logger.Serialize();
 
             // Assert
@@ -106,5 +110,74 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             Assert.Contains("\"Service\":\"testService\",\"functionVersion\":\"$LATEST\""
                 , result);
         }  
+
+        [Fact]
+        public void ThrowOnMetricsWithoutParametersOrEnvVariables(){
+            // Arrange
+            Metrics logger = new Metrics();
+
+            // Act
+            Action act = () => logger.Serialize();
+
+            // Assert
+            SchemaValidationException exception = Assert.Throws<SchemaValidationException>(act);
+
+            Assert.Equal("EMF schema is invalid. 'namespace' is mandatory and not specified.", exception.Message);
+        }
+
+        [Fact]
+        public void CaptureColdStartOnSerialize(){
+            // Arrange
+            Metrics logger = new Metrics("dotnet-powertools-test", "testService", true);
+
+            // Act
+            string result = logger.Serialize();
+
+            // Assert
+            Assert.Contains("\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}]", result);
+            Assert.Contains("\"ColdStart\":1.0", result);
+        }
+
+        [Fact]
+        public void SetAndGetMetricsNamespace(){
+            // Arrange
+            Metrics logger = new Metrics();
+            logger.SetNamespace("dotnet-powertools-test");
+
+            // Act
+            string result = logger.GetNamespace();
+
+            // Assert
+            Assert.Equal("dotnet-powertools-test", result);
+        }
+
+        [Fact]
+        public void AbleToAddMetadata(){
+            // Arrange
+            Metrics logger = new Metrics("dotnet-powertools-test", "testService");
+            logger.AddMetadata("test_metadata", "test_value");
+
+            // Act
+            string result = logger.Serialize();
+
+            // Assert
+            Assert.Contains("\"test_metadata\":\"test_value\"", result);
+        }
+
+        [Fact]
+        public void ValidInitializationWithDefaultDimensions(){
+            // Arrange
+            Metrics logger = new Metrics("dotnet-powertools-test", "testService")
+                            .WithDefaultDimensions(new Dictionary<string, string>
+                            {
+                                {"CustomDefaultDimension", "CustomDefaultDimensionValue"}
+                            });
+            // Act
+            string result = logger.Serialize();
+
+            // Assert
+            Assert.Contains("\"Dimensions\":[[\"CustomDefaultDimension\"]", result);
+            Assert.Contains("\"CustomDefaultDimension\":\"CustomDefaultDimensionValue\"", result);
+        }
     }
 }

@@ -1,22 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-<!--      <ProjectReference Include="..\AWS.Lambda.PowerTools.Generators\AWS.Lambda.PowerTools.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
-      <ProjectReference Include="..\AWS.Lambda.PowerTools\AWS.Lambda.PowerTools.csproj" />
+        <ProjectReference Include="..\AWS.Lambda.PowerTools\AWS.Lambda.PowerTools.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.CodeAnalysis" Version="3.11.0" />
-      <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2">
+      <PackageReference Include="Microsoft.CodeAnalysis" Version="4.0.1" />
+      <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="3.11.0" />
-      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" />
-      <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.11.0" />
-      <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-      <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
-      <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.11.0">
+      <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
+      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" />
+      <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.1" />
+      <PackageReference Include="Microsoft.CSharp" Version="4.7.0" PrivateAssets="all" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
+      <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.0.1">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -29,10 +28,10 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <PackageId>AWS.Lambda.PowerTools.Metrics</PackageId>
-        <Version>0.0.1</Version>
         <Authors>AWSLABS</Authors>
         <Company>Amazon Web Services</Company>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>default</LangVersion>
+        <IsRoslynComponent>true</IsRoslynComponent>
     </PropertyGroup>
 
 </Project>

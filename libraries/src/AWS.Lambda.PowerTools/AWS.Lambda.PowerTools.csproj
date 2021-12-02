@@ -7,7 +7,7 @@
         <Authors>AWSLABS</Authors>
         <Company>Amazon Web Services</Company>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

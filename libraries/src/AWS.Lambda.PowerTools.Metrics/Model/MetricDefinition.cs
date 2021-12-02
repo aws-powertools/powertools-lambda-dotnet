@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace AWS.Lambda.PowerTools.Metrics.Model
+namespace AWS.Lambda.PowerTools.Metrics
 {
     public class MetricDefinition
     {

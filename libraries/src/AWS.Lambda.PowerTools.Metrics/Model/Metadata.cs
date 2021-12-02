@@ -4,7 +4,7 @@ using Newtonsoft.Json.Serialization;
 using AWS.Lambda.PowerTools.Metrics.Serializer;
 using Newtonsoft.Json;
 
-namespace AWS.Lambda.PowerTools.Metrics.Model
+namespace AWS.Lambda.PowerTools.Metrics
 {
     public class Metadata
     {
@@ -31,6 +31,10 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
             _metricDirective.Metrics.Clear();
         }
 
+        internal void ClearNonDefaultDimensions(){
+            _metricDirective.Dimensions.Clear();
+        }
+
         internal void AddMetric(string key, double value, MetricUnit unit)
         {
             _metricDirective.AddMetric(key, value, unit);
@@ -49,6 +53,10 @@ namespace AWS.Lambda.PowerTools.Metrics.Model
         internal void SetDimensions(List<DimensionSet> dimensionSets)
         {
             _metricDirective.SetDimensions(dimensionSets);
+        }
+
+        internal void SetDefaultDimensions(List<DimensionSet> defaultDimensionSets){
+            _metricDirective.SetDefaultDimensions(defaultDimensionSets);
         }
 
         internal List<MetricDefinition> GetMetrics()
