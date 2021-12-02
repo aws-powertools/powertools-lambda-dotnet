@@ -9,7 +9,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         private MetricsContext _context;
         private bool _isColdStart = true;  
         private bool _captureMetricsEvenIfEmpty;      
-
+        
         /// <summary>
         /// Creates Metrics  with no namespace or service name defined - requires that they are defined after initialization
         /// </summary>
