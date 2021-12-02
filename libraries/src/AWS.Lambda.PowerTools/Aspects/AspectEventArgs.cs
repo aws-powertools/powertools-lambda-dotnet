@@ -1,0 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace AWS.Lambda.PowerTools.Aspects
+{
+    public class AspectEventArgs : EventArgs
+    {
+        public object Instance { get; internal set; }
+        public Type Type { get; internal set; }
+        public MethodBase Method { get; internal set; }
+        public string Name { get; internal set; }
+        public IReadOnlyList<object> Args { get; internal set; }
+        public Type ReturnType { get; internal set; }
+        public Attribute[] Triggers { get; internal set; }
+    }
+}
