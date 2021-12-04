@@ -4,7 +4,7 @@ using AWS.Lambda.PowerTools.Core;
 
 namespace Amazon.Lambda.PowerTools.Tracing.Internal
 {
-    internal class TracingAspectHandler : IMethodAspectAttribute
+    internal class TracingAspectHandler : IMethodAspectHandler
     {
         private readonly string _segmentName;
         private readonly string _namespace;

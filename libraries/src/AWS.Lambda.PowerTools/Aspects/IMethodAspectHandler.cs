@@ -2,7 +2,7 @@ using System;
 
 namespace AWS.Lambda.PowerTools.Aspects
 {
-    public interface IMethodAspectAttribute
+    public interface IMethodAspectHandler
     {
         void OnEntry(AspectEventArgs eventArgs);
         void OnSuccess(AspectEventArgs eventArgs, object result);
