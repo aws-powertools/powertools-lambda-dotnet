@@ -66,7 +66,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Web.Extensions
             {
                 string currentNamespace = logger.GetNamespace();
 
-                logger.PushSingleMetric("ColdStart", 1, MetricUnit.COUNT,metricsNamespace: currentNamespace);
+                // logger.PushSingleMetric("ColdStart", 1, MetricUnit.COUNT,metricsNamespace: currentNamespace);
 
                 _isColdStart = false;
             }

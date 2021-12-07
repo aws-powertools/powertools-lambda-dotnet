@@ -1,183 +1,449 @@
 using System;
 using System.Collections.Generic;
 using Xunit;
+using Moq;
+using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Metrics.Internal;
+using AWS.Lambda.PowerTools.Aspects;
+using System.IO;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace AWS.Lambda.PowerTools.Metrics.Tests
 {
-    public class EMFValidationTests
+    public class EmfValidationTests
     {
+        [Trait("Category", "EMFLimits")]
         [Fact]
-        public void FlushesAfter100Metrics()
+        public void When100MetricsAreAdded_FlushAutomatically()
         {
             // Arrange
-            Metrics logger = new Metrics("dotnet-powertools-test", "testService");
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            Metrics logger = new Metrics(
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService"
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act
+            handler.OnEntry(eventArgs);
+
             for (int i = 0; i <= 100; i++)
             {
-                logger.AddMetric($"Metric Name {i + 1}", i, MetricUnit.COUNT);
+                Metrics.AddMetric($"Metric Name {i + 1}", i, MetricUnit.COUNT);
             }
 
-            // Act
-            var metricsOutput = logger.Serialize();
+            handler.OnExit(eventArgs);
+
+            var metricsOutput = consoleOut.ToString();
 
             // Assert
-            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]]}", metricsOutput);
+            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]", metricsOutput);
+
+            // Reset
+            Metrics.ResetForTesting();
         }
 
+        [Trait("Category", "EMFLimits")]
         [Fact]
-        public void CannotAddMoreThan9Dimensions()
+        public void WhenMoreThan9DimensionsAdded_ThrowArgumentOutOfRangeException()
         {
             // Arrange
-            Metrics logger = new Metrics("dotnet-powertools-test", "testService");
+            var methodName = Guid.NewGuid().ToString();
+            Metrics logger = new Metrics(
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService"
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
+            handler.OnEntry(eventArgs);
+
             Action act = () =>
             {
-                for (int i = 0; i <= 9; i++)
+                for (var i = 0; i <= 9; i++)
                 {
-                    logger.AddDimension($"Dimension Name {i + 1}", $"Dimension Value {i + 1}");
+                    Metrics.AddDimension($"Dimension Name {i + 1}", $"Dimension Value {i + 1}");
                 }
             };
 
+            handler.OnExit(eventArgs);
+
             // Assert
             Assert.Throws<ArgumentOutOfRangeException>(act);
+
+            // Reset 
+            Metrics.ResetForTesting();
         }
 
+        [Trait("Category", "SchemaValidation")]
         [Fact]
-        public void SingleMetricSupportsMoreThanOneValue()
+        public void WhenNamespaceNotDefined_ThrowSchemaValidationException()
         {
             // Arrange
-            MetricsContext context = new MetricsContext();
-            context.SetNamespace("dotnet-powertools-test");
-            context.AddDimension("functionVersion", "$LATEST");
-            context.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
-            context.AddMetric("Time", 200, MetricUnit.MILLISECONDS);
+            var methodName = Guid.NewGuid().ToString();
+            Metrics logger = new Metrics(
+                captureMetricsEvenIfEmpty: true
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            var metrics = context.GetMetrics();
+            Action act = () =>{
+                handler.OnEntry(eventArgs);
+                handler.OnExit(eventArgs);
+            };
 
             // Assert
-            Assert.Single(metrics);
-            Assert.Equal(2, metrics[0].Values.Count);
-        }
-
-        [Fact]
-        public void ValidateEMFWithDimensionMetricAndMetadata()
-        {
-            // Arrange
-            MetricsContext context = new MetricsContext();
-            context.SetNamespace("dotnet-powertools-test");
-            context.AddDimension("functionVersion", "$LATEST");
-            context.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
-            context.AddMetadata("env", "dev");
-
-            // Act 
-            string result = context.Serialize();
-
-            // Assert
-            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}],\"Dimensions\":[[\"functionVersion\"]]}]},\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100.0}"
-                , result);
-        }
-
-        [Fact]
-        public void ThrowOnSerializationWithoutNamespace()
-        {
-            // Arrange
-            Metrics logger = new Metrics(false);
-            logger.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
-       
-            // Act
-            Action act = () => logger.Serialize();
-
-            // Assert
-            SchemaValidationException exception = Assert.Throws<SchemaValidationException>(act);
-
+            var exception = Assert.Throws<SchemaValidationException>(act);
             Assert.Equal("EMF schema is invalid. 'namespace' is mandatory and not specified.", exception.Message);
+
+            // RESET
+            Metrics.ResetForTesting();
         }
 
+        [Trait("Category", "SchemaValidation")]
         [Fact]
-        public void DimensionsMustExistAsMembers()
+        public void WhenDimensionsAreAdded_MustExistAsMembers()
         {
             // Arrange
-            Metrics logger = new Metrics("dotnet-powertools-test", "testService", false);
-            logger.AddDimension("functionVersion", "$LATEST");
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            Metrics logger = new Metrics(
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService",
+                captureMetricsEvenIfEmpty: true
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            string result = logger.Serialize();
+            handler.OnEntry(eventArgs);
+            Metrics.AddDimension("functionVersion", "$LATEST");
+            handler.OnExit(eventArgs);
+
+            string result = consoleOut.ToString();
 
             // Assert
             Assert.Contains("\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]"
                 , result);
             Assert.Contains("\"Service\":\"testService\",\"functionVersion\":\"$LATEST\""
                 , result);
-        }  
 
+            // Reset
+            Metrics.ResetForTesting();
+        }        
+
+        [Trait("Category", "SchemaValidation")]
         [Fact]
-        public void ThrowOnMetricsWithoutParametersOrEnvVariables(){
+        public void WhenCaptureColdStartEnabled_ValidateExists()
+        {
             // Arrange
-            Metrics logger = new Metrics();
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            Metrics logger = new Metrics(
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService",
+                captureMetricsEvenIfEmpty: true
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                true,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            Action act = () => logger.Serialize();
+            handler.OnEntry(eventArgs);
+            handler.OnExit(eventArgs);
 
-            // Assert
-            SchemaValidationException exception = Assert.Throws<SchemaValidationException>(act);
-
-            Assert.Equal("EMF schema is invalid. 'namespace' is mandatory and not specified.", exception.Message);
-        }
-
-        [Fact]
-        public void CaptureColdStartOnSerialize(){
-            // Arrange
-            Metrics logger = new Metrics("dotnet-powertools-test", "testService", true);
-
-            // Act
-            string result = logger.Serialize();
+            string result = consoleOut.ToString();
 
             // Assert
             Assert.Contains("\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}]", result);
             Assert.Contains("\"ColdStart\":1.0", result);
+
+            Metrics.ResetForTesting();
         }
 
+        [Trait("Category", "MetricsImplementation")]
         [Fact]
-        public void SetAndGetMetricsNamespace(){
+        public void WhenNamespaceIsDefined_AbleToRetrieveNamespace()
+        {
             // Arrange
+            var methodName = Guid.NewGuid().ToString();
             Metrics logger = new Metrics();
-            logger.SetNamespace("dotnet-powertools-test");
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };            
 
             // Act
-            string result = logger.GetNamespace();
+            handler.OnEntry(eventArgs);
+            Metrics.SetNamespace("dotnet-powertools-test");
 
+            string result = Metrics.GetNamespace();
+            
             // Assert
             Assert.Equal("dotnet-powertools-test", result);
+
+            // Reset
+            Metrics.ResetForTesting();
         }
 
+        [Trait("Category", "MetricsImplementation")]
         [Fact]
-        public void AbleToAddMetadata(){
+        public void WhenMetricsDefined_AbleToAddMetadata()
+        {
             // Arrange
-            Metrics logger = new Metrics("dotnet-powertools-test", "testService");
-            logger.AddMetadata("test_metadata", "test_value");
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            Metrics logger = new Metrics(
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService"
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            string result = logger.Serialize();
+            handler.OnEntry(eventArgs);
+            Metrics.AddMetadata("test_metadata", "test_value");
+            handler.OnExit(eventArgs);
+
+            string result = consoleOut.ToString();
 
             // Assert
             Assert.Contains("\"test_metadata\":\"test_value\"", result);
+
+            // Reset
+            Metrics.ResetForTesting();
+        }
+
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void WhenDefaultDimensionsSet_ValidInitialization()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            var defaultDimensions = new Dictionary<string, string> { { "CustomDefaultDimension", "CustomDefaultDimensionValue" } };
+            Metrics logger = new Metrics(
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService",
+                captureMetricsEvenIfEmpty: true
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act
+            handler.OnEntry(eventArgs);
+            Metrics.SetDefaultDimensions(defaultDimensions);
+            handler.OnExit(eventArgs);
+
+            string result = consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"Dimensions\":[[\"Service\"],[\"CustomDefaultDimension\"]", result);
+            Assert.Contains("\"CustomDefaultDimension\":\"CustomDefaultDimensionValue\"", result);
+
+            // Reset
+            Metrics.ResetForTesting();
+        }
+
+        [Trait("Category", "SchemaValidation")]
+        [Fact]
+        public void WhenDefaultDimensionSet_IgnoreDuplicates()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            var defaultDimensions = new Dictionary<string, string> { { "CustomDefaultDimension", "CustomDefaultDimensionValue" } };
+            Metrics logger = new Metrics(
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService",
+                captureMetricsEvenIfEmpty: true
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act
+            handler.OnEntry(eventArgs);
+            Metrics.SetDefaultDimensions(defaultDimensions);
+            Metrics.SetDefaultDimensions(defaultDimensions);
+            handler.OnExit(eventArgs);
+
+            string result = consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"Dimensions\":[[\"Service\"],[\"CustomDefaultDimension\"]", result);
+            Assert.Contains("\"CustomDefaultDimension\":\"CustomDefaultDimensionValue\"", result);
+
+            // Reset
+            Metrics.ResetForTesting();
         }
 
         [Fact]
-        public void ValidInitializationWithDefaultDimensions(){
+        public void WhenMetricsAndMetadataAdded_ValidateOutput()
+        {
             // Arrange
-            Metrics logger = new Metrics("dotnet-powertools-test", "testService")
-                            .WithDefaultDimensions(new Dictionary<string, string>
-                            {
-                                {"CustomDefaultDimension", "CustomDefaultDimensionValue"}
-                            });
-            // Act
-            string result = logger.Serialize();
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            Metrics logger = new Metrics(
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService"
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act 
+            handler.OnEntry(eventArgs);
+            Metrics.AddDimension("functionVersion", "$LATEST");
+            Metrics.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
+            Metrics.AddMetadata("env", "dev");
+            handler.OnExit(eventArgs);
+
+            var result = consoleOut.ToString();
 
             // Assert
-            Assert.Contains("\"Dimensions\":[[\"CustomDefaultDimension\"]", result);
-            Assert.Contains("\"CustomDefaultDimension\":\"CustomDefaultDimensionValue\"", result);
+            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}],\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]}]},\"Service\":\"testService\",\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100.0}"
+                , result);
+
+            // Reset
+            Metrics.ResetForTesting();
         }
+
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void WhenMetricsWitSameNameAdded_ValidateMetricArray()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            Metrics logger = new Metrics(
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService"
+            );
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false,
+                configurations.Object
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act 
+            handler.OnEntry(eventArgs);
+            Metrics.AddDimension("functionVersion", "$LATEST");
+            Metrics.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
+            Metrics.AddMetric("Time", 200, MetricUnit.MILLISECONDS);            
+            handler.OnExit(eventArgs);
+
+            var result = consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}]"
+                , result);
+            Assert.Contains("\"Time\":[100.0,200.0]"
+                , result);
+
+            // Reset
+            Metrics.ResetForTesting();
+        }        
     }
 }

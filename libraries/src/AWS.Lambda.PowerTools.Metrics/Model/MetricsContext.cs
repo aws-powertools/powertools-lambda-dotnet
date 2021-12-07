@@ -8,7 +8,7 @@ namespace AWS.Lambda.PowerTools.Metrics
     {
         private RootNode _rootNode;
         internal bool IsSerializable {
-            get {
+            get {                
                 return !(GetMetrics().Count == 0 && _rootNode.AWS.CustomMetadata.Count == 0);
             }
         }
@@ -82,15 +82,7 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         public string Serialize()
         {
-            try
-            {
-                return _rootNode.Serialize();
-            }
-            catch (ArgumentNullException)
-            {
-                throw;
-            }
-            
+            return _rootNode.Serialize();
         }
 
         public void Dispose()

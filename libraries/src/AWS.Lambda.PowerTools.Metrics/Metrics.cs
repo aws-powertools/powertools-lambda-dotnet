@@ -1,36 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace AWS.Lambda.PowerTools.Metrics
 {
     public class Metrics : IMetrics
     {
+        private static IMetrics Instance { get; set; }
+
+        private string MetricsNamespace { get; set; }
+        private string ServiceName { get; set; }
+        private bool CaptureEmptyMetricsEnabled { get; set; }
         private MetricsContext _context;
-        private bool _isColdStart = true;  
-        private bool _captureMetricsEvenIfEmpty;      
-        
+
         /// <summary>
         /// Creates Metrics  with no namespace or service name defined - requires that they are defined after initialization
         /// </summary>
-        public Metrics() : this(new MetricsContext(),null, null, false, false) { }
-
-        public Metrics(bool captureColdStart) : this(new MetricsContext(), null, null, captureColdStart, false) {}
-
-        public Metrics(string metricsNamespace, string serviceName) : this(new MetricsContext(), metricsNamespace, serviceName, false, false) { }
-
-        
-        public Metrics(string metricsNamespace, string serviceName, bool captureColdStart) : this(new MetricsContext(), metricsNamespace, serviceName, captureColdStart, false) { }
-
-        private Metrics(MetricsContext metricsContext, string metricsNamespace, string serviceName, bool captureColdStart, bool captureMetricsEvenIfEmpty)
+       public Metrics(string metricsNamespace = null, string serviceName = null, bool captureMetricsEvenIfEmpty = false)
         {
-            _context = metricsContext;
-            _captureMetricsEvenIfEmpty = captureMetricsEvenIfEmpty;
+            if (Instance == null)
+            {
+                MetricsNamespace = metricsNamespace;
+                ServiceName = serviceName;
+                CaptureEmptyMetricsEnabled = captureMetricsEvenIfEmpty;
 
-            ConfigureContext(in _context, metricsNamespace, serviceName);
-
-            if(captureColdStart){
-                CaptureColdStart();
+                Instance = this;
+                _context = InitializeContext(MetricsNamespace, ServiceName, null);
             }
         }
 
@@ -41,132 +35,158 @@ namespace AWS.Lambda.PowerTools.Metrics
         /// <param name="value"></param>
         /// <param name="unit"></param>
         /// <returns></returns>
-        public Metrics AddMetric(string key, double value, MetricUnit unit = MetricUnit.NONE)
+        void IMetrics.AddMetric(string key, double value, MetricUnit unit)
         {
-            if(_context.GetMetrics().Count == 100)
+            if (_context.GetMetrics().Count == 100)
             {
-                Flush(true);
+                Instance.Flush(true);
             }
 
             _context.AddMetric(key, value, unit);
-
-            return this;
         }
 
-        public Metrics SetNamespace(string metricsNamespace)
+        public static void AddMetric(string key, double value, MetricUnit unit = MetricUnit.NONE)
+        {
+            Instance.AddMetric(key, value, unit);
+        }      
+
+        void IMetrics.SetNamespace(string metricsNamespace)
         {
             _context.SetNamespace(metricsNamespace);
-
-            return this;
         }
 
-        public string GetNamespace()
+        public static void SetNamespace(string metricsNamespace){
+            Instance.SetNamespace(metricsNamespace);
+        }
+
+        string IMetrics.GetNamespace()
         {
             return _context.GetNamespace();
         }
 
-        public Metrics AddDimension(string key, string value)
+        public static string GetNamespace(){
+            return Instance.GetNamespace();
+        }
+
+        void IMetrics.AddDimension(string key, string value)
         {
             _context.AddDimension(new DimensionSet(key, value));
-            return this;
         }
 
-        public Metrics AddMetadata(string key, dynamic value)
+        public static void AddDimension(string key, string value){
+            Instance.AddDimension(key, value);
+        }
+
+        void IMetrics.AddMetadata(string key, dynamic value)
         {
             _context.AddMetadata(key, value);
-            return this;
         }
 
-        public Metrics WithDefaultDimensions(Dictionary<string, string> defaultDimensions){
-            
-            List<DimensionSet> defaultDimensionsList = new List<DimensionSet>();
-            foreach (var item in defaultDimensions)
-            {
-                defaultDimensionsList.Add(new DimensionSet(item.Key, item.Value));
-            }
-            
-            _context.SetDefaultDimensions(defaultDimensionsList);
-
-            return this;
+        public static void AddMetadata(string key, dynamic value){
+            Instance.AddMetadata(key, value);
         }
 
+        void IMetrics.SetDefaultDimensions(Dictionary<string, string> defaultDimensions){
+            _context.SetDefaultDimensions(DictionaryToList(defaultDimensions));
+        }
 
-        public void Flush(bool metricsOverflow = false)
+        public static void SetDefaultDimensions(Dictionary<string, string> defaultDimensions){
+            Instance.SetDefaultDimensions(defaultDimensions);
+        }
+
+        public static void Flush(){
+            Instance.Flush(false);
+        }
+
+        void IMetrics.Flush(bool metricsOverflow)
         {
-            if(_context.IsSerializable 
-                || _captureMetricsEvenIfEmpty){
-                var EMFPayload = _context.Serialize();
+            if (_context.IsSerializable
+                || CaptureEmptyMetricsEnabled)
+            {
+                var emfPayload = _context.Serialize();
 
-                Console.WriteLine(EMFPayload);
+                Console.WriteLine(emfPayload);
 
                 _context.ClearMetrics();
 
-                if(!metricsOverflow){ _context.ClearNonDefaultDimensions(); }
+                if (!metricsOverflow) { _context.ClearNonDefaultDimensions(); }
             }
-            else {
+            else
+            {
                 Console.WriteLine("##WARNING## Metrics and Metadata have not been specified. No data will be sent to Cloudwatch Metrics.");
             }
         }
 
         private void Flush(MetricsContext context)
         {
-            var EMFPayload = context.Serialize();
+            var emfPayload = context.Serialize();
 
-            Console.WriteLine(EMFPayload);
+            Console.WriteLine(emfPayload);
         }
 
         public string Serialize()
         {
-            try
-            {
-                return _context.Serialize();
-            }
-            catch (ArgumentException)
-            {
-                throw;
-            }
+            return _context.Serialize();
         }
 
-        
-        private void CaptureColdStart()
+        void IMetrics.PushSingleMetric(string metricName, double value, MetricUnit unit, string metricsNamespace, string serviceName, Dictionary<string, string> defaultDimensions)
         {
-            if (_isColdStart)
-            {
-                _context.AddMetric("ColdStart", 1, MetricUnit.COUNT);
+            using var context = InitializeContext(metricsNamespace, serviceName, defaultDimensions);
+            context.AddMetric(metricName, value, unit);
 
-                _isColdStart = false;
-            }
+            Flush(context);
         }
 
-        public void PushSingleMetric(string metricName, double value, MetricUnit unit, string metricsNamespace = null, string serviceName = null){
-            using(var context = new MetricsContext()){
+        public static void PushSingleMetric(string metricName, double value, MetricUnit unit, string metricsNamespace = null, string serviceName = null, Dictionary<string, string> defaultDimensions = null){
+            Instance.PushSingleMetric(metricName, value, unit, metricsNamespace, serviceName, defaultDimensions);
+        } 
 
-                ConfigureContext(in context, metricsNamespace, serviceName);
-
-                context.AddMetric(metricName, value, unit);
-
-                Flush(context);
-            }            
-        }
-
-        private void ConfigureContext(in MetricsContext context, string metricsNamespace, string serviceName)
+        private MetricsContext InitializeContext(string metricsNamespace, string serviceName, Dictionary<string, string> defaultDimensions)
         {
+            var context = new MetricsContext();
+
             if (!string.IsNullOrEmpty(metricsNamespace))
             {
                 context.SetNamespace(metricsNamespace);
             }
-            else if(!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE")))
+            else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE")))
             {
                 context.SetNamespace(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE"));
             }
-            
+
             PowertoolsConfig.Service = serviceName;
-            context.AddDimension("Service", PowertoolsConfig.Service);
+
+            var defaultDimensionsList = DictionaryToList(defaultDimensions);
+
+            // Add service as a default dimension
+            defaultDimensionsList.Add(new DimensionSet("Service", PowertoolsConfig.Service));
+
+            context.SetDefaultDimensions(defaultDimensionsList);
+
+            return context;
+        }
+
+        private List<DimensionSet> DictionaryToList(Dictionary<string, string> defaultDimensions)
+        {
+            List<DimensionSet> defaultDimensionsList = new List<DimensionSet>();
+            if (defaultDimensions != null)
+            {
+                foreach (var item in defaultDimensions)
+                {
+                    defaultDimensionsList.Add(new DimensionSet(item.Key, item.Value));
+                }
+            }
+
+            return defaultDimensionsList;
         }
 
         public void Dispose()
         {
             Flush();
+        }
+
+        internal static void ResetForTesting(){
+            Instance = null;
         }
     }
 }
