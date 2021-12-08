@@ -1,12 +1,10 @@
 using System;
 using AWS.Lambda.PowerTools.Aspects;
-using AWS.Lambda.PowerTools.Core;
 
 namespace AWS.Lambda.PowerTools.Metrics.Internal
 {
     internal class MetricsAspectHandler : IMethodAspectHandler
     {
-        private readonly IPowerToolsConfigurations _powerToolsConfigurations;
         private readonly IMetrics _metrics;
         private readonly bool _captureColdStartEnabled;
         private static bool _isColdStart = true;
@@ -14,13 +12,11 @@ namespace AWS.Lambda.PowerTools.Metrics.Internal
         internal MetricsAspectHandler
         (
             IMetrics metricsInstance,
-            bool captureColdStartEnabled,
-            IPowerToolsConfigurations powerToolsConfigurations
+            bool captureColdStartEnabled
         )
         {
             _metrics = metricsInstance;
             _captureColdStartEnabled = captureColdStartEnabled;
-            _powerToolsConfigurations = powerToolsConfigurations;
         }
 
         public void OnExit(AspectEventArgs eventArgs)

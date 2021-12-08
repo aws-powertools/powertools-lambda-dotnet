@@ -9,16 +9,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Serializer
 
         public override void WriteJson(JsonWriter writer, DateTime value, JsonSerializer serializer)
         {
-            long ms;
-            if(value is DateTime dateTime)
-            {
-                ms = (long)(dateTime.ToUniversalTime() - UnixEpoch).TotalMilliseconds;
-            }
-            else
-            {
-                throw new JsonException("Expected Date object value.");
-            }
-
+            var ms = (long)(value.ToUniversalTime() - UnixEpoch).TotalMilliseconds;
+            
             if(ms < 0)
             {
                 throw new JsonException("Invalid date");

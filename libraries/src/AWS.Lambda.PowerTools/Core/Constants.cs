@@ -6,5 +6,7 @@ namespace AWS.Lambda.PowerTools.Core
         internal const string SAM_LOCAL_ENV = "AWS_SAM_LOCAL";
         internal const string TRACER_CAPTURE_RESPONSE_ENV = "POWERTOOLS_TRACER_CAPTURE_RESPONSE";
         internal const string TRACER_CAPTURE_ERROR_ENV = "POWERTOOLS_TRACER_CAPTURE_ERROR";
+        internal const string METRICS_NAMESPACE_ENV = "POWERTOOLS_METRICS_NAMESPACE";
+        
     }
 }

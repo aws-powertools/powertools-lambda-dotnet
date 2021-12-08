@@ -4,9 +4,10 @@ namespace AWS.Lambda.PowerTools.Core
     {
         string ServiceName { get; }
         bool IsServiceNameDefined { get; }
-        bool TracerCaptureResponse{ get; }
-        bool TracerCaptureError{ get; }
-        bool IsSamLocal{ get; }
+        bool TracerCaptureResponse { get; }
+        bool TracerCaptureError { get; }
+        bool IsSamLocal { get; }
+        string MetricsNamespace { get; }
         
         string GetEnvironmentVariable(string variable);
         string GetEnvironmentVariableOrDefault(string variable, string defaultValue);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AWS.Lambda.PowerTools.Core;
 using Newtonsoft.Json;
 
 namespace AWS.Lambda.PowerTools.Metrics
@@ -67,9 +68,9 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         public void AddMetric(string name, double value, MetricUnit unit)
         {
-            if (Metrics.Count < PowertoolsConfig.MaxMetrics)
+            if (Metrics.Count < PowerToolsConfigurations.MaxMetrics)
             {
-                var metric = Metrics.FirstOrDefault(metric => metric.Name == name);
+                var metric = Metrics.FirstOrDefault(m => m.Name == name);
                 if (metric != null)
                 {
                     metric.AddValue(value);
@@ -92,7 +93,7 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         internal void AddDimension(DimensionSet dimension)
         {
-            if (Dimensions.Count < PowertoolsConfig.MaxDimensions)
+            if (Dimensions.Count < PowerToolsConfigurations.MaxDimensions)
             {
                 var matchingKeys = AllDimensionKeys.Where(x => x.Contains(dimension.DimensionKeys[0]));
                 if(!matchingKeys.Any())
