@@ -50,5 +50,13 @@ namespace AWS.Lambda.PowerTools.Core
         
         public string MetricsNamespace =>
             GetEnvironmentVariable(Constants.METRICS_NAMESPACE_ENV);
+        
+        public string LogLevel =>
+            GetEnvironmentVariable(Constants.LOG_LEVEL_NAME_ENV);
+
+        public double? LoggerSampleRate =>
+            double.TryParse(_systemWrapper.GetEnvironmentVariable(Constants.LOGGER_SAMPLE_RATE_NAME_ENV), out var result)
+                ? result
+                : null;
     }
 }

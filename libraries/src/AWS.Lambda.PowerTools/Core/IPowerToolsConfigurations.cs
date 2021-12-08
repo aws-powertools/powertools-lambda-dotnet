@@ -8,6 +8,8 @@ namespace AWS.Lambda.PowerTools.Core
         bool TracerCaptureError { get; }
         bool IsSamLocal { get; }
         string MetricsNamespace { get; }
+        string LogLevel { get; }
+        double? LoggerSampleRate { get; }
         
         string GetEnvironmentVariable(string variable);
         string GetEnvironmentVariableOrDefault(string variable, string defaultValue);
