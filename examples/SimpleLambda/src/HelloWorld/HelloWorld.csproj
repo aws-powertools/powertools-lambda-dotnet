@@ -15,7 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.PowerTools.Logging\AWS.Lambda.PowerTools.Logging.csproj" />
     <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.PowerTools.Metrics\AWS.Lambda.PowerTools.Metrics.csproj" />
+    <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.PowerTools.Tracing\AWS.Lambda.PowerTools.Tracing.csproj" />
   </ItemGroup>
 </Project>
 
