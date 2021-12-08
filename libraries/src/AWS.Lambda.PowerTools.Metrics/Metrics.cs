@@ -137,13 +137,18 @@ namespace AWS.Lambda.PowerTools.Metrics
         {
             var context = new MetricsContext();
 
-            if (string.IsNullOrWhiteSpace(metricsNamespace))
-                metricsNamespace = _powerToolsConfigurations.MetricsNamespace;
-            
+            if (!string.IsNullOrEmpty(metricsNamespace))
+            {
+                context.SetNamespace(metricsNamespace);
+            }
+            else if (!string.IsNullOrEmpty(_powerToolsConfigurations.MetricsNamespace))
+            {
+                context.SetNamespace(_powerToolsConfigurations.MetricsNamespace);
+            }
+
             if (string.IsNullOrWhiteSpace(serviceName))
                 serviceName = _powerToolsConfigurations.ServiceName;
-
-            context.SetNamespace(metricsNamespace);
+            
             var defaultDimensionsList = DictionaryToList(defaultDimensions);
 
             // Add service as a default dimension
