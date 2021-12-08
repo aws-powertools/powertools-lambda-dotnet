@@ -9,5 +9,6 @@ namespace AWS.Lambda.PowerTools.Core
         internal const string METRICS_NAMESPACE_ENV = "POWERTOOLS_METRICS_NAMESPACE";
         internal const string LOG_LEVEL_NAME_ENV = "LOG_LEVEL";
         internal const string LOGGER_SAMPLE_RATE_NAME_ENV = "POWERTOOLS_LOGGER_SAMPLE_RATE";
+        internal const string LOGGER_LOG_EVENT_NAME_ENV = "POWERTOOLS_LOGGER_LOG_EVENT";
     }
 }

@@ -11,9 +11,9 @@ namespace AWS.Lambda.PowerTools.Logging
     {
         private LogLevel? _logLevel;
         private double? _samplingRate;
+        private bool? _logEvent;
         
         public string ServiceName { get; set; }
-        public bool LogEvent { get; set; }
 
         public LogLevel LogLevel
         {
@@ -25,6 +25,12 @@ namespace AWS.Lambda.PowerTools.Logging
             get => _samplingRate.GetValueOrDefault();
             set => _samplingRate = value;
         }
+        
+        public bool LogEvent
+        {
+            get => _logEvent.GetValueOrDefault();
+            set => _logEvent = value;
+        }
 
         protected override IMethodAspectHandler CreateHandler()
         {
@@ -33,7 +39,7 @@ namespace AWS.Lambda.PowerTools.Logging
                 ServiceName,
                 _logLevel,
                 _samplingRate,
-                LogEvent,
+                _logEvent,
                 PowerToolsConfigurations.Instance,
                 SystemWrapper.Instance
             );

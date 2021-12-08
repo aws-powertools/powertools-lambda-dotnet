@@ -10,6 +10,7 @@ namespace AWS.Lambda.PowerTools.Core
         string MetricsNamespace { get; }
         string LogLevel { get; }
         double? LoggerSampleRate { get; }
+        bool LoggerLogEvent { get; }
         
         string GetEnvironmentVariable(string variable);
         string GetEnvironmentVariableOrDefault(string variable, string defaultValue);

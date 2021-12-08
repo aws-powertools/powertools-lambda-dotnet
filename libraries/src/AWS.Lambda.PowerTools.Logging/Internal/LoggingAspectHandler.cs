@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Amazon.Lambda.Core;
 using AWS.Lambda.PowerTools.Aspects;
@@ -12,7 +13,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         private readonly string _serviceName;
         private readonly LogLevel? _logLevel;
         private readonly double? _samplingRate;
-        private readonly bool _logEvent;
+        private readonly bool? _logEvent;
         private readonly IPowerToolsConfigurations _powerToolsConfigurations;
         private readonly ISystemWrapper _systemWrapper;
 
@@ -25,7 +26,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             string serviceName,
             LogLevel? logLevel,
             double? samplingRate,
-            bool logEvent,
+            bool? logEvent,
             IPowerToolsConfigurations powerToolsConfigurations,
             ISystemWrapper systemWrapper
         )
@@ -55,6 +56,20 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             
             Logger.AppendKey("ColdStart", _isColdStart);
 
+            InjectLambdaContext(eventArgs);
+
+            _isColdStart = false;
+            _initializeContext = false;
+            _isContextInitialized = true;
+
+            if (!(_logEvent ?? _powerToolsConfigurations.LoggerLogEvent)) 
+                return;
+            
+            LogEvent(eventArgs.Args.FirstOrDefault());
+        }
+
+        private void InjectLambdaContext(AspectEventArgs eventArgs)
+        {
             if (eventArgs.Args.FirstOrDefault(x => x is ILambdaContext) is ILambdaContext context)
             {
                 Logger.AppendKey("FunctionName", context.FunctionName);
@@ -69,17 +84,27 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                 _systemWrapper.LogLine(
                     $"Skipping Lambda Context injection because ILambdaContext context parameter not found.");
             }
+        }
 
-            _isColdStart = false;
-            _initializeContext = false;
-            _isContextInitialized = true;
-
-            if (!_logEvent) return;
-
-            var eventArg = eventArgs.Args.FirstOrDefault();
+        private void LogEvent(object eventArg)
+        {
             if (eventArg is not null)
             {
-                Logger.LogInformation("{event}", eventArg);
+                if (eventArg is Stream)
+                {
+                    try
+                    {
+                        Logger.LogInformation("{event}", eventArg);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError(e,"Failed to log event from supplied input stream.");
+                    }
+                }
+                else
+                {
+                    Logger.LogInformation("{event}", eventArg);
+                }
             }
             else if (IsEnabled(LogLevel.Debug))
             {

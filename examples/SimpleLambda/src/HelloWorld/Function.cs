@@ -7,7 +7,6 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 using AWS.Lambda.PowerTools.Logging;
 using AWS.Lambda.PowerTools.Metrics;
-using Microsoft.Extensions.Logging;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -15,13 +14,6 @@ using Microsoft.Extensions.Logging;
 
 namespace HelloWorld
 {
-    public class MyClass
-    {
-        public string FirsName { get; set; }
-        public string LastName { get; set; }
-        public List<MyClass> Children { get; set; }
-    }
-    
     public class Function
     {
         private static readonly HttpClient Client = new HttpClient();
@@ -46,33 +38,6 @@ namespace HelloWorld
             return msg.Replace("\n", "");
         }
 
-        private static List<MyClass> GetLogData()
-        {
-            return new()
-            {
-                new MyClass
-                {
-                    FirsName = "Amir",
-                    LastName = "Khairalomoum",
-                    Children = new List<MyClass>()
-                    {
-                        new() {FirsName = "Ava", LastName = "Khairalomoum"},
-                        new() {FirsName = "Ayden", LastName = "Khairalomoum"}
-                    }
-                },
-                new MyClass
-                {
-                    FirsName = "Angelique",
-                    LastName = "Terrier",
-                    Children = new List<MyClass>()
-                    {
-                        new() {FirsName = "Ava", LastName = "Khairalomoum"},
-                        new() {FirsName = "Ayden", LastName = "Khairalomoum"}
-                    }
-                }
-            };
-        }
-
         [Metrics(serviceName: "lambda-example", metricsNamespace: "dotnet-lambdapowertools", captureColdStart: true)]
         [Logging(LogEvent = true, SamplingRate = 0.7)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
@@ -80,8 +45,7 @@ namespace HelloWorld
             try
             {
                 Logger.AppendKey("test", "willBeLogged");
-                Logger.LogInformation("{people}", GetLogData());
-                
+
                 var watch = System.Diagnostics.Stopwatch.StartNew();
                 var location = await GetCallingIp();
                 watch.Stop();   
