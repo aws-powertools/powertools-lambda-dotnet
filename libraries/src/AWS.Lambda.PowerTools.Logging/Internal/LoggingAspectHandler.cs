@@ -75,11 +75,11 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             _isContextInitialized = true;
 
             if (!_logEvent) return;
-            
-            var eventArg = eventArgs.Args.FirstOrDefault(x => x is not ILambdaContext);
+
+            var eventArg = eventArgs.Args.FirstOrDefault();
             if (eventArg is not null)
             {
-                    
+                Logger.LogInformation("{event}", eventArg);
             }
             else if (IsEnabled(LogLevel.Debug))
             {
@@ -104,6 +104,15 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             
             Logger.RemoveAllKeys();
             _initializeContext = true;
+        }
+
+        internal void ResetForTest()
+        { 
+            _isColdStart = true; 
+            _initializeContext = true; 
+            _isContextInitialized = false;
+            Logger.LoggerProvider = null;
+            Logger.RemoveAllKeys();
         }
     }
 }
