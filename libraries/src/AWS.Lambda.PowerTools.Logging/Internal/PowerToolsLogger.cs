@@ -28,35 +28,36 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         private LoggerConfiguration GetCurrentConfig()
         {
             var currConfig = _getCurrentConfig();
+            var minimumLevel = _powerToolsConfigurations.GetLogLevel(currConfig?.MinimumLevel);
+            var samplingRate = currConfig?.SamplingRate ?? _powerToolsConfigurations.LoggerSampleRate;
 
             var config = new LoggerConfiguration
             {
                 ServiceName = currConfig?.ServiceName,
-                MinimumLevel = _powerToolsConfigurations.GetLogLevel(currConfig?.MinimumLevel),
-                SamplingRate = currConfig?.SamplingRate ?? _powerToolsConfigurations.LoggerSampleRate
+                MinimumLevel = minimumLevel,
+                SamplingRate = samplingRate
             };
 
-            if (!config.SamplingRate.HasValue)
+            if (!samplingRate.HasValue)
                 return config;
 
-            if (config.SamplingRate.Value < 0 || config.SamplingRate.Value > 1)
+            if (samplingRate.Value < 0 || samplingRate.Value > 1)
             {
-                if (IsEnabled(LogLevel.Debug))
+                if (minimumLevel is LogLevel.Debug or LogLevel.Trace)
                     _systemWrapper.LogLine(
-                        $"Skipping sampling rate configuration because of invalid value. Sampling rate: {config.SamplingRate.Value}");
+                        $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate.Value}");
                 config.SamplingRate = null;
                 return config;
             }
             
-            if(config.SamplingRate.Value == 0)
+            if(samplingRate.Value == 0)
                 return config;
 
             var sample = _systemWrapper.GetRandom();
-            if (config.SamplingRate.Value > sample)
+            if (samplingRate.Value > sample)
             {
-                if (IsEnabled(LogLevel.Debug))
-                    _systemWrapper.LogLine(
-                        $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {config.SamplingRate.Value}, Sampler Value: {sample}.");
+                _systemWrapper.LogLine(
+                    $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate.Value}, Sampler Value: {sample}.");
                 config.MinimumLevel = LogLevel.Debug;
             }
 
