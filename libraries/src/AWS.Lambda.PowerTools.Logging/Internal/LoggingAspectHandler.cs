@@ -13,8 +13,8 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         private readonly LogLevel? _logLevel;
         private readonly double? _samplingRate;
         private readonly bool _logEvent;
+        private readonly IPowerToolsConfigurations _powerToolsConfigurations;
         private readonly ISystemWrapper _systemWrapper;
-        private readonly LogLevelHelper _logLevelHelper;
 
         private static bool _isColdStart = true;
         private static bool _initializeContext = true;
@@ -34,12 +34,12 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             _logLevel = logLevel;
             _samplingRate = samplingRate;
             _logEvent = logEvent;
+            _powerToolsConfigurations = powerToolsConfigurations;
             _systemWrapper = systemWrapper;
-            _logLevelHelper = new LogLevelHelper(powerToolsConfigurations);
         }
 
         private bool IsEnabled(LogLevel logLevel) =>
-            logLevel != LogLevel.None && logLevel >= _logLevelHelper.GetLogLevel(_logLevel);
+            logLevel != LogLevel.None && logLevel >= _powerToolsConfigurations.GetLogLevel(_logLevel);
         
         public void OnEntry(AspectEventArgs eventArgs)
         {

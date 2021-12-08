@@ -12,14 +12,13 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         private readonly Func<LoggerConfiguration> _getCurrentConfig;
         private readonly IPowerToolsConfigurations _powerToolsConfigurations;
         private readonly ISystemWrapper _systemWrapper;
-        private readonly LogLevelHelper _logLevelHelper;
 
         private LoggerConfiguration _currentConfig;
         private LoggerConfiguration CurrentConfig => 
             _currentConfig ??= GetCurrentConfig();
         
         private LogLevel MinimumLevel => 
-            CurrentConfig.MinimumLevel ?? LogLevelHelper.DefaultLogLevel;
+            CurrentConfig.MinimumLevel ?? PowerToolsConfigurationsExtension.DefaultLogLevel;
 
         private string ServiceName => 
             !string.IsNullOrWhiteSpace(CurrentConfig.ServiceName)
@@ -32,7 +31,8 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
             var config = new LoggerConfiguration
             {
-                MinimumLevel = _logLevelHelper.GetLogLevel(currConfig?.MinimumLevel),
+                ServiceName = currConfig?.ServiceName,
+                MinimumLevel = _powerToolsConfigurations.GetLogLevel(currConfig?.MinimumLevel),
                 SamplingRate = currConfig?.SamplingRate ?? _powerToolsConfigurations.LoggerSampleRate
             };
 
@@ -65,11 +65,11 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
         public PowerToolsLogger(
             string name,
-            Func<LoggerConfiguration> getCurrentConfig, IPowerToolsConfigurations powerToolsConfigurations,
-            ISystemWrapper systemWrapper) =>
-            (_name, _getCurrentConfig, _powerToolsConfigurations, _systemWrapper, _logLevelHelper) = (name,
-                getCurrentConfig, powerToolsConfigurations, systemWrapper,
-                new LogLevelHelper(powerToolsConfigurations));
+            IPowerToolsConfigurations powerToolsConfigurations,
+            ISystemWrapper systemWrapper,
+            Func<LoggerConfiguration> getCurrentConfig) =>
+            (_name, _powerToolsConfigurations, _systemWrapper, _getCurrentConfig) = (name,
+                powerToolsConfigurations, systemWrapper, getCurrentConfig);
 
         public IDisposable BeginScope<TState>(TState state) => default!;
 

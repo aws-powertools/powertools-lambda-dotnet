@@ -113,7 +113,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             Assert.True((bool) allKeys["ColdStart"]);
             Assert.False(allKeys.ContainsKey("FunctionName"));
             Assert.False(allKeys.ContainsKey("FunctionVersion"));
-            Assert.False(allKeys.ContainsKey("FunctionMemorySize")); ;
+            Assert.False(allKeys.ContainsKey("FunctionMemorySize"));
             Assert.False(allKeys.ContainsKey("FunctionArn"));
             Assert.False(allKeys.ContainsKey("FunctionRequestId"));
             
@@ -160,7 +160,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             Assert.True((bool) allKeys["ColdStart"]);
             Assert.False(allKeys.ContainsKey("FunctionName"));
             Assert.False(allKeys.ContainsKey("FunctionVersion"));
-            Assert.False(allKeys.ContainsKey("FunctionMemorySize")); ;
+            Assert.False(allKeys.ContainsKey("FunctionMemorySize"));
             Assert.False(allKeys.ContainsKey("FunctionArn"));
             Assert.False(allKeys.ContainsKey("FunctionRequestId"));
             

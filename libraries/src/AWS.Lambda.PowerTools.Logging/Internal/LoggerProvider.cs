@@ -17,9 +17,10 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
         public ILogger CreateLogger(string categoryName) =>
             _loggers.GetOrAdd(categoryName,
-                name => new PowerToolsLogger(name, GetCurrentConfig, 
+                name => new PowerToolsLogger(name, 
                     PowerToolsConfigurations.Instance,
-                    SystemWrapper.Instance));
+                    SystemWrapper.Instance,
+                    GetCurrentConfig));
 
         private LoggerConfiguration GetCurrentConfig() => _currentConfig;
 

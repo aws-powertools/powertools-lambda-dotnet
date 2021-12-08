@@ -17,7 +17,7 @@ namespace AWS.Lambda.PowerTools.Logging
 
         public LogLevel LogLevel
         {
-            get => _logLevel ?? LogLevelHelper.DefaultLogLevel;
+            get => _logLevel ?? PowerToolsConfigurationsExtension.DefaultLogLevel;
             set => _logLevel = value;
         }
         public double SamplingRate
