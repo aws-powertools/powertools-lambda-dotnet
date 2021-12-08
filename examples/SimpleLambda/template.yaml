@@ -16,6 +16,7 @@ Resources:
       Handler: HelloWorld::HelloWorld.Function::FunctionHandler
       Runtime: dotnetcore3.1
       MemorySize: 512
+      Tracing: Active
       Environment: 
         Variables:
           POWERTOOLS_SERVICE_NAME: lambda-example

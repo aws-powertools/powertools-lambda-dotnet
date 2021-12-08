@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.PowerTools.Tracing;
 using AWS.Lambda.PowerTools.Logging;
 using AWS.Lambda.PowerTools.Metrics;
 
@@ -38,8 +39,9 @@ namespace HelloWorld
             return msg.Replace("\n", "");
         }
 
-        [Metrics(serviceName: "lambda-example", metricsNamespace: "dotnet-lambdapowertools", captureColdStart: true)]
         [Logging(LogEvent = true, SamplingRate = 0.7)]
+        [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+        [Metrics(serviceName: "lambda-example", metricsNamespace: "dotnet-lambdapowertools", captureColdStart: true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             try
