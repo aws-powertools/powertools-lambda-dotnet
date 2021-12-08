@@ -17,19 +17,18 @@ namespace HelloWorld
     public class Function
     {
         private static readonly HttpClient Client = new HttpClient();
-        private static Metrics Metrics = new Metrics(true);
-                                            // .WithDefaultDimensions(new Dictionary<string, string>{
-                                            //     {"CustomDefaultDimension", "CustomDefaultDimensionValue"}
-                                            // });
 
         private static async Task<string> GetCallingIp()
-        {
-            //Metrics.PushSingleMetric("CallingIp",1,MetricUnit.COUNT,"dotnet-lambdapowertools","lambda-example");
-            using (var metrics = new Metrics("dotnet-lambdapowertools", "lambda-example"))
-            {
-                metrics.AddDimension("Metric Type", "Single");
-                metrics.AddMetric("CallingIp", 1, MetricUnit.COUNT);
-            }
+        {    
+            Metrics.PushSingleMetric(
+                metricName: "CallingIP", 
+                value: 1, 
+                unit: MetricUnit.COUNT,
+                metricsNamespace: "dotnet-lambdapowertools",
+                serviceName: "lambda-example",
+                defaultDimensions: new Dictionary<string, string>{
+                    {"Metric Type", "Single"}
+                });                
 
             Client.DefaultRequestHeaders.Accept.Clear();
             Client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
@@ -39,18 +38,18 @@ namespace HelloWorld
             return msg.Replace("\n", "");
         }
 
+        [Metrics(serviceName: "lambda-example", metricsNamespace: "dotnet-lambdapowertools", captureColdStart: true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             try
             {
                 var watch = System.Diagnostics.Stopwatch.StartNew();
                 var location = await GetCallingIp();
-                watch.Stop();
+                watch.Stop();   
 
-                Metrics.AddDimension("Metric Type", "Aggregate");
                 Metrics.AddMetric("ElapsedExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
                 Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
-
+                
                 return new APIGatewayProxyResponse
                 {
                     Body = JsonSerializer.Serialize(new { location }),
@@ -66,10 +65,6 @@ namespace HelloWorld
                     StatusCode = 500,
                     Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
                 };
-            }
-            finally
-            {
-                Metrics.Flush();
             }
         }
     }

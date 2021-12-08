@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO.Compression;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -119,7 +117,18 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         internal void SetDefaultDimensions(List<DimensionSet> defaultDimensions)
         {
-            DefaultDimensions = defaultDimensions;
+            if(DefaultDimensions.Count() == 0){
+                DefaultDimensions = defaultDimensions;
+            }
+            else {
+                foreach (var item in defaultDimensions)
+                {                    
+                    if(!DefaultDimensions.Any(d => d.DimensionKeys.Contains(item.DimensionKeys[0]))){
+                        DefaultDimensions.Add(item);
+                    }
+                }
+            }
+            
         }
         
         internal Dictionary<string, string> ExpandAllDimensionSets()

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Serialization;
 using AWS.Lambda.PowerTools.Metrics.Serializer;
 using Newtonsoft.Json;
 
@@ -17,7 +16,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         private MetricDirective _metricDirective { get { return CloudWatchMetrics[0]; } }
 
         [JsonIgnore]
-        public Dictionary<string, dynamic> CustomMetadata { get; } = new Dictionary<string, dynamic>();
+        public Dictionary<string, dynamic> CustomMetadata { get; }
 
         public Metadata()
         {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace AWS.Lambda.PowerTools.Metrics
@@ -35,8 +34,6 @@ namespace AWS.Lambda.PowerTools.Metrics
                 return targetMembers;
             }
         }
-
-        
 
         public string Serialize()
         {
