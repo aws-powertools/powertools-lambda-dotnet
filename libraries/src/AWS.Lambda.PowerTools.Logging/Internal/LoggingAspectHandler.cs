@@ -41,7 +41,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
         private bool IsEnabled(LogLevel logLevel) =>
             logLevel != LogLevel.None && logLevel >= _powerToolsConfigurations.GetLogLevel(_logLevel);
-        
+
         public void OnEntry(AspectEventArgs eventArgs)
         {
             Logger.LoggerProvider ??= new LoggerProvider(
@@ -52,64 +52,86 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                     SamplingRate = _samplingRate
                 });
 
-            if (!_initializeContext) return;
-            
-            Logger.AppendKey("ColdStart", _isColdStart);
+            if (!_initializeContext)
+                return;
 
-            InjectLambdaContext(eventArgs);
+            Logger.AppendKey("ColdStart", _isColdStart);
 
             _isColdStart = false;
             _initializeContext = false;
             _isContextInitialized = true;
 
-            if (!(_logEvent ?? _powerToolsConfigurations.LoggerLogEvent)) 
-                return;
+            var eventObject = eventArgs.Args.FirstOrDefault();
+            var context = eventArgs.Args.FirstOrDefault(x => x is ILambdaContext) as ILambdaContext;
             
-            LogEvent(eventArgs.Args.FirstOrDefault());
+            InjectLambdaContext(context);
+            InjectXrayTraceId(eventObject);
+            if (_logEvent ?? _powerToolsConfigurations.LoggerLogEvent)
+                LogEvent(eventObject);
         }
 
-        private void InjectLambdaContext(AspectEventArgs eventArgs)
+        private void InjectLambdaContext(ILambdaContext context)
         {
-            if (eventArgs.Args.FirstOrDefault(x => x is ILambdaContext) is ILambdaContext context)
+            if (context is null)
             {
-                Logger.AppendKey("FunctionName", context.FunctionName);
-                Logger.AppendKey("FunctionVersion", context.FunctionVersion);
-                Logger.AppendKey("FunctionMemorySize", context.MemoryLimitInMB);
-                Logger.AppendKey("FunctionArn", context.InvokedFunctionArn);
-                Logger.AppendKey("FunctionRequestId", context.AwsRequestId);
-                //Logger.AppendKey("xray_trace_id", context.);
+                if(IsEnabled(LogLevel.Debug))
+                    _systemWrapper.LogLine(
+                        $"Skipping Lambda Context injection because ILambdaContext context parameter not found.");
+                return;
             }
-            else if (IsEnabled(LogLevel.Debug))
+            
+            Logger.AppendKey("FunctionName", context.FunctionName);
+            Logger.AppendKey("FunctionVersion", context.FunctionVersion);
+            Logger.AppendKey("FunctionMemorySize", context.MemoryLimitInMB);
+            Logger.AppendKey("FunctionArn", context.InvokedFunctionArn);
+            Logger.AppendKey("FunctionRequestId", context.AwsRequestId);
+        }
+
+        private void InjectXrayTraceId(object eventArg)
+        {
+            if (eventArg is null)
             {
-                _systemWrapper.LogLine(
-                    $"Skipping Lambda Context injection because ILambdaContext context parameter not found.");
+                if(IsEnabled(LogLevel.Debug))
+                    _systemWrapper.LogLine(
+                        $"Skipping Xray Trace Id extraction because event parameter not found.");
+                return;
             }
+            
+            //ToDo: Implement XrayTraceId extraction logic
+            Logger.AppendKey("XrayTraceId", "");
         }
 
         private void LogEvent(object eventArg)
         {
-            if (eventArg is not null)
+            switch (eventArg)
             {
-                if (eventArg is Stream)
+                case null:
                 {
+                    if (IsEnabled(LogLevel.Debug))
+                        _systemWrapper.LogLine(
+                            $"Skipping Event Log because event parameter not found.");
+                    break;
+                }
+                case Stream:
                     try
                     {
                         Logger.LogInformation("{event}", eventArg);
                     }
                     catch (Exception e)
                     {
-                        Logger.LogError(e,"Failed to log event from supplied input stream.");
+                        Logger.LogError(e, "Failed to log event from supplied input stream.");
                     }
-                }
-                else
-                {
-                    Logger.LogInformation("{event}", eventArg);
-                }
-            }
-            else if (IsEnabled(LogLevel.Debug))
-            {
-                _systemWrapper.LogLine(
-                    $"Skipping Event Log because event parameter not found.");
+                    break;
+                default:
+                    try
+                    {
+                        Logger.LogInformation("{event}", eventArg);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError(e, "Failed to log event from supplied input object.");
+                    }
+                    break;
             }
         }
 
