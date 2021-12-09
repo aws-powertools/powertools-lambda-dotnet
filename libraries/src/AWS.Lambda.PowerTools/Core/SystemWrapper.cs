@@ -13,5 +13,20 @@ namespace AWS.Lambda.PowerTools.Core
         {
             return Environment.GetEnvironmentVariable(variable);
         }
+        
+        public void Log(string value)
+        {
+            Console.Write(value);
+        }
+        
+        public void LogLine(string value)
+        {
+            Console.WriteLine(value);
+        }
+
+        public double GetRandom()
+        {
+            return new Random().NextDouble();
+        }
     }
 }
