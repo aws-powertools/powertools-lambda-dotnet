@@ -5,7 +5,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
-
+using Amazon.Lambda.PowerTools.Tracing;
+using AWS.Lambda.PowerTools.Logging;
 using AWS.Lambda.PowerTools.Metrics;
 
 
@@ -29,7 +30,7 @@ namespace HelloWorld
                 defaultDimensions: new Dictionary<string, string>{
                     {"Metric Type", "Single"}
                 });                
-
+            
             Client.DefaultRequestHeaders.Accept.Clear();
             Client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
 
@@ -38,11 +39,15 @@ namespace HelloWorld
             return msg.Replace("\n", "");
         }
 
+        [Logging(LogEvent = true, SamplingRate = 0.7)]
+        [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
         [Metrics(ServiceName = "lambda-example", MetricsNamespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             try
             {
+                Logger.AppendKey("test", "willBeLogged");
+
                 var watch = System.Diagnostics.Stopwatch.StartNew();
                 var location = await GetCallingIp();
                 watch.Stop();   
