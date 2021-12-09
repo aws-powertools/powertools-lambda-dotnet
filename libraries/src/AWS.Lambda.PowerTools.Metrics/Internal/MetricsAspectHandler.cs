@@ -27,13 +27,13 @@ namespace AWS.Lambda.PowerTools.Metrics.Internal
         public void OnEntry(AspectEventArgs eventArgs)
         {
             if (!_isColdStart || !_captureColdStartEnabled) return;
-            _metrics.AddMetric("ColdStart", 1, MetricUnit.COUNT);
+            _metrics.AddMetric("ColdStart", 1.0, MetricUnit.COUNT);
             _isColdStart = false;
         }
 
         public void OnSuccess(AspectEventArgs eventArgs, object result)
         {
-            // NOT IMPLEMENTED
+            
         }
 
         public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
