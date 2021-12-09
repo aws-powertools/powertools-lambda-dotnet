@@ -37,6 +37,11 @@ namespace AWS.Lambda.PowerTools.Metrics
             }
         }
 
+        /// <summary>
+        /// Serializes metrics object to a valid string in JSON format
+        /// </summary>
+        /// <returns>JSON EMF payload in string format</returns>
+        /// <exception cref="SchemaValidationException">Throws 'SchemaValidationException' when namespace is not defined</exception>
         public string Serialize()
         {
             if (string.IsNullOrWhiteSpace(AWS.GetNamespace()))

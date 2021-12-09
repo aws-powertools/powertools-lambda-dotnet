@@ -18,6 +18,9 @@ namespace AWS.Lambda.PowerTools.Metrics
         [JsonIgnore]
         public Dictionary<string, dynamic> CustomMetadata { get; }
 
+        /// <summary>
+        /// Create Metadata object
+        /// </summary>
         public Metadata()
         {
             CloudWatchMetrics = new List<MetricDirective>() { new MetricDirective() };
@@ -25,54 +28,90 @@ namespace AWS.Lambda.PowerTools.Metrics
             CustomMetadata = new Dictionary<string, dynamic>();
         }
 
+        /// <summary>
+        /// Deletes all metrics from memory
+        /// </summary>
         internal void ClearMetrics()
         {
             _metricDirective.Metrics.Clear();
         }
 
+        /// <summary>
+        /// Deletes non-default dimensions from memory
+        /// </summary>
         internal void ClearNonDefaultDimensions(){
             _metricDirective.Dimensions.Clear();
         }
 
+        /// <summary>
+        /// Adds metric to memory
+        /// </summary>
+        /// <param name="key">Metric key. Cannot be null, empty or whitespace</param>
+        /// <param name="value">Metric value</param>
+        /// <param name="unit">Metric Unit</param>
         internal void AddMetric(string key, double value, MetricUnit unit)
         {
             _metricDirective.AddMetric(key, value, unit);
         }   
 
+        /// <summary>
+        /// Sets global metrics namespace
+        /// </summary>
+        /// <param name="metricNamespace">Global metrics namespace</param>
         internal void SetNamespace(string metricNamespace)
         {         
             _metricDirective.SetNamespace(metricNamespace);
         }
 
+        /// <summary>
+        /// Adds new Dimension
+        /// </summary>
+        /// <param name="dimension">Dimension to add</param>
         internal void AddDimensionSet(DimensionSet dimension)
         {
             _metricDirective.AddDimension(dimension);
         }
 
-        internal void SetDimensions(List<DimensionSet> dimensionSets)
-        {
-            _metricDirective.SetDimensions(dimensionSets);
-        }
-
+        /// <summary>
+        /// Sets default dimensions list
+        /// </summary>
+        /// <param name="defaultDimensionSets">Default dimensions list</param>
         internal void SetDefaultDimensions(List<DimensionSet> defaultDimensionSets){
             _metricDirective.SetDefaultDimensions(defaultDimensionSets);
         }
 
+        /// <summary>
+        /// Retrieves metrics stored in memory
+        /// </summary>
+        /// <returns>List of metrics stored in memory</returns>
         internal List<MetricDefinition> GetMetrics()
         {
             return _metricDirective.Metrics;
         }
 
+        /// <summary>
+        /// Retrieves global namespace identifier
+        /// </summary>
+        /// <returns>Global namespace identifier</returns>
         internal string GetNamespace()
         {
             return _metricDirective.Namespace;
         }
 
+        /// <summary>
+        /// Adds metadata to memory
+        /// </summary>
+        /// <param name="key">Metadata key. Cannot be null, empty or whitespace</param>
+        /// <param name="value">Metadata value</param>
         internal void AddMetadata(string key, dynamic value)
         {
             CustomMetadata.Add(key, value);
         }
 
+        /// <summary>
+        /// Creates Dictionary with all Dimensions. Needed for correct EMF payload serialization
+        /// </summary>
+        /// <returns>Dictionary with all dimensions</returns>
         internal Dictionary<string, string> ExpandAllDimensionSets()
         {
             Dictionary<string, string> dimensionSets;
