@@ -38,7 +38,7 @@ namespace HelloWorld
             return msg.Replace("\n", "");
         }
 
-        [Metrics(serviceName: "lambda-example", metricsNamespace: "dotnet-lambdapowertools", captureColdStart: true)]
+        [Metrics(ServiceName = "lambda-example", MetricsNamespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             try

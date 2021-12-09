@@ -3,7 +3,10 @@ using System.Text.Json.Serialization;
 using AWS.Lambda.PowerTools.Metrics.Serializer;
 
 namespace AWS.Lambda.PowerTools.Metrics
-{       
+{   
+    /// <summary>
+    /// EMF MetricUnit object types
+    /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
     public enum MetricUnit
     {        
