@@ -30,7 +30,7 @@ namespace HelloWorld
                 defaultDimensions: new Dictionary<string, string>{
                     {"Metric Type", "Single"}
                 });                
-
+            
             Client.DefaultRequestHeaders.Accept.Clear();
             Client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
 
@@ -39,7 +39,7 @@ namespace HelloWorld
             return msg.Replace("\n", "");
         }
 
-        [Logging(LogEvent = true, SamplingRate = 0.7, CorrelationIdPath = CorrelationIdPaths.API_GATEWAY_REST)]
+        [Logging(LogEvent = true, SamplingRate = 0.7)]
         [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
         [Metrics(serviceName: "lambda-example", metricsNamespace: "dotnet-lambdapowertools", captureColdStart: true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
