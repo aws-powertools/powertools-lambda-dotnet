@@ -39,7 +39,7 @@ namespace HelloWorld
             return msg.Replace("\n", "");
         }
 
-        [Logging(LogEvent = true, SamplingRate = 0.7)]
+        [Logging(LogEvent = true, SamplingRate = 0.7, CorrelationIdPath = CorrelationIdPaths.API_GATEWAY_REST)]
         [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
         [Metrics(serviceName: "lambda-example", metricsNamespace: "dotnet-lambdapowertools", captureColdStart: true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)

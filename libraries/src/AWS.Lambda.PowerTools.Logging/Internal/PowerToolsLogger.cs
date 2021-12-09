@@ -18,7 +18,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             _currentConfig ??= GetCurrentConfig();
         
         private LogLevel MinimumLevel => 
-            CurrentConfig.MinimumLevel ?? PowerToolsConfigurationsExtension.DefaultLogLevel;
+            CurrentConfig.MinimumLevel ?? LoggingConstants.DefaultLogLevel;
 
         private string ServiceName => 
             !string.IsNullOrWhiteSpace(CurrentConfig.ServiceName)
@@ -88,20 +88,20 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             var message = new Dictionary<string, object>(StringComparer.Ordinal);
             
             // Add Scope Variables
-            foreach (var keyValuePair in Logger.GetAllKeys())
-                message.TryAdd(keyValuePair.Key, keyValuePair.Value);
+            foreach (var (key, value) in Logger.GetAllKeys())
+                message.TryAdd(key, value);
             
-            message.TryAdd("Timestamp", DateTime.UtcNow.ToString("o"));
-            message.TryAdd("Level", logLevel.ToString());
-            message.TryAdd("Service", ServiceName);
-            message.TryAdd("Name", _name);
-            message.TryAdd("Message", formatter(state, exception));
+            message.TryAdd(LoggingConstants.KeyTimestamp, DateTime.UtcNow.ToString("o"));
+            message.TryAdd(LoggingConstants.KeyLogLevel, logLevel.ToString());
+            message.TryAdd(LoggingConstants.KeyServiceName, ServiceName);
+            message.TryAdd(LoggingConstants.KeyLoggerName, _name);
+            message.TryAdd(LoggingConstants.KeyMessage, formatter(state, exception));
             if(CurrentConfig.SamplingRate.HasValue)
-                message.TryAdd("SamplingRate", CurrentConfig.SamplingRate.Value);
+                message.TryAdd(LoggingConstants.KeySamplingRate, CurrentConfig.SamplingRate.Value);
             if (exception != null)
-                message.TryAdd("Exception", exception.Message);
+                message.TryAdd(LoggingConstants.KeyException, exception.Message);
             if(state != null)
-                message.TryAdd("State", state);
+                message.TryAdd(LoggingConstants.KeyState, state);
 
             _systemWrapper.LogLine(JsonSerializer.Serialize(message));
         }

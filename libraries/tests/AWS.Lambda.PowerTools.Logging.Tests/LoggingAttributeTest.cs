@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.Core;
 using AWS.Lambda.PowerTools.Aspects;
 using AWS.Lambda.PowerTools.Core;
@@ -50,7 +53,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -62,18 +65,18 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
             
             Assert.NotNull(Logger.LoggerProvider);
-            Assert.True(allKeys.ContainsKey("ColdStart"));
-            Assert.True((bool) allKeys["ColdStart"]);
-            Assert.True(allKeys.ContainsKey("FunctionName"));
-            Assert.Equal(allKeys["FunctionName"], lambdaContext.Object.FunctionName);
-            Assert.True(allKeys.ContainsKey("FunctionVersion"));
-            Assert.Equal(allKeys["FunctionVersion"], lambdaContext.Object.FunctionVersion);
-            Assert.True(allKeys.ContainsKey("FunctionMemorySize"));
-            Assert.Equal(allKeys["FunctionMemorySize"], lambdaContext.Object.MemoryLimitInMB);
-            Assert.True(allKeys.ContainsKey("FunctionArn"));
-            Assert.Equal(allKeys["FunctionArn"], lambdaContext.Object.InvokedFunctionArn);
-            Assert.True(allKeys.ContainsKey("FunctionRequestId"));
-            Assert.Equal(allKeys["FunctionRequestId"], lambdaContext.Object.AwsRequestId);
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
+            Assert.True((bool) allKeys[LoggingConstants.KeyColdStart]);
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
+            Assert.Equal(allKeys[LoggingConstants.KeyFunctionName], lambdaContext.Object.FunctionName);
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
+            Assert.Equal(allKeys[LoggingConstants.KeyFunctionVersion], lambdaContext.Object.FunctionVersion);
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
+            Assert.Equal(allKeys[LoggingConstants.KeyFunctionMemorySize], lambdaContext.Object.MemoryLimitInMB);
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
+            Assert.Equal(allKeys[LoggingConstants.KeyFunctionArn], lambdaContext.Object.InvokedFunctionArn);
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
+            Assert.Equal(allKeys[LoggingConstants.KeyFunctionRequestId], lambdaContext.Object.AwsRequestId);
         }
     }
     
@@ -97,7 +100,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new object [] { }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -109,13 +112,13 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
             
             Assert.NotNull(Logger.LoggerProvider);
-            Assert.True(allKeys.ContainsKey("ColdStart"));
-            Assert.True((bool) allKeys["ColdStart"]);
-            Assert.False(allKeys.ContainsKey("FunctionName"));
-            Assert.False(allKeys.ContainsKey("FunctionVersion"));
-            Assert.False(allKeys.ContainsKey("FunctionMemorySize"));
-            Assert.False(allKeys.ContainsKey("FunctionArn"));
-            Assert.False(allKeys.ContainsKey("FunctionRequestId"));
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
+            Assert.True((bool) allKeys[LoggingConstants.KeyColdStart]);
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
             
             systemWrapper.Verify(v =>
                 v.LogLine(
@@ -144,7 +147,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new object [] { }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -156,13 +159,13 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
             
             Assert.NotNull(Logger.LoggerProvider);
-            Assert.True(allKeys.ContainsKey("ColdStart"));
-            Assert.True((bool) allKeys["ColdStart"]);
-            Assert.False(allKeys.ContainsKey("FunctionName"));
-            Assert.False(allKeys.ContainsKey("FunctionVersion"));
-            Assert.False(allKeys.ContainsKey("FunctionMemorySize"));
-            Assert.False(allKeys.ContainsKey("FunctionArn"));
-            Assert.False(allKeys.ContainsKey("FunctionRequestId"));
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
+            Assert.True((bool) allKeys[LoggingConstants.KeyColdStart]);
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
+            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
             
             systemWrapper.Verify(v =>
                 v.LogLine(
@@ -191,7 +194,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new object [] { }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -226,7 +229,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new object [] { }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -260,8 +263,8 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Name = methodName,
                 Args = new object [] { }
             };
-            
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, configurations.Object,
+
+            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -273,13 +276,93 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
             
             Assert.NotNull(Logger.LoggerProvider);
-            Assert.True(allKeys.ContainsKey("ColdStart"));
-            Assert.True((bool) allKeys["ColdStart"]);
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
+            Assert.True((bool) allKeys[LoggingConstants.KeyColdStart]);
             
             handler.OnExit(eventArgs);
             
             Assert.NotNull(Logger.LoggerProvider);
             Assert.False(Logger.GetAllKeys().Any());
+        }
+    }
+
+    public abstract class LoggingAttributeTestWithEventArgCorrelationId
+    {
+        protected void OnEntry_WhenEventArgExists_CapturesCorrelationIdBase(string correlationId, string correlationIdPath, object eventArg)
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var serviceName = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowerToolsConfigurations>();
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var eventArgs = new AspectEventArgs
+            {
+                Name = methodName,
+                Args = new[] { eventArg }
+            };
+
+            var handler = new LoggingAspectHandler(serviceName, logLevel, null, false, correlationIdPath,
+                configurations.Object,
+                systemWrapper.Object);
+
+            handler.ResetForTest();
+
+            // Act
+            handler.OnEntry(eventArgs);
+
+            var allKeys = Logger.GetAllKeys()
+                .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
+
+            // Assert
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyCorrelationId));
+            Assert.Equal((string) allKeys[LoggingConstants.KeyCorrelationId], correlationId);
+        }
+    }
+
+    [Collection("Sequential")]
+    public class LoggingAttributeTestWithEventArgCorrelationIdAPIGateway : LoggingAttributeTestWithEventArgCorrelationId
+    {
+        [Fact]
+        public void OnEntry_WhenEventArgExists_CapturesCorrelationId()
+        {
+            var correlationId = Guid.NewGuid().ToString();
+            OnEntry_WhenEventArgExists_CapturesCorrelationIdBase
+            (
+                correlationId,
+                CorrelationIdPaths.API_GATEWAY_REST,
+                new APIGatewayProxyRequest
+                {
+                    RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
+                    {
+                        RequestId = correlationId
+                    }
+                }
+            );
+        }
+    }
+    
+    [Collection("Sequential")]
+    public class LoggingAttributeTestWithEventArgCorrelationIdApplicationLoadBalancer : LoggingAttributeTestWithEventArgCorrelationId
+    {
+        [Fact]
+        public void OnEntry_WhenEventArgExists_CapturesCorrelationId()
+        {
+            var correlationId = Guid.NewGuid().ToString();
+            OnEntry_WhenEventArgExists_CapturesCorrelationIdBase
+            (
+                correlationId,
+                CorrelationIdPaths.APPLICATION_LOAD_BALANCER,
+                new ApplicationLoadBalancerRequest
+                {
+                    Headers = new Dictionary<string, string>
+                    {
+                        {"x-amzn-trace-id", correlationId}
+                    }
+                }
+            );
         }
     }
 }

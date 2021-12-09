@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Amazon.Lambda.Core;
@@ -14,19 +15,21 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         private readonly LogLevel? _logLevel;
         private readonly double? _samplingRate;
         private readonly bool? _logEvent;
+        private readonly string _correlationIdPath;
         private readonly IPowerToolsConfigurations _powerToolsConfigurations;
         private readonly ISystemWrapper _systemWrapper;
 
         private static bool _isColdStart = true;
         private static bool _initializeContext = true;
         private bool _isContextInitialized;
-        
+
         internal LoggingAspectHandler
         (
             string serviceName,
             LogLevel? logLevel,
             double? samplingRate,
             bool? logEvent,
+            string correlationIdPath,
             IPowerToolsConfigurations powerToolsConfigurations,
             ISystemWrapper systemWrapper
         )
@@ -35,12 +38,10 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             _logLevel = logLevel;
             _samplingRate = samplingRate;
             _logEvent = logEvent;
+            _correlationIdPath = correlationIdPath;
             _powerToolsConfigurations = powerToolsConfigurations;
             _systemWrapper = systemWrapper;
         }
-
-        private bool IsEnabled(LogLevel logLevel) =>
-            logLevel != LogLevel.None && logLevel >= _powerToolsConfigurations.GetLogLevel(_logLevel);
 
         public void OnEntry(AspectEventArgs eventArgs)
         {
@@ -55,7 +56,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             if (!_initializeContext)
                 return;
 
-            Logger.AppendKey("ColdStart", _isColdStart);
+            Logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
 
             _isColdStart = false;
             _initializeContext = false;
@@ -63,7 +64,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
             var eventObject = eventArgs.Args.FirstOrDefault();
             var context = eventArgs.Args.FirstOrDefault(x => x is ILambdaContext) as ILambdaContext;
-            
+
             CaptureXrayTraceId();
             CaptureLambdaContext(context);
             CaptureCorrelationId(eventObject);
@@ -71,49 +72,102 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                 LogEvent(eventObject);
         }
 
+        public void OnSuccess(AspectEventArgs eventArgs, object result)
+        {
+
+        }
+
+        public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
+        {
+            throw exception;
+        }
+
+        public void OnExit(AspectEventArgs eventArgs)
+        {
+            if (!_isContextInitialized) return;
+            Logger.RemoveAllKeys();
+            _initializeContext = true;
+        }
+
+        private bool IsDebug() => 
+            LogLevel.Debug >= _powerToolsConfigurations.GetLogLevel(_logLevel);
+
         private void CaptureXrayTraceId()
         {
             var xRayTraceId = _powerToolsConfigurations.XRayTraceId;
             if (string.IsNullOrWhiteSpace(xRayTraceId))
                 return;
-         
+
             xRayTraceId = xRayTraceId
                 .Split(';', StringSplitOptions.RemoveEmptyEntries)
                 .First()
                 .Replace("Root=", "");
-            
-            Logger.AppendKey("xray_trace_id", xRayTraceId);
+
+            Logger.AppendKey(LoggingConstants.KeyXRayTraceId, xRayTraceId);
         }
 
         private void CaptureLambdaContext(ILambdaContext context)
         {
             if (context is null)
             {
-                if(IsEnabled(LogLevel.Debug))
+                if (IsDebug())
                     _systemWrapper.LogLine(
                         $"Skipping Lambda Context injection because ILambdaContext context parameter not found.");
                 return;
             }
-            
-            Logger.AppendKey("FunctionName", context.FunctionName);
-            Logger.AppendKey("FunctionVersion", context.FunctionVersion);
-            Logger.AppendKey("FunctionMemorySize", context.MemoryLimitInMB);
-            Logger.AppendKey("FunctionArn", context.InvokedFunctionArn);
-            Logger.AppendKey("FunctionRequestId", context.AwsRequestId);
+
+            Logger.AppendKey(LoggingConstants.KeyFunctionName, context.FunctionName);
+            Logger.AppendKey(LoggingConstants.KeyFunctionVersion, context.FunctionVersion);
+            Logger.AppendKey(LoggingConstants.KeyFunctionMemorySize, context.MemoryLimitInMB);
+            Logger.AppendKey(LoggingConstants.KeyFunctionArn, context.InvokedFunctionArn);
+            Logger.AppendKey(LoggingConstants.KeyFunctionRequestId, context.AwsRequestId);
         }
 
         private void CaptureCorrelationId(object eventArg)
         {
+            if (string.IsNullOrWhiteSpace(_correlationIdPath))
+                return;
+
+            var correlationIdPaths = _correlationIdPath
+                .Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+            if (!correlationIdPaths.Any())
+                return;
+
             if (eventArg is null)
             {
-                if(IsEnabled(LogLevel.Debug))
+                if (IsDebug())
                     _systemWrapper.LogLine(
                         $"Skipping CorrelationId capture because event parameter not found.");
                 return;
             }
             
-            //ToDo: Implement CorrelationId capture logic
-            Logger.AppendKey("CorrelationId", "");
+            try
+            {
+                var rootObject = correlationIdPaths.Aggregate(eventArg, GetCorrelationId);
+                if (rootObject is not null)
+                    Logger.AppendKey(LoggingConstants.KeyCorrelationId, rootObject);
+            }
+            catch (Exception e)
+            {
+                if (IsDebug())
+                    _systemWrapper.LogLine(
+                        $"Skipping CorrelationId capture because of error caused while parsing the event object {e.Message}.");
+            }
+        }
+
+
+        private static object GetCorrelationId(object rootObject, string propertyName)
+        {
+            return rootObject switch
+            {
+                null => null,
+                IDictionary<string, string> headers => headers.ContainsKey(propertyName) ? headers[propertyName] : null,
+                IDictionary<string, IList<string>> multiValueHeaders => multiValueHeaders.ContainsKey(propertyName)
+                    ? multiValueHeaders[propertyName]?.FirstOrDefault()
+                    : null,
+                _ => rootObject.GetType().GetProperty(propertyName)?.GetValue(rootObject)
+            };
         }
 
         private void LogEvent(object eventArg)
@@ -122,7 +176,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             {
                 case null:
                 {
-                    if (IsEnabled(LogLevel.Debug))
+                    if (IsDebug())
                         _systemWrapper.LogLine(
                             $"Skipping Event Log because event parameter not found.");
                     break;
@@ -136,6 +190,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                     {
                         Logger.LogError(e, "Failed to log event from supplied input stream.");
                     }
+
                     break;
                 default:
                     try
@@ -146,32 +201,15 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                     {
                         Logger.LogError(e, "Failed to log event from supplied input object.");
                     }
+
                     break;
             }
         }
 
-        public void OnSuccess(AspectEventArgs eventArgs, object result)
-        {
-            
-        }
-
-        public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
-        {
-            throw exception;
-        }
-
-        public void OnExit(AspectEventArgs eventArgs)
-        {
-            if (!_isContextInitialized) return;
-            
-            Logger.RemoveAllKeys();
-            _initializeContext = true;
-        }
-
         internal void ResetForTest()
-        { 
-            _isColdStart = true; 
-            _initializeContext = true; 
+        {
+            _isColdStart = true;
+            _initializeContext = true;
             _isContextInitialized = false;
             Logger.LoggerProvider = null;
             Logger.RemoveAllKeys();
