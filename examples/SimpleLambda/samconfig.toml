@@ -1,9 +1,0 @@
-version = 0.1
-[default]
-[default.deploy]
-[default.deploy.parameters]
-stack_name = "simple-lambda-test"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1w1ueezwwdk1x"
-s3_prefix = "simple-lambda-test"
-region = "eu-west-2"
-capabilities = "CAPABILITY_IAM"
