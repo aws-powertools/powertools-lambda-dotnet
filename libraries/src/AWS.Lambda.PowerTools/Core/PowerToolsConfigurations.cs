@@ -2,6 +2,9 @@ namespace AWS.Lambda.PowerTools.Core
 {
     public class PowerToolsConfigurations : IPowerToolsConfigurations
     {
+        public const int MaxDimensions = 9;
+        public const int MaxMetrics = 100;
+        
         private static IPowerToolsConfigurations _instance;
         public static IPowerToolsConfigurations Instance => _instance ??= new PowerToolsConfigurations(SystemWrapper.Instance);
 
@@ -44,5 +47,8 @@ namespace AWS.Lambda.PowerTools.Core
         
         public bool IsSamLocal =>
             GetEnvironmentVariableOrDefault(Constants.SAM_LOCAL_ENV, false);
+        
+        public string MetricsNamespace =>
+            GetEnvironmentVariable(Constants.METRICS_NAMESPACE_ENV);
     }
 }

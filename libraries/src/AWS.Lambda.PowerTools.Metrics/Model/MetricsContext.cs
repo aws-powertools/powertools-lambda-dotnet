@@ -7,11 +7,7 @@ namespace AWS.Lambda.PowerTools.Metrics
     public class MetricsContext : IDisposable
     {
         private RootNode _rootNode;
-        internal bool IsSerializable {
-            get {                
-                return !(GetMetrics().Count == 0 && _rootNode.AWS.CustomMetadata.Count == 0);
-            }
-        }
+        internal bool IsSerializable => !(GetMetrics().Count == 0 && _rootNode.AWS.CustomMetadata.Count == 0);
 
         public MetricsContext()
         {
@@ -20,7 +16,7 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         public MetricsContext(List<DimensionSet> dimensions) : this()
         {
-            foreach (DimensionSet dimension in dimensions)
+            foreach (var dimension in dimensions)
             {
                 AddDimension(dimension);
             }

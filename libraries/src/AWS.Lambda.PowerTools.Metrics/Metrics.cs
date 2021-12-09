@@ -1,31 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using AWS.Lambda.PowerTools.Core;
 
 namespace AWS.Lambda.PowerTools.Metrics
 {
     public class Metrics : IMetrics
     {
-        private static IMetrics Instance { get; set; }
-
-        private string MetricsNamespace { get; set; }
-        private string ServiceName { get; set; }
-        private bool CaptureEmptyMetricsEnabled { get; set; }
-        private MetricsContext _context;
-
+        private static IMetrics _instance;
+        private readonly MetricsContext _context;
+        private readonly bool _captureEmptyMetricsEnabled;
+        private readonly IPowerToolsConfigurations _powerToolsConfigurations;
+        
+        
         /// <summary>
         /// Creates Metrics  with no namespace or service name defined - requires that they are defined after initialization
         /// </summary>
-       public Metrics(string metricsNamespace = null, string serviceName = null, bool captureMetricsEvenIfEmpty = false)
+       internal Metrics(IPowerToolsConfigurations powerToolsConfigurations, string metricsNamespace = null, string serviceName = null, bool captureMetricsEvenIfEmpty = false)
         {
-            if (Instance == null)
-            {
-                MetricsNamespace = metricsNamespace;
-                ServiceName = serviceName;
-                CaptureEmptyMetricsEnabled = captureMetricsEvenIfEmpty;
-
-                Instance = this;
-                _context = InitializeContext(MetricsNamespace, ServiceName, null);
-            }
+            if (_instance != null) return;
+            _instance = this;
+            _powerToolsConfigurations = powerToolsConfigurations;
+            _captureEmptyMetricsEnabled = captureMetricsEvenIfEmpty;
+            _context = InitializeContext(metricsNamespace, serviceName, null);
         }
 
         /// <summary>
@@ -39,7 +35,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         {
             if (_context.GetMetrics().Count == 100)
             {
-                Instance.Flush(true);
+                _instance.Flush(true);
             }
 
             _context.AddMetric(key, value, unit);
@@ -47,7 +43,7 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         public static void AddMetric(string key, double value, MetricUnit unit = MetricUnit.NONE)
         {
-            Instance.AddMetric(key, value, unit);
+            _instance.AddMetric(key, value, unit);
         }      
 
         void IMetrics.SetNamespace(string metricsNamespace)
@@ -56,7 +52,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
         public static void SetNamespace(string metricsNamespace){
-            Instance.SetNamespace(metricsNamespace);
+            _instance.SetNamespace(metricsNamespace);
         }
 
         string IMetrics.GetNamespace()
@@ -65,7 +61,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
         public static string GetNamespace(){
-            return Instance.GetNamespace();
+            return _instance.GetNamespace();
         }
 
         void IMetrics.AddDimension(string key, string value)
@@ -74,7 +70,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
         public static void AddDimension(string key, string value){
-            Instance.AddDimension(key, value);
+            _instance.AddDimension(key, value);
         }
 
         void IMetrics.AddMetadata(string key, dynamic value)
@@ -83,7 +79,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
         public static void AddMetadata(string key, dynamic value){
-            Instance.AddMetadata(key, value);
+            _instance.AddMetadata(key, value);
         }
 
         void IMetrics.SetDefaultDimensions(Dictionary<string, string> defaultDimensions){
@@ -91,17 +87,13 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
         public static void SetDefaultDimensions(Dictionary<string, string> defaultDimensions){
-            Instance.SetDefaultDimensions(defaultDimensions);
-        }
-
-        public static void Flush(){
-            Instance.Flush(false);
+            _instance.SetDefaultDimensions(defaultDimensions);
         }
 
         void IMetrics.Flush(bool metricsOverflow)
         {
             if (_context.IsSerializable
-                || CaptureEmptyMetricsEnabled)
+                || _captureEmptyMetricsEnabled)
             {
                 var emfPayload = _context.Serialize();
 
@@ -138,7 +130,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
         public static void PushSingleMetric(string metricName, double value, MetricUnit unit, string metricsNamespace = null, string serviceName = null, Dictionary<string, string> defaultDimensions = null){
-            Instance.PushSingleMetric(metricName, value, unit, metricsNamespace, serviceName, defaultDimensions);
+            _instance.PushSingleMetric(metricName, value, unit, metricsNamespace, serviceName, defaultDimensions);
         } 
 
         private MetricsContext InitializeContext(string metricsNamespace, string serviceName, Dictionary<string, string> defaultDimensions)
@@ -149,17 +141,18 @@ namespace AWS.Lambda.PowerTools.Metrics
             {
                 context.SetNamespace(metricsNamespace);
             }
-            else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE")))
+            else if (!string.IsNullOrEmpty(_powerToolsConfigurations.MetricsNamespace))
             {
-                context.SetNamespace(Environment.GetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE"));
+                context.SetNamespace(_powerToolsConfigurations.MetricsNamespace);
             }
 
-            PowertoolsConfig.Service = serviceName;
-
+            if (string.IsNullOrWhiteSpace(serviceName))
+                serviceName = _powerToolsConfigurations.ServiceName;
+            
             var defaultDimensionsList = DictionaryToList(defaultDimensions);
 
             // Add service as a default dimension
-            defaultDimensionsList.Add(new DimensionSet("Service", PowertoolsConfig.Service));
+            defaultDimensionsList.Add(new DimensionSet("Service", serviceName));
 
             context.SetDefaultDimensions(defaultDimensionsList);
 
@@ -182,11 +175,11 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         public void Dispose()
         {
-            Flush();
+            _instance.Flush();
         }
 
         internal static void ResetForTesting(){
-            Instance = null;
+            _instance = null;
         }
     }
 }
