@@ -64,13 +64,28 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             var eventObject = eventArgs.Args.FirstOrDefault();
             var context = eventArgs.Args.FirstOrDefault(x => x is ILambdaContext) as ILambdaContext;
             
-            InjectLambdaContext(context);
-            InjectXrayTraceId(eventObject);
+            CaptureXrayTraceId();
+            CaptureLambdaContext(context);
+            CaptureCorrelationId(eventObject);
             if (_logEvent ?? _powerToolsConfigurations.LoggerLogEvent)
                 LogEvent(eventObject);
         }
 
-        private void InjectLambdaContext(ILambdaContext context)
+        private void CaptureXrayTraceId()
+        {
+            var xRayTraceId = _powerToolsConfigurations.XRayTraceId;
+            if (string.IsNullOrWhiteSpace(xRayTraceId))
+                return;
+         
+            xRayTraceId = xRayTraceId
+                .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .First()
+                .Replace("Root=", "");
+            
+            Logger.AppendKey("xray_trace_id", xRayTraceId);
+        }
+
+        private void CaptureLambdaContext(ILambdaContext context)
         {
             if (context is null)
             {
@@ -87,18 +102,18 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             Logger.AppendKey("FunctionRequestId", context.AwsRequestId);
         }
 
-        private void InjectXrayTraceId(object eventArg)
+        private void CaptureCorrelationId(object eventArg)
         {
             if (eventArg is null)
             {
                 if(IsEnabled(LogLevel.Debug))
                     _systemWrapper.LogLine(
-                        $"Skipping Xray Trace Id extraction because event parameter not found.");
+                        $"Skipping CorrelationId capture because event parameter not found.");
                 return;
             }
             
-            //ToDo: Implement XrayTraceId extraction logic
-            Logger.AppendKey("XrayTraceId", "");
+            //ToDo: Implement CorrelationId capture logic
+            Logger.AppendKey("CorrelationId", "");
         }
 
         private void LogEvent(object eventArg)

@@ -11,6 +11,7 @@ namespace AWS.Lambda.PowerTools.Core
         string LogLevel { get; }
         double? LoggerSampleRate { get; }
         bool LoggerLogEvent { get; }
+        string XRayTraceId { get; }
         
         string GetEnvironmentVariable(string variable);
         string GetEnvironmentVariableOrDefault(string variable, string defaultValue);

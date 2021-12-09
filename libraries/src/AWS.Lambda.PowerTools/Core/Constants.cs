@@ -10,5 +10,6 @@ namespace AWS.Lambda.PowerTools.Core
         internal const string LOG_LEVEL_NAME_ENV = "LOG_LEVEL";
         internal const string LOGGER_SAMPLE_RATE_NAME_ENV = "POWERTOOLS_LOGGER_SAMPLE_RATE";
         internal const string LOGGER_LOG_EVENT_NAME_ENV = "POWERTOOLS_LOGGER_LOG_EVENT";
+        internal const string XRAY_TRACE_ID_ENV = "_X_AMZN_TRACE_ID";
     }
 }
