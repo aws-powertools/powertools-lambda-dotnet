@@ -258,14 +258,9 @@ namespace AWS.Lambda.PowerTools.Metrics
         {
             var context = new MetricsContext();
 
-            if (!string.IsNullOrWhiteSpace(metricsNamespace))
-            {
-                context.SetNamespace(metricsNamespace);
-            }
-            else if (!string.IsNullOrWhiteSpace(_powerToolsConfigurations.MetricsNamespace))
-            {
-                context.SetNamespace(_powerToolsConfigurations.MetricsNamespace);
-            }
+            context.SetNamespace(!string.IsNullOrWhiteSpace(metricsNamespace)
+                ? metricsNamespace
+                : _powerToolsConfigurations.MetricsNamespace);
 
             if (string.IsNullOrWhiteSpace(serviceName))
                 serviceName = _powerToolsConfigurations.ServiceName;
