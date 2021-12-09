@@ -29,7 +29,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Web.Extensions
 
                 // Include X-Ray trace if it is set
                 var xRayTraceId = context.Request.Headers["X-Amzn-Trace-Id"];
-                if(!string.IsNullOrEmpty(xRayTraceId) && xRayTraceId.Count > 0)
+                if(!string.IsNullOrWhiteSpace(xRayTraceId) && xRayTraceId.Count > 0)
                 {
                    logger.AddMetadata("XRayTraceId", xRayTraceId[0]);
                 }
@@ -37,7 +37,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Web.Extensions
                 // Include w3c trace id
                 logger.AddMetadata("TraceId", Activity.Current?.Id ?? context?.TraceIdentifier);
 
-                if (!string.IsNullOrEmpty(Activity.Current?.TraceStateString))
+                if (!string.IsNullOrWhiteSpace(Activity.Current?.TraceStateString))
                 {
                    logger.AddMetadata("TraceState", Activity.Current.TraceStateString);
                 }

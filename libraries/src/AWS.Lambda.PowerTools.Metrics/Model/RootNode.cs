@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.PowerTools.Metrics
 {
     public class RootNode
     {
-        [JsonProperty("_aws")]
+        [JsonPropertyName("_aws")]
         public Metadata AWS { get; } = new Metadata();
 
         [JsonExtensionData]
@@ -37,12 +39,12 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         public string Serialize()
         {
-            if (string.IsNullOrEmpty(AWS.GetNamespace()))
+            if (string.IsNullOrWhiteSpace(AWS.GetNamespace()))
             {
                 throw new SchemaValidationException("namespace");
             }
 
-            return JsonConvert.SerializeObject(this);
+            return JsonSerializer.Serialize(this);
         }
 
     }

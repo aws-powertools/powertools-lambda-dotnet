@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using AWS.Lambda.PowerTools.Core;
-using Newtonsoft.Json;
 
 namespace AWS.Lambda.PowerTools.Metrics
 {
     public class MetricDirective
     {
         
-        [JsonProperty("Namespace")]
+        [JsonPropertyName("Namespace")]
         public string Namespace { get; private set; }
         
-        [JsonProperty("Metrics")]
+        [JsonPropertyName("Metrics")]
         public List<MetricDefinition> Metrics
         {
             get; private set;
@@ -38,7 +38,7 @@ namespace AWS.Lambda.PowerTools.Metrics
             DefaultDimensions = defaultDimensions;
         }
 
-        [JsonProperty("Dimensions")]
+        [JsonPropertyName("Dimensions")]
         public List<List<string>> AllDimensionKeys
         {
             get

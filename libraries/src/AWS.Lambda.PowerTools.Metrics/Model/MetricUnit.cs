@@ -1,12 +1,12 @@
 using System.Runtime.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using System.Text.Json.Serialization;
+using AWS.Lambda.PowerTools.Metrics.Serializer;
 
 namespace AWS.Lambda.PowerTools.Metrics
-{
+{       
     [JsonConverter(typeof(StringEnumConverter))]
     public enum MetricUnit
-    {
+    {        
         [EnumMember(Value = "None")]
         NONE,
         [EnumMember(Value = "Seconds")]

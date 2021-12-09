@@ -11,13 +11,17 @@ namespace AWS.Lambda.PowerTools.Metrics
         private readonly bool _captureEmptyMetricsEnabled;
         private readonly IPowerToolsConfigurations _powerToolsConfigurations;
         
-        
         /// <summary>
-        /// Creates Metrics  with no namespace or service name defined - requires that they are defined after initialization
+        /// Creates a Metrics object that provides features to send metrics to Amazon Cloudwatch using the Embedded metric format (EMF). See https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html 
         /// </summary>
+        /// <param name="powerToolsConfigurations"></param>
+        /// <param name="metricsNamespace"></param>
+        /// <param name="serviceName"></param>
+        /// <param name="captureMetricsEvenIfEmpty"></param>
        internal Metrics(IPowerToolsConfigurations powerToolsConfigurations, string metricsNamespace = null, string serviceName = null, bool captureMetricsEvenIfEmpty = false)
         {
             if (_instance != null) return;
+
             _instance = this;
             _powerToolsConfigurations = powerToolsConfigurations;
             _captureEmptyMetricsEnabled = captureMetricsEvenIfEmpty;
@@ -25,7 +29,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
         /// <summary>
-        /// 
+        /// Implements interface that adds new metric to memory.
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
@@ -33,6 +37,10 @@ namespace AWS.Lambda.PowerTools.Metrics
         /// <returns></returns>
         void IMetrics.AddMetric(string key, double value, MetricUnit unit)
         {
+            if(string.IsNullOrWhiteSpace(key)){
+                throw new ArgumentException("'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+            }
+
             if (_context.GetMetrics().Count == 100)
             {
                 _instance.Flush(true);
@@ -41,31 +49,63 @@ namespace AWS.Lambda.PowerTools.Metrics
             _context.AddMetric(key, value, unit);
         }
 
+        /// <summary>
+        /// Adds new metric to memory.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="unit"></param>
         public static void AddMetric(string key, double value, MetricUnit unit = MetricUnit.NONE)
         {
             _instance.AddMetric(key, value, unit);
         }      
 
+        /// <summary>
+        /// Implements interface that sets metrics namespace identifier.
+        /// </summary>
+        /// <param name="metricsNamespace"></param>
         void IMetrics.SetNamespace(string metricsNamespace)
         {
             _context.SetNamespace(metricsNamespace);
         }
 
+        /// <summary>
+        /// Sets metrics namespace identifier.
+        /// </summary>
+        /// <param name="metricsNamespace"></param>
         public static void SetNamespace(string metricsNamespace){
             _instance.SetNamespace(metricsNamespace);
         }
 
+        /// <summary>
+        /// Implements interface that allows retrieval of namespace identifier.
+        /// </summary>
+        /// <returns>Namespace identifier</returns>
         string IMetrics.GetNamespace()
         {
             return _context.GetNamespace();
         }
 
+        /// <summary>
+        /// Retrieves namespace identifier.
+        /// </summary>
+        /// <returns>Namespace identifier</returns>
         public static string GetNamespace(){
             return _instance.GetNamespace();
         }
 
+        /// <summary>
+        /// Implements interface that adds a dimension.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         void IMetrics.AddDimension(string key, string value)
         {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentException("'AddDimension' method requires a valid dimension key. 'Null' or empty values are not allowed.");
+            }
+
             _context.AddDimension(new DimensionSet(key, value));
         }
 
@@ -75,6 +115,11 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         void IMetrics.AddMetadata(string key, dynamic value)
         {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentException("'AddMetadata' method requires a valid metadata key. 'Null' or empty values are not allowed.");
+            }
+
             _context.AddMetadata(key, value);
         }
 
@@ -83,6 +128,14 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
         void IMetrics.SetDefaultDimensions(Dictionary<string, string> defaultDimensions){
+            foreach (var item in defaultDimensions)
+            {
+                if (string.IsNullOrWhiteSpace(item.Key) || string.IsNullOrWhiteSpace(item.Value))
+                {
+                    throw new ArgumentException("'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty values are not allowed.");
+                }
+            }
+
             _context.SetDefaultDimensions(DictionaryToList(defaultDimensions));
         }
 
@@ -123,6 +176,11 @@ namespace AWS.Lambda.PowerTools.Metrics
 
         void IMetrics.PushSingleMetric(string metricName, double value, MetricUnit unit, string metricsNamespace, string serviceName, Dictionary<string, string> defaultDimensions)
         {
+            if (string.IsNullOrWhiteSpace(metricName))
+            {
+                throw new ArgumentException("'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+            }
+
             using var context = InitializeContext(metricsNamespace, serviceName, defaultDimensions);
             context.AddMetric(metricName, value, unit);
 
@@ -137,11 +195,11 @@ namespace AWS.Lambda.PowerTools.Metrics
         {
             var context = new MetricsContext();
 
-            if (!string.IsNullOrEmpty(metricsNamespace))
+            if (!string.IsNullOrWhiteSpace(metricsNamespace))
             {
                 context.SetNamespace(metricsNamespace);
             }
-            else if (!string.IsNullOrEmpty(_powerToolsConfigurations.MetricsNamespace))
+            else if (!string.IsNullOrWhiteSpace(_powerToolsConfigurations.MetricsNamespace))
             {
                 context.SetNamespace(_powerToolsConfigurations.MetricsNamespace);
             }
