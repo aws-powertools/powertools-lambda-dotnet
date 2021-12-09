@@ -206,7 +206,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             // Assert
             Assert.Contains("\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}]", result);
-            Assert.Contains("\"ColdStart\":1.0", result);
+            Assert.Contains("\"ColdStart\":1", result);
 
             Metrics.ResetForTesting();
         }
@@ -384,14 +384,14 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act 
             handler.OnEntry(eventArgs);
             Metrics.AddDimension("functionVersion", "$LATEST");
-            Metrics.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
+            Metrics.AddMetric("Time", 100.7, MetricUnit.MILLISECONDS);
             Metrics.AddMetadata("env", "dev");
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
 
             // Assert
-            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}],\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]}]},\"Service\":\"testService\",\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100.0}"
+            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}],\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]}]},\"Service\":\"testService\",\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100.7}"
                 , result);
 
             // Reset
@@ -400,7 +400,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
         [Trait("Category", "MetricsImplementation")]
         [Fact]
-        public void WhenMetricsWitSameNameAdded_ValidateMetricArray()
+        public void WhenMetricsWithSameNameAdded_ValidateMetricArray()
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
@@ -425,7 +425,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act 
             handler.OnEntry(eventArgs);
             Metrics.AddDimension("functionVersion", "$LATEST");
-            Metrics.AddMetric("Time", 100, MetricUnit.MILLISECONDS);
+            Metrics.AddMetric("Time", 100.5, MetricUnit.MILLISECONDS);
             Metrics.AddMetric("Time", 200, MetricUnit.MILLISECONDS);            
             handler.OnExit(eventArgs);
 
@@ -434,7 +434,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Assert
             Assert.Contains("\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}]"
                 , result);
-            Assert.Contains("\"Time\":[100.0,200.0]"
+            Assert.Contains("\"Time\":[100.5,200]"
                 , result);
 
             // Reset

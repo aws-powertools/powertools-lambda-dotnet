@@ -18,9 +18,9 @@ namespace AWS.Lambda.PowerTools.Metrics
         private IMetrics MetricsInstance =>
             _metricsInstance ??= new Metrics(
                 PowerToolsConfigurations.Instance,
-                metricsNamespace: MetricsNamespace,
-                serviceName: ServiceName,
-                captureMetricsEvenIfEmpty: CaptureEmptyMetrics
+                MetricsNamespace,
+                ServiceName,
+                CaptureEmptyMetrics
             );
 
         protected override IMethodAspectHandler CreateHandler()
