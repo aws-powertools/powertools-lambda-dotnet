@@ -7,49 +7,46 @@ namespace Amazon.Lambda.PowerTools.Tracing
 {
     public static class Tracing
     {
-        private static TracingHandler _instance;
-        private static TracingHandler Instance => _instance ??=
-            new TracingHandler(PowerToolsConfigurations.Instance, XRayRecorder.Instance);
-
         public static Entity GetEntity()
         {
-            return Instance.GetEntity();
+            return XRayRecorder.Instance.GetEntity();
         }
         
         public static void AddAnnotation(string key, object value)
         {
-            Instance.AddAnnotation(key, value);
+            XRayRecorder.Instance.AddAnnotation(key, value);
         }
 
         public static void AddMetadata(string key, object value)
         {
-            Instance.AddMetadata(key, value);
+            AddMetadata(null, key, value);
         }
 
         public static void AddMetadata(string nameSpace, string key, object value)
         {
-            Instance.AddMetadata(nameSpace, key, value);
+            XRayRecorder.Instance.AddMetadata(nameSpace, key, value);
+        }
+        
+        public static ISegmentScope BeginSubsegmentScope(string name, Entity entity = null)
+        {
+            return BeginSubsegmentScope(null, name, entity);
         }
 
-        public static void WithEntitySubsegment(string name, Entity entity, Action<Subsegment> subsegment)
+        public static ISegmentScope BeginSubsegmentScope(string nameSpace, string name, Entity entity = null)
         {
-            Instance.WithEntitySubsegment(name, entity, subsegment);
-        }
-
-        public static void WithEntitySubsegment(string nameSpace, string name, Entity entity,
-            Action<Subsegment> subsegment)
-        {
-            Instance.WithEntitySubsegment(nameSpace, name, entity, subsegment);
-        }
-
-        public static void WithSubsegment(string name, Action<Subsegment> subsegment)
-        {
-            Instance.WithSubsegment(name, subsegment);
-        }
-
-        public static void WithSubsegment(string nameSpace, string name, Action<Subsegment> subsegment)
-        {
-            Instance.WithSubsegment(nameSpace, name, subsegment);
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException(nameof(name));
+            
+            if (!name.StartsWith("#"))
+                name = $"## {name}";
+           
+            return new SegmentScope(
+                PowerToolsConfigurations.Instance,
+                XRayRecorder.Instance,
+                nameSpace,
+                name,
+                entity
+            );
         }
     }
 }
