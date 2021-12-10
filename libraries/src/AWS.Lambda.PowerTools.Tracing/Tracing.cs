@@ -19,12 +19,12 @@ namespace Amazon.Lambda.PowerTools.Tracing
 
         public static void AddMetadata(string key, object value)
         {
-            AddMetadata(null, key, value);
+            XRayRecorder.Instance.AddMetadata(GetNamespaceOrDefault(null), key, value);
         }
 
         public static void AddMetadata(string nameSpace, string key, object value)
         {
-            XRayRecorder.Instance.AddMetadata(nameSpace, key, value);
+            XRayRecorder.Instance.AddMetadata(GetNamespaceOrDefault(nameSpace), key, value);
         }
         
         public static ISegmentScope BeginSubsegmentScope(string name, Entity entity = null)
@@ -43,10 +43,19 @@ namespace Amazon.Lambda.PowerTools.Tracing
             return new SegmentScope(
                 PowerToolsConfigurations.Instance,
                 XRayRecorder.Instance,
-                nameSpace,
+                GetNamespaceOrDefault(nameSpace),
                 name,
                 entity
             );
+        }
+        
+        private static string GetNamespaceOrDefault(string nameSpace)
+        {
+            if (!string.IsNullOrWhiteSpace(nameSpace))
+                return nameSpace;
+            
+            nameSpace = (GetEntity() as Subsegment)?.Namespace;
+            return !string.IsNullOrWhiteSpace(nameSpace) ? nameSpace : PowerToolsConfigurations.Instance.ServiceName;
         }
     }
 }
