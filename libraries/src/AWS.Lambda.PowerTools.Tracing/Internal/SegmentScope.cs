@@ -1,3 +1,4 @@
+using System;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
 using AWS.Lambda.PowerTools.Core;
 
@@ -48,19 +49,34 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
         
         public void AddAnnotation(string key, object value)
         {
-            _xRayRecorder.AddAnnotation(key, value);
+            if(_current is null)
+                _xRayRecorder.AddAnnotation(key, value);
+            else 
+                _current.AddAnnotation(key, value);
+                
         }
-        
+
         public void AddMetadata(string key, object value)
         {
-            _xRayRecorder.AddMetadata(_nameSpace, key, value);
+            AddMetadata(_nameSpace, key, value);
         }
 
         public void AddMetadata(string nameSpace, string key, object value)
         {
-            _xRayRecorder.AddMetadata(GetNamespaceOrDefault(nameSpace), key, value);
+            if (_current is null)
+                _xRayRecorder.AddMetadata(GetNamespaceOrDefault(nameSpace), key, value);
+            else
+                _current.AddMetadata(GetNamespaceOrDefault(nameSpace), key, value);
         }
         
+        public void AddException(Exception exception)
+        {
+            if (_current is null)
+                _xRayRecorder.AddException(exception);
+            else
+                _current.AddException(exception);
+        }
+
         public void Dispose()
         {
             if (_current is null)

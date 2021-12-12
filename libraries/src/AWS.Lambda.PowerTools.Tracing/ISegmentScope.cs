@@ -9,5 +9,6 @@ namespace Amazon.Lambda.PowerTools.Tracing
         void AddAnnotation(string key, object value);
         void AddMetadata(string key, object value);
         void AddMetadata(string nameSpace, string key, object value);
+        void AddException(Exception exception);
     }
 }

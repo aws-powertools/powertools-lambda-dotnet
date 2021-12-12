@@ -49,13 +49,26 @@ namespace Amazon.Lambda.PowerTools.Tracing
             );
         }
         
+        public static void AddException(Exception exception)
+        {
+            XRayRecorder.Instance.AddException(exception);
+        }
+        
+        public static void AddHttpInformation(string key, object value)
+        {
+            XRayRecorder.Instance.AddHttpInformation(key, value);
+        }
+
         private static string GetNamespaceOrDefault(string nameSpace)
         {
             if (!string.IsNullOrWhiteSpace(nameSpace))
                 return nameSpace;
             
             nameSpace = (GetEntity() as Subsegment)?.Namespace;
-            return !string.IsNullOrWhiteSpace(nameSpace) ? nameSpace : PowerToolsConfigurations.Instance.ServiceName;
+            if (!string.IsNullOrWhiteSpace(nameSpace))
+                return nameSpace;
+            
+            return PowerToolsConfigurations.Instance.ServiceName;
         }
     }
 }

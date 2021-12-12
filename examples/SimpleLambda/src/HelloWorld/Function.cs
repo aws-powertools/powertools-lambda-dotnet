@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -17,47 +18,80 @@ namespace HelloWorld
 {
     public class Function
     {
-        private static readonly HttpClient Client = new HttpClient();
+        private static readonly HttpClient client = new HttpClient();
 
-        private static async Task<string> GetCallingIp()
-        {    
-            Metrics.PushSingleMetric(
-                metricName: "CallingIP", 
-                value: 1, 
-                unit: MetricUnit.COUNT,
-                metricsNamespace: "dotnet-lambdapowertools",
-                serviceName: "lambda-example",
-                defaultDimensions: new Dictionary<string, string>{
-                    {"Metric Type", "Single"}
-                });                
-            
-            Client.DefaultRequestHeaders.Accept.Clear();
-            Client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
-
-            var msg = await Client.GetStringAsync("https://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext: false);
-
-            return msg.Replace("\n", "");
+        [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.Disabled)]
+        private static async Task<string> GetCallingIP()
+        {
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+            var msg = await client.GetStringAsync("http://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext:false);
+            return msg.Replace("\n","");
         }
-
+        
         [Logging(LogEvent = true, SamplingRate = 0.7)]
         [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-        [Metrics(serviceName: "lambda-example", metricsNamespace: "dotnet-lambdapowertools", captureColdStart: true)]
+        [Metrics(ServiceName = "lambda-example", Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             try
             {
-                Logger.AppendKey("test", "willBeLogged");
-
-                var watch = System.Diagnostics.Stopwatch.StartNew();
-                var location = await GetCallingIp();
-                watch.Stop();   
-
+                // Add Metrics
+                var watch = Stopwatch.StartNew();
+                Metrics.PushSingleMetric(
+                    metricName: "CallingIP",
+                    value: 1,
+                    unit: MetricUnit.COUNT,
+                    metricsNamespace: "dotnet-lambdapowertools",
+                    serviceName: "lambda-example",
+                    defaultDimensions: new Dictionary<string, string>
+                    {
+                        {"Metric Type", "Single"}
+                    });
+                var location = await GetCallingIP();
+                watch.Stop();
+                
                 Metrics.AddMetric("ElapsedExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
                 Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
                 
+                var body = new Dictionary<string, string>
+                {
+                    { "message", "hello world" },
+                    { "location", location }
+                };
+                
+                // Append a log key
+                Logger.AppendKey("test", "willBeLogged");
+                
+                // Log response inside a subsegment scope
+                using (var subsegment = Tracing.BeginSubsegmentScope("LoggingResponse"))
+                {
+                    subsegment.AddAnnotation("Test", "New");
+                    Logger.LogInformation("log something out");
+                    Logger.LogInformation("{body}", body);
+                }
+
+                // Trace parallel tasks
+                const int taskNumber = 2;
+                var tasks = new Task[taskNumber];
+                var entity = Tracing.GetEntity();
+                for (var i = 0; i < taskNumber; i++)
+                {
+                    var name = $"Inline Subsegment {i}";
+                    var task = Task.Run(() =>
+                    {
+                        using (Tracing.BeginSubsegmentScope(name, entity))
+                        {
+                            Logger.LogInformation($"log something out for inline subsegment {i}");
+                        }
+                    });
+                    tasks[i] = task;
+                }
+                Task.WaitAll(tasks);
+
                 return new APIGatewayProxyResponse
                 {
-                    Body = JsonSerializer.Serialize(new { location }),
+                    Body = JsonSerializer.Serialize(body),
                     StatusCode = 200,
                     Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
                 };

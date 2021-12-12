@@ -17,5 +17,7 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
         void EndSubsegment();
         Entity GetEntity();
         void SetEntity(Entity entity);
+        void AddException(Exception exception);
+        void AddHttpInformation(string key, object value);
     }
 }

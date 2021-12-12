@@ -48,5 +48,15 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
         {
             AWSXRayRecorder.Instance.SetEntity(entity);
         }
+        
+        public void AddException(Exception exception)
+        {
+            AWSXRayRecorder.Instance.AddException(exception);
+        }
+
+        public void AddHttpInformation(string key, object value)
+        {
+            AWSXRayRecorder.Instance.AddHttpInformation(key, value);
+        }
     }
 }
