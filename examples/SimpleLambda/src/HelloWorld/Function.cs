@@ -63,13 +63,12 @@ namespace HelloWorld
                 // Append a log key
                 Logger.AppendKey("test", "willBeLogged");
                 
-                // Log response inside a subsegment scope
-                using (var subsegment = Tracing.BeginSubsegmentScope("LoggingResponse"))
+                Tracing.WithSubsegment("LoggingResponse", subsegment =>
                 {
                     subsegment.AddAnnotation("Test", "New");
                     Logger.LogInformation("log something out");
                     Logger.LogInformation("{body}", body);
-                }
+                });
 
                 // Trace parallel tasks
                 const int taskNumber = 2;
@@ -80,10 +79,10 @@ namespace HelloWorld
                     var name = $"Inline Subsegment {i}";
                     var task = Task.Run(() =>
                     {
-                        using (Tracing.BeginSubsegmentScope(name, entity))
+                        Tracing.WithSubsegment(name, entity, _ =>
                         {
                             Logger.LogInformation($"log something out for inline subsegment {i}");
-                        }
+                        });
                     });
                     tasks[i] = task;
                 }
