@@ -52,7 +52,8 @@ segment name that appears in traces.
     public class Function
     {
         [Tracing]
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             await BusinessLogic1()
                 .ConfigureAwait(false);
@@ -79,7 +80,8 @@ segment name that appears in traces.
    	public class Function
     {
         [Tracing(SegmentName = "YourCustomName")]
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             ...
         }
@@ -100,7 +102,8 @@ different supported `CaptureMode` to record response, exception or both.
     public class Function
     {
         [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             ...
         }
@@ -141,7 +144,8 @@ context for an operation using any native object.
     public class Function
     {
         [Tracing]
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             Tracing.AddAnnotation("annotation", "value");
         }
@@ -152,13 +156,13 @@ context for an operation using any native object.
 
     You can add metadata using `AddMetadata()` method from Tracing
     ```c# hl_lines="8"
-    import software.amazon.lambda.powertools.tracing.Tracing;
-    import software.amazon.lambda.powertools.tracing.TracingUtils;
+    using Amazon.Lambda.PowerTools.Tracing;
 
     public class Function
     {
         [Tracing]
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             Tracing.AddMetadata("content", "value");
         }
@@ -177,7 +181,8 @@ under a subsegment, or you are doing multithreaded programming. Refer examples b
     
     public class Function
     {
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             Tracing.WithSubsegment("loggingResponse", (subsegment) => {
                 // Some business logic
@@ -197,7 +202,8 @@ under a subsegment, or you are doing multithreaded programming. Refer examples b
 
     public class Function
     {
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             // Extract existing trace data
             var entity = Tracing.GetEntity();
