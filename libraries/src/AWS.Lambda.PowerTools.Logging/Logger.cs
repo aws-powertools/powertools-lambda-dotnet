@@ -53,7 +53,7 @@ namespace AWS.Lambda.PowerTools.Logging
                 _scope.Remove(key);
         }
 
-        public static void RemoveKeys(IEnumerable<string> keys)
+        public static void RemoveKeys(params string[] keys)
         {
             if (keys == null) return;
             foreach (var key in keys)

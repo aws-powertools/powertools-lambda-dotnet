@@ -15,7 +15,9 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         private readonly LogLevel? _logLevel;
         private readonly double? _samplingRate;
         private readonly bool? _logEvent;
+        private readonly bool _clearState;
         private readonly string _correlationIdPath;
+        private static readonly Dictionary<string, object> _lambdaContextKeys = new();
         private readonly IPowerToolsConfigurations _powerToolsConfigurations;
         private readonly ISystemWrapper _systemWrapper;
 
@@ -30,6 +32,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             double? samplingRate,
             bool? logEvent,
             string correlationIdPath,
+            bool clearState,
             IPowerToolsConfigurations powerToolsConfigurations,
             ISystemWrapper systemWrapper
         )
@@ -38,6 +41,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             _logLevel = logLevel;
             _samplingRate = samplingRate;
             _logEvent = logEvent;
+            _clearState = clearState;
             _correlationIdPath = correlationIdPath;
             _powerToolsConfigurations = powerToolsConfigurations;
             _systemWrapper = systemWrapper;
@@ -55,7 +59,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
             if (!_initializeContext)
                 return;
-
+            
             Logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
 
             _isColdStart = false;
@@ -85,7 +89,9 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         public void OnExit(AspectEventArgs eventArgs)
         {
             if (!_isContextInitialized) return;
-            Logger.RemoveAllKeys();
+            _lambdaContextKeys.Clear();
+            if (_clearState)
+                Logger.RemoveAllKeys();
             _initializeContext = true;
         }
 
@@ -108,6 +114,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
         private void CaptureLambdaContext(ILambdaContext context)
         {
+            _lambdaContextKeys.Clear();
             if (context is null)
             {
                 if (IsDebug())
@@ -115,12 +122,12 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                         $"Skipping Lambda Context injection because ILambdaContext context parameter not found.");
                 return;
             }
-
-            Logger.AppendKey(LoggingConstants.KeyFunctionName, context.FunctionName);
-            Logger.AppendKey(LoggingConstants.KeyFunctionVersion, context.FunctionVersion);
-            Logger.AppendKey(LoggingConstants.KeyFunctionMemorySize, context.MemoryLimitInMB);
-            Logger.AppendKey(LoggingConstants.KeyFunctionArn, context.InvokedFunctionArn);
-            Logger.AppendKey(LoggingConstants.KeyFunctionRequestId, context.AwsRequestId);
+            
+            _lambdaContextKeys.Add(LoggingConstants.KeyFunctionName, context.FunctionName);
+            _lambdaContextKeys.Add(LoggingConstants.KeyFunctionVersion, context.FunctionVersion);
+            _lambdaContextKeys.Add(LoggingConstants.KeyFunctionMemorySize, context.MemoryLimitInMB);
+            _lambdaContextKeys.Add(LoggingConstants.KeyFunctionArn, context.InvokedFunctionArn);
+            _lambdaContextKeys.Add(LoggingConstants.KeyFunctionRequestId, context.AwsRequestId);
         }
 
         private void CaptureCorrelationId(object eventArg)
@@ -155,8 +162,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                         $"Skipping CorrelationId capture because of error caused while parsing the event object {e.Message}.");
             }
         }
-
-
+        
         private static object GetCorrelationId(object rootObject, string propertyName)
         {
             return rootObject switch
@@ -211,8 +217,14 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             _isColdStart = true;
             _initializeContext = true;
             _isContextInitialized = false;
+            _lambdaContextKeys.Clear();
             Logger.LoggerProvider = null;
             Logger.RemoveAllKeys();
+        }
+
+        internal static IEnumerable<KeyValuePair<string, object>> GetLambdaContextKeys()
+        {
+            return _lambdaContextKeys.AsEnumerable();
         }
     }
 }

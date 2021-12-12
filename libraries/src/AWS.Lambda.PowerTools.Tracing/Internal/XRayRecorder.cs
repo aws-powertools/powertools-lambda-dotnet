@@ -1,5 +1,8 @@
 using System;
 using Amazon.XRay.Recorder.Core;
+using Amazon.XRay.Recorder.Core.Internal.Emitters;
+using Amazon.XRay.Recorder.Core.Internal.Entities;
+using Amazon.XRay.Recorder.Core.Strategies;
 
 namespace Amazon.Lambda.PowerTools.Tracing.Internal
 {
@@ -7,6 +10,9 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
     {
         private static IXRayRecorder _instance;
         public static IXRayRecorder Instance => _instance ??= new XRayRecorder();
+        
+        public ISegmentEmitter Emitter => AWSXRayRecorder.Instance.Emitter;
+        public IStreamingStrategy StreamingStrategy => AWSXRayRecorder.Instance.StreamingStrategy;
         
         public void BeginSubsegment(string name, DateTime? timestamp = null)
         {
@@ -31,6 +37,26 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
         public void EndSubsegment()
         {
             AWSXRayRecorder.Instance.EndSubsegment();
+        }
+
+        public Entity GetEntity()
+        {
+            return AWSXRayRecorder.Instance.GetEntity();
+        }
+        
+        public void SetEntity(Entity entity)
+        {
+            AWSXRayRecorder.Instance.SetEntity(entity);
+        }
+        
+        public void AddException(Exception exception)
+        {
+            AWSXRayRecorder.Instance.AddException(exception);
+        }
+
+        public void AddHttpInformation(string key, object value)
+        {
+            AWSXRayRecorder.Instance.AddHttpInformation(key, value);
         }
     }
 }

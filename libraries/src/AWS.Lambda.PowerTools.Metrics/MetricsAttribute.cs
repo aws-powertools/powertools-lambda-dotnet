@@ -8,8 +8,8 @@ namespace AWS.Lambda.PowerTools.Metrics
     [AttributeUsage(AttributeTargets.Method)]
     public class MetricsAttribute : MethodAspectAttribute
     {
-        public string MetricsNamespace { get; set; } 
-        public string ServiceName { get; set; } 
+        public string Namespace { get; set; }
+        public string ServiceName { get; set; }
         public bool CaptureColdStart { get; set; }
         public bool CaptureEmptyMetrics { get; set; }
 
@@ -18,7 +18,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         private IMetrics MetricsInstance =>
             _metricsInstance ??= new Metrics(
                 PowerToolsConfigurations.Instance,
-                MetricsNamespace,
+                Namespace,
                 ServiceName,
                 CaptureEmptyMetrics
             );

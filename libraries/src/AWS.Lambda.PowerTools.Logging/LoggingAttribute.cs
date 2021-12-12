@@ -20,6 +20,7 @@ namespace AWS.Lambda.PowerTools.Logging
             get => _logLevel ?? LoggingConstants.DefaultLogLevel;
             set => _logLevel = value;
         }
+        
         public double SamplingRate
         {
             get => _samplingRate.GetValueOrDefault();
@@ -34,6 +35,8 @@ namespace AWS.Lambda.PowerTools.Logging
         
         public string CorrelationIdPath { get; set; }
 
+        public bool ClearState { get; set; } = false;
+        
         protected override IMethodAspectHandler CreateHandler()
         {
             return new LoggingAspectHandler
@@ -43,6 +46,7 @@ namespace AWS.Lambda.PowerTools.Logging
                 _samplingRate,
                 _logEvent,
                 CorrelationIdPath,
+                ClearState,
                 PowerToolsConfigurations.Instance,
                 SystemWrapper.Instance
             );

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -17,47 +18,98 @@ namespace HelloWorld
 {
     public class Function
     {
-        private static readonly HttpClient Client = new HttpClient();
+        private static readonly HttpClient client = new HttpClient();
 
-        private static async Task<string> GetCallingIp()
-        {    
-            Metrics.PushSingleMetric(
-                metricName: "CallingIP", 
-                value: 1, 
-                unit: MetricUnit.COUNT,
-                metricsNamespace: "dotnet-lambdapowertools",
-                serviceName: "lambda-example",
-                defaultDimensions: new Dictionary<string, string>{
-                    {"Metric Type", "Single"}
-                });                
-            
-            Client.DefaultRequestHeaders.Accept.Clear();
-            Client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
-
-            var msg = await Client.GetStringAsync("https://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext: false);
-
-            return msg.Replace("\n", "");
+        [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.Disabled)]
+        private static async Task<string> GetCallingIP()
+        {
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+            var msg = await client.GetStringAsync("http://checkip.amazonaws.com/")
+                .ConfigureAwait(continueOnCapturedContext:false);
+            return msg.Replace("\n","");
         }
 
+        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+        private static void NestedMethodsParent()
+        {
+            Logger.LogInformation($"NestedMethodsParent method");
+            NestedMethodsChild(1);
+            NestedMethodsChild(1);
+        }
+        
+        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+        private static void NestedMethodsChild(int childId)
+        {
+            Logger.LogInformation($"NestedMethodsChild method for child {childId}");
+        }
+        
         [Logging(LogEvent = true, SamplingRate = 0.7)]
         [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-        [Metrics(ServiceName = "lambda-example", MetricsNamespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
+        [Metrics(ServiceName = "lambda-example", Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             try
             {
-                Logger.AppendKey("test", "willBeLogged");
-
-                var watch = System.Diagnostics.Stopwatch.StartNew();
-                var location = await GetCallingIp();
-                watch.Stop();   
-
+                // Add Metrics
+                var watch = Stopwatch.StartNew();
+                Metrics.PushSingleMetric(
+                    metricName: "CallingIP",
+                    value: 1,
+                    unit: MetricUnit.COUNT,
+                    metricsNamespace: "dotnet-lambdapowertools",
+                    serviceName: "lambda-example",
+                    defaultDimensions: new Dictionary<string, string>
+                    {
+                        {"Metric Type", "Single"}
+                    });
+                var location = await GetCallingIP();
+                watch.Stop();
+                
                 Metrics.AddMetric("ElapsedExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
                 Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
                 
+                var body = new Dictionary<string, string>
+                {
+                    { "message", "hello world" },
+                    { "location", location }
+                };
+                
+                // Append Log Key
+                Logger.AppendKey("test", "willBeLogged");
+                
+                // Trace Nested Methods
+                NestedMethodsParent();
+                
+                // Trace Fluent API
+                Tracing.WithSubsegment("LoggingResponse", subsegment =>
+                {
+                    subsegment.AddAnnotation("Test", "New");
+                    Logger.LogInformation("log something out");
+                    Logger.LogInformation("{body}", body);
+                });
+
+                // Trace Parallel Tasks
+                var entity = Tracing.GetEntity();
+                var task = Task.Run(() =>
+                {
+                    Tracing.WithSubsegment("Inline Subsegment 1", entity, _ =>
+                    {
+                        Logger.LogInformation($"log something out for inline subsegment 1");
+                    });
+                });
+                var anotherTask = Task.Run(() =>
+                {
+                    Tracing.WithSubsegment("Inline Subsegment 2", entity, _ =>
+                    {
+                        Logger.LogInformation($"log something out for inline subsegment 2");
+                    });
+                });
+                Task.WaitAll(task, anotherTask);
+
                 return new APIGatewayProxyResponse
                 {
-                    Body = JsonSerializer.Serialize(new { location }),
+                    Body = JsonSerializer.Serialize(body),
                     StatusCode = 200,
                     Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
                 };
