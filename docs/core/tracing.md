@@ -77,7 +77,7 @@ segment name that appears in traces.
 === "Custom Segment names"
 
     ```c# hl_lines="3"
-   	public class Function
+    public class Function
     {
         [Tracing(SegmentName = "YourCustomName")]
         public async Task<APIGatewayProxyResponse> FunctionHandler
