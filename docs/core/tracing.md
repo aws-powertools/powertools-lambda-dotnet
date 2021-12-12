@@ -42,7 +42,7 @@ The Powertools service name is used as the X-Ray namespace. This can be set usin
 
 ### Lambda handler
 
-To enable Powertools tracing to your function add the `[Tracing] attribute to your `FunctionHandler` method or on
+To enable Powertools tracing to your function add the `[Tracing]` attribute to your `FunctionHandler` method or on
 any method will capture the method as a separate subsegment automatically. You can optionally choose to customize 
 segment name that appears in traces.
 
