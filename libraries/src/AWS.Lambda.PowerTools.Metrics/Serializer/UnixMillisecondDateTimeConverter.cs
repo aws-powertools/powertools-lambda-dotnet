@@ -6,11 +6,11 @@ namespace AWS.Lambda.PowerTools.Metrics.Serializer
 {
     public class UnixMillisecondDateTimeConverter : JsonConverter<DateTime>
     {
-        private readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        private readonly DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
-            var ms = (long)(value.ToUniversalTime() - UnixEpoch).TotalMilliseconds;
+            var ms = (long)(value.ToUniversalTime() - _unixEpoch).TotalMilliseconds;
             
             if(ms < 0)
             {

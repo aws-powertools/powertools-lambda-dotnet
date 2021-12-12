@@ -24,12 +24,30 @@ namespace AWS.Lambda.PowerTools.Metrics
         [JsonIgnore]
         public List<DimensionSet> DefaultDimensions {get; private set; }
 
+        /// <summary>
+        /// Creates empty MetricDirective object 
+        /// </summary>
         public MetricDirective() : this(null, new List<MetricDefinition>(), new List<DimensionSet>()) { }
 
+        /// <summary>
+        /// Creates MetricDirective object with specific namespace identifier
+        /// </summary>
+        /// <param name="metricsNamespace">Metrics namespace identifier</param>
         public MetricDirective(string metricsNamespace) : this(metricsNamespace, new List<MetricDefinition>(), new List<DimensionSet>()) { }
 
+        /// <summary>
+        /// Creates MetricDirective object with specific namespace identifier and default dimensions list
+        /// </summary>
+        /// <param name="metricsNamespace">Metrics namespace identifier</param>
+        /// <param name="defaultDimensions">Default dimensions list</param>
         public MetricDirective(string metricsNamespace, List<DimensionSet> defaultDimensions) : this(metricsNamespace, new List<MetricDefinition>(), defaultDimensions) { }
         
+        /// <summary>
+        /// Creates MetricDirective object with specific namespace identifier, list of metrics and default dimensions list
+        /// </summary>
+        /// <param name="metricsNamespace">Metrics namespace identifier</param>
+        /// <param name="metrics">List of metrics</param>
+        /// <param name="defaultDimensions">Default dimensions list</param>
         private MetricDirective(string metricsNamespace, List<MetricDefinition> metrics, List<DimensionSet> defaultDimensions)
         {
             Namespace = metricsNamespace;
@@ -38,6 +56,9 @@ namespace AWS.Lambda.PowerTools.Metrics
             DefaultDimensions = defaultDimensions;
         }
 
+        /// <summary>
+        /// Creates list with all dimensions. Needed for correct EMF payload creation
+        /// </summary>
         [JsonPropertyName("Dimensions")]
         public List<List<string>> AllDimensionKeys
         {
@@ -63,9 +84,14 @@ namespace AWS.Lambda.PowerTools.Metrics
                 return defaultKeys;
             }
         }
-
         
-
+        /// <summary>
+        /// Adds metric to memory
+        /// </summary>
+        /// <param name="name">Metric name. Cannot be null, empty or whitespace</param>
+        /// <param name="value">Metric value</param>
+        /// <param name="unit">Metric unit</param>
+        /// <exception cref="ArgumentOutOfRangeException">Throws 'ArgumentOutOfRangeException' if more than 100 items are added to list. Should only happen if gate keeping fails on Flush method</exception>
         public void AddMetric(string name, double value, MetricUnit unit)
         {
             if (Metrics.Count < PowerToolsConfigurations.MaxMetrics)
@@ -86,11 +112,20 @@ namespace AWS.Lambda.PowerTools.Metrics
             }
         }
 
+        /// <summary>
+        /// Sets metrics namespace identifier
+        /// </summary>
+        /// <param name="metricsNamespace">Metrics namespace identifier</param>
         internal void SetNamespace(string metricsNamespace)
         {
             Namespace = metricsNamespace;
         }
 
+        /// <summary>
+        /// Adds new dimension to memory
+        /// </summary>
+        /// <param name="dimension">Metrics Dimension</param>
+        /// <exception cref="ArgumentOutOfRangeException">Throws 'ArgumentOutOfRangeException' if more than 9 dimension are added to the list</exception>
         internal void AddDimension(DimensionSet dimension)
         {
             if (Dimensions.Count < PowerToolsConfigurations.MaxDimensions)
@@ -102,7 +137,7 @@ namespace AWS.Lambda.PowerTools.Metrics
                 }
                 else
                 {
-                    Console.WriteLine($"WARN: Failed to Add dimension '{dimension.DimensionKeys[0]}'. Dimension already exists.");
+                    Console.WriteLine($"##WARNING##: Failed to Add dimension '{dimension.DimensionKeys[0]}'. Dimension already exists.");
                 }
             }
             else
@@ -111,14 +146,13 @@ namespace AWS.Lambda.PowerTools.Metrics
             }
         }
 
-        internal void SetDimensions(List<DimensionSet> dimensions)
-        {
-            Dimensions = dimensions;
-        }
-
+        /// <summary>
+        /// Sets default dimensions
+        /// </summary>
+        /// <param name="defaultDimensions">Default dimensions list</param>
         internal void SetDefaultDimensions(List<DimensionSet> defaultDimensions)
         {
-            if(DefaultDimensions.Count() == 0){
+            if(!DefaultDimensions.Any()){
                 DefaultDimensions = defaultDimensions;
             }
             else {
@@ -132,23 +166,27 @@ namespace AWS.Lambda.PowerTools.Metrics
             
         }
         
+        /// <summary>
+        /// Appends dimension and default dimension lists
+        /// </summary>
+        /// <returns>Dictionary with dimension and default dimension list appended</returns>
         internal Dictionary<string, string> ExpandAllDimensionSets()
         {
             var dimensions = new Dictionary<string, string>();
 
-            foreach (DimensionSet dimensionSet in DefaultDimensions)
+            foreach (var dimensionSet in DefaultDimensions)
             {
-                foreach (var dimension in dimensionSet.Dimensions)
+                foreach (var (key, value) in dimensionSet.Dimensions)
                 {
-                    dimensions.TryAdd(dimension.Key, dimension.Value);
+                    dimensions.TryAdd(key, value);
                 }
             }
 
-            foreach (DimensionSet dimensionSet in Dimensions)
+            foreach (var dimensionSet in Dimensions)
             {
-                foreach (var dimension in dimensionSet.Dimensions)
+                foreach (var (key, value) in dimensionSet.Dimensions)
                 {
-                    dimensions.TryAdd(dimension.Key, dimension.Value);
+                    dimensions.TryAdd(key, value);
                 }
             }
 

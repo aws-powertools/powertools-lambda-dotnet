@@ -22,7 +22,7 @@ namespace AWS.Lambda.PowerTools.Metrics
                 ServiceName,
                 CaptureEmptyMetrics
             );
-
+        
         protected override IMethodAspectHandler CreateHandler()
         {
             return new MetricsAspectHandler
