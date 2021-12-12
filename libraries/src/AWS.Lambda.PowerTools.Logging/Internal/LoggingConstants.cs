@@ -11,7 +11,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         internal const string KeyFunctionMemorySize = "FunctionMemorySize";
         internal const string KeyFunctionArn = "FunctionArn";
         internal const string KeyFunctionRequestId = "FunctionRequestId";
-        internal const string KeyXRayTraceId = "xray_trace_id";
+        internal const string KeyXRayTraceId = "XRayTraceId";
         internal const string KeyCorrelationId = "CorrelationId";
         internal const string KeyTimestamp = "Timestamp";
         internal const string KeyLogLevel = "Level";

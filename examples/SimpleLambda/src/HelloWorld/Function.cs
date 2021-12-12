@@ -25,8 +25,23 @@ namespace HelloWorld
         {
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
-            var msg = await client.GetStringAsync("http://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext:false);
+            var msg = await client.GetStringAsync("http://checkip.amazonaws.com/")
+                .ConfigureAwait(continueOnCapturedContext:false);
             return msg.Replace("\n","");
+        }
+
+        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+        private static void NestedMethodsParent()
+        {
+            Logger.LogInformation($"NestedMethodsParent method");
+            NestedMethodsChild(1);
+            NestedMethodsChild(1);
+        }
+        
+        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+        private static void NestedMethodsChild(int childId)
+        {
+            Logger.LogInformation($"NestedMethodsChild method for child {childId}");
         }
         
         [Logging(LogEvent = true, SamplingRate = 0.7)]
@@ -60,9 +75,13 @@ namespace HelloWorld
                     { "location", location }
                 };
                 
-                // Append a log key
+                // Append Log Key
                 Logger.AppendKey("test", "willBeLogged");
                 
+                // Trace Nested Methods
+                NestedMethodsParent();
+                
+                // Trace Fluent API
                 Tracing.WithSubsegment("LoggingResponse", subsegment =>
                 {
                     subsegment.AddAnnotation("Test", "New");
@@ -70,23 +89,23 @@ namespace HelloWorld
                     Logger.LogInformation("{body}", body);
                 });
 
-                // Trace parallel tasks
-                const int taskNumber = 2;
-                var tasks = new Task[taskNumber];
+                // Trace Parallel Tasks
                 var entity = Tracing.GetEntity();
-                for (var i = 0; i < taskNumber; i++)
+                var task = Task.Run(() =>
                 {
-                    var name = $"Inline Subsegment {i}";
-                    var task = Task.Run(() =>
+                    Tracing.WithSubsegment("Inline Subsegment 1", entity, _ =>
                     {
-                        Tracing.WithSubsegment(name, entity, _ =>
-                        {
-                            Logger.LogInformation($"log something out for inline subsegment {i}");
-                        });
+                        Logger.LogInformation($"log something out for inline subsegment 1");
                     });
-                    tasks[i] = task;
-                }
-                Task.WaitAll(tasks);
+                });
+                var anotherTask = Task.Run(() =>
+                {
+                    Tracing.WithSubsegment("Inline Subsegment 2", entity, _ =>
+                    {
+                        Logger.LogInformation($"log something out for inline subsegment 2");
+                    });
+                });
+                Task.WaitAll(task, anotherTask);
 
                 return new APIGatewayProxyResponse
                 {
