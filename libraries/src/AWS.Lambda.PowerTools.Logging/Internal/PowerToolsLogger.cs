@@ -86,9 +86,13 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                 return;
 
             var message = new Dictionary<string, object>(StringComparer.Ordinal);
-            
-            // Add Scope Variables
+
+            // Add Custom Keys
             foreach (var (key, value) in Logger.GetAllKeys())
+                message.TryAdd(key, value);
+            
+            // Add Lambda Context Keys
+            foreach (var (key, value) in LoggingAspectHandler.GetLambdaContextKeys())
                 message.TryAdd(key, value);
             
             message.TryAdd(LoggingConstants.KeyTimestamp, DateTime.UtcNow.ToString("o"));
