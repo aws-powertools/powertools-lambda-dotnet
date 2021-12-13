@@ -88,5 +88,14 @@ namespace AWS.Lambda.PowerTools.Metrics.Internal
         {
             throw exception;
         }
+        
+        /// <summary>
+        /// Helper method for testing purposes. Clears static instance between test execution
+        /// </summary>
+        internal void ResetForTest()
+        {
+            _isColdStart = true;
+            Metrics.ResetForTest();
+        }
     }
 }

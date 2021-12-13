@@ -328,7 +328,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         /// <summary>
         /// Helper method for testing purposes. Clears static instance between test execution
         /// </summary>
-        internal static void ResetForTesting()
+        internal static void ResetForTest()
         {
             _instance = null;
         }
