@@ -12,6 +12,7 @@ namespace AWS.Lambda.PowerTools.Metrics
         void PushSingleMetric(string metricName, double value, MetricUnit unit, string metricsNamespace = null, string serviceName = null, Dictionary<string, string> defaultDimensions = null);
         void SetNamespace(string metricsNamespace);
         string GetNamespace();
+        string GetServiceName();
         string Serialize();
         void Flush(bool metricsOverflow = false);
     }

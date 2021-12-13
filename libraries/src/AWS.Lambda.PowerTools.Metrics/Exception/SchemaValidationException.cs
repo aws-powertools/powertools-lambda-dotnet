@@ -8,4 +8,5 @@ public class SchemaValidationException : Exception
     /// </summary>
     /// <param name="propertyName">Missing property name</param>
     public SchemaValidationException(string propertyName) : base($"EMF schema is invalid. '{propertyName}' is mandatory and not specified.") { }
+    public SchemaValidationException(bool raiseEmptyMetrics) : base($"No metrics have been provided.") { }
 }

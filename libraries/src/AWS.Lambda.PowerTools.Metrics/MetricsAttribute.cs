@@ -9,9 +9,9 @@ namespace AWS.Lambda.PowerTools.Metrics
     public class MetricsAttribute : MethodAspectAttribute
     {
         public string Namespace { get; set; }
-        public string ServiceName { get; set; }
+        public string Service { get; set; }
         public bool CaptureColdStart { get; set; }
-        public bool CaptureEmptyMetrics { get; set; }
+        public bool RaiseOnEmptyMetrics { get; set; }
 
 
         private IMetrics _metricsInstance;
@@ -19,8 +19,8 @@ namespace AWS.Lambda.PowerTools.Metrics
             _metricsInstance ??= new Metrics(
                 PowerToolsConfigurations.Instance,
                 Namespace,
-                ServiceName,
-                CaptureEmptyMetrics
+                Service,
+                RaiseOnEmptyMetrics
             );
         
         protected override IMethodAspectHandler CreateHandler()

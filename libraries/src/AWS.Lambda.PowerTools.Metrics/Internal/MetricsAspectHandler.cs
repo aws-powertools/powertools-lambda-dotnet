@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Amazon.Lambda.Core;
 using AWS.Lambda.PowerTools.Aspects;
 
 namespace AWS.Lambda.PowerTools.Metrics.Internal
@@ -40,7 +43,29 @@ namespace AWS.Lambda.PowerTools.Metrics.Internal
         public void OnEntry(AspectEventArgs eventArgs)
         {
             if (!_isColdStart || !_captureColdStartEnabled) return;
-            _metrics.AddMetric("ColdStart", 1.0, MetricUnit.COUNT);
+
+            var metricsNamespace = _metrics.GetNamespace();
+            var serviceName = _metrics.GetServiceName();
+            Dictionary<string, string> dimensions = null;
+
+            var context = eventArgs.Args?.FirstOrDefault(x => x is ILambdaContext) as ILambdaContext;
+            if (context != null)
+            {
+                dimensions = new Dictionary<string, string>
+                {
+                    {"FunctionName", context.FunctionName}
+                };
+            }
+
+            _metrics.PushSingleMetric(
+                "ColdStart",
+                1.0,
+                MetricUnit.COUNT,
+                metricsNamespace,
+                serviceName,
+                dimensions
+            );
+            
             _isColdStart = false;
         }
 

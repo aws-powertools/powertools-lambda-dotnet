@@ -12,6 +12,9 @@ namespace AWS.Lambda.PowerTools.Metrics
         [JsonPropertyName("Namespace")]
         public string Namespace { get; private set; }
         
+        [JsonIgnore]
+        public string ServiceName { get; private set; }
+        
         [JsonPropertyName("Metrics")]
         public List<MetricDefinition> Metrics
         {
@@ -119,6 +122,15 @@ namespace AWS.Lambda.PowerTools.Metrics
         internal void SetNamespace(string metricsNamespace)
         {
             Namespace = metricsNamespace;
+        }
+        
+        /// <summary>
+        /// Sets service name
+        /// </summary>
+        /// <param name="serviceName">Service name</param>
+        internal void SetServiceName(string serviceName)
+        {
+            ServiceName = serviceName;
         }
 
         /// <summary>

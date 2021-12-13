@@ -70,6 +70,24 @@ namespace AWS.Lambda.PowerTools.Metrics
         {
             return _rootNode.AWS.GetNamespace();
         }
+        
+        /// <summary>
+        /// Sets service name identifier
+        /// </summary>
+        /// <param name="serviceName">Service name</param>
+        public void SetServiceName(string serviceName)
+        {
+            _rootNode.AWS.SetServiceName(serviceName);
+        }
+
+        /// <summary>
+        /// Retrieves service name from memory
+        /// </summary>
+        /// <returns>Service name</returns>
+        internal string GetServiceName()
+        {
+            return _rootNode.AWS.GetServiceName();
+        }
 
         /// <summary>
         /// Adds new dimension to memory
