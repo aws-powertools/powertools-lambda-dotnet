@@ -7,45 +7,104 @@ namespace Amazon.Lambda.PowerTools.Tracing
 {
     public static class Tracing
     {
+        /// <summary>
+        /// Gets entity (segment/subsegment) from the <see cref="P:Amazon.XRay.Recorder.Core.AWSXRayRecorderImpl.TraceContext" />.
+        /// </summary>
+        /// <returns>The entity (segment/subsegment)</returns>
+        /// <exception cref="T:Amazon.XRay.Recorder.Core.Exceptions.EntityNotAvailableException">Thrown when the entity is not available to get.</exception>
         public static Entity GetEntity()
         {
             return XRayRecorder.Instance.GetEntity();
         }
         
+        /// <summary>
+        /// Set the specified entity (segment/subsegment) into <see cref="P:Amazon.XRay.Recorder.Core.AWSXRayRecorderImpl.TraceContext" />.
+        /// </summary>
+        /// <param name="entity">The entity to be set</param>
+        /// <exception cref="T:Amazon.XRay.Recorder.Core.Exceptions.EntityNotAvailableException">Thrown when the entity is not available to set</exception>
         public static void SetEntity(Entity entity)
         {
             XRayRecorder.Instance.SetEntity(entity);
         }
-        
+
+        /// <summary>
+        /// Adds the specified key and value as annotation to current segment.
+        /// The type of value is restricted. Only <see cref="T:System.String" />, <see cref="T:System.Int32" />, <see cref="T:System.Int64" />,
+        /// <see cref="T:System.Double" /> and <see cref="T:System.Boolean" /> are supported.
+        /// </summary>
+        /// <param name="key">The key of the annotation to add.</param>
+        /// <param name="value">The value of the annotation to add.</param>
+        /// <exception cref="T:Amazon.XRay.Recorder.Core.Exceptions.EntityNotAvailableException">Entity is not available in trace context.</exception>
         public static void AddAnnotation(string key, object value)
         {
             XRayRecorder.Instance.AddAnnotation(key, value);
         }
 
+        /// <summary>
+        /// Adds the specified key and value to metadata with given namespace.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
         public static void AddMetadata(string key, object value)
         {
             XRayRecorder.Instance.AddMetadata(GetNamespaceOrDefault(null), key, value);
         }
 
+        /// <summary>
+        /// Adds the specified key and value to metadata with given namespace.
+        /// </summary>
+        /// <param name="nameSpace">The namespace.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
         public static void AddMetadata(string nameSpace, string key, object value)
         {
             XRayRecorder.Instance.AddMetadata(GetNamespaceOrDefault(nameSpace), key, value);
         }
 
+        /// <summary>
+        /// Add the exception to current segment and also mark current segment as fault.
+        /// </summary>
+        /// <param name="exception">The exception to be added.</param>
+        /// <exception cref="T:Amazon.XRay.Recorder.Core.Exceptions.EntityNotAvailableException">Entity is not available in trace context.</exception>
         public static void AddException(Exception exception)
         {
             XRayRecorder.Instance.AddException(exception);
         }
         
+        /// <summary>
+        /// Adds the specified key and value as http information to current segment.
+        /// </summary>
+        /// <param name="key">The key of the http information to add.</param>
+        /// <param name="value">The value of the http information to add.</param>
+        /// <exception cref="T:System.ArgumentException">Key is null or empty.</exception>
+        /// <exception cref="T:System.ArgumentNullException">Value is null.</exception>
+        /// <exception cref="T:Amazon.XRay.Recorder.Core.Exceptions.EntityNotAvailableException">Entity is not available in trace context.</exception>
         public static void AddHttpInformation(string key, object value)
         {
             XRayRecorder.Instance.AddHttpInformation(key, value);
         }
         
+        /// <summary>
+        /// Adds a new subsegment around the passed consumer. This also provides access to
+        /// the newly created subsegment.
+        /// The namespace used follows the flow as described in <see cref="T:Amazon.Lambda.PowerTools.Tracing.TracingAttribute" />
+        /// </summary>
+        /// <param name="name">The name of the subsegment.</param>
+        /// <param name="subsegment">The x-ray subsegment for the wrapped consumer.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
         public static void WithSubsegment(string name, Action<Subsegment> subsegment) {
             WithSubsegment(null, name, subsegment);
         }
 
+        /// <summary>
+        /// Adds a new subsegment around the passed consumer. This also provides access to
+        /// the newly created subsegment.
+        /// The namespace used follows the flow as described in <see cref="T:Amazon.Lambda.PowerTools.Tracing.TracingAttribute" />
+        /// </summary>
+        /// <param name="nameSpace"></param>
+        /// <param name="name">The name of the subsegment.</param>
+        /// <param name="subsegment">The x-ray subsegment for the wrapped consumer.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
         public static void WithSubsegment(string nameSpace, string name, Action<Subsegment> subsegment)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -63,10 +122,34 @@ namespace Amazon.Lambda.PowerTools.Tracing
             }
         }
         
+        
+        /// <summary>
+        /// Adds a new subsegment around the passed consumer. This also provides access to
+        /// the newly created subsegment.
+        /// This method is intended for use with multi-threaded programming where the
+        /// context is lost between threads.
+        /// </summary>
+        /// <param name="name">The name of the subsegment.</param>
+        /// <param name="entity">The current x-ray context.</param>
+        /// <param name="subsegment">The x-ray subsegment for the wrapped consumer.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the entity is not provided.</exception>
         public static void WithSubsegment(string name, Entity entity, Action<Subsegment> subsegment) {
             WithSubsegment(null, name, subsegment);
         }
 
+        /// <summary>
+        /// Adds a new subsegment around the passed consumer. This also provides access to
+        /// the newly created subsegment.
+        /// This method is intended for use with multi-threaded programming where the
+        /// context is lost between threads.
+        /// </summary>
+        /// <param name="nameSpace">The namespace of the subsegment.</param>
+        /// <param name="name">The name of the subsegment.</param>
+        /// <param name="entity">The current x-ray context.</param>
+        /// <param name="subsegment">The x-ray subsegment for the wrapped consumer.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the entity is not provided.</exception>
         public static void WithSubsegment(string nameSpace, string name, Entity entity, Action<Subsegment> subsegment)
         {
             if (string.IsNullOrWhiteSpace(name))
