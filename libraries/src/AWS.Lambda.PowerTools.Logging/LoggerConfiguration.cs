@@ -5,7 +5,7 @@ namespace AWS.Lambda.PowerTools.Logging
 {
     public class LoggerConfiguration : IOptions<LoggerConfiguration>
     {
-        public string ServiceName { get; set; }
+        public string Service { get; set; }
         public LogLevel? MinimumLevel { get; set; }
         public double? SamplingRate { get; set; }
         

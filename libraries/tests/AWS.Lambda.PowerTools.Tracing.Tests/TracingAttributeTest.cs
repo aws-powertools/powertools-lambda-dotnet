@@ -20,19 +20,19 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             const bool isColdStart = true;
             var methodName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             
             var configurations1 = new Mock<IPowerToolsConfigurations>();
             configurations1.Setup(c =>
-                c.IsServiceNameDefined
+                c.IsServiceDefined
             ).Returns(true);
             configurations1.Setup(c =>
-                c.ServiceName
-            ).Returns(serviceName);
+                c.Service
+            ).Returns(service);
             
             var configurations2 = new Mock<IPowerToolsConfigurations>();
             configurations2.Setup(c =>
-                c.IsServiceNameDefined
+                c.IsServiceDefined
             ).Returns(false);
 
             var recorder1 = new Mock<IXRayRecorder>();
@@ -74,7 +74,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             recorder1.Verify(v =>
                 v.AddAnnotation(
                     It.Is<string>(i => i == "Service"),
-                    It.Is<string>(i => i == serviceName)
+                    It.Is<string>(i => i == service)
                 ), Times.Once);
 
             recorder2.Verify(v =>
@@ -168,15 +168,15 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
         }
 
         [Fact]
-        public void OnEntry_WhenNamespaceIsNull_SetNamespaceWithServiceName()
+        public void OnEntry_WhenNamespaceIsNull_SetNamespaceWithService()
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var configurations = new Mock<IPowerToolsConfigurations>();
             configurations.Setup(c =>
-                c.ServiceName
-            ).Returns(serviceName);
+                c.Service
+            ).Returns(service);
             var recorder = new Mock<IXRayRecorder>();
 
             var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
@@ -189,7 +189,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Assert
             recorder.Verify(v =>
                 v.SetNamespace(
-                    It.Is<string>(i => i == serviceName)
+                    It.Is<string>(i => i == service)
                 ), Times.Once);
         }
 

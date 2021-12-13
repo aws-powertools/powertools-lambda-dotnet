@@ -46,7 +46,7 @@ namespace HelloWorld
         
         [Logging(LogEvent = true, SamplingRate = 0.7)]
         [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-        [Metrics(ServiceName = "lambda-example", Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
+        [Metrics(Service = "lambda-example", Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             try
@@ -57,8 +57,8 @@ namespace HelloWorld
                     metricName: "CallingIP",
                     value: 1,
                     unit: MetricUnit.COUNT,
-                    metricsNamespace: "dotnet-lambdapowertools",
-                    serviceName: "lambda-example",
+                    nameSpace: "dotnet-lambdapowertools",
+                    service: "lambda-example",
                     defaultDimensions: new Dictionary<string, string>
                     {
                         {"Metric Type", "Single"}

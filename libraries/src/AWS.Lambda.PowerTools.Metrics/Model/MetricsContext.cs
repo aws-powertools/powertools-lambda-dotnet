@@ -72,6 +72,24 @@ namespace AWS.Lambda.PowerTools.Metrics
         }
 
         /// <summary>
+        /// Sets service name identifier
+        /// </summary>
+        /// <param name="service">Service name</param>
+        public void SetService(string service)
+        {
+            _rootNode.AWS.SetService(service);
+        }
+
+        /// <summary>
+        /// Retrieves service name from memory
+        /// </summary>
+        /// <returns>Service name</returns>
+        internal string GetService()
+        {
+            return _rootNode.AWS.GetService();
+        }
+
+        /// <summary>
         /// Adds new dimension to memory
         /// </summary>
         /// <param name="key">Dimension key. Cannot be null, empty or whitespace</param>

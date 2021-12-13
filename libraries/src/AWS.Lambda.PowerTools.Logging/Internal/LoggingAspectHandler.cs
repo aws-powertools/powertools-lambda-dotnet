@@ -11,7 +11,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 {
     internal class LoggingAspectHandler : IMethodAspectHandler
     {
-        private readonly string _serviceName;
+        private readonly string _service;
         private readonly LogLevel? _logLevel;
         private readonly double? _samplingRate;
         private readonly bool? _logEvent;
@@ -27,7 +27,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
         internal LoggingAspectHandler
         (
-            string serviceName,
+            string service,
             LogLevel? logLevel,
             double? samplingRate,
             bool? logEvent,
@@ -37,7 +37,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             ISystemWrapper systemWrapper
         )
         {
-            _serviceName = serviceName;
+            _service = service;
             _logLevel = logLevel;
             _samplingRate = samplingRate;
             _logEvent = logEvent;
@@ -52,7 +52,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             Logger.LoggerProvider ??= new LoggerProvider(
                 new LoggerConfiguration
                 {
-                    ServiceName = _serviceName,
+                    Service = _service,
                     MinimumLevel = _logLevel,
                     SamplingRate = _samplingRate
                 });

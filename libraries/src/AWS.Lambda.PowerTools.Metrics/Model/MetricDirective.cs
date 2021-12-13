@@ -12,6 +12,9 @@ namespace AWS.Lambda.PowerTools.Metrics
         [JsonPropertyName("Namespace")]
         public string Namespace { get; private set; }
         
+        [JsonIgnore]
+        public string Service { get; private set; }
+        
         [JsonPropertyName("Metrics")]
         public List<MetricDefinition> Metrics
         {
@@ -32,25 +35,25 @@ namespace AWS.Lambda.PowerTools.Metrics
         /// <summary>
         /// Creates MetricDirective object with specific namespace identifier
         /// </summary>
-        /// <param name="metricsNamespace">Metrics namespace identifier</param>
-        public MetricDirective(string metricsNamespace) : this(metricsNamespace, new List<MetricDefinition>(), new List<DimensionSet>()) { }
+        /// <param name="nameSpace">Metrics namespace identifier</param>
+        public MetricDirective(string nameSpace) : this(nameSpace, new List<MetricDefinition>(), new List<DimensionSet>()) { }
 
         /// <summary>
         /// Creates MetricDirective object with specific namespace identifier and default dimensions list
         /// </summary>
-        /// <param name="metricsNamespace">Metrics namespace identifier</param>
+        /// <param name="nameSpace">Metrics namespace identifier</param>
         /// <param name="defaultDimensions">Default dimensions list</param>
-        public MetricDirective(string metricsNamespace, List<DimensionSet> defaultDimensions) : this(metricsNamespace, new List<MetricDefinition>(), defaultDimensions) { }
-        
+        public MetricDirective(string nameSpace, List<DimensionSet> defaultDimensions) : this(nameSpace, new List<MetricDefinition>(), defaultDimensions) { }
+
         /// <summary>
         /// Creates MetricDirective object with specific namespace identifier, list of metrics and default dimensions list
         /// </summary>
-        /// <param name="metricsNamespace">Metrics namespace identifier</param>
+        /// <param name="nameSpace">Metrics namespace identifier</param>
         /// <param name="metrics">List of metrics</param>
         /// <param name="defaultDimensions">Default dimensions list</param>
-        private MetricDirective(string metricsNamespace, List<MetricDefinition> metrics, List<DimensionSet> defaultDimensions)
+        private MetricDirective(string nameSpace, List<MetricDefinition> metrics, List<DimensionSet> defaultDimensions)
         {
-            Namespace = metricsNamespace;
+            Namespace = nameSpace;
             Metrics = metrics;
             Dimensions = new List<DimensionSet>();
             DefaultDimensions = defaultDimensions;
@@ -115,10 +118,19 @@ namespace AWS.Lambda.PowerTools.Metrics
         /// <summary>
         /// Sets metrics namespace identifier
         /// </summary>
-        /// <param name="metricsNamespace">Metrics namespace identifier</param>
-        internal void SetNamespace(string metricsNamespace)
+        /// <param name="nameSpace">Metrics namespace identifier</param>
+        internal void SetNamespace(string nameSpace)
         {
-            Namespace = metricsNamespace;
+            Namespace = nameSpace;
+        }
+
+        /// <summary>
+        /// Sets service name
+        /// </summary>
+        /// <param name="service">Service name</param>
+        internal void SetService(string service)
+        {
+            Service = service;
         }
 
         /// <summary>

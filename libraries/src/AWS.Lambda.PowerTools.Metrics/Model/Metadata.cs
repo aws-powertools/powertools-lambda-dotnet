@@ -62,6 +62,33 @@ namespace AWS.Lambda.PowerTools.Metrics
         {         
             _metricDirective.SetNamespace(metricNamespace);
         }
+        
+        /// <summary>
+        /// Retrieves global namespace identifier
+        /// </summary>
+        /// <returns>Global namespace identifier</returns>
+        internal string GetNamespace()
+        {
+            return _metricDirective.Namespace;
+        }
+
+        /// <summary>
+        /// Sets service name
+        /// </summary>
+        /// <param name="service">Service name</param>
+        internal void SetService(string service)
+        {         
+            _metricDirective.SetService(service);
+        }
+        
+        /// <summary>
+        /// Retrieves service name
+        /// </summary>
+        /// <returns>Service name</returns>
+        internal string GetService()
+        {
+            return _metricDirective.Service;
+        }
 
         /// <summary>
         /// Adds new Dimension
@@ -87,15 +114,6 @@ namespace AWS.Lambda.PowerTools.Metrics
         internal List<MetricDefinition> GetMetrics()
         {
             return _metricDirective.Metrics;
-        }
-
-        /// <summary>
-        /// Retrieves global namespace identifier
-        /// </summary>
-        /// <returns>Global namespace identifier</returns>
-        internal string GetNamespace()
-        {
-            return _metricDirective.Namespace;
         }
 
         /// <summary>

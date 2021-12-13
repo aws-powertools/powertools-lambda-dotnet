@@ -33,10 +33,10 @@ namespace AWS.Lambda.PowerTools.Core
                 : defaultValue;
         }
 
-        public string ServiceName =>
+        public string Service =>
             GetEnvironmentVariableOrDefault(Constants.SERVICE_NAME_ENV, "service_undefined");
 
-        public bool IsServiceNameDefined =>
+        public bool IsServiceDefined =>
             !string.IsNullOrWhiteSpace(GetEnvironmentVariable(Constants.SERVICE_NAME_ENV));
 
         public bool TracerCaptureResponse =>
@@ -48,7 +48,7 @@ namespace AWS.Lambda.PowerTools.Core
         public bool IsSamLocal =>
             GetEnvironmentVariableOrDefault(Constants.SAM_LOCAL_ENV, false);
         
-        public string MetricsNamespace =>
+        public string Namespace =>
             GetEnvironmentVariable(Constants.METRICS_NAMESPACE_ENV);
         
         public string LogLevel =>

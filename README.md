@@ -1,6 +1,6 @@
 # AWS Lambda Powertools (.NET)
 
-[![Build .NET Core](https://github.com/awslabs/aws-lambda-powertools-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/awslabs/aws-lambda-powertools-dotnet/actions/workflows/build.yml)
+![aws provider](https://img.shields.io/badge/provider-AWS-orange?logo=amazon-aws&color=ff9900) [![Build](https://github.com/awslabs/aws-lambda-powertools-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/awslabs/aws-lambda-powertools-dotnet/actions/workflows/build.yml)
 
 A suite of .NET (C#) utilities for AWS Lambda functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. ([AWS Lambda Powertools Python](https://github.com/awslabs/aws-lambda-powertools-python) and [AWS Lambda Powertools Java](https://github.com/awslabs/aws-lambda-powertools-java) are also available).
 

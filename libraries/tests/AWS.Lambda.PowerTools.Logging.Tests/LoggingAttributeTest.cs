@@ -35,7 +35,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             // Arrange
             
             var methodName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             
             var configurations = new Mock<IPowerToolsConfigurations>();
@@ -53,7 +53,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -86,7 +86,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
             
             var configurations = new Mock<IPowerToolsConfigurations>();
@@ -98,7 +98,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new object [] { }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -133,7 +133,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             
             var configurations = new Mock<IPowerToolsConfigurations>();
@@ -145,7 +145,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new object [] { }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -180,7 +180,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
             
             var configurations = new Mock<IPowerToolsConfigurations>();
@@ -192,7 +192,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new object [] { }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -215,7 +215,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             
             var configurations = new Mock<IPowerToolsConfigurations>();
@@ -227,7 +227,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new object [] { }
             };
             
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -250,7 +250,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             
             var configurations = new Mock<IPowerToolsConfigurations>();
@@ -262,7 +262,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new object [] { }
             };
 
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, true, null, true, configurations.Object,
+            var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
             
             handler.ResetForTest();
@@ -290,7 +290,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
 
             var configurations = new Mock<IPowerToolsConfigurations>();
@@ -302,7 +302,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 Args = new[] { eventArg }
             };
 
-            var handler = new LoggingAspectHandler(serviceName, logLevel, null, false, correlationIdPath,
+            var handler = new LoggingAspectHandler(service, logLevel, null, false, correlationIdPath,
                 true, configurations.Object,
                 systemWrapper.Object);
 

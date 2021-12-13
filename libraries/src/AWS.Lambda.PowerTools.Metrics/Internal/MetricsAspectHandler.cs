@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Amazon.Lambda.Core;
 using AWS.Lambda.PowerTools.Aspects;
 
 namespace AWS.Lambda.PowerTools.Metrics.Internal
@@ -40,7 +43,29 @@ namespace AWS.Lambda.PowerTools.Metrics.Internal
         public void OnEntry(AspectEventArgs eventArgs)
         {
             if (!_isColdStart || !_captureColdStartEnabled) return;
-            _metrics.AddMetric("ColdStart", 1.0, MetricUnit.COUNT);
+
+            var nameSpace = _metrics.GetNamespace();
+            var service = _metrics.GetService();
+            Dictionary<string, string> dimensions = null;
+
+            var context = eventArgs.Args?.FirstOrDefault(x => x is ILambdaContext) as ILambdaContext;
+            if (context != null)
+            {
+                dimensions = new Dictionary<string, string>
+                {
+                    {"FunctionName", context.FunctionName}
+                };
+            }
+
+            _metrics.PushSingleMetric(
+                "ColdStart",
+                1.0,
+                MetricUnit.COUNT,
+                nameSpace,
+                service,
+                dimensions
+            );
+            
             _isColdStart = false;
         }
 
@@ -62,6 +87,15 @@ namespace AWS.Lambda.PowerTools.Metrics.Internal
         public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
         {
             throw exception;
+        }
+        
+        /// <summary>
+        /// Helper method for testing purposes. Clears static instance between test execution
+        /// </summary>
+        internal void ResetForTest()
+        {
+            _isColdStart = true;
+            Metrics.ResetForTest();
         }
     }
 }

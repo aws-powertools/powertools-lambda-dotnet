@@ -15,7 +15,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         internal const string KeyCorrelationId = "CorrelationId";
         internal const string KeyTimestamp = "Timestamp";
         internal const string KeyLogLevel = "Level";
-        internal const string KeyServiceName = "Service";
+        internal const string KeyService = "Service";
         internal const string KeyLoggerName = "Name";
         internal const string KeyMessage = "Message";
         internal const string KeySamplingRate = "SamplingRate";

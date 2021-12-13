@@ -20,10 +20,10 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         private LogLevel MinimumLevel => 
             CurrentConfig.MinimumLevel ?? LoggingConstants.DefaultLogLevel;
 
-        private string ServiceName => 
-            !string.IsNullOrWhiteSpace(CurrentConfig.ServiceName)
-            ? CurrentConfig.ServiceName
-            : _powerToolsConfigurations.ServiceName;
+        private string Service => 
+            !string.IsNullOrWhiteSpace(CurrentConfig.Service)
+            ? CurrentConfig.Service
+            : _powerToolsConfigurations.Service;
 
         private LoggerConfiguration GetCurrentConfig()
         {
@@ -33,7 +33,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
             var config = new LoggerConfiguration
             {
-                ServiceName = currConfig?.ServiceName,
+                Service = currConfig?.Service,
                 MinimumLevel = minimumLevel,
                 SamplingRate = samplingRate
             };
@@ -97,7 +97,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             
             message.TryAdd(LoggingConstants.KeyTimestamp, DateTime.UtcNow.ToString("o"));
             message.TryAdd(LoggingConstants.KeyLogLevel, logLevel.ToString());
-            message.TryAdd(LoggingConstants.KeyServiceName, ServiceName);
+            message.TryAdd(LoggingConstants.KeyService, Service);
             message.TryAdd(LoggingConstants.KeyLoggerName, _name);
             message.TryAdd(LoggingConstants.KeyMessage, formatter(state, exception));
             if(CurrentConfig.SamplingRate.HasValue)

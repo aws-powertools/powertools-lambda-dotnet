@@ -13,7 +13,7 @@ namespace AWS.Lambda.PowerTools.Logging
         private double? _samplingRate;
         private bool? _logEvent;
         
-        public string ServiceName { get; set; }
+        public string Service { get; set; }
 
         public LogLevel LogLevel
         {
@@ -41,7 +41,7 @@ namespace AWS.Lambda.PowerTools.Logging
         {
             return new LoggingAspectHandler
             (
-                ServiceName,
+                Service,
                 _logLevel,
                 _samplingRate,
                 _logEvent,
