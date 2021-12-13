@@ -86,7 +86,7 @@ namespace HelloWorld
                 {
                     subsegment.AddAnnotation("Test", "New");
                     Logger.LogInformation("log something out");
-                    Logger.LogInformation("{body}", body);
+                    Logger.LogInformation(body);
                 });
 
                 // Trace Parallel Tasks

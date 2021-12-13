@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using AWS.Lambda.PowerTools.Core;
 using Microsoft.Extensions.Logging;
@@ -99,15 +100,38 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             message.TryAdd(LoggingConstants.KeyLogLevel, logLevel.ToString());
             message.TryAdd(LoggingConstants.KeyService, Service);
             message.TryAdd(LoggingConstants.KeyLoggerName, _name);
-            message.TryAdd(LoggingConstants.KeyMessage, formatter(state, exception));
+            message.TryAdd(LoggingConstants.KeyMessage,
+                CustomFormatter(state, exception, out var customMessage) && customMessage is not null
+                    ? customMessage
+                    : formatter(state, exception));
             if(CurrentConfig.SamplingRate.HasValue)
                 message.TryAdd(LoggingConstants.KeySamplingRate, CurrentConfig.SamplingRate.Value);
             if (exception != null)
                 message.TryAdd(LoggingConstants.KeyException, exception.Message);
-            if(state != null)
-                message.TryAdd(LoggingConstants.KeyState, state);
 
             _systemWrapper.LogLine(JsonSerializer.Serialize(message));
+        }
+
+        private static bool CustomFormatter<TState>(TState state, Exception exception, out object message)
+        {
+            message = null;
+            if (exception is not null)
+                return false;
+
+            var stateKeys = (state as IEnumerable<KeyValuePair<string, object>>)?
+                .ToDictionary(i => i.Key, i => i.Value);
+
+            if (stateKeys is null || stateKeys.Count != 2)
+                return false;
+
+            if (!stateKeys.TryGetValue("{OriginalFormat}", out var originalFormat))
+                return false;
+            
+            if(originalFormat?.ToString() != LoggingConstants.KeyJsonFormatter)
+                return false;
+
+            message = stateKeys.First(k => k.Key != "{OriginalFormat}").Value;
+            return true;
         }
     }
 }

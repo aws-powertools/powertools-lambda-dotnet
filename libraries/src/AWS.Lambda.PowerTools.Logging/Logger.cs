@@ -95,6 +95,11 @@ namespace AWS.Lambda.PowerTools.Logging
         {
             LoggerInstance.LogDebug(message, args);
         }
+        
+        public static void LogDebug(object message)
+        {
+            LoggerInstance.LogDebug(message);
+        }
 
         #endregion
         
@@ -118,6 +123,11 @@ namespace AWS.Lambda.PowerTools.Logging
         public static void LogTrace(string message, params object[] args)
         {
             LoggerInstance.LogTrace(message, args);
+        }
+        
+        public static void LogTrace(object message)
+        {
+            LoggerInstance.LogTrace(message);
         }
         
         #endregion
@@ -144,6 +154,11 @@ namespace AWS.Lambda.PowerTools.Logging
             LoggerInstance.LogInformation(message, args);
         }
         
+        public static void LogInformation(object message)
+        {
+            LoggerInstance.LogInformation(message);
+        }
+
         #endregion
         
         #region Warning
@@ -166,6 +181,11 @@ namespace AWS.Lambda.PowerTools.Logging
         public static void LogWarning(string message, params object[] args)
         {
             LoggerInstance.LogWarning(message, args);
+        }
+        
+        public static void LogWarning(object message)
+        {
+            LoggerInstance.LogWarning(message);
         }
         
         #endregion
@@ -192,6 +212,11 @@ namespace AWS.Lambda.PowerTools.Logging
             LoggerInstance.LogError(message, args);
         }
         
+        public static void LogError(object message)
+        {
+            LoggerInstance.LogError(message);
+        }
+        
         #endregion
         
         #region Critical
@@ -214,6 +239,11 @@ namespace AWS.Lambda.PowerTools.Logging
         public static void LogCritical(string message, params object[] args)
         {
             LoggerInstance.LogCritical(message, args);
+        }
+        
+        public static void LogCritical(object message)
+        {
+            LoggerInstance.LogCritical(message);
         }
         
         #endregion
@@ -243,6 +273,11 @@ namespace AWS.Lambda.PowerTools.Logging
         public static void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
             LoggerInstance.Log(logLevel, eventId, state, exception, formatter);
+        }
+        
+        public static void Log(LogLevel logLevel, object message)
+        {
+            LoggerInstance.Log(logLevel, message);
         }
         
         #endregion
