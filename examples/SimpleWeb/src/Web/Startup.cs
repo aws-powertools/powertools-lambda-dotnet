@@ -27,10 +27,10 @@ namespace Web
             // UNCOMMENT IF YOU WANT TO DEFINE THE NAMESPACE AND SERVICE NAME
             // CAN USE VALUES COMING FROM CONFIGURATION FILE OR HARCODED VALUES
             //
-            //var metricsNamespace = $"{Configuration.GetSection("LambdaPowertools").GetValue<string>("POWERTOOLS_METRICS_NAMESPACE")}";
-            //var serviceName = $"{Configuration.GetSection("LambdaPowertools").GetValue<string>("POWERTOOLS_SERVICE_NAME")}";
+            //var nameSpace = $"{Configuration.GetSection("LambdaPowertools").GetValue<string>("POWERTOOLS_METRICS_NAMESPACE")}";
+            //var service = $"{Configuration.GetSection("LambdaPowertools").GetValue<string>("POWERTOOLS_SERVICE_NAME")}";
 
-            //services.AddMetrics(metricsNamespace, serviceName);
+            //services.AddMetrics(nameSpace, service);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline

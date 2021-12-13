@@ -71,23 +71,23 @@ namespace AWS.Lambda.PowerTools.Metrics
         {
             return _metricDirective.Namespace;
         }
-        
+
         /// <summary>
         /// Sets service name
         /// </summary>
-        /// <param name="serviceName">Service name</param>
-        internal void SetServiceName(string serviceName)
+        /// <param name="service">Service name</param>
+        internal void SetService(string service)
         {         
-            _metricDirective.SetServiceName(serviceName);
+            _metricDirective.SetService(service);
         }
         
         /// <summary>
         /// Retrieves service name
         /// </summary>
         /// <returns>Service name</returns>
-        internal string GetServiceName()
+        internal string GetService()
         {
-            return _metricDirective.ServiceName;
+            return _metricDirective.Service;
         }
 
         /// <summary>

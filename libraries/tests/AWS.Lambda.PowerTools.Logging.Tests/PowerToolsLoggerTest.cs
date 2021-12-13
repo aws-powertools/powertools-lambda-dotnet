@@ -14,7 +14,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
 
             var configurations = new Mock<IPowerToolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
@@ -22,7 +22,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
-                    ServiceName = serviceName,
+                    Service = service,
                     MinimumLevel = minimumLevel
                 });
 
@@ -56,7 +56,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             // Assert
             systemWrapper.Verify(v =>
                 v.LogLine(
-                    It.Is<string>(s=> s.Contains(serviceName))
+                    It.Is<string>(s=> s.Contains(service))
                 ), Times.Once);
            
         }
@@ -65,7 +65,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
 
             var configurations = new Mock<IPowerToolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
@@ -73,7 +73,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
-                    ServiceName = serviceName,
+                    Service = service,
                     MinimumLevel = minimumLevel
                 });
 
@@ -233,13 +233,13 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             var loggerSampleRate = 0.7;
             var randomSampleRate = 0.5;
            
             var configurations = new Mock<IPowerToolsConfigurations>();
-            configurations.Setup(c => c.ServiceName).Returns(serviceName);
+            configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
             configurations.Setup(c => c.LoggerSampleRate).Returns(loggerSampleRate);
             
@@ -249,7 +249,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
-                    ServiceName = null,
+                    Service = null,
                     MinimumLevel = null
                 });
             
@@ -260,7 +260,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
                 v.LogLine(
                     It.Is<string>
                     (s=> 
-                        s.Contains(serviceName) &&
+                        s.Contains(service) &&
                         s.Contains(loggerSampleRate.ToString(CultureInfo.InvariantCulture))
                     )
                 ), Times.Once);
@@ -271,13 +271,13 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             var loggerSampleRate = 0.7;
             var randomSampleRate = 0.5;
            
             var configurations = new Mock<IPowerToolsConfigurations>();
-            configurations.Setup(c => c.ServiceName).Returns(serviceName);
+            configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
             configurations.Setup(c => c.LoggerSampleRate).Returns(loggerSampleRate);
             
@@ -287,7 +287,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
-                    ServiceName = null,
+                    Service = null,
                     MinimumLevel = null
                 });
             
@@ -309,12 +309,12 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             var loggerSampleRate = 2;
 
             var configurations = new Mock<IPowerToolsConfigurations>();
-            configurations.Setup(c => c.ServiceName).Returns(serviceName);
+            configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
             configurations.Setup(c => c.LoggerSampleRate).Returns(loggerSampleRate);
             
@@ -323,7 +323,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
-                    ServiceName = null,
+                    Service = null,
                     MinimumLevel = null
                 });
             

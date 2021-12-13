@@ -322,8 +322,8 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
                     metricName: "ColdStart",
                     value: 1,
                     unit: MetricUnit.COUNT,
-                    metricsNamespace: "ExampleApplication",
-                    serviceName: "Booking",
+                    nameSpace: "ExampleApplication",
+                    service: "Booking",
                     defaultDimensions: new Dictionary<string, string>
                     {
                         {"FunctionContext", "$LATEST"}

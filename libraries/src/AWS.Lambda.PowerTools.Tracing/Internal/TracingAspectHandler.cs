@@ -34,7 +34,7 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
         
         private string GetNamespace()
         {
-            return !string.IsNullOrWhiteSpace(_namespace) ? _namespace : _powerToolsConfigurations.ServiceName;
+            return !string.IsNullOrWhiteSpace(_namespace) ? _namespace : _powerToolsConfigurations.Service;
         }
 
         private bool CaptureResponse()
@@ -85,8 +85,8 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
                 _captureAnnotations = false;
                 _isAnnotationsCaptured = true;
 
-                if (_powerToolsConfigurations.IsServiceNameDefined)
-                    _xRayRecorder.AddAnnotation("Service", _powerToolsConfigurations.ServiceName);
+                if (_powerToolsConfigurations.IsServiceDefined)
+                    _xRayRecorder.AddAnnotation("Service", _powerToolsConfigurations.Service);
             }
         }
 

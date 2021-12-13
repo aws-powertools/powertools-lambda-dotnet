@@ -57,8 +57,8 @@ namespace HelloWorld
                     metricName: "CallingIP",
                     value: 1,
                     unit: MetricUnit.COUNT,
-                    metricsNamespace: "dotnet-lambdapowertools",
-                    serviceName: "lambda-example",
+                    nameSpace: "dotnet-lambdapowertools",
+                    service: "lambda-example",
                     defaultDimensions: new Dictionary<string, string>
                     {
                         {"Metric Type", "Single"}

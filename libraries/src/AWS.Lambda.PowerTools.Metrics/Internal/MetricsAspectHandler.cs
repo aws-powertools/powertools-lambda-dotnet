@@ -44,8 +44,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Internal
         {
             if (!_isColdStart || !_captureColdStartEnabled) return;
 
-            var metricsNamespace = _metrics.GetNamespace();
-            var serviceName = _metrics.GetServiceName();
+            var nameSpace = _metrics.GetNamespace();
+            var service = _metrics.GetService();
             Dictionary<string, string> dimensions = null;
 
             var context = eventArgs.Args?.FirstOrDefault(x => x is ILambdaContext) as ILambdaContext;
@@ -61,8 +61,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Internal
                 "ColdStart",
                 1.0,
                 MetricUnit.COUNT,
-                metricsNamespace,
-                serviceName,
+                nameSpace,
+                service,
                 dimensions
             );
             

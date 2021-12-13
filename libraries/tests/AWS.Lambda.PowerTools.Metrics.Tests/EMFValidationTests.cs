@@ -27,8 +27,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -67,8 +67,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -105,8 +105,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -147,8 +147,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -226,8 +226,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -296,8 +296,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             var configurations = new Mock<IPowerToolsConfigurations>();
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -335,8 +335,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -375,8 +375,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -414,8 +414,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -455,8 +455,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             var logger = new Metrics(
                 configurations.Object,
-                metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService"
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
             );
 
             var handler = new MetricsAspectHandler(

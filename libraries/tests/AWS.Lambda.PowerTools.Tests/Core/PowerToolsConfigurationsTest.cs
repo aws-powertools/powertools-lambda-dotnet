@@ -164,13 +164,13 @@ namespace AWS.Lambda.PowerTools.Tests.Core
         
         #endregion
 
-        #region ServiceName Tests
+        #region Service Tests
 
         [Fact]
-        public void ServiceName_WhenEnvironmentIsNull_ReturnsDefaultValue()
+        public void Service_WhenEnvironmentIsNull_ReturnsDefaultValue()
         {
             // Arrange
-            var defaultServiceName = "service_undefined";
+            var defaultService = "service_undefined";
             var systemWrapper = new Mock<ISystemWrapper>();
 
             systemWrapper.Setup(c =>
@@ -180,7 +180,7 @@ namespace AWS.Lambda.PowerTools.Tests.Core
             var configurations = new PowerToolsConfigurations(systemWrapper.Object);
             
             // Act
-            var result = configurations.ServiceName;
+            var result = configurations.Service;
 
             // Assert
             systemWrapper.Verify(v =>
@@ -188,24 +188,24 @@ namespace AWS.Lambda.PowerTools.Tests.Core
                     It.Is<string>(i => i == Constants.SERVICE_NAME_ENV)
                 ), Times.Once);
             
-            Assert.Equal(result, defaultServiceName);
+            Assert.Equal(result, defaultService);
         }
         
         [Fact]
-        public void ServiceName_WhenEnvironmentHasValue_ReturnsValue()
+        public void Service_WhenEnvironmentHasValue_ReturnsValue()
         {
             // Arrange
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var systemWrapper = new Mock<ISystemWrapper>();
 
             systemWrapper.Setup(c =>
                 c.GetEnvironmentVariable(Constants.SERVICE_NAME_ENV)
-            ).Returns(serviceName);
+            ).Returns(service);
             
             var configurations = new PowerToolsConfigurations(systemWrapper.Object);
             
             // Act
-            var result = configurations.ServiceName;
+            var result = configurations.Service;
 
             // Assert
             systemWrapper.Verify(v =>
@@ -213,28 +213,28 @@ namespace AWS.Lambda.PowerTools.Tests.Core
                     It.Is<string>(i => i == Constants.SERVICE_NAME_ENV)
                 ), Times.Once);
             
-            Assert.Equal(result, serviceName);
+            Assert.Equal(result, service);
         }
 
         #endregion
         
-        #region IsServiceNameDefined Tests
+        #region IsServiceDefined Tests
         
         [Fact]
-        public void IsServiceNameDefined_WhenEnvironmentHasValue_ReturnsTrue()
+        public void IsServiceDefined_WhenEnvironmentHasValue_ReturnsTrue()
         {
             // Arrange
-            var serviceName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
             var systemWrapper = new Mock<ISystemWrapper>();
 
             systemWrapper.Setup(c =>
                 c.GetEnvironmentVariable(Constants.SERVICE_NAME_ENV)
-            ).Returns(serviceName);
+            ).Returns(service);
             
             var configurations = new PowerToolsConfigurations(systemWrapper.Object);
             
             // Act
-            var result = configurations.IsServiceNameDefined;
+            var result = configurations.IsServiceDefined;
 
             // Assert
             systemWrapper.Verify(v =>
@@ -246,7 +246,7 @@ namespace AWS.Lambda.PowerTools.Tests.Core
         }
         
         [Fact]
-        public void IsServiceNameDefined_WhenEnvironmentDoesNotHaveValue_ReturnsFalse()
+        public void IsServiceDefined_WhenEnvironmentDoesNotHaveValue_ReturnsFalse()
         {
             // Arrange
             var systemWrapper = new Mock<ISystemWrapper>();
@@ -258,7 +258,7 @@ namespace AWS.Lambda.PowerTools.Tests.Core
             var configurations = new PowerToolsConfigurations(systemWrapper.Object);
             
             // Act
-            var result = configurations.IsServiceNameDefined;
+            var result = configurations.IsServiceDefined;
 
             // Assert
             systemWrapper.Verify(v =>

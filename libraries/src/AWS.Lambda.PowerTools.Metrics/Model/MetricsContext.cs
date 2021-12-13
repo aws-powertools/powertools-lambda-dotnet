@@ -70,23 +70,23 @@ namespace AWS.Lambda.PowerTools.Metrics
         {
             return _rootNode.AWS.GetNamespace();
         }
-        
+
         /// <summary>
         /// Sets service name identifier
         /// </summary>
-        /// <param name="serviceName">Service name</param>
-        public void SetServiceName(string serviceName)
+        /// <param name="service">Service name</param>
+        public void SetService(string service)
         {
-            _rootNode.AWS.SetServiceName(serviceName);
+            _rootNode.AWS.SetService(service);
         }
 
         /// <summary>
         /// Retrieves service name from memory
         /// </summary>
         /// <returns>Service name</returns>
-        internal string GetServiceName()
+        internal string GetService()
         {
-            return _rootNode.AWS.GetServiceName();
+            return _rootNode.AWS.GetService();
         }
 
         /// <summary>

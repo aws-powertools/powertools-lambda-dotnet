@@ -106,7 +106,7 @@ namespace Amazon.Lambda.PowerTools.Tracing
             if (!string.IsNullOrWhiteSpace(nameSpace))
                 return nameSpace;
             
-            return PowerToolsConfigurations.Instance.ServiceName;
+            return PowerToolsConfigurations.Instance.Service;
         }
     }
 }
