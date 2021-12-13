@@ -190,7 +190,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                 case Stream:
                     try
                     {
-                        Logger.LogInformation("{event}", eventArg);
+                        Logger.LogInformation(eventArg);
                     }
                     catch (Exception e)
                     {
@@ -201,7 +201,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                 default:
                     try
                     {
-                        Logger.LogInformation("{event}", eventArg);
+                        Logger.LogInformation(eventArg);
                     }
                     catch (Exception e)
                     {
