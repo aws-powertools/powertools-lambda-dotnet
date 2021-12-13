@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.PowerTools.Logging.Internal
 {
-    public static class PowerToolsConfigurationsExtension
+    internal static class PowerToolsConfigurationsExtension
     {
-        public static LogLevel GetLogLevel(this IPowerToolsConfigurations powerToolsConfigurations, LogLevel? logLevel = null)
+        internal static LogLevel GetLogLevel(this IPowerToolsConfigurations powerToolsConfigurations, LogLevel? logLevel = null)
         {
             if (logLevel.HasValue) 
                 return logLevel.Value;

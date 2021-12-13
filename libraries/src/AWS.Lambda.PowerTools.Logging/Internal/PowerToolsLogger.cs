@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.PowerTools.Logging.Internal
 {
-    public sealed class PowerToolsLogger : ILogger
+    internal sealed class PowerToolsLogger : ILogger
     {
         private readonly string _name;
         private readonly Func<LoggerConfiguration> _getCurrentConfig;

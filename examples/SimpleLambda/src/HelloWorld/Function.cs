@@ -18,32 +18,6 @@ namespace HelloWorld
 {
     public class Function
     {
-        private static readonly HttpClient client = new HttpClient();
-
-        [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.Disabled)]
-        private static async Task<string> GetCallingIP()
-        {
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
-            var msg = await client.GetStringAsync("http://checkip.amazonaws.com/")
-                .ConfigureAwait(continueOnCapturedContext:false);
-            return msg.Replace("\n","");
-        }
-
-        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
-        private static void NestedMethodsParent()
-        {
-            Logger.LogInformation($"NestedMethodsParent method");
-            NestedMethodsChild(1);
-            NestedMethodsChild(1);
-        }
-        
-        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
-        private static void NestedMethodsChild(int childId)
-        {
-            Logger.LogInformation($"NestedMethodsChild method for child {childId}");
-        }
-        
         [Logging(LogEvent = true, SamplingRate = 0.7)]
         [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
         [Metrics(Service = "lambda-example", Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
@@ -80,7 +54,7 @@ namespace HelloWorld
                 
                 // Trace Nested Methods
                 NestedMethodsParent();
-                
+
                 // Trace Fluent API
                 Tracing.WithSubsegment("LoggingResponse", subsegment =>
                 {
@@ -123,6 +97,32 @@ namespace HelloWorld
                     Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
                 };
             }
+        }
+        
+        private static readonly HttpClient client = new HttpClient();
+
+        [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.Disabled)]
+        private static async Task<string> GetCallingIP()
+        {
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+            var msg = await client.GetStringAsync("http://checkip.amazonaws.com/")
+                .ConfigureAwait(continueOnCapturedContext:false);
+            return msg.Replace("\n","");
+        }
+
+        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+        private static void NestedMethodsParent()
+        {
+            Logger.LogInformation($"NestedMethodsParent method");
+            NestedMethodsChild(1);
+            NestedMethodsChild(1);
+        }
+        
+        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+        private static void NestedMethodsChild(int childId)
+        {
+            Logger.LogInformation($"NestedMethodsChild method for child {childId}");
         }
     }
 }
