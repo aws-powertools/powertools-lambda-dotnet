@@ -56,6 +56,46 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             Metrics.ResetForTesting();
         }
 
+        [Trait("Category", value: "SchemaValidation")]
+        [Fact]
+        public void WhenCaptureColdStart_CreateSeparateBlob()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+            
+            var configurations = new Mock<IPowerToolsConfigurations>();
+
+            var logger = new Metrics(
+                configurations.Object,
+                metricsNamespace: "dotnet-powertools-test",
+                serviceName: "testService"
+            );
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                true
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act
+            handler.OnEntry(eventArgs);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            handler.OnExit(eventArgs);
+
+            var metricsOutput = consoleOut.ToString();
+
+            // Assert
+            var metricBlobs = AllIndexesOf(metricsOutput.ToString(), "_aws");
+            
+            Assert.Equal(2, metricBlobs.Count);
+
+            // Reset
+            Metrics.ResetForTesting();
+        }
+        
         [Trait("Category", "EMFLimits")]
         [Fact]
         public void WhenMoreThan9DimensionsAdded_ThrowArgumentOutOfRangeException()
@@ -106,8 +146,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             var configurations = new Mock<IPowerToolsConfigurations>();
             
             var logger = new Metrics(
-                configurations.Object,
-                captureMetricsEvenIfEmpty: true
+                configurations.Object
             );
             
             var handler = new MetricsAspectHandler(
@@ -120,6 +159,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act
             Action act = () =>{
                 handler.OnEntry(eventArgs);
+                Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
                 handler.OnExit(eventArgs);
             };
 
@@ -145,8 +185,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             var logger = new Metrics(
                 configurations.Object,
                 metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService",
-                captureMetricsEvenIfEmpty: true
+                serviceName: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -159,6 +198,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act
             handler.OnEntry(eventArgs);
             Metrics.AddDimension("functionVersion", "$LATEST");
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -187,8 +227,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             var logger = new Metrics(
                 configurations.Object,
                 metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService",
-                captureMetricsEvenIfEmpty: true
+                serviceName: "testService"
             );
             
             var handler = new MetricsAspectHandler(
@@ -200,6 +239,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             // Act
             handler.OnEntry(eventArgs);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -292,8 +332,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             var logger = new Metrics(
                 configurations.Object,
                 metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService",
-                captureMetricsEvenIfEmpty: true
+                serviceName: "testService"
             );
 
             var handler = new MetricsAspectHandler(
@@ -306,6 +345,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act
             handler.OnEntry(eventArgs);
             Metrics.SetDefaultDimensions(defaultDimensions);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -332,8 +372,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             var logger = new Metrics(
                 configurations.Object,
                 metricsNamespace: "dotnet-powertools-test",
-                serviceName: "testService",
-                captureMetricsEvenIfEmpty: true
+                serviceName: "testService"
             );
             
             var handler = new MetricsAspectHandler(
@@ -347,6 +386,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             handler.OnEntry(eventArgs);
             Metrics.SetDefaultDimensions(defaultDimensions);
             Metrics.SetDefaultDimensions(defaultDimensions);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -439,6 +479,25 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             // Reset
             Metrics.ResetForTesting();
-        }        
+        }
+
+        #region Helpers
+
+        public List<int> AllIndexesOf(string str, string value)
+        {
+            var indexes = new List<int>();
+
+            if (string.IsNullOrEmpty(value)) return indexes;
+            
+            for (var index = 0;; index += value.Length)
+            {
+                index = str.IndexOf(value, index, StringComparison.Ordinal);
+                if (index == -1)
+                    return indexes;
+                indexes.Add(index);
+            }
+        }
+
+        #endregion
     }
 }
