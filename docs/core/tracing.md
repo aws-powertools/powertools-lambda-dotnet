@@ -197,7 +197,7 @@ under a subsegment, or you are doing multithreaded programming. Refer examples b
 
 === "Multi Threaded Programming"
 
-    ```c# hl_lines="9 11 12 13 14 15 16 17"
+    ```c# hl_lines="13-16"
     using Amazon.Lambda.PowerTools.Tracing;
 
     public class Function

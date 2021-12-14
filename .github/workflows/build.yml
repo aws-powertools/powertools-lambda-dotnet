@@ -16,17 +16,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET Core 3.1
+    - name: Setup .NET 6.0
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.x
-    - name: Setup .NET 5.0
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
     - name: Install solution dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test & Code Coverage
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --collect:"XPlat Code Coverage" -r ./codecov --no-restore --verbosity normal
+    - name: Codecov
+      uses: codecov/codecov-action@v2.1.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: unittests
+        fail_ci_if_error: true
+        name: codecov-lambda-powertools-dotnet
+        verbose: true
+        directory: ./codecov

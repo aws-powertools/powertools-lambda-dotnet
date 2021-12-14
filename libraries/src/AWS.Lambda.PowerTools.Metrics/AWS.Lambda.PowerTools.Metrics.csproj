@@ -27,7 +27,7 @@
       <Folder Include="Serializer\" />
     </ItemGroup>
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
         <PackageId>AWS.Lambda.PowerTools.Metrics</PackageId>
         <Authors>AWSLABS</Authors>
         <Company>Amazon Web Services</Company>
