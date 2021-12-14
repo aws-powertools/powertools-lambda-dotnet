@@ -268,7 +268,7 @@ this means that custom keys can be persisted across invocations. If you want all
 
 === "Function.cs"
 
-    ```cs hl_lines="8 12"
+    ```cs hl_lines="9 16"
     /**
      * Handler for requests to Lambda function.
      */
