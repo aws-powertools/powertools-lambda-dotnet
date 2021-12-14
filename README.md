@@ -10,9 +10,9 @@ A suite of .NET (C#) utilities for AWS Lambda functions to ease adopting best pr
 
 ## Features
 
-* **[Tracing](https://awslabs.github.io/aws-lambda-powertools-python/latest/core/tracer/)** - Decorators and utilities to trace Lambda function handlers, and both synchronous and asynchronous functions
-* **[Logging](https://awslabs.github.io/aws-lambda-powertools-python/latest/core/logger/)** - Structured logging made easier, and decorator to enrich structured logging with key Lambda context details
-* **[Metrics](https://awslabs.github.io/aws-lambda-powertools-python/latest/core/metrics/)** - Custom Metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
+* **[Tracing](https://awslabs.github.io/aws-lambda-powertools-dotnet/core/tracer/)** - Decorators and utilities to trace Lambda function handlers, and both synchronous and asynchronous functions
+* **[Logging](https://awslabs.github.io/aws-lambda-powertools-dotnet/core/logger/)** - Structured logging made easier, and decorator to enrich structured logging with key Lambda context details
+* **[Metrics](https://awslabs.github.io/aws-lambda-powertools-dotnet/core/metrics/)** - Custom Metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
 
 ### Installation
 
@@ -26,6 +26,11 @@ With Nuget...
 
 * Structured logging initial implementation from [aws-lambda-logging](https://gitlab.com/hadrien/aws_lambda_logging)
 * Powertools idea [DAZN Powertools](https://github.com/getndazn/dazn-lambda-powertools/)
+
+## Connect
+
+* **AWS Developers Slack**: `#lambda-powertools` - **[Invite, if you don't have an account](https://join.slack.com/t/awsdevelopers/shared_invite/zt-yryddays-C9fkWrmguDv0h2EEDzCqvw)**
+* **Email**: aws-lambda-powertools-feedback@amazon.com
 
 ## License
 
