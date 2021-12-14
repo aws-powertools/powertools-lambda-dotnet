@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using Amazon.Lambda.Core;
 using AWS.Lambda.PowerTools.Aspects;
 using AWS.Lambda.PowerTools.Core;
@@ -136,7 +137,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                 return;
 
             var correlationIdPaths = _correlationIdPath
-                .Split('.', StringSplitOptions.RemoveEmptyEntries);
+                .Split(CorrelationIdPaths.Separator, StringSplitOptions.RemoveEmptyEntries);
 
             if (!correlationIdPaths.Any())
                 return;
@@ -151,9 +152,21 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
             
             try
             {
-                var rootObject = correlationIdPaths.Aggregate(eventArg, GetCorrelationId);
-                if (rootObject is not null)
-                    Logger.AppendKey(LoggingConstants.KeyCorrelationId, rootObject);
+                var correlationId = string.Empty;
+                var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg));
+                var element = jsonDoc.RootElement;
+                for (var i = 0; i < correlationIdPaths.Length; i++)
+                {
+                    if (!element.TryGetProperty(correlationIdPaths[i], out var childElement)) 
+                        break;
+                    
+                    element = childElement;
+                    if (i == correlationIdPaths.Length - 1)
+                        correlationId = element.ToString();
+                }
+                
+                if (!string.IsNullOrWhiteSpace(correlationId))
+                    Logger.AppendKey(LoggingConstants.KeyCorrelationId, correlationId);
             }
             catch (Exception e)
             {
@@ -161,19 +174,6 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                     _systemWrapper.LogLine(
                         $"Skipping CorrelationId capture because of error caused while parsing the event object {e.Message}.");
             }
-        }
-        
-        private static object GetCorrelationId(object rootObject, string propertyName)
-        {
-            return rootObject switch
-            {
-                null => null,
-                IDictionary<string, string> headers => headers.ContainsKey(propertyName) ? headers[propertyName] : null,
-                IDictionary<string, IList<string>> multiValueHeaders => multiValueHeaders.ContainsKey(propertyName)
-                    ? multiValueHeaders[propertyName]?.FirstOrDefault()
-                    : null,
-                _ => rootObject.GetType().GetProperty(propertyName)?.GetValue(rootObject)
-            };
         }
 
         private void LogEvent(object eventArg)

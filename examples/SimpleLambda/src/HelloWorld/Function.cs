@@ -16,7 +16,7 @@ using AWS.Lambda.PowerTools.Metrics;
 
 namespace HelloWorld
 {
-    public class Function
+    public class Function1
     {
         [Logging(LogEvent = true, SamplingRate = 0.7)]
         [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]

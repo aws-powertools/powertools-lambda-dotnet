@@ -19,7 +19,7 @@ Logging requires two settings:
 Setting | Description | Environment variable | Attribute parameter
 ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------
 **Logging level** | Sets how verbose Logger should be (Information, by default) |  `LOG_LEVEL` | `LogLevel`
-**Service name** | Sets **Service** key that will be present across all log statements | `POWERTOOLS_SERVICE_NAME` | `ServiceName`
+**Service** | Sets **Service** key that will be present across all log statements | `POWERTOOLS_SERVICE_NAME` | `Service`
 
 > Example using AWS Serverless Application Model (SAM)
 
@@ -47,102 +47,51 @@ Your logs will always include the following keys to your structured logging:
 
 Key | Type | Example | Description
 ------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------
-**Timestamp** | String | "2020-05-24 18:17:33,774" | Timestamp of actual log statement
-**Level** | String | "Information" | Logging level
-**Name** | String | "PowerTools Logger" | Logger name
-**ColdStart** | Boolean | true| ColdStart value.
-**Service** | String | "payment" | Service name defined. "service_undefined" will be used if unknown
+**Timestamp** | string | "2020-05-24 18:17:33,774" | Timestamp of actual log statement
+**Level** | string | "Information" | Logging level
+**Name** | string | "PowerTools Logger" | Logger name
+**ColdStart** | bool | true| ColdStart value.
+**Service** | string | "payment" | Service name defined. "service_undefined" will be used if unknown
 **SamplingRate** | int |  0.1 | Debug logging sampling rate in percentage e.g. 10% in this case
-**Message** | String |  "Collecting payment" | Log statement value. Unserializable JSON values will be casted to string
-**FunctionName**| String | "example-powertools-HelloWorldFunction-1P1Z6B39FLU73"
-**FunctionVersion**| String | "12"
-**FunctionMemorySize**| String | "128"
-**FunctionArn**| String | "arn:aws:lambda:eu-west-1:012345678910:function:example-powertools-HelloWorldFunction-1P1Z6B39FLU73"
-**XRayTraceId**| String | "1-5759e988-bd862e3fe1be46a994272793" | X-Ray Trace ID when Lambda function has enabled Tracing
-**FunctionRequestId**| String | "899856cb-83d1-40d7-8611-9e78f15f32f4" | AWS Request ID from lambda context
-**State**| JSON | See below | JSON log entry
+**Message** | string |  "Collecting payment" | Log statement value. Unserializable JSON values will be casted to string
+**FunctionName**| string | "example-powertools-HelloWorldFunction-1P1Z6B39FLU73"
+**FunctionVersion**| string | "12"
+**FunctionMemorySize**| string | "128"
+**FunctionArn**| string | "arn:aws:lambda:eu-west-1:012345678910:function:example-powertools-HelloWorldFunction-1P1Z6B39FLU73"
+**XRayTraceId**| string | "1-5759e988-bd862e3fe1be46a994272793" | X-Ray Trace ID when Lambda function has enabled Tracing
+**FunctionRequestId**| string | "899856cb-83d1-40d7-8611-9e78f15f32f4" | AWS Request ID from lambda context
 
-=== "Example CloudWatch Logs excerpt"
+## Logging incoming event
 
-    ```json hl_lines="7-11 16-19"
-    {
-		"ColdStart": true,
-		"XRayTraceId": "1-61b600cf-5b6094cc123936136c4413e6",
-		"FunctionName": "simple-lambda-test-HelloWorldFunction-6Riwvl7WcJt3",
-		"FunctionVersion": "$LATEST",
-		"FunctionMemorySize": 512,
-		"FunctionArn": "arn:aws:lambda:eu-west-2:286043031651:function:simple-lambda-test-HelloWorldFunction-6Riwvl7WcJt3",
-		"FunctionRequestId": "c3f11265-0a39-443c-814d-671a567f5fee",
-		"Timestamp": "2021-12-12T14:01:53.4222470Z",
-		"Level": "Information",
-		"Service": "lambda-example",
-		"Name": "AWS.Lambda.PowerTools.Logging.Logger",
-		"Message": "hello world",
-		"SamplingRate": 0.7,
-		"State": [
-			{
-				"Key": "body",
-				"Value": {
-					"message": "hello world"
-				}
-			}
-		]
-	}
-    ```
-
-## Capturing context Lambda info
-
-You can enrich your structured logs with key Lambda context information via `logEvent` annotation parameter. 
-You can also explicitly log any incoming event using `logEvent` param. Refer [Override default object mapper](#override-default-object-mapper) 
-to customise what is logged.
+ You can also explicitly log any incoming event using `LogEvent` parameter. The first handler parameter is the input to the handler, which can be event data (published by an event source) or custom input that you provide such as a string or any custom data object.
 
 !!! warning
     Log event is disabled by default to prevent sensitive info being logged.
 
 
-=== "App.java"
+=== "Function.cs"
 
-    ```java hl_lines="14"
-    import org.apache.logging.log4j.LogManager;
-    import org.apache.logging.log4j.Logger;
-    import software.amazon.lambda.powertools.logging.LoggingUtils;
-    import software.amazon.lambda.powertools.logging.Logging;
+    ```c# hl_lines="14"
+    using AWS.Lambda.PowerTools.Logging;
     ...
     
     /**
      * Handler for requests to Lambda function.
      */
-    public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    
-        Logger log = LogManager.getLogger();
-    
-        @Logging
-        public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
-         ...
-        }
-    }
-    ```
-
-=== "AppLogEvent.java"
-    
-    ```java hl_lines="8"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class AppLogEvent implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    
-        Logger log = LogManager.getLogger();
-        
-        @Logging(logEvent = true)
-        public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
-         ...
+    public class Function
+    {
+        [Logging(LogEvent = true)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            ...
         }
     }
     ```
 
 ## Setting a Correlation ID
 
-You can set a Correlation ID using `correlationIdPath` attribute by passing a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}.
+You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}.
 
 === "App.java"
 
