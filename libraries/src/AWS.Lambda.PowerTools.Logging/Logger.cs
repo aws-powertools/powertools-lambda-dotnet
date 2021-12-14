@@ -11,19 +11,22 @@ namespace AWS.Lambda.PowerTools.Logging
         private static ILogger LoggerInstance => _loggerInstance ??= Create<Logger>();
         internal static ILoggerProvider LoggerProvider { get; set; }
         private static IDictionary<string, object> _scope { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
-
+        
         /// <summary>
         /// Creates a new <see cref="T:Microsoft.Extensions.Logging.ILogger" /> instance.
         /// </summary>
         /// <param name="categoryName">The category name for messages produced by the logger.</param>
         /// <returns>The instance of <see cref="T:Microsoft.Extensions.Logging.ILogger" /> that was created.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the categoryName is not provided.</exception>
+        /// <exception cref="LoggerException">Thrown when the [Logging] attribute is not added to the Lambda handler.</exception>
         public static ILogger Create(string categoryName)
         {
             if (string.IsNullOrWhiteSpace(categoryName))
                 throw new ArgumentNullException(nameof(categoryName));
-                    
+
             if (LoggerProvider == null)
-                throw new ArgumentNullException(nameof(LoggerProvider));
+                throw new LoggerException(
+                    "LoggerProvider has not been initialized. Add [Logging] attribute to the Lambda handler");
          
             return LoggerProvider.CreateLogger(categoryName);
         }
@@ -32,6 +35,7 @@ namespace AWS.Lambda.PowerTools.Logging
         /// Creates a new <see cref="T:Microsoft.Extensions.Logging.ILogger" /> instance.
         /// </summary>
         /// <returns>The instance of <see cref="T:Microsoft.Extensions.Logging.ILogger" /> that was created.</returns>
+        /// <exception cref="LoggerException">Thrown when the [Logging] attribute is not added to the Lambda handler.</exception>
         public static ILogger Create<T>()
         {
             return Create(typeof(T).FullName);
@@ -39,29 +43,56 @@ namespace AWS.Lambda.PowerTools.Logging
 
         #region Scope Variables
 
+        /// <summary>
+        /// Appending additional key to the log context.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the key is not provided.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the value is not provided.</exception>
         public static void AppendKey(string key, object value)
         {
-            if (string.IsNullOrWhiteSpace(key)) 
-                return;
-            
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentNullException(nameof(key));
+
+            if (value is null)
+                throw new ArgumentNullException(nameof(value));
+
             if (_scope.ContainsKey(key))
                 _scope[key] = value;
             else
                 _scope.Add(key, value);
         }
 
+        /// <summary>
+        /// Appending additional key to the log context.
+        /// </summary>
+        /// <param name="keys">The list of keys.</param>
         public static void AppendKeys(IDictionary<string, object> keys)
         {
-            foreach (var keyValuePair in keys)
-                AppendKey(keyValuePair.Key, keyValuePair.Value);
+            foreach (var (key, value) in keys)
+                AppendKey(key, value);
         }
 
+        /// <summary>
+        /// Remove additional key from the log context.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the key is not provided.</exception>
         public static void RemoveKey(string key)
         {
-            if (!string.IsNullOrWhiteSpace(key) && _scope.ContainsKey(key))
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentNullException(nameof(key));
+
+            if (_scope.ContainsKey(key))
                 _scope.Remove(key);
         }
 
+        
+        /// <summary>
+        /// Remove additional keys from the log context.
+        /// </summary>
+        /// <param name="keys">The list of keys.</param>
         public static void RemoveKeys(params string[] keys)
         {
             if (keys == null) return;
@@ -69,11 +100,17 @@ namespace AWS.Lambda.PowerTools.Logging
                 RemoveKey(key);
         }
 
+        /// <summary>
+        /// Returns all additional keys added to the log context.
+        /// </summary>
         public static IEnumerable<KeyValuePair<string, object>> GetAllKeys()
         {
             return _scope.AsEnumerable();
         }
         
+        /// <summary>
+        /// Removes all additional keys from the log context.
+        /// </summary>
         internal static void RemoveAllKeys()
         {
             _scope.Clear();
