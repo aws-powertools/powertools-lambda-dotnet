@@ -14,9 +14,9 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal
         public ISegmentEmitter Emitter => AWSXRayRecorder.Instance.Emitter;
         public IStreamingStrategy StreamingStrategy => AWSXRayRecorder.Instance.StreamingStrategy;
         
-        public void BeginSubsegment(string name, DateTime? timestamp = null)
+        public void BeginSubsegment(string name)
         {
-            AWSXRayRecorder.Instance.BeginSubsegment(name, timestamp);
+            AWSXRayRecorder.Instance.BeginSubsegment(name);
         }
 
         public void SetNamespace(string value)

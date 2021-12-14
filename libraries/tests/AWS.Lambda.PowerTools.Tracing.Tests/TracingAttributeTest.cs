@@ -138,8 +138,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Assert
             recorder.Verify(v =>
                 v.BeginSubsegment(
-                    It.Is<string>(i => i == $"## {methodName}"),
-                    It.IsAny<DateTime?>()
+                    It.Is<string>(i => i == $"## {methodName}")
                 ), Times.Once);
         }
 
@@ -162,8 +161,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Assert
             recorder.Verify(v =>
                 v.BeginSubsegment(
-                    It.Is<string>(i => i == segmentName),
-                    It.IsAny<DateTime?>()
+                    It.Is<string>(i => i == segmentName)
                 ), Times.Once);
         }
 

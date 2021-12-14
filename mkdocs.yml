@@ -10,7 +10,7 @@ nav:
   - Roadmap: https://github.com/awslabs/aws-lambda-powertools-roadmap/projects/1" target="_blank
   - Core utilities:
       - core/tracing.md
-      - core/logger.md
+      - core/logging.md
       - core/metrics.md
 
 theme:

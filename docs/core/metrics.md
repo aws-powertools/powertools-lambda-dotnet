@@ -47,12 +47,11 @@ Setting | Description | Environment variable | Constructor parameter
 	  HelloWorldFunction:
 	    Type: AWS::Serverless::Function 
 		  Properties:
-			Runtime: dotnetcore3.1
 			...
 			Environment: 
 			  Variables:
-			  POWERTOOLS_SERVICE_NAME: Payment
-			  POWERTOOLS_METRICS_NAMESPACE: ServerlessAirline
+			    POWERTOOLS_SERVICE_NAME: Payment
+			    POWERTOOLS_METRICS_NAMESPACE: ServerlessAirline
     ```
 
 

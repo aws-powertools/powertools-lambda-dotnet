@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace AWS.Lambda.PowerTools.Logging.Internal
 {
-    public sealed class LoggerProvider : ILoggerProvider
+    internal sealed class LoggerProvider : ILoggerProvider
     {
         private readonly LoggerConfiguration _currentConfig;
         private readonly ConcurrentDictionary<string, PowerToolsLogger> _loggers = new();

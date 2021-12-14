@@ -13,28 +13,56 @@ namespace AWS.Lambda.PowerTools.Logging
         private double? _samplingRate;
         private bool? _logEvent;
         
+        /// <summary>
+        /// Service name is used for logging.
+        /// This can be also set using the environment variable <c>POWERTOOLS_SERVICE_NAME</c>.
+        /// </summary>
         public string Service { get; set; }
 
+        /// <summary>
+        /// Specify the minimum log level for logging (Information, by default).
+        /// This can be also set using the environment variable <c>LOG_LEVEL</c>.
+        /// </summary>
         public LogLevel LogLevel
         {
             get => _logLevel ?? LoggingConstants.DefaultLogLevel;
             set => _logLevel = value;
         }
         
+        /// <summary>
+        /// Dynamically set a percentage of logs to DEBUG level.
+        /// This can be also set using the environment variable <c>POWERTOOLS_LOGGER_SAMPLE_RATE</c>.
+        /// </summary>
         public double SamplingRate
         {
             get => _samplingRate.GetValueOrDefault();
             set => _samplingRate = value;
         }
         
+        /// <summary>
+        /// Explicitly log any incoming event, The first handler parameter is the input to the handler,
+        /// which can be event data (published by an event source) or custom input that you provide
+        /// such as a string or any custom data object.
+        /// </summary>
         public bool LogEvent
         {
             get => _logEvent.GetValueOrDefault();
             set => _logEvent = value;
         }
         
+        /// <summary>
+        /// Pointer path to extract correlation id from input parameter.
+        /// The first handler parameter is the input to the handler, which can be
+        /// event data (published by an event source) or custom input that you provide
+        /// such as a string or any custom data object.
+        /// </summary>
         public string CorrelationIdPath { get; set; }
 
+        /// <summary>
+        /// Logger is commonly initialized in the global scope.
+        /// Due to Lambda Execution Context reuse, this means that custom keys can be persisted across invocations.
+        /// Set this attribute to true if you want all custom keys to be deleted on each request.
+        /// </summary>
         public bool ClearState { get; set; } = false;
         
         protected override IMethodAspectHandler CreateHandler()

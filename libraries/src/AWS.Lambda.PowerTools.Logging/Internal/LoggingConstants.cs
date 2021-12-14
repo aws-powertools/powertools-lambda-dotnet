@@ -5,6 +5,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
     internal static class LoggingConstants
     {
         internal const LogLevel DefaultLogLevel = LogLevel.Information;
+        internal const string KeyJsonFormatter = "{@json}";
         internal const string KeyColdStart = "ColdStart";
         internal const string KeyFunctionName = "FunctionName";
         internal const string KeyFunctionVersion = "FunctionVersion";
@@ -20,6 +21,5 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         internal const string KeyMessage = "Message";
         internal const string KeySamplingRate = "SamplingRate";
         internal const string KeyException = "Exception";
-        internal const string KeyState = "State";
     }
 }
