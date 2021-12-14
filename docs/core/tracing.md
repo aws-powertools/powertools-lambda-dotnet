@@ -48,7 +48,7 @@ segment name that appears in traces.
 
 === "Tracing attribute"
 
-    ```c# hl_lines="3 10 15"
+    ```c# hl_lines="3 14 19"
     public class Function
     {
         [Tracing]
@@ -138,7 +138,7 @@ context for an operation using any native object.
 === "Annotations"
 
     You can add annotations using `AddAnnotation()` method from Tracing
-    ```c# hl_lines="8"
+    ```c# hl_lines="9"
     using Amazon.Lambda.PowerTools.Tracing;
 
     public class Function
@@ -155,7 +155,7 @@ context for an operation using any native object.
 === "Metadata"
 
     You can add metadata using `AddMetadata()` method from Tracing
-    ```c# hl_lines="8"
+    ```c# hl_lines="9"
     using Amazon.Lambda.PowerTools.Tracing;
 
     public class Function
@@ -176,7 +176,7 @@ under a subsegment, or you are doing multithreaded programming. Refer examples b
 
 === "Functional Api"
 
-    ```c# hl_lines="7 8 9 11 12 13"
+    ```c# hl_lines="8 9 10 12 13 14"
     using Amazon.Lambda.PowerTools.Tracing;
     
     public class Function
@@ -197,7 +197,7 @@ under a subsegment, or you are doing multithreaded programming. Refer examples b
 
 === "Multi Threaded Programming"
 
-    ```c# hl_lines="7 9 10 11"
+    ```c# hl_lines="13-16"
     using Amazon.Lambda.PowerTools.Tracing;
 
     public class Function
