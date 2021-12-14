@@ -63,7 +63,7 @@ Key | Type | Example | Description
 
 ## Logging incoming event
 
- You can also explicitly log any incoming event using `LogEvent` parameter. The first handler parameter is the input to the handler, which can be event data (published by an event source) or custom input that you provide such as a string or any custom data object.
+When debugging in non-production environments, you can instruct Logger to log the incoming event with `LogEvent` parameter or via POWERTOOLS_LOGGER_LOG_EVENT environment variable.
 
 !!! warning
     Log event is disabled by default to prevent sensitive info being logged.
@@ -71,10 +71,7 @@ Key | Type | Example | Description
 
 === "Function.cs"
 
-    ```c# hl_lines="14"
-    using AWS.Lambda.PowerTools.Logging;
-    ...
-    
+    ```c# hl_lines="6"
     /**
      * Handler for requests to Lambda function.
      */
@@ -93,20 +90,18 @@ Key | Type | Example | Description
 
 You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}.
 
-=== "App.java"
+=== "Function.cs"
 
-    ```java hl_lines="8"
+    ```c# hl_lines="6"
     /**
      * Handler for requests to Lambda function.
      */
-    public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    
-        Logger log = LogManager.getLogger();
-    
-        @Logging(correlationIdPath = "/headers/my_request_id_header")
-        public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
-            ...
-            log.info("Collecting payment")
+    public class Function
+    {
+        [Logging(CorrelationIdPath = "/headers/my_request_id_header")]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
             ...
         }
     }
@@ -123,39 +118,39 @@ You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [J
 
 === "Example CloudWatch Logs excerpt"
 
-    ```json hl_lines="11"
-	{
-		"level": "INFO",
-	  	"message": "Collecting payment",
-		"timestamp": "2021-05-03 11:47:12,494+0200",
-	  	"service": "payment",
-	  	"coldStart": true,
-	  	"functionName": "test",
-	  	"functionMemorySize": 128,
-	  	"functionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-	  	"lambda_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
-	  	"correlation_id": "correlation_id_value"
-	}
+    ```json hl_lines="15"
+    {
+        "ColdStart": true,
+        "XRayTraceId": "1-61b7add4-66532bb81441e1b060389429",
+        "FunctionName": "test",
+        "FunctionVersion": "$LATEST",
+        "FunctionMemorySize": 128,
+        "FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "Timestamp": "2021-12-13T20:32:22.5774262Z",
+        "Level": "Information",
+        "Service": "lambda-example",
+        "Name": "AWS.Lambda.PowerTools.Logging.Logger",
+        "Message": "Collecting payment",
+        "SamplingRate": 0.7,
+        "CorrelationId": "correlation_id_value",
+    }
     ```
 We provide [built-in JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"} 
 for known event sources, where either a request ID or X-Ray Trace ID are present.
 
-=== "App.java"
+=== "Function.cs"
 
-    ```java hl_lines="10"
-    import software.amazon.lambda.powertools.logging.CorrelationIdPathConstants;
-
+    ```c# hl_lines="6"
     /**
      * Handler for requests to Lambda function.
      */
-    public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    
-        Logger log = LogManager.getLogger();
-    
-        @Logging(correlationIdPath = CorrelationIdPathConstants.API_GATEWAY_REST)
-        public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
-            ...
-            log.info("Collecting payment")
+    public class Function
+    {
+        [Logging(CorrelationIdPath = CorrelationIdPaths.API_GATEWAY_REST)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
             ...
         }
     }
@@ -165,91 +160,100 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
 
 	```json hl_lines="3"
 	{
-	  "requestContext": {
-		"requestId": "correlation_id_value"
+	  "RequestContext": {
+		"RequestId": "correlation_id_value"
 	  }
 	}
 	```
 
 === "Example CloudWatch Logs excerpt"
 
-    ```json hl_lines="11"
-	{
-		"level": "INFO",
-	  	"message": "Collecting payment",
-		"timestamp": "2021-05-03 11:47:12,494+0200",
-	  	"service": "payment",
-	  	"coldStart": true,
-	  	"functionName": "test",
-	  	"functionMemorySize": 128,
-	  	"functionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-	  	"lambda_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
-	  	"correlation_id": "correlation_id_value"
-	}
+    ```json hl_lines="15"
+    {
+        "ColdStart": true,
+        "XRayTraceId": "1-61b7add4-66532bb81441e1b060389429",
+        "FunctionName": "test",
+        "FunctionVersion": "$LATEST",
+        "FunctionMemorySize": 128,
+        "FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "Timestamp": "2021-12-13T20:32:22.5774262Z",
+        "Level": "Information",
+        "Service": "lambda-example",
+        "Name": "AWS.Lambda.PowerTools.Logging.Logger",
+        "Message": "Collecting payment",
+        "SamplingRate": 0.7,
+        "CorrelationId": "correlation_id_value",
+    }
     ```
 	
 ## Appending additional keys
 
 !!! info "Custom keys are persisted across warm invocations"
-        Always set additional keys as part of your handler to ensure they have the latest value, or explicitly clear them with [`clearState=true`](#clearing-all-state).
+        Always set additional keys as part of your handler to ensure they have the latest value, or explicitly clear them with [`ClearState=true`](#clearing-all-state).
 
-You can append your own keys to your existing logs via `appendKey`.
+You can append your own keys to your existing logs via `AppendKey`.
 
-=== "App.java"
+=== "Function.cs"
 
-    ```java hl_lines="11 19"
+    ```c# hl_lines="11 21"
     /**
      * Handler for requests to Lambda function.
      */
-    public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    
-        Logger log = LogManager.getLogger();
-    
-        @Logging(logEvent = true)
-        public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
+    public class Function
+    {
+        [Logging(LogEvent = true)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
             ...
-            LoggingUtils.appendKey("test", "willBeLogged");
+            Logger.AppendKey("test", "willBeLogged");
             ...
-    
+
             ...
-             Map<String, String> customKeys = new HashMap<>();
-             customKeys.put("test", "value");
-             customKeys.put("test1", "value1");
-    
-             LoggingUtils.appendKeys(customKeys);
+            var customKeys = new Dictionary<string, string>
+            {
+                {"test1", "value1"}, 
+                {"test2", "value2"}
+            };
+            
+            Logger.AppendKeys(customKeys);
             ...
         }
     }
     ```
 
-
 ### Removing additional keys
 
-You can remove any additional key from entry using `LoggingUtils.removeKeys()`.
+You can remove any additional key from entry using `Logger.RemoveKeys()`.
 
-=== "App.java"
+=== "Function.cs"
 
-    ```java hl_lines="19 20"
+    ```c# hl_lines="23 24"
     /**
      * Handler for requests to Lambda function.
      */
-    public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    
-        Logger log = LogManager.getLogger();
-    
-        @Logging(logEvent = true)
-        public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
+    public class Function
+    {
+        [Logging(LogEvent = true)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
             ...
-            LoggingUtils.appendKey("test", "willBeLogged");
+            Logger.AppendKey("test", "willBeLogged");
             ...
-            Map<String, String> customKeys = new HashMap<>();
-            customKeys.put("test1", "value");
-            customKeys.put("test2", "value1");
-    
-            LoggingUtils.appendKeys(customKeys);
+
             ...
-            LoggingUtils.removeKey("test");
-            LoggingUtils.removeKeys("test1", "test2");
+            var customKeys = new Dictionary<string, string>
+            {
+                {"test1", "value1"}, 
+                {"test2", "value2"}
+            };
+            
+            Logger.AppendKeys(customKeys);
+            ...
+            Logger.RemoveKeys("test");
+            Logger.RemoveKeys("test1", "test2");
             ...
         }
     }
@@ -259,27 +263,31 @@ You can remove any additional key from entry using `LoggingUtils.removeKeys()`.
 
 Logger is commonly initialized in the global scope. Due to [Lambda Execution Context reuse](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html), 
 this means that custom keys can be persisted across invocations. If you want all custom keys to be deleted, you can use 
-`clearState=true` attribute on `@Logging` annotation.
+`ClearState=true` attribute on `[Logging]` attribute.
 
 
-=== "App.java"
+=== "Function.cs"
 
-    ```java hl_lines="8 12"
+    ```cs hl_lines="8 12"
     /**
      * Handler for requests to Lambda function.
      */
-    public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    
-        Logger log = LogManager.getLogger();
-    
-        @Logging(clearState = true)
-        public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
+    public class Function
+    {
+        private static ILogger typedLogger = null;
+        private static ILogger TypedLogger => typedLogger ??= Logger.Create<Function>();
+
+        [Logging(ClearState = true)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
             ...
-            if(input.getHeaders().get("someSpecialHeader")) {
-                LoggingUtils.appendKey("specialKey", "value");
+            if (apigProxyEvent.Headers.ContainsKey("SomeSpecialHeader"))
+            {
+                Logger.AppendKey("SpecialKey", "value");
             }
-            
-            log.info("Collecting payment");
+
+            TypedLogger.LogInformation("Collecting payment");
             ...
         }
     }
@@ -288,16 +296,16 @@ this means that custom keys can be persisted across invocations. If you want all
 
     ```json hl_lines="11"
 	{
-		"level": "INFO",
-	  	"message": "Collecting payment",
-		"timestamp": "2021-05-03 11:47:12,494+0200",
-	  	"service": "payment",
-	  	"coldStart": true,
-	  	"functionName": "test",
-	  	"functionMemorySize": 128,
-	  	"functionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-	  	"lambda_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
-        "specialKey": "value"
+		"Level": "Information",
+	  	"Message": "Collecting payment",
+		"Timestamp": "2021-12-13T20:32:22.5774262Z",
+	  	"Service": "payment",
+	  	"ColdStart": true,
+	  	"FunctionName": "test",
+	  	"FunctionMemorySize": 128,
+	  	"FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+	  	"FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "SpecialKey": "value"
 	}
     ```
 
@@ -305,67 +313,39 @@ this means that custom keys can be persisted across invocations. If you want all
 
     ```json
 	{
-		"level": "INFO",
-	  	"message": "Collecting payment",
-		"timestamp": "2021-05-03 11:47:12,494+0200",
-	  	"service": "payment",
-	  	"coldStart": true,
-	  	"functionName": "test",
-	  	"functionMemorySize": 128,
-	  	"functionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-	  	"lambda_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72"
+		"Level": "Information",
+	  	"Message": "Collecting payment",
+		"Timestamp": "2021-12-13T20:32:22.5774262Z",
+	  	"Service": "payment",
+	  	"ColdStart": true,
+	  	"FunctionName": "test",
+	  	"FunctionMemorySize": 128,
+	  	"FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+	  	"FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72"
 	}
-    ```
-
-## Override default object mapper
-
-You can optionally choose to override default object mapper which is used to serialize lambda function events. You might
-want to supply custom object mapper in order to control how serialisation is done, for example, when you want to log only
-specific fields from received event due to security.
-
-=== "App.java"
-
-    ```java hl_lines="9 10"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    
-        Logger log = LogManager.getLogger();
-
-        static {
-            ObjectMapper objectMapper = new ObjectMapper();
-            LoggingUtils.defaultObjectMapper(objectMapper);
-        }
-    
-        @Logging(logEvent = true)
-        public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
-            ...
-        }
-    }
     ```
 
 ## Sampling debug logs
 
 You can dynamically set a percentage of your logs to **DEBUG** level via env var `POWERTOOLS_LOGGER_SAMPLE_RATE` or
-via `samplingRate` attribute on annotation. 
+via `SamplingRate` parameter on attribute. 
 
 !!! info
-    Configuration on environment variable is given precedence over sampling rate configuration on annotation, provided it's in valid value range.
+    Configuration on environment variable is given precedence over sampling rate configuration on attribute, provided it's in valid value range.
 
-=== "Sampling via annotation attribute"
+=== "Sampling via attribute parameter"
 
-    ```java hl_lines="8"
+    ```c# hl_lines="6"
     /**
      * Handler for requests to Lambda function.
      */
-    public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    
-        Logger log = LogManager.getLogger();
-    
-        @Logging(samplingRate = 0.5)
-        public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
-         ...
+    public class Function
+    {
+        [Logging(SamplingRate = 0.5)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            ...
         }
     }
     ```
@@ -378,7 +358,7 @@ via `samplingRate` attribute on annotation.
             Type: AWS::Serverless::Function
             Properties:
             ...
-            Runtime: java8
+            Runtime: dotnetcore3.1
             Environment:
                 Variables:
                     POWERTOOLS_LOGGER_SAMPLE_RATE: 0.5

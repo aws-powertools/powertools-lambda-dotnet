@@ -68,27 +68,22 @@ namespace AWS.Lambda.PowerTools.Logging
         /// Appending additional key to the log context.
         /// </summary>
         /// <param name="keys">The list of keys.</param>
-        public static void AppendKeys(IDictionary<string, object> keys)
+        public static void AppendKeys(IEnumerable<KeyValuePair<string, object>> keys)
         {
             foreach (var (key, value) in keys)
                 AppendKey(key, value);
         }
 
         /// <summary>
-        /// Remove additional key from the log context.
+        /// Appending additional key to the log context.
         /// </summary>
-        /// <param name="key">The key.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the key is not provided.</exception>
-        public static void RemoveKey(string key)
+        /// <param name="keys">The list of keys.</param>
+        public static void AppendKeys(IEnumerable<KeyValuePair<string, string>> keys)
         {
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentNullException(nameof(key));
-
-            if (_scope.ContainsKey(key))
-                _scope.Remove(key);
+            foreach (var (key, value) in keys)
+                AppendKey(key, value);
         }
 
-        
         /// <summary>
         /// Remove additional keys from the log context.
         /// </summary>
@@ -97,7 +92,8 @@ namespace AWS.Lambda.PowerTools.Logging
         {
             if (keys == null) return;
             foreach (var key in keys)
-                RemoveKey(key);
+                if (_scope.ContainsKey(key))
+                    _scope.Remove(key);
         }
 
         /// <summary>

@@ -155,6 +155,7 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                 var correlationId = string.Empty;
                 var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg));
                 var element = jsonDoc.RootElement;
+                
                 for (var i = 0; i < correlationIdPaths.Length; i++)
                 {
                     if (!element.TryGetProperty(correlationIdPaths[i], out var childElement)) 
