@@ -26,13 +26,13 @@ Setting | Description | Environment variable | Attribute parameter
 You can also override log level by setting **`POWERTOOLS_LOG_LEVEL`** env var. Here is an example using AWS Serverless Application Model (SAM)
 
 === "template.yaml"
-    ``` yaml hl_lines="9 10"
+
+    ```yaml hl_lines="8 9"
     Resources:
         HelloWorldFunction:
             Type: AWS::Serverless::Function
             Properties:
             ...
-            Runtime: dotnetcore3.1
             Environment:
                 Variables:
                     POWERTOOLS_LOG_LEVEL: Debug
@@ -68,7 +68,6 @@ When debugging in non-production environments, you can instruct Logger to log th
 !!! warning
     Log event is disabled by default to prevent sensitive info being logged.
 
-
 === "Function.cs"
 
     ```c# hl_lines="6"
@@ -88,7 +87,7 @@ When debugging in non-production environments, you can instruct Logger to log th
 
 ## Setting a Correlation ID
 
-You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}.
+You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03) {target="_blank"}.
 
 === "Function.cs"
 
@@ -108,13 +107,13 @@ You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [J
     ```
 === "Example Event"
 
-	```json hl_lines="3"
-	{
-	  "headers": {
-		"my_request_id_header": "correlation_id_value"
-	  }
-	}
-	```
+    ```json hl_lines="3"
+    {
+        "headers": {
+            "my_request_id_header": "correlation_id_value"
+        }
+    }
+    ```
 
 === "Example CloudWatch Logs excerpt"
 
@@ -136,7 +135,7 @@ You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [J
         "CorrelationId": "correlation_id_value",
     }
     ```
-We provide [built-in JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"} 
+We provide [built-in JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}
 for known event sources, where either a request ID or X-Ray Trace ID are present.
 
 === "Function.cs"
@@ -158,13 +157,13 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
 
 === "Example Event"
 
-	```json hl_lines="3"
-	{
-	  "RequestContext": {
-		"RequestId": "correlation_id_value"
-	  }
-	}
-	```
+    ```json hl_lines="3"
+    {
+        "RequestContext": {
+            "RequestId": "correlation_id_value"
+        }
+    }
+    ```
 
 === "Example CloudWatch Logs excerpt"
 
@@ -186,7 +185,7 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
         "CorrelationId": "correlation_id_value",
     }
     ```
-	
+
 ## Appending additional keys
 
 !!! info "Custom keys are persisted across warm invocations"
@@ -196,7 +195,7 @@ You can append your own keys to your existing logs via `AppendKey`.
 
 === "Function.cs"
 
-    ```c# hl_lines="11 21"
+    ```c# hl_lines="11 19"
     /**
      * Handler for requests to Lambda function.
      */
@@ -208,8 +207,6 @@ You can append your own keys to your existing logs via `AppendKey`.
         {
             ...
             Logger.AppendKey("test", "willBeLogged");
-            ...
-
             ...
             var customKeys = new Dictionary<string, string>
             {
@@ -229,7 +226,7 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
 
 === "Function.cs"
 
-    ```c# hl_lines="23 24"
+    ```c# hl_lines="21 22"
     /**
      * Handler for requests to Lambda function.
      */
@@ -241,8 +238,6 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
         {
             ...
             Logger.AppendKey("test", "willBeLogged");
-            ...
-
             ...
             var customKeys = new Dictionary<string, string>
             {
@@ -261,10 +256,7 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
 
 ### Clearing all state
 
-Logger is commonly initialized in the global scope. Due to [Lambda Execution Context reuse](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html), 
-this means that custom keys can be persisted across invocations. If you want all custom keys to be deleted, you can use 
-`ClearState=true` attribute on `[Logging]` attribute.
-
+Logger is commonly initialized in the global scope. Due to [Lambda Execution Context reuse](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html), this means that custom keys can be persisted across invocations. If you want all custom keys to be deleted, you can use `ClearState=true` attribute on `[Logging]` attribute.
 
 === "Function.cs"
 
@@ -295,40 +287,40 @@ this means that custom keys can be persisted across invocations. If you want all
 === "#1 Request"
 
     ```json hl_lines="11"
-	{
-		"Level": "Information",
-	  	"Message": "Collecting payment",
-		"Timestamp": "2021-12-13T20:32:22.5774262Z",
-	  	"Service": "payment",
-	  	"ColdStart": true,
-	  	"FunctionName": "test",
-	  	"FunctionMemorySize": 128,
-	  	"FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-	  	"FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+    {
+        "Level": "Information",
+        "Message": "Collecting payment",
+        "Timestamp": "2021-12-13T20:32:22.5774262Z",
+        "Service": "payment",
+        "ColdStart": true,
+        "FunctionName": "test",
+        "FunctionMemorySize": 128,
+        "FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
         "SpecialKey": "value"
-	}
+    }
     ```
 
 === "#2 Request"
 
     ```json
-	{
-		"Level": "Information",
-	  	"Message": "Collecting payment",
-		"Timestamp": "2021-12-13T20:32:22.5774262Z",
-	  	"Service": "payment",
-	  	"ColdStart": true,
-	  	"FunctionName": "test",
-	  	"FunctionMemorySize": 128,
-	  	"FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-	  	"FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72"
-	}
+    {
+        "Level": "Information",
+        "Message": "Collecting payment",
+        "Timestamp": "2021-12-13T20:32:22.5774262Z",
+        "Service": "payment",
+        "ColdStart": true,
+        "FunctionName": "test",
+        "FunctionMemorySize": 128,
+        "FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72"
+    }
     ```
 
 ## Sampling debug logs
 
 You can dynamically set a percentage of your logs to **DEBUG** level via env var `POWERTOOLS_LOGGER_SAMPLE_RATE` or
-via `SamplingRate` parameter on attribute. 
+via `SamplingRate` parameter on attribute.
 
 !!! info
     Configuration on environment variable is given precedence over sampling rate configuration on attribute, provided it's in valid value range.
@@ -352,13 +344,12 @@ via `SamplingRate` parameter on attribute.
 
 === "Sampling via environment variable"
 
-    ```yaml hl_lines="9"
+    ```yaml hl_lines="8"
     Resources:
         HelloWorldFunction:
             Type: AWS::Serverless::Function
             Properties:
             ...
-            Runtime: dotnetcore3.1
             Environment:
                 Variables:
                     POWERTOOLS_LOGGER_SAMPLE_RATE: 0.5

@@ -18,11 +18,13 @@ namespace HelloWorld
 {
     public class Function
     {
+        private static readonly HttpClient client = new HttpClient();
+
         [Logging(LogEvent = true, SamplingRate = 0.7)]
         [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
         [Metrics(Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
+        {                                
             try
             {
                 // Add Metrics
@@ -51,7 +53,7 @@ namespace HelloWorld
                 
                 // Append Log Key
                 Logger.AppendKey("test", "willBeLogged");
-                
+
                 // Trace Nested Methods
                 NestedMethodsParent();
 
@@ -98,8 +100,6 @@ namespace HelloWorld
                 };
             }
         }
-        
-        private static readonly HttpClient client = new HttpClient();
 
         [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.Disabled)]
         private static async Task<string> GetCallingIP()

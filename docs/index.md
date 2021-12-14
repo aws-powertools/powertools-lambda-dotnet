@@ -36,7 +36,7 @@ sam init --location https://github.com/aws-samples/cookiecutter-aws-sam-dotnet
 | Utility | Description
 | ------------------------------------------------- | ---------------------------------------------------------------------------------
 [Tracing](./core/tracing.md) | Decorators and utilities to trace Lambda function handlers, and both synchronous and asynchronous functions
-[Logger](./core/logger.md) | Structured logging made easier, and decorator to enrich structured logging with key Lambda context details
+[Logger](./core/logging.md) | Structured logging made easier, and decorator to enrich structured logging with key Lambda context details
 [Metrics](./core/metrics.md) | Custom Metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
 
 ## Environment variables
@@ -51,6 +51,6 @@ sam init --location https://github.com/aws-samples/cookiecutter-aws-sam-dotnet
 | **POWERTOOLS_TRACE_DISABLED** | Disables tracing | [Tracing](./core/tracing) | `false` |
 | **POWERTOOLS_TRACER_CAPTURE_RESPONSE** | Captures Lambda or method return as metadata. | [Tracing](./core/tracing) | `true` |
 | **POWERTOOLS_TRACER_CAPTURE_ERROR** | Captures Lambda or method exception as metadata. | [Tracing](./core/tracing) | `true` |
-| **POWERTOOLS_LOGGER_LOG_EVENT** | Logs incoming event | [Logging](./core/logger) | `false` |
-| **POWERTOOLS_LOGGER_SAMPLE_RATE** | Debug log sampling | [Logging](./core/logger) | `0` |
-| **POWERTOOLS_LOG_DEDUPLICATION_DISABLED** | Disables log deduplication filter protection to use Pytest Live Log feature | [Logging](./core/logger) | `false` |
+| **POWERTOOLS_LOGGER_LOG_EVENT** | Logs incoming event | [Logging](./core/logging) | `false` |
+| **POWERTOOLS_LOGGER_SAMPLE_RATE** | Debug log sampling | [Logging](./core/logging) | `0` |
+| **POWERTOOLS_LOG_DEDUPLICATION_DISABLED** | Disables log deduplication filter protection to use Pytest Live Log feature | [Logging](./core/logging) | `false` |
