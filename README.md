@@ -22,6 +22,30 @@ With Nuget...
 
 * [TODO: Add example project here]
 
+## Run locally (with .NET 6)
+
+.NET 6 is not yet a built-in runtime in Lambda Functions. For that reason, we temporarily run the sample application inside a Docker container.
+
+#### Build
+
+```bash
+sam build -t template-docker.yaml
+```
+
+#### Invoke
+
+```bash
+sam build -t template-docker.yaml && sam local invoke
+```
+
+## Deploy
+
+.NET 6 is not yet a built-in runtime in Lambda Functions. For that reason, we temporarily run the sample application inside a Docker container.
+
+```bash
+sam build -t template-docker.yaml && sam deploy
+```
+
 ## Credits
 
 * Structured logging initial implementation from [aws-lambda-logging](https://gitlab.com/hadrien/aws_lambda_logging)
