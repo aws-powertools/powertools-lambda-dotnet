@@ -7,7 +7,7 @@ namespace AWS.Lambda.PowerTools.Core
         bool TracerCaptureResponse { get; }
         bool TracerCaptureError { get; }
         bool IsSamLocal { get; }
-        string Namespace { get; }
+        string MetricsNamespace { get; }
         string LogLevel { get; }
         double? LoggerSampleRate { get; }
         bool LoggerLogEvent { get; }

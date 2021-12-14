@@ -48,7 +48,7 @@ namespace AWS.Lambda.PowerTools.Core
         public bool IsSamLocal =>
             GetEnvironmentVariableOrDefault(Constants.SAM_LOCAL_ENV, false);
         
-        public string Namespace =>
+        public string MetricsNamespace =>
             GetEnvironmentVariable(Constants.METRICS_NAMESPACE_ENV);
         
         public string LogLevel =>

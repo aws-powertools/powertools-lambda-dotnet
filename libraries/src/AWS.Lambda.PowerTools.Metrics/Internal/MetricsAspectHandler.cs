@@ -48,8 +48,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Internal
             var service = _metrics.GetService();
             Dictionary<string, string> dimensions = null;
 
-            var context = eventArgs.Args?.FirstOrDefault(x => x is ILambdaContext) as ILambdaContext;
-            if (context != null)
+            if (eventArgs.Args?.FirstOrDefault(x => x is ILambdaContext) is ILambdaContext context)
             {
                 dimensions = new Dictionary<string, string>
                 {

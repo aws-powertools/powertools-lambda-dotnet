@@ -20,7 +20,7 @@ namespace HelloWorld
     {
         [Logging(LogEvent = true, SamplingRate = 0.7)]
         [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-        [Metrics(Service = "lambda-example", Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
+        [Metrics(Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
             try

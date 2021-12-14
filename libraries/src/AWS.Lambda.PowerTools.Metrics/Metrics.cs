@@ -282,7 +282,7 @@ namespace AWS.Lambda.PowerTools.Metrics
 
             context.SetNamespace(!string.IsNullOrWhiteSpace(nameSpace)
                 ? nameSpace
-                : _powerToolsConfigurations.Namespace);
+                : _powerToolsConfigurations.MetricsNamespace);
 
             context.SetService(!string.IsNullOrWhiteSpace(service)
                 ? service
