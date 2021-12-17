@@ -87,7 +87,7 @@ When debugging in non-production environments, you can instruct Logger to log th
 
 ## Setting a Correlation ID
 
-You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03) {target="_blank"}.
+You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}.
 
 === "Function.cs"
 
