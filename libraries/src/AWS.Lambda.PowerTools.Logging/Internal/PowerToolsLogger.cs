@@ -17,6 +17,11 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
         private LoggerConfiguration _currentConfig;
         private LoggerConfiguration CurrentConfig => 
             _currentConfig ??= GetCurrentConfig();
+
+        internal void ClearConfig()
+        {
+            _currentConfig = null;
+        }
         
         private LogLevel MinimumLevel => 
             CurrentConfig.MinimumLevel ?? LoggingConstants.DefaultLogLevel;

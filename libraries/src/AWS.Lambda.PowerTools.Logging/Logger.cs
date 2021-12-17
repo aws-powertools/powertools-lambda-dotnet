@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AWS.Lambda.PowerTools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.PowerTools.Logging
@@ -18,16 +19,13 @@ namespace AWS.Lambda.PowerTools.Logging
         /// <param name="categoryName">The category name for messages produced by the logger.</param>
         /// <returns>The instance of <see cref="T:Microsoft.Extensions.Logging.ILogger" /> that was created.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the categoryName is not provided.</exception>
-        /// <exception cref="LoggerException">Thrown when the [Logging] attribute is not added to the Lambda handler.</exception>
         public static ILogger Create(string categoryName)
         {
             if (string.IsNullOrWhiteSpace(categoryName))
                 throw new ArgumentNullException(nameof(categoryName));
 
-            if (LoggerProvider == null)
-                throw new LoggerException(
-                    "LoggerProvider has not been initialized. Add [Logging] attribute to the Lambda handler");
-         
+            LoggerProvider ??= new LoggerProvider(null);
+
             return LoggerProvider.CreateLogger(categoryName);
         }
 
@@ -35,7 +33,6 @@ namespace AWS.Lambda.PowerTools.Logging
         /// Creates a new <see cref="T:Microsoft.Extensions.Logging.ILogger" /> instance.
         /// </summary>
         /// <returns>The instance of <see cref="T:Microsoft.Extensions.Logging.ILogger" /> that was created.</returns>
-        /// <exception cref="LoggerException">Thrown when the [Logging] attribute is not added to the Lambda handler.</exception>
         public static ILogger Create<T>()
         {
             return Create(typeof(T).FullName);
