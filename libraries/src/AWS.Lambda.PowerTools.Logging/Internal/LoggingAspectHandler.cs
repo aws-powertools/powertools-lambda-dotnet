@@ -50,14 +50,23 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 
         public void OnEntry(AspectEventArgs eventArgs)
         {
-            Logger.LoggerProvider ??= new LoggerProvider(
-                new LoggerConfiguration
-                {
-                    Service = _service,
-                    MinimumLevel = _logLevel,
-                    SamplingRate = _samplingRate
-                });
-
+            var loggerConfig = new LoggerConfiguration
+            {
+                Service = _service,
+                MinimumLevel = _logLevel,
+                SamplingRate = _samplingRate
+            };
+            
+            switch (Logger.LoggerProvider)
+            {
+                case null:
+                    Logger.LoggerProvider = new LoggerProvider(loggerConfig);
+                    break;
+                case LoggerProvider:
+                    ((LoggerProvider)Logger.LoggerProvider).Configure(loggerConfig);
+                    break;
+            }
+            
             if (!_initializeContext)
                 return;
             

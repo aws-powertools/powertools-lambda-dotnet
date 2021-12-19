@@ -7,12 +7,11 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
 {
     internal sealed class LoggerProvider : ILoggerProvider
     {
-        private readonly LoggerConfiguration _currentConfig;
         private readonly ConcurrentDictionary<string, PowerToolsLogger> _loggers = new();
 
-        public LoggerProvider(IOptions<LoggerConfiguration> config)
+        internal LoggerProvider(IOptions<LoggerConfiguration> config)
         {
-            _currentConfig = config.Value;
+            _currentConfig = config?.Value;
         }
 
         public ILogger CreateLogger(string categoryName) =>
@@ -22,11 +21,23 @@ namespace AWS.Lambda.PowerTools.Logging.Internal
                     SystemWrapper.Instance,
                     GetCurrentConfig));
 
+        
+        private LoggerConfiguration _currentConfig;
         private LoggerConfiguration GetCurrentConfig() => _currentConfig;
 
         public void Dispose()
         {
             _loggers.Clear();
+        }
+
+        internal void Configure(IOptions<LoggerConfiguration> config)
+        {
+            if (_currentConfig is not null || config is null)
+                return;
+            
+            _currentConfig = config.Value;
+            foreach (var logger in _loggers.Values)
+                logger.ClearConfig();
         }
     }
 }
