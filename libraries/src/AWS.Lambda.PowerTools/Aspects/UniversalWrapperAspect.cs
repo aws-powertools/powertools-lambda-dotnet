@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ * 
+ *  http://aws.amazon.com/apache2.0
+ * 
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +23,24 @@ using AspectInjector.Broker;
 
 namespace AWS.Lambda.PowerTools.Aspects
 {
+    /// <summary>
+    /// Class UniversalWrapperAspect.
+    /// </summary>
     [Aspect(Scope.Global)]
     public class UniversalWrapperAspect
     {
+        /// <summary>
+        /// Handles the specified instance.
+        /// </summary>
+        /// <param name="instance">The instance.</param>
+        /// <param name="type">The type.</param>
+        /// <param name="method">The method.</param>
+        /// <param name="target">The target.</param>
+        /// <param name="name">The name.</param>
+        /// <param name="args">The arguments.</param>
+        /// <param name="returnType">Type of the return.</param>
+        /// <param name="triggers">The triggers.</param>
+        /// <returns>System.Object.</returns>
         [Advice(Kind.Around, Targets = Target.Method)]
         public object Handle(
             [Argument(Source.Instance)] object instance,
@@ -37,17 +67,39 @@ namespace AWS.Lambda.PowerTools.Aspects
             var handler = GetMethodHandler(method, returnType, wrappers);
             return handler(target, args, eventArgs);
         }
-        
+
+        /// <summary>
+        /// Delegate Handler
+        /// </summary>
+        /// <param name="next">The next.</param>
+        /// <param name="args">The arguments.</param>
+        /// <param name="eventArgs">The <see cref="AspectEventArgs"/> instance containing the event data.</param>
+        /// <returns>System.Object.</returns>
         private delegate object Handler(Func<object[], object> next, object[] args, AspectEventArgs eventArgs);
 
+        /// <summary>
+        /// The delegate cache
+        /// </summary>
         private static readonly Dictionary<MethodBase, Handler> _delegateCache = new Dictionary<MethodBase, Handler>();
 
+        /// <summary>
+        /// The asynchronous generic handler
+        /// </summary>
         private static readonly MethodInfo _asyncGenericHandler =
             typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapAsync), BindingFlags.NonPublic | BindingFlags.Instance);
 
+        /// <summary>
+        /// The synchronize generic handler
+        /// </summary>
         private static readonly MethodInfo _syncGenericHandler =
             typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapSync), BindingFlags.NonPublic | BindingFlags.Instance);
 
+        /// <summary>
+        /// Creates the method handler.
+        /// </summary>
+        /// <param name="returnType">Type of the return.</param>
+        /// <param name="wrappers">The wrappers.</param>
+        /// <returns>Handler.</returns>
         private static Handler CreateMethodHandler(Type returnType, IEnumerable<UniversalWrapperAttribute> wrappers)
         {
             var targetParam = Expression.Parameter(typeof(Func<object[], object>), "orig");
@@ -85,6 +137,13 @@ namespace AWS.Lambda.PowerTools.Aspects
             return handlerCompiled;
         }
 
+        /// <summary>
+        /// Gets the method handler.
+        /// </summary>
+        /// <param name="method">The method.</param>
+        /// <param name="returnType">Type of the return.</param>
+        /// <param name="wrappers">The wrappers.</param>
+        /// <returns>Handler.</returns>
         private static Handler GetMethodHandler(MethodBase method, Type returnType, IEnumerable<UniversalWrapperAttribute> wrappers)
         {
             if (!_delegateCache.TryGetValue(method, out var handler))
