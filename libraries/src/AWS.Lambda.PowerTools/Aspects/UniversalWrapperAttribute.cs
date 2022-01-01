@@ -16,38 +16,39 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AWS.Lambda.PowerTools.Aspects
+namespace AWS.Lambda.PowerTools.Aspects;
+
+/// <summary>
+///     Class UniversalWrapperAttribute.
+///     Implements the <see cref="System.Attribute" />
+/// </summary>
+/// <seealso cref="System.Attribute" />
+public abstract class UniversalWrapperAttribute : Attribute
 {
     /// <summary>
-    /// Class UniversalWrapperAttribute.
-    /// Implements the <see cref="System.Attribute" />
+    ///     Wraps the synchronize.
     /// </summary>
-    /// <seealso cref="System.Attribute" />
-    public abstract class UniversalWrapperAttribute : Attribute
+    /// <typeparam name="T"></typeparam>
+    /// <param name="target">The target.</param>
+    /// <param name="args">The arguments.</param>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    /// <returns>T.</returns>
+    protected internal virtual T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
     {
-        /// <summary>
-        /// Wraps the synchronize.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="target">The target.</param>
-        /// <param name="args">The arguments.</param>
-        /// <param name="eventArgs">The <see cref="AspectEventArgs"/> instance containing the event data.</param>
-        /// <returns>T.</returns>
-        protected internal virtual T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
-        {
-            return target(args);
-        }
-        /// <summary>
-        /// Wraps the asynchronous.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="target">The target.</param>
-        /// <param name="args">The arguments.</param>
-        /// <param name="eventArgs">The <see cref="AspectEventArgs"/> instance containing the event data.</param>
-        /// <returns>Task&lt;T&gt;.</returns>
-        protected internal virtual Task<T> WrapAsync<T>(Func<object[], Task<T>> target, object[] args, AspectEventArgs eventArgs)
-        {
-            return target(args);
-        }
+        return target(args);
+    }
+
+    /// <summary>
+    ///     Wraps the asynchronous.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="target">The target.</param>
+    /// <param name="args">The arguments.</param>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    /// <returns>Task&lt;T&gt;.</returns>
+    protected internal virtual Task<T> WrapAsync<T>(Func<object[], Task<T>> target, object[] args,
+        AspectEventArgs eventArgs)
+    {
+        return target(args);
     }
 }

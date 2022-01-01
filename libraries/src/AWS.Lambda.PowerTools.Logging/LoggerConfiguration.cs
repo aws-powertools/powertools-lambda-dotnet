@@ -16,28 +16,40 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace AWS.Lambda.PowerTools.Logging
+namespace AWS.Lambda.PowerTools.Logging;
+
+/// <summary>
+///     Class LoggerConfiguration.
+///     Implements the
+///     <see cref="Microsoft.Extensions.Options.IOptions{AWS.Lambda.PowerTools.Logging.LoggerConfiguration}" />
+/// </summary>
+/// <seealso cref="Microsoft.Extensions.Options.IOptions{AWS.Lambda.PowerTools.Logging.LoggerConfiguration}" />
+public class LoggerConfiguration : IOptions<LoggerConfiguration>
 {
-    public class LoggerConfiguration : IOptions<LoggerConfiguration>
-    {
-        /// <summary>
-        /// Service name is used for logging.
-        /// This can be also set using the environment variable <c>POWERTOOLS_SERVICE_NAME</c>.
-        /// </summary>
-        public string Service { get; set; }
-        
-        /// <summary>
-        /// Specify the minimum log level for logging (Information, by default).
-        /// This can be also set using the environment variable <c>LOG_LEVEL</c>.
-        /// </summary>
-        public LogLevel? MinimumLevel { get; set; }
-        
-        /// <summary>
-        /// Dynamically set a percentage of logs to DEBUG level.
-        /// This can be also set using the environment variable <c>POWERTOOLS_LOGGER_SAMPLE_RATE</c>.
-        /// </summary>
-        public double? SamplingRate { get; set; }
-        
-        LoggerConfiguration IOptions<LoggerConfiguration>.Value => this;
-    }
+    /// <summary>
+    ///     Service name is used for logging.
+    ///     This can be also set using the environment variable <c>POWERTOOLS_SERVICE_NAME</c>.
+    /// </summary>
+    /// <value>The service.</value>
+    public string Service { get; set; }
+
+    /// <summary>
+    ///     Specify the minimum log level for logging (Information, by default).
+    ///     This can be also set using the environment variable <c>LOG_LEVEL</c>.
+    /// </summary>
+    /// <value>The minimum level.</value>
+    public LogLevel? MinimumLevel { get; set; }
+
+    /// <summary>
+    ///     Dynamically set a percentage of logs to DEBUG level.
+    ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_SAMPLE_RATE</c>.
+    /// </summary>
+    /// <value>The sampling rate.</value>
+    public double? SamplingRate { get; set; }
+
+    /// <summary>
+    ///     The default configured <typeparamref name="TOptions" /> instance
+    /// </summary>
+    /// <value>The value.</value>
+    LoggerConfiguration IOptions<LoggerConfiguration>.Value => this;
 }

@@ -13,33 +13,32 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Logging
+namespace AWS.Lambda.PowerTools.Logging;
+
+/// <summary>
+///     Supported Event types from which Correlation ID can be extracted
+/// </summary>
+public static class CorrelationIdPaths
 {
+    internal const char Separator = '/';
+
     /// <summary>
-    /// Supported Event types from which Correlation ID can be extracted
+    ///     To use when function is expecting API Gateway Rest API request event
     /// </summary>
-    public static class CorrelationIdPaths
-    {
-        internal const char Separator = '/';
-        
-        /// <summary>
-        /// To use when function is expecting API Gateway Rest API Request event
-        /// </summary>
-        public const string API_GATEWAY_REST = "/RequestContext/RequestId";
-        
-        /// <summary>
-        /// To use when function is expecting API Gateway HTTP API Request event
-        /// </summary>
-        public const string API_GATEWAY_HTTP = "/RequestContext/RequestId";
-        
-        /// <summary>
-        /// To use when function is expecting Application Load balancer Request event
-        /// </summary>
-        public const string APPLICATION_LOAD_BALANCER = "/Headers/x-amzn-trace-id";
-        
-        /// <summary>
-        /// To use when function is expecting Event Bridge Request event
-        /// </summary>
-        public const string EVENT_BRIDGE = "/Id";
-    }
+    public const string ApiGatewayRest = "/RequestContext/RequestId";
+
+    /// <summary>
+    ///     To use when function is expecting API Gateway HTTP API request event
+    /// </summary>
+    public const string ApiGatewayHttp = "/RequestContext/RequestId";
+
+    /// <summary>
+    ///     To use when function is expecting Application Load balancer request event
+    /// </summary>
+    public const string ApplicationLoadBalancer = "/Headers/x-amzn-trace-id";
+
+    /// <summary>
+    ///     To use when function is expecting EventBridge request event
+    /// </summary>
+    public const string EventBridge = "/Id";
 }

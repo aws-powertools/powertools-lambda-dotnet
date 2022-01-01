@@ -15,39 +15,38 @@
 
 using System;
 
-namespace AWS.Lambda.PowerTools.Aspects
+namespace AWS.Lambda.PowerTools.Aspects;
+
+/// <summary>
+///     Interface IMethodAspectHandler
+/// </summary>
+public interface IMethodAspectHandler
 {
     /// <summary>
-    /// Interface IMethodAspectHandler
+    ///     Handles the <see cref="E:Entry" /> event.
     /// </summary>
-    public interface IMethodAspectHandler
-    {
-        /// <summary>
-        /// Handles the <see cref="E:Entry" /> event.
-        /// </summary>
-        /// <param name="eventArgs">The <see cref="AspectEventArgs"/> instance containing the event data.</param>
-        void OnEntry(AspectEventArgs eventArgs);
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    void OnEntry(AspectEventArgs eventArgs);
 
-        /// <summary>
-        /// Called when [success].
-        /// </summary>
-        /// <param name="eventArgs">The <see cref="AspectEventArgs"/> instance containing the event data.</param>
-        /// <param name="result">The result.</param>
-        void OnSuccess(AspectEventArgs eventArgs, object result);
+    /// <summary>
+    ///     Called when [success].
+    /// </summary>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    /// <param name="result">The result.</param>
+    void OnSuccess(AspectEventArgs eventArgs, object result);
 
-        /// <summary>
-        /// Called when [exception].
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="eventArgs">The <see cref="AspectEventArgs"/> instance containing the event data.</param>
-        /// <param name="exception">The exception.</param>
-        /// <returns>T.</returns>
-        T OnException<T>(AspectEventArgs eventArgs, Exception exception);
+    /// <summary>
+    ///     Called when [exception].
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    /// <param name="exception">The exception.</param>
+    /// <returns>T.</returns>
+    T OnException<T>(AspectEventArgs eventArgs, Exception exception);
 
-        /// <summary>
-        /// Handles the <see cref="E:Exit" /> event.
-        /// </summary>
-        /// <param name="eventArgs">The <see cref="AspectEventArgs"/> instance containing the event data.</param>
-        void OnExit(AspectEventArgs eventArgs);
-    }
+    /// <summary>
+    ///     Handles the <see cref="E:Exit" /> event.
+    /// </summary>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    void OnExit(AspectEventArgs eventArgs);
 }

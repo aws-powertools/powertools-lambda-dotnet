@@ -345,7 +345,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             OnEntry_WhenEventArgExists_CapturesCorrelationIdBase
             (
                 correlationId,
-                CorrelationIdPaths.API_GATEWAY_REST,
+                CorrelationIdPaths.ApiGatewayRest,
                 new APIGatewayProxyRequest
                 {
                     RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
@@ -367,7 +367,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             OnEntry_WhenEventArgExists_CapturesCorrelationIdBase
             (
                 correlationId,
-                CorrelationIdPaths.APPLICATION_LOAD_BALANCER,
+                CorrelationIdPaths.ApplicationLoadBalancer,
                 new ApplicationLoadBalancerRequest
                 {
                     Headers = new Dictionary<string, string>

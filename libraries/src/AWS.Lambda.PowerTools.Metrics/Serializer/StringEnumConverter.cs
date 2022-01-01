@@ -21,54 +21,110 @@ using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AWS.Lambda.PowerTools.Metrics.Serializer
+namespace AWS.Lambda.PowerTools.Metrics.Serializer;
+
+/// <summary>
+///     Class StringEnumConverter.
+///     Implements the <see cref="System.Text.Json.Serialization.JsonConverterFactory" />
+/// </summary>
+/// <seealso cref="System.Text.Json.Serialization.JsonConverterFactory" />
+public class StringEnumConverter : JsonConverterFactory
 {
-    public class StringEnumConverter : JsonConverterFactory
+    /// <summary>
+    ///     The allow integer values
+    /// </summary>
+    private readonly bool _allowIntegerValues;
+
+    /// <summary>
+    ///     The base converter
+    /// </summary>
+    private readonly JsonStringEnumConverter _baseConverter;
+
+    /// <summary>
+    ///     The naming policy
+    /// </summary>
+    private readonly JsonNamingPolicy _namingPolicy;
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="StringEnumConverter" /> class.
+    /// </summary>
+    public StringEnumConverter() : this(null)
     {
-        private readonly JsonNamingPolicy _namingPolicy;
-        private readonly bool _allowIntegerValues;
-        private readonly JsonStringEnumConverter _baseConverter;
-
-        public StringEnumConverter() : this(null) { }
-
-        private StringEnumConverter(JsonNamingPolicy namingPolicy = null, bool allowIntegerValues = true)
-        {
-            _namingPolicy = namingPolicy;
-            _allowIntegerValues = allowIntegerValues;
-            _baseConverter = new JsonStringEnumConverter(namingPolicy, allowIntegerValues);
-        }
-
-        public override bool CanConvert(Type typeToConvert)
-        {
-            return _baseConverter.CanConvert(typeToConvert);
-        }
-
-        public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
-        {
-            var query = from field in typeToConvert.GetFields(BindingFlags.Public | BindingFlags.Static)
-                        let attr = field.GetCustomAttribute<EnumMemberAttribute>()
-                        where attr != null
-                        select (field.Name, attr.Value);
-            var dictionary = query.ToDictionary(p => p.Item1, p => p.Item2);
-            return dictionary.Count > 0 ? new JsonStringEnumConverter(new DictionaryLookupNamingPolicy(dictionary, _namingPolicy), _allowIntegerValues).CreateConverter(typeToConvert, options) : _baseConverter.CreateConverter(typeToConvert, options);
-        }
     }
 
-    public class JsonNamingPolicyDecorator : JsonNamingPolicy
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="StringEnumConverter" /> class.
+    /// </summary>
+    /// <param name="namingPolicy">The naming policy.</param>
+    /// <param name="allowIntegerValues">if set to <c>true</c> [allow integer values].</param>
+    private StringEnumConverter(JsonNamingPolicy namingPolicy = null, bool allowIntegerValues = true)
     {
-        private readonly JsonNamingPolicy _underlyingNamingPolicy;
-
-        protected JsonNamingPolicyDecorator(JsonNamingPolicy underlyingNamingPolicy) => _underlyingNamingPolicy = underlyingNamingPolicy;
-
-        public override string ConvertName(string name) => _underlyingNamingPolicy == null ? name : _underlyingNamingPolicy.ConvertName(name);
+        _namingPolicy = namingPolicy;
+        _allowIntegerValues = allowIntegerValues;
+        _baseConverter = new JsonStringEnumConverter(namingPolicy, allowIntegerValues);
     }
 
-    internal class DictionaryLookupNamingPolicy : JsonNamingPolicyDecorator
+    /// <summary>
+    ///     When overridden in a derived class, determines whether the converter instance can convert the specified object
+    ///     type.
+    /// </summary>
+    /// <param name="typeToConvert">The type of the object to check whether it can be converted by this converter instance.</param>
+    /// <returns>
+    ///     <see langword="true" /> if the instance can convert the specified object type; otherwise,
+    ///     <see langword="false" />.
+    /// </returns>
+    public override bool CanConvert(Type typeToConvert)
     {
-        private readonly Dictionary<string, string> _dictionary;
+        return _baseConverter.CanConvert(typeToConvert);
+    }
 
-        public DictionaryLookupNamingPolicy(Dictionary<string, string> dictionary, JsonNamingPolicy underlyingNamingPolicy) : base(underlyingNamingPolicy) => _dictionary = dictionary ?? throw new ArgumentNullException();
+    /// <summary>
+    ///     Creates a converter for a specified type.
+    /// </summary>
+    /// <param name="typeToConvert">The type handled by the converter.</param>
+    /// <param name="options">The serialization options to use.</param>
+    /// <returns>A converter for which <typeparamref name="T" /> is compatible with <paramref name="typeToConvert" />.</returns>
+    public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+    {
+        var query = from field in typeToConvert.GetFields(BindingFlags.Public | BindingFlags.Static)
+            let attr = field.GetCustomAttribute<EnumMemberAttribute>()
+            where attr != null
+            select (field.Name, attr.Value);
+        var dictionary = query.ToDictionary(p => p.Item1, p => p.Item2);
+        return dictionary.Count > 0
+            ? new JsonStringEnumConverter(new DictionaryLookupNamingPolicy(dictionary, _namingPolicy),
+                _allowIntegerValues).CreateConverter(typeToConvert, options)
+            : _baseConverter.CreateConverter(typeToConvert, options);
+    }
+}
 
-        public override string ConvertName(string name) => _dictionary.TryGetValue(name, out var value) ? value : base.ConvertName(name);
+public class JsonNamingPolicyDecorator : JsonNamingPolicy
+{
+    private readonly JsonNamingPolicy _underlyingNamingPolicy;
+
+    protected JsonNamingPolicyDecorator(JsonNamingPolicy underlyingNamingPolicy)
+    {
+        _underlyingNamingPolicy = underlyingNamingPolicy;
+    }
+
+    public override string ConvertName(string name)
+    {
+        return _underlyingNamingPolicy == null ? name : _underlyingNamingPolicy.ConvertName(name);
+    }
+}
+
+internal class DictionaryLookupNamingPolicy : JsonNamingPolicyDecorator
+{
+    private readonly Dictionary<string, string> _dictionary;
+
+    public DictionaryLookupNamingPolicy(Dictionary<string, string> dictionary, JsonNamingPolicy underlyingNamingPolicy)
+        : base(underlyingNamingPolicy)
+    {
+        _dictionary = dictionary ?? throw new ArgumentNullException();
+    }
+
+    public override string ConvertName(string name)
+    {
+        return _dictionary.TryGetValue(name, out var value) ? value : base.ConvertName(name);
     }
 }

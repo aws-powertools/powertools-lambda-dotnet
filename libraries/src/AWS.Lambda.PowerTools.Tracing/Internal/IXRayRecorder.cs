@@ -18,21 +18,79 @@ using Amazon.XRay.Recorder.Core.Internal.Emitters;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
 using Amazon.XRay.Recorder.Core.Strategies;
 
-namespace Amazon.Lambda.PowerTools.Tracing.Internal
+namespace Amazon.Lambda.PowerTools.Tracing.Internal;
+
+/// <summary>
+///     Interface IXRayRecorder
+/// </summary>
+public interface IXRayRecorder
 {
-    public interface IXRayRecorder
-    {
-        ISegmentEmitter Emitter { get; }
-        IStreamingStrategy StreamingStrategy { get; }
-        
-        void BeginSubsegment(string name);
-        void SetNamespace(string value);
-        void AddAnnotation(string key, object value);
-        void AddMetadata(string nameSpace, string key, object value);
-        void EndSubsegment();
-        Entity GetEntity();
-        void SetEntity(Entity entity);
-        void AddException(Exception exception);
-        void AddHttpInformation(string key, object value);
-    }
+    /// <summary>
+    ///     Gets the emitter.
+    /// </summary>
+    /// <value>The emitter.</value>
+    ISegmentEmitter Emitter { get; }
+
+    /// <summary>
+    ///     Gets the streaming strategy.
+    /// </summary>
+    /// <value>The streaming strategy.</value>
+    IStreamingStrategy StreamingStrategy { get; }
+
+    /// <summary>
+    ///     Begins the subsegment.
+    /// </summary>
+    /// <param name="name">The name.</param>
+    void BeginSubsegment(string name);
+
+    /// <summary>
+    ///     Sets the namespace.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    void SetNamespace(string value);
+
+    /// <summary>
+    ///     Adds the annotation.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <param name="value">The value.</param>
+    void AddAnnotation(string key, object value);
+
+    /// <summary>
+    ///     Adds the metadata.
+    /// </summary>
+    /// <param name="nameSpace">The name space.</param>
+    /// <param name="key">The key.</param>
+    /// <param name="value">The value.</param>
+    void AddMetadata(string nameSpace, string key, object value);
+
+    /// <summary>
+    ///     Ends the subsegment.
+    /// </summary>
+    void EndSubsegment();
+
+    /// <summary>
+    ///     Gets the entity.
+    /// </summary>
+    /// <returns>Entity.</returns>
+    Entity GetEntity();
+
+    /// <summary>
+    ///     Sets the entity.
+    /// </summary>
+    /// <param name="entity">The entity.</param>
+    void SetEntity(Entity entity);
+
+    /// <summary>
+    ///     Adds the exception.
+    /// </summary>
+    /// <param name="exception">The exception.</param>
+    void AddException(Exception exception);
+
+    /// <summary>
+    ///     Adds the HTTP information.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <param name="value">The value.</param>
+    void AddHttpInformation(string key, object value);
 }

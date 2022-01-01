@@ -13,36 +13,35 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Core
+namespace AWS.Lambda.PowerTools.Core;
+
+/// <summary>
+///     Interface ISystemWrapper
+/// </summary>
+public interface ISystemWrapper
 {
     /// <summary>
-    /// Interface ISystemWrapper
+    ///     Gets the environment variable.
     /// </summary>
-    public interface ISystemWrapper
-    {
-        /// <summary>
-        /// Gets the environment variable.
-        /// </summary>
-        /// <param name="variable">The variable.</param>
-        /// <returns>System.String.</returns>
-        string GetEnvironmentVariable(string variable);
+    /// <param name="variable">The variable.</param>
+    /// <returns>System.String.</returns>
+    string GetEnvironmentVariable(string variable);
 
-        /// <summary>
-        /// Logs the specified value.
-        /// </summary>
-        /// <param name="value">The value.</param>
-        void Log(string value);
+    /// <summary>
+    ///     Logs the specified value.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    void Log(string value);
 
-        /// <summary>
-        /// Logs the line.
-        /// </summary>
-        /// <param name="value">The value.</param>
-        void LogLine(string value);
+    /// <summary>
+    ///     Logs the line.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    void LogLine(string value);
 
-        /// <summary>
-        /// Gets random number
-        /// </summary>
-        /// <returns>System.Double.</returns>
-        double GetRandom();
-    }
+    /// <summary>
+    ///     Gets random number
+    /// </summary>
+    /// <returns>System.Double.</returns>
+    double GetRandom();
 }

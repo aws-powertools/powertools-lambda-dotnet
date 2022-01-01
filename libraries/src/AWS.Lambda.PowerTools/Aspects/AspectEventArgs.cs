@@ -17,55 +17,54 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace AWS.Lambda.PowerTools.Aspects
+namespace AWS.Lambda.PowerTools.Aspects;
+
+/// <summary>
+///     Class AspectEventArgs.
+///     Implements the <see cref="System.EventArgs" />
+/// </summary>
+/// <seealso cref="System.EventArgs" />
+public class AspectEventArgs : EventArgs
 {
     /// <summary>
-    /// Class AspectEventArgs.
-    /// Implements the <see cref="System.EventArgs" />
+    ///     Gets the instance.
     /// </summary>
-    /// <seealso cref="System.EventArgs" />
-    public class AspectEventArgs : EventArgs
-    {
-        /// <summary>
-        /// Gets the instance.
-        /// </summary>
-        /// <value>The instance.</value>
-        public object Instance { get; internal set; }
+    /// <value>The instance.</value>
+    public object Instance { get; internal set; }
 
-        /// <summary>
-        /// Gets the type.
-        /// </summary>
-        /// <value>The type.</value>
-        public Type Type { get; internal set; }
+    /// <summary>
+    ///     Gets the type.
+    /// </summary>
+    /// <value>The type.</value>
+    public Type Type { get; internal set; }
 
-        /// <summary>
-        /// Gets the method.
-        /// </summary>
-        /// <value>The method.</value>
-        public MethodBase Method { get; internal set; }
+    /// <summary>
+    ///     Gets the method.
+    /// </summary>
+    /// <value>The method.</value>
+    public MethodBase Method { get; internal set; }
 
-        /// <summary>
-        /// Gets the name.
-        /// </summary>
-        /// <value>The name.</value>
-        public string Name { get; internal set; }
+    /// <summary>
+    ///     Gets the name.
+    /// </summary>
+    /// <value>The name.</value>
+    public string Name { get; internal set; }
 
-        /// <summary>
-        /// Gets the arguments.
-        /// </summary>
-        /// <value>The arguments.</value>
-        public IReadOnlyList<object> Args { get; internal set; }
+    /// <summary>
+    ///     Gets the arguments.
+    /// </summary>
+    /// <value>The arguments.</value>
+    public IReadOnlyList<object> Args { get; internal set; }
 
-        /// <summary>
-        /// Gets the type of the return.
-        /// </summary>
-        /// <value>The type of the return.</value>
-        public Type ReturnType { get; internal set; }
+    /// <summary>
+    ///     Gets the type of the return.
+    /// </summary>
+    /// <value>The type of the return.</value>
+    public Type ReturnType { get; internal set; }
 
-        /// <summary>
-        /// Gets the triggers.
-        /// </summary>
-        /// <value>The triggers.</value>
-        public Attribute[] Triggers { get; internal set; }
-    }
+    /// <summary>
+    ///     Gets the triggers.
+    /// </summary>
+    /// <value>The triggers.</value>
+    public Attribute[] Triggers { get; internal set; }
 }

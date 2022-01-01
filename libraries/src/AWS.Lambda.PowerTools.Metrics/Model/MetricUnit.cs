@@ -17,67 +17,154 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using AWS.Lambda.PowerTools.Metrics.Serializer;
 
-namespace AWS.Lambda.PowerTools.Metrics
-{   
+namespace AWS.Lambda.PowerTools.Metrics;
+
+/// <summary>
+///     EMF MetricUnit object types
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum MetricUnit
+{
     /// <summary>
-    /// EMF MetricUnit object types
+    ///     The none
     /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum MetricUnit
-    {        
-        [EnumMember(Value = "None")]
-        NONE,
-        [EnumMember(Value = "Seconds")]
-        SECONDS,
-        [EnumMember(Value = "Microseconds")]
-        MICROSECONDS,
-        [EnumMember(Value = "Milliseconds")]
-        MILLISECONDS,
-        [EnumMember(Value = "Bytes")]
-        BYTES,
-        [EnumMember(Value = "Kilobytes")]
-        KILOBYTES,
-        [EnumMember(Value = "Megabytes")]
-        MEGABYTES,
-        [EnumMember(Value = "Gigabytes")]
-        GIGABYTES,
-        [EnumMember(Value = "Terabytes")]
-        TERABYTES,
-        [EnumMember(Value = "Bits")]
-        BITS,
-        [EnumMember(Value = "Kilobits")]
-        KILOBITS,
-        [EnumMember(Value = "Megabits")]
-        MEGABITS,
-        [EnumMember(Value = "Gigabits")]
-        GIGABITS,
-        [EnumMember(Value = "Terabits")]
-        TERABITS,
-        [EnumMember(Value = "Percent")]
-        PERCENT,
-        [EnumMember(Value = "Count")]
-        COUNT,
-        [EnumMember(Value = "Bytes/Second")]
-        BYTES_PER_SECOND,
-        [EnumMember(Value = "Kilobytes/Second")]
-        KILOBYTES_PER_SECOND,
-        [EnumMember(Value = "Megabytes/Second")]
-        MEGABYTES_PER_SECOND,
-        [EnumMember(Value = "Gigabytes/Second")]
-        GIGABYTES_PER_SECOND,
-        [EnumMember(Value = "Terabytes/Second")]
-        TERABYTES_PER_SECOND,
-        [EnumMember(Value = "Bits/Second")]
-        BITS_PER_SECOND,
-        [EnumMember(Value = "Kilobits/Second")]
-        KILOBITS_PER_SECOND,
-        [EnumMember(Value = "Megabits/Second")]
-        MEGABITS_PER_SECOND,
-        [EnumMember(Value = "Gigabits/Second")]
-        GIGABITS_PER_SECOND,
-        [EnumMember(Value = "Terabits/Second")]
-        TERABITS_PER_SECOND,
-        [EnumMember(Value = "Count/Second")]
-        COUNT_PER_SECOND
-    }
+    [EnumMember(Value = "None")] NONE,
+
+    /// <summary>
+    ///     The seconds
+    /// </summary>
+    [EnumMember(Value = "Seconds")] SECONDS,
+
+    /// <summary>
+    ///     The microseconds
+    /// </summary>
+    [EnumMember(Value = "Microseconds")] MICROSECONDS,
+
+    /// <summary>
+    ///     The milliseconds
+    /// </summary>
+    [EnumMember(Value = "Milliseconds")] MILLISECONDS,
+
+    /// <summary>
+    ///     The bytes
+    /// </summary>
+    [EnumMember(Value = "Bytes")] BYTES,
+
+    /// <summary>
+    ///     The kilobytes
+    /// </summary>
+    [EnumMember(Value = "Kilobytes")] KILOBYTES,
+
+    /// <summary>
+    ///     The megabytes
+    /// </summary>
+    [EnumMember(Value = "Megabytes")] MEGABYTES,
+
+    /// <summary>
+    ///     The gigabytes
+    /// </summary>
+    [EnumMember(Value = "Gigabytes")] GIGABYTES,
+
+    /// <summary>
+    ///     The terabytes
+    /// </summary>
+    [EnumMember(Value = "Terabytes")] TERABYTES,
+
+    /// <summary>
+    ///     The bits
+    /// </summary>
+    [EnumMember(Value = "Bits")] BITS,
+
+    /// <summary>
+    ///     The kilobits
+    /// </summary>
+    [EnumMember(Value = "Kilobits")] KILOBITS,
+
+    /// <summary>
+    ///     The megabits
+    /// </summary>
+    [EnumMember(Value = "Megabits")] MEGABITS,
+
+    /// <summary>
+    ///     The gigabits
+    /// </summary>
+    [EnumMember(Value = "Gigabits")] GIGABITS,
+
+    /// <summary>
+    ///     The terabits
+    /// </summary>
+    [EnumMember(Value = "Terabits")] TERABITS,
+
+    /// <summary>
+    ///     The percent
+    /// </summary>
+    [EnumMember(Value = "Percent")] PERCENT,
+
+    /// <summary>
+    ///     The count
+    /// </summary>
+    [EnumMember(Value = "Count")] COUNT,
+
+    /// <summary>
+    ///     The bytes per second
+    /// </summary>
+    [EnumMember(Value = "Bytes/Second")] BYTES_PER_SECOND,
+
+    /// <summary>
+    ///     The kilobytes per second
+    /// </summary>
+    [EnumMember(Value = "Kilobytes/Second")]
+    KILOBYTES_PER_SECOND,
+
+    /// <summary>
+    ///     The megabytes per second
+    /// </summary>
+    [EnumMember(Value = "Megabytes/Second")]
+    MEGABYTES_PER_SECOND,
+
+    /// <summary>
+    ///     The gigabytes per second
+    /// </summary>
+    [EnumMember(Value = "Gigabytes/Second")]
+    GIGABYTES_PER_SECOND,
+
+    /// <summary>
+    ///     The terabytes per second
+    /// </summary>
+    [EnumMember(Value = "Terabytes/Second")]
+    TERABYTES_PER_SECOND,
+
+    /// <summary>
+    ///     The bits per second
+    /// </summary>
+    [EnumMember(Value = "Bits/Second")] BITS_PER_SECOND,
+
+    /// <summary>
+    ///     The kilobits per second
+    /// </summary>
+    [EnumMember(Value = "Kilobits/Second")]
+    KILOBITS_PER_SECOND,
+
+    /// <summary>
+    ///     The megabits per second
+    /// </summary>
+    [EnumMember(Value = "Megabits/Second")]
+    MEGABITS_PER_SECOND,
+
+    /// <summary>
+    ///     The gigabits per second
+    /// </summary>
+    [EnumMember(Value = "Gigabits/Second")]
+    GIGABITS_PER_SECOND,
+
+    /// <summary>
+    ///     The terabits per second
+    /// </summary>
+    [EnumMember(Value = "Terabits/Second")]
+    TERABITS_PER_SECOND,
+
+    /// <summary>
+    ///     The count per second
+    /// </summary>
+    [EnumMember(Value = "Count/Second")] COUNT_PER_SECOND
 }

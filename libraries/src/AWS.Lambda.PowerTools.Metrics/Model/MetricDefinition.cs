@@ -16,66 +16,72 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace AWS.Lambda.PowerTools.Metrics
+namespace AWS.Lambda.PowerTools.Metrics;
+
+/// <summary>
+///     Class MetricDefinition.
+/// </summary>
+public class MetricDefinition
 {
-    public class MetricDefinition
+    /// <summary>
+    ///     Creates a MetricDefinition object. MetricUnit is set to NONE since it is not provided.
+    /// </summary>
+    /// <param name="name">Metric name</param>
+    /// <param name="value">Metric value</param>
+    public MetricDefinition(string name, double value) : this(name, MetricUnit.NONE, new List<double> {value})
     {
-        [JsonPropertyName("Name")]
-        public string Name
-        {
-            get;
-            set;
-        }
+    }
 
-        [JsonIgnore]
-        public List<double> Values
-        {
-            get;
-        }
+    /// <summary>
+    ///     Creates a MetricDefinition object
+    /// </summary>
+    /// <param name="name">Metric name</param>
+    /// <param name="unit">Metric unit</param>
+    /// <param name="value">Metric value</param>
+    public MetricDefinition(string name, MetricUnit unit, double value) : this(name, unit, new List<double> {value})
+    {
+    }
 
-        [JsonPropertyName("Unit")]
-        public MetricUnit Unit {
-            get;
-            set;
-        }
+    /// <summary>
+    ///     Creates a MetricDefinition object with multiple values
+    /// </summary>
+    /// <param name="name">Metric name</param>
+    /// <param name="unit">Metric unit</param>
+    /// <param name="values">List of metric values</param>
+    public MetricDefinition(string name, MetricUnit unit, List<double> values)
+    {
+        Name = name;
+        Unit = unit;
+        Values = values;
+    }
 
-        /// <summary>
-        /// Creates a MetricDefinition object. MetricUnit is set to NONE since it is not provided.
-        /// </summary>
-        /// <param name="name">Metric name</param>
-        /// <param name="value">Metric value</param>
-        public MetricDefinition(string name, double value) : this(name, MetricUnit.NONE, new List<double> { value })
-        {
-        }
+    /// <summary>
+    ///     Gets or sets the name.
+    /// </summary>
+    /// <value>The name.</value>
+    [JsonPropertyName("Name")]
+    public string Name { get; set; }
 
-        /// <summary>
-        /// Creates a MetricDefinition object
-        /// </summary>
-        /// <param name="name">Metric name</param>
-        /// <param name="unit">Metric unit</param>
-        /// <param name="value">Metric value</param>
-        public MetricDefinition(string name, MetricUnit unit, double value) : this(name, unit, new List<double> { value }) { }
+    /// <summary>
+    ///     Gets the values.
+    /// </summary>
+    /// <value>The values.</value>
+    [JsonIgnore]
+    public List<double> Values { get; }
 
-        /// <summary>
-        /// Creates a MetricDefinition object with multiple values
-        /// </summary>
-        /// <param name="name">Metric name</param>
-        /// <param name="unit">Metric unit</param>
-        /// <param name="values">List of metric values</param>
-        public MetricDefinition(string name, MetricUnit unit, List<double> values)
-        {
-            Name = name;
-            Unit = unit;
-            Values = values;
-        }
+    /// <summary>
+    ///     Gets or sets the unit.
+    /// </summary>
+    /// <value>The unit.</value>
+    [JsonPropertyName("Unit")]
+    public MetricUnit Unit { get; set; }
 
-        /// <summary>
-        /// Adds value to existing metric with same key
-        /// </summary>
-        /// <param name="value">Metric value to add to existing key</param>
-        public void AddValue(double value)
-        {
-            Values.Add(value);
-        }        
+    /// <summary>
+    ///     Adds value to existing metric with same key
+    /// </summary>
+    /// <param name="value">Metric value to add to existing key</param>
+    public void AddValue(double value)
+    {
+        Values.Add(value);
     }
 }

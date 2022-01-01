@@ -19,205 +19,209 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using AWS.Lambda.PowerTools.Core;
 
-namespace AWS.Lambda.PowerTools.Metrics
+namespace AWS.Lambda.PowerTools.Metrics;
+
+/// <summary>
+///     Class MetricDirective.
+/// </summary>
+public class MetricDirective
 {
-    public class MetricDirective
+    /// <summary>
+    ///     Creates empty MetricDirective object
+    /// </summary>
+    public MetricDirective() : this(null, new List<MetricDefinition>(), new List<DimensionSet>())
     {
-        
-        [JsonPropertyName("Namespace")]
-        public string Namespace { get; private set; }
-        
-        [JsonIgnore]
-        public string Service { get; private set; }
-        
-        [JsonPropertyName("Metrics")]
-        public List<MetricDefinition> Metrics
+    }
+
+    /// <summary>
+    ///     Creates MetricDirective object with specific namespace identifier
+    /// </summary>
+    /// <param name="nameSpace">Metrics namespace identifier</param>
+    public MetricDirective(string nameSpace) : this(nameSpace, new List<MetricDefinition>(), new List<DimensionSet>())
+    {
+    }
+
+    /// <summary>
+    ///     Creates MetricDirective object with specific namespace identifier and default dimensions list
+    /// </summary>
+    /// <param name="nameSpace">Metrics namespace identifier</param>
+    /// <param name="defaultDimensions">Default dimensions list</param>
+    public MetricDirective(string nameSpace, List<DimensionSet> defaultDimensions) : this(nameSpace,
+        new List<MetricDefinition>(), defaultDimensions)
+    {
+    }
+
+    /// <summary>
+    ///     Creates MetricDirective object with specific namespace identifier, list of metrics and default dimensions list
+    /// </summary>
+    /// <param name="nameSpace">Metrics namespace identifier</param>
+    /// <param name="metrics">List of metrics</param>
+    /// <param name="defaultDimensions">Default dimensions list</param>
+    private MetricDirective(string nameSpace, List<MetricDefinition> metrics, List<DimensionSet> defaultDimensions)
+    {
+        Namespace = nameSpace;
+        Metrics = metrics;
+        Dimensions = new List<DimensionSet>();
+        DefaultDimensions = defaultDimensions;
+    }
+
+    /// <summary>
+    ///     Gets the namespace.
+    /// </summary>
+    /// <value>The namespace.</value>
+    [JsonPropertyName("Namespace")]
+    public string Namespace { get; private set; }
+
+    /// <summary>
+    ///     Gets the service.
+    /// </summary>
+    /// <value>The service.</value>
+    [JsonIgnore]
+    public string Service { get; private set; }
+
+    /// <summary>
+    ///     Gets the metrics.
+    /// </summary>
+    /// <value>The metrics.</value>
+    [JsonPropertyName("Metrics")]
+    public List<MetricDefinition> Metrics { get; private set; }
+
+    /// <summary>
+    ///     Gets the dimensions.
+    /// </summary>
+    /// <value>The dimensions.</value>
+    [JsonIgnore]
+    public List<DimensionSet> Dimensions { get; private set; }
+
+    /// <summary>
+    ///     Gets the default dimensions.
+    /// </summary>
+    /// <value>The default dimensions.</value>
+    [JsonIgnore]
+    public List<DimensionSet> DefaultDimensions { get; private set; }
+
+    /// <summary>
+    ///     Creates list with all dimensions. Needed for correct EMF payload creation
+    /// </summary>
+    /// <value>All dimension keys.</value>
+    [JsonPropertyName("Dimensions")]
+    public List<List<string>> AllDimensionKeys
+    {
+        get
         {
-            get; private set;
+            var defaultKeys = DefaultDimensions
+                .Where(d => d.DimensionKeys.Any())
+                .Select(s => s.DimensionKeys)
+                .ToList();
+
+            var keys = Dimensions
+                .Where(d => d.DimensionKeys.Any())
+                .Select(s => s.DimensionKeys)
+                .ToList();
+
+            defaultKeys.AddRange(keys);
+
+            if (defaultKeys.Count == 0) defaultKeys.Add(new List<string>());
+
+            return defaultKeys;
         }
+    }
 
-        [JsonIgnore]
-        public List<DimensionSet> Dimensions { get; private set; }
-
-        [JsonIgnore]
-        public List<DimensionSet> DefaultDimensions {get; private set; }
-
-        /// <summary>
-        /// Creates empty MetricDirective object 
-        /// </summary>
-        public MetricDirective() : this(null, new List<MetricDefinition>(), new List<DimensionSet>()) { }
-
-        /// <summary>
-        /// Creates MetricDirective object with specific namespace identifier
-        /// </summary>
-        /// <param name="nameSpace">Metrics namespace identifier</param>
-        public MetricDirective(string nameSpace) : this(nameSpace, new List<MetricDefinition>(), new List<DimensionSet>()) { }
-
-        /// <summary>
-        /// Creates MetricDirective object with specific namespace identifier and default dimensions list
-        /// </summary>
-        /// <param name="nameSpace">Metrics namespace identifier</param>
-        /// <param name="defaultDimensions">Default dimensions list</param>
-        public MetricDirective(string nameSpace, List<DimensionSet> defaultDimensions) : this(nameSpace, new List<MetricDefinition>(), defaultDimensions) { }
-
-        /// <summary>
-        /// Creates MetricDirective object with specific namespace identifier, list of metrics and default dimensions list
-        /// </summary>
-        /// <param name="nameSpace">Metrics namespace identifier</param>
-        /// <param name="metrics">List of metrics</param>
-        /// <param name="defaultDimensions">Default dimensions list</param>
-        private MetricDirective(string nameSpace, List<MetricDefinition> metrics, List<DimensionSet> defaultDimensions)
+    /// <summary>
+    ///     Adds metric to memory
+    /// </summary>
+    /// <param name="name">Metric name. Cannot be null, empty or whitespace</param>
+    /// <param name="value">Metric value</param>
+    /// <param name="unit">Metric unit</param>
+    /// <exception cref="System.ArgumentOutOfRangeException">Metrics - Cannot add more than 100 metrics at the same time.</exception>
+    public void AddMetric(string name, double value, MetricUnit unit)
+    {
+        if (Metrics.Count < PowerToolsConfigurations.MaxMetrics)
         {
-            Namespace = nameSpace;
-            Metrics = metrics;
-            Dimensions = new List<DimensionSet>();
+            var metric = Metrics.FirstOrDefault(m => m.Name == name);
+            if (metric != null)
+                metric.AddValue(value);
+            else
+                Metrics.Add(new MetricDefinition(name, unit, value));
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(Metrics),
+                "Cannot add more than 100 metrics at the same time.");
+        }
+    }
+
+    /// <summary>
+    ///     Sets metrics namespace identifier
+    /// </summary>
+    /// <param name="nameSpace">Metrics namespace identifier</param>
+    internal void SetNamespace(string nameSpace)
+    {
+        Namespace = nameSpace;
+    }
+
+    /// <summary>
+    ///     Sets service name
+    /// </summary>
+    /// <param name="service">Service name</param>
+    internal void SetService(string service)
+    {
+        Service = service;
+    }
+
+    /// <summary>
+    ///     Adds new dimension to memory
+    /// </summary>
+    /// <param name="dimension">Metrics Dimension</param>
+    /// <exception cref="System.ArgumentOutOfRangeException">Dimensions - Cannot add more than 9 dimensions at the same time.</exception>
+    internal void AddDimension(DimensionSet dimension)
+    {
+        if (Dimensions.Count < PowerToolsConfigurations.MaxDimensions)
+        {
+            var matchingKeys = AllDimensionKeys.Where(x => x.Contains(dimension.DimensionKeys[0]));
+            if (!matchingKeys.Any())
+                Dimensions.Add(dimension);
+            else
+                Console.WriteLine(
+                    $"##WARNING##: Failed to Add dimension '{dimension.DimensionKeys[0]}'. Dimension already exists.");
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(Dimensions),
+                "Cannot add more than 9 dimensions at the same time.");
+        }
+    }
+
+    /// <summary>
+    ///     Sets default dimensions
+    /// </summary>
+    /// <param name="defaultDimensions">Default dimensions list</param>
+    internal void SetDefaultDimensions(List<DimensionSet> defaultDimensions)
+    {
+        if (!DefaultDimensions.Any())
             DefaultDimensions = defaultDimensions;
-        }
+        else
+            foreach (var item in defaultDimensions)
+                if (!DefaultDimensions.Any(d => d.DimensionKeys.Contains(item.DimensionKeys[0])))
+                    DefaultDimensions.Add(item);
+    }
 
-        /// <summary>
-        /// Creates list with all dimensions. Needed for correct EMF payload creation
-        /// </summary>
-        [JsonPropertyName("Dimensions")]
-        public List<List<string>> AllDimensionKeys
-        {
-            get
-            {
-                var defaultKeys = DefaultDimensions
-                    .Where(d => d.DimensionKeys.Any())
-                    .Select(s => s.DimensionKeys)
-                    .ToList();
+    /// <summary>
+    ///     Appends dimension and default dimension lists
+    /// </summary>
+    /// <returns>Dictionary with dimension and default dimension list appended</returns>
+    internal Dictionary<string, string> ExpandAllDimensionSets()
+    {
+        var dimensions = new Dictionary<string, string>();
 
-                var keys = Dimensions
-                    .Where(d => d.DimensionKeys.Any())
-                    .Select(s => s.DimensionKeys)
-                    .ToList();
+        foreach (var dimensionSet in DefaultDimensions)
+        foreach (var (key, value) in dimensionSet.Dimensions)
+            dimensions.TryAdd(key, value);
 
-                defaultKeys.AddRange(keys);
+        foreach (var dimensionSet in Dimensions)
+        foreach (var (key, value) in dimensionSet.Dimensions)
+            dimensions.TryAdd(key, value);
 
-                if(defaultKeys.Count == 0)
-                {
-                    defaultKeys.Add(new List<string>());
-                }
-
-                return defaultKeys;
-            }
-        }
-        
-        /// <summary>
-        /// Adds metric to memory
-        /// </summary>
-        /// <param name="name">Metric name. Cannot be null, empty or whitespace</param>
-        /// <param name="value">Metric value</param>
-        /// <param name="unit">Metric unit</param>
-        /// <exception cref="ArgumentOutOfRangeException">Throws 'ArgumentOutOfRangeException' if more than 100 items are added to list. Should only happen if gate keeping fails on Flush method</exception>
-        public void AddMetric(string name, double value, MetricUnit unit)
-        {
-            if (Metrics.Count < PowerToolsConfigurations.MaxMetrics)
-            {
-                var metric = Metrics.FirstOrDefault(m => m.Name == name);
-                if (metric != null)
-                {
-                    metric.AddValue(value);
-                }
-                else
-                {
-                    Metrics.Add(new MetricDefinition(name, unit, value));
-                }
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(Metrics), "Cannot add more than 100 metrics at the same time.");
-            }
-        }
-
-        /// <summary>
-        /// Sets metrics namespace identifier
-        /// </summary>
-        /// <param name="nameSpace">Metrics namespace identifier</param>
-        internal void SetNamespace(string nameSpace)
-        {
-            Namespace = nameSpace;
-        }
-
-        /// <summary>
-        /// Sets service name
-        /// </summary>
-        /// <param name="service">Service name</param>
-        internal void SetService(string service)
-        {
-            Service = service;
-        }
-
-        /// <summary>
-        /// Adds new dimension to memory
-        /// </summary>
-        /// <param name="dimension">Metrics Dimension</param>
-        /// <exception cref="ArgumentOutOfRangeException">Throws 'ArgumentOutOfRangeException' if more than 9 dimension are added to the list</exception>
-        internal void AddDimension(DimensionSet dimension)
-        {
-            if (Dimensions.Count < PowerToolsConfigurations.MaxDimensions)
-            {
-                var matchingKeys = AllDimensionKeys.Where(x => x.Contains(dimension.DimensionKeys[0]));
-                if(!matchingKeys.Any())
-                {
-                    Dimensions.Add(dimension);
-                }
-                else
-                {
-                    Console.WriteLine($"##WARNING##: Failed to Add dimension '{dimension.DimensionKeys[0]}'. Dimension already exists.");
-                }
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(Dimensions), "Cannot add more than 9 dimensions at the same time.");
-            }
-        }
-
-        /// <summary>
-        /// Sets default dimensions
-        /// </summary>
-        /// <param name="defaultDimensions">Default dimensions list</param>
-        internal void SetDefaultDimensions(List<DimensionSet> defaultDimensions)
-        {
-            if(!DefaultDimensions.Any()){
-                DefaultDimensions = defaultDimensions;
-            }
-            else {
-                foreach (var item in defaultDimensions)
-                {                    
-                    if(!DefaultDimensions.Any(d => d.DimensionKeys.Contains(item.DimensionKeys[0]))){
-                        DefaultDimensions.Add(item);
-                    }
-                }
-            }
-            
-        }
-        
-        /// <summary>
-        /// Appends dimension and default dimension lists
-        /// </summary>
-        /// <returns>Dictionary with dimension and default dimension list appended</returns>
-        internal Dictionary<string, string> ExpandAllDimensionSets()
-        {
-            var dimensions = new Dictionary<string, string>();
-
-            foreach (var dimensionSet in DefaultDimensions)
-            {
-                foreach (var (key, value) in dimensionSet.Dimensions)
-                {
-                    dimensions.TryAdd(key, value);
-                }
-            }
-
-            foreach (var dimensionSet in Dimensions)
-            {
-                foreach (var (key, value) in dimensionSet.Dimensions)
-                {
-                    dimensions.TryAdd(key, value);
-                }
-            }
-
-            return dimensions;
-        }
+        return dimensions;
     }
 }

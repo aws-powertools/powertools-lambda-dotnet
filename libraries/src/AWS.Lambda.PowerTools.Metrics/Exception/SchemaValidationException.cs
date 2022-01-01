@@ -15,13 +15,28 @@
 
 using System;
 
+/// <summary>
+///     Class SchemaValidationException.
+///     Implements the <see cref="System.Exception" />
+/// </summary>
+/// <seealso cref="System.Exception" />
 [Serializable]
 public class SchemaValidationException : Exception
 {
     /// <summary>
-    /// Thrown when required property is missing on Metrics Object
+    ///     Thrown when required property is missing on Metrics Object
     /// </summary>
     /// <param name="propertyName">Missing property name</param>
-    public SchemaValidationException(string propertyName) : base($"EMF schema is invalid. '{propertyName}' is mandatory and not specified.") { }
-    public SchemaValidationException(bool raiseEmptyMetrics) : base($"No metrics have been provided.") { }
+    public SchemaValidationException(string propertyName) : base(
+        $"EMF schema is invalid. '{propertyName}' is mandatory and not specified.")
+    {
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="SchemaValidationException" /> class.
+    /// </summary>
+    /// <param name="raiseEmptyMetrics">if set to <c>true</c> [raise empty metrics].</param>
+    public SchemaValidationException(bool raiseEmptyMetrics) : base("No metrics have been provided.")
+    {
+    }
 }

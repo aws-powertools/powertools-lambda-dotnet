@@ -16,20 +16,32 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AWS.Lambda.PowerTools.Metrics
+namespace AWS.Lambda.PowerTools.Metrics;
+
+/// <summary>
+///     List of key-value pairs with Metric Dimensions
+/// </summary>
+public class DimensionSet
 {
     /// <summary>
-    /// List of key-value pairs with Metric Dimensions
+    ///     Initializes a new instance of the <see cref="DimensionSet" /> class.
     /// </summary>
-    public class DimensionSet
+    /// <param name="key">The key.</param>
+    /// <param name="value">The value.</param>
+    public DimensionSet(string key, string value)
     {
-        internal Dictionary<string, string> Dimensions { get; } = new Dictionary<string, string>(); 
-
-        public DimensionSet(string key, string value)
-        {
-            Dimensions[key] = value;
-        }
-
-        public List<string> DimensionKeys => Dimensions.Keys.ToList();
+        Dimensions[key] = value;
     }
+
+    /// <summary>
+    ///     Gets the dimensions.
+    /// </summary>
+    /// <value>The dimensions.</value>
+    internal Dictionary<string, string> Dimensions { get; } = new();
+
+    /// <summary>
+    ///     Gets the dimension keys.
+    /// </summary>
+    /// <value>The dimension keys.</value>
+    public List<string> DimensionKeys => Dimensions.Keys.ToList();
 }

@@ -13,48 +13,55 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Core
+namespace AWS.Lambda.PowerTools.Core;
+
+/// <summary>
+///     Class Constants
+/// </summary>
+internal static class Constants
 {
     /// <summary>
-    /// Class Constants
+    ///     Constant for POWERTOOLS_SERVICE_NAME environment variable
     /// </summary>
-    internal static class Constants
-    {
-        /// <summary>
-        /// Constant for POWERTOOLS_SERVICE_NAME environment variable 
-        /// </summary>
-        internal const string SERVICE_NAME_ENV = "POWERTOOLS_SERVICE_NAME";
-        /// <summary>
-        /// Constant for AWS_SAM_LOCAL environment variable 
-        /// </summary>
-        internal const string SAM_LOCAL_ENV = "AWS_SAM_LOCAL";
-        /// <summary>
-        /// Constant for POWERTOOLS_TRACER_CAPTURE_RESPONSE environment variable 
-        /// </summary>
-        internal const string TRACER_CAPTURE_RESPONSE_ENV = "POWERTOOLS_TRACER_CAPTURE_RESPONSE";
-        /// <summary>
-        /// Constant for POWERTOOLS_TRACER_CAPTURE_ERROR environment variable 
-        /// </summary>
-        internal const string TRACER_CAPTURE_ERROR_ENV = "POWERTOOLS_TRACER_CAPTURE_ERROR";
-        /// <summary>
-        /// Constant for POWERTOOLS_METRICS_NAMESPACE environment variable
-        /// </summary>
-        internal const string METRICS_NAMESPACE_ENV = "POWERTOOLS_METRICS_NAMESPACE";
-        /// <summary>
-        /// Constant for LOG_LEVEL environment variable 
-        /// </summary>
-        internal const string LOG_LEVEL_NAME_ENV = "LOG_LEVEL";
-        /// <summary>
-        /// Constant for POWERTOOLS_LOGGER_SAMPLE_RATE environment variable 
-        /// </summary>
-        internal const string LOGGER_SAMPLE_RATE_NAME_ENV = "POWERTOOLS_LOGGER_SAMPLE_RATE";
-        /// <summary>
-        /// Constant for POWERTOOLS_LOGGER_LOG_EVENT environment variable 
-        /// </summary>
-        internal const string LOGGER_LOG_EVENT_NAME_ENV = "POWERTOOLS_LOGGER_LOG_EVENT";
-        /// <summary>
-        /// Constant for AWS X-Ray trace identifier environment variable 
-        /// </summary>
-        internal const string XRAY_TRACE_ID_ENV = "_X_AMZN_TRACE_ID";
-    }
+    internal const string ServiceNameEnv = "POWERTOOLS_SERVICE_NAME";
+
+    /// <summary>
+    ///     Constant for AWS_SAM_LOCAL environment variable
+    /// </summary>
+    internal const string SamLocalEnv = "AWS_SAM_LOCAL";
+
+    /// <summary>
+    ///     Constant for POWERTOOLS_TRACER_CAPTURE_RESPONSE environment variable
+    /// </summary>
+    internal const string TracerCaptureResponseEnv = "POWERTOOLS_TRACER_CAPTURE_RESPONSE";
+
+    /// <summary>
+    ///     Constant for POWERTOOLS_TRACER_CAPTURE_ERROR environment variable
+    /// </summary>
+    internal const string TracerCaptureErrorEnv = "POWERTOOLS_TRACER_CAPTURE_ERROR";
+
+    /// <summary>
+    ///     Constant for POWERTOOLS_METRICS_NAMESPACE environment variable
+    /// </summary>
+    internal const string MetricsNamespaceEnv = "POWERTOOLS_METRICS_NAMESPACE";
+
+    /// <summary>
+    ///     Constant for LOG_LEVEL environment variable
+    /// </summary>
+    internal const string LogLevelNameEnv = "LOG_LEVEL";
+
+    /// <summary>
+    ///     Constant for POWERTOOLS_LOGGER_SAMPLE_RATE environment variable
+    /// </summary>
+    internal const string LoggerSampleRateNameEnv = "POWERTOOLS_LOGGER_SAMPLE_RATE";
+
+    /// <summary>
+    ///     Constant for POWERTOOLS_LOGGER_LOG_EVENT environment variable
+    /// </summary>
+    internal const string LoggerLogEventNameEnv = "POWERTOOLS_LOGGER_LOG_EVENT";
+
+    /// <summary>
+    ///     Constant for AWS X-Ray trace identifier environment variable
+    /// </summary>
+    internal const string XrayTraceIdEnv = "_X_AMZN_TRACE_ID";
 }

@@ -55,13 +55,13 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder3 = new Mock<IXRayRecorder>();
             var recorder4 = new Mock<IXRayRecorder>();
 
-            var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+            var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations1.Object, recorder1.Object);
-            var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+            var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations1.Object, recorder2.Object);
-            var handler3 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+            var handler3 = new TracingAspectHandler(null, null, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations2.Object, recorder3.Object);
-            var handler4 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+            var handler4 = new TracingAspectHandler(null, null, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations2.Object, recorder4.Object);
 
             var eventArgs = new AspectEventArgs {Name = methodName};
@@ -143,7 +143,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var configurations = new Mock<IPowerToolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
 
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -166,7 +166,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var configurations = new Mock<IPowerToolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
 
-            var handler = new TracingAspectHandler(segmentName, null, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(segmentName, null, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -192,7 +192,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             ).Returns(service);
             var recorder = new Mock<IXRayRecorder>();
 
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -215,7 +215,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var configurations = new Mock<IPowerToolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -246,7 +246,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -278,7 +278,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -304,7 +304,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Response,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.RESPONSE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -333,7 +333,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ResponseAndError,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.RESPONSE_AND_ERROR,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -362,7 +362,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Error,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ERROR,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -388,7 +388,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Disabled,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.DISABLED,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -421,7 +421,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -452,7 +452,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -479,7 +479,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Error,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ERROR,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -507,7 +507,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ResponseAndError,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.RESPONSE_AND_ERROR,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -538,7 +538,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Response,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.RESPONSE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -568,7 +568,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
 
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Disabled,
+            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.DISABLED,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -600,7 +600,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             ).Returns(false);
             var recorder = new Mock<IXRayRecorder>();
 
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 
@@ -622,7 +622,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             ).Returns(true);
             var recorder = new Mock<IXRayRecorder>();
 
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.ENVIRONMENT_VARIABLE,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
 

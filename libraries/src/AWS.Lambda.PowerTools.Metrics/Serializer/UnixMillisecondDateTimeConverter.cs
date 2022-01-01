@@ -17,27 +17,46 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AWS.Lambda.PowerTools.Metrics.Serializer
+namespace AWS.Lambda.PowerTools.Metrics.Serializer;
+
+/// <summary>
+///     Class UnixMillisecondDateTimeConverter.
+///     Implements the <see cref="System.Text.Json.Serialization.JsonConverter{System.DateTime}" />
+/// </summary>
+/// <seealso cref="System.Text.Json.Serialization.JsonConverter{System.DateTime}" />
+public class UnixMillisecondDateTimeConverter : JsonConverter<DateTime>
 {
-    public class UnixMillisecondDateTimeConverter : JsonConverter<DateTime>
+    /// <summary>
+    ///     The unix epoch
+    /// </summary>
+    private readonly DateTime _unixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    /// <summary>
+    ///     Writes a specified value as JSON.
+    /// </summary>
+    /// <param name="writer">The writer to write to.</param>
+    /// <param name="value">The value to convert to JSON.</param>
+    /// <param name="options">An object that specifies serialization options to use.</param>
+    /// <exception cref="System.Text.Json.JsonException">Invalid date</exception>
+    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
     {
-        private readonly DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var ms = (long) (value.ToUniversalTime() - _unixEpoch).TotalMilliseconds;
 
-        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
-        {
-            var ms = (long)(value.ToUniversalTime() - _unixEpoch).TotalMilliseconds;
-            
-            if(ms < 0)
-            {
-                throw new JsonException("Invalid date");
-            }
+        if (ms < 0) throw new JsonException("Invalid date");
 
-            writer.WriteNumberValue(ms);
-        }
+        writer.WriteNumberValue(ms);
+    }
 
-        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            throw new NotImplementedException();
-        }
+    /// <summary>
+    ///     Reads and converts the JSON to type <typeparamref name="T" />.
+    /// </summary>
+    /// <param name="reader">The reader.</param>
+    /// <param name="typeToConvert">The type to convert.</param>
+    /// <param name="options">An object that specifies serialization options to use.</param>
+    /// <returns>The converted value.</returns>
+    /// <exception cref="System.NotImplementedException"></exception>
+    public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        throw new NotImplementedException();
     }
 }

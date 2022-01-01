@@ -21,7 +21,7 @@ namespace HelloWorld
         private static readonly HttpClient client = new HttpClient();
 
         [Logging(LogEvent = true, SamplingRate = 0.7)]
-        [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+        [Tracing(CaptureMode = TracingCaptureMode.RESPONSE_AND_ERROR)]
         [Metrics(Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {                                
@@ -101,7 +101,7 @@ namespace HelloWorld
             }
         }
 
-        [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.Disabled)]
+        [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.DISABLED)]
         private static async Task<string> GetCallingIP()
         {
             client.DefaultRequestHeaders.Accept.Clear();
@@ -111,7 +111,7 @@ namespace HelloWorld
             return msg.Replace("\n","");
         }
 
-        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+        [Tracing(CaptureMode = TracingCaptureMode.DISABLED)]
         private static void NestedMethodsParent()
         {
             Logger.LogInformation($"NestedMethodsParent method");
@@ -119,7 +119,7 @@ namespace HelloWorld
             NestedMethodsChild(1);
         }
         
-        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+        [Tracing(CaptureMode = TracingCaptureMode.DISABLED)]
         private static void NestedMethodsChild(int childId)
         {
             Logger.LogInformation($"NestedMethodsChild method for child {childId}");

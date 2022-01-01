@@ -17,85 +17,86 @@ using System;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
 
-namespace AWS.Lambda.PowerTools.Aspects
+namespace AWS.Lambda.PowerTools.Aspects;
+
+/// <summary>
+///     Class MethodAspectAttribute.
+///     Implements the <see cref="AWS.Lambda.PowerTools.Aspects.UniversalWrapperAttribute" />
+/// </summary>
+/// <seealso cref="AWS.Lambda.PowerTools.Aspects.UniversalWrapperAttribute" />
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+[Injection(typeof(UniversalWrapperAspect), Inherited = true)]
+public abstract class MethodAspectAttribute : UniversalWrapperAttribute
 {
     /// <summary>
-    /// Class MethodAspectAttribute.
-    /// Implements the <see cref="AWS.Lambda.PowerTools.Aspects.UniversalWrapperAttribute" />
+    ///     The aspect handler
     /// </summary>
-    /// <seealso cref="AWS.Lambda.PowerTools.Aspects.UniversalWrapperAttribute" />
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-    [Injection(typeof(UniversalWrapperAspect), Inherited = true)]
-    public abstract class MethodAspectAttribute : UniversalWrapperAttribute
+    private IMethodAspectHandler _aspectHandler;
+
+    /// <summary>
+    ///     Gets the aspect handler.
+    /// </summary>
+    /// <value>The aspect handler.</value>
+    private IMethodAspectHandler AspectHandler => _aspectHandler ??= CreateHandler();
+
+    /// <summary>
+    ///     Creates the handler.
+    /// </summary>
+    /// <returns>IMethodAspectHandler.</returns>
+    protected abstract IMethodAspectHandler CreateHandler();
+
+    /// <summary>
+    ///     Wraps the synchronize.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="target">The target.</param>
+    /// <param name="args">The arguments.</param>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    /// <returns>T.</returns>
+    protected internal sealed override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
     {
-        /// <summary>
-        /// The aspect handler
-        /// </summary>
-        private IMethodAspectHandler _aspectHandler;
-        /// <summary>
-        /// Gets the aspect handler.
-        /// </summary>
-        /// <value>The aspect handler.</value>
-        private IMethodAspectHandler AspectHandler => _aspectHandler ??= CreateHandler();
-
-        /// <summary>
-        /// Creates the handler.
-        /// </summary>
-        /// <returns>IMethodAspectHandler.</returns>
-        protected abstract IMethodAspectHandler CreateHandler();
-
-        /// <summary>
-        /// Wraps the synchronize.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="target">The target.</param>
-        /// <param name="args">The arguments.</param>
-        /// <param name="eventArgs">The <see cref="AspectEventArgs"/> instance containing the event data.</param>
-        /// <returns>T.</returns>
-        protected internal sealed override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
+        AspectHandler.OnEntry(eventArgs);
+        try
         {
-            AspectHandler.OnEntry(eventArgs);
-            try
-            {
-                var result = base.WrapSync(target, args, eventArgs);
-                AspectHandler.OnSuccess(eventArgs, result);
-                return result;
-            }
-            catch (Exception exception)
-            {
-                return AspectHandler.OnException<T>(eventArgs, exception);
-            }
-            finally
-            {
-                AspectHandler.OnExit(eventArgs);
-            }
+            var result = base.WrapSync(target, args, eventArgs);
+            AspectHandler.OnSuccess(eventArgs, result);
+            return result;
         }
-
-        /// <summary>
-        /// Wrap as an asynchronous operation.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="target">The target.</param>
-        /// <param name="args">The arguments.</param>
-        /// <param name="eventArgs">The <see cref="AspectEventArgs"/> instance containing the event data.</param>
-        /// <returns>A Task&lt;T&gt; representing the asynchronous operation.</returns>
-        protected internal sealed override async Task<T> WrapAsync<T>(Func<object[], Task<T>> target, object[] args, AspectEventArgs eventArgs)
+        catch (Exception exception)
         {
-            AspectHandler.OnEntry(eventArgs);
-            try
-            {
-                var result = await base.WrapAsync(target, args, eventArgs);
-                AspectHandler.OnSuccess(eventArgs, result);
-                return result;
-            }
-            catch (Exception exception)
-            {
-                return AspectHandler.OnException<T>(eventArgs, exception);
-            }
-            finally
-            {
-                AspectHandler.OnExit(eventArgs);
-            }
+            return AspectHandler.OnException<T>(eventArgs, exception);
+        }
+        finally
+        {
+            AspectHandler.OnExit(eventArgs);
+        }
+    }
+
+    /// <summary>
+    ///     Wrap as an asynchronous operation.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="target">The target.</param>
+    /// <param name="args">The arguments.</param>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    /// <returns>A Task&lt;T&gt; representing the asynchronous operation.</returns>
+    protected internal sealed override async Task<T> WrapAsync<T>(Func<object[], Task<T>> target, object[] args,
+        AspectEventArgs eventArgs)
+    {
+        AspectHandler.OnEntry(eventArgs);
+        try
+        {
+            var result = await base.WrapAsync(target, args, eventArgs);
+            AspectHandler.OnSuccess(eventArgs, result);
+            return result;
+        }
+        catch (Exception exception)
+        {
+            return AspectHandler.OnException<T>(eventArgs, exception);
+        }
+        finally
+        {
+            AspectHandler.OnExit(eventArgs);
         }
     }
 }
