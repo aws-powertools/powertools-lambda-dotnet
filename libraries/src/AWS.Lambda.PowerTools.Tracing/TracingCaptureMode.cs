@@ -25,14 +25,14 @@ public enum TracingCaptureMode
     ///     on {<see cref="T:Amazon.Lambda.PowerTools.Tracing.TracingAttribute" /> attribute, it will override value of
     ///     environment variable POWERTOOLS_TRACER_CAPTURE_RESPONSE
     /// </summary>
-    RESPONSE,
+    Response,
 
     /// <summary>
     ///     Enabled attribute to capture only error from the method. If this mode is explicitly overridden
     ///     on <see cref="T:Amazon.Lambda.PowerTools.Tracing.TracingAttribute" /> attribute, it will override value of
     ///     environment variable POWERTOOLS_TRACER_CAPTURE_ERROR
     /// </summary>
-    ERROR,
+    Error,
 
     /// <summary>
     ///     Enabled attribute to capture both response error from the method. If this mode is explicitly overridden
@@ -40,7 +40,7 @@ public enum TracingCaptureMode
     ///     environment variables POWERTOOLS_TRACER_CAPTURE_RESPONSE
     ///     and POWERTOOLS_TRACER_CAPTURE_ERROR
     /// </summary>
-    RESPONSE_AND_ERROR,
+    ResponseAndError,
 
     /// <summary>
     ///     Disables attribute to capture both response and error from the method. If this mode is explicitly overridden
@@ -48,11 +48,11 @@ public enum TracingCaptureMode
     ///     environment variable POWERTOOLS_TRACER_CAPTURE_RESPONSE
     ///     and POWERTOOLS_TRACER_CAPTURE_ERROR
     /// </summary>
-    DISABLED,
+    Disabled,
 
     /// <summary>
     ///     Enables/Disables attribute to capture response and error from the method based on the value of
     ///     environment variable POWERTOOLS_TRACER_CAPTURE_RESPONSE and POWERTOOLS_TRACER_CAPTURE_ERROR
     /// </summary>
-    ENVIRONMENT_VARIABLE
+    EnvironmentVariable
 }

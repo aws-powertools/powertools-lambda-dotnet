@@ -55,7 +55,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             // Act
             handler.OnEntry(eventArgs);
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var metricsOutput = consoleOut.ToString();
@@ -95,7 +95,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             // Act
             handler.OnEntry(eventArgs);
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -136,7 +136,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             for (int i = 0; i <= 100; i++)
             {
-                Metrics.AddMetric($"Metric Name {i + 1}", i, MetricUnit.COUNT);
+                Metrics.AddMetric($"Metric Name {i + 1}", i, MetricUnit.Count);
             }
 
             handler.OnExit(eventArgs);
@@ -216,7 +216,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             Action act = () =>
             {
                 handler.OnEntry(eventArgs);
-                Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+                Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
                 handler.OnExit(eventArgs);
             };
 
@@ -255,7 +255,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act
             handler.OnEntry(eventArgs);
             Metrics.AddDimension("functionVersion", "$LATEST");
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -364,7 +364,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act
             handler.OnEntry(eventArgs);
             Metrics.SetDefaultDimensions(defaultDimensions);
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -405,7 +405,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             handler.OnEntry(eventArgs);
             Metrics.SetDefaultDimensions(defaultDimensions);
             Metrics.SetDefaultDimensions(defaultDimensions);
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -443,7 +443,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act 
             handler.OnEntry(eventArgs);
             Metrics.AddDimension("functionVersion", "$LATEST");
-            Metrics.AddMetric("Time", 100.7, MetricUnit.MILLISECONDS);
+            Metrics.AddMetric("Time", 100.7, MetricUnit.Milliseconds);
             Metrics.AddMetadata("env", "dev");
             handler.OnExit(eventArgs);
 
@@ -484,8 +484,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act 
             handler.OnEntry(eventArgs);
             Metrics.AddDimension("functionVersion", "$LATEST");
-            Metrics.AddMetric("Time", 100.5, MetricUnit.MILLISECONDS);
-            Metrics.AddMetric("Time", 200, MetricUnit.MILLISECONDS);
+            Metrics.AddMetric("Time", 100.5, MetricUnit.Milliseconds);
+            Metrics.AddMetric("Time", 200, MetricUnit.Milliseconds);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();

@@ -201,13 +201,13 @@ internal class TracingAspectHandler : IMethodAspectHandler
     {
         switch (_captureMode)
         {
-            case TracingCaptureMode.ENVIRONMENT_VARIABLE:
+            case TracingCaptureMode.EnvironmentVariable:
                 return _powerToolsConfigurations.TracerCaptureResponse;
-            case TracingCaptureMode.RESPONSE:
-            case TracingCaptureMode.RESPONSE_AND_ERROR:
+            case TracingCaptureMode.Response:
+            case TracingCaptureMode.ResponseAndError:
                 return true;
-            case TracingCaptureMode.ERROR:
-            case TracingCaptureMode.DISABLED:
+            case TracingCaptureMode.Error:
+            case TracingCaptureMode.Disabled:
             default:
                 return false;
         }
@@ -221,13 +221,13 @@ internal class TracingAspectHandler : IMethodAspectHandler
     {
         switch (_captureMode)
         {
-            case TracingCaptureMode.ENVIRONMENT_VARIABLE:
+            case TracingCaptureMode.EnvironmentVariable:
                 return _powerToolsConfigurations.TracerCaptureError;
-            case TracingCaptureMode.ERROR:
-            case TracingCaptureMode.RESPONSE_AND_ERROR:
+            case TracingCaptureMode.Error:
+            case TracingCaptureMode.ResponseAndError:
                 return true;
-            case TracingCaptureMode.RESPONSE:
-            case TracingCaptureMode.DISABLED:
+            case TracingCaptureMode.Response:
+            case TracingCaptureMode.Disabled:
             default:
                 return false;
         }

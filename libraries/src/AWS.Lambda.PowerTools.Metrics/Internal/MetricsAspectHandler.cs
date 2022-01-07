@@ -88,7 +88,7 @@ internal class MetricsAspectHandler : IMethodAspectHandler
         _metrics.PushSingleMetric(
             "ColdStart",
             1.0,
-            MetricUnit.COUNT,
+            MetricUnit.Count,
             nameSpace,
             service,
             dimensions

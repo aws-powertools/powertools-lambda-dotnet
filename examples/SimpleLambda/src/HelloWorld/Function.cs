@@ -21,7 +21,7 @@ namespace HelloWorld
         private static readonly HttpClient client = new HttpClient();
 
         [Logging(LogEvent = true, SamplingRate = 0.7)]
-        [Tracing(CaptureMode = TracingCaptureMode.RESPONSE_AND_ERROR)]
+        [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
         [Metrics(Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {                                
@@ -32,7 +32,7 @@ namespace HelloWorld
                 Metrics.PushSingleMetric(
                     metricName: "CallingIP",
                     value: 1,
-                    unit: MetricUnit.COUNT,
+                    unit: MetricUnit.Count,
                     nameSpace: "dotnet-lambdapowertools",
                     service: "lambda-example",
                     defaultDimensions: new Dictionary<string, string>
@@ -42,8 +42,8 @@ namespace HelloWorld
                 var location = await GetCallingIP();
                 watch.Stop();
                 
-                Metrics.AddMetric("ElapsedExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
-                Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
+                Metrics.AddMetric("ElapsedExecutionTime", watch.ElapsedMilliseconds, MetricUnit.Milliseconds);
+                Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.Count);
                 
                 var body = new Dictionary<string, string>
                 {
@@ -101,7 +101,7 @@ namespace HelloWorld
             }
         }
 
-        [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.DISABLED)]
+        [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.Disabled)]
         private static async Task<string> GetCallingIP()
         {
             client.DefaultRequestHeaders.Accept.Clear();
@@ -111,7 +111,7 @@ namespace HelloWorld
             return msg.Replace("\n","");
         }
 
-        [Tracing(CaptureMode = TracingCaptureMode.DISABLED)]
+        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
         private static void NestedMethodsParent()
         {
             Logger.LogInformation($"NestedMethodsParent method");
@@ -119,7 +119,7 @@ namespace HelloWorld
             NestedMethodsChild(1);
         }
         
-        [Tracing(CaptureMode = TracingCaptureMode.DISABLED)]
+        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
         private static void NestedMethodsChild(int childId)
         {
             Logger.LogInformation($"NestedMethodsChild method for child {childId}");

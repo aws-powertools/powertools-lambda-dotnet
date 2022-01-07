@@ -247,7 +247,7 @@ public class Metrics : IMetrics
     /// <param name="key">Metric Key. Must not be null, empty or whitespace</param>
     /// <param name="value">Metric Value</param>
     /// <param name="unit">Metric Unit</param>
-    public static void AddMetric(string key, double value, MetricUnit unit = MetricUnit.NONE)
+    public static void AddMetric(string key, double value, MetricUnit unit = MetricUnit.None)
     {
         _instance.AddMetric(key, value, unit);
     }

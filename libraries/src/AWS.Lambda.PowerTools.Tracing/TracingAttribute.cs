@@ -46,7 +46,7 @@ public class TracingAttribute : MethodAspectAttribute
     ///     <c>POWERTOOLS_TRACER_CAPTURE_ERROR</c>.
     /// </summary>
     /// <value>The capture mode.</value>
-    public TracingCaptureMode CaptureMode { get; set; } = TracingCaptureMode.ENVIRONMENT_VARIABLE;
+    public TracingCaptureMode CaptureMode { get; set; } = TracingCaptureMode.EnvironmentVariable;
 
     /// <summary>
     ///     Creates the handler.

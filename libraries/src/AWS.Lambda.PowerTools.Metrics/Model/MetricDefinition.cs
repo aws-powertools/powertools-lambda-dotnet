@@ -28,7 +28,7 @@ public class MetricDefinition
     /// </summary>
     /// <param name="name">Metric name</param>
     /// <param name="value">Metric value</param>
-    public MetricDefinition(string name, double value) : this(name, MetricUnit.NONE, new List<double> {value})
+    public MetricDefinition(string name, double value) : this(name, MetricUnit.None, new List<double> {value})
     {
     }
 
