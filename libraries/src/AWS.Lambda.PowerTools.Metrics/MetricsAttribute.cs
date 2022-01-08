@@ -34,7 +34,7 @@ public class MetricsAttribute : MethodAspectAttribute
     private IMetrics _metricsInstance;
 
     /// <summary>
-    ///     Set namespace to current subsegment.
+    ///     Set namespace.
     ///     The default is the environment variable <c>POWERTOOLS_METRICS_NAMESPACE</c>.
     /// </summary>
     /// <value>The namespace.</value>
