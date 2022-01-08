@@ -46,7 +46,7 @@ public abstract class MethodAspectAttribute : UniversalWrapperAttribute
     protected abstract IMethodAspectHandler CreateHandler();
 
     /// <summary>
-    ///     Wraps the synchronize.
+    ///     Wraps as a synchronous operation.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="target">The target.</param>
