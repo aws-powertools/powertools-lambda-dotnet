@@ -26,71 +26,71 @@ namespace AWS.Lambda.PowerTools.Metrics;
 public interface IMetrics : IDisposable
 {
     /// <summary>
-    ///     Adds the metric.
+    ///     Adds metric
     /// </summary>
-    /// <param name="key">The key.</param>
-    /// <param name="value">The value.</param>
-    /// <param name="unit">The unit.</param>
+    /// <param name="key">Metric key</param>
+    /// <param name="value">Metric value</param>
+    /// <param name="unit">Metric unit</param>
     void AddMetric(string key, double value, MetricUnit unit);
 
     /// <summary>
-    ///     Adds the dimension.
+    ///     Adds a dimension
     /// </summary>
-    /// <param name="key">The key.</param>
-    /// <param name="value">The value.</param>
+    /// <param name="key">Dimension key</param>
+    /// <param name="value">Dimension value</param>
     void AddDimension(string key, string value);
 
     /// <summary>
-    ///     Sets the default dimensions.
+    ///     Sets the default dimensions
     /// </summary>
-    /// <param name="defaultDimension">The default dimension.</param>
+    /// <param name="defaultDimension">Default dimensions</param>
     void SetDefaultDimensions(Dictionary<string, string> defaultDimension);
 
     /// <summary>
-    ///     Adds the metadata.
+    ///     Adds metadata 
     /// </summary>
-    /// <param name="key">The key.</param>
-    /// <param name="value">The value.</param>
+    /// <param name="key">Metadata key</param>
+    /// <param name="value">Metadata value</param>
     void AddMetadata(string key, dynamic value);
 
     /// <summary>
-    ///     Pushes the single metric.
+    ///     Pushes a single metric with custom namespace, service and dimensions.
     /// </summary>
-    /// <param name="metricName">Name of the metric.</param>
-    /// <param name="value">The value.</param>
-    /// <param name="unit">The unit.</param>
-    /// <param name="nameSpace">The name space.</param>
-    /// <param name="service">The service.</param>
-    /// <param name="defaultDimensions">The default dimensions.</param>
+    /// <param name="metricName">Name of the metric</param>
+    /// <param name="value">Metric value</param>
+    /// <param name="unit">Metric unit</param>
+    /// <param name="nameSpace">Metric namespace</param>
+    /// <param name="service">Metric service</param>
+    /// <param name="defaultDimensions">Metric default dimensions</param>
     void PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace = null,
         string service = null, Dictionary<string, string> defaultDimensions = null);
 
     /// <summary>
-    ///     Sets the namespace.
+    ///     Sets the namespace
     /// </summary>
-    /// <param name="nameSpace">The name space.</param>
+    /// <param name="nameSpace">Metrics namespace</param>
     void SetNamespace(string nameSpace);
 
     /// <summary>
-    ///     Gets the namespace.
+    ///     Gets the namespace
     /// </summary>
     /// <returns>System.String.</returns>
     string GetNamespace();
 
     /// <summary>
-    ///     Gets the service.
+    ///     Gets the service
     /// </summary>
     /// <returns>System.String.</returns>
     string GetService();
 
     /// <summary>
-    ///     Serializes this instance.
+    ///     Serializes metrics instance
     /// </summary>
     /// <returns>System.String.</returns>
     string Serialize();
 
     /// <summary>
-    ///     Flushes the specified metrics overflow.
+    ///     Flushes metrics to CloudWatch
     /// </summary>
     /// <param name="metricsOverflow">if set to <c>true</c> [metrics overflow].</param>
     void Flush(bool metricsOverflow = false);
