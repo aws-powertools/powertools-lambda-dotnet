@@ -79,7 +79,7 @@ internal sealed class LoggerProvider : ILoggerProvider
     }
 
     /// <summary>
-    ///     Configures the specified configuration.
+    ///     Configures the loggers.
     /// </summary>
     /// <param name="config">The configuration.</param>
     internal void Configure(IOptions<LoggerConfiguration> config)
