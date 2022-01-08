@@ -27,12 +27,12 @@ namespace Amazon.Lambda.PowerTools.Tracing.Internal;
 internal class TracingAspectHandler : IMethodAspectHandler
 {
     /// <summary>
-    ///     The is cold start
+    ///     If true, then is cold start
     /// </summary>
     private static bool _isColdStart = true;
 
     /// <summary>
-    ///     The capture annotations
+    ///     If true, capture annotations
     /// </summary>
     private static bool _captureAnnotations = true;
 
@@ -42,7 +42,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     private readonly TracingCaptureMode _captureMode;
 
     /// <summary>
-    ///     The namespace
+    ///     Tracing namespace
     /// </summary>
     private readonly string _namespace;
 
@@ -57,12 +57,12 @@ internal class TracingAspectHandler : IMethodAspectHandler
     private readonly string _segmentName;
 
     /// <summary>
-    ///     The x ray recorder
+    ///     X-Ray Recorder
     /// </summary>
     private readonly IXRayRecorder _xRayRecorder;
 
     /// <summary>
-    ///     The is annotations captured
+    ///     If true, annotations have been captured
     /// </summary>
     private bool _isAnnotationsCaptured;
 
@@ -70,10 +70,10 @@ internal class TracingAspectHandler : IMethodAspectHandler
     ///     Initializes a new instance of the <see cref="TracingAspectHandler" /> class.
     /// </summary>
     /// <param name="segmentName">Name of the segment.</param>
-    /// <param name="nameSpace">The name space.</param>
+    /// <param name="nameSpace">The namespace.</param>
     /// <param name="captureMode">The capture mode.</param>
     /// <param name="powerToolsConfigurations">The power tools configurations.</param>
-    /// <param name="xRayRecorder">The x ray recorder.</param>
+    /// <param name="xRayRecorder">The X-Ray recorder.</param>
     internal TracingAspectHandler
     (
         string segmentName,
