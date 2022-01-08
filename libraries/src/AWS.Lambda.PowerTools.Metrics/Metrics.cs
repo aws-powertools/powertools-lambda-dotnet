@@ -42,7 +42,7 @@ public class Metrics : IMetrics
     private readonly IPowerToolsConfigurations _powerToolsConfigurations;
 
     /// <summary>
-    ///     The raise on empty metrics
+    ///     If true, Powertools will throw an exception on empty metrics when trying to flush
     /// </summary>
     private readonly bool _raiseOnEmptyMetrics;
 
