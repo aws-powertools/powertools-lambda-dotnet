@@ -26,7 +26,7 @@ namespace AWS.Lambda.PowerTools.Aspects;
 public abstract class UniversalWrapperAttribute : Attribute
 {
     /// <summary>
-    ///     Wraps the synchronize.
+    ///     Wraps as a synchronous operation.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="target">The target.</param>
@@ -39,7 +39,7 @@ public abstract class UniversalWrapperAttribute : Attribute
     }
 
     /// <summary>
-    ///     Wraps the asynchronous.
+    ///     Wraps as an asynchronous operation.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="target">The target.</param>
