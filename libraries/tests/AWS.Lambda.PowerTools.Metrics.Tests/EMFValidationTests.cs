@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ * 
+ *  http://aws.amazon.com/apache2.0
+ * 
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using Xunit;
@@ -40,7 +55,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             // Act
             handler.OnEntry(eventArgs);
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var metricsOutput = consoleOut.ToString();
@@ -80,7 +95,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             // Act
             handler.OnEntry(eventArgs);
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -121,7 +136,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
 
             for (int i = 0; i <= 100; i++)
             {
-                Metrics.AddMetric($"Metric Name {i + 1}", i, MetricUnit.COUNT);
+                Metrics.AddMetric($"Metric Name {i + 1}", i, MetricUnit.Count);
             }
 
             handler.OnExit(eventArgs);
@@ -201,7 +216,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             Action act = () =>
             {
                 handler.OnEntry(eventArgs);
-                Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+                Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
                 handler.OnExit(eventArgs);
             };
 
@@ -240,7 +255,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act
             handler.OnEntry(eventArgs);
             Metrics.AddDimension("functionVersion", "$LATEST");
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -349,7 +364,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act
             handler.OnEntry(eventArgs);
             Metrics.SetDefaultDimensions(defaultDimensions);
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -390,7 +405,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             handler.OnEntry(eventArgs);
             Metrics.SetDefaultDimensions(defaultDimensions);
             Metrics.SetDefaultDimensions(defaultDimensions);
-            Metrics.AddMetric("TestMetric", 1, MetricUnit.COUNT);
+            Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();
@@ -428,7 +443,7 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act 
             handler.OnEntry(eventArgs);
             Metrics.AddDimension("functionVersion", "$LATEST");
-            Metrics.AddMetric("Time", 100.7, MetricUnit.MILLISECONDS);
+            Metrics.AddMetric("Time", 100.7, MetricUnit.Milliseconds);
             Metrics.AddMetadata("env", "dev");
             handler.OnExit(eventArgs);
 
@@ -469,8 +484,8 @@ namespace AWS.Lambda.PowerTools.Metrics.Tests
             // Act 
             handler.OnEntry(eventArgs);
             Metrics.AddDimension("functionVersion", "$LATEST");
-            Metrics.AddMetric("Time", 100.5, MetricUnit.MILLISECONDS);
-            Metrics.AddMetric("Time", 200, MetricUnit.MILLISECONDS);
+            Metrics.AddMetric("Time", 100.5, MetricUnit.Milliseconds);
+            Metrics.AddMetric("Time", 200, MetricUnit.Milliseconds);
             handler.OnExit(eventArgs);
 
             var result = consoleOut.ToString();

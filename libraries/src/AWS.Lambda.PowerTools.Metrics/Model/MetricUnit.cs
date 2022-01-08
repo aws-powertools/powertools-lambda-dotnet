@@ -1,68 +1,170 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ * 
+ *  http://aws.amazon.com/apache2.0
+ * 
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using AWS.Lambda.PowerTools.Metrics.Serializer;
 
-namespace AWS.Lambda.PowerTools.Metrics
-{   
+namespace AWS.Lambda.PowerTools.Metrics;
+
+/// <summary>
+/// Enum MetricUnit
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum MetricUnit
+{
     /// <summary>
-    /// EMF MetricUnit object types
+    ///     Metrics unit none
     /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum MetricUnit
-    {        
-        [EnumMember(Value = "None")]
-        NONE,
-        [EnumMember(Value = "Seconds")]
-        SECONDS,
-        [EnumMember(Value = "Microseconds")]
-        MICROSECONDS,
-        [EnumMember(Value = "Milliseconds")]
-        MILLISECONDS,
-        [EnumMember(Value = "Bytes")]
-        BYTES,
-        [EnumMember(Value = "Kilobytes")]
-        KILOBYTES,
-        [EnumMember(Value = "Megabytes")]
-        MEGABYTES,
-        [EnumMember(Value = "Gigabytes")]
-        GIGABYTES,
-        [EnumMember(Value = "Terabytes")]
-        TERABYTES,
-        [EnumMember(Value = "Bits")]
-        BITS,
-        [EnumMember(Value = "Kilobits")]
-        KILOBITS,
-        [EnumMember(Value = "Megabits")]
-        MEGABITS,
-        [EnumMember(Value = "Gigabits")]
-        GIGABITS,
-        [EnumMember(Value = "Terabits")]
-        TERABITS,
-        [EnumMember(Value = "Percent")]
-        PERCENT,
-        [EnumMember(Value = "Count")]
-        COUNT,
-        [EnumMember(Value = "Bytes/Second")]
-        BYTES_PER_SECOND,
-        [EnumMember(Value = "Kilobytes/Second")]
-        KILOBYTES_PER_SECOND,
-        [EnumMember(Value = "Megabytes/Second")]
-        MEGABYTES_PER_SECOND,
-        [EnumMember(Value = "Gigabytes/Second")]
-        GIGABYTES_PER_SECOND,
-        [EnumMember(Value = "Terabytes/Second")]
-        TERABYTES_PER_SECOND,
-        [EnumMember(Value = "Bits/Second")]
-        BITS_PER_SECOND,
-        [EnumMember(Value = "Kilobits/Second")]
-        KILOBITS_PER_SECOND,
-        [EnumMember(Value = "Megabits/Second")]
-        MEGABITS_PER_SECOND,
-        [EnumMember(Value = "Gigabits/Second")]
-        GIGABITS_PER_SECOND,
-        [EnumMember(Value = "Terabits/Second")]
-        TERABITS_PER_SECOND,
-        [EnumMember(Value = "Count/Second")]
-        COUNT_PER_SECOND
-    }
+    [EnumMember(Value = "None")] None,
+
+    /// <summary>
+    ///     Metrics unit in seconds
+    /// </summary>
+    [EnumMember(Value = "Seconds")] Seconds,
+
+    /// <summary>
+    ///     Metrics unit in microseconds
+    /// </summary>
+    [EnumMember(Value = "Microseconds")] Microseconds,
+
+    /// <summary>
+    ///     Metrics unit in milliseconds
+    /// </summary>
+    [EnumMember(Value = "Milliseconds")] Milliseconds,
+
+    /// <summary>
+    ///     Metrics unit in bytes
+    /// </summary>
+    [EnumMember(Value = "Bytes")] Bytes,
+
+    /// <summary>
+    ///     Metrics unit in kilobytes
+    /// </summary>
+    [EnumMember(Value = "Kilobytes")] Kilobytes,
+
+    /// <summary>
+    ///     Metrics unit in megabytes
+    /// </summary>
+    [EnumMember(Value = "Megabytes")] Megabytes,
+
+    /// <summary>
+    ///     Metrics unit in gigabytes
+    /// </summary>
+    [EnumMember(Value = "Gigabytes")] Gigabytes,
+
+    /// <summary>
+    ///     Metrics unit in terabytes
+    /// </summary>
+    [EnumMember(Value = "Terabytes")] Terabytes,
+
+    /// <summary>
+    ///     Metrics unit in bits
+    /// </summary>
+    [EnumMember(Value = "Bits")] Bits,
+
+    /// <summary>
+    ///     Metrics unit in kilobits
+    /// </summary>
+    [EnumMember(Value = "Kilobits")] Kilobits,
+
+    /// <summary>
+    ///     Metrics unit in megabits
+    /// </summary>
+    [EnumMember(Value = "Megabits")] Megabits,
+
+    /// <summary>
+    ///     Metrics unit in gigabits
+    /// </summary>
+    [EnumMember(Value = "Gigabits")] Gigabits,
+
+    /// <summary>
+    ///     Metrics unit in terabits
+    /// </summary>
+    [EnumMember(Value = "Terabits")] Terabits,
+
+    /// <summary>
+    ///     Metrics unit in percent
+    /// </summary>
+    [EnumMember(Value = "Percent")] Percent,
+
+    /// <summary>
+    ///     Metrics unit count
+    /// </summary>
+    [EnumMember(Value = "Count")] Count,
+
+    /// <summary>
+    ///     Metrics unit in bytes per second
+    /// </summary>
+    [EnumMember(Value = "Bytes/Second")] BytesPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in kilobytes per second
+    /// </summary>
+    [EnumMember(Value = "Kilobytes/Second")]
+    KilobytesPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in megabytes per second
+    /// </summary>
+    [EnumMember(Value = "Megabytes/Second")]
+    MegabytesPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in gigabytes per second
+    /// </summary>
+    [EnumMember(Value = "Gigabytes/Second")]
+    GigabytesPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in terabytes per second
+    /// </summary>
+    [EnumMember(Value = "Terabytes/Second")]
+    TerabytesPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in bits per second
+    /// </summary>
+    [EnumMember(Value = "Bits/Second")] BitsPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in kilobits per second
+    /// </summary>
+    [EnumMember(Value = "Kilobits/Second")]
+    KilobitsPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in megabits per second
+    /// </summary>
+    [EnumMember(Value = "Megabits/Second")]
+    MegabitsPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in gigabits per second
+    /// </summary>
+    [EnumMember(Value = "Gigabits/Second")]
+    GigabitsPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in terabits per second
+    /// </summary>
+    [EnumMember(Value = "Terabits/Second")]
+    TerabitsPerSecond,
+
+    /// <summary>
+    ///     Metrics unit in count per second
+    /// </summary>
+    [EnumMember(Value = "Count/Second")] CountPerSecond
 }

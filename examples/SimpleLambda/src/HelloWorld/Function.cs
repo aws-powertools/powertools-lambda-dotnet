@@ -32,7 +32,7 @@ namespace HelloWorld
                 Metrics.PushSingleMetric(
                     metricName: "CallingIP",
                     value: 1,
-                    unit: MetricUnit.COUNT,
+                    unit: MetricUnit.Count,
                     nameSpace: "dotnet-lambdapowertools",
                     service: "lambda-example",
                     defaultDimensions: new Dictionary<string, string>
@@ -42,8 +42,8 @@ namespace HelloWorld
                 var location = await GetCallingIP();
                 watch.Stop();
                 
-                Metrics.AddMetric("ElapsedExecutionTime", watch.ElapsedMilliseconds, MetricUnit.MILLISECONDS);
-                Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.COUNT);
+                Metrics.AddMetric("ElapsedExecutionTime", watch.ElapsedMilliseconds, MetricUnit.Milliseconds);
+                Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.Count);
                 
                 var body = new Dictionary<string, string>
                 {
