@@ -27,5 +27,7 @@
         <PackageReference Include="AWSSDK.XRay" Version="3.7.0.103" />
         <PackageReference Include="AWSXRayRecorder.Core" Version="2.10.1" />
     </ItemGroup>
-
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 </Project>

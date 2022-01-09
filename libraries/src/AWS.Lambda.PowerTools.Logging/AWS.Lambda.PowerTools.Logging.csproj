@@ -22,6 +22,10 @@
     <ItemGroup>
       <ProjectReference Include="..\AWS.Lambda.PowerTools\AWS.Lambda.PowerTools.csproj" />
     </ItemGroup>
+    
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.Core" Version="1.2.0" />
