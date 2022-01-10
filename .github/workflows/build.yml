@@ -1,4 +1,4 @@
-name: Build .NET Core
+name: Build .NET
 
 on:
   push:
@@ -34,4 +34,4 @@ jobs:
         fail_ci_if_error: true
         name: codecov-lambda-powertools-dotnet
         verbose: true
-        directory: ./codecov
+        directory: ./libraries/codecov
