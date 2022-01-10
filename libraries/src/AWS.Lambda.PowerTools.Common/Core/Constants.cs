@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Core;
+namespace AWS.Lambda.PowerTools.Common;
 
 /// <summary>
 ///     Class Constants

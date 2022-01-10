@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.PowerTools.Tracing;
+using AWS.Lambda.PowerTools.Tracing;
 using AWS.Lambda.PowerTools.Logging;
 using AWS.Lambda.PowerTools.Metrics;
 

@@ -13,35 +13,69 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Core;
+using System;
+
+namespace AWS.Lambda.PowerTools.Common;
 
 /// <summary>
-///     Interface ISystemWrapper
+///     Class SystemWrapper.
+///     Implements the <see cref="ISystemWrapper" />
 /// </summary>
-public interface ISystemWrapper
+/// <seealso cref="ISystemWrapper" />
+public class SystemWrapper : ISystemWrapper
 {
+    /// <summary>
+    ///     The instance
+    /// </summary>
+    private static ISystemWrapper _instance;
+
+    /// <summary>
+    ///     Prevents a default instance of the <see cref="SystemWrapper" /> class from being created.
+    /// </summary>
+    private SystemWrapper()
+    {
+    }
+
+    /// <summary>
+    ///     Gets the instance.
+    /// </summary>
+    /// <value>The instance.</value>
+    public static ISystemWrapper Instance => _instance ??= new SystemWrapper();
+
     /// <summary>
     ///     Gets the environment variable.
     /// </summary>
     /// <param name="variable">The variable.</param>
     /// <returns>System.String.</returns>
-    string GetEnvironmentVariable(string variable);
+    public string GetEnvironmentVariable(string variable)
+    {
+        return Environment.GetEnvironmentVariable(variable);
+    }
 
     /// <summary>
     ///     Logs the specified value.
     /// </summary>
     /// <param name="value">The value.</param>
-    void Log(string value);
+    public void Log(string value)
+    {
+        Console.Write(value);
+    }
 
     /// <summary>
     ///     Logs the line.
     /// </summary>
     /// <param name="value">The value.</param>
-    void LogLine(string value);
+    public void LogLine(string value)
+    {
+        Console.WriteLine(value);
+    }
 
     /// <summary>
     ///     Gets random number
     /// </summary>
     /// <returns>System.Double.</returns>
-    double GetRandom();
+    public double GetRandom()
+    {
+        return new Random().NextDouble();
+    }
 }

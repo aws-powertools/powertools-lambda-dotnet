@@ -15,7 +15,7 @@
 
 using System;
 using System.Globalization;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Common;
 using AWS.Lambda.PowerTools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 using Moq;

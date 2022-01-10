@@ -19,17 +19,16 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Amazon.Lambda.Core;
-using AWS.Lambda.PowerTools.Aspects;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Common;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.PowerTools.Logging.Internal;
 
 /// <summary>
 ///     Class LoggingAspectHandler.
-///     Implements the <see cref="AWS.Lambda.PowerTools.Aspects.IMethodAspectHandler" />
+///     Implements the <see cref="IMethodAspectHandler" />
 /// </summary>
-/// <seealso cref="AWS.Lambda.PowerTools.Aspects.IMethodAspectHandler" />
+/// <seealso cref="IMethodAspectHandler" />
 internal class LoggingAspectHandler : IMethodAspectHandler
 {
     /// <summary>

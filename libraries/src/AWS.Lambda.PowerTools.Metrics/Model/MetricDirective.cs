@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Common;
 
 namespace AWS.Lambda.PowerTools.Metrics;
 

@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace AWS.Lambda.PowerTools.Aspects;
+namespace AWS.Lambda.PowerTools.Common;
 
 /// <summary>
 ///     Class AspectEventArgs.

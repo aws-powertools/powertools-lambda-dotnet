@@ -14,7 +14,7 @@
  */
 
 using System.Collections.Concurrent;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

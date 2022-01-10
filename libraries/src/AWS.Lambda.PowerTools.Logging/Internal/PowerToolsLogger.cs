@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Common;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.PowerTools.Logging.Internal;

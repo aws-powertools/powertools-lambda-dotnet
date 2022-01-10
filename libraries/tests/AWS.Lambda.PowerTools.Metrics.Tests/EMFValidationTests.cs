@@ -17,10 +17,9 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 using Moq;
-using AWS.Lambda.PowerTools.Core;
 using AWS.Lambda.PowerTools.Metrics.Internal;
-using AWS.Lambda.PowerTools.Aspects;
 using System.IO;
+using AWS.Lambda.PowerTools.Common;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 

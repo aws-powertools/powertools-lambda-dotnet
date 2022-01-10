@@ -15,10 +15,9 @@
 
 using System;
 using System.Linq;
-using Amazon.Lambda.PowerTools.Tracing;
-using Amazon.Lambda.PowerTools.Tracing.Internal;
-using AWS.Lambda.PowerTools.Aspects;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Tracing;
+using AWS.Lambda.PowerTools.Tracing.Internal;
+using AWS.Lambda.PowerTools.Common;
 using Moq;
 using Xunit;
 

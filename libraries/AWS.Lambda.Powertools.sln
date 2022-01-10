@@ -5,7 +5,7 @@ VisualStudioVersion = 16.6.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools", "src\AWS.Lambda.PowerTools\AWS.Lambda.PowerTools.csproj", "{ACED222F-BDEB-48B6-BA6E-A28659080766}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Common", "src\AWS.Lambda.PowerTools.Common\AWS.Lambda.PowerTools.Common.csproj", "{ACED222F-BDEB-48B6-BA6E-A28659080766}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Logging", "src\AWS.Lambda.PowerTools.Logging\AWS.Lambda.PowerTools.Logging.csproj", "{7A6A2996-1F41-4C94-A0A2-3AE963247243}"
 EndProject
@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Metri
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Tracing.Tests", "tests\AWS.Lambda.PowerTools.Tracing.Tests\AWS.Lambda.PowerTools.Tracing.Tests.csproj", "{A040AED5-BBB8-4BFA-B2A5-BBD82817B8A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Tests", "tests\AWS.Lambda.PowerTools.Tests\AWS.Lambda.PowerTools.Tests.csproj", "{4EC48E6A-45B5-4E25-ABBD-C23FE2BD6E1E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Common.Tests", "tests\AWS.Lambda.PowerTools.Common.Tests\AWS.Lambda.PowerTools.Common.Tests.csproj", "{4EC48E6A-45B5-4E25-ABBD-C23FE2BD6E1E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

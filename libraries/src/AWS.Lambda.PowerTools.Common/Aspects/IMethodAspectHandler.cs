@@ -15,7 +15,7 @@
 
 using System;
 
-namespace AWS.Lambda.PowerTools.Aspects;
+namespace AWS.Lambda.PowerTools.Common;
 
 /// <summary>
 ///     Interface IMethodAspectHandler

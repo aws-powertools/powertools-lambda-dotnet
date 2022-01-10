@@ -21,7 +21,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
 
-namespace AWS.Lambda.PowerTools.Aspects;
+namespace AWS.Lambda.PowerTools.Common;
 
 /// <summary>
 ///     Class UniversalWrapperAspect.

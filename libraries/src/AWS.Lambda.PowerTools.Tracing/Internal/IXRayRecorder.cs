@@ -18,7 +18,7 @@ using Amazon.XRay.Recorder.Core.Internal.Emitters;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
 using Amazon.XRay.Recorder.Core.Strategies;
 
-namespace Amazon.Lambda.PowerTools.Tracing.Internal;
+namespace AWS.Lambda.PowerTools.Tracing.Internal;
 
 /// <summary>
 ///     Interface IXRayRecorder

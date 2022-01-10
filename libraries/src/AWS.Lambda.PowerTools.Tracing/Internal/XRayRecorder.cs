@@ -19,13 +19,13 @@ using Amazon.XRay.Recorder.Core.Internal.Emitters;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
 using Amazon.XRay.Recorder.Core.Strategies;
 
-namespace Amazon.Lambda.PowerTools.Tracing.Internal;
+namespace AWS.Lambda.PowerTools.Tracing.Internal;
 
 /// <summary>
 ///     Class XRayRecorder.
-///     Implements the <see cref="Amazon.Lambda.PowerTools.Tracing.Internal.IXRayRecorder" />
+///     Implements the <see cref="AWS.Lambda.PowerTools.Tracing.Internal.IXRayRecorder" />
 /// </summary>
-/// <seealso cref="Amazon.Lambda.PowerTools.Tracing.Internal.IXRayRecorder" />
+/// <seealso cref="AWS.Lambda.PowerTools.Tracing.Internal.IXRayRecorder" />
 internal class XRayRecorder : IXRayRecorder
 {
     /// <summary>
