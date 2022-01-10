@@ -23,7 +23,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests
 {
-    public class PowerToolsLoggerTest
+    public class PowertoolsLoggerTest
     {
         private void Log_WhenMinimumLevelIsBelowLogLevel_Logs(LogLevel logLevel, LogLevel minimumLevel)
         {
