@@ -17,7 +17,7 @@ using System;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
 
-namespace AWS.Lambda.PowerTools.Common;
+namespace AWS.Lambda.Powertools.Common;
 
 /// <summary>
 ///     Class MethodAspectAttribute.

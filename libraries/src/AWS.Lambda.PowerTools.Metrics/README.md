@@ -1,4 +1,4 @@
-# AWS.Lambda.PowerTools.Metrics
+# AWS.Lambda.Powertools.Metrics
 
 This package contains classes that can be used as....
 

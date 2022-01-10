@@ -15,4 +15,4 @@
 
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("AWS.Lambda.PowerTools.Metrics.Tests")]
+[assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Metrics.Tests")]

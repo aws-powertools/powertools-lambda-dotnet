@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Logging;
+namespace AWS.Lambda.Powertools.Logging;
 
 /// <summary>
 ///     Supported Event types from which Correlation ID can be extracted

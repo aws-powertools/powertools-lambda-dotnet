@@ -15,7 +15,7 @@
 
 using Microsoft.Extensions.Logging;
 
-namespace AWS.Lambda.PowerTools.Logging.Internal;
+namespace AWS.Lambda.Powertools.Logging.Internal;
 
 /// <summary>
 ///     Class LoggingConstants.

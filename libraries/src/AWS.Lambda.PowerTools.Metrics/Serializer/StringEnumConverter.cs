@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AWS.Lambda.PowerTools.Metrics.Serializer;
+namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     Class StringEnumConverter.

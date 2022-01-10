@@ -15,7 +15,7 @@
 
 using System;
 
-namespace AWS.Lambda.PowerTools.Common;
+namespace AWS.Lambda.Powertools.Common;
 
 /// <summary>
 ///     Class SystemWrapper.

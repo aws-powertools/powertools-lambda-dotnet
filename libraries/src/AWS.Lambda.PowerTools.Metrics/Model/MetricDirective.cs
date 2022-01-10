@@ -17,9 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
 
-namespace AWS.Lambda.PowerTools.Metrics;
+namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     Class MetricDirective.
@@ -136,7 +136,7 @@ public class MetricDirective
     /// <exception cref="System.ArgumentOutOfRangeException">Metrics - Cannot add more than 100 metrics at the same time.</exception>
     public void AddMetric(string name, double value, MetricUnit unit)
     {
-        if (Metrics.Count < PowerToolsConfigurations.MaxMetrics)
+        if (Metrics.Count < PowertoolsConfigurations.MaxMetrics)
         {
             var metric = Metrics.FirstOrDefault(m => m.Name == name);
             if (metric != null)
@@ -176,7 +176,7 @@ public class MetricDirective
     /// <exception cref="System.ArgumentOutOfRangeException">Dimensions - Cannot add more than 9 dimensions at the same time.</exception>
     internal void AddDimension(DimensionSet dimension)
     {
-        if (Dimensions.Count < PowerToolsConfigurations.MaxDimensions)
+        if (Dimensions.Count < PowertoolsConfigurations.MaxDimensions)
         {
             var matchingKeys = AllDimensionKeys.Where(x => x.Contains(dimension.DimensionKeys[0]));
             if (!matchingKeys.Any())

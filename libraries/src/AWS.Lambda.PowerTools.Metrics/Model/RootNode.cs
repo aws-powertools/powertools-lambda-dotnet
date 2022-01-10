@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AWS.Lambda.PowerTools.Metrics;
+namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     Class RootNode.

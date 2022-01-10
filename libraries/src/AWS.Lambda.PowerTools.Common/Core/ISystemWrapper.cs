@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Common;
+namespace AWS.Lambda.Powertools.Common;
 
 /// <summary>
 ///     Interface ISystemWrapper

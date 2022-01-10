@@ -14,12 +14,13 @@
  */
 
 using System;
+using AWS.Lambda.Powertools.Common;
 using Moq;
 using Xunit;
 
-namespace AWS.Lambda.PowerTools.Common.Tests
+namespace AWS.Lambda.Powertools.Common.Tests
 {
-    public class PowerToolsConfigurationsTest
+    public class PowertoolsConfigurationsTest
     {
         #region GetEnvironmentVariable Tests
         
@@ -35,7 +36,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(key)
             ).Returns(string.Empty);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, defaultValue);
@@ -60,7 +61,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(key)
             ).Returns(string.Empty);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, false);
@@ -85,7 +86,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(key)
             ).Returns(string.Empty);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, true);
@@ -112,7 +113,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(key)
             ).Returns(value);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, defaultValue);
@@ -137,7 +138,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(key)
             ).Returns("true");
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, false);
@@ -162,7 +163,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(key)
             ).Returns("false");
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, true);
@@ -191,7 +192,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.ServiceNameEnv)
             ).Returns(string.Empty);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.Service;
@@ -216,7 +217,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.ServiceNameEnv)
             ).Returns(service);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.Service;
@@ -245,7 +246,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.ServiceNameEnv)
             ).Returns(service);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.IsServiceDefined;
@@ -269,7 +270,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.ServiceNameEnv)
             ).Returns(string.Empty);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.IsServiceDefined;
@@ -297,7 +298,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.TracerCaptureResponseEnv)
             ).Returns(string.Empty);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.TracerCaptureResponse;
@@ -321,7 +322,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.TracerCaptureResponseEnv)
             ).Returns("false");
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.TracerCaptureResponse;
@@ -345,7 +346,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.TracerCaptureResponseEnv)
             ).Returns("true");
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.TracerCaptureResponse;
@@ -373,7 +374,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.TracerCaptureErrorEnv)
             ).Returns(string.Empty);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.TracerCaptureError;
@@ -397,7 +398,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.TracerCaptureErrorEnv)
             ).Returns("false");
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.TracerCaptureError;
@@ -421,7 +422,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.TracerCaptureErrorEnv)
             ).Returns("true");
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.TracerCaptureError;
@@ -449,7 +450,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.SamLocalEnv)
             ).Returns(string.Empty);
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.IsSamLocal;
@@ -473,7 +474,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.SamLocalEnv)
             ).Returns("false");
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.IsSamLocal;
@@ -497,7 +498,7 @@ namespace AWS.Lambda.PowerTools.Common.Tests
                 c.GetEnvironmentVariable(Constants.SamLocalEnv)
             ).Returns("true");
             
-            var configurations = new PowerToolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
             
             // Act
             var result = configurations.IsSamLocal;

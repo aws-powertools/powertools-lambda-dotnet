@@ -15,6 +15,8 @@
 
 using System;
 
+namespace AWS.Lambda.Powertools.Metrics;
+
 /// <summary>
 ///     Class SchemaValidationException.
 ///     Implements the <see cref="System.Exception" />

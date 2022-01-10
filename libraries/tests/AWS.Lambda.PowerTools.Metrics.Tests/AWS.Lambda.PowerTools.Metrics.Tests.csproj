@@ -6,6 +6,10 @@
     <IsPackable>false</IsPackable>
 
     <LangVersion>default</LangVersion>
+
+    <AssemblyName>AWS.Lambda.Powertools.Metrics.Tests</AssemblyName>
+
+    <RootNamespace>AWS.Lambda.Powertools.Metrics.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AWS.Lambda.PowerTools.Metrics\AWS.Lambda.PowerTools.Metrics.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" />
   </ItemGroup>
 </Project>

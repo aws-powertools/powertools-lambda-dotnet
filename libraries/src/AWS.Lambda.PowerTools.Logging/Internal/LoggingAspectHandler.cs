@@ -19,10 +19,10 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Amazon.Lambda.Core;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
 using Microsoft.Extensions.Logging;
 
-namespace AWS.Lambda.PowerTools.Logging.Internal;
+namespace AWS.Lambda.Powertools.Logging.Internal;
 
 /// <summary>
 ///     Class LoggingAspectHandler.
@@ -69,7 +69,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     The power tools configurations
     /// </summary>
-    private readonly IPowerToolsConfigurations _powerToolsConfigurations;
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
     /// <summary>
     ///     The sampling rate
@@ -100,7 +100,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <param name="logEvent">if set to <c>true</c> [log event].</param>
     /// <param name="correlationIdPath">The correlation identifier path.</param>
     /// <param name="clearState">if set to <c>true</c> [clear state].</param>
-    /// <param name="powerToolsConfigurations">The power tools configurations.</param>
+    /// <param name="powertoolsConfigurations">The power tools configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
     internal LoggingAspectHandler
     (
@@ -110,7 +110,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         bool? logEvent,
         string correlationIdPath,
         bool clearState,
-        IPowerToolsConfigurations powerToolsConfigurations,
+        IPowertoolsConfigurations powertoolsConfigurations,
         ISystemWrapper systemWrapper
     )
     {
@@ -120,7 +120,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         _logEvent = logEvent;
         _clearState = clearState;
         _correlationIdPath = correlationIdPath;
-        _powerToolsConfigurations = powerToolsConfigurations;
+        _powertoolsConfigurations = powertoolsConfigurations;
         _systemWrapper = systemWrapper;
     }
 
@@ -128,7 +128,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     Handles the <see cref="E:Entry" /> event.
     /// </summary>
     /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.PowerTools.Aspects.AspectEventArgs" /> instance containing the
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     public void OnEntry(AspectEventArgs eventArgs)
@@ -165,7 +165,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         CaptureXrayTraceId();
         CaptureLambdaContext(context);
         CaptureCorrelationId(eventObject);
-        if (_logEvent ?? _powerToolsConfigurations.LoggerLogEvent)
+        if (_logEvent ?? _powertoolsConfigurations.LoggerLogEvent)
             LogEvent(eventObject);
     }
 
@@ -173,7 +173,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     Called when [success].
     /// </summary>
     /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.PowerTools.Aspects.AspectEventArgs" /> instance containing the
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     /// <param name="result">The result.</param>
@@ -186,7 +186,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.PowerTools.Aspects.AspectEventArgs" /> instance containing the
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     /// <param name="exception">The exception.</param>
@@ -200,7 +200,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     Handles the <see cref="E:Exit" /> event.
     /// </summary>
     /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.PowerTools.Aspects.AspectEventArgs" /> instance containing the
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     public void OnExit(AspectEventArgs eventArgs)
@@ -218,7 +218,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <returns><c>true</c> if this instance is debug; otherwise, <c>false</c>.</returns>
     private bool IsDebug()
     {
-        return LogLevel.Debug >= _powerToolsConfigurations.GetLogLevel(_logLevel);
+        return LogLevel.Debug >= _powertoolsConfigurations.GetLogLevel(_logLevel);
     }
 
     /// <summary>
@@ -226,7 +226,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// </summary>
     private void CaptureXrayTraceId()
     {
-        var xRayTraceId = _powerToolsConfigurations.XRayTraceId;
+        var xRayTraceId = _powertoolsConfigurations.XRayTraceId;
         if (string.IsNullOrWhiteSpace(xRayTraceId))
             return;
 

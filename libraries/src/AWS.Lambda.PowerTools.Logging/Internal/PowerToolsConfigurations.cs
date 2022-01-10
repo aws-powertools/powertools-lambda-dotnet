@@ -14,29 +14,29 @@
  */
 
 using System;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
 using Microsoft.Extensions.Logging;
 
-namespace AWS.Lambda.PowerTools.Logging.Internal;
+namespace AWS.Lambda.Powertools.Logging.Internal;
 
 /// <summary>
-///     Class PowerToolsConfigurationsExtension.
+///     Class PowertoolsConfigurationsExtension.
 /// </summary>
-internal static class PowerToolsConfigurationsExtension
+internal static class PowertoolsConfigurationsExtension
 {
     /// <summary>
     ///     Gets the log level.
     /// </summary>
-    /// <param name="powerToolsConfigurations">The power tools configurations.</param>
+    /// <param name="powertoolsConfigurations">The power tools configurations.</param>
     /// <param name="logLevel">The log level.</param>
     /// <returns>LogLevel.</returns>
-    internal static LogLevel GetLogLevel(this IPowerToolsConfigurations powerToolsConfigurations,
+    internal static LogLevel GetLogLevel(this IPowertoolsConfigurations powertoolsConfigurations,
         LogLevel? logLevel = null)
     {
         if (logLevel.HasValue)
             return logLevel.Value;
 
-        if (Enum.TryParse((powerToolsConfigurations.LogLevel ?? "").Trim(), true, out LogLevel result))
+        if (Enum.TryParse((powertoolsConfigurations.LogLevel ?? "").Trim(), true, out LogLevel result))
             return result;
 
         return LoggingConstants.DefaultLogLevel;

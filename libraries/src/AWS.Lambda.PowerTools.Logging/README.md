@@ -1,4 +1,4 @@
-# AWS.Lambda.PowerTools.Logging
+# AWS.Lambda.Powertools.Logging
 
 This package contains classes that can be used as....
 

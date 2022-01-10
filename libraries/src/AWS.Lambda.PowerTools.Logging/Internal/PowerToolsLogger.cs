@@ -17,17 +17,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
 using Microsoft.Extensions.Logging;
 
-namespace AWS.Lambda.PowerTools.Logging.Internal;
+namespace AWS.Lambda.Powertools.Logging.Internal;
 
 /// <summary>
-///     Class PowerToolsLogger. This class cannot be inherited.
+///     Class PowertoolsLogger. This class cannot be inherited.
 ///     Implements the <see cref="Microsoft.Extensions.Logging.ILogger" />
 /// </summary>
 /// <seealso cref="Microsoft.Extensions.Logging.ILogger" />
-internal sealed class PowerToolsLogger : ILogger
+internal sealed class PowertoolsLogger : ILogger
 {
     /// <summary>
     ///     The get current configuration
@@ -42,7 +42,7 @@ internal sealed class PowerToolsLogger : ILogger
     /// <summary>
     ///     The power tools configurations
     /// </summary>
-    private readonly IPowerToolsConfigurations _powerToolsConfigurations;
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
     /// <summary>
     ///     The system wrapper
@@ -55,20 +55,20 @@ internal sealed class PowerToolsLogger : ILogger
     private LoggerConfiguration _currentConfig;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="PowerToolsLogger" /> class.
+    ///     Initializes a new instance of the <see cref="PowertoolsLogger" /> class.
     /// </summary>
     /// <param name="name">The name.</param>
-    /// <param name="powerToolsConfigurations">The power tools configurations.</param>
+    /// <param name="powertoolsConfigurations">The power tools configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
     /// <param name="getCurrentConfig">The get current configuration.</param>
-    public PowerToolsLogger(
+    public PowertoolsLogger(
         string name,
-        IPowerToolsConfigurations powerToolsConfigurations,
+        IPowertoolsConfigurations powertoolsConfigurations,
         ISystemWrapper systemWrapper,
         Func<LoggerConfiguration> getCurrentConfig)
     {
-        (_name, _powerToolsConfigurations, _systemWrapper, _getCurrentConfig) = (name,
-            powerToolsConfigurations, systemWrapper, getCurrentConfig);
+        (_name, _powertoolsConfigurations, _systemWrapper, _getCurrentConfig) = (name,
+            powertoolsConfigurations, systemWrapper, getCurrentConfig);
     }
 
     /// <summary>
@@ -92,7 +92,7 @@ internal sealed class PowerToolsLogger : ILogger
     private string Service =>
         !string.IsNullOrWhiteSpace(CurrentConfig.Service)
             ? CurrentConfig.Service
-            : _powerToolsConfigurations.Service;
+            : _powertoolsConfigurations.Service;
 
     /// <summary>
     ///     Begins the scope.
@@ -171,12 +171,12 @@ internal sealed class PowerToolsLogger : ILogger
     /// <summary>
     ///     Gets the current configuration.
     /// </summary>
-    /// <returns>AWS.Lambda.PowerTools.Logging.LoggerConfiguration.</returns>
+    /// <returns>AWS.Lambda.Powertools.Logging.LoggerConfiguration.</returns>
     private LoggerConfiguration GetCurrentConfig()
     {
         var currConfig = _getCurrentConfig();
-        var minimumLevel = _powerToolsConfigurations.GetLogLevel(currConfig?.MinimumLevel);
-        var samplingRate = currConfig?.SamplingRate ?? _powerToolsConfigurations.LoggerSampleRate;
+        var minimumLevel = _powertoolsConfigurations.GetLogLevel(currConfig?.MinimumLevel);
+        var samplingRate = currConfig?.SamplingRate ?? _powertoolsConfigurations.LoggerSampleRate;
 
         var config = new LoggerConfiguration
         {

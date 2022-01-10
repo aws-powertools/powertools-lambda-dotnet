@@ -13,14 +13,14 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Common;
+namespace AWS.Lambda.Powertools.Common;
 
 /// <summary>
-///     Class PowerToolsConfigurations.
-///     Implements the <see cref="IPowerToolsConfigurations" />
+///     Class PowertoolsConfigurations.
+///     Implements the <see cref="IPowertoolsConfigurations" />
 /// </summary>
-/// <seealso cref="IPowerToolsConfigurations" />
-public class PowerToolsConfigurations : IPowerToolsConfigurations
+/// <seealso cref="IPowertoolsConfigurations" />
+public class PowertoolsConfigurations : IPowertoolsConfigurations
 {
     /// <summary>
     ///     The maximum dimensions
@@ -35,7 +35,7 @@ public class PowerToolsConfigurations : IPowerToolsConfigurations
     /// <summary>
     ///     The instance
     /// </summary>
-    private static IPowerToolsConfigurations _instance;
+    private static IPowertoolsConfigurations _instance;
 
     /// <summary>
     ///     The system wrapper
@@ -43,10 +43,10 @@ public class PowerToolsConfigurations : IPowerToolsConfigurations
     private readonly ISystemWrapper _systemWrapper;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="PowerToolsConfigurations" /> class.
+    ///     Initializes a new instance of the <see cref="PowertoolsConfigurations" /> class.
     /// </summary>
     /// <param name="systemWrapper">The system wrapper.</param>
-    internal PowerToolsConfigurations(ISystemWrapper systemWrapper)
+    internal PowertoolsConfigurations(ISystemWrapper systemWrapper)
     {
         _systemWrapper = systemWrapper;
     }
@@ -55,8 +55,8 @@ public class PowerToolsConfigurations : IPowerToolsConfigurations
     ///     Gets the instance.
     /// </summary>
     /// <value>The instance.</value>
-    public static IPowerToolsConfigurations Instance =>
-        _instance ??= new PowerToolsConfigurations(SystemWrapper.Instance);
+    public static IPowertoolsConfigurations Instance =>
+        _instance ??= new PowertoolsConfigurations(SystemWrapper.Instance);
 
     /// <summary>
     ///     Gets the environment variable.

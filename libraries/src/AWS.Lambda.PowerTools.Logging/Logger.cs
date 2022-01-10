@@ -16,10 +16,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AWS.Lambda.PowerTools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 
-namespace AWS.Lambda.PowerTools.Logging;
+namespace AWS.Lambda.Powertools.Logging;
 
 /// <summary>
 ///     Class Logger.

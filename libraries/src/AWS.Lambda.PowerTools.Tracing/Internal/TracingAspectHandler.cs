@@ -14,10 +14,9 @@
  */
 
 using System;
-using AWS.Lambda.PowerTools.Common;
-using AWS.Lambda.PowerTools.Tracing;
+using AWS.Lambda.Powertools.Common;
 
-namespace AWS.Lambda.PowerTools.Tracing.Internal;
+namespace AWS.Lambda.Powertools.Tracing.Internal;
 
 /// <summary>
 ///     Class TracingAspectHandler.
@@ -49,7 +48,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     The power tools configurations
     /// </summary>
-    private readonly IPowerToolsConfigurations _powerToolsConfigurations;
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
     /// <summary>
     ///     The segment name
@@ -72,21 +71,21 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <param name="segmentName">Name of the segment.</param>
     /// <param name="nameSpace">The namespace.</param>
     /// <param name="captureMode">The capture mode.</param>
-    /// <param name="powerToolsConfigurations">The power tools configurations.</param>
+    /// <param name="powertoolsConfigurations">The power tools configurations.</param>
     /// <param name="xRayRecorder">The X-Ray recorder.</param>
     internal TracingAspectHandler
     (
         string segmentName,
         string nameSpace,
         TracingCaptureMode captureMode,
-        IPowerToolsConfigurations powerToolsConfigurations,
+        IPowertoolsConfigurations powertoolsConfigurations,
         IXRayRecorder xRayRecorder
     )
     {
         _segmentName = segmentName;
         _namespace = nameSpace;
         _captureMode = captureMode;
-        _powerToolsConfigurations = powerToolsConfigurations;
+        _powertoolsConfigurations = powertoolsConfigurations;
         _xRayRecorder = xRayRecorder;
     }
 
@@ -94,7 +93,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     ///     Handles the <see cref="E:Entry" /> event.
     /// </summary>
     /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.PowerTools.Aspects.AspectEventArgs" /> instance containing the
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     public void OnEntry(AspectEventArgs eventArgs)
@@ -113,8 +112,8 @@ internal class TracingAspectHandler : IMethodAspectHandler
             _captureAnnotations = false;
             _isAnnotationsCaptured = true;
 
-            if (_powerToolsConfigurations.IsServiceDefined)
-                _xRayRecorder.AddAnnotation("Service", _powerToolsConfigurations.Service);
+            if (_powertoolsConfigurations.IsServiceDefined)
+                _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
         }
     }
 
@@ -122,7 +121,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     ///     Called when [success].
     /// </summary>
     /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.PowerTools.Aspects.AspectEventArgs" /> instance containing the
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     /// <param name="result">The result.</param>
@@ -146,7 +145,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.PowerTools.Aspects.AspectEventArgs" /> instance containing the
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     /// <param name="exception">The exception.</param>
@@ -172,7 +171,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     ///     Handles the <see cref="E:Exit" /> event.
     /// </summary>
     /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.PowerTools.Aspects.AspectEventArgs" /> instance containing the
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     public void OnExit(AspectEventArgs eventArgs)
@@ -180,7 +179,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
         if (_isAnnotationsCaptured)
             _captureAnnotations = true;
 
-        if (!_powerToolsConfigurations.IsSamLocal)
+        if (!_powertoolsConfigurations.IsSamLocal)
             _xRayRecorder.EndSubsegment();
     }
 
@@ -190,7 +189,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <returns>System.String.</returns>
     private string GetNamespace()
     {
-        return !string.IsNullOrWhiteSpace(_namespace) ? _namespace : _powerToolsConfigurations.Service;
+        return !string.IsNullOrWhiteSpace(_namespace) ? _namespace : _powertoolsConfigurations.Service;
     }
 
     /// <summary>
@@ -202,7 +201,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
         switch (_captureMode)
         {
             case TracingCaptureMode.EnvironmentVariable:
-                return _powerToolsConfigurations.TracerCaptureResponse;
+                return _powertoolsConfigurations.TracerCaptureResponse;
             case TracingCaptureMode.Response:
             case TracingCaptureMode.ResponseAndError:
                 return true;
@@ -222,7 +221,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
         switch (_captureMode)
         {
             case TracingCaptureMode.EnvironmentVariable:
-                return _powerToolsConfigurations.TracerCaptureError;
+                return _powertoolsConfigurations.TracerCaptureError;
             case TracingCaptureMode.Error:
             case TracingCaptureMode.ResponseAndError:
                 return true;

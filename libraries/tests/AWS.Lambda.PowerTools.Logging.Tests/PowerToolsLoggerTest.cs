@@ -15,13 +15,13 @@
 
 using System;
 using System.Globalization;
-using AWS.Lambda.PowerTools.Common;
-using AWS.Lambda.PowerTools.Logging.Internal;
+using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
-namespace AWS.Lambda.PowerTools.Logging.Tests
+namespace AWS.Lambda.Powertools.Logging.Tests
 {
     public class PowerToolsLoggerTest
     {
@@ -31,10 +31,10 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var loggerName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
 
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
 
-            var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
                     Service = service,
@@ -45,22 +45,22 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             {
                 // Act
                 case LogLevel.Critical:
-                    logger.LogCritical("Test");
+                    LoggerExtensions.LogCritical(logger, "Test");
                     break;
                 case LogLevel.Debug:
-                    logger.LogDebug("Test");
+                    LoggerExtensions.LogDebug(logger, "Test");
                     break;
                 case LogLevel.Error:
-                    logger.LogError("Test");
+                    LoggerExtensions.LogError(logger, "Test");
                     break;
                 case LogLevel.Information:
-                    logger.LogInformation("Test");
+                    LoggerExtensions.LogInformation(logger, "Test");
                     break;
                 case LogLevel.Trace:
-                    logger.LogTrace("Test");
+                    LoggerExtensions.LogTrace(logger, "Test");
                     break;
                 case LogLevel.Warning:
-                    logger.LogWarning("Test");
+                    LoggerExtensions.LogWarning(logger, "Test");
                     break;
                 case LogLevel.None:
                     break;
@@ -82,10 +82,10 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var loggerName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
 
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
 
-            var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
                     Service = service,
@@ -96,22 +96,22 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             {
                 // Act
                 case LogLevel.Critical:
-                    logger.LogCritical("Test");
+                    LoggerExtensions.LogCritical(logger, "Test");
                     break;
                 case LogLevel.Debug:
-                    logger.LogDebug("Test");
+                    LoggerExtensions.LogDebug(logger, "Test");
                     break;
                 case LogLevel.Error:
-                    logger.LogError("Test");
+                    LoggerExtensions.LogError(logger, "Test");
                     break;
                 case LogLevel.Information:
-                    logger.LogInformation("Test");
+                    LoggerExtensions.LogInformation(logger, "Test");
                     break;
                 case LogLevel.Trace:
-                    logger.LogTrace("Test");
+                    LoggerExtensions.LogTrace(logger, "Test");
                     break;
                 case LogLevel.Warning:
-                    logger.LogWarning("Test");
+                    LoggerExtensions.LogWarning(logger, "Test");
                     break;
                 case LogLevel.None:
                     break;
@@ -253,7 +253,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var loggerSampleRate = 0.7;
             var randomSampleRate = 0.5;
            
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
             configurations.Setup(c => c.LoggerSampleRate).Returns(loggerSampleRate);
@@ -261,14 +261,14 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var systemWrapper = new Mock<ISystemWrapper>();
             systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
 
-            var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
                     Service = null,
                     MinimumLevel = null
                 });
             
-            logger.LogInformation("Test");
+            LoggerExtensions.LogInformation(logger, "Test");
 
             // Assert
             systemWrapper.Verify(v =>
@@ -291,7 +291,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var loggerSampleRate = 0.7;
             var randomSampleRate = 0.5;
            
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
             configurations.Setup(c => c.LoggerSampleRate).Returns(loggerSampleRate);
@@ -299,14 +299,14 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var systemWrapper = new Mock<ISystemWrapper>();
             systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
 
-            var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
                     Service = null,
                     MinimumLevel = null
                 });
             
-            logger.LogInformation("Test");
+            LoggerExtensions.LogInformation(logger, "Test");
 
             // Assert
             systemWrapper.Verify(v =>
@@ -328,21 +328,21 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var logLevel = LogLevel.Trace;
             var loggerSampleRate = 2;
 
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
             configurations.Setup(c => c.LoggerSampleRate).Returns(loggerSampleRate);
             
             var systemWrapper = new Mock<ISystemWrapper>();
 
-            var logger = new PowerToolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
                 new LoggerConfiguration
                 {
                     Service = null,
                     MinimumLevel = null
                 });
             
-            logger.LogInformation("Test");
+            LoggerExtensions.LogInformation(logger, "Test");
 
             // Assert
             systemWrapper.Verify(v =>

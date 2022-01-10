@@ -16,7 +16,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AWS.Lambda.PowerTools.Metrics;
+namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     List of key-value pairs with Metric Dimensions

@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AWS.Lambda.PowerTools.Metrics;
+namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     Class MetricsContext.

@@ -14,11 +14,11 @@
  */
 
 using System;
-using AWS.Lambda.PowerTools.Tracing.Internal;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Tracing.Internal;
 
-namespace AWS.Lambda.PowerTools.Tracing;
+namespace AWS.Lambda.Powertools.Tracing;
 
 /// <summary>
 ///     Class Tracing.
@@ -124,7 +124,7 @@ public static class Tracing
     ///     Adds a new subsegment around the passed consumer. This also provides access to
     ///     the newly created subsegment.
     ///     The namespace used follows the flow as described in
-    ///     <see cref="T:AWS.Lambda.PowerTools.Tracing.TracingAttribute" />
+    ///     <see cref="T:AWS.Lambda.Powertools.Tracing.TracingAttribute" />
     /// </summary>
     /// <param name="name">The name of the subsegment.</param>
     /// <param name="subsegment">The x-ray subsegment for the wrapped consumer.</param>
@@ -138,7 +138,7 @@ public static class Tracing
     ///     Adds a new subsegment around the passed consumer. This also provides access to
     ///     the newly created subsegment.
     ///     The namespace used follows the flow as described in
-    ///     <see cref="T:AWS.Lambda.PowerTools.Tracing.TracingAttribute" />
+    ///     <see cref="T:AWS.Lambda.Powertools.Tracing.TracingAttribute" />
     /// </summary>
     /// <param name="nameSpace">The name space.</param>
     /// <param name="name">The name of the subsegment.</param>
@@ -234,6 +234,6 @@ public static class Tracing
         if (!string.IsNullOrWhiteSpace(nameSpace))
             return nameSpace;
 
-        return PowerToolsConfigurations.Instance.Service;
+        return PowertoolsConfigurations.Instance.Service;
     }
 }

@@ -13,12 +13,12 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Common;
+namespace AWS.Lambda.Powertools.Common;
 
 /// <summary>
-///     Interface IPowerToolsConfigurations
+///     Interface IPowertoolsConfigurations
 /// </summary>
-public interface IPowerToolsConfigurations
+public interface IPowertoolsConfigurations
 {
     /// <summary>
     ///     Gets the service.

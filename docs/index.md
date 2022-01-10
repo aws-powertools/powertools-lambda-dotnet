@@ -23,7 +23,7 @@ This project separates core utilities that will be available in other runtimes v
 
 Powertools is available on NuGet.
 
-* [AWS.Lambda.PowerTools](https://www.nuget.org/packages?q=AWS.Lambda.PowerTools): `dotnet nuget add AWS.Lambda.PowerTools`
+* [AWS.Lambda.Powertools](https://www.nuget.org/packages?q=AWS.Lambda.Powertools): `dotnet nuget add AWS.Lambda.Powertools`
 
 **Quick hello world example using SAM CLI**
 

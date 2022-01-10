@@ -14,11 +14,11 @@
  */
 
 using System.Collections.Concurrent;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace AWS.Lambda.PowerTools.Logging.Internal;
+namespace AWS.Lambda.Powertools.Logging.Internal;
 
 /// <summary>
 ///     Class LoggerProvider. This class cannot be inherited.
@@ -30,7 +30,7 @@ internal sealed class LoggerProvider : ILoggerProvider
     /// <summary>
     ///     The loggers
     /// </summary>
-    private readonly ConcurrentDictionary<string, PowerToolsLogger> _loggers = new();
+    private readonly ConcurrentDictionary<string, PowertoolsLogger> _loggers = new();
 
 
     /// <summary>
@@ -55,8 +55,8 @@ internal sealed class LoggerProvider : ILoggerProvider
     public ILogger CreateLogger(string categoryName)
     {
         return _loggers.GetOrAdd(categoryName,
-            name => new PowerToolsLogger(name,
-                PowerToolsConfigurations.Instance,
+            name => new PowertoolsLogger(name,
+                PowertoolsConfigurations.Instance,
                 SystemWrapper.Instance,
                 GetCurrentConfig));
     }

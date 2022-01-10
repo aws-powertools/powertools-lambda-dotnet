@@ -1,4 +1,4 @@
-# AWS.Lambda.PowerTools.Tracing
+# AWS.Lambda.Powertools.Tracing
 
 This package contains classes that can be used as....
 

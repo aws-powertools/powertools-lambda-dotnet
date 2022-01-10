@@ -16,9 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using AWS.Lambda.PowerTools.Metrics.Serializer;
 
-namespace AWS.Lambda.PowerTools.Metrics;
+namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     Class Metadata.

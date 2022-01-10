@@ -15,15 +15,15 @@
 
 using System;
 using System.Collections.Generic;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
 
-namespace AWS.Lambda.PowerTools.Metrics;
+namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     Class Metrics.
-///     Implements the <see cref="AWS.Lambda.PowerTools.Metrics.IMetrics" />
+///     Implements the <see cref="IMetrics" />
 /// </summary>
-/// <seealso cref="AWS.Lambda.PowerTools.Metrics.IMetrics" />
+/// <seealso cref="IMetrics" />
 public class Metrics : IMetrics
 {
     /// <summary>
@@ -39,7 +39,7 @@ public class Metrics : IMetrics
     /// <summary>
     ///     The power tools configurations
     /// </summary>
-    private readonly IPowerToolsConfigurations _powerToolsConfigurations;
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
     /// <summary>
     ///     If true, Powertools will throw an exception on empty metrics when trying to flush
@@ -51,17 +51,17 @@ public class Metrics : IMetrics
     ///     format (EMF). See
     ///     https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html
     /// </summary>
-    /// <param name="powerToolsConfigurations">Lambda Powertools Configuration</param>
+    /// <param name="powertoolsConfigurations">Lambda Powertools Configuration</param>
     /// <param name="nameSpace">Metrics Namespace Identifier</param>
     /// <param name="service">Metrics Service Name</param>
     /// <param name="raiseOnEmptyMetrics">Instructs metrics validation to throw exception if no metrics are provided</param>
-    internal Metrics(IPowerToolsConfigurations powerToolsConfigurations, string nameSpace = null, string service = null,
+    internal Metrics(IPowertoolsConfigurations powertoolsConfigurations, string nameSpace = null, string service = null,
         bool raiseOnEmptyMetrics = false)
     {
         if (_instance != null) return;
 
         _instance = this;
-        _powerToolsConfigurations = powerToolsConfigurations;
+        _powertoolsConfigurations = powertoolsConfigurations;
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
         _context = InitializeContext(nameSpace, service, null);
     }
@@ -342,11 +342,11 @@ public class Metrics : IMetrics
 
         context.SetNamespace(!string.IsNullOrWhiteSpace(nameSpace)
             ? nameSpace
-            : _powerToolsConfigurations.MetricsNamespace);
+            : _powertoolsConfigurations.MetricsNamespace);
 
         context.SetService(!string.IsNullOrWhiteSpace(service)
             ? service
-            : _powerToolsConfigurations.Service);
+            : _powertoolsConfigurations.Service);
 
         var defaultDimensionsList = DictionaryToList(defaultDimensions);
 

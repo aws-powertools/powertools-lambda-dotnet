@@ -3,6 +3,8 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <LangVersion>default</LangVersion>
+        <AssemblyName>AWS.Lambda.Powertools.Logging.Tests</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Logging.Tests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\AWS.Lambda.PowerTools.Logging\AWS.Lambda.PowerTools.Logging.csproj" />
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" />
     </ItemGroup>
 
 </Project>

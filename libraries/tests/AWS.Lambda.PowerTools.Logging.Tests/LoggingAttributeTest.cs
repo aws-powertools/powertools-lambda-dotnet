@@ -19,15 +19,15 @@ using System.Linq;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.Core;
-using AWS.Lambda.PowerTools.Common;
-using AWS.Lambda.PowerTools.Logging.Internal;
+using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
-namespace AWS.Lambda.PowerTools.Logging.Tests
+namespace AWS.Lambda.Powertools.Logging.Tests
 {
     [Collection("Sequential")]
     public class LoggingAttributeTestWithLambdaContext
@@ -52,7 +52,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
             var lambdaContext = MockLambdaContext();
 
@@ -103,7 +103,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
             
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
             
             var eventArgs = new AspectEventArgs
@@ -150,7 +150,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
             
             var eventArgs = new AspectEventArgs
@@ -197,7 +197,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
             
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
             
             var eventArgs = new AspectEventArgs
@@ -232,7 +232,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
             
             var eventArgs = new AspectEventArgs
@@ -267,7 +267,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
             
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
             
             var eventArgs = new AspectEventArgs
@@ -307,7 +307,7 @@ namespace AWS.Lambda.PowerTools.Logging.Tests
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
 
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
 
             var eventArgs = new AspectEventArgs

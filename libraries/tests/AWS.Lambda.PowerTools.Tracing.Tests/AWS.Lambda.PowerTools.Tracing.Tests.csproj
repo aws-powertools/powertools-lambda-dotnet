@@ -3,10 +3,12 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <LangVersion>default</LangVersion>
+        <AssemblyName>AWS.Lambda.Powertools.Tracing.Tests</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Tracing.Tests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\AWS.Lambda.PowerTools.Tracing\AWS.Lambda.PowerTools.Tracing.csproj" />
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Tracing\AWS.Lambda.Powertools.Tracing.csproj" />
     </ItemGroup>
 
     <ItemGroup>

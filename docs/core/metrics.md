@@ -58,7 +58,7 @@ Setting | Description | Environment variable | Constructor parameter
 === "Function.cs"
 
     ```csharp hl_lines="4"
-    using AWS.Lambda.PowerTools.Metrics;
+    using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
       Metrics(Namespace = "ServerlessAirline", Service = "Orders", CaptureColdStart = true, RaiseOnEmptyMetrics = true)]
@@ -87,7 +87,7 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
 === "Metrics"
 
     ```csharp hl_lines="8"
-    using AWS.Lambda.PowerTools.Metrics;
+    using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
       
@@ -101,7 +101,7 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
 === "Metrics with custom dimensions"
 
     ```csharp hl_lines="8-9"
-    using AWS.Lambda.PowerTools.Metrics;
+    using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
       
@@ -130,7 +130,7 @@ You can use **`SetDefaultDimensions`** method to persist dimensions across Lambd
 === "SetDefaultDimensions method"
 
     ```csharp hl_lines="4 5 6 7 12"
-    using AWS.Lambda.PowerTools.Metrics;
+    using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
       private Dictionary<string, string> _defaultDimensions = new Dictionary<string, string>{
@@ -156,7 +156,7 @@ During metrics validation, if no metrics are provided then a warning will be log
 === "Function.cs"
 
     ```csharp hl_lines="8"
-    using AWS.Lambda.PowerTools.Metrics;
+    using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
       
@@ -211,7 +211,7 @@ If you want to ensure that at least one metric is emitted, you can pass **`Raise
 === "Function.cs"
 
     ```python hl_lines="5"
-    using AWS.Lambda.PowerTools.Metrics;
+    using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
       
@@ -228,7 +228,7 @@ You can optionally capture cold start metrics by setting **`CaptureColdStart`** 
 === "Function.cs"
 
     ```csharp hl_lines="5"
-    using AWS.Lambda.PowerTools.Metrics;
+    using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
       
@@ -257,7 +257,7 @@ You can add high-cardinality data as part of your Metrics log with `AddMetadata`
 === "Function.cs"
 
     ```csharp hl_lines="9"
-    using AWS.Lambda.PowerTools.Metrics;
+    using AWS.Lambda.Powertools.Metrics;
     
     public class Function {
       
@@ -310,7 +310,7 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
 === "Function.cs"
 
     ```csharp hl_lines="8-17"
-    using AWS.Lambda.PowerTools.Metrics;
+    using AWS.Lambda.Powertools.Metrics;
     
     public class Function {
       

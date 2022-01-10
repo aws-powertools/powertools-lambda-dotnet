@@ -2,21 +2,20 @@
 
     <PropertyGroup>
       <TargetFramework>net6.0</TargetFramework>
-      <PackageId>AWS.Lambda.PowerTools.Common</PackageId>
+      <PackageId>AWS.Lambda.Powertools.Common</PackageId>
       <Version>0.0.1</Version>
       <Authors>Amazon Web Services</Authors>
       <Company>Amazon.com, Inc</Company>
       <LangVersion>default</LangVersion>
-      <Title>AWS Lambda PowerTools for .NET</Title>
+      <Title>AWS Lambda Powertools for .NET</Title>
       <Copyright>Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
       <RepositoryUrl>https://github.com/awslabs/aws-lambda-powertools-dotnet</RepositoryUrl>
       <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-      <PackageTags>AWS;Amazon;Lambda;PowerTools</PackageTags>
-      <PackageIconUrl></PackageIconUrl>
+      <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
       <PackageIcon>AWSLogo128x128.png</PackageIcon>
       <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-      <AssemblyName>AWS.Lambda.PowerTools.Common</AssemblyName>
-      <RootNamespace>AWS.Lambda.PowerTools.Common</RootNamespace>
+      <AssemblyName>AWS.Lambda.Powertools.Common</AssemblyName>
+      <RootNamespace>AWS.Lambda.Powertools.Common</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

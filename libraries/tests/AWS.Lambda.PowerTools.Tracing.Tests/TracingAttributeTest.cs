@@ -15,15 +15,14 @@
 
 using System;
 using System.Linq;
-using AWS.Lambda.PowerTools.Tracing;
-using AWS.Lambda.PowerTools.Tracing.Internal;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Tracing.Internal;
 using Moq;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
-namespace AWS.Lambda.PowerTools.Tracing.Tests
+namespace AWS.Lambda.Powertools.Tracing.Tests
 {
     [Collection("Sequential")]
     public class TracingAttributeColdStartTest
@@ -36,7 +35,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             var methodName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
             
-            var configurations1 = new Mock<IPowerToolsConfigurations>();
+            var configurations1 = new Mock<IPowertoolsConfigurations>();
             configurations1.Setup(c =>
                 c.IsServiceDefined
             ).Returns(true);
@@ -44,7 +43,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
                 c.Service
             ).Returns(service);
             
-            var configurations2 = new Mock<IPowerToolsConfigurations>();
+            var configurations2 = new Mock<IPowertoolsConfigurations>();
             configurations2.Setup(c =>
                 c.IsServiceDefined
             ).Returns(false);
@@ -139,7 +138,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
 
             var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
@@ -162,7 +161,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var segmentName = Guid.NewGuid().ToString();
             var methodName = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
 
             var handler = new TracingAspectHandler(segmentName, null, TracingCaptureMode.EnvironmentVariable,
@@ -185,7 +184,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c =>
                 c.Service
             ).Returns(service);
@@ -211,7 +210,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
 
             var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
@@ -238,7 +237,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c =>
                 c.TracerCaptureResponse
             ).Returns(true);
@@ -270,7 +269,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c =>
                 c.TracerCaptureResponse
             ).Returns(false);
@@ -299,7 +298,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
@@ -328,7 +327,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
@@ -357,7 +356,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
@@ -383,7 +382,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
             var results = new[] {"A", "B"};
 
@@ -413,7 +412,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c =>
                 c.TracerCaptureError
             ).Returns(true);
@@ -444,7 +443,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c =>
                 c.TracerCaptureError
             ).Returns(false);
@@ -474,7 +473,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
 
@@ -502,7 +501,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
 
@@ -530,7 +529,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c =>
                 c.TracerCaptureError
             ).Returns(false);
@@ -560,7 +559,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c =>
                 c.TracerCaptureError
             ).Returns(false);
@@ -593,7 +592,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c =>
                 c.IsSamLocal
             ).Returns(false);
@@ -615,7 +614,7 @@ namespace AWS.Lambda.PowerTools.Tracing.Tests
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowerToolsConfigurations>();
+            var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c =>
                 c.IsSamLocal
             ).Returns(true);

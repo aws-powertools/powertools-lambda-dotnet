@@ -17,9 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Amazon.Lambda.Core;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
 
-namespace AWS.Lambda.PowerTools.Metrics.Internal;
+namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     Class MetricsAspectHandler.
@@ -46,7 +46,7 @@ internal class MetricsAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Creates MetricsAspectHandler to supports running code before and after marked methods.
     /// </summary>
-    /// <param name="metricsInstance">AWS.Lambda.PowerTools.Metrics Instance</param>
+    /// <param name="metricsInstance">AWS.Lambda.Powertools.Metrics Instance</param>
     /// <param name="captureColdStartEnabled">If 'true', captures cold start during Lambda execution</param>
     internal MetricsAspectHandler
     (

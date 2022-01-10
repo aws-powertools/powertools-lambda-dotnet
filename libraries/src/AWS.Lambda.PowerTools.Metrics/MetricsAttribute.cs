@@ -14,10 +14,9 @@
  */
 
 using System;
-using AWS.Lambda.PowerTools.Common;
-using AWS.Lambda.PowerTools.Metrics.Internal;
+using AWS.Lambda.Powertools.Common;
 
-namespace AWS.Lambda.PowerTools.Metrics;
+namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     Class MetricsAttribute.
@@ -64,7 +63,7 @@ public class MetricsAttribute : MethodAspectAttribute
     /// <value>The metrics instance.</value>
     private IMetrics MetricsInstance =>
         _metricsInstance ??= new Metrics(
-            PowerToolsConfigurations.Instance,
+            PowertoolsConfigurations.Instance,
             Namespace,
             Service,
             RaiseOnEmptyMetrics

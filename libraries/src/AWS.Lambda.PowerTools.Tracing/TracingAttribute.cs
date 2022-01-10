@@ -13,11 +13,10 @@
  * permissions and limitations under the License.
  */
 
-using AWS.Lambda.PowerTools.Tracing;
-using AWS.Lambda.PowerTools.Tracing.Internal;
-using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Tracing.Internal;
 
-namespace AWS.Lambda.PowerTools.Tracing;
+namespace AWS.Lambda.Powertools.Tracing;
 
 /// <summary>
 ///     Class TracingAttribute.
@@ -59,7 +58,7 @@ public class TracingAttribute : MethodAspectAttribute
             SegmentName,
             Namespace,
             CaptureMode,
-            PowerToolsConfigurations.Instance,
+            PowertoolsConfigurations.Instance,
             XRayRecorder.Instance
         );
     }
