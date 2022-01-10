@@ -246,9 +246,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     private void CaptureLambdaContext(AspectEventArgs eventArgs)
     {
         _clearLambdaContext = PowertoolsLambdaContext.Extract(eventArgs);
-        if (PowertoolsLambdaContext.Instance is not null)
-            return;
-        if (IsDebug())
+        if (PowertoolsLambdaContext.Instance is null && IsDebug())
             _systemWrapper.LogLine(
                 "Skipping Lambda Context injection because ILambdaContext context parameter not found.");
     }
