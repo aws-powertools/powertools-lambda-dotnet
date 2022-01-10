@@ -5,23 +5,23 @@ VisualStudioVersion = 16.6.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Common", "src\AWS.Lambda.PowerTools.Common\AWS.Lambda.PowerTools.Common.csproj", "{ACED222F-BDEB-48B6-BA6E-A28659080766}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Common", "src\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj", "{ACED222F-BDEB-48B6-BA6E-A28659080766}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Logging", "src\AWS.Lambda.PowerTools.Logging\AWS.Lambda.PowerTools.Logging.csproj", "{7A6A2996-1F41-4C94-A0A2-3AE963247243}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Logging", "src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj", "{7A6A2996-1F41-4C94-A0A2-3AE963247243}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Metrics", "src\AWS.Lambda.PowerTools.Metrics\AWS.Lambda.PowerTools.Metrics.csproj", "{3BA6251D-DE4E-4547-AAA9-25F4BA04C636}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Metrics", "src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj", "{3BA6251D-DE4E-4547-AAA9-25F4BA04C636}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Tracing", "src\AWS.Lambda.PowerTools.Tracing\AWS.Lambda.PowerTools.Tracing.csproj", "{1A3AC28C-3AEE-40FE-B229-9E38BB609547}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Tracing", "src\AWS.Lambda.Powertools.Tracing\AWS.Lambda.Powertools.Tracing.csproj", "{1A3AC28C-3AEE-40FE-B229-9E38BB609547}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1CFF5568-8486-475F-81F6-06105C437528}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Logging.Tests", "tests\AWS.Lambda.PowerTools.Logging.Tests\AWS.Lambda.PowerTools.Logging.Tests.csproj", "{B68A0D0A-4785-48CB-864F-29E3A8ACA526}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Logging.Tests", "tests\AWS.Lambda.Powertools.Logging.Tests\AWS.Lambda.Powertools.Logging.Tests.csproj", "{B68A0D0A-4785-48CB-864F-29E3A8ACA526}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Metrics.Tests", "tests\AWS.Lambda.PowerTools.Metrics.Tests\AWS.Lambda.PowerTools.Metrics.Tests.csproj", "{A422C742-2CF9-409D-BDAE-15825AB62113}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Metrics.Tests", "tests\AWS.Lambda.Powertools.Metrics.Tests\AWS.Lambda.Powertools.Metrics.Tests.csproj", "{A422C742-2CF9-409D-BDAE-15825AB62113}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Tracing.Tests", "tests\AWS.Lambda.PowerTools.Tracing.Tests\AWS.Lambda.PowerTools.Tracing.Tests.csproj", "{A040AED5-BBB8-4BFA-B2A5-BBD82817B8A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Tracing.Tests", "tests\AWS.Lambda.Powertools.Tracing.Tests\AWS.Lambda.Powertools.Tracing.Tests.csproj", "{A040AED5-BBB8-4BFA-B2A5-BBD82817B8A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.PowerTools.Common.Tests", "tests\AWS.Lambda.PowerTools.Common.Tests\AWS.Lambda.PowerTools.Common.Tests.csproj", "{4EC48E6A-45B5-4E25-ABBD-C23FE2BD6E1E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Common.Tests", "tests\AWS.Lambda.Powertools.Common.Tests\AWS.Lambda.Powertools.Common.Tests.csproj", "{4EC48E6A-45B5-4E25-ABBD-C23FE2BD6E1E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

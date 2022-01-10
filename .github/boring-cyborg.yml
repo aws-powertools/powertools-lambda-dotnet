@@ -1,14 +1,14 @@
 ##### Labeler ##########################################################################################################
 labelPRBasedOnFilePath:
   area/logger:
-    - libraries/src/AWS.Lambda.PowerTools.Logging/*
-    - libraries/src/AWS.Lambda.PowerTools.Logging/**/*
+    - libraries/src/AWS.Lambda.Powertools.Logging/*
+    - libraries/src/AWS.Lambda.Powertools.Logging/**/*
   area/tracer:
-    - libraries/src/AWS.Lambda.PowerTools.Tracing/*
-    - libraries/src/AWS.Lambda.PowerTools.Tracing/**/*
+    - libraries/src/AWS.Lambda.Powertools.Tracing/*
+    - libraries/src/AWS.Lambda.Powertools.Tracing/**/*
   area/metrics:
-    - libraries/src/AWS.Lambda.PowerTools.Metrics/*
-    - libraries/src/AWS.Lambda.PowerTools.Metrics/**/*
+    - libraries/src/AWS.Lambda.Powertools.Metrics/*
+    - libraries/src/AWS.Lambda.Powertools.Metrics/**/*
 
   documentation:
     - docs/*

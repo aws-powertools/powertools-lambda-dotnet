@@ -2,7 +2,7 @@ docs/node_modules
 docs/.cache
 docs/public
 
-deploy/
+deploy/**
 
 .idea
 .vscode

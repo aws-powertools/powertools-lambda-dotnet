@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>default</LangVersion>
+        <PackageId>AWS.Lambda.Powertools.Metrics</PackageId>
+        <Version>0.0.1</Version>
+        <Authors>Amazon Web Services</Authors>
+        <Company>Amazon.com, Inc</Company>
+        <Title>AWS Lambda Powertools for .NET</Title>
+        <Description>AWS Lambda Powertools for .NET - Metrics package.</Description>
+        <Copyright>Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
+        <RepositoryUrl>https://github.com/awslabs/aws-lambda-powertools-dotnet</RepositoryUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>AWSLogo128x128.png</PackageIcon>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <AssemblyName>AWS.Lambda.Powertools.Metrics</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Metrics</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Amazon.Lambda.Core" Version="1.2.0" />
+      <PackageReference Include="AspectInjector" Version="2.6.0" />
+      <PackageReference Include="Microsoft.CodeAnalysis" Version="4.0.1" />
+      <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="4.0.1" />
+      <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" />
+      <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.1" />
+      <PackageReference Include="Microsoft.CSharp" Version="4.7.0" PrivateAssets="all" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
+      <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.0.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Serializer\" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
+</Project>

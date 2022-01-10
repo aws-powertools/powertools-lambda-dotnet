@@ -6,9 +6,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
-using AWS.Lambda.PowerTools.Tracing;
-using AWS.Lambda.PowerTools.Logging;
-using AWS.Lambda.PowerTools.Metrics;
+using AWS.Lambda.Powertools.Tracing;
+using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.

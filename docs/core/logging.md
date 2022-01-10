@@ -49,7 +49,7 @@ Key | Type | Example | Description
 ------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------
 **Timestamp** | string | "2020-05-24 18:17:33,774" | Timestamp of actual log statement
 **Level** | string | "Information" | Logging level
-**Name** | string | "PowerTools Logger" | Logger name
+**Name** | string | "Powertools Logger" | Logger name
 **ColdStart** | bool | true| ColdStart value.
 **Service** | string | "payment" | Service name defined. "service_undefined" will be used if unknown
 **SamplingRate** | int |  0.1 | Debug logging sampling rate in percentage e.g. 10% in this case
@@ -129,7 +129,7 @@ You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [J
         "Timestamp": "2021-12-13T20:32:22.5774262Z",
         "Level": "Information",
         "Service": "lambda-example",
-        "Name": "AWS.Lambda.PowerTools.Logging.Logger",
+        "Name": "AWS.Lambda.Powertools.Logging.Logger",
         "Message": "Collecting payment",
         "SamplingRate": 0.7,
         "CorrelationId": "correlation_id_value",
@@ -179,7 +179,7 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
         "Timestamp": "2021-12-13T20:32:22.5774262Z",
         "Level": "Information",
         "Service": "lambda-example",
-        "Name": "AWS.Lambda.PowerTools.Logging.Logger",
+        "Name": "AWS.Lambda.Powertools.Logging.Logger",
         "Message": "Collecting payment",
         "SamplingRate": 0.7,
         "CorrelationId": "correlation_id_value",
