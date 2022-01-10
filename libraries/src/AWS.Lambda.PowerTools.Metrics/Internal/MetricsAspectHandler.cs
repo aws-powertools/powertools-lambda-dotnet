@@ -17,15 +17,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Amazon.Lambda.Core;
-using AWS.Lambda.PowerTools.Aspects;
+using AWS.Lambda.PowerTools.Common;
 
 namespace AWS.Lambda.PowerTools.Metrics.Internal;
 
 /// <summary>
 ///     Class MetricsAspectHandler.
-///     Implements the <see cref="AWS.Lambda.PowerTools.Aspects.IMethodAspectHandler" />
+///     Implements the <see cref="IMethodAspectHandler" />
 /// </summary>
-/// <seealso cref="AWS.Lambda.PowerTools.Aspects.IMethodAspectHandler" />
+/// <seealso cref="IMethodAspectHandler" />
 internal class MetricsAspectHandler : IMethodAspectHandler
 {
     /// <summary>

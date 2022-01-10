@@ -13,17 +13,17 @@
  * permissions and limitations under the License.
  */
 
-using Amazon.Lambda.PowerTools.Tracing.Internal;
-using AWS.Lambda.PowerTools.Aspects;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Tracing;
+using AWS.Lambda.PowerTools.Tracing.Internal;
+using AWS.Lambda.PowerTools.Common;
 
-namespace Amazon.Lambda.PowerTools.Tracing;
+namespace AWS.Lambda.PowerTools.Tracing;
 
 /// <summary>
 ///     Class TracingAttribute.
-///     Implements the <see cref="AWS.Lambda.PowerTools.Aspects.MethodAspectAttribute" />
+///     Implements the <see cref="MethodAspectAttribute" />
 /// </summary>
-/// <seealso cref="AWS.Lambda.PowerTools.Aspects.MethodAspectAttribute" />
+/// <seealso cref="MethodAspectAttribute" />
 public class TracingAttribute : MethodAspectAttribute
 {
     /// <summary>

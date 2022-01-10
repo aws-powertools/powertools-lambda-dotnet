@@ -15,7 +15,7 @@
 
 using System;
 using System.Collections.Generic;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Common;
 
 namespace AWS.Lambda.PowerTools.Metrics;
 

@@ -2,7 +2,7 @@
 
     <PropertyGroup>
       <TargetFramework>net6.0</TargetFramework>
-      <PackageId>AWS.Lambda.PowerTools</PackageId>
+      <PackageId>AWS.Lambda.PowerTools.Common</PackageId>
       <Version>0.0.1</Version>
       <Authors>Amazon Web Services</Authors>
       <Company>Amazon.com, Inc</Company>
@@ -15,6 +15,8 @@
       <PackageIconUrl></PackageIconUrl>
       <PackageIcon>AWSLogo128x128.png</PackageIcon>
       <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+      <AssemblyName>AWS.Lambda.PowerTools.Common</AssemblyName>
+      <RootNamespace>AWS.Lambda.PowerTools.Common</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

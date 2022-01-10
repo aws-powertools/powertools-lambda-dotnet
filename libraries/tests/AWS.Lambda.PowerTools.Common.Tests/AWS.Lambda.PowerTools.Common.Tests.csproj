@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\AWS.Lambda.PowerTools\AWS.Lambda.PowerTools.csproj" />
+      <ProjectReference Include="..\..\src\AWS.Lambda.PowerTools.Common\AWS.Lambda.PowerTools.Common.csproj" />
     </ItemGroup>
 
 </Project>

@@ -14,11 +14,10 @@
  */
 
 using System;
-using AWS.Lambda.PowerTools.Core;
 using Moq;
 using Xunit;
 
-namespace AWS.Lambda.PowerTools.Tests.Core
+namespace AWS.Lambda.PowerTools.Common.Tests
 {
     public class PowerToolsConfigurationsTest
     {

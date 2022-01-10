@@ -14,16 +14,16 @@
  */
 
 using System;
-using AWS.Lambda.PowerTools.Aspects;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Common;
+using AWS.Lambda.PowerTools.Tracing;
 
-namespace Amazon.Lambda.PowerTools.Tracing.Internal;
+namespace AWS.Lambda.PowerTools.Tracing.Internal;
 
 /// <summary>
 ///     Class TracingAspectHandler.
-///     Implements the <see cref="AWS.Lambda.PowerTools.Aspects.IMethodAspectHandler" />
+///     Implements the <see cref="IMethodAspectHandler" />
 /// </summary>
-/// <seealso cref="AWS.Lambda.PowerTools.Aspects.IMethodAspectHandler" />
+/// <seealso cref="IMethodAspectHandler" />
 internal class TracingAspectHandler : IMethodAspectHandler
 {
     /// <summary>

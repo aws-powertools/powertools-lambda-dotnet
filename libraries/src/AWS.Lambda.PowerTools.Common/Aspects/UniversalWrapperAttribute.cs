@@ -16,7 +16,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AWS.Lambda.PowerTools.Aspects;
+namespace AWS.Lambda.PowerTools.Common;
 
 /// <summary>
 ///     Class UniversalWrapperAttribute.

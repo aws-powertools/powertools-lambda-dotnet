@@ -13,13 +13,13 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.PowerTools.Core;
+namespace AWS.Lambda.PowerTools.Common;
 
 /// <summary>
 ///     Class PowerToolsConfigurations.
-///     Implements the <see cref="AWS.Lambda.PowerTools.Core.IPowerToolsConfigurations" />
+///     Implements the <see cref="IPowerToolsConfigurations" />
 /// </summary>
-/// <seealso cref="AWS.Lambda.PowerTools.Core.IPowerToolsConfigurations" />
+/// <seealso cref="IPowerToolsConfigurations" />
 public class PowerToolsConfigurations : IPowerToolsConfigurations
 {
     /// <summary>

@@ -13,69 +13,35 @@
  * permissions and limitations under the License.
  */
 
-using System;
-
-namespace AWS.Lambda.PowerTools.Core;
+namespace AWS.Lambda.PowerTools.Common;
 
 /// <summary>
-///     Class SystemWrapper.
-///     Implements the <see cref="AWS.Lambda.PowerTools.Core.ISystemWrapper" />
+///     Interface ISystemWrapper
 /// </summary>
-/// <seealso cref="AWS.Lambda.PowerTools.Core.ISystemWrapper" />
-public class SystemWrapper : ISystemWrapper
+public interface ISystemWrapper
 {
-    /// <summary>
-    ///     The instance
-    /// </summary>
-    private static ISystemWrapper _instance;
-
-    /// <summary>
-    ///     Prevents a default instance of the <see cref="SystemWrapper" /> class from being created.
-    /// </summary>
-    private SystemWrapper()
-    {
-    }
-
-    /// <summary>
-    ///     Gets the instance.
-    /// </summary>
-    /// <value>The instance.</value>
-    public static ISystemWrapper Instance => _instance ??= new SystemWrapper();
-
     /// <summary>
     ///     Gets the environment variable.
     /// </summary>
     /// <param name="variable">The variable.</param>
     /// <returns>System.String.</returns>
-    public string GetEnvironmentVariable(string variable)
-    {
-        return Environment.GetEnvironmentVariable(variable);
-    }
+    string GetEnvironmentVariable(string variable);
 
     /// <summary>
     ///     Logs the specified value.
     /// </summary>
     /// <param name="value">The value.</param>
-    public void Log(string value)
-    {
-        Console.Write(value);
-    }
+    void Log(string value);
 
     /// <summary>
     ///     Logs the line.
     /// </summary>
     /// <param name="value">The value.</param>
-    public void LogLine(string value)
-    {
-        Console.WriteLine(value);
-    }
+    void LogLine(string value);
 
     /// <summary>
     ///     Gets random number
     /// </summary>
     /// <returns>System.Double.</returns>
-    public double GetRandom()
-    {
-        return new Random().NextDouble();
-    }
+    double GetRandom();
 }

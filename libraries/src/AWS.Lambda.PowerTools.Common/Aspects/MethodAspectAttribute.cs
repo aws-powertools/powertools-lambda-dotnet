@@ -17,13 +17,13 @@ using System;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
 
-namespace AWS.Lambda.PowerTools.Aspects;
+namespace AWS.Lambda.PowerTools.Common;
 
 /// <summary>
 ///     Class MethodAspectAttribute.
-///     Implements the <see cref="AWS.Lambda.PowerTools.Aspects.UniversalWrapperAttribute" />
+///     Implements the <see cref="UniversalWrapperAttribute" />
 /// </summary>
-/// <seealso cref="AWS.Lambda.PowerTools.Aspects.UniversalWrapperAttribute" />
+/// <seealso cref="UniversalWrapperAttribute" />
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
 [Injection(typeof(UniversalWrapperAspect), Inherited = true)]
 public abstract class MethodAspectAttribute : UniversalWrapperAttribute

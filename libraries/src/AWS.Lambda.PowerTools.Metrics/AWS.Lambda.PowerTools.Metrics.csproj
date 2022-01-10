@@ -19,7 +19,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\AWS.Lambda.PowerTools\AWS.Lambda.PowerTools.csproj" />
+        <ProjectReference Include="..\AWS.Lambda.PowerTools.Common\AWS.Lambda.PowerTools.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -45,7 +45,7 @@
       <Folder Include="Serializer\" />
     </ItemGroup>
     <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
     <ItemGroup>
       <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />

@@ -14,17 +14,16 @@
  */
 
 using System;
-using AWS.Lambda.PowerTools.Aspects;
-using AWS.Lambda.PowerTools.Core;
+using AWS.Lambda.PowerTools.Common;
 using AWS.Lambda.PowerTools.Metrics.Internal;
 
 namespace AWS.Lambda.PowerTools.Metrics;
 
 /// <summary>
 ///     Class MetricsAttribute.
-///     Implements the <see cref="AWS.Lambda.PowerTools.Aspects.MethodAspectAttribute" />
+///     Implements the <see cref="MethodAspectAttribute" />
 /// </summary>
-/// <seealso cref="AWS.Lambda.PowerTools.Aspects.MethodAspectAttribute" />
+/// <seealso cref="MethodAspectAttribute" />
 [AttributeUsage(AttributeTargets.Method)]
 public class MetricsAttribute : MethodAspectAttribute
 {
