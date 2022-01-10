@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
-using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
@@ -32,15 +31,23 @@ namespace AWS.Lambda.Powertools.Logging.Tests
     [Collection("Sequential")]
     public class LoggingAttributeTestWithLambdaContext
     {
-        private static Mock<ILambdaContext> MockLambdaContext()
+        private class TestLambdaContext : PowertoolsLambdaContext
         {
-            var lambdaContext = new Mock<ILambdaContext>();
-            lambdaContext.Setup(c => c.FunctionName).Returns(Guid.NewGuid().ToString());
-            lambdaContext.Setup(c => c.FunctionVersion).Returns(Guid.NewGuid().ToString());
-            lambdaContext.Setup(c => c.MemoryLimitInMB).Returns(new Random().Next());
-            lambdaContext.Setup(c => c.InvokedFunctionArn).Returns(Guid.NewGuid().ToString());
-            lambdaContext.Setup(c => c.AwsRequestId).Returns(Guid.NewGuid().ToString());
-            return lambdaContext;
+            protected internal TestLambdaContext(string awsRequestId, string functionName, string functionVersion, string invokedFunctionArn, string logGroupName, string logStreamName, int memoryLimitInMB) : base(awsRequestId, functionName, functionVersion, invokedFunctionArn, logGroupName, logStreamName, memoryLimitInMB) { }
+        }
+        
+        private static TestLambdaContext NewLambdaContext()
+        {
+            return new TestLambdaContext
+            (
+                awsRequestId: Guid.NewGuid().ToString(),
+                functionName: Guid.NewGuid().ToString(),
+                functionVersion: Guid.NewGuid().ToString(),
+                invokedFunctionArn: Guid.NewGuid().ToString(),
+                logGroupName: Guid.NewGuid().ToString(),
+                logStreamName: Guid.NewGuid().ToString(),
+                memoryLimitInMB: new Random().Next()
+            );
         }
         
         [Fact]
@@ -54,7 +61,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             
             var configurations = new Mock<IPowertoolsConfigurations>();
             var systemWrapper = new Mock<ISystemWrapper>();
-            var lambdaContext = MockLambdaContext();
+            var lambdaContext = NewLambdaContext();
 
             var eventArg = new {Source = "Test"};
             var eventArgs = new AspectEventArgs
@@ -63,7 +70,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 Args = new object []
                 {
                     eventArg,
-                    lambdaContext.Object
+                    lambdaContext
                 }
             };
             
@@ -74,21 +81,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             // Act
             handler.OnEntry(eventArgs);
-
-            var allKeys = LoggingAspectHandler.GetLambdaContextKeys()
-                .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
             
             Assert.NotNull(Logger.LoggerProvider);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionName], lambdaContext.Object.FunctionName);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionVersion], lambdaContext.Object.FunctionVersion);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionMemorySize], lambdaContext.Object.MemoryLimitInMB);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionArn], lambdaContext.Object.InvokedFunctionArn);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionRequestId], lambdaContext.Object.AwsRequestId);
+            Assert.NotNull(PowertoolsLambdaContext.Instance);
         }
     }
     

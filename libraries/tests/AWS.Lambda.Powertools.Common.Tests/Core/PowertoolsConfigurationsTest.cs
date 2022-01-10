@@ -14,7 +14,6 @@
  */
 
 using System;
-using AWS.Lambda.Powertools.Common;
 using Moq;
 using Xunit;
 
