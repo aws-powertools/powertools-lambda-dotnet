@@ -1,4 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>default</LangVersion>
+        <PackageId>AWS.Lambda.PowerTools.Metrics</PackageId>
+        <Version>0.0.1</Version>
+        <Authors>Amazon Web Services</Authors>
+        <Company>Amazon.com, Inc</Company>
+        <Title>AWS Lambda PowerTools for .NET</Title>
+        <Description>AWS Lambda PowerTools for .NET - Metrics package.</Description>
+        <Copyright>Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
+        <RepositoryUrl>https://github.com/awslabs/aws-lambda-powertools-dotnet</RepositoryUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageTags>AWS;Amazon;Lambda;PowerTools</PackageTags>
+        <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>AWSLogo128x128.png</PackageIcon>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\AWS.Lambda.PowerTools\AWS.Lambda.PowerTools.csproj" />
@@ -26,13 +44,10 @@
     <ItemGroup>
       <Folder Include="Serializer\" />
     </ItemGroup>
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <PackageId>AWS.Lambda.PowerTools.Metrics</PackageId>
-        <Authors>AWSLABS</Authors>
-        <Company>Amazon Web Services</Company>
-        <LangVersion>default</LangVersion>
-        <IsRoslynComponent>true</IsRoslynComponent>
-    </PropertyGroup>
-
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+    <ItemGroup>
+      <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
 </Project>
