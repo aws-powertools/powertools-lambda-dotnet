@@ -53,6 +53,16 @@ internal class PowertoolsLambdaContext
     /// </summary>
     internal static PowertoolsLambdaContext Instance { get; private set; }
     
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="PowertoolsLambdaContext" /> class.
+    /// </summary>
+    /// <param name="awsRequestId">The AWS request ID associated with the request.</param>
+    /// <param name="functionName">Name of the Lambda function that is running.</param>
+    /// <param name="functionVersion">The Lambda function version that is executing.</param>
+    /// <param name="invokedFunctionArn">The ARN used to invoke this function.</param>
+    /// <param name="logGroupName">The CloudWatch log group name associated with the invoked function.</param>
+    /// <param name="logStreamName">The CloudWatch log stream name for this function execution.</param>
+    /// <param name="memoryLimitInMB">Memory limit, in MB, you configured for the Lambda function.</param>
     protected PowertoolsLambdaContext
     (
         string awsRequestId,
@@ -73,6 +83,13 @@ internal class PowertoolsLambdaContext
         MemoryLimitInMB = memoryLimitInMB;
     }
 
+    /// <summary>
+    ///     Extract the lambda context from Lambda handler arguments.
+    /// </summary>
+    /// <param name="eventArgs">
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
+    ///     event data.
+    /// </param>
     internal static bool Extract(AspectEventArgs eventArgs)
     {
         if (Instance is not null)
@@ -96,6 +113,9 @@ internal class PowertoolsLambdaContext
         return true;
     }
     
+    /// <summary>
+    ///     Clear the extracted lambda context.
+    /// </summary>
     internal static void Clear()
     {
         Instance = null;

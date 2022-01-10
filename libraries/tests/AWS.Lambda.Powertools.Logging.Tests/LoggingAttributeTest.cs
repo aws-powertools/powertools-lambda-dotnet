@@ -84,6 +84,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             
             Assert.NotNull(Logger.LoggerProvider);
             Assert.NotNull(PowertoolsLambdaContext.Instance);
+            Assert.Equal(PowertoolsLambdaContext.Instance.AwsRequestId, lambdaContext.AwsRequestId);
+            Assert.Equal(PowertoolsLambdaContext.Instance.FunctionName, lambdaContext.FunctionName);
+            Assert.Equal(PowertoolsLambdaContext.Instance.FunctionVersion, lambdaContext.FunctionVersion);
+            Assert.Equal(PowertoolsLambdaContext.Instance.InvokedFunctionArn, lambdaContext.InvokedFunctionArn);
+            Assert.Equal(PowertoolsLambdaContext.Instance.LogGroupName, lambdaContext.LogGroupName);
+            Assert.Equal(PowertoolsLambdaContext.Instance.LogStreamName, lambdaContext.LogStreamName);
+            Assert.Equal(PowertoolsLambdaContext.Instance.MemoryLimitInMB, lambdaContext.MemoryLimitInMB);
         }
     }
     
