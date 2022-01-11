@@ -1,56 +1,84 @@
 ---
-title: Homepage
-description: AWS Lambda Powertools for .NET
+title: AWS Lambda Powertools for .NET (developer preview)
+description: AWS Lambda Powertools for .NET (developer preview)
 ---
 
-A suite of utilities for AWS Lambda functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more.
+# AWS Lambda Powertools for .NET
 
-!!! tip "Looking for a quick read through how the core features are used?"
-  	Check out [this detailed blog post](https://aws.amazon.com/blogs/opensource/simplifying-serverless-best-practices-with-lambda-powertools/) with a practical example.
+AWS Lambda Powertools for .NET is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, **Powertools for .NET is optimised for .NET 6 only**.
 
-## Tenets
+The GitHub repository for this project can be found [here](https://github.com/awslabs/aws-lambda-powertools-dotnet).
 
-This project separates core utilities that will be available in other runtimes vs general utilities that might not be available across all runtimes.
+!!! warning  "Do not use this library in production"
 
-* **AWS Lambda only**. We optimise for AWS Lambda function environments and supported runtimes only. Utilities might work with web frameworks and non-Lambda environments, though they are not officially supported.
-* **Eases the adoption of best practices**. The main priority of the utilities is to facilitate best practices adoption, as defined in the AWS Well-Architected Serverless Lens; all other functionality is optional.
-* **Keep it lean**. Additional dependencies are carefully considered for security and ease of maintenance, and prevent negatively impacting startup time.
-* **We strive for backwards compatibility**. New features and changes should keep backwards compatibility. If a breaking change cannot be avoided, the deprecation and migration process should be clearly defined.
-* **We work backwards from the community**. We aim to strike a balance of what would work best for 80% of customers. Emerging practices are considered and discussed via Requests for Comment (RFCs)
-* **Idiomatic**. Utilities follow programming language idioms and language-specific best practices.
+    **AWS Lambda Powertools for .NET is currently released as a alpha developer preview** and is intended strictly for feedback purposes only. This version is not stable, and significant breaking changes might incur as part of the upcoming production-ready release.
 
-## Install
+    Your support is much appreciated. If you encounter any problems, [please raise an issue](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new/choose).
 
-Powertools is available on NuGet.
+    **Do not use this library for production workloads.**
 
-* [AWS.Lambda.Powertools](https://www.nuget.org/packages?q=AWS.Lambda.Powertools): `dotnet nuget add AWS.Lambda.Powertools`
-
-**Quick hello world example using SAM CLI**
-
-```bash
-sam init --location https://github.com/aws-samples/cookiecutter-aws-sam-dotnet
-```
-
-## Features
+## Available Powertools libraries
 
 | Utility | Description
 | ------------------------------------------------- | ---------------------------------------------------------------------------------
 [Tracing](./core/tracing.md) | Decorators and utilities to trace Lambda function handlers, and both synchronous and asynchronous functions
 [Logger](./core/logging.md) | Structured logging made easier, and decorator to enrich structured logging with key Lambda context details
-[Metrics](./core/metrics.md) | Custom Metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
+[Metrics](./core/metrics.md) | Custom AWS metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
 
-## Environment variables
+!!! info "Looking for a quick read through how the core features are used?"
+   Check out the [Simplifying serverless best practices with Lambda Powertools](https://aws.amazon.com/blogs/opensource/simplifying-serverless-best-practices-with-lambda-powertools/) blog post with a practical example.
 
-!!! info
-    **Explicit parameters take precedence over environment variables.**
+## Install
 
-| Environment variable | Description | Utility | Default |
-| ------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------- |
-| **POWERTOOLS_SERVICE_NAME** | Sets service name used for tracing namespace, metrics dimension and structured logging | All | `"service_undefined"` |
-| **POWERTOOLS_METRICS_NAMESPACE** | Sets namespace used for metrics | [Metrics](./core/metrics) | `None` |
-| **POWERTOOLS_TRACE_DISABLED** | Disables tracing | [Tracing](./core/tracing) | `false` |
-| **POWERTOOLS_TRACER_CAPTURE_RESPONSE** | Captures Lambda or method return as metadata. | [Tracing](./core/tracing) | `true` |
-| **POWERTOOLS_TRACER_CAPTURE_ERROR** | Captures Lambda or method exception as metadata. | [Tracing](./core/tracing) | `true` |
-| **POWERTOOLS_LOGGER_LOG_EVENT** | Logs incoming event | [Logging](./core/logging) | `false` |
-| **POWERTOOLS_LOGGER_SAMPLE_RATE** | Debug log sampling | [Logging](./core/logging) | `0` |
-| **POWERTOOLS_LOG_DEDUPLICATION_DISABLED** | Disables log deduplication filter protection to use Pytest Live Log feature | [Logging](./core/logging) | `false` |
+Powertools is available on NuGet.
+
+* [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
+
+    `dotnet nuget add AWS.Lambda.Powertools.Tracing`
+
+* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
+
+    `dotnet nuget add AWS.Lambda.Powertools.Logging`
+
+* [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Metrics):
+
+    `dotnet nuget add AWS.Lambda.Powertools.Metrics`
+
+### SAM CLI custom template
+
+We have provided you with a custom template for the Serverless Application Model (SAM) command-line interface (CLI). This generates a starter project that allows you to interactively choose the Powertools features that enables you to include in your project.
+
+```bash
+sam init --location https://github.com/aws-samples/cookiecutter-aws-sam-dotnet
+```
+
+To use the SAM CLI, you need the following tools.
+
+* SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+* .NET 6.0 (LTS)  - [Install .NET 6.0](https://www.microsoft.com/net/download)
+* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
+
+### Examples
+
+We have provided a few examples that should you how to use the each of the core Powertools features.
+
+* [Tracer](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/tracer){target="_blank"} example
+* [Logger](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/logger/){target="_blank"} example
+* [Metrics](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/metrics/){target="_blank"} example
+
+## Other members of the AWS Lambda Powertools family
+
+Not using .NET? No problem we have you covered. Here are the other members of the AWS Lambda Powertools family:
+
+* [AWS Lambda Powertools for Python](https://github.com/awslabs/aws-lambda-powertools-python)
+* [AWS Lambda Powertools for Java](https://github.com/awslabs/aws-lambda-powertools-java)
+* [AWS Lambda Powertools for TypeScript](https://github.com/awslabs/aws-lambda-powertools-typescript)
+
+## Connect
+
+* **AWS Developers Slack**: `#lambda-powertools` - [Invite, if you don't have an account](https://join.slack.com/t/awsdevelopers/shared_invite/zt-yryddays-C9fkWrmguDv0h2EEDzCqvw){target="_blank"}
+* **Email**: aws-lambda-powertools-feedback@amazon.com
+
+## Credits
+
+* Credits for the Lambda Powertools idea go to [DAZN](https://github.com/getndazn){target="_blank"} and their [DAZN Lambda Powertools](https://github.com/getndazn/dazn-lambda-powertools/){target="_blank"}.
