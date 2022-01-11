@@ -5,23 +5,29 @@ namespace AWS.Lambda.Powertools.Common.Tests;
 
 public class PowertoolsLambdaContextTest
 {
-    private class TestLambdaContext : PowertoolsLambdaContext
+    private class TestLambdaContext
     {
-        protected internal TestLambdaContext(string awsRequestId, string functionName, string functionVersion, string invokedFunctionArn, string logGroupName, string logStreamName, int memoryLimitInMB) : base(awsRequestId, functionName, functionVersion, invokedFunctionArn, logGroupName, logStreamName, memoryLimitInMB) { }
+        public string AwsRequestId { get; set; }
+        public string FunctionName { get; set; }
+        public string FunctionVersion { get; set; }
+        public string InvokedFunctionArn { get; set; }
+        public string LogGroupName { get; set; }
+        public string LogStreamName { get; set; }
+        public int MemoryLimitInMB { get; set; }
     }
         
     private static TestLambdaContext NewLambdaContext()
     {
         return new TestLambdaContext
-        (
-            awsRequestId: Guid.NewGuid().ToString(),
-            functionName: Guid.NewGuid().ToString(),
-            functionVersion: Guid.NewGuid().ToString(),
-            invokedFunctionArn: Guid.NewGuid().ToString(),
-            logGroupName: Guid.NewGuid().ToString(),
-            logStreamName: Guid.NewGuid().ToString(),
-            memoryLimitInMB: new Random().Next()
-        );
+        {
+            AwsRequestId = Guid.NewGuid().ToString(),
+            FunctionName = Guid.NewGuid().ToString(),
+            FunctionVersion = Guid.NewGuid().ToString(),
+            InvokedFunctionArn = Guid.NewGuid().ToString(),
+            LogGroupName = Guid.NewGuid().ToString(),
+            LogStreamName = Guid.NewGuid().ToString(),
+            MemoryLimitInMB = new Random().Next()
+        };
     }
     
     [Fact]

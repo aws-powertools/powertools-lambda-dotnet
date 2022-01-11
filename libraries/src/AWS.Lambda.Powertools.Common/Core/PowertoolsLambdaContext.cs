@@ -1,4 +1,6 @@
+using System;
 using System.Linq;
+using System.Reflection;
 
 namespace AWS.Lambda.Powertools.Common;
 
@@ -54,36 +56,6 @@ internal class PowertoolsLambdaContext
     internal static PowertoolsLambdaContext Instance { get; private set; }
     
     /// <summary>
-    ///     Initializes a new instance of the <see cref="PowertoolsLambdaContext" /> class.
-    /// </summary>
-    /// <param name="awsRequestId">The AWS request ID associated with the request.</param>
-    /// <param name="functionName">Name of the Lambda function that is running.</param>
-    /// <param name="functionVersion">The Lambda function version that is executing.</param>
-    /// <param name="invokedFunctionArn">The ARN used to invoke this function.</param>
-    /// <param name="logGroupName">The CloudWatch log group name associated with the invoked function.</param>
-    /// <param name="logStreamName">The CloudWatch log stream name for this function execution.</param>
-    /// <param name="memoryLimitInMB">Memory limit, in MB, you configured for the Lambda function.</param>
-    protected PowertoolsLambdaContext
-    (
-        string awsRequestId,
-        string functionName,
-        string functionVersion,
-        string invokedFunctionArn,
-        string logGroupName,
-        string logStreamName,
-        int memoryLimitInMB
-    )
-    {
-        AwsRequestId = awsRequestId;
-        FunctionName = functionName;
-        FunctionVersion = functionVersion;
-        InvokedFunctionArn = invokedFunctionArn;
-        LogGroupName = logGroupName;
-        LogStreamName = logStreamName;
-        MemoryLimitInMB = memoryLimitInMB;
-    }
-
-    /// <summary>
     ///     Extract the lambda context from Lambda handler arguments.
     /// </summary>
     /// <param name="eventArgs">
@@ -95,24 +67,60 @@ internal class PowertoolsLambdaContext
         if (Instance is not null)
             return false;
 
-        dynamic lambdaContext = eventArgs?.Args?.LastOrDefault(arg => (arg.GetType().Name ?? "").EndsWith("LambdaContext"));;
-
-        if (lambdaContext is null)
+        if (eventArgs?.Args is null)
             return false;
 
-        Instance = new PowertoolsLambdaContext
-        (
-            awsRequestId: lambdaContext.AwsRequestId,
-            functionName: lambdaContext.FunctionName,
-            functionVersion: lambdaContext.FunctionVersion,
-            invokedFunctionArn: lambdaContext.InvokedFunctionArn,
-            logGroupName: lambdaContext.LogGroupName,
-            logStreamName: lambdaContext.LogStreamName,
-            memoryLimitInMB: lambdaContext.MemoryLimitInMB
-        );
-        return true;
+        foreach (var arg in eventArgs.Args)
+        {
+            if (arg is null)
+                continue;
+
+            var argType = arg.GetType();
+            if (!(argType.Name ?? "").EndsWith("LambdaContext"))
+                continue;
+
+            Instance = new PowertoolsLambdaContext();
+
+            foreach (var prop in argType.GetProperties())
+            {
+                if (prop.Name.Equals("AwsRequestId", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Instance.AwsRequestId = prop.GetValue(arg) as string;
+                }
+                else if (prop.Name.Equals("FunctionName", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Instance.FunctionName = prop.GetValue(arg) as string;
+                }
+                else if (prop.Name.Equals("FunctionVersion", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Instance.FunctionVersion = prop.GetValue(arg) as string;
+                }
+                else if (prop.Name.Equals("InvokedFunctionArn", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Instance.InvokedFunctionArn = prop.GetValue(arg) as string;
+                }
+                else if (prop.Name.Equals("LogGroupName", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Instance.LogGroupName = prop.GetValue(arg) as string;
+                }
+                else if (prop.Name.Equals("LogStreamName", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Instance.LogStreamName = prop.GetValue(arg) as string;
+                }
+                else if (prop.Name.Equals("MemoryLimitInMB", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    var propVal = prop.GetValue(arg);
+                    if (propVal is null || !int.TryParse(propVal.ToString(), out var intVal)) continue;
+                    Instance.MemoryLimitInMB = intVal;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
-    
+
     /// <summary>
     ///     Clear the extracted lambda context.
     /// </summary>
