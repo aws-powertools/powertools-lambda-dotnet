@@ -76,11 +76,11 @@ internal class PowertoolsLambdaContext
                 continue;
 
             var argType = arg.GetType();
-            if (!(argType.Name ?? "").EndsWith("LambdaContext"))
+            if (!argType.Name.EndsWith("LambdaContext"))
                 continue;
 
             Instance = new PowertoolsLambdaContext();
-
+            
             foreach (var prop in argType.GetProperties())
             {
                 if (prop.Name.Equals("AwsRequestId", StringComparison.CurrentCultureIgnoreCase))
