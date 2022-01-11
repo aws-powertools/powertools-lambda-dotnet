@@ -143,11 +143,11 @@ internal sealed class PowertoolsLogger : ILogger
         // Add Lambda Context Keys
         if (PowertoolsLambdaContext.Instance is not null)
         {
-            message.Add(LoggingConstants.KeyFunctionName, PowertoolsLambdaContext.Instance.FunctionName);
-            message.Add(LoggingConstants.KeyFunctionVersion, PowertoolsLambdaContext.Instance.FunctionVersion);
-            message.Add(LoggingConstants.KeyFunctionMemorySize, PowertoolsLambdaContext.Instance.MemoryLimitInMB);
-            message.Add(LoggingConstants.KeyFunctionArn, PowertoolsLambdaContext.Instance.InvokedFunctionArn);
-            message.Add(LoggingConstants.KeyFunctionRequestId, PowertoolsLambdaContext.Instance.AwsRequestId);
+            message.TryAdd(LoggingConstants.KeyFunctionName, PowertoolsLambdaContext.Instance.FunctionName);
+            message.TryAdd(LoggingConstants.KeyFunctionVersion, PowertoolsLambdaContext.Instance.FunctionVersion);
+            message.TryAdd(LoggingConstants.KeyFunctionMemorySize, PowertoolsLambdaContext.Instance.MemoryLimitInMB);
+            message.TryAdd(LoggingConstants.KeyFunctionArn, PowertoolsLambdaContext.Instance.InvokedFunctionArn);
+            message.TryAdd(LoggingConstants.KeyFunctionRequestId, PowertoolsLambdaContext.Instance.AwsRequestId);
         }
 
         message.TryAdd(LoggingConstants.KeyTimestamp, DateTime.UtcNow.ToString("o"));
