@@ -6,6 +6,8 @@ edit_uri: edit/develop/docs
 
 nav:
   - Homepage: index.md
+  - Our tenets: tenets.md
+  - References: references.md
   - Changelog: changelog.md
   - Roadmap: https://github.com/awslabs/aws-lambda-powertools-roadmap/projects/1" target="_blank
   - Core utilities:
@@ -15,15 +17,16 @@ nav:
 
 theme:
   name: material
-  palette:
+  palette:  
     - scheme: default
-      primary: deep blue
+      primary: blue
+      accent: deep orange
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to dark mode
     - scheme: slate
-      primary: indigo
-      accent: teal
+      primary: blue
+      accent: orange
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
