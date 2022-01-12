@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
-using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
@@ -29,69 +28,6 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests
 {
-    [Collection("Sequential")]
-    public class LoggingAttributeTestWithLambdaContext
-    {
-        private static Mock<ILambdaContext> MockLambdaContext()
-        {
-            var lambdaContext = new Mock<ILambdaContext>();
-            lambdaContext.Setup(c => c.FunctionName).Returns(Guid.NewGuid().ToString());
-            lambdaContext.Setup(c => c.FunctionVersion).Returns(Guid.NewGuid().ToString());
-            lambdaContext.Setup(c => c.MemoryLimitInMB).Returns(new Random().Next());
-            lambdaContext.Setup(c => c.InvokedFunctionArn).Returns(Guid.NewGuid().ToString());
-            lambdaContext.Setup(c => c.AwsRequestId).Returns(Guid.NewGuid().ToString());
-            return lambdaContext;
-        }
-        
-        [Fact]
-        public void OnEntry_WhenHasLambdaContext_AppendLambdaContextKeys()
-        {
-            // Arrange
-            
-            var methodName = Guid.NewGuid().ToString();
-            var service = Guid.NewGuid().ToString();
-            var logLevel = LogLevel.Trace;
-            
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            var systemWrapper = new Mock<ISystemWrapper>();
-            var lambdaContext = MockLambdaContext();
-
-            var eventArg = new {Source = "Test"};
-            var eventArgs = new AspectEventArgs
-            {
-                Name = methodName,
-                Args = new object []
-                {
-                    eventArg,
-                    lambdaContext.Object
-                }
-            };
-            
-            var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
-                systemWrapper.Object);
-            
-            handler.ResetForTest();
-
-            // Act
-            handler.OnEntry(eventArgs);
-
-            var allKeys = LoggingAspectHandler.GetLambdaContextKeys()
-                .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
-            
-            Assert.NotNull(Logger.LoggerProvider);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionName], lambdaContext.Object.FunctionName);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionVersion], lambdaContext.Object.FunctionVersion);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionMemorySize], lambdaContext.Object.MemoryLimitInMB);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionArn], lambdaContext.Object.InvokedFunctionArn);
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
-            Assert.Equal(allKeys[LoggingConstants.KeyFunctionRequestId], lambdaContext.Object.AwsRequestId);
-        }
-    }
-    
     [Collection("Sequential")]
     public class LoggingAttributeTestWithoutLambdaContext
     {

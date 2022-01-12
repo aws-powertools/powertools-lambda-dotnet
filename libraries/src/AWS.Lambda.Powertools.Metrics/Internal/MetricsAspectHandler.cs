@@ -15,8 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics;
@@ -42,6 +40,11 @@ internal class MetricsAspectHandler : IMethodAspectHandler
     ///     The metrics
     /// </summary>
     private readonly IMetrics _metrics;
+    
+    /// <summary>
+    ///     Specify to clear Lambda Context on exit
+    /// </summary>
+    private bool _clearLambdaContext;
 
     /// <summary>
     ///     Creates MetricsAspectHandler to supports running code before and after marked methods.
@@ -65,6 +68,8 @@ internal class MetricsAspectHandler : IMethodAspectHandler
     public void OnExit(AspectEventArgs eventArgs)
     {
         _metrics.Flush();
+        if (_clearLambdaContext)
+            PowertoolsLambdaContext.Clear();
     }
 
     /// <summary>
@@ -78,12 +83,16 @@ internal class MetricsAspectHandler : IMethodAspectHandler
         var nameSpace = _metrics.GetNamespace();
         var service = _metrics.GetService();
         Dictionary<string, string> dimensions = null;
+        
+        _clearLambdaContext = PowertoolsLambdaContext.Extract(eventArgs);
 
-        if (eventArgs.Args?.FirstOrDefault(x => x is ILambdaContext) is ILambdaContext context)
+        if (PowertoolsLambdaContext.Instance is not null)
+        {
             dimensions = new Dictionary<string, string>
             {
-                {"FunctionName", context.FunctionName}
+                {"FunctionName", PowertoolsLambdaContext.Instance.FunctionName}
             };
+        }
 
         _metrics.PushSingleMetric(
             "ColdStart",
@@ -126,5 +135,6 @@ internal class MetricsAspectHandler : IMethodAspectHandler
     {
         _isColdStart = true;
         Metrics.ResetForTest();
+        PowertoolsLambdaContext.Clear();
     }
 }
