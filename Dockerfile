@@ -10,6 +10,7 @@ RUN mkdir $FUNCTION_DIR
 WORKDIR $FUNCTION_DIR
 COPY examples/SimpleLambda/src/HelloWorld/Function.cs examples/SimpleLambda/src/HelloWorld/HelloWorld.csproj examples/SimpleLambda/src/HelloWorld/aws-lambda-tools-defaults.json $FUNCTION_DIR/examples/SimpleLambda/src/HelloWorld/
 COPY libraries/src/ $FUNCTION_DIR/libraries/src/
+COPY libraries/*.png $FUNCTION_DIR/libraries/
 RUN dotnet tool install -g Amazon.Lambda.Tools
 
 # Build and Copy artifacts depending on build mode.
