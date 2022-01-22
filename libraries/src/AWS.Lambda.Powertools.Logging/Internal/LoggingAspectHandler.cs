@@ -14,11 +14,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
 using Microsoft.Extensions.Logging;
 
@@ -31,11 +29,6 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// <seealso cref="IMethodAspectHandler" />
 internal class LoggingAspectHandler : IMethodAspectHandler
 {
-    /// <summary>
-    ///     The lambda context keys
-    /// </summary>
-    private static readonly Dictionary<string, object> _lambdaContextKeys = new();
-
     /// <summary>
     ///     The is cold start
     /// </summary>
@@ -90,6 +83,11 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     The is context initialized
     /// </summary>
     private bool _isContextInitialized;
+    
+    /// <summary>
+    ///     Specify to clear Lambda Context on exit
+    /// </summary>
+    private bool _clearLambdaContext;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LoggingAspectHandler" /> class.
@@ -160,10 +158,8 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         _isContextInitialized = true;
 
         var eventObject = eventArgs.Args.FirstOrDefault();
-        var context = eventArgs.Args.FirstOrDefault(x => x is ILambdaContext) as ILambdaContext;
-
         CaptureXrayTraceId();
-        CaptureLambdaContext(context);
+        CaptureLambdaContext(eventArgs);
         CaptureCorrelationId(eventObject);
         if (_logEvent ?? _powertoolsConfigurations.LoggerLogEvent)
             LogEvent(eventObject);
@@ -205,8 +201,10 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnExit(AspectEventArgs eventArgs)
     {
-        if (!_isContextInitialized) return;
-        _lambdaContextKeys.Clear();
+        if (!_isContextInitialized)
+            return;
+        if (_clearLambdaContext)
+            PowertoolsLambdaContext.Clear();
         if (_clearState)
             Logger.RemoveAllKeys();
         _initializeContext = true;
@@ -241,23 +239,16 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Captures the lambda context.
     /// </summary>
-    /// <param name="context">The context.</param>
-    private void CaptureLambdaContext(ILambdaContext context)
+    /// <param name="eventArgs">
+    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
+    ///     event data.
+    /// </param>
+    private void CaptureLambdaContext(AspectEventArgs eventArgs)
     {
-        _lambdaContextKeys.Clear();
-        if (context is null)
-        {
-            if (IsDebug())
-                _systemWrapper.LogLine(
-                    "Skipping Lambda Context injection because ILambdaContext context parameter not found.");
-            return;
-        }
-
-        _lambdaContextKeys.Add(LoggingConstants.KeyFunctionName, context.FunctionName);
-        _lambdaContextKeys.Add(LoggingConstants.KeyFunctionVersion, context.FunctionVersion);
-        _lambdaContextKeys.Add(LoggingConstants.KeyFunctionMemorySize, context.MemoryLimitInMB);
-        _lambdaContextKeys.Add(LoggingConstants.KeyFunctionArn, context.InvokedFunctionArn);
-        _lambdaContextKeys.Add(LoggingConstants.KeyFunctionRequestId, context.AwsRequestId);
+        _clearLambdaContext = PowertoolsLambdaContext.Extract(eventArgs);
+        if (PowertoolsLambdaContext.Instance is null && IsDebug())
+            _systemWrapper.LogLine(
+                "Skipping Lambda Context injection because ILambdaContext context parameter not found.");
     }
 
     /// <summary>
@@ -358,17 +349,8 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         _isColdStart = true;
         _initializeContext = true;
         _isContextInitialized = false;
-        _lambdaContextKeys.Clear();
+        PowertoolsLambdaContext.Clear();
         Logger.LoggerProvider = null;
         Logger.RemoveAllKeys();
-    }
-
-    /// <summary>
-    ///     Gets the lambda context keys.
-    /// </summary>
-    /// <returns>IEnumerable&lt;KeyValuePair&lt;System.String, System.Object&gt;&gt;.</returns>
-    internal static IEnumerable<KeyValuePair<string, object>> GetLambdaContextKeys()
-    {
-        return _lambdaContextKeys.AsEnumerable();
     }
 }
