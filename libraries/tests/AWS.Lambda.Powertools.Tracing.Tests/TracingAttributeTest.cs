@@ -50,7 +50,8 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var recorder2 = new Mock<IXRayRecorder>();
             var recorder3 = new Mock<IXRayRecorder>();
             var recorder4 = new Mock<IXRayRecorder>();
-
+            
+            TracingAspectHandler.ResetForTest();
             var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
                 configurations1.Object, recorder1.Object);
             var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
@@ -125,60 +126,171 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
                 ), Times.Never);
         }
     }
+    
+    [Collection("Sequential")]
+    public class TracingAttributeDisableTest
+    {
+        [Fact]
+        public void Tracing_WhenTracerDisabled_DDisablesTracing()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var configurations1 = new Mock<IPowertoolsConfigurations>();
+            configurations1.Setup(c => c.TracingDisabled).Returns(true);
+            configurations1.Setup(c => c.IsLambdaEnvironment).Returns(true);
+
+            var configurations2 = new Mock<IPowertoolsConfigurations>();
+            configurations2.Setup(c => c.TracingDisabled).Returns(true);
+            configurations2.Setup(c => c.IsLambdaEnvironment).Returns(true);
+
+            var recorder1 = new Mock<IXRayRecorder>();
+            var recorder2 = new Mock<IXRayRecorder>();
+
+            TracingAspectHandler.ResetForTest();
+            var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+                configurations1.Object, recorder1.Object);
+            var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+                configurations1.Object, recorder2.Object);
+
+            var results = new[] {"A", "B"};
+            var exception = new Exception("Test Exception");
+            var eventArgs = new AspectEventArgs { Name = methodName };
+            
+            // Act
+            // Cold Start Execution
+            handler1.OnEntry(eventArgs);
+            handler1.OnSuccess(eventArgs, results);
+            object Act1() => handler1.OnException<object>(eventArgs, exception);
+            handler1.OnExit(eventArgs);
+            
+            // Warm Start Execution
+            handler2.OnEntry(eventArgs);
+            handler2.OnSuccess(eventArgs, results);
+            object Act2() => handler2.OnException<object>(eventArgs, exception);
+            handler2.OnExit(eventArgs);
+
+            // Assert
+            recorder1.Verify(v => v.BeginSubsegment(It.IsAny<string>()), Times.Never);
+            recorder1.Verify(v => v.EndSubsegment(), Times.Never);
+            recorder1.Verify(v =>
+                v.AddMetadata(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                ), Times.Never);
+            Assert.Throws<Exception>(Act1);
+            recorder1.Verify(v =>
+                v.AddMetadata(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<Exception>()
+                ), Times.Never);
+            
+            recorder2.Verify(v => v.BeginSubsegment(It.IsAny<string>()), Times.Never);
+            recorder2.Verify(v => v.EndSubsegment(), Times.Never);
+            recorder2.Verify(v =>
+                v.AddMetadata(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                ), Times.Never);
+            Assert.Throws<Exception>(Act2);
+            recorder2.Verify(v =>
+                v.AddMetadata(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<Exception>()
+                ), Times.Never);
+        }
+    }
+    
+     [Collection("Sequential")]
+    public class TracingAttributeLambdaEnvironmentTest
+    {
+        [Fact]
+        public void Tracing_WhenOutsideOfLambdaEnv_DisablesTracing()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var configurations1 = new Mock<IPowertoolsConfigurations>();
+            configurations1.Setup(c => c.TracingDisabled).Returns(false);
+            configurations1.Setup(c => c.IsLambdaEnvironment).Returns(false);
+
+            var configurations2 = new Mock<IPowertoolsConfigurations>();
+            configurations2.Setup(c => c.TracingDisabled).Returns(true);
+            configurations2.Setup(c => c.IsLambdaEnvironment).Returns(true);
+
+            var recorder1 = new Mock<IXRayRecorder>();
+            var recorder2 = new Mock<IXRayRecorder>();
+
+            TracingAspectHandler.ResetForTest();
+            var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+                configurations1.Object, recorder1.Object);
+            var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
+                configurations1.Object, recorder2.Object);
+
+            var results = new[] {"A", "B"};
+            var exception = new Exception("Test Exception");
+            var eventArgs = new AspectEventArgs { Name = methodName };
+            
+            // Act
+            // Cold Start Execution
+            handler1.OnEntry(eventArgs);
+            handler1.OnSuccess(eventArgs, results);
+            object Act1() => handler1.OnException<object>(eventArgs, exception);
+            handler1.OnExit(eventArgs);
+            
+            // Warm Start Execution
+            handler2.OnEntry(eventArgs);
+            handler2.OnSuccess(eventArgs, results);
+            object Act2() => handler2.OnException<object>(eventArgs, exception);
+            handler2.OnExit(eventArgs);
+
+            // Assert
+            recorder1.Verify(v => v.BeginSubsegment(It.IsAny<string>()), Times.Never);
+            recorder1.Verify(v => v.EndSubsegment(), Times.Never);
+            recorder1.Verify(v =>
+                v.AddMetadata(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                ), Times.Never);
+            Assert.Throws<Exception>(Act1);
+            recorder1.Verify(v =>
+                v.AddMetadata(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<Exception>()
+                ), Times.Never);
+            
+            recorder2.Verify(v => v.BeginSubsegment(It.IsAny<string>()), Times.Never);
+            recorder2.Verify(v => v.EndSubsegment(), Times.Never);
+            recorder2.Verify(v =>
+                v.AddMetadata(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                ), Times.Never);
+            Assert.Throws<Exception>(Act2);
+            recorder2.Verify(v =>
+                v.AddMetadata(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<Exception>()
+                ), Times.Never);
+        }
+    }
 
     [Collection("Sequential")]
     public class TracingAttributeTest
     {
+        public TracingAttributeTest()
+        {
+            TracingAspectHandler.ResetForTest();
+        }
+
         #region OnEntry Tests
         
-        [Fact]
-        public void OnEntry_WhenTracerDisabled_DoesNotBeginSubsegment()
-        {
-            // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            configurations.Setup(c => c.IsLambdaEnvironment).Returns(true);
-            configurations.Setup(c => c.TracingDisabled).Returns(true);
-            var recorder = new Mock<IXRayRecorder>();
-
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder.Object);
-            var eventArgs = new AspectEventArgs {Name = methodName};
-
-            // Act
-            handler.OnEntry(eventArgs);
-
-            // Assert
-            recorder.Verify(v =>
-                v.BeginSubsegment(
-                    It.IsAny<string>()
-                ), Times.Never);
-        }
-        
-        [Fact]
-        public void OnEntry_WhenOutsideOfLambdaEnvironment_DoesNotBeginSubsegment()
-        {
-            // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            configurations.Setup(c => c.IsLambdaEnvironment).Returns(false);
-            configurations.Setup(c => c.TracingDisabled).Returns(true);
-            var recorder = new Mock<IXRayRecorder>();
-
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder.Object);
-            var eventArgs = new AspectEventArgs {Name = methodName};
-
-            // Act
-            handler.OnEntry(eventArgs);
-
-            // Assert
-            recorder.Verify(v =>
-                v.BeginSubsegment(
-                    It.IsAny<string>()
-                ), Times.Never);
-        }
-
         [Fact]
         public void OnEntry_WhenSegmentNameIsNull_BeginSubsegmentWithMethodName()
         {
@@ -264,7 +376,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             configurations.Setup(c => c.IsLambdaEnvironment).Returns(true);
             configurations.Setup(c => c.TracingDisabled).Returns(false);
             var recorder = new Mock<IXRayRecorder>();
-
+            
             var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
@@ -282,64 +394,6 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
         #endregion
 
         #region OnSuccess Tests
-        
-        [Fact]
-        public void OnSuccess_WhenTracerDisabled_DoesNotCaptureResponse()
-        {
-            // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            configurations.Setup(c => c.IsLambdaEnvironment).Returns(true);
-            configurations.Setup(c => c.TracingDisabled).Returns(true);
-            configurations.Setup(c => c.TracerCaptureResponse).Returns(true);
-            var recorder = new Mock<IXRayRecorder>();
-            var results = new[] {"A", "B"};
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder.Object);
-            var eventArgs = new AspectEventArgs {Name = methodName};
-
-            // Act
-            handler.OnSuccess(eventArgs, results);
-
-            // Assert
-            recorder.Verify(v =>
-                v.AddMetadata(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()
-                ), Times.Never);
-        }
-        
-        [Fact]
-        public void OnSuccess_WhenOutsideOfLambdaEnvironment_DoesNotCaptureResponse()
-        {
-            // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            configurations.Setup(c => c.IsLambdaEnvironment).Returns(false);
-            configurations.Setup(c => c.TracingDisabled).Returns(false);
-            configurations.Setup(c => c.TracerCaptureResponse).Returns(true);
-            var recorder = new Mock<IXRayRecorder>();
-            var results = new[] {"A", "B"};
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder.Object);
-            var eventArgs = new AspectEventArgs {Name = methodName};
-
-            // Act
-            handler.OnSuccess(eventArgs, results);
-
-            // Assert
-            recorder.Verify(v =>
-                v.AddMetadata(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()
-                ), Times.Never);
-        }
 
         [Fact]
         public void OnSuccess_WhenTracerCaptureResponseEnvironmentVariableIsTrue_CapturesResponse()
@@ -523,66 +577,6 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
         #endregion
 
         #region OnException Tests
-        
-        [Fact]
-        public void OnException_WhenTracerDisabled_DoesNotCaptureError()
-        {
-            // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            configurations.Setup(c => c.IsLambdaEnvironment).Returns(true);
-            configurations.Setup(c => c.TracingDisabled).Returns(true);
-            configurations.Setup(c => c.TracerCaptureError).Returns(true);
-            var recorder = new Mock<IXRayRecorder>();
-            var exception = new Exception("Test Exception");
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder.Object);
-            var eventArgs = new AspectEventArgs {Name = methodName};
-
-            // Act
-            object Act() => handler.OnException<object>(eventArgs, exception);
-
-            // Assert
-            Assert.Throws<Exception>(Act);
-            recorder.Verify(v =>
-                v.AddMetadata(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<Exception>()
-                ), Times.Never);
-        }
-        
-        [Fact]
-        public void OnException_WhenOutsideOfLambdaEnvironment_DoesNotCaptureError()
-        {
-            // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            configurations.Setup(c => c.IsLambdaEnvironment).Returns(false);
-            configurations.Setup(c => c.TracingDisabled).Returns(false);
-            configurations.Setup(c => c.TracerCaptureError).Returns(true);
-            var recorder = new Mock<IXRayRecorder>();
-            var exception = new Exception("Test Exception");
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder.Object);
-            var eventArgs = new AspectEventArgs {Name = methodName};
-
-            // Act
-            object Act() => handler.OnException<object>(eventArgs, exception);
-
-            // Assert
-            Assert.Throws<Exception>(Act);
-            recorder.Verify(v =>
-                v.AddMetadata(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<Exception>()
-                ), Times.Never);
-        }
 
         [Fact]
         public void OnException_WhenTracerCaptureErrorEnvironmentVariableIsTrue_CapturesError()
@@ -768,51 +762,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
         #endregion
         
         #region OnExit Tests
-        
-        [Fact]
-        public void OnExit_EndSubsegment()
-        {
-            // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            configurations.Setup(c => c.IsLambdaEnvironment).Returns(true);
-            configurations.Setup(c => c.TracingDisabled).Returns(false);
-            configurations.Setup(c => c.IsSamLocal).Returns(false);
-            var recorder = new Mock<IXRayRecorder>();
 
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder.Object);
-            var eventArgs = new AspectEventArgs {Name = methodName};
-
-            // Act
-            handler.OnExit(eventArgs);
-
-            // Assert
-            recorder.Verify(v => v.EndSubsegment(), Times.Once);
-        }
-        
-        [Fact]
-        public void OnExit_WhenTracerDisabled_DoesNotEndSubsegment()
-        {
-            // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            configurations.Setup(c => c.IsLambdaEnvironment).Returns(true);
-            configurations.Setup(c => c.TracingDisabled).Returns(true);
-            configurations.Setup(c => c.IsSamLocal).Returns(false);
-            var recorder = new Mock<IXRayRecorder>();
-
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations.Object, recorder.Object);
-            var eventArgs = new AspectEventArgs {Name = methodName};
-
-            // Act
-            handler.OnExit(eventArgs);
-
-            // Assert
-            recorder.Verify(v => v.EndSubsegment(), Times.Never);
-        }
-        
         [Fact]
         public void OnExit_WhenOutsideOfLambdaEnvironment_DoesNotEndSubsegment()
         {

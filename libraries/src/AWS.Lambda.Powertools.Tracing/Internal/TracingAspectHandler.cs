@@ -34,6 +34,11 @@ internal class TracingAspectHandler : IMethodAspectHandler
     ///     If true, capture annotations
     /// </summary>
     private static bool _captureAnnotations = true;
+    
+    /// <summary>
+    ///     If true, tracing is disabled
+    /// </summary>
+    private static bool _isTracingDisabled;
 
     /// <summary>
     ///     The capture mode
@@ -59,11 +64,6 @@ internal class TracingAspectHandler : IMethodAspectHandler
     ///     X-Ray Recorder
     /// </summary>
     private readonly IXRayRecorder _xRayRecorder;
-    
-    /// <summary>
-    ///     If true, tracing is disabled
-    /// </summary>
-    private readonly bool _isDisabled;
 
     /// <summary>
     ///     If true, annotations have been captured
@@ -92,16 +92,22 @@ internal class TracingAspectHandler : IMethodAspectHandler
         _captureMode = captureMode;
         _powertoolsConfigurations = powertoolsConfigurations;
         _xRayRecorder = xRayRecorder;
+        CheckIfTracingDisabled();
+    }
 
-        if (powertoolsConfigurations.TracingDisabled)
+    private void CheckIfTracingDisabled()
+    {
+        if (_isTracingDisabled)
+            return;
+        
+        if (_powertoolsConfigurations.TracingDisabled)
         {
-            _isDisabled = true;
-            _captureMode = TracingCaptureMode.Disabled;
+            _isTracingDisabled = true;
+            Console.WriteLine("Tracing has been disabled via env var POWERTOOLS_TRACE_DISABLED");
         }
-        else if (!powertoolsConfigurations.IsLambdaEnvironment)
+        else if (!_powertoolsConfigurations.IsLambdaEnvironment)
         {
-            _isDisabled = true;
-            _captureMode = TracingCaptureMode.Disabled;
+            _isTracingDisabled = true;
             Console.WriteLine("Running outside Lambda environment; disabling Tracing");
         }
     }
@@ -115,7 +121,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnEntry(AspectEventArgs eventArgs)
     {
-        if(_isDisabled)
+        if(_isTracingDisabled)
             return;
 
         var segmentName = !string.IsNullOrWhiteSpace(_segmentName) ? _segmentName : $"## {eventArgs.Name}";
@@ -196,7 +202,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnExit(AspectEventArgs eventArgs)
     {
-        if(_isDisabled)
+        if(_isTracingDisabled)
             return;
 
         if (_isAnnotationsCaptured)
@@ -220,7 +226,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     private bool CaptureResponse()
     {
-        if(_isDisabled)
+        if(_isTracingDisabled)
             return false;
         
         switch (_captureMode)
@@ -243,7 +249,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     private bool CaptureError()
     {
-        if(_isDisabled)
+        if(_isTracingDisabled)
             return false;
         
         switch (_captureMode)
@@ -258,5 +264,15 @@ internal class TracingAspectHandler : IMethodAspectHandler
             default:
                 return false;
         }
+    }
+    
+    /// <summary>
+    ///     Resets for test.
+    /// </summary>
+    internal static void ResetForTest()
+    {
+        _isColdStart = true;
+        _captureAnnotations = true;
+        _isTracingDisabled = false;
     }
 }

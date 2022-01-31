@@ -344,11 +344,10 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Resets for test.
     /// </summary>
-    internal void ResetForTest()
+    internal static void ResetForTest()
     {
         _isColdStart = true;
         _initializeContext = true;
-        _isContextInitialized = false;
         PowertoolsLambdaContext.Clear();
         Logger.LoggerProvider = null;
         Logger.RemoveAllKeys();
