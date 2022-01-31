@@ -38,7 +38,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     If true, tracing is disabled
     /// </summary>
-    private static bool _isTracingDisabled;
+    private static bool? _isTracingDisabled;
 
     /// <summary>
     ///     The capture mode
@@ -92,13 +92,12 @@ internal class TracingAspectHandler : IMethodAspectHandler
         _captureMode = captureMode;
         _powertoolsConfigurations = powertoolsConfigurations;
         _xRayRecorder = xRayRecorder;
-        CheckIfTracingDisabled();
     }
 
-    private void CheckIfTracingDisabled()
+    private bool TracingDisabled()
     {
-        if (_isTracingDisabled)
-            return;
+        if (_isTracingDisabled.HasValue)
+            return _isTracingDisabled.Value;
         
         if (_powertoolsConfigurations.TracingDisabled)
         {
@@ -110,6 +109,11 @@ internal class TracingAspectHandler : IMethodAspectHandler
             _isTracingDisabled = true;
             Console.WriteLine("Running outside Lambda environment; disabling Tracing");
         }
+        else
+        {
+            _isTracingDisabled = false;
+        }
+        return _isTracingDisabled.Value;
     }
 
     /// <summary>
@@ -121,7 +125,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnEntry(AspectEventArgs eventArgs)
     {
-        if(_isTracingDisabled)
+        if(TracingDisabled())
             return;
 
         var segmentName = !string.IsNullOrWhiteSpace(_segmentName) ? _segmentName : $"## {eventArgs.Name}";
@@ -202,7 +206,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnExit(AspectEventArgs eventArgs)
     {
-        if(_isTracingDisabled)
+        if(TracingDisabled())
             return;
 
         if (_isAnnotationsCaptured)
@@ -226,7 +230,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     private bool CaptureResponse()
     {
-        if(_isTracingDisabled)
+        if(TracingDisabled())
             return false;
         
         switch (_captureMode)
@@ -249,7 +253,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     private bool CaptureError()
     {
-        if(_isTracingDisabled)
+        if(TracingDisabled())
             return false;
         
         switch (_captureMode)
@@ -273,6 +277,6 @@ internal class TracingAspectHandler : IMethodAspectHandler
     {
         _isColdStart = true;
         _captureAnnotations = true;
-        _isTracingDisabled = false;
+        _isTracingDisabled = null;
     }
 }
