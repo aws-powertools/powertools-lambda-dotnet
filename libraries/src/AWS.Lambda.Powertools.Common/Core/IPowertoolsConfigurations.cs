@@ -79,6 +79,18 @@ public interface IPowertoolsConfigurations
     /// </summary>
     /// <value>The X-Ray trace identifier.</value>
     string XRayTraceId { get; }
+    
+    /// <summary>
+    ///     Gets a value indicating whether this instance is Lambda.
+    /// </summary>
+    /// <value><c>true</c> if this instance is Lambda; otherwise, <c>false</c>.</value>
+    bool IsLambdaEnvironment { get; }
+    
+    /// <summary>
+    ///     Gets a value indicating whether [tracing is disabled].
+    /// </summary>
+    /// <value><c>true</c> if [tracing is disabled]; otherwise, <c>false</c>.</value>
+    bool TracingDisabled { get; }
 
     /// <summary>
     ///     Gets the environment variable.

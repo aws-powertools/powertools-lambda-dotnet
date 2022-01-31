@@ -59,6 +59,11 @@ internal class TracingAspectHandler : IMethodAspectHandler
     ///     X-Ray Recorder
     /// </summary>
     private readonly IXRayRecorder _xRayRecorder;
+    
+    /// <summary>
+    ///     If true, tracing is disabled
+    /// </summary>
+    private readonly bool _isDisabled;
 
     /// <summary>
     ///     If true, annotations have been captured
@@ -87,6 +92,18 @@ internal class TracingAspectHandler : IMethodAspectHandler
         _captureMode = captureMode;
         _powertoolsConfigurations = powertoolsConfigurations;
         _xRayRecorder = xRayRecorder;
+
+        if (powertoolsConfigurations.TracingDisabled)
+        {
+            _isDisabled = true;
+            _captureMode = TracingCaptureMode.Disabled;
+        }
+        else if (!powertoolsConfigurations.IsLambdaEnvironment)
+        {
+            _isDisabled = true;
+            _captureMode = TracingCaptureMode.Disabled;
+            Console.WriteLine("Running outside Lambda environment; disabling Tracing");
+        }
     }
 
     /// <summary>
@@ -98,6 +115,9 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnEntry(AspectEventArgs eventArgs)
     {
+        if(_isDisabled)
+            return;
+
         var segmentName = !string.IsNullOrWhiteSpace(_segmentName) ? _segmentName : $"## {eventArgs.Name}";
         var nameSpace = GetNamespace();
 
@@ -130,7 +150,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
         if (CaptureResponse())
         {
             var nameSpace = GetNamespace();
-
+            
             _xRayRecorder.AddMetadata
             (
                 nameSpace,
@@ -176,11 +196,13 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnExit(AspectEventArgs eventArgs)
     {
+        if(_isDisabled)
+            return;
+
         if (_isAnnotationsCaptured)
             _captureAnnotations = true;
 
-        if (!_powertoolsConfigurations.IsSamLocal)
-            _xRayRecorder.EndSubsegment();
+        _xRayRecorder.EndSubsegment();
     }
 
     /// <summary>
@@ -198,6 +220,9 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     private bool CaptureResponse()
     {
+        if(_isDisabled)
+            return false;
+        
         switch (_captureMode)
         {
             case TracingCaptureMode.EnvironmentVariable:
@@ -218,6 +243,9 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     private bool CaptureError()
     {
+        if(_isDisabled)
+            return false;
+        
         switch (_captureMode)
         {
             case TracingCaptureMode.EnvironmentVariable:

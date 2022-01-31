@@ -39,6 +39,11 @@ internal static class Constants
     ///     Constant for POWERTOOLS_TRACER_CAPTURE_ERROR environment variable
     /// </summary>
     internal const string TracerCaptureErrorEnv = "POWERTOOLS_TRACER_CAPTURE_ERROR";
+    
+    /// <summary>
+    ///     Constant for POWERTOOLS_TRACE_DISABLED environment variable
+    /// </summary>
+    internal const string TracingDisabledEnv = "POWERTOOLS_TRACE_DISABLED";
 
     /// <summary>
     ///     Constant for POWERTOOLS_METRICS_NAMESPACE environment variable
@@ -64,4 +69,9 @@ internal static class Constants
     ///     Constant for AWS X-Ray trace identifier environment variable
     /// </summary>
     internal const string XrayTraceIdEnv = "_X_AMZN_TRACE_ID";
+    
+    /// <summary>
+    ///     Constant for LAMBDA_TASK_ROOT environment variable
+    /// </summary>
+    internal const string LambdaTaskRoot = "LAMBDA_TASK_ROOT";
 }

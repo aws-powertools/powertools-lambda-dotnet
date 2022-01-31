@@ -48,7 +48,7 @@ segment name that appears in traces.
 
 === "Tracing attribute"
 
-    ```c# hl_lines="3 14 19"
+    ```c# hl_lines="3 14 20"
     public class Function
     {
         [Tracing]
@@ -63,12 +63,14 @@ segment name that appears in traces.
         }
         
         [Tracing]
-        private async Task BusinessLogic1(){
+        private async Task BusinessLogic1()
+        {
     
         }
     
         [Tracing]
-        private async Task BusinessLogic2(){
+        private async Task BusinessLogic2()
+        {
     
         }
     }
