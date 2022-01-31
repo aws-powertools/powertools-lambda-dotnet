@@ -94,28 +94,6 @@ internal class TracingAspectHandler : IMethodAspectHandler
         _xRayRecorder = xRayRecorder;
     }
 
-    private bool TracingDisabled()
-    {
-        if (_isTracingDisabled.HasValue)
-            return _isTracingDisabled.Value;
-        
-        if (_powertoolsConfigurations.TracingDisabled)
-        {
-            _isTracingDisabled = true;
-            Console.WriteLine("Tracing has been disabled via env var POWERTOOLS_TRACE_DISABLED");
-        }
-        else if (!_powertoolsConfigurations.IsLambdaEnvironment)
-        {
-            _isTracingDisabled = true;
-            Console.WriteLine("Running outside Lambda environment; disabling Tracing");
-        }
-        else
-        {
-            _isTracingDisabled = false;
-        }
-        return _isTracingDisabled.Value;
-    }
-
     /// <summary>
     ///     Handles the <see cref="E:Entry" /> event.
     /// </summary>
@@ -227,7 +205,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Captures the response.
     /// </summary>
-    /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+    /// <returns><c>true</c> if tracing should capture responses, <c>false</c> otherwise.</returns>
     private bool CaptureResponse()
     {
         if(TracingDisabled())
@@ -250,7 +228,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Captures the error.
     /// </summary>
-    /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+    /// <returns><c>true</c> if tracing should capture errors, <c>false</c> otherwise.</returns>
     private bool CaptureError()
     {
         if(TracingDisabled())
@@ -271,7 +249,33 @@ internal class TracingAspectHandler : IMethodAspectHandler
     }
     
     /// <summary>
-    ///     Resets for test.
+    ///     Tracing disabled.
+    /// </summary>
+    /// <returns><c>true</c> if tracing is disabled, <c>false</c> otherwise.</returns>
+    private bool TracingDisabled()
+    {
+        if (_isTracingDisabled.HasValue)
+            return _isTracingDisabled.Value;
+        
+        if (_powertoolsConfigurations.TracingDisabled)
+        {
+            _isTracingDisabled = true;
+            Console.WriteLine("Tracing has been disabled via env var POWERTOOLS_TRACE_DISABLED");
+        }
+        else if (!_powertoolsConfigurations.IsLambdaEnvironment)
+        {
+            _isTracingDisabled = true;
+            Console.WriteLine("Running outside Lambda environment; disabling Tracing");
+        }
+        else
+        {
+            _isTracingDisabled = false;
+        }
+        return _isTracingDisabled.Value;
+    }
+    
+    /// <summary>
+    ///     Resets static variables for test.
     /// </summary>
     internal static void ResetForTest()
     {
