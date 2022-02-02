@@ -164,4 +164,17 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <value>The X-Ray trace identifier.</value>
     public string XRayTraceId =>
         GetEnvironmentVariable(Constants.XrayTraceIdEnv);
+
+    /// <summary>
+    ///     Gets a value indicating whether this instance is Lambda.
+    /// </summary>
+    /// <value><c>true</c> if this instance is Lambda; otherwise, <c>false</c>.</value>
+    public bool IsLambdaEnvironment => GetEnvironmentVariable(Constants.LambdaTaskRoot) is not null;
+    
+    /// <summary>
+    ///     Gets a value indicating whether [tracing is disabled].
+    /// </summary>
+    /// <value><c>true</c> if [tracing is disabled]; otherwise, <c>false</c>.</value>
+    public bool TracingDisabled =>
+        GetEnvironmentVariableOrDefault(Constants.TracingDisabledEnv, false);
 }

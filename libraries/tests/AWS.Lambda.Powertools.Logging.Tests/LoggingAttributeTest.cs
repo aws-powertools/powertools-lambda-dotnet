@@ -48,10 +48,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 Args = new object [] { }
             };
             
+            LoggingAspectHandler.ResetForTest();
             var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
-            
-            handler.ResetForTest();
 
             // Act
             handler.OnEntry(eventArgs);
@@ -95,10 +94,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 Args = new object [] { }
             };
             
+            LoggingAspectHandler.ResetForTest();
             var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
-            
-            handler.ResetForTest();
 
             // Act
             handler.OnEntry(eventArgs);
@@ -142,10 +140,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 Args = new object [] { }
             };
             
+            LoggingAspectHandler.ResetForTest();
             var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
-            
-            handler.ResetForTest();
 
             // Act
             handler.OnEntry(eventArgs);
@@ -177,10 +174,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 Args = new object [] { }
             };
             
+            LoggingAspectHandler.ResetForTest();
             var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
-            
-            handler.ResetForTest();
 
             // Act
             handler.OnEntry(eventArgs);
@@ -212,10 +208,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 Args = new object [] { }
             };
 
+            LoggingAspectHandler.ResetForTest();
             var handler = new LoggingAspectHandler(service, logLevel, null, true, null, true, configurations.Object,
                 systemWrapper.Object);
-            
-            handler.ResetForTest();
 
             // Act
             handler.OnEntry(eventArgs);
@@ -252,11 +247,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 Args = new[] { eventArg }
             };
 
+            LoggingAspectHandler.ResetForTest();
             var handler = new LoggingAspectHandler(service, logLevel, null, false, correlationIdPath,
                 true, configurations.Object,
                 systemWrapper.Object);
-
-            handler.ResetForTest();
 
             // Act
             handler.OnEntry(eventArgs);
