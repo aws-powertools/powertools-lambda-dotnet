@@ -36,11 +36,11 @@ public class RootNode
     /// </summary>
     /// <value>The metric data.</value>
     [JsonExtensionData]
-    public Dictionary<string, dynamic> MetricData
+    public Dictionary<string, object> MetricData
     {
         get
         {
-            var targetMembers = new Dictionary<string, dynamic>();
+            var targetMembers = new Dictionary<string, object>();
 
             foreach (var dimension in AWS.ExpandAllDimensionSets()) targetMembers.Add(dimension.Key, dimension.Value);
 
