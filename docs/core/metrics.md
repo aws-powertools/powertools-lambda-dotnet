@@ -120,6 +120,9 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
 !!! note "Metrics overflow"
     CloudWatch EMF supports a max of 100 metrics per batch. Metrics utility will flush all metrics when adding the 100th metric. Subsequent metrics, e.g. 101th, will be aggregated into a new EMF object, for your convenience.
 
+!!! warning "Metric value must be a positive number"
+    Metric values must be a positive number otherwise an `ArgumentException` will be thrown.
+
 !!! warning "Do not create metrics or dimensions outside the handler"
     Metrics or dimensions added in the global scope will only be added during cold start. Disregard if that's the intended behaviour.
 
