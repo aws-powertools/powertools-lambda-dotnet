@@ -81,6 +81,11 @@ public class Metrics : IMetrics
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(
                 "'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+        
+        if (value < 0) {
+            throw new ArgumentException(
+                "'AddMetric' method requires a valid metrics value. Value must be >= 0.");
+        }
 
         if (_context.GetMetrics().Count == 100) _instance.Flush(true);
 
