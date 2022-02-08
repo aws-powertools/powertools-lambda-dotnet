@@ -59,7 +59,7 @@ public class MetricDefinition
     ///     Gets or sets the name.
     /// </summary>
     /// <value>The name.</value>
-    [JsonPropertyName("Name")]
+    [JsonPropertyName(nameof(Name))]
     public string Name { get; set; }
 
     /// <summary>
@@ -73,7 +73,7 @@ public class MetricDefinition
     ///     Gets or sets the unit.
     /// </summary>
     /// <value>The unit.</value>
-    [JsonPropertyName("Unit")]
+    [JsonPropertyName(nameof(Unit))]
     public MetricUnit Unit { get; set; }
 
     /// <summary>
