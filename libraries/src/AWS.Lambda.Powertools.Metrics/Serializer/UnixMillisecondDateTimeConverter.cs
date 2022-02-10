@@ -27,11 +27,6 @@ namespace AWS.Lambda.Powertools.Metrics;
 public class UnixMillisecondDateTimeConverter : JsonConverter<DateTime>
 {
     /// <summary>
-    ///     The unix epoch
-    /// </summary>
-    private readonly DateTime _unixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-    /// <summary>
     ///     Writes a specified value as JSON.
     /// </summary>
     /// <param name="writer">The writer to write to.</param>
@@ -40,7 +35,7 @@ public class UnixMillisecondDateTimeConverter : JsonConverter<DateTime>
     /// <exception cref="System.Text.Json.JsonException">Invalid date</exception>
     public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
     {
-        var ms = (long) (value.ToUniversalTime() - _unixEpoch).TotalMilliseconds;
+        var ms = (long) (value.ToUniversalTime() - DateTime.UnixEpoch).TotalMilliseconds;
 
         if (ms < 0) throw new JsonException("Invalid date");
 
