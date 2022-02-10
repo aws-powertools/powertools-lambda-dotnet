@@ -28,15 +28,12 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-      - name: Configure api docs generator
+      - name: Configure and build api docs generator
         run: |
           curl -LJO https://github.com/dotnet/docfx/releases/download/v2.56.7/docfx.zip 
-          unzip docfx.zip -d /home/runner/work/aws-lambda-powertools-dotnet/aws-lambda-powertools-dotnet/docfx && rm docfx.zip
-          echo "/home/runner/work/aws-lambda-powertools-dotnet/aws-lambda-powertools-dotnet/docfx" >> $GITHUB_PATH
-      - name: Build api docs 
-        run: |
-          cd apidocs
-          docfx docfx.json
+          unzip docfx.zip -d docfx && rm docfx.zip    
+          cd docfx/    
+          docfx apidocs/docfx.json
       - name: Release API docs to latest
         uses: peaceiris/actions-gh-pages@v3
         with:
