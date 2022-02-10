@@ -21,6 +21,10 @@ jobs:
         run: |
           echo "SOURCE_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           echo "SOURCE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Setup Docker
+        uses: |
+          brew cask install docker
+          docker --version
       - name: Build docs website
         run: make build-docs-website
       - name: Deploy all docs
