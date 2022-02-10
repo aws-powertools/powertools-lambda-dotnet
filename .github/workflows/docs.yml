@@ -30,10 +30,12 @@ jobs:
           publish_dir: ./dist
       - name: Install HomeBrew
         run: |
-          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          test -r ~/.bash_profile && echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >>~/.bash_profile
-          echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >>~/.profile
+          sudo apt update
+          sudo apt-get install build-essential
+          sudo apt install git -y
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew doctor
       - name: Configure and build api docs generator
         run: |
           brew install docfx    
