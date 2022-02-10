@@ -36,7 +36,7 @@ jobs:
           fetch-depth: 0
       - name: Configure and build api docs generator
         run: |
-          brew install -f docfx    
+          brew install -f docfx --overwrite   
           docfx apidocs/docfx.json
       - name: Release API docs to latest
         uses: peaceiris/actions-gh-pages@v3
