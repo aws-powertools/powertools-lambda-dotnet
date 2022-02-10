@@ -31,8 +31,8 @@ jobs:
       - name: Configure api docs generator
         run: |
           curl -LJO https://github.com/dotnet/docfx/releases/download/v2.56.7/docfx.zip 
-          unzip docfx.zip -d /docfx && rm docfx.zip
-          export PATH="/docfx:$PATH"
+          unzip docfx.zip -d /home/runner/work/aws-lambda-powertools-dotnet/aws-lambda-powertools-dotnet/docfx && rm docfx.zip
+          export PATH="/home/runner/work/aws-lambda-powertools-dotnet/aws-lambda-powertools-dotnet/docfx:$PATH"
       - name: Build api docs 
         run: |
           cd apidocs
