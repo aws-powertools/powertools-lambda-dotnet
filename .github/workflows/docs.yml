@@ -3,7 +3,7 @@ name: Docs
 on:
   push:
     branches:
-      - develop
+      - api-docs
 
 jobs:
   docs:
@@ -28,6 +28,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Install HomeBrew
         run: |
           sudo apt update
