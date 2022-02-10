@@ -51,7 +51,7 @@ public interface IMetrics : IDisposable
     /// </summary>
     /// <param name="key">Metadata key</param>
     /// <param name="value">Metadata value</param>
-    void AddMetadata(string key, dynamic value);
+    void AddMetadata(string key, object value);
 
     /// <summary>
     ///     Pushes a single metric with custom namespace, service and dimensions.

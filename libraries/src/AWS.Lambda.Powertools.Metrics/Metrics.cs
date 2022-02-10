@@ -81,6 +81,11 @@ public class Metrics : IMetrics
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(
                 "'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+        
+        if (value < 0) {
+            throw new ArgumentException(
+                "'AddMetric' method requires a valid metrics value. Value must be >= 0.");
+        }
 
         if (_context.GetMetrics().Count == 100) _instance.Flush(true);
 
@@ -141,7 +146,7 @@ public class Metrics : IMetrics
     ///     'AddMetadata' method requires a valid metadata key. 'Null' or empty
     ///     values are not allowed.
     /// </exception>
-    void IMetrics.AddMetadata(string key, dynamic value)
+    void IMetrics.AddMetadata(string key, object value)
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(
@@ -285,7 +290,7 @@ public class Metrics : IMetrics
     /// </summary>
     /// <param name="key">Metadata key. Must not be null, empty or whitespace</param>
     /// <param name="value">Metadata value</param>
-    public static void AddMetadata(string key, dynamic value)
+    public static void AddMetadata(string key, object value)
     {
         _instance.AddMetadata(key, value);
     }
