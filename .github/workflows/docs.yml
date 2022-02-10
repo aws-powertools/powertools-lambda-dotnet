@@ -7,7 +7,7 @@ on:
 
 jobs:
   docs:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -30,14 +30,6 @@ jobs:
           publish_dir: ./dist
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-      - name: Install HomeBrew
-        run: |
-          sudo apt update
-          sudo apt-get install build-essential
-          sudo apt install git -y
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew doctor
       - name: Configure and build api docs generator
         run: |
           brew install docfx    
