@@ -4,8 +4,10 @@
       "src": [
         {
           "files": [
-            "../libraries/src/**.csproj"
-          ]
+            "**/*.csproj"
+          ],
+          "src": "../libraries/src/",
+          "force": true
         }
       ],
       "dest": "api",
@@ -53,7 +55,7 @@
       "_appFaviconPath": "images/favicon.ico",
       "_appLogoPath": "images/AWS_logo.png",
       "_enableNewTab": true,
-      "_disableContribution": false
+      "_disableContribution": true
     },
     "fileMetadataFiles": [],
     "template": [
