@@ -375,6 +375,44 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             handler.ResetForTest();
         }
 
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void WhenMetricIsNegativeValue_ThrowException()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var configurations = new Mock<IPowertoolsConfigurations>();
+
+            var logger = new Powertools.Metrics.Metrics(
+                configurations.Object,
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
+            );
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act
+            Action act = () =>
+            {
+                int metricValue = -1;
+                handler.OnEntry(eventArgs);
+                Powertools.Metrics.Metrics.AddMetric("TestMetric", metricValue, MetricUnit.Count);
+                handler.OnExit(eventArgs);
+            };
+
+            // Assert
+            var exception = Assert.Throws<ArgumentException>(act);
+            Assert.Equal("'AddMetric' method requires a valid metrics value. Value must be >= 0.", exception.Message);
+
+            // RESET
+            handler.ResetForTest();
+        }
+
         [Trait("Category", "SchemaValidation")]
         [Fact]
         public void WhenDefaultDimensionSet_IgnoreDuplicates()

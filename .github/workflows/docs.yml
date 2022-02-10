@@ -36,7 +36,7 @@ jobs:
           echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >>~/.profile
       - name: Configure and build api docs generator
         run: |
-          brew install docfx    
+          brew install docfx  
           docfx apidocs/docfx.json
       - name: Release API docs to latest
         uses: peaceiris/actions-gh-pages@v3
