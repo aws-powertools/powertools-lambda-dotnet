@@ -36,6 +36,7 @@ jobs:
           fetch-depth: 0
       - name: Configure and build api docs generator
         run: |
+          brew link --overwrite mono
           brew install docfx    
           docfx apidocs/docfx.json
       - name: Release API docs to latest
