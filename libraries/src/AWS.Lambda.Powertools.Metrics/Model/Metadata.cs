@@ -31,7 +31,7 @@ public class Metadata
     {
         CloudWatchMetrics = new List<MetricDirective> {new()};
         Timestamp = DateTime.Now;
-        CustomMetadata = new Dictionary<string, dynamic>();
+        CustomMetadata = new Dictionary<string, object>();
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public class Metadata
     ///     Gets the cloud watch metrics.
     /// </summary>
     /// <value>The cloud watch metrics.</value>
-    [JsonPropertyName("CloudWatchMetrics")]
+    [JsonPropertyName(nameof(CloudWatchMetrics))]
     public List<MetricDirective> CloudWatchMetrics { get; }
 
     /// <summary>
@@ -59,7 +59,7 @@ public class Metadata
     /// </summary>
     /// <value>The custom metadata.</value>
     [JsonIgnore]
-    public Dictionary<string, dynamic> CustomMetadata { get; }
+    public Dictionary<string, object> CustomMetadata { get; }
 
     /// <summary>
     ///     Deletes all metrics from memory
@@ -156,7 +156,7 @@ public class Metadata
     /// </summary>
     /// <param name="key">Metadata key. Cannot be null, empty or whitespace</param>
     /// <param name="value">Metadata value</param>
-    internal void AddMetadata(string key, dynamic value)
+    internal void AddMetadata(string key, object value)
     {
         CustomMetadata.Add(key, value);
     }
