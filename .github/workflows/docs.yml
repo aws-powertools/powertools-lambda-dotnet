@@ -44,4 +44,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./apidocs/_site
           keep_files: true
-          destination_dir: latest/api
+          destination_dir: api
