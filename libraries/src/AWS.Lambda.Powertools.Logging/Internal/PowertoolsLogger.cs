@@ -116,15 +116,14 @@ internal sealed class PowertoolsLogger : ILogger
     }
 
     /// <summary>
-    ///     Logs the specified log level.
+    ///     Writes a log entry.
     /// </summary>
-    /// <typeparam name="TState">The type of the t state.</typeparam>
-    /// <param name="logLevel">The log level.</param>
-    /// <param name="eventId">The event identifier.</param>
-    /// <param name="state">The state.</param>
-    /// <param name="exception">The exception.</param>
-    /// <param name="formatter">The formatter.</param>
-    /// <exception cref="ArgumentNullException">nameof(formatter)</exception>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="eventId">Id of the event.</param>
+    /// <param name="state">The entry to be written. Can be also an object.</param>
+    /// <param name="exception">The exception related to this entry.</param>
+    /// <param name="formatter">Function to create a <see cref="T:System.String" /> message of the <paramref name="state" /> and <paramref name="exception" />.</param>
+    /// <typeparam name="TState">The type of the object to be written.</typeparam>
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
         Func<TState, Exception, string> formatter)
     {
@@ -218,13 +217,13 @@ internal sealed class PowertoolsLogger : ILogger
     }
 
     /// <summary>
-    ///     Customs the formatter.
+    ///     Formats message for a log entry.
     /// </summary>
-    /// <typeparam name="TState">The type of the t state.</typeparam>
-    /// <param name="state">The state.</param>
-    /// <param name="exception">The exception.</param>
-    /// <param name="message">The message.</param>
-    /// <returns>bool.</returns>
+    /// <typeparam name="TState">The type of the object to be formatted.</typeparam>
+    /// <param name="state">The entry to be formatted. Can be also an object.</param>
+    /// <param name="exception">The exception related to this entry.</param>
+    /// <param name="message">The formatted message</param>
+    /// <returns>bool</returns>
     private static bool CustomFormatter<TState>(TState state, Exception exception, out object message)
     {
         message = null;

@@ -69,7 +69,7 @@ public class MetricDirective
     ///     Gets the namespace.
     /// </summary>
     /// <value>The namespace.</value>
-    [JsonPropertyName("Namespace")]
+    [JsonPropertyName(nameof(Namespace))]
     public string Namespace { get; private set; }
 
     /// <summary>
@@ -83,7 +83,7 @@ public class MetricDirective
     ///     Gets the metrics.
     /// </summary>
     /// <value>The metrics.</value>
-    [JsonPropertyName("Metrics")]
+    [JsonPropertyName(nameof(Metrics))]
     public List<MetricDefinition> Metrics { get; private set; }
 
     /// <summary>

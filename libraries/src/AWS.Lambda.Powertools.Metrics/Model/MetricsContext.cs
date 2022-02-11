@@ -148,7 +148,7 @@ public class MetricsContext : IDisposable
     /// </summary>
     /// <param name="key">Metadata key</param>
     /// <param name="value">Metadata value</param>
-    public void AddMetadata(string key, dynamic value)
+    public void AddMetadata(string key, object value)
     {
         _rootNode.AWS.AddMetadata(key, value);
     }
