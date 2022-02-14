@@ -260,14 +260,12 @@ Logger is commonly initialized in the global scope. Due to [Lambda Execution Con
 
 === "Function.cs"
 
-    ```cs hl_lines="8 15"
+    ```cs hl_lines="6 13"
     /**
      * Handler for requests to Lambda function.
      */
     public class Function
     {
-        private static readonly ILogger logger = Logger.Create<Function>();
-        
         [Logging(ClearState = true)]
         public async Task<APIGatewayProxyResponse> FunctionHandler
             (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
@@ -278,7 +276,7 @@ Logger is commonly initialized in the global scope. Due to [Lambda Execution Con
                 Logger.AppendKey("SpecialKey", "value");
             }
 
-            logger.LogInformation("Collecting payment");
+            Logger.LogInformation("Collecting payment");
             ...
         }
     }

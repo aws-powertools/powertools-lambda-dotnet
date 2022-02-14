@@ -34,6 +34,11 @@ internal class TracingAspectHandler : IMethodAspectHandler
     ///     If true, capture annotations
     /// </summary>
     private static bool _captureAnnotations = true;
+    
+    /// <summary>
+    ///     If true, tracing is disabled
+    /// </summary>
+    private static bool? _isTracingDisabled;
 
     /// <summary>
     ///     The capture mode
@@ -98,6 +103,9 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnEntry(AspectEventArgs eventArgs)
     {
+        if(TracingDisabled())
+            return;
+
         var segmentName = !string.IsNullOrWhiteSpace(_segmentName) ? _segmentName : $"## {eventArgs.Name}";
         var nameSpace = GetNamespace();
 
@@ -130,7 +138,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
         if (CaptureResponse())
         {
             var nameSpace = GetNamespace();
-
+            
             _xRayRecorder.AddMetadata
             (
                 nameSpace,
@@ -176,11 +184,13 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnExit(AspectEventArgs eventArgs)
     {
+        if(TracingDisabled())
+            return;
+
         if (_isAnnotationsCaptured)
             _captureAnnotations = true;
 
-        if (!_powertoolsConfigurations.IsSamLocal)
-            _xRayRecorder.EndSubsegment();
+        _xRayRecorder.EndSubsegment();
     }
 
     /// <summary>
@@ -195,9 +205,12 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Captures the response.
     /// </summary>
-    /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+    /// <returns><c>true</c> if tracing should capture responses, <c>false</c> otherwise.</returns>
     private bool CaptureResponse()
     {
+        if(TracingDisabled())
+            return false;
+        
         switch (_captureMode)
         {
             case TracingCaptureMode.EnvironmentVariable:
@@ -215,9 +228,12 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Captures the error.
     /// </summary>
-    /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
+    /// <returns><c>true</c> if tracing should capture errors, <c>false</c> otherwise.</returns>
     private bool CaptureError()
     {
+        if(TracingDisabled())
+            return false;
+        
         switch (_captureMode)
         {
             case TracingCaptureMode.EnvironmentVariable:
@@ -230,5 +246,41 @@ internal class TracingAspectHandler : IMethodAspectHandler
             default:
                 return false;
         }
+    }
+    
+    /// <summary>
+    ///     Tracing disabled.
+    /// </summary>
+    /// <returns><c>true</c> if tracing is disabled, <c>false</c> otherwise.</returns>
+    private bool TracingDisabled()
+    {
+        if (_isTracingDisabled.HasValue)
+            return _isTracingDisabled.Value;
+        
+        if (_powertoolsConfigurations.TracingDisabled)
+        {
+            _isTracingDisabled = true;
+            Console.WriteLine("Tracing has been disabled via env var POWERTOOLS_TRACE_DISABLED");
+        }
+        else if (!_powertoolsConfigurations.IsLambdaEnvironment)
+        {
+            _isTracingDisabled = true;
+            Console.WriteLine("Running outside Lambda environment; disabling Tracing");
+        }
+        else
+        {
+            _isTracingDisabled = false;
+        }
+        return _isTracingDisabled.Value;
+    }
+    
+    /// <summary>
+    ///     Resets static variables for test.
+    /// </summary>
+    internal static void ResetForTest()
+    {
+        _isColdStart = true;
+        _captureAnnotations = true;
+        _isTracingDisabled = null;
     }
 }

@@ -10,6 +10,7 @@ nav:
   - References: references.md
   - Changelog: changelog.md
   - Roadmap: https://github.com/awslabs/aws-lambda-powertools-roadmap/projects/1" target="_blank
+  - API Reference: api/" target="_blank
   - Core utilities:
       - core/tracing.md
       - core/logging.md
