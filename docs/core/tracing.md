@@ -8,18 +8,21 @@ a provides functionality to reduce the overhead of performing common tracing tas
 
 ![Tracing showcase](../media/tracer_utility_showcase.png)
 
- **Key Features**
+## Key Features
 
- * Capture cold start as annotation, and responses as well as full exceptions as metadata
- * Helper methods to improve the developer experience of creating new X-Ray subsegments.
- * Better developer experience when developing with multiple threads.
- * Auto patch supported modules by AWS X-Ray
+* Helper methods to improve the developer experience for creating [custom AWS X-Ray subsegments](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-subsegments.html).
+* Capture cold start as annotation.
+* Capture function responses and full exceptions as metadata.
+* Better experience when developing with multiple threads.
+* Auto-patch supported modules by AWS X-Ray
 
-Initialization
+## Initialization
 
-Before your use this utility, your AWS Lambda function [must have permissions](https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html#services-xray-permissions) to send traces to AWS X-Ray.
+Before you use this utility, your AWS Lambda function [must have permissions](https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html#services-xray-permissions) to send traces to AWS X-Ray.
 
-> Example using AWS Serverless Application Model (SAM)
+To enable active tracing on an AWS Serverless Application Model (AWS SAM) AWS::Serverless::Function resource, use the `Tracing` property. You can use the Globals section of the AWS SAM template to set this for all  
+
+### Using AWS Serverless Application Model (AWS SAM)
 
 === "template.yaml"
 
@@ -29,7 +32,7 @@ Before your use this utility, your AWS Lambda function [must have permissions](h
             Type: AWS::Serverless::Function
             Properties:
             ...
-            Runtime: dotnetcore3.1
+            Runtime: dotnet6.0
     
             Tracing: Active
             Environment:
@@ -43,7 +46,7 @@ The Powertools service name is used as the X-Ray namespace. This can be set usin
 ### Lambda handler
 
 To enable Powertools tracing to your function add the `[Tracing]` attribute to your `FunctionHandler` method or on
-any method will capture the method as a separate subsegment automatically. You can optionally choose to customize 
+any method will capture the method as a separate subsegment automatically. You can optionally choose to customize
 segment name that appears in traces.
 
 === "Tracing attribute"
@@ -134,7 +137,7 @@ different supported `CaptureMode` to record response, exception or both.
 **Annotations** are key-values associated with traces and indexed by AWS X-Ray. You can use them to filter traces and to
 create [Trace Groups](https://aws.amazon.com/about-aws/whats-new/2018/11/aws-xray-adds-the-ability-to-group-traces/) to slice and dice your transactions.
 
-**Metadata** are key-values also associated with traces but not indexed by AWS X-Ray. You can use them to add additional 
+**Metadata** are key-values also associated with traces but not indexed by AWS X-Ray. You can use them to add additional
 context for an operation using any native object.
 
 === "Annotations"

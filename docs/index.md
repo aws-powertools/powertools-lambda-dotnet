@@ -30,7 +30,7 @@ The GitHub repository for this project can be found [here](https://github.com/aw
 
 ## Install
 
-Powertools is available on NuGet.
+The AWS Lambda Powertools for .NET utilities (.NET 6) are available as Nuget packages. You can install the packages from Nuget gallery or from Visual Studio editor. Search `AWS.Lambda.Powertools*` to see various utilities available.Powertools is available on NuGet.
 
 * [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
 
@@ -46,7 +46,7 @@ Powertools is available on NuGet.
 
 ### SAM CLI custom template
 
-We have provided you with a custom template for the Serverless Application Model (SAM) command-line interface (CLI). This generates a starter project that allows you to interactively choose the Powertools features that enables you to include in your project.
+We have provided you with a custom template for the Serverless Application Model (AWS SAM) command-line interface (CLI). This generates a starter project that allows you to interactively choose the Powertools features that enables you to include in your project.
 
 ```bash
 sam init --location https://github.com/aws-samples/cookiecutter-aws-sam-dotnet

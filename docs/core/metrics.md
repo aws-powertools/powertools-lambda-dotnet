@@ -38,22 +38,21 @@ Setting | Description | Environment variable | Constructor parameter
 
 !!! tip "Use your application or main service as the metric namespace to easily group all metrics"
 
-> Example using AWS Serverless Application Model (SAM)
+> Example using AWS Serverless Application Model (AWS SAM)
 
 === "template.yml"
 
-    ```yaml hl_lines="9 10"
-    Resources:
-	  HelloWorldFunction:
-	    Type: AWS::Serverless::Function 
-		  Properties:
-			...
-			Environment: 
-			  Variables:
-			    POWERTOOLS_SERVICE_NAME: Payment
-			    POWERTOOLS_METRICS_NAMESPACE: ServerlessAirline
-    ```
-
+```yaml hl_lines="9 10"
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+    ...
+    Environment: 
+      Variables:
+        POWERTOOLS_SERVICE_NAME: Payment
+        POWERTOOLS_METRICS_NAMESPACE: ServerlessAirline
+```
 
 === "Function.cs"
 

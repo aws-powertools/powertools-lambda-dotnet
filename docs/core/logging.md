@@ -5,7 +5,7 @@ description: Core utility
 
 Logging provides an opinionated logger with output structured as JSON.
 
-**Key features**
+## Key features
 
 * Capture key fields from Lambda context, cold start and structures logging output as JSON
 * Log Lambda event when instructed (disabled by default)
@@ -21,9 +21,9 @@ Setting | Description | Environment variable | Attribute parameter
 **Logging level** | Sets how verbose Logger should be (Information, by default) |  `LOG_LEVEL` | `LogLevel`
 **Service** | Sets **Service** key that will be present across all log statements | `POWERTOOLS_SERVICE_NAME` | `Service`
 
-> Example using AWS Serverless Application Model (SAM)
+### Example using AWS Serverless Application Model (AWS SAM)
 
-You can also override log level by setting **`POWERTOOLS_LOG_LEVEL`** env var. Here is an example using AWS Serverless Application Model (SAM)
+You can also override log level by setting **`POWERTOOLS_LOG_LEVEL`** env var. Here is an example using AWS Serverless Application Model (AWS SAM)
 
 === "template.yaml"
 
