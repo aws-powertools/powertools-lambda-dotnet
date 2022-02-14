@@ -4,6 +4,11 @@ Welcome to the *AWS Lambda Powertools for .NET* API reference. This documentatio
 
 If you have any feedback, create a new issue in the *AWS Lambda Powertools for .NET* repository on GitHub.
 
+> [!NOTE]
+> Are you looking for documentation on how to use AWS Lambda Powertools for .NET utilities and code samples?
+>  
+> 👉 [Here](https://awslabs.github.io/aws-lambda-powertools-dotnet/) is the perfect place to start.
+
 ### API reference
 
 [AWS.Lambda.Powertools.Common](api/AWS.Lambda.Powertools.Common.html)
