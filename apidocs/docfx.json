@@ -45,7 +45,8 @@
       "_appLogoPath": "images/img.svg",
       "_enableNewTab": true,
       "_disableContribution": true,
-      "_enableSearch": "true"
+      "_enableSearch": "true",
+      "_appFooter": "AWS Lambda Powertools for .NET"
     },
     "fileMetadataFiles": [],
     "template": ["default", "templates/material"],
