@@ -1,27 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
 
-    <IsPackable>false</IsPackable>
+        <IsPackable>false</IsPackable>
 
-    <LangVersion>default</LangVersion>
+        <LangVersion>default</LangVersion>
 
-    <AssemblyName>AWS.Lambda.Powertools.Metrics.Tests</AssemblyName>
+        <AssemblyName>AWS.Lambda.Powertools.Metrics.Tests</AssemblyName>
 
-    <RootNamespace>AWS.Lambda.Powertools.Metrics.Tests</RootNamespace>
-  </PropertyGroup>
+        <RootNamespace>AWS.Lambda.Powertools.Metrics.Tests</RootNamespace>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
-    <PackageReference Include="xunit" Version="2.4.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
-    <PackageReference Include="coverlet.collector" Version="1.2.0" />
-    <PackageReference Include="Moq" Version="4.16.1" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0"/>
+        <PackageReference Include="xunit" Version="2.4.0"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0"/>
+        <PackageReference Include="coverlet.collector" Version="1.2.0"/>
+        <PackageReference Include="Moq" Version="4.16.1"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Common.csproj" />
-    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj"/>
+    </ItemGroup>
 </Project>
