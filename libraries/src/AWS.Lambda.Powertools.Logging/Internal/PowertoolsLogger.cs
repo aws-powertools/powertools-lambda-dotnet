@@ -40,7 +40,7 @@ internal sealed class PowertoolsLogger : ILogger
     private readonly string _name;
 
     /// <summary>
-    ///     The power tools configurations
+    ///     The Powertools configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
@@ -58,7 +58,7 @@ internal sealed class PowertoolsLogger : ILogger
     ///     Initializes a new instance of the <see cref="PowertoolsLogger" /> class.
     /// </summary>
     /// <param name="name">The name.</param>
-    /// <param name="powertoolsConfigurations">The power tools configurations.</param>
+    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
     /// <param name="getCurrentConfig">The get current configuration.</param>
     public PowertoolsLogger(

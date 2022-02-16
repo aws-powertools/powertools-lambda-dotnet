@@ -60,7 +60,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     private readonly LogLevel? _logLevel;
 
     /// <summary>
-    ///     The power tools configurations
+    ///     The Powertools configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
@@ -98,7 +98,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <param name="logEvent">if set to <c>true</c> [log event].</param>
     /// <param name="correlationIdPath">The correlation identifier path.</param>
     /// <param name="clearState">if set to <c>true</c> [clear state].</param>
-    /// <param name="powertoolsConfigurations">The power tools configurations.</param>
+    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
     internal LoggingAspectHandler
     (
