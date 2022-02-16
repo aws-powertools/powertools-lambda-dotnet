@@ -162,7 +162,12 @@ internal sealed class PowertoolsLogger : ILogger
         if (exception != null)
             message.TryAdd(LoggingConstants.KeyException, exception.Message);
 
-        _systemWrapper.LogLine(JsonSerializer.Serialize(message));
+        JsonSerializerOptions options = new(JsonSerializerDefaults.Web)
+        {
+            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
+        };
+        
+        _systemWrapper.LogLine(JsonSerializer.Serialize(message, options));
     }
 
     /// <summary>
