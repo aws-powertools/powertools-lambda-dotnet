@@ -65,7 +65,7 @@ internal static class LoggingConstants
     /// <summary>
     ///     Constant for key x ray trace identifier
     /// </summary>
-    internal const string KeyXRayTraceId = "XRayTraceId";
+    internal const string KeyXRayTraceId = "XrayTraceId";
 
     /// <summary>
     ///     Constant for key correlation identifier
