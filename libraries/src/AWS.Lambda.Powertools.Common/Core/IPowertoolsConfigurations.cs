@@ -75,6 +75,12 @@ public interface IPowertoolsConfigurations
     bool LoggerLogEvent { get; }
 
     /// <summary>
+    ///     Gets the logger output casing.
+    /// </summary>
+    /// <value>The logger output casing. Defaults to snake case.</value>
+    string LoggerOutputCase { get; }
+
+    /// <summary>
     ///     Gets the X-Ray trace identifier.
     /// </summary>
     /// <value>The X-Ray trace identifier.</value>

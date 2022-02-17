@@ -52,4 +52,11 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     /// </summary>
     /// <value>The value.</value>
     LoggerConfiguration IOptions<LoggerConfiguration>.Value => this;
+
+    /// <summary>
+    ///     The logger output case.
+    ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
+    /// </summary>
+    /// <value>The logger output case.</value>
+    public string LogOutputCase { get; set; }
 }
