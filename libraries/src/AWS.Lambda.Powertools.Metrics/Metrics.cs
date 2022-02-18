@@ -37,7 +37,7 @@ public class Metrics : IMetrics
     private readonly MetricsContext _context;
 
     /// <summary>
-    ///     The power tools configurations
+    ///     The Powertools configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 

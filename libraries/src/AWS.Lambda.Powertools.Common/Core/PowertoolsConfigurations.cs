@@ -159,6 +159,13 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
         GetEnvironmentVariableOrDefault(Constants.LoggerLogEventNameEnv, false);
 
     /// <summary>
+    ///     Gets the logger output casing.
+    /// </summary>
+    /// <value>The logger output casing. Defaults to snake case.</value>
+    public string LoggerOutputCase =>
+        GetEnvironmentVariableOrDefault(Constants.LoggerOutputCaseEnv, "SnakeCase");
+
+    /// <summary>
     ///     Gets the X-Ray trace identifier.
     /// </summary>
     /// <value>The X-Ray trace identifier.</value>

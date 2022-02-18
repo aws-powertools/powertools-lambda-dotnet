@@ -38,7 +38,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 new LoggerConfiguration
                 {
                     Service = service,
-                    MinimumLevel = minimumLevel
+                    MinimumLevel = minimumLevel                
                 });
 
             switch (logLevel)
@@ -353,6 +353,172 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     )
                 ), Times.Once);
            
+        }
+
+        [Fact]
+        public void Log_SetsCaseToCamelCase_OutputsCamelCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns("CamelCase");
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);            
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {                     
+                     Service = null,
+                     MinimumLevel = null
+                 });
+            
+            var message = new {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            LoggerExtensions.LogInformation(logger, message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_SetsCaseToPascalCase_OutputsPascalCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns("PascalCase");
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            LoggerExtensions.LogInformation(logger, message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"Message\":{\"PropOne\":\"Value 1\",\"PropTwo\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_SetsCaseToSnakeCase_OutputsSnakeCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns("SnakeCase");
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            LoggerExtensions.LogInformation(logger, message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"prop_one\":\"Value 1\",\"prop_two\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_NoOutputCaseSet_OutputDefaultsToSnakeCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            LoggerExtensions.LogInformation(logger, message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"prop_one\":\"Value 1\",\"prop_two\":\"Value 2\"}")
+                    )
+                ), Times.Once);
         }
     }
 }

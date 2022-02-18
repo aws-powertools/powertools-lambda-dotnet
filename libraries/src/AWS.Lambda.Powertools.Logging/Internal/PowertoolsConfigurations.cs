@@ -27,7 +27,7 @@ internal static class PowertoolsConfigurationsExtension
     /// <summary>
     ///     Gets the log level.
     /// </summary>
-    /// <param name="powertoolsConfigurations">The power tools configurations.</param>
+    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="logLevel">The log level.</param>
     /// <returns>LogLevel.</returns>
     internal static LogLevel GetLogLevel(this IPowertoolsConfigurations powertoolsConfigurations,
