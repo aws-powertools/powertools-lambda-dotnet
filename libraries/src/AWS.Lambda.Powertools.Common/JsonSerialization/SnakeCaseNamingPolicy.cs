@@ -13,15 +13,26 @@
  * permissions and limitations under the License.
  */
 
-
 using System.Text.Json;
 
 namespace AWS.Lambda.Powertools.Common;
 
+/// <summary>
+/// Class SnakeCaseNamingPolicy
+/// Implements the <see cref="System.Text.Json.JsonNamingPolicy" />
+/// </summary>
 public class SnakeCaseNamingPolicy : JsonNamingPolicy
 {
+    /// <summary>
+    /// Instance of SnakeCaseNamingPolicy
+    /// </summary>
     public static SnakeCaseNamingPolicy Instance { get; } = new SnakeCaseNamingPolicy();
 
+    /// <summary>
+    /// Converts key name to snake case
+    /// </summary>
+    /// <param name="name">Name of key</param>
+    /// <returns></returns>
     public override string ConvertName(string name)
     {
         return name.ToSnakeCase();

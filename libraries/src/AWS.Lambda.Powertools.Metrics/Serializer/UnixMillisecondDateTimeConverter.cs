@@ -21,9 +21,9 @@ namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
 ///     Class UnixMillisecondDateTimeConverter.
-///     Implements the <see cref="System.Text.Json.Serialization.JsonConverter{System.DateTime}" />
+///     Implements the <see cref="System.Text.Json.Serialization.JsonConverter" />
 /// </summary>
-/// <seealso cref="System.Text.Json.Serialization.JsonConverter{System.DateTime}" />
+/// <seealso cref="System.Text.Json.Serialization.JsonConverter" />
 public class UnixMillisecondDateTimeConverter : JsonConverter<DateTime>
 {
     /// <summary>
@@ -43,7 +43,7 @@ public class UnixMillisecondDateTimeConverter : JsonConverter<DateTime>
     }
 
     /// <summary>
-    ///     Reads and converts the JSON to type <typeparamref name="T" />.
+    ///     Reads and converts the JSON to DateTime />.
     /// </summary>
     /// <param name="reader">The reader.</param>
     /// <param name="typeToConvert">The type to convert.</param>

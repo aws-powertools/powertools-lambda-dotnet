@@ -17,13 +17,26 @@ using System.Linq;
 
 namespace AWS.Lambda.Powertools.Common;
 
+/// <summary>
+/// Class StringUtils
+/// </summary>
 public static class StringUtils
 {
+    /// <summary>
+    /// Extension method to convert string to snake case
+    /// </summary>
+    /// <param name="str">string</param>
+    /// <returns>Snake case formatted string</returns>
     public static string ToSnakeCase(this string str)
     {
         return string.Concat(str.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
     }
 
+    /// <summary>
+    /// Extension method to convert string to pascal case
+    /// </summary>
+    /// <param name="str">string</param>
+    /// <returns>Pascal case formatted string</returns>
     public static string ToPascalCase(this string str)
     {
         return string.Concat(char.ToUpper(str[0]), str.Substring(1));
