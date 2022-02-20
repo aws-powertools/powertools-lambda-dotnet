@@ -22,13 +22,6 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <DocumentationFile>bin\Debug\net6.0\AWS.Lambda.Powertools.Common.xml</DocumentationFile>
-    </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <DocumentationFile>bin\Release\net6.0\AWS.Lambda.Powertools.Common.xml</DocumentationFile>
-    </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="AspectInjector" Version="2.7.2" />
