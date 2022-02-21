@@ -178,7 +178,7 @@ public class Metrics : IMetrics
     ///     automatically and sent to Cloudwatch.
     /// </summary>
     /// <param name="metricsOverflow">If enabled, non-default dimensions are cleared after flushing metrics</param>
-    /// <exception cref="global.SchemaValidationException">true</exception>
+    /// <exception cref="SchemaValidationException">true</exception>
     void IMetrics.Flush(bool metricsOverflow)
     {
         if (_context.GetMetrics().Count == 0

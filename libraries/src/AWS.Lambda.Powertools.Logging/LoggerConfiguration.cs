@@ -21,9 +21,9 @@ namespace AWS.Lambda.Powertools.Logging;
 /// <summary>
 ///     Class LoggerConfiguration.
 ///     Implements the
-///     <see cref="Microsoft.Extensions.Options.IOptions{AWS.Lambda.Powertools.Logging.LoggerConfiguration}" />
+///     <see cref="Microsoft.Extensions.Options.IOptions{LoggerConfiguration}" />
 /// </summary>
-/// <seealso cref="Microsoft.Extensions.Options.IOptions{AWS.Lambda.Powertools.Logging.LoggerConfiguration}" />
+/// <seealso cref="Microsoft.Extensions.Options.IOptions{LoggerConfiguration}" />
 public class LoggerConfiguration : IOptions<LoggerConfiguration>
 {
     /// <summary>

@@ -127,7 +127,7 @@ public static class Tracing
     ///     <see cref="T:AWS.Lambda.Powertools.Tracing.TracingAttribute" />
     /// </summary>
     /// <param name="name">The name of the subsegment.</param>
-    /// <param name="subsegment">The x-ray subsegment for the wrapped consumer.</param>
+    /// <param name="subsegment">The AWS X-Ray subsegment for the wrapped consumer.</param>
     /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
     public static void WithSubsegment(string name, Action<Subsegment> subsegment)
     {
@@ -142,7 +142,7 @@ public static class Tracing
     /// </summary>
     /// <param name="nameSpace">The name space.</param>
     /// <param name="name">The name of the subsegment.</param>
-    /// <param name="subsegment">The x-ray subsegment for the wrapped consumer.</param>
+    /// <param name="subsegment">The AWS X-Ray subsegment for the wrapped consumer.</param>
     /// <exception cref="System.ArgumentNullException">name</exception>
     public static void WithSubsegment(string nameSpace, string name, Action<Subsegment> subsegment)
     {
@@ -169,8 +169,8 @@ public static class Tracing
     ///     context is lost between threads.
     /// </summary>
     /// <param name="name">The name of the subsegment.</param>
-    /// <param name="entity">The current x-ray context.</param>
-    /// <param name="subsegment">The x-ray subsegment for the wrapped consumer.</param>
+    /// <param name="entity">The current AWS X-Ray context.</param>
+    /// <param name="subsegment">The AWS X-Ray subsegment for the wrapped consumer.</param>
     /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
     /// <exception cref="ArgumentNullException">Thrown when the entity is not provided.</exception>
     public static void WithSubsegment(string name, Entity entity, Action<Subsegment> subsegment)
@@ -186,8 +186,8 @@ public static class Tracing
     /// </summary>
     /// <param name="nameSpace">The namespace of the subsegment.</param>
     /// <param name="name">The name of the subsegment.</param>
-    /// <param name="entity">The current x-ray context.</param>
-    /// <param name="subsegment">The x-ray subsegment for the wrapped consumer.</param>
+    /// <param name="entity">The current AWS X-Ray context.</param>
+    /// <param name="subsegment">The AWS X-Ray subsegment for the wrapped consumer.</param>
     /// <exception cref="System.ArgumentNullException">name</exception>
     /// <exception cref="System.ArgumentNullException">entity</exception>
     public static void WithSubsegment(string nameSpace, string name, Entity entity, Action<Subsegment> subsegment)

@@ -60,7 +60,7 @@ public class RootNode
     ///     Serializes metrics object to a valid string in JSON format
     /// </summary>
     /// <returns>JSON EMF payload in string format</returns>
-    /// <exception cref="global.SchemaValidationException">namespace</exception>
+    /// <exception cref="SchemaValidationException">namespace</exception>
     public string Serialize()
     {
         if (string.IsNullOrWhiteSpace(AWS.GetNamespace())) throw new SchemaValidationException("namespace");

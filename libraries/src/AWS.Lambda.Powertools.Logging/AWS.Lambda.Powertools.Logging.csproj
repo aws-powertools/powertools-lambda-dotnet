@@ -19,6 +19,10 @@
         <AssemblyName>AWS.Lambda.Powertools.Logging</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Logging</RootNamespace>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
       
     <ItemGroup>
       <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />

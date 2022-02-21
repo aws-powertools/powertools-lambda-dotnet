@@ -18,6 +18,11 @@
       <RootNamespace>AWS.Lambda.Powertools.Common</RootNamespace>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+
     <ItemGroup>
       <PackageReference Include="AspectInjector" Version="2.7.2" />
     </ItemGroup>

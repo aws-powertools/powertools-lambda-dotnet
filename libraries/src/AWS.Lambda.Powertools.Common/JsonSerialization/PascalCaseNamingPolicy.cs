@@ -18,10 +18,23 @@ using System.Text.Json;
 
 namespace AWS.Lambda.Powertools.Common;
 
+/// <summary>
+/// Class PascalCaseNamingPolicy
+/// Implements the <see cref="System.Text.Json.JsonNamingPolicy" />
+/// </summary>
 public class PascalCaseNamingPolicy : JsonNamingPolicy
 {
+    /// <summary>
+    /// Instance of PascalCaseNamingPolicy
+    /// </summary>
     public static PascalCaseNamingPolicy Instance { get; } = new PascalCaseNamingPolicy();
 
+
+    /// <summary>
+    /// Converts key to pascal case
+    /// </summary>
+    /// <param name="name">Name of key</param>
+    /// <returns></returns>
     public override string ConvertName(string name)
     {
         return name.ToPascalCase();
