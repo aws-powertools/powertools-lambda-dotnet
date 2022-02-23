@@ -563,7 +563,46 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         }
         
         [Fact]
-        public void BeginScope_WhenScopeIsDictionary_ExtractScopeKeys()
+        public void BeginScope_WhenScopeIsObjectDictionary_ExtractScopeKeys()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var scopeKeys = new Dictionary<string, object>
+            {
+                { "PropOne", "Value 1" },
+                { "PropTwo", "Value 2" }
+            };
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 2);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropOne"));
+                Assert.True(loggerScope.ExtraKeys["PropOne"] == scopeKeys["PropOne"]);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropTwo"));
+                Assert.True(loggerScope.ExtraKeys["PropTwo"] == scopeKeys["PropTwo"]);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsStringDictionary_ExtractScopeKeys()
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -614,7 +653,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         [InlineData(LogLevel.Warning, false)]
         [InlineData(LogLevel.Error, false)]
         [InlineData(LogLevel.Critical, false)]
-        public void Log_WhenExtraKeysIsStringDictionary_AppendExtraKeys(LogLevel logLevel, bool logMethod)
+        public void Log_WhenExtraKeysIsObjectDictionary_AppendExtraKeys(LogLevel logLevel, bool logMethod)
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -695,7 +734,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         [InlineData(LogLevel.Warning, false)]
         [InlineData(LogLevel.Error, false)]
         [InlineData(LogLevel.Critical, false)]
-        public void Log_WhenExtraKeysIsObjectDictionary_AppendExtraKeys(LogLevel logLevel, bool logMethod)
+        public void Log_WhenExtraKeysIsStringDictionary_AppendExtraKeys(LogLevel logLevel, bool logMethod)
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
