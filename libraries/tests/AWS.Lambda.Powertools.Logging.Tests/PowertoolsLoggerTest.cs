@@ -614,7 +614,88 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         [InlineData(LogLevel.Warning, false)]
         [InlineData(LogLevel.Error, false)]
         [InlineData(LogLevel.Critical, false)]
-        public void Log_WhenExtraKeysIsProvided_AppendExtraKeys(LogLevel logLevel, bool logMethod)
+        public void Log_WhenExtraKeysIsStringDictionary_AppendExtraKeys(LogLevel logLevel, bool logMethod)
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var message = Guid.NewGuid().ToString();
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns("PascalCase");
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = LogLevel.Trace,
+                });
+
+            var scopeKeys = new Dictionary<string, object>
+            {
+                { "PropOne", "Value 1" },
+                { "PropTwo", "Value 2" }
+            };
+
+            if(logMethod)
+                logger.Log(logLevel, scopeKeys, message);
+            else switch (logLevel)
+            {
+                case LogLevel.Trace:
+                    logger.LogTrace(scopeKeys, message);
+                    break;
+                case LogLevel.Debug:
+                    logger.LogDebug(scopeKeys, message);
+                    break;
+                case LogLevel.Information:
+                    logger.LogInformation(scopeKeys, message);
+                    break;
+                case LogLevel.Warning:
+                    logger.LogWarning(scopeKeys, message);
+                    break;
+                case LogLevel.Error:
+                    logger.LogError(scopeKeys, message);
+                    break;
+                case LogLevel.Critical:
+                    logger.LogCritical(scopeKeys, message);
+                    break;
+                case LogLevel.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
+            }
+            
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s=> 
+                        s.Contains(scopeKeys.Keys.First()) && 
+                        s.Contains(scopeKeys.Keys.Last()) &&
+                        s.Contains(scopeKeys.Values.First().ToString()) && 
+                        s.Contains(scopeKeys.Values.Last().ToString())
+                    )
+                ), Times.Once);
+
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Theory]
+        [InlineData(LogLevel.Trace, true)]
+        [InlineData(LogLevel.Debug, true)]
+        [InlineData(LogLevel.Information, true)]
+        [InlineData(LogLevel.Warning, true)]
+        [InlineData(LogLevel.Error, true)]
+        [InlineData(LogLevel.Critical, true)]
+        [InlineData(LogLevel.Trace, false)]
+        [InlineData(LogLevel.Debug, false)]
+        [InlineData(LogLevel.Information, false)]
+        [InlineData(LogLevel.Warning, false)]
+        [InlineData(LogLevel.Error, false)]
+        [InlineData(LogLevel.Critical, false)]
+        public void Log_WhenExtraKeysIsObjectDictionary_AppendExtraKeys(LogLevel logLevel, bool logMethod)
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -676,6 +757,87 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                         s.Contains(scopeKeys.Keys.Last()) &&
                         s.Contains(scopeKeys.Values.First()) && 
                         s.Contains(scopeKeys.Values.Last())
+                    )
+                ), Times.Once);
+
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Theory]
+        [InlineData(LogLevel.Trace, true)]
+        [InlineData(LogLevel.Debug, true)]
+        [InlineData(LogLevel.Information, true)]
+        [InlineData(LogLevel.Warning, true)]
+        [InlineData(LogLevel.Error, true)]
+        [InlineData(LogLevel.Critical, true)]
+        [InlineData(LogLevel.Trace, false)]
+        [InlineData(LogLevel.Debug, false)]
+        [InlineData(LogLevel.Information, false)]
+        [InlineData(LogLevel.Warning, false)]
+        [InlineData(LogLevel.Error, false)]
+        [InlineData(LogLevel.Critical, false)]
+        public void Log_WhenExtraKeysAsObject_AppendExtraKeys(LogLevel logLevel, bool logMethod)
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var message = Guid.NewGuid().ToString();
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns("PascalCase");
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = LogLevel.Trace,
+                });
+
+            var scopeKeys = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            if(logMethod)
+                logger.Log(logLevel, scopeKeys, message);
+            else switch (logLevel)
+            {
+                case LogLevel.Trace:
+                    logger.LogTrace(scopeKeys, message);
+                    break;
+                case LogLevel.Debug:
+                    logger.LogDebug(scopeKeys, message);
+                    break;
+                case LogLevel.Information:
+                    logger.LogInformation(scopeKeys, message);
+                    break;
+                case LogLevel.Warning:
+                    logger.LogWarning(scopeKeys, message);
+                    break;
+                case LogLevel.Error:
+                    logger.LogError(scopeKeys, message);
+                    break;
+                case LogLevel.Critical:
+                    logger.LogCritical(scopeKeys, message);
+                    break;
+                case LogLevel.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
+            }
+            
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s=> 
+                        s.Contains("PropOne") && 
+                        s.Contains("PropTwo") &&
+                        s.Contains(scopeKeys.PropOne) && 
+                        s.Contains(scopeKeys.PropTwo)
                     )
                 ), Times.Once);
 

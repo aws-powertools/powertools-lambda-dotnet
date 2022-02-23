@@ -108,11 +108,20 @@ internal sealed class PowertoolsLogger : ILogger
         return CurrentScope;
     }
 
+    /// <summary>
+    ///     Ends the scope.
+    /// </summary>
     internal void EndScope()
     {
         CurrentScope = null;
     }
 
+    /// <summary>
+    ///     Extract provided scope keys
+    /// </summary>
+    /// <typeparam name="TState">The type of the t state.</typeparam>
+    /// <param name="state">The state.</param>
+    /// <returns>Key/Value pair of provided scope keys</returns>
     private static Dictionary<string, object> GetScopeKeys<TState>(TState state)
     {
         var keys = new Dictionary<string, object>();
