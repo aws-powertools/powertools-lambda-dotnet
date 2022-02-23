@@ -677,6 +677,88 @@ public class Logger
     }
 
     #endregion
+    
+    #region ExtraKeys Logger Extentions
+
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogTrace<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogTrace(extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogDebug<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogDebug(extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogInformation<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogInformation(extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogWarning<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogWarning(extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogError<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogError(extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogCritical<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogCritical(extraKeys, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void Log<T>(LogLevel logLevel, T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.Log(logLevel, message, args);
+    }
+    
+    #endregion
 
     #endregion
 }

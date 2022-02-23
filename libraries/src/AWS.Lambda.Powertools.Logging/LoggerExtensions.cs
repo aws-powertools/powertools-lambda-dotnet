@@ -100,4 +100,93 @@ public static class LoggerExtensions
     {
         logger.Log(logLevel, LoggingConstants.KeyJsonFormatter, message);
     }
+
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogTrace<T>(this ILogger logger, T extraKeys, string message, params object[] args) where T : class
+    {
+        Log(logger, LogLevel.Trace, extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogDebug<T>(this ILogger logger, T extraKeys, string message, params object[] args) where T : class
+    {
+        Log(logger, LogLevel.Debug, extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogInformation<T>(this ILogger logger, T extraKeys, string message, params object[] args) where T : class
+    {
+        Log(logger, LogLevel.Information, extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogWarning<T>(this ILogger logger, T extraKeys, string message, params object[] args) where T : class
+    {
+        Log(logger, LogLevel.Warning, extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogError<T>(this ILogger logger, T extraKeys, string message, params object[] args) where T : class
+    {
+        Log(logger, LogLevel.Error, extraKeys, message, args);
+    }
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void LogCritical<T>(this ILogger logger, T extraKeys, string message, params object[] args) where T : class
+    {
+        Log(logger, LogLevel.Critical, extraKeys, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message.</param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    public static void Log<T>(this ILogger logger, LogLevel logLevel, T extraKeys, string message, params object[] args) where T : class
+    {
+        if (extraKeys is not null)
+            using (logger.BeginScope(extraKeys))
+                logger.Log(logLevel, message, args);
+        else
+            logger.Log(logLevel, message, args);
+    }
 }

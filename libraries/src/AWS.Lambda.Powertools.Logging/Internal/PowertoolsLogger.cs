@@ -94,6 +94,8 @@ internal sealed class PowertoolsLogger : ILogger
             ? CurrentConfig.Service
             : _powertoolsConfigurations.Service;
 
+    internal PowertoolsLoggerScope CurrentScope { get; private set; }
+
     /// <summary>
     ///     Begins the scope.
     /// </summary>
@@ -102,7 +104,53 @@ internal sealed class PowertoolsLogger : ILogger
     /// <returns>System.IDisposable.</returns>
     public IDisposable BeginScope<TState>(TState state)
     {
-        return default!;
+        CurrentScope = new PowertoolsLoggerScope(this, GetScopeKeys(state));
+        return CurrentScope;
+    }
+
+    internal void EndScope()
+    {
+        CurrentScope = null;
+    }
+
+    private static Dictionary<string, object> GetScopeKeys<TState>(TState state)
+    {
+        var keys = new Dictionary<string, object>();
+        
+        if (state is null) 
+            return keys;
+        
+        switch (state)
+        {
+            case IEnumerable<KeyValuePair<string, string>> pairs:
+            {
+                foreach (var (key, value) in pairs)
+                {
+                    if (!string.IsNullOrWhiteSpace(key))
+                        keys.TryAdd(key, value);
+                }
+                break;
+            }
+            case IEnumerable<KeyValuePair<string, object>> pairs:
+            {
+                foreach (var (key, value) in pairs)
+                {
+                    if (!string.IsNullOrWhiteSpace(key))
+                        keys.TryAdd(key, value);
+                }
+                break;
+            }
+            default:
+            {
+                foreach (var property in state.GetType().GetProperties())
+                {
+                    keys.TryAdd(property.Name, property.GetValue(state));
+                }
+                break;
+            }
+        }
+        
+        return keys;
     }
 
     /// <summary>
@@ -147,6 +195,16 @@ internal sealed class PowertoolsLogger : ILogger
             message.TryAdd(LoggingConstants.KeyFunctionMemorySize, PowertoolsLambdaContext.Instance.MemoryLimitInMB);
             message.TryAdd(LoggingConstants.KeyFunctionArn, PowertoolsLambdaContext.Instance.InvokedFunctionArn);
             message.TryAdd(LoggingConstants.KeyFunctionRequestId, PowertoolsLambdaContext.Instance.AwsRequestId);
+        }
+
+        // Add Extra Fields
+        if (CurrentScope?.ExtraKeys is not null)
+        {
+            foreach (var (key, value) in CurrentScope.ExtraKeys)
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                    message.TryAdd(key, value);
+            }
         }
 
         message.TryAdd(LoggingConstants.KeyTimestamp, DateTime.UtcNow.ToString("o"));
