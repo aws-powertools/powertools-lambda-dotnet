@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
+        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.4.0" />
+        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.2.0" />
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="0.0.1" />
+        <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="0.0.1" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.2.20" />
+    </ItemGroup>
+</Project>
