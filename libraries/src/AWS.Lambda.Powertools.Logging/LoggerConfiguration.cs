@@ -58,5 +58,5 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
     /// </summary>
     /// <value>The logger output case.</value>
-    public string LogOutputCase { get; set; }
+    public LoggerOutputCase? LoggerOutputCase { get; set; }
 }

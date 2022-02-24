@@ -26,6 +26,11 @@ internal static class LoggingConstants
     ///     Constant for default log level
     /// </summary>
     internal const LogLevel DefaultLogLevel = LogLevel.Information;
+    
+    /// <summary>
+    ///     Constant for default log output case
+    /// </summary>
+    internal const LoggerOutputCase DefaultLoggerOutputCase = LoggerOutputCase.SnakeCase;
 
     /// <summary>
     ///     Constant for key json formatter

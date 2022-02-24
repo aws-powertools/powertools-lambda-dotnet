@@ -233,35 +233,28 @@ internal sealed class PowertoolsLogger : ILogger
         _systemWrapper.LogLine(JsonSerializer.Serialize(message, options));
     }
 
-    internal JsonSerializerOptions BuildCaseSerializerOptions(){
-        object LogCase;
-        Enum.TryParse(typeof(LoggerOutputCase), _currentConfig.LogOutputCase, true, out LogCase);
-
-        if(LogCase != null){
-            switch (LogCase)
-            {
-                case LoggerOutputCase.CamelCase:
-                    return new(JsonSerializerDefaults.Web){
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
-                    };
-                case LoggerOutputCase.PascalCase:
-                    return new() { 
-                        PropertyNamingPolicy = PascalCaseNamingPolicy.Instance, 
-                        DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance 
-                    };
-                default: // Snake case is the default
-                    return new() { 
-                        PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance, 
-                        DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance 
-                    };                
-            }
-        }
-        else {
-            return new() { 
-                PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance, 
-                DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance 
-            };
+    private JsonSerializerOptions BuildCaseSerializerOptions()
+    {
+        switch (CurrentConfig.LoggerOutputCase)
+        {
+            case LoggerOutputCase.CamelCase:
+                return new(JsonSerializerDefaults.Web)
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
+                };
+            case LoggerOutputCase.PascalCase:
+                return new()
+                {
+                    PropertyNamingPolicy = PascalCaseNamingPolicy.Instance,
+                    DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance
+                };
+            default: // Snake case is the default
+                return new()
+                {
+                    PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance,
+                    DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance
+                };
         }
     }
 
@@ -282,14 +275,14 @@ internal sealed class PowertoolsLogger : ILogger
         var currConfig = _getCurrentConfig();
         var minimumLevel = _powertoolsConfigurations.GetLogLevel(currConfig?.MinimumLevel);
         var samplingRate = currConfig?.SamplingRate ?? _powertoolsConfigurations.LoggerSampleRate;
-        var logOutputCase = _powertoolsConfigurations.LoggerOutputCase;
+        var loggerOutputCase =  _powertoolsConfigurations.GetLoggerOutputCase(currConfig?.LoggerOutputCase);
 
         var config = new LoggerConfiguration
         {
             Service = currConfig?.Service,
             MinimumLevel = minimumLevel,
             SamplingRate = samplingRate,
-            LogOutputCase = logOutputCase
+            LoggerOutputCase = loggerOutputCase
         };
 
         if (!samplingRate.HasValue)

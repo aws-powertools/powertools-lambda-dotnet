@@ -58,6 +58,11 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     The log level
     /// </summary>
     private readonly LogLevel? _logLevel;
+    
+    /// <summary>
+    ///     The logger output case
+    /// </summary>
+    private readonly LoggerOutputCase? _loggerOutputCase;
 
     /// <summary>
     ///     The Powertools configurations
@@ -94,6 +99,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// </summary>
     /// <param name="service">Service name</param>
     /// <param name="logLevel">The log level.</param>
+    /// <param name="loggerOutputCase">The logger output case.</param>
     /// <param name="samplingRate">The sampling rate.</param>
     /// <param name="logEvent">if set to <c>true</c> [log event].</param>
     /// <param name="correlationIdPath">The correlation identifier path.</param>
@@ -104,6 +110,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     (
         string service,
         LogLevel? logLevel,
+        LoggerOutputCase? loggerOutputCase,
         double? samplingRate,
         bool? logEvent,
         string correlationIdPath,
@@ -114,6 +121,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     {
         _service = service;
         _logLevel = logLevel;
+        _loggerOutputCase = loggerOutputCase;
         _samplingRate = samplingRate;
         _logEvent = logEvent;
         _clearState = clearState;
@@ -135,7 +143,8 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         {
             Service = _service,
             MinimumLevel = _logLevel,
-            SamplingRate = _samplingRate
+            SamplingRate = _samplingRate,
+            LoggerOutputCase = _loggerOutputCase
         };
 
         switch (Logger.LoggerProvider)

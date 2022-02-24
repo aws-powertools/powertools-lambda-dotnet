@@ -369,7 +369,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
-            configurations.Setup(c => c.LoggerOutputCase).Returns("CamelCase");
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.CamelCase.ToString);
 
             var systemWrapper = new Mock<ISystemWrapper>();
             systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);            
@@ -410,7 +410,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
-            configurations.Setup(c => c.LoggerOutputCase).Returns("PascalCase");
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.PascalCase.ToString);
 
             var systemWrapper = new Mock<ISystemWrapper>();
             systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
@@ -452,7 +452,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
-            configurations.Setup(c => c.LoggerOutputCase).Returns("SnakeCase");
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.SnakeCase.ToString);
 
             var systemWrapper = new Mock<ISystemWrapper>();
             systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
@@ -663,7 +663,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
-            configurations.Setup(c => c.LoggerOutputCase).Returns("PascalCase");
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.PascalCase.ToString);
             var systemWrapper = new Mock<ISystemWrapper>();
 
             var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
@@ -744,7 +744,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
-            configurations.Setup(c => c.LoggerOutputCase).Returns("PascalCase");
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.PascalCase.ToString);
             var systemWrapper = new Mock<ISystemWrapper>();
 
             var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
@@ -825,7 +825,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var configurations = new Mock<IPowertoolsConfigurations>();
             configurations.Setup(c => c.Service).Returns(service);
             configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
-            configurations.Setup(c => c.LoggerOutputCase).Returns("PascalCase");
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.PascalCase.ToString);
             var systemWrapper = new Mock<ISystemWrapper>();
 
             var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
