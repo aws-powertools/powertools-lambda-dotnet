@@ -48,7 +48,7 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     public double? SamplingRate { get; set; }
 
     /// <summary>
-    ///     The default configured <typeparamref name="TOptions" /> instance
+    ///     The default configured options instance
     /// </summary>
     /// <value>The value.</value>
     LoggerConfiguration IOptions<LoggerConfiguration>.Value => this;
