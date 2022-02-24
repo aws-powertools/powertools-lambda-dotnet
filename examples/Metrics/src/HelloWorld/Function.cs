@@ -23,6 +23,9 @@ public class Function
     private static HttpClient? _httpClient;
     private static IDynamoDBContext? _dynamoDbContext;
 
+    /// <summary>
+    /// Function constructor
+    /// </summary>
     public Function()
     {
         _httpClient = new HttpClient();
@@ -39,6 +42,12 @@ public class Function
         _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
     }
 
+    /// <summary>
+    /// Lambda Handler
+    /// </summary>
+    /// <param name="apigwProxyEvent">API Gateway Proxy event</param>
+    /// <param name="context">AWS Lambda context</param>
+    /// <returns>API Gateway Proxy response</returns>
     [Logging(LogEvent = true)]
     [Metrics(CaptureColdStart = true)]
     public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
@@ -103,39 +112,39 @@ public class Function
         }
     }
 
+    /// <summary>
+    /// Calls location api to return IP address
+    /// </summary>
+    /// <returns>IP address string</returns>
     private static async Task<string?> GetCallingIp()
     {
-        if (_httpClient != null)
+        if (_httpClient == null) return "0.0.0.0";
+        _httpClient.DefaultRequestHeaders.Accept.Clear();
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+
+        try
         {
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+            Logger.LogInformation("Calling Check IP API ");
 
-            try
-            {
-                Logger.LogInformation("Calling Check IP API ");
+            var response = await _httpClient.GetStringAsync("https://checkip.amazonaws.com/").ConfigureAwait(false);
+            var ip = response.Replace("\n", "");
 
-                var response = await _httpClient.GetStringAsync("https://checkip.amazonaws.com/").ConfigureAwait(false);
-                var ip = response.Replace("\n", "");
+            Logger.LogInformation("API response returned {}", ip);
 
-                Logger.LogInformation("API response returned {}", ip);
-
-                return ip;
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex);
-                throw;
-            }
+            return ip;
         }
-
-        return "0.0.0.0";
+        catch (Exception ex)
+        {
+            Logger.LogError(ex);
+            throw;
+        }
     }
 
     /// <summary>
-    /// Saves the loopup record in DynamoDB
+    /// Saves the LookupRecord record in DynamoDB
     /// </summary>
-    /// <param name="lookupRecord"></param>
-    /// <returns></returns>
+    /// <param name="lookupRecord">Instance of LookupRecord</param>
+    /// <returns>LookupRecord</returns>
     private static Task<LookupRecord> SaveRecordInDynamo(LookupRecord lookupRecord)
     {
         try
@@ -153,7 +162,7 @@ public class Function
 }
 
 /// <summary>
-/// Record to represent the data structure of Lookup
+/// LookupRecord class represents the data structure of location lookup
 /// </summary>
 [Serializable]
 public class LookupRecord
@@ -163,7 +172,7 @@ public class LookupRecord
     }
 
     /// <summary>
-    /// Record to represent the data structure of Lookup
+    /// Create new LookupRecord
     /// </summary>
     /// <param name="lookupId">Id of the lookup</param>
     /// <param name="greeting">Greeting phrase</param>

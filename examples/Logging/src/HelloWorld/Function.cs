@@ -85,10 +85,9 @@ public class Function
 
     private static async Task<string?> GetCallingIp()
     {
-        if (_httpClient != null)
-        {
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+        if (_httpClient == null) return "0.0.0.0";
+        _httpClient.DefaultRequestHeaders.Accept.Clear();
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
 
             try
             {
@@ -105,10 +104,7 @@ public class Function
             {
                 Logger.LogError(ex);
                 throw;
-            }
-        }
-
-        return "0.0.0.0";
+            }   
     }
 
     /// <summary>
