@@ -1,55 +1,47 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Example project for AWS Lambda Powertools tracing utility
+  Example project for AWS Lambda Powertools Metrics utility
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 10
-    Tracing: Active
     Environment:
       Variables:
-        POWERTOOLS_SERVICE_NAME: powertools-dotnet-tracing-sample
+        POWERTOOLS_SERVICE_NAME: powertools-dotnet-metrics-sample # This can also be set using the Metrics decorator on your handler [Metrics(Namespace = "aws-lambda-powertools"]
         POWERTOOLS_LOG_LEVEL: Debug
-        POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase (Default)
-        POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
-        POWERTOOLS_TRACER_CAPTURE_ERROR: true     # To disable tracing (CaptureMode = TracingCaptureMode.Disabled)
+        POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase (default)
+        POWERTOOLS_METRICS_NAMESPACE: AWSLambdaPowertools # This can also be set using the Metrics decorator on your handler [Metrics(Namespace = "aws-lambda-powertools"]
 
 Resources:
-
-  HelloWorldApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: Prod
-      EndpointConfiguration: REGIONAL
-      TracingEnabled: true
-
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: ./src/HelloWorld/
-      Handler: HelloWorld::HelloWorld.Function::FunctionHandler
       MemorySize: 256
-      Runtime: dotnet6
+      PackageType: Image
       Role: !Sub ${HelloWorldFunctionRole.Arn}
       Environment:
         Variables:
-          TABLE_NAME: !Ref PowertoolsTracingTable
+          TABLE_NAME: !Ref PowertoolsMetricsTable
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref HelloWorldApi
             Path: /hello
             Method: get
+    Metadata:
+      DockerTag: dotnet6.0-v1
+      DockerContext: ./src/HelloWorld
+      Dockerfile: Dockerfile
+      DockerBuildArgs:
+        SAM_BUILD_MODE: Release # Debug or Release
 
 
-
-  PowertoolsTracingTable:
+  PowertoolsMetricsTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: PowertoolsTracing
+      TableName: PowertoolsMetrics
       PrimaryKey:
         Name: LookupId
         Type: String
@@ -90,7 +82,7 @@ Resources:
                     - 'dynamodb:BatchWriteItem'
                     - 'dynamodb:BatchGetItem'
                   Resource:
-                    - !Sub ${PowertoolsTracingTable.Arn}
+                    - !Sub ${PowertoolsMetricsTable.Arn}
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -98,7 +90,7 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HelloWorldApi:
     Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${HelloWorldApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
   HelloWorldFunction:
     Description: "Hello World Lambda Function ARN"
     Value: !GetAtt HelloWorldFunction.Arn

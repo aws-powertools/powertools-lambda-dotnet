@@ -9,6 +9,7 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Tracing;
 
@@ -27,6 +28,7 @@ public class Function
     /// </summary>
     public Function()
     {
+        AWSSDKHandler.RegisterXRayForAllServices();
         _httpClient = new HttpClient();
 
         var tableName = Environment.GetEnvironmentVariable("TABLE_NAME");
@@ -64,7 +66,11 @@ public class Function
 
         // Trace Fluent API
         Tracing.WithSubsegment("LoggingResponse",
-            subsegment => { subsegment.AddAnnotation("AccountId", apigwProxyEvent.RequestContext.AccountId); });
+            subsegment =>
+            {
+                subsegment.AddAnnotation("AccountId", apigwProxyEvent.RequestContext.AccountId);
+                subsegment.AddMetadata("LookupRecord", lookupRecord);
+            });
 
         try
         {

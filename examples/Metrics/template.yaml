@@ -18,8 +18,9 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::FunctionHandler
       MemorySize: 256
-      PackageType: Image
       Role: !Sub ${HelloWorldFunctionRole.Arn}
       Environment:
         Variables:
@@ -30,13 +31,6 @@ Resources:
           Properties:
             Path: /hello
             Method: get
-    Metadata:
-      DockerTag: dotnet6.0-v1
-      DockerContext: ./src/HelloWorld
-      Dockerfile: Dockerfile
-      DockerBuildArgs:
-        SAM_BUILD_MODE: Release # Debug or Release
-
 
   PowertoolsMetricsTable:
     Type: AWS::Serverless::SimpleTable

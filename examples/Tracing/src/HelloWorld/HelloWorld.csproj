@@ -11,5 +11,6 @@
         <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="0.0.1" />
         <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="0.0.1" />
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.2.20" />
+        <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.3" />
     </ItemGroup>
 </Project>
