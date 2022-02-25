@@ -28,17 +28,17 @@ You can also override log level by setting **`POWERTOOLS_LOG_LEVEL`** env var. H
 
 === "template.yaml"
 
-        ```yaml hl_lines="8 9"
-        Resources:
-            HelloWorldFunction:
-                Type: AWS::Serverless::Function
-                Properties:
-                ...
-                Environment:
-                    Variables:
-                        POWERTOOLS_LOG_LEVEL: Debug
-                        POWERTOOLS_SERVICE_NAME: example
-        ```
+    ```yaml hl_lines="8 9"
+    Resources:
+       HelloWorldFunction:
+           Type: AWS::Serverless::Function
+           Properties:
+           ...
+           Environment:
+               Variables:
+                  POWERTOOLS_LOG_LEVEL: Debug
+                  POWERTOOLS_SERVICE_NAME: example
+    ```
 
 You can also explicitly set a service name via **`POWERTOOLS_SERVICE_NAME`** env var. This sets **service** key that will be present across all log statements.
 
