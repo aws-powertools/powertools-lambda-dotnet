@@ -107,12 +107,12 @@ public class Function
 
         try
         {
-            Logger.LogInformation("Calling Check IP API ");
+            Logger.LogInformation("Calling Check IP API");
 
             var response = await _httpClient.GetStringAsync("https://checkip.amazonaws.com/").ConfigureAwait(false);
             var ip = response.Replace("\n", "");
 
-            Logger.LogInformation("API response returned {}", ip);
+            Logger.LogInformation($"API response returned {ip}");
 
             return ip;
         }
