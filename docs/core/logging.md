@@ -255,6 +255,39 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
     }
     ```
 
+## Extra Keys
+
+Extra keys argument is available for all log levels' methods, as implemented in the standard logging library - e.g. Logger.Information, Logger.Warning.
+
+It accepts any dictionary, and all keyword arguments will be added as part of the root structure of the logs for that log statement.
+
+!!! info
+        Any keyword argument added using extra keys will not be persisted for subsequent messages.
+
+=== "Function.cs"
+
+    ```c# hl_lines="16"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging(LogEvent = true)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            ...
+            var extraKeys = new Dictionary<string, string>
+            {
+                {"test1", "value1"}
+            };
+            
+            Logger.LogInformation(extraKeys, "Collecting payment");
+            ...
+        }
+    }
+    ```
+
 ### Clearing all state
 
 Logger is commonly initialized in the global scope. Due to [Lambda Execution Context reuse](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html), this means that custom keys can be persisted across invocations. If you want all custom keys to be deleted, you can use `ClearState=true` attribute on `[Logging]` attribute.
