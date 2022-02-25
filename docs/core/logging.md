@@ -279,7 +279,7 @@ It accepts any dictionary, and all keyword arguments will be added as part of th
             ...
             var extraKeys = new Dictionary<string, string>
             {
-                {"test1", "value1"}
+                {"extraKey1", "value1"}
             };
             
             Logger.LogInformation(extraKeys, "Collecting payment");
