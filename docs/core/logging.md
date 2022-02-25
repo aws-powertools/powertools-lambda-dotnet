@@ -390,10 +390,24 @@ via `SamplingRate` parameter on attribute.
 
 By definition *AWS Lambda Powertools for .NET* outputs logging keys using **snake case** (e.g. *"function_memory_size": 128*). This allows developers using different AWS Lambda Powertools runtimes, to search logs across services written in languages such as Python or TypeScript.
 
-If you want, you can override this behavior by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
+If you want to override the default behaviour you can either set the desired casing through attributes, as described in the example below, or by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
 
-!!! info
-    Logging output casing can only be set using environment variables.
+=== "Output casing via attribute parameter"
+
+    ```c# hl_lines="6"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging(LoggerOutputCase = LoggerOutputCase.CamelCase)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            ...
+        }
+    }
+    ```
 
 Below are some output examples for different casing.
 
