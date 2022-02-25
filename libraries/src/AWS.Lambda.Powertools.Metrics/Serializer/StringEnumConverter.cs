@@ -82,7 +82,7 @@ public class StringEnumConverter : JsonConverterFactory
     /// </summary>
     /// <param name="typeToConvert">The type handled by the converter.</param>
     /// <param name="options">The serialization options to use.</param>
-    /// <returns>A converter for which <typeparamref name="T" /> is compatible with <paramref name="typeToConvert" />.</returns>
+    /// <returns>A converter for which type is compatible with <paramref name="typeToConvert" />.</returns>
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
         var query = from field in typeToConvert.GetFields(BindingFlags.Public | BindingFlags.Static)
