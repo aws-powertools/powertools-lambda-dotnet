@@ -41,4 +41,16 @@ internal static class PowertoolsConfigurationsExtension
 
         return LoggingConstants.DefaultLogLevel;
     }
+    
+    internal static LoggerOutputCase GetLoggerOutputCase(this IPowertoolsConfigurations powertoolsConfigurations,
+        LoggerOutputCase? loggerOutputCase = null)
+    {
+        if (loggerOutputCase.HasValue)
+            return loggerOutputCase.Value;
+
+        if (Enum.TryParse((powertoolsConfigurations.LoggerOutputCase ?? "").Trim(), true, out LoggerOutputCase result))
+            return result;
+
+        return LoggingConstants.DefaultLoggerOutputCase;
+    }
 }

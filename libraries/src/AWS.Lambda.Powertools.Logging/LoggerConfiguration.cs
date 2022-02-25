@@ -48,7 +48,7 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     public double? SamplingRate { get; set; }
 
     /// <summary>
-    ///     The default configured <typeparamref name="TOptions" /> instance
+    ///     The default configured options instance
     /// </summary>
     /// <value>The value.</value>
     LoggerConfiguration IOptions<LoggerConfiguration>.Value => this;
@@ -58,5 +58,5 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
     /// </summary>
     /// <value>The logger output case.</value>
-    public string LogOutputCase { get; set; }
+    public LoggerOutputCase? LoggerOutputCase { get; set; }
 }

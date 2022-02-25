@@ -149,7 +149,7 @@ public class Logger
 
     #endregion
 
-    #region Logger Functions
+    #region Core Logger Methods
 
     #region Debug
 
@@ -211,16 +211,6 @@ public class Logger
     public static void LogDebug(string message, params object[] args)
     {
         LoggerInstance.LogDebug(message, args);
-    }
-
-    /// <summary>
-    ///     Formats and writes a debug log message as JSON.
-    /// </summary>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>Logger.LogDebug(new {User = user, Address = address})</example>
-    public static void LogDebug(object message)
-    {
-        LoggerInstance.LogDebug(message);
     }
 
     #endregion
@@ -287,16 +277,6 @@ public class Logger
         LoggerInstance.LogTrace(message, args);
     }
 
-    /// <summary>
-    ///     Formats and writes a trace log message as JSON.
-    /// </summary>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>Logger.LogTrace(new {User = user, Address = address})</example>
-    public static void LogTrace(object message)
-    {
-        LoggerInstance.LogTrace(message);
-    }
-
     #endregion
 
     #region Information
@@ -359,16 +339,6 @@ public class Logger
     public static void LogInformation(string message, params object[] args)
     {
         LoggerInstance.LogInformation(message, args);
-    }
-
-    /// <summary>
-    ///     Formats and writes an informational log message as JSON.
-    /// </summary>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>Logger.LogInformation(new {User = user, Address = address})</example>
-    public static void LogInformation(object message)
-    {
-        LoggerInstance.LogInformation(message);
     }
 
     #endregion
@@ -434,17 +404,7 @@ public class Logger
     {
         LoggerInstance.LogWarning(message, args);
     }
-
-    /// <summary>
-    ///     Formats and writes a warning log message as JSON.
-    /// </summary>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>Logger.LogWarning(new {User = user, Address = address})</example>
-    public static void LogWarning(object message)
-    {
-        LoggerInstance.LogWarning(message);
-    }
-
+    
     #endregion
 
     #region Error
@@ -510,16 +470,6 @@ public class Logger
         LoggerInstance.LogError(message, args);
     }
 
-    /// <summary>
-    ///     Formats and writes an error log message as JSON.
-    /// </summary>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>Logger.LogError(new {User = user, Address = address})</example>
-    public static void LogError(object message)
-    {
-        LoggerInstance.LogError(message);
-    }
-
     #endregion
 
     #region Critical
@@ -583,17 +533,7 @@ public class Logger
     {
         LoggerInstance.LogCritical(message, args);
     }
-
-    /// <summary>
-    ///     Formats and writes a critical log message as JSON.
-    /// </summary>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>Logger.LogCritical(new {User = user, Address = address})</example>
-    public static void LogCritical(object message)
-    {
-        LoggerInstance.LogCritical(message);
-    }
-
+    
     #endregion
 
     #region Log
@@ -665,17 +605,552 @@ public class Logger
         LoggerInstance.Log(logLevel, eventId, state, exception, formatter);
     }
 
+    #endregion
+    
+    #endregion
+    
+    #region JSON Logger Methods
+
+    /// <summary>
+    ///     Formats and writes a trace log message as JSON.
+    /// </summary>
+    /// <param name="message">The object to be serialized as JSON.</param>
+    /// <example>logger.LogTrace(new {User = user, Address = address})</example>
+    public static void LogTrace(object message)
+    {
+        LoggerInstance.LogTrace(message);
+    }
+
+    /// <summary>
+    ///     Formats and writes an trace log message.
+    /// </summary>
+    /// <param name="exception">The exception to log.</param>
+    /// <example>logger.LogTrace(exception)</example>
+    public static void LogTrace(Exception exception)
+    {
+        LoggerInstance.LogTrace(exception);
+    }
+
+    /// <summary>
+    ///     Formats and writes a debug log message as JSON.
+    /// </summary>
+    /// <param name="message">The object to be serialized as JSON.</param>
+    /// <example>logger.LogDebug(new {User = user, Address = address})</example>
+    public static void LogDebug(object message)
+    {
+        LoggerInstance.LogDebug(message);
+    }
+
+    /// <summary>
+    ///     Formats and writes an debug log message.
+    /// </summary>
+    /// <param name="exception">The exception to log.</param>
+    /// <example>logger.LogDebug(exception)</example>
+    public static void LogDebug(Exception exception)
+    {
+        LoggerInstance.LogDebug(exception);
+    }
+
+    /// <summary>
+    ///     Formats and writes an information log message as JSON.
+    /// </summary>
+    /// <param name="message">The object to be serialized as JSON.</param>
+    /// <example>logger.LogInformation(new {User = user, Address = address})</example>
+    public static void LogInformation(object message)
+    {
+        LoggerInstance.LogInformation(message);
+    }
+
+    /// <summary>
+    ///     Formats and writes an information log message.
+    /// </summary>
+    /// <param name="exception">The exception to log.</param>
+    /// <example>logger.LogInformation(exception)</example>
+    public static void LogInformation(Exception exception)
+    {
+        LoggerInstance.LogInformation(exception);
+    }
+
+    /// <summary>
+    ///     Formats and writes a warning log message as JSON.
+    /// </summary>
+    /// <param name="message">The object to be serialized as JSON.</param>
+    /// <example>logger.LogWarning(new {User = user, Address = address})</example>
+    public static void LogWarning(object message)
+    {
+        LoggerInstance.LogWarning(message);
+    }
+
+    /// <summary>
+    ///     Formats and writes an warning log message.
+    /// </summary>
+    /// <param name="exception">The exception to log.</param>
+    /// <example>logger.LogWarning(exception)</example>
+    public static void LogWarning(Exception exception)
+    {
+        LoggerInstance.LogWarning(exception);
+    }
+
+    /// <summary>
+    ///     Formats and writes a error log message as JSON.
+    /// </summary>
+    /// <param name="message">The object to be serialized as JSON.</param>
+    /// <example>logger.LogCritical(new {User = user, Address = address})</example>
+    public static void LogError(object message)
+    {
+        LoggerInstance.LogError(message);
+    }
+
+    /// <summary>
+    ///     Formats and writes an error log message.
+    /// </summary>
+    /// <param name="exception">The exception to log.</param>
+    /// <example>logger.LogError(exception)</example>
+    public static void LogError(Exception exception)
+    {
+        LoggerInstance.LogError(exception);
+    }
+
+    /// <summary>
+    ///     Formats and writes a critical log message as JSON.
+    /// </summary>
+    /// <param name="message">The object to be serialized as JSON.</param>
+    /// <example>logger.LogCritical(new {User = user, Address = address})</example>
+    public static void LogCritical(object message)
+    {
+        LoggerInstance.LogCritical(message);
+    }
+
+    /// <summary>
+    ///     Formats and writes an critical log message.
+    /// </summary>
+    /// <param name="exception">The exception to log.</param>
+    /// <example>logger.LogCritical(exception)</example>
+    public static void LogCritical(Exception exception)
+    {
+        LoggerInstance.LogCritical(exception);
+    }
+
     /// <summary>
     ///     Formats and writes a log message as JSON at the specified log level.
     /// </summary>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>Logger.Log(LogLevel.Information, new {User = user, Address = address})</example>
+    /// <example>logger.Log(LogLevel.Information, new {User = user, Address = address})</example>
     public static void Log(LogLevel logLevel, object message)
     {
         LoggerInstance.Log(logLevel, message);
     }
 
+    /// <summary>
+    ///     Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <example>logger.Log(LogLevel.Information, exception)</example>
+    public static void Log(LogLevel logLevel, Exception exception)
+    {
+        LoggerInstance.Log(logLevel, exception);
+    }
+
+    #endregion
+
+    #region ExtraKeys Logger Methods
+
+    #region Debug
+    
+    /// <summary>
+    /// Formats and writes a debug log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogDebug(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogDebug<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogDebug(extraKeys, eventId, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a debug log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogDebug(extraKeys, 0, "Processing request from {Address}", address)</example>
+    public static void LogDebug<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogDebug(extraKeys, eventId, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a debug log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogDebug(extraKeys, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogDebug<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogDebug(extraKeys, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a debug log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogDebug(extraKeys, "Processing request from {Address}", address)</example>
+    public static void LogDebug<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogDebug(extraKeys, message, args);
+    }
+    
+    #endregion
+
+    #region Trace
+    
+    /// <summary>
+    /// Formats and writes a trace log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogTrace(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogTrace<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogTrace(extraKeys, eventId, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a trace log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogTrace(extraKeys, 0, "Processing request from {Address}", address)</example>
+    public static void LogTrace<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogTrace(extraKeys, eventId, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a trace log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogTrace(extraKeys, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogTrace<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogTrace(extraKeys, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a trace log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogTrace(extraKeys, "Processing request from {Address}", address)</example>
+    public static void LogTrace<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogTrace(extraKeys, message, args);
+    }
+
+    #endregion
+
+    #region Information
+    
+    /// <summary>
+    /// Formats and writes an informational log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogInformation(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogInformation<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogInformation(extraKeys, eventId, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes an informational log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogInformation(extraKeys, 0, "Processing request from {Address}", address)</example>
+    public static void LogInformation<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogInformation(extraKeys, eventId, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes an informational log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogInformation(extraKeys, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogInformation<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogInformation(extraKeys, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes an informational log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogInformation(extraKeys, "Processing request from {Address}", address)</example>
+    public static void LogInformation<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogInformation(extraKeys, message, args);
+    }
+    
+    #endregion
+
+    #region Warning
+
+    /// <summary>
+    /// Formats and writes a warning log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogWarning(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogWarning<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogWarning(extraKeys, eventId, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a warning log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogWarning(extraKeys, 0, "Processing request from {Address}", address)</example>
+    public static void LogWarning<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogWarning(extraKeys, eventId, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a warning log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogWarning(extraKeys, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogWarning<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogWarning(extraKeys, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a warning log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogWarning(extraKeys, "Processing request from {Address}", address)</example>
+    public static void LogWarning<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogWarning(extraKeys, message, args);
+    }
+    
+    #endregion
+
+    #region Error
+
+    /// <summary>
+    /// Formats and writes an error log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogError(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogError<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogError(extraKeys, eventId, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes an error log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogError(extraKeys, 0, "Processing request from {Address}", address)</example>
+    public static void LogError<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogError(extraKeys, eventId, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes an error log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogError(extraKeys, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogError<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogError(extraKeys, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes an error log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogError(extraKeys, "Processing request from {Address}", address)</example>
+    public static void LogError<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogError(extraKeys, message, args);
+    }
+
+    #endregion
+
+    #region Critical
+
+    /// <summary>
+    /// Formats and writes a critical log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogCritical(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogCritical<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogCritical(extraKeys, eventId, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a critical log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogCritical(extraKeys, 0, "Processing request from {Address}", address)</example>
+    public static void LogCritical<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogCritical(extraKeys, eventId, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a critical log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogCritical(extraKeys, exception, "Error while processing request from {Address}", address)</example>
+    public static void LogCritical<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogCritical(extraKeys, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a critical log message.
+    /// </summary>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.LogCritical(extraKeys, "Processing request from {Address}", address)</example>
+    public static void LogCritical<T>(T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.LogCritical(extraKeys, message, args);
+    }
+
+    #endregion
+
+    #region Log
+    
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.Log(LogLevel.Information, extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
+    public static void Log<T>(LogLevel logLevel, T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.Log(logLevel, extraKeys, eventId, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="eventId">The event id associated with the log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.Log(LogLevel.Information, extraKeys, 0, "Processing request from {Address}", address)</example>
+    public static void Log<T>(LogLevel logLevel, T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    {
+        LoggerInstance.Log(logLevel, extraKeys, eventId, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="exception">The exception to log.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.Log(LogLevel.Information, extraKeys, exception, "Error while processing request from {Address}", address)</example>
+    public static void Log<T>(LogLevel logLevel, T extraKeys, Exception exception, string message, params object[] args) where T : class
+    {
+        LoggerInstance.Log(logLevel, extraKeys, exception, message, args);
+    }
+
+    /// <summary>
+    /// Formats and writes a log message at the specified log level.
+    /// </summary>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
+    /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
+    /// <param name="args">An object array that contains zero or more objects to format.</param>
+    /// <example>logger.Log(LogLevel.Information, extraKeys, "Processing request from {Address}", address)</example>
+    public static void Log<T>(LogLevel logLevel, T extraKeys, string message, params object[] args) where T : class
+    {
+        LoggerInstance.Log(logLevel, extraKeys, message, args);
+    }
+    
     #endregion
 
     #endregion
