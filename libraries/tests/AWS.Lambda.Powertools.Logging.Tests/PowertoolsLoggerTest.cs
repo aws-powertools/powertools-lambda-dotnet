@@ -358,7 +358,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         }
 
         [Fact]
-        public void Log_SetsCaseToCamelCase_OutputsCamelCaseLog()
+        public void Log_EnvVarSetsCaseToCamelCase_OutputsCamelCaseLog()
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -399,7 +399,49 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         }
 
         [Fact]
-        public void Log_SetsCaseToPascalCase_OutputsPascalCaseLog()
+        public void Log_AttributeSetsCaseToCamelCase_OutputsCamelCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);            
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null,
+                     LoggerOutputCase = LoggerOutputCase.CamelCase
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_EnvVarSetsCaseToPascalCase_OutputsPascalCaseLog()
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -441,7 +483,49 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         }
 
         [Fact]
-        public void Log_SetsCaseToSnakeCase_OutputsSnakeCaseLog()
+        public void Log_AttributeSetsCaseToPascalCase_OutputsPascalCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null,
+                     LoggerOutputCase = LoggerOutputCase.PascalCase
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"Message\":{\"PropOne\":\"Value 1\",\"PropTwo\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_EnvVarSetsCaseToSnakeCase_OutputsSnakeCaseLog()
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -462,6 +546,48 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                  {
                      Service = null,
                      MinimumLevel = null
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"prop_one\":\"Value 1\",\"prop_two\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_AttributeSetsCaseToSnakeCase_OutputsSnakeCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null,
+                     LoggerOutputCase = LoggerOutputCase.SnakeCase
                  });
 
             var message = new
