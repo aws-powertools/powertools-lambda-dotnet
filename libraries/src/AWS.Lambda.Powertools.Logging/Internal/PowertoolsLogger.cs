@@ -40,7 +40,7 @@ internal sealed class PowertoolsLogger : ILogger
     private readonly string _name;
 
     /// <summary>
-    ///     The power tools configurations
+    ///     The Powertools configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
@@ -58,7 +58,7 @@ internal sealed class PowertoolsLogger : ILogger
     ///     Initializes a new instance of the <see cref="PowertoolsLogger" /> class.
     /// </summary>
     /// <param name="name">The name.</param>
-    /// <param name="powertoolsConfigurations">The power tools configurations.</param>
+    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
     /// <param name="getCurrentConfig">The get current configuration.</param>
     public PowertoolsLogger(
@@ -94,6 +94,8 @@ internal sealed class PowertoolsLogger : ILogger
             ? CurrentConfig.Service
             : _powertoolsConfigurations.Service;
 
+    internal PowertoolsLoggerScope CurrentScope { get; private set; }
+
     /// <summary>
     ///     Begins the scope.
     /// </summary>
@@ -102,7 +104,62 @@ internal sealed class PowertoolsLogger : ILogger
     /// <returns>System.IDisposable.</returns>
     public IDisposable BeginScope<TState>(TState state)
     {
-        return default!;
+        CurrentScope = new PowertoolsLoggerScope(this, GetScopeKeys(state));
+        return CurrentScope;
+    }
+
+    /// <summary>
+    ///     Ends the scope.
+    /// </summary>
+    internal void EndScope()
+    {
+        CurrentScope = null;
+    }
+
+    /// <summary>
+    ///     Extract provided scope keys
+    /// </summary>
+    /// <typeparam name="TState">The type of the t state.</typeparam>
+    /// <param name="state">The state.</param>
+    /// <returns>Key/Value pair of provided scope keys</returns>
+    private static Dictionary<string, object> GetScopeKeys<TState>(TState state)
+    {
+        var keys = new Dictionary<string, object>();
+        
+        if (state is null) 
+            return keys;
+        
+        switch (state)
+        {
+            case IEnumerable<KeyValuePair<string, string>> pairs:
+            {
+                foreach (var (key, value) in pairs)
+                {
+                    if (!string.IsNullOrWhiteSpace(key))
+                        keys.TryAdd(key, value);
+                }
+                break;
+            }
+            case IEnumerable<KeyValuePair<string, object>> pairs:
+            {
+                foreach (var (key, value) in pairs)
+                {
+                    if (!string.IsNullOrWhiteSpace(key))
+                        keys.TryAdd(key, value);
+                }
+                break;
+            }
+            default:
+            {
+                foreach (var property in state.GetType().GetProperties())
+                {
+                    keys.TryAdd(property.Name, property.GetValue(state));
+                }
+                break;
+            }
+        }
+        
+        return keys;
     }
 
     /// <summary>
@@ -149,6 +206,16 @@ internal sealed class PowertoolsLogger : ILogger
             message.TryAdd(LoggingConstants.KeyFunctionRequestId, PowertoolsLambdaContext.Instance.AwsRequestId);
         }
 
+        // Add Extra Fields
+        if (CurrentScope?.ExtraKeys is not null)
+        {
+            foreach (var (key, value) in CurrentScope.ExtraKeys)
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                    message.TryAdd(key, value);
+            }
+        }
+
         message.TryAdd(LoggingConstants.KeyTimestamp, DateTime.UtcNow.ToString("o"));
         message.TryAdd(LoggingConstants.KeyLogLevel, logLevel.ToString());
         message.TryAdd(LoggingConstants.KeyService, Service);
@@ -162,7 +229,33 @@ internal sealed class PowertoolsLogger : ILogger
         if (exception != null)
             message.TryAdd(LoggingConstants.KeyException, exception.Message);
 
-        _systemWrapper.LogLine(JsonSerializer.Serialize(message));
+        var options = BuildCaseSerializerOptions();
+        _systemWrapper.LogLine(JsonSerializer.Serialize(message, options));
+    }
+
+    private JsonSerializerOptions BuildCaseSerializerOptions()
+    {
+        switch (CurrentConfig.LoggerOutputCase)
+        {
+            case LoggerOutputCase.CamelCase:
+                return new(JsonSerializerDefaults.Web)
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
+                };
+            case LoggerOutputCase.PascalCase:
+                return new()
+                {
+                    PropertyNamingPolicy = PascalCaseNamingPolicy.Instance,
+                    DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance
+                };
+            default: // Snake case is the default
+                return new()
+                {
+                    PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance,
+                    DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance
+                };
+        }
     }
 
     /// <summary>
@@ -182,12 +275,14 @@ internal sealed class PowertoolsLogger : ILogger
         var currConfig = _getCurrentConfig();
         var minimumLevel = _powertoolsConfigurations.GetLogLevel(currConfig?.MinimumLevel);
         var samplingRate = currConfig?.SamplingRate ?? _powertoolsConfigurations.LoggerSampleRate;
+        var loggerOutputCase =  _powertoolsConfigurations.GetLoggerOutputCase(currConfig?.LoggerOutputCase);
 
         var config = new LoggerConfiguration
         {
             Service = currConfig?.Service,
             MinimumLevel = minimumLevel,
-            SamplingRate = samplingRate
+            SamplingRate = samplingRate,
+            LoggerOutputCase = loggerOutputCase
         };
 
         if (!samplingRate.HasValue)

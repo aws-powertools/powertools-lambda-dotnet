@@ -14,7 +14,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
@@ -25,7 +27,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 {
     public class PowertoolsLoggerTest
     {
-        private void Log_WhenMinimumLevelIsBelowLogLevel_Logs(LogLevel logLevel, LogLevel minimumLevel)
+        private static void Log_WhenMinimumLevelIsBelowLogLevel_Logs(LogLevel logLevel, LogLevel minimumLevel)
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -38,29 +40,29 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 new LoggerConfiguration
                 {
                     Service = service,
-                    MinimumLevel = minimumLevel
+                    MinimumLevel = minimumLevel                
                 });
 
             switch (logLevel)
             {
                 // Act
                 case LogLevel.Critical:
-                    LoggerExtensions.LogCritical(logger, "Test");
+                    logger.LogCritical("Test");
                     break;
                 case LogLevel.Debug:
-                    LoggerExtensions.LogDebug(logger, "Test");
+                    logger.LogDebug("Test");
                     break;
                 case LogLevel.Error:
-                    LoggerExtensions.LogError(logger, "Test");
+                    logger.LogError("Test");
                     break;
                 case LogLevel.Information:
-                    LoggerExtensions.LogInformation(logger, "Test");
+                    logger.LogInformation("Test");
                     break;
                 case LogLevel.Trace:
-                    LoggerExtensions.LogTrace(logger, "Test");
+                    logger.LogTrace("Test");
                     break;
                 case LogLevel.Warning:
-                    LoggerExtensions.LogWarning(logger, "Test");
+                    logger.LogWarning("Test");
                     break;
                 case LogLevel.None:
                     break;
@@ -76,7 +78,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
            
         }
         
-        private void Log_WhenMinimumLevelIsAboveLogLevel_DoesNotLog(LogLevel logLevel, LogLevel minimumLevel)
+        private static void Log_WhenMinimumLevelIsAboveLogLevel_DoesNotLog(LogLevel logLevel, LogLevel minimumLevel)
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -96,22 +98,22 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             {
                 // Act
                 case LogLevel.Critical:
-                    LoggerExtensions.LogCritical(logger, "Test");
+                    logger.LogCritical("Test");
                     break;
                 case LogLevel.Debug:
-                    LoggerExtensions.LogDebug(logger, "Test");
+                    logger.LogDebug("Test");
                     break;
                 case LogLevel.Error:
-                    LoggerExtensions.LogError(logger, "Test");
+                    logger.LogError("Test");
                     break;
                 case LogLevel.Information:
-                    LoggerExtensions.LogInformation(logger, "Test");
+                    logger.LogInformation("Test");
                     break;
                 case LogLevel.Trace:
-                    LoggerExtensions.LogTrace(logger, "Test");
+                    logger.LogTrace("Test");
                     break;
                 case LogLevel.Warning:
-                    LoggerExtensions.LogWarning(logger, "Test");
+                    logger.LogWarning("Test");
                     break;
                 case LogLevel.None:
                     break;
@@ -268,7 +270,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     MinimumLevel = null
                 });
             
-            LoggerExtensions.LogInformation(logger, "Test");
+            logger.LogInformation("Test");
 
             // Assert
             systemWrapper.Verify(v =>
@@ -306,7 +308,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     MinimumLevel = null
                 });
             
-            LoggerExtensions.LogInformation(logger, "Test");
+            logger.LogInformation("Test");
 
             // Assert
             systemWrapper.Verify(v =>
@@ -342,7 +344,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     MinimumLevel = null
                 });
             
-            LoggerExtensions.LogInformation(logger, "Test");
+            logger.LogInformation("Test");
 
             // Assert
             systemWrapper.Verify(v =>
@@ -353,6 +355,658 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     )
                 ), Times.Once);
            
+        }
+
+        [Fact]
+        public void Log_EnvVarSetsCaseToCamelCase_OutputsCamelCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.CamelCase.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);            
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {                     
+                     Service = null,
+                     MinimumLevel = null
+                 });
+            
+            var message = new {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_AttributeSetsCaseToCamelCase_OutputsCamelCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);            
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null,
+                     LoggerOutputCase = LoggerOutputCase.CamelCase
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_EnvVarSetsCaseToPascalCase_OutputsPascalCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.PascalCase.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"Message\":{\"PropOne\":\"Value 1\",\"PropTwo\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_AttributeSetsCaseToPascalCase_OutputsPascalCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null,
+                     LoggerOutputCase = LoggerOutputCase.PascalCase
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"Message\":{\"PropOne\":\"Value 1\",\"PropTwo\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_EnvVarSetsCaseToSnakeCase_OutputsSnakeCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.SnakeCase.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"prop_one\":\"Value 1\",\"prop_two\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_AttributeSetsCaseToSnakeCase_OutputsSnakeCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null,
+                     LoggerOutputCase = LoggerOutputCase.SnakeCase
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"prop_one\":\"Value 1\",\"prop_two\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+
+        [Fact]
+        public void Log_NoOutputCaseSet_OutputDefaultsToSnakeCaseLog()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                 new LoggerConfiguration
+                 {
+                     Service = null,
+                     MinimumLevel = null
+                 });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"message\":{\"prop_one\":\"Value 1\",\"prop_two\":\"Value 2\"}")
+                    )
+                ), Times.Once);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsObject_ExtractScopeKeys()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+            
+            var scopeKeys = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+            
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 2);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropOne"));
+                Assert.True((string)loggerScope.ExtraKeys["PropOne"] == scopeKeys.PropOne);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropTwo"));
+                Assert.True((string)loggerScope.ExtraKeys["PropTwo"] == scopeKeys.PropTwo);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsObjectDictionary_ExtractScopeKeys()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var scopeKeys = new Dictionary<string, object>
+            {
+                { "PropOne", "Value 1" },
+                { "PropTwo", "Value 2" }
+            };
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 2);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropOne"));
+                Assert.True(loggerScope.ExtraKeys["PropOne"] == scopeKeys["PropOne"]);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropTwo"));
+                Assert.True(loggerScope.ExtraKeys["PropTwo"] == scopeKeys["PropTwo"]);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsStringDictionary_ExtractScopeKeys()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var scopeKeys = new Dictionary<string, string>
+            {
+                { "PropOne", "Value 1" },
+                { "PropTwo", "Value 2" }
+            };
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 2);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropOne"));
+                Assert.True((string)loggerScope.ExtraKeys["PropOne"] == scopeKeys["PropOne"]);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropTwo"));
+                Assert.True((string)loggerScope.ExtraKeys["PropTwo"] == scopeKeys["PropTwo"]);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Theory]
+        [InlineData(LogLevel.Trace, true)]
+        [InlineData(LogLevel.Debug, true)]
+        [InlineData(LogLevel.Information, true)]
+        [InlineData(LogLevel.Warning, true)]
+        [InlineData(LogLevel.Error, true)]
+        [InlineData(LogLevel.Critical, true)]
+        [InlineData(LogLevel.Trace, false)]
+        [InlineData(LogLevel.Debug, false)]
+        [InlineData(LogLevel.Information, false)]
+        [InlineData(LogLevel.Warning, false)]
+        [InlineData(LogLevel.Error, false)]
+        [InlineData(LogLevel.Critical, false)]
+        public void Log_WhenExtraKeysIsObjectDictionary_AppendExtraKeys(LogLevel logLevel, bool logMethod)
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var message = Guid.NewGuid().ToString();
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.PascalCase.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = LogLevel.Trace,
+                });
+
+            var scopeKeys = new Dictionary<string, object>
+            {
+                { "PropOne", "Value 1" },
+                { "PropTwo", "Value 2" }
+            };
+
+            if(logMethod)
+                logger.Log(logLevel, scopeKeys, message);
+            else switch (logLevel)
+            {
+                case LogLevel.Trace:
+                    logger.LogTrace(scopeKeys, message);
+                    break;
+                case LogLevel.Debug:
+                    logger.LogDebug(scopeKeys, message);
+                    break;
+                case LogLevel.Information:
+                    logger.LogInformation(scopeKeys, message);
+                    break;
+                case LogLevel.Warning:
+                    logger.LogWarning(scopeKeys, message);
+                    break;
+                case LogLevel.Error:
+                    logger.LogError(scopeKeys, message);
+                    break;
+                case LogLevel.Critical:
+                    logger.LogCritical(scopeKeys, message);
+                    break;
+                case LogLevel.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
+            }
+            
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s=> 
+                        s.Contains(scopeKeys.Keys.First()) && 
+                        s.Contains(scopeKeys.Keys.Last()) &&
+                        s.Contains(scopeKeys.Values.First().ToString()) && 
+                        s.Contains(scopeKeys.Values.Last().ToString())
+                    )
+                ), Times.Once);
+
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Theory]
+        [InlineData(LogLevel.Trace, true)]
+        [InlineData(LogLevel.Debug, true)]
+        [InlineData(LogLevel.Information, true)]
+        [InlineData(LogLevel.Warning, true)]
+        [InlineData(LogLevel.Error, true)]
+        [InlineData(LogLevel.Critical, true)]
+        [InlineData(LogLevel.Trace, false)]
+        [InlineData(LogLevel.Debug, false)]
+        [InlineData(LogLevel.Information, false)]
+        [InlineData(LogLevel.Warning, false)]
+        [InlineData(LogLevel.Error, false)]
+        [InlineData(LogLevel.Critical, false)]
+        public void Log_WhenExtraKeysIsStringDictionary_AppendExtraKeys(LogLevel logLevel, bool logMethod)
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var message = Guid.NewGuid().ToString();
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.PascalCase.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = LogLevel.Trace,
+                });
+
+            var scopeKeys = new Dictionary<string, string>
+            {
+                { "PropOne", "Value 1" },
+                { "PropTwo", "Value 2" }
+            };
+
+            if(logMethod)
+                logger.Log(logLevel, scopeKeys, message);
+            else switch (logLevel)
+            {
+                case LogLevel.Trace:
+                    logger.LogTrace(scopeKeys, message);
+                    break;
+                case LogLevel.Debug:
+                    logger.LogDebug(scopeKeys, message);
+                    break;
+                case LogLevel.Information:
+                    logger.LogInformation(scopeKeys, message);
+                    break;
+                case LogLevel.Warning:
+                    logger.LogWarning(scopeKeys, message);
+                    break;
+                case LogLevel.Error:
+                    logger.LogError(scopeKeys, message);
+                    break;
+                case LogLevel.Critical:
+                    logger.LogCritical(scopeKeys, message);
+                    break;
+                case LogLevel.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
+            }
+            
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s=> 
+                        s.Contains(scopeKeys.Keys.First()) && 
+                        s.Contains(scopeKeys.Keys.Last()) &&
+                        s.Contains(scopeKeys.Values.First()) && 
+                        s.Contains(scopeKeys.Values.Last())
+                    )
+                ), Times.Once);
+
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Theory]
+        [InlineData(LogLevel.Trace, true)]
+        [InlineData(LogLevel.Debug, true)]
+        [InlineData(LogLevel.Information, true)]
+        [InlineData(LogLevel.Warning, true)]
+        [InlineData(LogLevel.Error, true)]
+        [InlineData(LogLevel.Critical, true)]
+        [InlineData(LogLevel.Trace, false)]
+        [InlineData(LogLevel.Debug, false)]
+        [InlineData(LogLevel.Information, false)]
+        [InlineData(LogLevel.Warning, false)]
+        [InlineData(LogLevel.Error, false)]
+        [InlineData(LogLevel.Critical, false)]
+        public void Log_WhenExtraKeysAsObject_AppendExtraKeys(LogLevel logLevel, bool logMethod)
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var message = Guid.NewGuid().ToString();
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            configurations.Setup(c => c.LoggerOutputCase).Returns(LoggerOutputCase.PascalCase.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = LogLevel.Trace,
+                });
+
+            var scopeKeys = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            if(logMethod)
+                logger.Log(logLevel, scopeKeys, message);
+            else switch (logLevel)
+            {
+                case LogLevel.Trace:
+                    logger.LogTrace(scopeKeys, message);
+                    break;
+                case LogLevel.Debug:
+                    logger.LogDebug(scopeKeys, message);
+                    break;
+                case LogLevel.Information:
+                    logger.LogInformation(scopeKeys, message);
+                    break;
+                case LogLevel.Warning:
+                    logger.LogWarning(scopeKeys, message);
+                    break;
+                case LogLevel.Error:
+                    logger.LogError(scopeKeys, message);
+                    break;
+                case LogLevel.Critical:
+                    logger.LogCritical(scopeKeys, message);
+                    break;
+                case LogLevel.None:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
+            }
+            
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s=> 
+                        s.Contains("PropOne") && 
+                        s.Contains("PropTwo") &&
+                        s.Contains(scopeKeys.PropOne) && 
+                        s.Contains(scopeKeys.PropTwo)
+                    )
+                ), Times.Once);
+
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
         }
     }
 }

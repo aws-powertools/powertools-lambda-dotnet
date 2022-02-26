@@ -66,6 +66,12 @@ internal static class Constants
     internal const string LoggerLogEventNameEnv = "POWERTOOLS_LOGGER_LOG_EVENT";
 
     /// <summary>
+    ///     Constant for POWERTOOLS_LOGGER_CASE environment variable
+    ///     Defaults to snake case
+    /// </summary>
+    internal const string LoggerOutputCaseEnv = "POWERTOOLS_LOGGER_CASE";
+
+    /// <summary>
     ///     Constant for AWS X-Ray trace identifier environment variable
     /// </summary>
     internal const string XrayTraceIdEnv = "_X_AMZN_TRACE_ID";

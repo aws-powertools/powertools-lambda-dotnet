@@ -27,7 +27,7 @@ internal static class PowertoolsConfigurationsExtension
     /// <summary>
     ///     Gets the log level.
     /// </summary>
-    /// <param name="powertoolsConfigurations">The power tools configurations.</param>
+    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="logLevel">The log level.</param>
     /// <returns>LogLevel.</returns>
     internal static LogLevel GetLogLevel(this IPowertoolsConfigurations powertoolsConfigurations,
@@ -40,5 +40,17 @@ internal static class PowertoolsConfigurationsExtension
             return result;
 
         return LoggingConstants.DefaultLogLevel;
+    }
+    
+    internal static LoggerOutputCase GetLoggerOutputCase(this IPowertoolsConfigurations powertoolsConfigurations,
+        LoggerOutputCase? loggerOutputCase = null)
+    {
+        if (loggerOutputCase.HasValue)
+            return loggerOutputCase.Value;
+
+        if (Enum.TryParse((powertoolsConfigurations.LoggerOutputCase ?? "").Trim(), true, out LoggerOutputCase result))
+            return result;
+
+        return LoggingConstants.DefaultLoggerOutputCase;
     }
 }

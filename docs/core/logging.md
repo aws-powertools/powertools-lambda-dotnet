@@ -29,14 +29,14 @@ You can also override log level by setting **`POWERTOOLS_LOG_LEVEL`** env var. H
 
     ```yaml hl_lines="8 9"
     Resources:
-        HelloWorldFunction:
-            Type: AWS::Serverless::Function
-            Properties:
-            ...
-            Environment:
-                Variables:
-                    POWERTOOLS_LOG_LEVEL: Debug
-                    POWERTOOLS_SERVICE_NAME: example
+       HelloWorldFunction:
+           Type: AWS::Serverless::Function
+           Properties:
+           ...
+           Environment:
+               Variables:
+                  POWERTOOLS_LOG_LEVEL: Debug
+                  POWERTOOLS_SERVICE_NAME: example
     ```
 
 You can also explicitly set a service name via **`POWERTOOLS_SERVICE_NAME`** env var. This sets **service** key that will be present across all log statements.
@@ -119,20 +119,20 @@ You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [J
 
     ```json hl_lines="15"
     {
-        "ColdStart": true,
-        "XRayTraceId": "1-61b7add4-66532bb81441e1b060389429",
-        "FunctionName": "test",
-        "FunctionVersion": "$LATEST",
-        "FunctionMemorySize": 128,
-        "FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-        "FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
-        "Timestamp": "2021-12-13T20:32:22.5774262Z",
-        "Level": "Information",
-        "Service": "lambda-example",
-        "Name": "AWS.Lambda.Powertools.Logging.Logger",
-        "Message": "Collecting payment",
-        "SamplingRate": 0.7,
-        "CorrelationId": "correlation_id_value",
+        "cold_start": true,
+        "xray_trace_id": "1-61b7add4-66532bb81441e1b060389429",
+        "function_name": "test",
+        "function_version": "$LATEST",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "level": "Information",
+        "service": "lambda-example",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "Collecting payment",
+        "sampling_rate": 0.7,
+        "correlation_id": "correlation_id_value",
     }
     ```
 We provide [built-in JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}
@@ -169,20 +169,20 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
 
     ```json hl_lines="15"
     {
-        "ColdStart": true,
-        "XRayTraceId": "1-61b7add4-66532bb81441e1b060389429",
-        "FunctionName": "test",
-        "FunctionVersion": "$LATEST",
-        "FunctionMemorySize": 128,
-        "FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-        "FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
-        "Timestamp": "2021-12-13T20:32:22.5774262Z",
-        "Level": "Information",
-        "Service": "lambda-example",
-        "Name": "AWS.Lambda.Powertools.Logging.Logger",
-        "Message": "Collecting payment",
-        "SamplingRate": 0.7,
-        "CorrelationId": "correlation_id_value",
+        "cold_start": true,
+        "xray_trace_id": "1-61b7add4-66532bb81441e1b060389429",
+        "function_name": "test",
+        "function_version": "$LATEST",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "level": "Information",
+        "service": "lambda-example",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "Collecting payment",
+        "sampling_rate": 0.7,
+        "correlation_id": "correlation_id_value",
     }
     ```
 
@@ -254,6 +254,39 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
     }
     ```
 
+## Extra Keys
+
+Extra keys argument is available for all log levels' methods, as implemented in the standard logging library - e.g. Logger.Information, Logger.Warning.
+
+It accepts any dictionary, and all keyword arguments will be added as part of the root structure of the logs for that log statement.
+
+!!! info
+        Any keyword argument added using extra keys will not be persisted for subsequent messages.
+
+=== "Function.cs"
+
+    ```c# hl_lines="16"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging(LogEvent = true)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            ...
+            var extraKeys = new Dictionary<string, string>
+            {
+                {"extraKey1", "value1"}
+            };
+            
+            Logger.LogInformation(extraKeys, "Collecting payment");
+            ...
+        }
+    }
+    ```
+
 ### Clearing all state
 
 Logger is commonly initialized in the global scope. Due to [Lambda Execution Context reuse](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html), this means that custom keys can be persisted across invocations. If you want all custom keys to be deleted, you can use `ClearState=true` attribute on `[Logging]` attribute.
@@ -285,16 +318,16 @@ Logger is commonly initialized in the global scope. Due to [Lambda Execution Con
 
     ```json hl_lines="11"
     {
-        "Level": "Information",
-        "Message": "Collecting payment",
-        "Timestamp": "2021-12-13T20:32:22.5774262Z",
-        "Service": "payment",
-        "ColdStart": true,
-        "FunctionName": "test",
-        "FunctionMemorySize": 128,
-        "FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-        "FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
-        "SpecialKey": "value"
+        "level": "Information",
+        "message": "Collecting payment",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "service": "payment",
+        "cold_start": true,
+        "function_name": "test",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "special_key": "value"
     }
     ```
 
@@ -302,15 +335,15 @@ Logger is commonly initialized in the global scope. Due to [Lambda Execution Con
 
     ```json
     {
-        "Level": "Information",
-        "Message": "Collecting payment",
-        "Timestamp": "2021-12-13T20:32:22.5774262Z",
-        "Service": "payment",
-        "ColdStart": true,
-        "FunctionName": "test",
-        "FunctionMemorySize": 128,
-        "FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
-        "FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72"
+        "level": "Information",
+        "message": "Collecting payment",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "service": "payment",
+        "cold_start": true,
+        "function_name": "test",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72"
     }
     ```
 
@@ -350,4 +383,77 @@ via `SamplingRate` parameter on attribute.
             Environment:
                 Variables:
                     POWERTOOLS_LOGGER_SAMPLE_RATE: 0.5
+    ```
+
+## Configure Log Output Casing
+
+By definition *AWS Lambda Powertools for .NET* outputs logging keys using **snake case** (e.g. *"function_memory_size": 128*). This allows developers using different AWS Lambda Powertools runtimes, to search logs across services written in languages such as Python or TypeScript.
+
+If you want to override the default behaviour you can either set the desired casing through attributes, as described in the example below, or by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
+
+=== "Output casing via attribute parameter"
+
+    ```c# hl_lines="6"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging(LoggerOutputCase = LoggerOutputCase.CamelCase)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            ...
+        }
+    }
+    ```
+
+Below are some output examples for different casing.
+
+=== "Camel Case"
+
+    ```json
+    {
+        "level": "Information",
+        "message": "Collecting payment",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "service": "payment",
+        "coldStart": true,
+        "functionName": "test",
+        "functionMemorySize": 128,
+        "functionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "functionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72"
+    }
+    ```
+
+=== "Pascal Case"
+
+    ```json
+    {
+        "Level": "Information",
+        "Message": "Collecting payment",
+        "Timestamp": "2021-12-13T20:32:22.5774262Z",
+        "Service": "payment",
+        "ColdStart": true,
+        "FunctionName": "test",
+        "FunctionMemorySize": 128,
+        "FunctionArn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "FunctionRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72"
+    }
+    ```
+
+=== "Snake Case"
+
+    ```json
+    {
+        "level": "Information",
+        "message": "Collecting payment",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "service": "payment",
+        "cold_start": true,
+        "function_name": "test",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72"
+    }
     ```

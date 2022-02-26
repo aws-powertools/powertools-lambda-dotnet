@@ -14,7 +14,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -77,13 +76,13 @@ public class StringEnumConverter : JsonConverterFactory
     {
         return _baseConverter.CanConvert(typeToConvert);
     }
-
+    
     /// <summary>
     ///     Creates a converter for a specified type.
     /// </summary>
     /// <param name="typeToConvert">The type handled by the converter.</param>
     /// <param name="options">The serialization options to use.</param>
-    /// <returns>A converter for which <typeparamref name="T" /> is compatible with <paramref name="typeToConvert" />.</returns>
+    /// <returns>A converter for which type is compatible with <paramref name="typeToConvert" />.</returns>
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
         var query = from field in typeToConvert.GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -95,36 +94,5 @@ public class StringEnumConverter : JsonConverterFactory
             ? new JsonStringEnumConverter(new DictionaryLookupNamingPolicy(dictionary, _namingPolicy),
                 _allowIntegerValues).CreateConverter(typeToConvert, options)
             : _baseConverter.CreateConverter(typeToConvert, options);
-    }
-}
-
-public class JsonNamingPolicyDecorator : JsonNamingPolicy
-{
-    private readonly JsonNamingPolicy _underlyingNamingPolicy;
-
-    protected JsonNamingPolicyDecorator(JsonNamingPolicy underlyingNamingPolicy)
-    {
-        _underlyingNamingPolicy = underlyingNamingPolicy;
-    }
-
-    public override string ConvertName(string name)
-    {
-        return _underlyingNamingPolicy == null ? name : _underlyingNamingPolicy.ConvertName(name);
-    }
-}
-
-internal class DictionaryLookupNamingPolicy : JsonNamingPolicyDecorator
-{
-    private readonly Dictionary<string, string> _dictionary;
-
-    public DictionaryLookupNamingPolicy(Dictionary<string, string> dictionary, JsonNamingPolicy underlyingNamingPolicy)
-        : base(underlyingNamingPolicy)
-    {
-        _dictionary = dictionary ?? throw new ArgumentNullException();
-    }
-
-    public override string ConvertName(string name)
-    {
-        return _dictionary.TryGetValue(name, out var value) ? value : base.ConvertName(name);
     }
 }

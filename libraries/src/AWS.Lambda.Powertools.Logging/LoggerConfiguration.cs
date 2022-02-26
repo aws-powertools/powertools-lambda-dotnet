@@ -21,9 +21,9 @@ namespace AWS.Lambda.Powertools.Logging;
 /// <summary>
 ///     Class LoggerConfiguration.
 ///     Implements the
-///     <see cref="Microsoft.Extensions.Options.IOptions{AWS.Lambda.Powertools.Logging.LoggerConfiguration}" />
+///     <see cref="Microsoft.Extensions.Options.IOptions{LoggerConfiguration}" />
 /// </summary>
-/// <seealso cref="Microsoft.Extensions.Options.IOptions{AWS.Lambda.Powertools.Logging.LoggerConfiguration}" />
+/// <seealso cref="Microsoft.Extensions.Options.IOptions{LoggerConfiguration}" />
 public class LoggerConfiguration : IOptions<LoggerConfiguration>
 {
     /// <summary>
@@ -48,8 +48,15 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     public double? SamplingRate { get; set; }
 
     /// <summary>
-    ///     The default configured <typeparamref name="TOptions" /> instance
+    ///     The default configured options instance
     /// </summary>
     /// <value>The value.</value>
     LoggerConfiguration IOptions<LoggerConfiguration>.Value => this;
+
+    /// <summary>
+    ///     The logger output case.
+    ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
+    /// </summary>
+    /// <value>The logger output case.</value>
+    public LoggerOutputCase? LoggerOutputCase { get; set; }
 }
