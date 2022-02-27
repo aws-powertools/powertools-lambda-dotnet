@@ -41,6 +41,15 @@ public class Function
         var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
         _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
     }
+    
+    /// <summary>
+    /// Test constructor
+    /// </summary>
+    public Function(IDynamoDBContext dynamoDbContext, HttpClient httpClient)   
+    {
+        _httpClient = httpClient;
+        _dynamoDbContext = dynamoDbContext;
+    }
 
     /// <summary>
     /// Lambda Handler
@@ -141,17 +150,16 @@ public class Function
     }
 
     /// <summary>
-    /// Saves the LookupRecord record in DynamoDB
+    /// Saves the lookup record in DynamoDB
     /// </summary>
     /// <param name="lookupRecord">Instance of LookupRecord</param>
-    /// <returns>LookupRecord</returns>
-    private static Task<LookupRecord> SaveRecordInDynamo(LookupRecord lookupRecord)
+    /// <returns>A Task that can be used to poll or wait for results, or both.</returns>
+    private static async Task SaveRecordInDynamo(LookupRecord lookupRecord)
     {
         try
         {
             Logger.LogInformation($"Saving record with id {lookupRecord.LookupId}");
-            _dynamoDbContext?.SaveAsync(lookupRecord).Wait();
-            return Task.FromResult(lookupRecord);
+            await _dynamoDbContext?.SaveAsync(lookupRecord)!;
         }
         catch (AmazonDynamoDBException e)
         {

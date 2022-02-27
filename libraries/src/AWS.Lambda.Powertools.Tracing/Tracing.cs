@@ -212,11 +212,14 @@ public static class Tracing
             childSubsegment.IsInProgress = false;
             childSubsegment.Release();
             childSubsegment.SetEndTimeToNow();
-            if (childSubsegment.IsEmittable())
-                XRayRecorder.Instance.Emitter.Send(childSubsegment.RootSegment);
-            else if (XRayRecorder.Instance.StreamingStrategy.ShouldStream(childSubsegment))
-                XRayRecorder.Instance.StreamingStrategy.Stream(childSubsegment.RootSegment,
-                    XRayRecorder.Instance.Emitter);
+            if (PowertoolsConfigurations.Instance.IsLambdaEnvironment)
+            {
+                if (childSubsegment.IsEmittable())
+                    XRayRecorder.Instance.Emitter.Send(childSubsegment.RootSegment);
+                else if (XRayRecorder.Instance.StreamingStrategy.ShouldStream(childSubsegment))
+                    XRayRecorder.Instance.StreamingStrategy.Stream(childSubsegment.RootSegment,
+                        XRayRecorder.Instance.Emitter);
+            }
         }
     }
 
