@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2.DataModel;
 using Xunit;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
+using Moq;
+using Moq.Protected;
 using Xunit.Abstractions;
 
 namespace HelloWorld.Tests
@@ -13,31 +18,45 @@ namespace HelloWorld.Tests
     public class FunctionTest
     {
         private readonly ITestOutputHelper _testOutputHelper;
-        private static readonly HttpClient Client = new HttpClient();
-
+       
         public FunctionTest(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
-        }
-
-        private static async Task<string> GetCallingIP()
-        {
-            Client.DefaultRequestHeaders.Accept.Clear();
-            Client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
-
-            var stringTask = Client.GetStringAsync("http://checkip.amazonaws.com/")
-                .ConfigureAwait(continueOnCapturedContext: false);
-
-            var msg = await stringTask;
-            return msg.Replace("\n", "");
         }
 
         [Fact]
         public async Task TestHelloWorldFunctionHandler()
         {
             var requestId = Guid.NewGuid().ToString("D");
-            var request = new APIGatewayProxyRequest()
-                { RequestContext = new APIGatewayProxyRequest.ProxyRequestContext() { RequestId = requestId } };
+            var accountId = Guid.NewGuid().ToString("D");
+            var location = "192.158. 1.38";
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME","powertools-dotnet-sample");
+            
+            var dynamoDbContext = new Mock<IDynamoDBContext>();
+            var handlerMock = new Mock<HttpMessageHandler>();
+            handlerMock
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(location)
+                })
+                .Verifiable();
+            
+            var request = new APIGatewayProxyRequest
+            {
+                RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
+                {
+                    RequestId = requestId,
+                    AccountId = accountId
+                }
+            };
+            
             var context = new TestLambdaContext()
             {
                 FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1",
@@ -45,8 +64,8 @@ namespace HelloWorld.Tests
                 MemoryLimitInMB = 215,
                 AwsRequestId = Guid.NewGuid().ToString("D")
             };
-            string location = GetCallingIP().Result;
-            Dictionary<string, string> body = new Dictionary<string, string>
+            
+            var body = new Dictionary<string, string>
             {
                 { "LookupId", requestId },
                 { "Greeting", "Hello AWS Lambda Powertools for .NET" },
@@ -60,7 +79,7 @@ namespace HelloWorld.Tests
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
 
-            var function = new Function();
+            var function = new Function(dynamoDbContext.Object, new HttpClient(handlerMock.Object));
             var response = await function.FunctionHandler(request, context);
 
             _testOutputHelper.WriteLine("Lambda Response: \n" + response.Body);
