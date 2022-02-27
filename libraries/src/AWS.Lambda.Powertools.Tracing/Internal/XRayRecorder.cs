@@ -40,16 +40,22 @@ internal class XRayRecorder : IXRayRecorder
     public static IXRayRecorder Instance => _instance ??= new XRayRecorder();
 
     /// <summary>
+    ///     Checks whether current execution is in AWS Lambda.
+    /// </summary>
+    /// <returns>Returns true if current execution is in AWS Lambda.</returns>
+    private static readonly bool _isLambda = AWSXRayRecorder.IsLambda();
+
+    /// <summary>
     ///     Gets the emitter.
     /// </summary>
     /// <value>The emitter.</value>
-    public ISegmentEmitter Emitter => AWSXRayRecorder.Instance.Emitter;
+    public ISegmentEmitter Emitter => _isLambda ? AWSXRayRecorder.Instance.Emitter : null;
 
     /// <summary>
     ///     Gets the streaming strategy.
     /// </summary>
     /// <value>The streaming strategy.</value>
-    public IStreamingStrategy StreamingStrategy => AWSXRayRecorder.Instance.StreamingStrategy;
+    public IStreamingStrategy StreamingStrategy => _isLambda ? AWSXRayRecorder.Instance.StreamingStrategy : null;
 
     /// <summary>
     ///     Begins the subsegment.
@@ -57,7 +63,8 @@ internal class XRayRecorder : IXRayRecorder
     /// <param name="name">The name.</param>
     public void BeginSubsegment(string name)
     {
-        AWSXRayRecorder.Instance.BeginSubsegment(name);
+        if (_isLambda)
+            AWSXRayRecorder.Instance.BeginSubsegment(name);
     }
 
     /// <summary>
@@ -66,7 +73,8 @@ internal class XRayRecorder : IXRayRecorder
     /// <param name="value">The value.</param>
     public void SetNamespace(string value)
     {
-        AWSXRayRecorder.Instance.SetNamespace(value);
+        if (_isLambda)
+            AWSXRayRecorder.Instance.SetNamespace(value);
     }
 
     /// <summary>
@@ -76,7 +84,8 @@ internal class XRayRecorder : IXRayRecorder
     /// <param name="value">The value.</param>
     public void AddAnnotation(string key, object value)
     {
-        AWSXRayRecorder.Instance.AddAnnotation(key, value);
+        if (_isLambda)
+            AWSXRayRecorder.Instance.AddAnnotation(key, value);
     }
 
     /// <summary>
@@ -87,7 +96,8 @@ internal class XRayRecorder : IXRayRecorder
     /// <param name="value">The value.</param>
     public void AddMetadata(string nameSpace, string key, object value)
     {
-        AWSXRayRecorder.Instance.AddMetadata(nameSpace, key, value);
+        if (_isLambda)
+            AWSXRayRecorder.Instance.AddMetadata(nameSpace, key, value);
     }
 
     /// <summary>
@@ -95,7 +105,8 @@ internal class XRayRecorder : IXRayRecorder
     /// </summary>
     public void EndSubsegment()
     {
-        AWSXRayRecorder.Instance.EndSubsegment();
+        if (_isLambda)
+            AWSXRayRecorder.Instance.EndSubsegment();
     }
 
     /// <summary>
@@ -104,7 +115,9 @@ internal class XRayRecorder : IXRayRecorder
     /// <returns>Entity.</returns>
     public Entity GetEntity()
     {
-        return AWSXRayRecorder.Instance.GetEntity();
+        return _isLambda
+            ? AWSXRayRecorder.Instance.GetEntity()
+            : new Segment("Root");
     }
 
     /// <summary>
@@ -113,7 +126,8 @@ internal class XRayRecorder : IXRayRecorder
     /// <param name="entity">The entity.</param>
     public void SetEntity(Entity entity)
     {
-        AWSXRayRecorder.Instance.SetEntity(entity);
+        if (_isLambda)
+            AWSXRayRecorder.Instance.SetEntity(entity);
     }
 
     /// <summary>
@@ -122,7 +136,8 @@ internal class XRayRecorder : IXRayRecorder
     /// <param name="exception">The exception.</param>
     public void AddException(Exception exception)
     {
-        AWSXRayRecorder.Instance.AddException(exception);
+        if (_isLambda)
+            AWSXRayRecorder.Instance.AddException(exception);
     }
 
     /// <summary>
@@ -132,6 +147,7 @@ internal class XRayRecorder : IXRayRecorder
     /// <param name="value">The value.</param>
     public void AddHttpInformation(string key, object value)
     {
-        AWSXRayRecorder.Instance.AddHttpInformation(key, value);
+        if (_isLambda)
+            AWSXRayRecorder.Instance.AddHttpInformation(key, value);
     }
 }
