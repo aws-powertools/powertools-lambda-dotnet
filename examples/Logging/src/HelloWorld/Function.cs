@@ -36,7 +36,10 @@ public class Function
     private static HttpClient? _httpClient;
     private static IDynamoDBContext? _dynamoDbContext;
     
-    public Function()   
+    /// <summary>
+    /// Function constructor
+    /// </summary>
+    public Function()
     {
         _httpClient = new HttpClient();
 
@@ -50,6 +53,15 @@ public class Function
 
         var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
         _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
+    }
+    
+    /// <summary>
+    /// Test constructor
+    /// </summary>
+    public Function(IDynamoDBContext dynamoDbContext, HttpClient httpClient)   
+    {
+        _httpClient = httpClient;
+        _dynamoDbContext = dynamoDbContext;
     }
 
     [Logging(LogEvent = true)]
@@ -123,17 +135,16 @@ public class Function
     }
 
     /// <summary>
-    /// Saves the loopup record in DynamoDB
+    /// Saves the lookup record in DynamoDB
     /// </summary>
     /// <param name="lookupRecord"></param>
-    /// <returns></returns>
-    private static Task<LookupRecord> SaveRecordInDynamo(LookupRecord lookupRecord)
+    /// <returns>A Task that can be used to poll or wait for results, or both.</returns>
+    private static async Task SaveRecordInDynamo(LookupRecord lookupRecord)
     {
         try
         {
             Logger.LogInformation($"Saving record with id {lookupRecord.LookupId}");
-             _dynamoDbContext?.SaveAsync(lookupRecord).Wait();
-             return Task.FromResult(lookupRecord);
+            await _dynamoDbContext?.SaveAsync(lookupRecord)!;
         }
         catch (AmazonDynamoDBException e)
         {
