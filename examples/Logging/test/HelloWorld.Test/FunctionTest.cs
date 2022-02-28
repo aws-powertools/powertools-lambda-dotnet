@@ -30,7 +30,7 @@ namespace HelloWorld.Tests
             // Arrange
             var requestId = Guid.NewGuid().ToString("D");
             var accountId = Guid.NewGuid().ToString("D");
-            var location = "192.158. 1.38";
+            var location = "192.158.1.38";
             
             var dynamoDbContext = new Mock<IDynamoDBContext>();
             var handlerMock = new Mock<HttpMessageHandler>();

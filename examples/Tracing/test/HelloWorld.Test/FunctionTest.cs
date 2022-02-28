@@ -30,7 +30,7 @@ namespace HelloWorld.Tests
             // Arrange
             var requestId = Guid.NewGuid().ToString("D");
             var accountId = Guid.NewGuid().ToString("D");
-            var location = "192.158. 1.38";
+            var location = "192.158.1.38";
             Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME","powertools-dotnet-sample");
             
             var dynamoDbContext = new Mock<IDynamoDBContext>();
