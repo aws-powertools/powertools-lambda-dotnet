@@ -117,7 +117,7 @@ internal class XRayRecorder : IXRayRecorder
     {
         return _isLambda
             ? AWSXRayRecorder.Instance.GetEntity()
-            : new Segment("Root");
+            : new Subsegment("Root");
     }
 
     /// <summary>

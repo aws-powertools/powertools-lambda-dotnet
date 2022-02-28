@@ -78,13 +78,15 @@ namespace HelloWorld.Tests
                 StatusCode = 200,
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
-
+            
+            // Act
             var function = new Function(dynamoDbContext.Object, new HttpClient(handlerMock.Object));
             var response = await function.FunctionHandler(request, context);
 
             _testOutputHelper.WriteLine("Lambda Response: \n" + response.Body);
             _testOutputHelper.WriteLine("Expected Response: \n" + expectedResponse.Body);
 
+            // Assert
             Assert.Equal(expectedResponse.Body, response.Body);
             Assert.Equal(expectedResponse.Headers, response.Headers);
             Assert.Equal(expectedResponse.StatusCode, response.StatusCode);

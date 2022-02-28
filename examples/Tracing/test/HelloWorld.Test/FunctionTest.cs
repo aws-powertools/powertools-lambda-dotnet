@@ -27,6 +27,7 @@ namespace HelloWorld.Tests
         [Fact]
         public async Task TestHelloWorldFunctionHandler()
         {
+            // Arrange
             var requestId = Guid.NewGuid().ToString("D");
             var accountId = Guid.NewGuid().ToString("D");
             var location = "192.158. 1.38";
@@ -79,12 +80,14 @@ namespace HelloWorld.Tests
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
 
+            // Act
             var function = new Function(dynamoDbContext.Object, new HttpClient(handlerMock.Object));
             var response = await function.FunctionHandler(request, context);
 
             _testOutputHelper.WriteLine("Lambda Response: \n" + response.Body);
             _testOutputHelper.WriteLine("Expected Response: \n" + expectedResponse.Body);
 
+            // Assert
             Assert.Equal(expectedResponse.Body, response.Body);
             Assert.Equal(expectedResponse.Headers, response.Headers);
             Assert.Equal(expectedResponse.StatusCode, response.StatusCode);
