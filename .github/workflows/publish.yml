@@ -18,25 +18,25 @@ jobs:
       uses: notiz-dev/github-action-json-property@release
       with: 
         path: 'version.json'
-        prop_path: 'AWS.Lambda.Powertools.Common'
+        prop_path: 'Core.Common'
     - name: Read AWS.Lambda.Powertools.Logging version
       id: logging-version
       uses: notiz-dev/github-action-json-property@release
       with: 
         path: 'version.json'
-        prop_path: 'AWS.Lambda.Powertools.Logging'
+        prop_path: 'Core.Logging'
     - name: Read AWS.Lambda.Powertools.Tracing version
       id: tracing-version
       uses: notiz-dev/github-action-json-property@release
       with: 
         path: 'version.json'
-        prop_path: 'AWS.Lambda.Powertools.Tracing'
+        prop_path: 'Core.Tracing'
     - name: Read AWS.Lambda.Powertools.Metrics version
       id: metrics-version
       uses: notiz-dev/github-action-json-property@release
       with: 
         path: 'version.json'
-        prop_path: 'AWS.Lambda.Powertools.Metrics'
+        prop_path: 'Core.Metrics'
     - name: Setup .NET 6.0
       uses: actions/setup-dotnet@v1
       with:

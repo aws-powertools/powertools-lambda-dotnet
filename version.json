@@ -1,6 +1,8 @@
 {
-  "AWS.Lambda.Powertools.Common": "0.0.1",
-  "AWS.Lambda.Powertools.Logging": "0.0.1",
-  "AWS.Lambda.Powertools.Metrics": "0.0.2",
-  "AWS.Lambda.Powertools.Tracing": "0.0.1"
+  "Core": {
+    "Common": "0.0.1",
+    "Logging": "0.0.1",
+    "Metrics": "0.0.1",
+    "Tracing": "0.0.1"
+  }
 }
