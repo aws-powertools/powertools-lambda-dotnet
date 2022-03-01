@@ -20,19 +20,19 @@ jobs:
         path: 'version.json'
         prop_path: 'AWS.Lambda.Powertools.Common'
     - name: Read AWS.Lambda.Powertools.Logging version
-      id: common-version
+      id: logging-version
       uses: notiz-dev/github-action-json-property@release
       with: 
         path: 'version.json'
         prop_path: 'AWS.Lambda.Powertools.Logging'
     - name: Read AWS.Lambda.Powertools.Tracing version
-      id: common-version
+      id: tracing-version
       uses: notiz-dev/github-action-json-property@release
       with: 
         path: 'version.json'
         prop_path: 'AWS.Lambda.Powertools.Tracing'
     - name: Read AWS.Lambda.Powertools.Metrics version
-      id: common-version
+      id: metrics-version
       uses: notiz-dev/github-action-json-property@release
       with: 
         path: 'version.json'
@@ -45,10 +45,10 @@ jobs:
       run: dotnet tool install -g dotnet-setversion
     - name: Set assembly version in all projects
       run: |                
-        setversion ${steps.AWS.Lambda.Powertools.Common.outputs.prop} libraries/src/AWS.Lambda.Powertools.Common/AWS.Lambda.Powertools.Common.csproj
-        setversion ${steps.AWS.Lambda.Powertools.Logging.outputs.prop} libraries/src/AWS.Lambda.Powertools.Logging/AWS.Lambda.Powertools.Logging.csproj
-        setversion ${steps.AWS.Lambda.Powertools.Metrics.outputs.prop} libraries/src/AWS.Lambda.Powertools.Metrics/AWS.Lambda.Powertools.Metrics.csproj
-        setversion ${steps.AWS.Lambda.Powertools.Tracing.outputs.prop} libraries/src/AWS.Lambda.Powertools.Tracing/AWS.Lambda.Powertools.Tracing.csproj
+        setversion ${steps.common-version.outputs.prop} libraries/src/AWS.Lambda.Powertools.Common/AWS.Lambda.Powertools.Common.csproj
+        setversion ${steps.logging-version.outputs.prop} libraries/src/AWS.Lambda.Powertools.Logging/AWS.Lambda.Powertools.Logging.csproj
+        setversion ${steps.metrics-version.outputs.prop} libraries/src/AWS.Lambda.Powertools.Metrics/AWS.Lambda.Powertools.Metrics.csproj
+        setversion ${steps.tracing-version.outputs.prop} libraries/src/AWS.Lambda.Powertools.Tracing/AWS.Lambda.Powertools.Tracing.csproj
     - name: Authenticate to GitHub packages # Temporary package repository for publishing validation
       run: dotnet nuget add source --username ${{ secrets.PUBLISH_USERNAME }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name nuget ${{ secrets.NUGET_SOURCE }}
     - name: Generate Nuget Packages
