@@ -58,5 +58,5 @@ jobs:
     - name: Publish Nuget Packages
       run: |
         cd deploy/nuget-packages
-        dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API_KEY }} -s nuget
+        dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate -s nuget
 
