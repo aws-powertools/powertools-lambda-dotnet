@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="full-build" 
+    xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <ItemGroup>
+        <DeploymentNuGetConfig Include="NuGet.Config"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+        <PackCommand>dotnet pack --no-build -c $(Configuration) -o $(MSBuildThisFileDirectory)/../deploy/nuget-packages</PackCommand>
+		<PackWithConfigurationCommand>dotnet pack --no-build -o $(MSBuildThisFileDirectory)/../deploy/nuget-packages</PackWithConfigurationCommand>
+        <Cicd Condition="'$(Cicd)' == ''">false</Cicd>
+    </PropertyGroup>
+
+    <Target Name="full-build" DependsOnTargets="full-build-notests;run-tests;"></Target>
+    <Target Name="full-build-notests" DependsOnTargets="build-nuget-packages;"></Target>
+    <Target Name="tests" DependsOnTargets="unit-tests"></Target>
+    <Target Name="unit-tests" DependsOnTargets="run-unit-tests"></Target>
+    <Target Name="build" DependsOnTargets="build-project-packages;run-blueprint-packager;build-lambda-test-tool-package-cicd"></Target>
+
+    <ItemGroup>
+        <LibraryName Include="..\libraries\src\**\*.csproj"/>
+    </ItemGroup>
+
+    <Target Name="init" Condition="!$(Cicd)">
+        <RemoveDir Directories="../deploy"/>
+        <MakeDir Directories="../deploy/nuget-packages"/>
+        <Exec Command="dotnet restore AWS.Lambda.Powertools.sln" WorkingDirectory="..\libraries"/>
+    </Target>
+
+    <Target Name="run-tests" DependsOnTargets="build-nuget-packages">
+        <PropertyGroup>
+            <Command>dotnet test -c $(Configuration)</Command>
+        </PropertyGroup>
+        <Exec Command="$(Command) AWS.Lambda.Powertools.sln" WorkingDirectory="..\libraries"/>
+    </Target>
+
+    <Target Name="build-nuget-packages" DependsOnTargets="init">
+        <Exec Command="dotnet msbuild AWS.Lambda.Powertools.sln /t:Rebuild /p:Configuration=$(Configuration) /p:AssemblyOriginatorKeyFile=$(AssemblyOriginatorKeyFile) /p:SignAssembly=$(SignAssembly)" WorkingDirectory="..\libraries"/>
+        <Exec Command="$(PackCommand)" WorkingDirectory="..\libraries\src\%(LibraryName.FileName)"/>
+    </Target>
+
+    <Target Name="build-project-packages">
+        <Exec Command="dotnet msbuild -restore /p:Configuration=$(Configuration) /p:AssemblyOriginatorKeyFile=$(AssemblyOriginatorKeyFile) /p:SignAssembly=$(SignAssembly)" WorkingDirectory="..\libraries\src\%(LibraryName.FileName)"/>
+    </Target>
+    
+    <Target Name="run-unit-tests">
+        <Exec Command="dotnet test -c $(Configuration)" WorkingDirectory="..\libraries\test\Amazon.Lambda.RuntimeSupport.Tests\Amazon.Lambda.RuntimeSupport.UnitTests"/>
+    </Target>
+    
+    <Target Name="create-nuget-packages-cicd" DependsOnTargets="build-project-packages">
+        <Exec Command="$(PackCommand)" WorkingDirectory="..\libraries\src\%(LibraryName.FileName)"/>
+    </Target>
+</Project>
