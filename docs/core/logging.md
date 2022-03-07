@@ -3,7 +3,7 @@ title: Logging
 description: Core utility
 ---
 
-Logging provides an opinionated logger with output structured as JSON.
+The logging utility provides a Lambda optimised logger with output structured as JSON.
 
 ## Key features
 
@@ -53,7 +53,7 @@ Key | Type | Example | Description
 **ColdStart** | bool | true| ColdStart value.
 **Service** | string | "payment" | Service name defined. "service_undefined" will be used if unknown
 **SamplingRate** | int |  0.1 | Debug logging sampling rate in percentage e.g. 10% in this case
-**Message** | string |  "Collecting payment" | Log statement value. Unserializable JSON values will be casted to string
+**Message** | string |  "Collecting payment" | Log statement value. Unserializable JSON values will be cast to string
 **FunctionName**| string | "example-powertools-HelloWorldFunction-1P1Z6B39FLU73"
 **FunctionVersion**| string | "12"
 **FunctionMemorySize**| string | "128"
@@ -191,33 +191,28 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
 !!! info "Custom keys are persisted across warm invocations"
         Always set additional keys as part of your handler to ensure they have the latest value, or explicitly clear them with [`ClearState=true`](#clearing-all-state).
 
-You can append your own keys to your existing logs via `AppendKey`.
+You can append your own keys to your existing logs via `AppendKey`. Typically this value would be passed into the function via the event. Appended keys are added to all subsequent log entries in the current execution from the point the logger method is called. To ensure the key is added to all log entries, call this method as early as possible in the Lambda handler.
 
 === "Function.cs"
 
-    ```c# hl_lines="11 19"
+    ```c# hl_lines="15"
     /**
      * Handler for requests to Lambda function.
      */
-    public class Function
+    [Logging(LogEvent = true)]
+    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
+        ILambdaContext context)
     {
-        [Logging(LogEvent = true)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
+        
+        var lookupId = new Dictionary<string, object>()
         {
-            ...
-            Logger.AppendKey("test", "willBeLogged");
-            ...
-            var customKeys = new Dictionary<string, string>
-            {
-                {"test1", "value1"}, 
-                {"test2", "value2"}
-            };
-            
-            Logger.AppendKeys(customKeys);
-            ...
-        }
-    }
+            { "LookupId", requestContextRequestId }
+        };
+
+        Logger.AppendKeys(lookupId);
+
+        Logger.LogInformation("Getting ip address from external service"); // Adds lookup id to this log entry
     ```
 
 ### Removing additional keys
@@ -255,6 +250,8 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
     ```
 
 ## Extra Keys
+
+Extra keys allow you to append additional keys to a log entry. Unlike `AppendKey`, extra keys will only apply to the current log entry. 
 
 Extra keys argument is available for all log levels' methods, as implemented in the standard logging library - e.g. Logger.Information, Logger.Warning.
 
