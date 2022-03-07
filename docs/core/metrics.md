@@ -18,7 +18,7 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://cons
 
 If you're new to Amazon CloudWatch, there are two terminologies you must be aware of before using this utility:
 
-* **Namespace**. It's the highest level container that will group multiple metrics from multiple services for a given application, for example `ServerlessEcommerce`.
+* **Namespace**. It's the highest level container that will group multiple metrics from multiple services for a given application, for example `MyCompanyEcommerce`.
 * **Dimensions**. Metrics metadata in key-value format. They help you slice and dice metrics visualization, for example `ColdStart` metric by Payment `service`.
 
 <figure>
@@ -33,7 +33,7 @@ Metric has two global settings that will be used across all metrics emitted:
 
 Setting | Description | Environment variable | Constructor parameter
 ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------
-**Metric namespace** | Logical container where all metrics will be placed e.g. `ServerlessAirline` |  `POWERTOOLS_METRICS_NAMESPACE` | `Namespace`
+**Metric namespace** | Logical container where all metrics will be placed e.g. `MyCompanyEcommerce` |  `POWERTOOLS_METRICS_NAMESPACE` | `Namespace`
 **Service** | Optionally, sets **service** metric dimension across all metrics e.g. `payment` | `POWERTOOLS_SERVICE_NAME` | `Service`
 
 !!! tip "Use your application or main service as the metric namespace to easily group all metrics"
@@ -50,8 +50,8 @@ Resources:
     ...
     Environment: 
       Variables:
-        POWERTOOLS_SERVICE_NAME: Payment
-        POWERTOOLS_METRICS_NAMESPACE: ServerlessAirline
+        POWERTOOLS_SERVICE_NAME: ShoppingCartService
+        POWERTOOLS_METRICS_NAMESPACE: MyCompanyEcommerce
 ```
 
 === "Function.cs"
@@ -60,7 +60,7 @@ Resources:
     using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
-      Metrics(Namespace = "ServerlessAirline", Service = "Orders", CaptureColdStart = true, RaiseOnEmptyMetrics = true)]
+      Metrics(Namespace = "MyCompanyEcommerce", Service = "ShoppingCartService", CaptureColdStart = true, RaiseOnEmptyMetrics = true)]
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
         ...
