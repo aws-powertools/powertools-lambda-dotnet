@@ -63,7 +63,7 @@ Key | Type | Example | Description
 
 ## Logging incoming event
 
-When debugging in non-production environments, you can instruct Logger to log the incoming event with `LogEvent` parameter or via POWERTOOLS_LOGGER_LOG_EVENT environment variable.
+When debugging in non-production environments, you can instruct Logger to log the incoming event with `LogEvent` parameter or via `POWERTOOLS_LOGGER_LOG_EVENT` environment variable.
 
 !!! warning
     Log event is disabled by default to prevent sensitive info being logged.
