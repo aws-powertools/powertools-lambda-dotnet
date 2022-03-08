@@ -66,6 +66,24 @@ We have provided a few examples that should you how to use the each of the core 
 * [Logger](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/logger/){target="_blank"} example
 * [Metrics](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/metrics/){target="_blank"} example
 
+## Environment variables
+
+!!! info
+    **Explicit parameters take precedence over environment variables.**
+
+| Environment variable | Description | Utility | Default |
+| ------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **POWERTOOLS_SERVICE_NAME** | Sets service name used for tracing namespace, metrics dimension and structured logging | All | `"service_undefined"` |
+| **POWERTOOLS_METRICS_NAMESPACE** | Sets namespace used for metrics | [Metrics](./core/metrics) | `Null` |
+| **POWERTOOLS_TRACE_DISABLED** | Explicitly disables tracing | [Tracing](./core/tracer) | `false` |
+| **POWERTOOLS_TRACER_CAPTURE_RESPONSE** | Enables/Disables tracing mode to capture method response. | [Tracing](./core/tracer) | `true` |
+| **POWERTOOLS_TRACER_CAPTURE_ERROR** | Enables/Disables tracing mode to capture method error. | [Tracing](./core/tracer) | `true` |
+| **POWERTOOLS_LOG_LEVEL** | Sets logging level | [Logging](./core/logger) | `Information` |
+| **POWERTOOLS_LOGGER_LOG_EVENT** | Logs incoming event | [Logging](./core/logger) | `false` |
+| **POWERTOOLS_LOGGER_SAMPLE_RATE** | Debug log sampling | [Logging](./core/logger) | `0` |
+| **POWERTOOLS_LOGGER_CASE** | Sets logger output case | [Logging](./core/logger) | `SnakeCase` |
+
+
 ## Other members of the AWS Lambda Powertools family
 
 Not using .NET? No problem we have you covered. Here are the other members of the AWS Lambda Powertools family:
