@@ -57,7 +57,7 @@ public class LoggingAttribute : MethodAspectAttribute
 
     /// <summary>
     ///     Specify the minimum log level for logging (Information, by default).
-    ///     This can be also set using the environment variable <c>LOG_LEVEL</c>.
+    ///     This can be also set using the environment variable <c>POWERTOOLS_LOG_LEVEL</c>.
     /// </summary>
     /// <value>The log level.</value>
     public LogLevel LogLevel
