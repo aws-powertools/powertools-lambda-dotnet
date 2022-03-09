@@ -20,7 +20,6 @@ description: AWS Lambda Powertools for .NET references
 | **POWERTOOLS_TRACER_CAPTURE_RESPONSE** | Captures Lambda or method return as metadata. | [Tracing](./core/tracing) | `true` |
 | **POWERTOOLS_TRACER_CAPTURE_ERROR** | Captures Lambda or method exception as metadata. | [Tracing](./core/tracing) | `true` |
 
-## SAM template snippets
 
 ### Logging
 

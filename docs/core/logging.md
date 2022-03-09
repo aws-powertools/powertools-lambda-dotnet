@@ -18,7 +18,7 @@ Logging requires two settings:
 
 Setting | Description | Environment variable | Attribute parameter
 ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------
-**Logging level** | Sets how verbose Logger should be (Information, by default) |  `LOG_LEVEL` | `LogLevel`
+**Logging level** | Sets how verbose Logger should be (Information, by default) |  `POWERTOOLS_LOG_LEVEL` | `LogLevel`
 **Service** | Sets **Service** key that will be present across all log statements | `POWERTOOLS_SERVICE_NAME` | `Service`
 
 ### Example using AWS Serverless Application Model (AWS SAM)
@@ -63,7 +63,7 @@ Key | Type | Example | Description
 
 ## Logging incoming event
 
-When debugging in non-production environments, you can instruct Logger to log the incoming event with `LogEvent` parameter or via POWERTOOLS_LOGGER_LOG_EVENT environment variable.
+When debugging in non-production environments, you can instruct Logger to log the incoming event with `LogEvent` parameter or via `POWERTOOLS_LOGGER_LOG_EVENT` environment variable.
 
 !!! warning
     Log event is disabled by default to prevent sensitive info being logged.
