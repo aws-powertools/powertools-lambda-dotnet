@@ -11,10 +11,10 @@ description: AWS Lambda Powertools for .NET references
 | Environment variable | Description | Utility | Default |
 | ------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------- |
 | **POWERTOOLS_SERVICE_NAME** | Sets service name used for tracing namespace, metrics dimension and structured logging | All | `"service_undefined"` |
+| **POWERTOOLS_LOG_LEVEL** | Sets logging level | [Logging](./core/logger) | `Information` |
+| **POWERTOOLS_LOGGER_CASE** | Override the default casing for log keys | [Logging](./core/logging/#configure-log-output-casing) | `SnakeCase` |
 | **POWERTOOLS_LOGGER_LOG_EVENT** | Logs incoming event | [Logging](./core/logging) | `false` |
 | **POWERTOOLS_LOGGER_SAMPLE_RATE** | Debug log sampling | [Logging](./core/logging) | `0` |
-| **POWERTOOLS_LOG_DEDUPLICATION_DISABLED** | Disables log deduplication filter protection to use Pytest Live Log feature | [Logging](./core/logging) | `false` |
-| **POWERTOOLS_LOGGER_CASE** | Override the default casing for log keys | [Logging](./core/logging/#configure-log-output-casing) | `SnakeCase` |
 | **POWERTOOLS_METRICS_NAMESPACE** | Sets namespace used for metrics | [Metrics](./core/metrics) | `None` |
 | **POWERTOOLS_TRACE_DISABLED** | Disables tracing | [Tracing](./core/tracing) | `false` |
 | **POWERTOOLS_TRACER_CAPTURE_RESPONSE** | Captures Lambda or method return as metadata. | [Tracing](./core/tracing) | `true` |
