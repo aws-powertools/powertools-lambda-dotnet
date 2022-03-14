@@ -35,6 +35,10 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.instant
+    - navigation.indexes
+    - navigation.tracking
+    - content.code.annotate
   icon:
     repo: fontawesome/brands/github
   logo: media/aws-logo-light.svg
@@ -43,13 +47,13 @@ theme:
 
 markdown_extensions:
   - admonition
-  - pymdownx.tabbed
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.highlight:
       linenums: true
-  - pymdownx.superfences
   - pymdownx.details
   - pymdownx.snippets:
-      base_path: '.'
+      base_path: "."
       check_paths: true
   - meta
   - toc:
@@ -58,8 +62,9 @@ markdown_extensions:
   - attr_list
   - pymdownx.emoji
   - pymdownx.inlinehilite
+  - pymdownx.superfences
 
-copyright: Copyright &copy; 2021 Amazon Web Services
+copyright: Copyright &copy; 2022 Amazon Web Services
 
 plugins:
   - git-revision-date
