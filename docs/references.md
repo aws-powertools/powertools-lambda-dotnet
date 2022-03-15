@@ -20,7 +20,7 @@ description: AWS Lambda Powertools for .NET references
 | **POWERTOOLS_TRACER_CAPTURE_RESPONSE** | Captures Lambda or method return as metadata. | [Tracing](./core/tracing) | `true` |
 | **POWERTOOLS_TRACER_CAPTURE_ERROR** | Captures Lambda or method exception as metadata. | [Tracing](./core/tracing) | `true` |
 
-
+## SAM template snippets
 
 ### Logging
 
@@ -30,7 +30,7 @@ description: AWS Lambda Powertools for .NET references
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Example project for AWS Lambda Powertools Logging utility
+  Example project for Powertools Logging utility
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -39,9 +39,10 @@ Globals:
     Environment:
       Variables:
         POWERTOOLS_SERVICE_NAME: powertools-dotnet-logging-sample
-        POWERTOOLS_LOGGER_LOG_EVENT: true
         POWERTOOLS_LOG_LEVEL: Debug
+        POWERTOOLS_LOGGER_LOG_EVENT: true
         POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+        POWERTOOLS_LOGGER_SAMPLE_RATE: 0
 
 ```
 
@@ -53,7 +54,7 @@ Globals:
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Example project for AWS Lambda Powertools Metrics utility
+  Example project for Powertools Metrics utility
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -73,7 +74,7 @@ Globals:
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Example project for AWS Lambda Powertools tracing utility
+  Example project for Powertools tracing utility
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
