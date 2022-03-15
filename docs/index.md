@@ -5,7 +5,7 @@ description: AWS Lambda Powertools for .NET (developer preview)
 
 # AWS Lambda Powertools for .NET
 
-AWS Lambda Powertools for .NET (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, Powertools is **optimised for .NET 6 only**.
+AWS Lambda Powertools for .NET (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, Powertools is **optimized for .NET 6 only**.
 
 The GitHub repository for this project can be found [here](https://github.com/awslabs/aws-lambda-powertools-dotnet).
 
@@ -30,7 +30,7 @@ The GitHub repository for this project can be found [here](https://github.com/aw
 
 ## Install
 
-Powertools are available as Nuget packages. You can install the packages from NuGet gallery or from Visual Studio editor. Search `AWS.Lambda.Powertools*` to see various utilities available.
+Powertools are available as NuGet packages. You can install the packages from NuGet gallery or from Visual Studio editor. Search `AWS.Lambda.Powertools*` to see various utilities available.
 
 * [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
 

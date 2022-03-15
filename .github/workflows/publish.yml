@@ -51,11 +51,11 @@ jobs:
         setversion ${{steps.tracing-version.outputs.prop}} libraries/src/AWS.Lambda.Powertools.Tracing/AWS.Lambda.Powertools.Tracing.csproj
     - name: Authenticate to GitHub packages # Temporary package repository for publishing validation
       run: dotnet nuget add source --username ${{ secrets.PUBLISH_USERNAME }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name nuget ${{ secrets.NUGET_SOURCE }}
-    - name: Generate Nuget Packages
+    - name: Generate NuGet Packages
       run: |
         cd buildtools
         dotnet build -c Release        
-    - name: Publish Nuget Packages
+    - name: Publish NuGet Packages
       run: |
         cd deploy/nuget-packages
         dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate -s nuget
