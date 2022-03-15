@@ -48,6 +48,7 @@ Here is an example using the AWS SAM [Globals section](https://docs.aws.amazon.c
                 POWERTOOLS_LOG_LEVEL: Debug
                 POWERTOOLS_LOGGER_LOG_EVENT: true
                 POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+                POWERTOOLS_LOGGER_SAMPLE_RATE: 0
     ```
 
 ### Full list of environment variables
@@ -229,7 +230,7 @@ You can append your own keys to your existing logs via `AppendKey`. Typically th
         var lookupInfo = new Dictionary<string, object>()
         {
             {"LookupInfo", new Dictionary<string, object>{{ "LookupId", requestContextRequestId }}}
-        };
+        };  
 
         // Appended keys are added to all subsequent log entries in the current execution.
         // Call this method as early as possible in the Lambda handler.

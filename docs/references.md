@@ -42,6 +42,7 @@ Globals:
         POWERTOOLS_LOG_LEVEL: Debug
         POWERTOOLS_LOGGER_LOG_EVENT: true
         POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+        POWERTOOLS_LOGGER_SAMPLE_RATE: 0
 
 ```
 

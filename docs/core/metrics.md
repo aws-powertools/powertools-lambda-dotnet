@@ -21,38 +21,47 @@ If you're new to Amazon CloudWatch, there are two terminologies you must be awar
 * **Namespace**. It's the highest level container that will group multiple metrics from multiple services for a given application, for example `MyCompanyEcommerce`.
 * **Dimensions**. Metrics metadata in key-value format. They help you slice and dice metrics visualization, for example `ColdStart` metric by Payment `service`.
 
+Visit the AWS documentation for a complete explanation for [Amazon CloudWatch concepts](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html).
+
 <figure>
   <img src="../../media/metrics_terminology.png" />
   <figcaption>Metric terminology, visually explained</figcaption>
 </figure>
 
-
 ## Getting started
 
-Metric has two global settings that will be used across all metrics emitted:
+**`Metrics`** is implemented as a Singleton to keep track of your aggregate metrics in memory and make them accessible anywhere in your code. To guarantee that metrics are flushed properly the **`MetricsAttribute`** must be added on the lambda handler.
+
+Metrics has two global settings that will be used across all metrics emitted. Use your application or main service as the metric namespace to easily group all metrics:
 
 Setting | Description | Environment variable | Constructor parameter
 ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------
-**Metric namespace** | Logical container where all metrics will be placed e.g. `MyCompanyEcommerce` |  `POWERTOOLS_METRICS_NAMESPACE` | `Namespace`
 **Service** | Optionally, sets **service** metric dimension across all metrics e.g. `payment` | `POWERTOOLS_SERVICE_NAME` | `Service`
+**Metric namespace** | Logical container where all metrics will be placed e.g. `MyCompanyEcommerce` |  `POWERTOOLS_METRICS_NAMESPACE` | `Namespace`
 
-!!! tip "Use your application or main service as the metric namespace to easily group all metrics"
+!!! info "Autocomplete Metric Units"
+    All parameters in **`Metrics Attribute`** are optional. Following rules apply:
 
-> Example using AWS Serverless Application Model (AWS SAM)
+      - **Namespace:** **`Empty`** string by default. You can either specify it in code or environment variable. If not present before flushing metrics, a **`SchemaValidationException`** will be thrown.
+      - **Service:** **`service_undefined`** by default. You can either specify it in code or environment variable.
+      - **CaptureColdStart:** **`false`** by default. 
+      - **RaiseOnEmptyMetrics:** **`false`** by default.
+
+### Example using AWS Serverless Application Model (AWS SAM)
 
 === "template.yml"
 
-```yaml hl_lines="9 10"
-Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function 
-    Properties:
-    ...
-    Environment: 
-      Variables:
-        POWERTOOLS_SERVICE_NAME: ShoppingCartService
-        POWERTOOLS_METRICS_NAMESPACE: MyCompanyEcommerce
-```
+    ```yaml hl_lines="9 10"
+    Resources:
+    HelloWorldFunction:
+        Type: AWS::Serverless::Function 
+        Properties:
+        ...
+        Environment: 
+        Variables:
+            POWERTOOLS_SERVICE_NAME: ShoppingCartService
+            POWERTOOLS_METRICS_NAMESPACE: MyCompanyEcommerce
+    ```
 
 === "Function.cs"
 
@@ -68,16 +77,12 @@ Resources:
     }
     ```
 
-!!! Warning "Metrics Attribute placement"
-    **`Metrics`** is implemented as a Singleton to keep track of your aggregate metrics in memory and make them accessible anywhere in your code. To guarantee that metrics are flushed properly the **`MetricsAttribute`** must be added on the lambda handler.
+### Full list of environment variables
 
-!!! info "Autocomplete Metric Units"
-    All parameters in **`Metrics Attribute`** are optional. Following rules apply:
-      
-      - **Namespace:** **`Empty`** string by default. You can either specify it in code or environment variable. If not present before flushing metrics, a **`SchemaValidationException`** will be thrown.
-      - **Service:** **`service_undefined`** by default. You can either specify it in code or environment variable.
-      - **CaptureColdStart:** **`false`** by default. 
-      - **RaiseOnEmptyMetrics:** **`false`** by default.
+| Environment variable | Description | Default |
+| ------------------------------------------------- | --------------------------------------------------------------------------------- |  ------------------------------------------------- |
+| **POWERTOOLS_SERVICE_NAME** | Sets service name used for tracing namespace, metrics dimension and structured logging | `"service_undefined"` |
+| **POWERTOOLS_METRICS_NAMESPACE** | Sets namespace used for metrics | `None` |
 
 ### Creating metrics
 
