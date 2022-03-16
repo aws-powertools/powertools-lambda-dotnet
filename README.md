@@ -20,19 +20,19 @@ Lambda Powertools provides three core utilities:
 
 ### Installation
 
-The AWS Lambda Powertools for .NET utilities (.NET 6) are available as Nuget packages. You can install the packages from Nuget gallery or from Visual Studio editor. Search `AWS.Lambda.Powertools*` to see various utilities available.Powertools is available on NuGet.
+The AWS Lambda Powertools for .NET utilities (.NET 6) are available as NuGet packages. You can install the packages from NuGet gallery or from Visual Studio editor. Search `AWS.Lambda.Powertools*` to see various utilities available.Powertools is available on NuGet.
 
 * [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
 
-    `dotnet nuget add AWS.Lambda.Powertools.Logging`
+    `dotnet add package AWS.Lambda.Powertools.Logging`
 
 * [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Metrics):
 
-    `dotnet nuget add AWS.Lambda.Powertools.Metrics`
+    `dotnet add package AWS.Lambda.Powertools.Metrics`
 
 * [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
 
-    `dotnet nuget add AWS.Lambda.Powertools.Tracing`
+    `dotnet add package AWS.Lambda.Powertools.Tracing`
 
 ## Examples
 

@@ -3,7 +3,7 @@ title: Logging
 description: Core utility
 ---
 
-The logging utility provides a Lambda optimised logger with output structured as JSON.
+The logging utility provides a Lambda optimized logger with output structured as JSON.
 
 ## Key features
 
