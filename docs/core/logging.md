@@ -300,7 +300,7 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
 
 ## Extra Keys
 
-Extra keys allow you to append additional keys to a log entry. Unlike `AppendKey`, extra keys will only apply to the current log entry. 
+Extra keys allow you to append additional keys to a log entry. Unlike `AppendKey`, extra keys will only apply to the current log entry.
 
 Extra keys argument is available for all log levels' methods, as implemented in the standard logging library - e.g. Logger.Information, Logger.Warning.
 
@@ -439,7 +439,7 @@ via `SamplingRate` parameter on attribute.
 
 By definition Powertools outputs logging keys using **snake case** (e.g. *"function_memory_size": 128*). This allows developers using different Powertools runtimes, to search logs across services written in languages such as Python or TypeScript.
 
-If you want to override the default behaviour you can either set the desired casing through attributes, as described in the example below, or by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
+If you want to override the default behavior you can either set the desired casing through attributes, as described in the example below, or by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
 
 === "Output casing via attribute parameter"
 

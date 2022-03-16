@@ -128,7 +128,7 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
     Metric values must be a positive number otherwise an `ArgumentException` will be thrown.
 
 !!! warning "Do not create metrics or dimensions outside the handler"
-    Metrics or dimensions added in the global scope will only be added during cold start. Disregard if that's the intended behaviour.
+    Metrics or dimensions added in the global scope will only be added during cold start. Disregard if that's the intended behavior.
 
 ### Adding default dimensions
 
@@ -177,29 +177,29 @@ During metrics validation, if no metrics are provided then a warning will be log
 === "Example CloudWatch Logs excerpt"
 
     ```json hl_lines="2 7 10 15 22"
-	{
-	  "BookingConfirmation": 1.0,
-	  "_aws": {
-		"Timestamp": 1592234975665,
-		"CloudWatchMetrics": [
-		  {
-			"Namespace": "ExampleApplication",
-			"Dimensions": [
-			  [
-				"service"
-			  ]
-			],
-			"Metrics": [
-			  {
-				"Name": "BookingConfirmation",
-				"Unit": "Count"
-			  }
-			]
-		  }
-		]
-	  },
-	  "service": "ExampleService"
-	}
+    {
+    "BookingConfirmation": 1.0,
+    "_aws": {
+        "Timestamp": 1592234975665,
+        "CloudWatchMetrics": [
+            {
+        "Namespace": "ExampleApplication",
+        "Dimensions": [
+            [
+            "service"
+            ]
+        ],
+        "Metrics": [
+            {
+            "Name": "BookingConfirmation",
+            "Unit": "Count"
+            }
+        ]
+            }
+        ]
+        },
+    "service": "ExampleService"
+    }
     ```
 
 !!! tip "Metric validation"
@@ -279,30 +279,30 @@ You can add high-cardinality data as part of your Metrics log with `AddMetadata`
 === "Example CloudWatch Logs excerpt"
 
     ```json hl_lines="23"
-	{
-	  "SuccessfulBooking": 1.0,
-	  "_aws": {
-		"Timestamp": 1592234975665,
-		"CloudWatchMetrics": [
-		  {
-			"Namespace": "ExampleApplication",
-			"Dimensions": [
-			  [
-				"service"
-			  ]
-			],
-			"Metrics": [
-			  {
-				"Name": "SuccessfulBooking",
-				"Unit": "Count"
-			  }
-			]
-		  }
-		]
-	  },
-	  "Service": "Booking",
-	  "BookingId": "683EEB2D-B2F3-4075-96EE-788E6E2EED45"
-	}
+ {
+   "SuccessfulBooking": 1.0,
+   "_aws": {
+  "Timestamp": 1592234975665,
+  "CloudWatchMetrics": [
+    {
+   "Namespace": "ExampleApplication",
+   "Dimensions": [
+     [
+    "service"
+     ]
+   ],
+   "Metrics": [
+     {
+    "Name": "SuccessfulBooking",
+    "Unit": "Count"
+     }
+   ]
+    }
+  ]
+   },
+   "Service": "Booking",
+   "BookingId": "683EEB2D-B2F3-4075-96EE-788E6E2EED45"
+ }
     ```
 
 ### Single metric with a different dimension
