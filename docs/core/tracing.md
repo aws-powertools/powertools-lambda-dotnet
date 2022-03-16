@@ -102,8 +102,8 @@ segment name that appears in traces.
     }
     ```
 
-By default, this attribute will automatically record method responses and exceptions. You can change the default behaviour by setting
-the environment variables `POWERTOOLS_TRACER_CAPTURE_RESPONSE` and `POWERTOOLS_TRACER_CAPTURE_ERROR` as needed. Optionally, you can override behaviour by different supported `CaptureMode` to record response, exception or both.
+By default, this attribute will automatically record method responses and exceptions. You can change the default behavior by setting
+the environment variables `POWERTOOLS_TRACER_CAPTURE_RESPONSE` and `POWERTOOLS_TRACER_CAPTURE_ERROR` as needed. Optionally, you can override behavior by different supported `CaptureMode` to record response, exception or both.
 
 !!! warning "Returning sensitive information from your Lambda handler or functions, where `Tracing` is used?"
     You can disable attribute from capturing their responses and exception as tracing metadata with **`captureMode=DISABLED`**
@@ -184,8 +184,7 @@ context for an operation using any native object.
 
 ## Utilities
 
-Tracing modules comes with certain utility method when you don't want to use attribute for capturing a code block
-under a subsegment, or you are doing multithreaded programming. Refer examples below.
+Tracing modules comes with certain utility method when you don't want to use attribute for capturing a code block under a subsegment, or you are doing multithreaded programming. Refer examples below.
 
 === "Functional Api"
 

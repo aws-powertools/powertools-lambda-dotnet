@@ -439,7 +439,7 @@ via `SamplingRate` parameter on attribute.
 
 By definition Powertools outputs logging keys using **snake case** (e.g. *"function_memory_size": 128*). This allows developers using different Powertools runtimes, to search logs across services written in languages such as Python or TypeScript.
 
-If you want to override the default behaviour you can either set the desired casing through attributes, as described in the example below, or by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
+If you want to override the default behavior you can either set the desired casing through attributes, as described in the example below, or by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
 
 === "Output casing via attribute parameter"
 

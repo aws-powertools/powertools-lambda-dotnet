@@ -128,7 +128,7 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
     Metric values must be a positive number otherwise an `ArgumentException` will be thrown.
 
 !!! warning "Do not create metrics or dimensions outside the handler"
-    Metrics or dimensions added in the global scope will only be added during cold start. Disregard if that's the intended behaviour.
+    Metrics or dimensions added in the global scope will only be added during cold start. Disregard if that's the intended behavior.
 
 ### Adding default dimensions
 
