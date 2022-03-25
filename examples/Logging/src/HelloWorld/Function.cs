@@ -101,6 +101,8 @@ public class Function
         }
         catch (Exception e)
         {
+            Logger.LogError(e.Message);
+            
             return new APIGatewayProxyResponse
             {
                 Body = e.Message,
