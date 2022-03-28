@@ -1,119 +1,132 @@
 # AWS.Lambda.Powertools.Tracing
 
-This package contains classes that can be used as....
+Powertools tracing is an opinionated thin wrapper for [AWS X-Ray .NET SDK](https://github.com/aws/aws-xray-sdk-dotnet/)
+a provides functionality to reduce the overhead of performing common tracing tasks.
+
+## Key Features
+
+* Helper methods to improve the developer experience for creating [custom AWS X-Ray subsegments](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-subsegments.html).
+* Capture cold start as annotation.
+* Capture function responses and full exceptions as metadata.
+* Better experience when developing with multiple threads.
+* Auto-patch supported modules by AWS X-Ray
+
+## Read the docs
+
+For a full list of features go to [awslabs.github.io/aws-lambda-powertools-dotnet/core/tracing/](awslabs.github.io/aws-lambda-powertools-dotnet/core/tracing/)
+
+**GitHub:** https://github.com/awslabs/aws-lambda-powertools-dotnet/
 
 ## Sample Function
 
-Below is a sample class and Lambda function that illustrates how....
+View the full example here: [https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/develop/examples/Tracing](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/develop/examples/Tracing)
 
 ```csharp
 public class Function
 {
-    private static readonly HttpClient client = new HttpClient();
-
-    [Logging(LogEvent = true, SamplingRate = 0.7)]
+    /// <summary>
+    /// Lambda Handler
+    /// </summary>
+    /// <param name="apigwProxyEvent">API Gateway Proxy event</param>
+    /// <param name="context">AWS Lambda context</param>
+    /// <returns>API Gateway Proxy response</returns>
+    [Logging(LogEvent = true)]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-    [Metrics(Namespace = "dotnet-lambdapowertools", CaptureColdStart = true)]
-    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-    {                                
+    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
+        ILambdaContext context)
+    {
+        var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
+
+        Logger.LogInformation("Getting ip address from external service");
+
+        var location = await GetCallingIp().ConfigureAwait(false);
+
+        var lookupRecord = new LookupRecord(lookupId: requestContextRequestId,
+            greeting: "Hello AWS Lambda Powertools for .NET", ipAddress: location);
+
+        // Trace Fluent API
+        Tracing.WithSubsegment("LoggingResponse",
+            subsegment =>
+            {
+                subsegment.AddAnnotation("AccountId", apigwProxyEvent.RequestContext.AccountId);
+                subsegment.AddMetadata("LookupRecord", lookupRecord);
+            });
+
         try
         {
-            // Add Metrics
-            var watch = Stopwatch.StartNew();
-            Metrics.PushSingleMetric(
-                metricName: "CallingIP",
-                value: 1,
-                unit: MetricUnit.Count,
-                nameSpace: "dotnet-lambdapowertools",
-                service: "lambda-example",
-                defaultDimensions: new Dictionary<string, string>
-                {
-                    {"Metric Type", "Single"}
-                });
-            var location = await GetCallingIP();
-            watch.Stop();
-            
-            Metrics.AddMetric("ElapsedExecutionTime", watch.ElapsedMilliseconds, MetricUnit.Milliseconds);
-            Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.Count);
-            
-            var body = new Dictionary<string, string>
-            {
-                { "message", "hello world" },
-                { "location", location }
-            };
-            
-            // Append Log Key
-            Logger.AppendKey("test", "willBeLogged");
-
-            // Trace Nested Methods
-            NestedMethodsParent();
-
-            // Trace Fluent API
-            Tracing.WithSubsegment("LoggingResponse", subsegment =>
-            {
-                subsegment.AddAnnotation("Test", "New");
-                Logger.LogInformation("log something out");
-                Logger.LogInformation(body);
-            });
-
-            // Trace Parallel Tasks
-            var entity = Tracing.GetEntity();
-            var task = Task.Run(() =>
-            {
-                Tracing.WithSubsegment("Inline Subsegment 1", entity, _ =>
-                {
-                    Logger.LogInformation($"log something out for inline subsegment 1");
-                });
-            });
-            var anotherTask = Task.Run(() =>
-            {
-                Tracing.WithSubsegment("Inline Subsegment 2", entity, _ =>
-                {
-                    Logger.LogInformation($"log something out for inline subsegment 2");
-                });
-            });
-            Task.WaitAll(task, anotherTask);
+            await SaveRecordInDynamo(lookupRecord);
 
             return new APIGatewayProxyResponse
             {
-                Body = JsonSerializer.Serialize(body),
+                Body = JsonSerializer.Serialize(lookupRecord),
                 StatusCode = 200,
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
+            Logger.LogError(e.Message);
+            
             return new APIGatewayProxyResponse
             {
-                Body = JsonSerializer.Serialize(ex.Message),
+                Body = e.Message,
                 StatusCode = 500,
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
     }
 
-    [Tracing(Namespace = "GetCallingIP", CaptureMode = TracingCaptureMode.Disabled)]
-    private static async Task<string> GetCallingIP()
+    /// <summary>
+    /// Calls location api to return IP address
+    /// </summary>
+    /// <returns>IP address string</returns>
+    [Tracing(SegmentName = "Location service")]
+    private static async Task<string?> GetCallingIp()
     {
-        client.DefaultRequestHeaders.Accept.Clear();
-        client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
-        var msg = await client.GetStringAsync("http://checkip.amazonaws.com/")
-            .ConfigureAwait(continueOnCapturedContext:false);
-        return msg.Replace("\n","");
+        if (_httpClient == null) return "0.0.0.0";
+        _httpClient.DefaultRequestHeaders.Accept.Clear();
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+
+        try
+        {
+            Logger.LogInformation("Calling Check IP API");
+
+            var response = await _httpClient.GetStringAsync("https://checkip.amazonaws.com/").ConfigureAwait(false);
+            var ip = response.Replace("\n", "");
+
+            Logger.LogInformation($"API response returned {ip}");
+
+            return ip;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex);
+            throw;
+        }
     }
 
-    [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
-    private static void NestedMethodsParent()
+    /// <summary>
+    /// Saves the lookup record in DynamoDB
+    /// </summary>
+    /// <param name="lookupRecord">Instance of LookupRecord</param>
+    /// <returns>A Task that can be used to poll or wait for results, or both.</returns>
+    [Tracing(SegmentName = "DynamoDB")]
+    private static async Task SaveRecordInDynamo(LookupRecord lookupRecord)
     {
-        Logger.LogInformation($"NestedMethodsParent method");
-        NestedMethodsChild(1);
-        NestedMethodsChild(1);
-    }
-    
-    [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
-    private static void NestedMethodsChild(int childId)
-    {
-        Logger.LogInformation($"NestedMethodsChild method for child {childId}");
+        try
+        {
+            Logger.LogInformation($"Saving record with id {lookupRecord.LookupId}");
+            await _dynamoDbContext?.SaveAsync(lookupRecord)!;
+        }
+        catch (AmazonDynamoDBException e)
+        {
+            Logger.LogCritical(e.Message);
+            throw;
+        }
     }
 }
 ```
+
+## Sample output
+
+![Tracing showcase](http://awslabs.github.io/aws-lambda-powertools-dotnet/media/tracer_utility_showcase.png)

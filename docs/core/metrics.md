@@ -5,7 +5,7 @@ description: Core utility
 
 Metrics creates custom metrics asynchronously by logging metrics to standard output following [Amazon CloudWatch Embedded Metric Format (EMF)](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format.html).
 
-These metrics can be visualized through [Amazon CloudWatch Console](https://console.aws.amazon.com/cloudwatch/).
+These metrics can be visualized through [Amazon CloudWatch Console](https://aws.amazon.com/cloudwatch/).
 
 ## Key features
 
