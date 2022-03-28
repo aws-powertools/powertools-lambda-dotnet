@@ -21,10 +21,37 @@ using Microsoft.Extensions.Logging;
 namespace AWS.Lambda.Powertools.Logging;
 
 /// <summary>
-///     Class LoggingAttribute.
-///     Implements the <see cref="MethodAspectAttribute" />
+///     Creates and setups a logger to format statements in JSON.
+/// 
+///     Includes service name and any additional key=value into logs
+///     It also accepts both service name or level explicitly via env vars
+///
+///     Environment variables
+///     ---------------------
+///     POWERTOOLS_SERVICE_NAME : string
+///         service name
+///     POWERTOOLS_LOG_LEVEL: string
+///         logging level (e.g. Information, Debug, and Trace)
+///     POWERTOOLS_LOGGER_CASE: string
+///         logger output case (e.g. CamelCase, PascalCase, and SnakeCase)
+///     POWERTOOLS_LOGGER_SAMPLE_RATE: double
+///         sampling rate ranging from 0 to 1, 1 being 100% sampling
+///
+///     Parameters
+///     ----------
+///     Service : string, optional
+///         service name to be appended in logs, by default "service_undefined"
+///     LogLevel : enum, optional
+///         logging level (e.g. Information, Debug, and Trace), by default Information
+///     LoggerOutputCase : enum, optional
+///         logger output case (e.g. CamelCase, PascalCase, and SnakeCase)
+///     SamplingRate: double, optional
+///         sample rate for debug calls within execution context defaults to 0.0
+///     CorrelationIdPath: string, optional
+///         pointer path to extract correlation id from input parameter.
+///     ClearState: bool, optional
+///         clear all custom keys on each request, by default false
 /// </summary>
-/// <seealso cref="MethodAspectAttribute" />
 [AttributeUsage(AttributeTargets.Method)]
 public class LoggingAttribute : MethodAspectAttribute
 {
