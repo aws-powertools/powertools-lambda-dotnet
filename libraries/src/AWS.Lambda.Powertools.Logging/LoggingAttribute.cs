@@ -21,37 +21,87 @@ using Microsoft.Extensions.Logging;
 namespace AWS.Lambda.Powertools.Logging;
 
 /// <summary>
-///     Creates and setups a logger to format statements in JSON.
-/// 
-///     Includes service name and any additional key=value into logs
-///     It also accepts both service name or level explicitly via env vars
-///
-///     Environment variables
-///     ---------------------
-///     POWERTOOLS_SERVICE_NAME : string
-///         service name
-///     POWERTOOLS_LOG_LEVEL: string
-///         logging level (e.g. Information, Debug, and Trace)
-///     POWERTOOLS_LOGGER_CASE: string
-///         logger output case (e.g. CamelCase, PascalCase, and SnakeCase)
-///     POWERTOOLS_LOGGER_SAMPLE_RATE: double
-///         sampling rate ranging from 0 to 1, 1 being 100% sampling
-///
-///     Parameters
-///     ----------
-///     Service : string, optional
-///         service name to be appended in logs, by default "service_undefined"
-///     LogLevel : enum, optional
-///         logging level (e.g. Information, Debug, and Trace), by default Information
-///     LoggerOutputCase : enum, optional
-///         logger output case (e.g. CamelCase, PascalCase, and SnakeCase)
-///     SamplingRate: double, optional
-///         sample rate for debug calls within execution context defaults to 0.0
-///     CorrelationIdPath: string, optional
-///         pointer path to extract correlation id from input parameter.
-///     ClearState: bool, optional
-///         clear all custom keys on each request, by default false
+///     Creates and setups a logger to format statements in JSON.                                     <br/>
+///                                                                                                   <br/>
+///     Includes service name and any additional parameter logs.                                      <br/>
+///     It also accepts both service name or lo level explicitly via Environment variables.           <br/>
+///                                                                                                   <br/>
+///     Environment variables                                                                         <br/>
+///     ---------------------                                                                         <br/> 
+///     <list type="table">
+///         <listheader>
+///           <term>Variable name</term>
+///           <description>Description</description>
+///         </listheader>
+///         <item>
+///             <term>POWERTOOLS_SERVICE_NAME</term>
+///             <description>string, service name</description>
+///         </item>
+///         <item>
+///             <term>POWERTOOLS_LOG_LEVEL</term>
+///             <description>string, logging level (e.g. Information, Debug, and Trace)</description>
+///         </item>
+///         <item>
+///             <term>POWERTOOLS_LOGGER_CASE</term>
+///             <description>string, logger output case (e.g. CamelCase, PascalCase, and SnakeCase)</description>
+///         </item>
+///         <item>
+///             <term>POWERTOOLS_LOGGER_SAMPLE_RATE</term>
+///             <description>double, sampling rate ranging from 0 to 1, 1 being 100% sampling</description>
+///         </item>
+///     </list>
+///                                                                                                   <br/>
+///     Parameters                                                                                    <br/>
+///     -----------                                                                                   <br/>
+///     <list type="table">
+///         <listheader>
+///           <term>Parameter name</term>
+///           <description>Description</description>
+///         </listheader>
+///         <item>
+///             <term>Service</term>
+///             <description>string, service name to be appended in logs, by default "service_undefined"</description>
+///         </item>
+///         <item>
+///             <term>LogLevel</term>
+///             <description>enum, logging level (e.g. Information, Debug, and Trace), by default Information</description>
+///         </item>
+///         <item>
+///             <term>LoggerOutputCase</term>
+///             <description>enum, logger output case (e.g. CamelCase, PascalCase, and SnakeCase)</description>
+///         </item>
+///         <item>
+///             <term>SamplingRate</term>
+///             <description>double, sample rate for debug calls within execution context defaults to 0.0</description>
+///         </item>
+///         <item>
+///             <term>CorrelationIdPath</term>
+///             <description>string, pointer path to extract correlation id from input parameter</description>
+///         </item>
+///         <item>
+///             <term>ClearState</term>
+///             <description>bool, clear all custom keys on each request, by default false</description>
+///         </item>
+///     </list>
 /// </summary>
+/// <example>
+///     <code>
+///         [Logging(
+///             Service = "example",
+///             LogEvent = true,
+///             ClearState = true,
+///             LogLevel = LogLevel.Debug,
+///             LoggerOutputCase = LoggerOutputCase.SnakeCase,
+///             CorrelationIdPath = "/headers/my_request_id_header")
+///         ]
+///         public async Task&lt;APIGatewayProxyResponse&gt; FunctionHandler
+///              (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+///         {
+///             ...
+///         }
+///     </code>
+/// </example>
+
 [AttributeUsage(AttributeTargets.Method)]
 public class LoggingAttribute : MethodAspectAttribute
 {
