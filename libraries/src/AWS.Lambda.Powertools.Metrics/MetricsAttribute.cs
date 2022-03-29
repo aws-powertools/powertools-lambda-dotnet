@@ -19,10 +19,83 @@ using AWS.Lambda.Powertools.Common;
 namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
-///     Class MetricsAttribute.
-///     Implements the <see cref="MethodAspectAttribute" />
+///      Creates custom metrics asynchronously by logging metrics to
+///      standard output following Amazon CloudWatch Embedded Metric Format (EMF).                    <br/>
+///                                                                                                   <br/>
+///     Key features                                                                                  <br/>
+///     ---------------------                                                                         <br/> 
+///     <list type="bullet">
+///         <item>
+///             <description>Aggregate up to 100 metrics using a single CloudWatch EMF object (large JSON blob)</description>
+///         </item>
+///         <item>
+///             <description>Validate against common metric definitions mistakes (metric unit, values, max dimensions, max metrics, etc)</description>
+///         </item>
+///         <item>
+///             <description>Metrics are created asynchronously by CloudWatch service, no custom stacks needed</description>
+///         </item>
+///         <item>
+///             <description>Context manager to create a one off metric with a different dimension</description>
+///         </item>
+///     </list>
+///                                                                                                   <br/> 
+///     Environment variables                                                                         <br/>
+///     ---------------------                                                                         <br/> 
+///     <list type="table">
+///         <listheader>
+///           <term>Variable name</term>
+///           <description>Description</description>
+///         </listheader>
+///         <item>
+///             <term>POWERTOOLS_SERVICE_NAME</term>
+///             <description>string, service name</description>
+///         </item>
+///         <item>
+///             <term>POWERTOOLS_METRICS_NAMESPACE</term>
+///             <description>string, metric namespace</description>
+///         </item>
+///     </list>
+///                                                                                                   <br/>
+///     Parameters                                                                                    <br/>
+///     -----------                                                                                   <br/>
+///     <list type="table">
+///         <listheader>
+///           <term>Parameter name</term>
+///           <description>Description</description>
+///         </listheader>
+///         <item>
+///             <term>Service</term>
+///             <description>string, service name is used for metric dimension across all metrics, by default service_undefined</description>
+///         </item>
+///         <item>
+///             <term>Namespace</term>
+///             <description>string, logical container where all metrics will be placed</description>
+///         </item>
+///         <item>
+///             <term>CaptureColdStart</term>
+///             <description>bool, captures cold start during Lambda execution, by default false</description>
+///         </item>
+///         <item>
+///             <term>RaiseOnEmptyMetrics</term>
+///             <description>bool, instructs metrics validation to throw exception if no metrics are provided, by default false</description>
+///         </item>
+///     </list>
 /// </summary>
-/// <seealso cref="MethodAspectAttribute" />
+/// <example>
+///     <code>
+///         [Metrics(
+///             Service = "Example",
+///             Namespace = "ExampleNamespace",
+///             CaptureColdStart = true,
+///             RaiseOnEmptyMetrics = true)
+///         ]
+///         public async Task&lt;APIGatewayProxyResponse&gt; FunctionHandler
+///              (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+///         {
+///             ...
+///         }
+///     </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Method)]
 public class MetricsAttribute : MethodAspectAttribute
 {

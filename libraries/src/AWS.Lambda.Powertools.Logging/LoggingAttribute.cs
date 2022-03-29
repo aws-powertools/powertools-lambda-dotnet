@@ -21,11 +21,25 @@ using Microsoft.Extensions.Logging;
 namespace AWS.Lambda.Powertools.Logging;
 
 /// <summary>
-///     Creates and setups a logger to format statements in JSON.                                     <br/>
+///     Provides a Lambda optimized logger with output structured as JSON.                            <br/>
 ///                                                                                                   <br/>
-///     Includes service name and any additional parameter logs.                                      <br/>
-///     It also accepts both service name or lo level explicitly via Environment variables.           <br/>
-///                                                                                                   <br/>
+///     Key features                                                                                  <br/>
+///     ---------------------                                                                         <br/> 
+///     <list type="bullet">
+///         <item>
+///             <description>Capture key fields from Lambda context and cold start</description>
+///         </item>
+///         <item>
+///             <description>Log Lambda event when instructed (disabled by default)</description>
+///         </item>
+///         <item>
+///             <description>Log sampling enables DEBUG log level for a percentage of requests (disabled by default)</description>
+///         </item>
+///         <item>
+///             <description>Append additional keys to structured log at any point in time</description>
+///         </item>
+///     </list>
+///                                                                                                   <br/> 
 ///     Environment variables                                                                         <br/>
 ///     ---------------------                                                                         <br/> 
 ///     <list type="table">
@@ -87,7 +101,7 @@ namespace AWS.Lambda.Powertools.Logging;
 /// <example>
 ///     <code>
 ///         [Logging(
-///             Service = "example",
+///             Service = "Example",
 ///             LogEvent = true,
 ///             ClearState = true,
 ///             LogLevel = LogLevel.Debug,
@@ -101,7 +115,6 @@ namespace AWS.Lambda.Powertools.Logging;
 ///         }
 ///     </code>
 /// </example>
-
 [AttributeUsage(AttributeTargets.Method)]
 public class LoggingAttribute : MethodAspectAttribute
 {
