@@ -26,7 +26,7 @@ The GitHub repository for this project can be found [here](https://github.com/aw
 [Metrics](./core/metrics.md) | Custom AWS metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
 
 !!! info "Looking for a quick read through how the core features are used?"
-   Check out the [Simplifying serverless best practices with Lambda Powertools](https://aws.amazon.com/blogs/opensource/simplifying-serverless-best-practices-with-lambda-powertools/) blog post with a practical example.
+   Check out the [Simplifying serverless best practices with Lambda Powertools](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-powertools-for-net) blog post with a practical example.
 
 ## Install
 
