@@ -7,8 +7,8 @@
 
     <PropertyGroup>
         <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
-        <PackCommand>dotnet pack --no-build -c $(Configuration) -o $(MSBuildThisFileDirectory)/../deploy/nuget-packages</PackCommand>
-		<PackWithConfigurationCommand>dotnet pack --no-build -o $(MSBuildThisFileDirectory)/../deploy/nuget-packages</PackWithConfigurationCommand>
+        <PackCommand>dotnet pack --no-build -c $(Configuration) -o "$(MSBuildThisFileDirectory)/../deploy/nuget-packages"</PackCommand>
+		<PackWithConfigurationCommand>dotnet pack --no-build -o "$(MSBuildThisFileDirectory)/../deploy/nuget-packages"</PackWithConfigurationCommand>
         <Cicd Condition="'$(Cicd)' == ''">false</Cicd>
     </PropertyGroup>
 
