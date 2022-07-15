@@ -4,14 +4,17 @@ on:
     types: [opened]
 
 jobs:
+
   apply-file-based-labels:
     permissions:
+      contents: read
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/labeler@v3
+    - uses: actions/labeler@v4
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        
   apply-internal-external-label:
     permissions:
       pull-requests: write
