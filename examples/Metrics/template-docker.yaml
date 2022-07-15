@@ -37,7 +37,7 @@ Resources:
       DockerContext: ./src/HelloWorld
       Dockerfile: Dockerfile
       DockerBuildArgs:
-        SAM_BUILD_MODE: Release # Debug or Release
+        SAM_BUILD_MODE: run # debug or run
 
 
   PowertoolsMetricsTable:
