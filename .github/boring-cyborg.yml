@@ -1,5 +1,8 @@
 ##### Labeler ##########################################################################################################
 labelPRBasedOnFilePath:
+  area/common:
+    - libraries/src/AWS.Lambda.Powertools.Common/*
+    - libraries/src/AWS.Lambda.Powertools.Common/**/*
   area/logger:
     - libraries/src/AWS.Lambda.Powertools.Logging/*
     - libraries/src/AWS.Lambda.Powertools.Logging/**/*
