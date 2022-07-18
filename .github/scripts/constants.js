@@ -25,7 +25,7 @@ module.exports = Object.freeze({
     "LABEL_BLOCK_REASON": "need-issue",
 
     // /** @type {string} */
-    // "LABEL_PENDING_RELEASE": "pending-release",
+    "LABEL_PENDING_RELEASE": "pending-release",
 
     /** @type {string} */
     "HANDLE_MAINTAINERS_TEAM": "@awslabs/aws-lambda-powertools-net",
