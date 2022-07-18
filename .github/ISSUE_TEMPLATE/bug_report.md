@@ -1,43 +1,91 @@
----
 name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: bug, triage
-assignees: ''
+description: Report a reproducible bug to help us improve
+title: "Bug: TITLE"
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for submitting a bug report. Please add as much information as possible to help us reproduce, and remove any potential sensitive data.
 
----
+        Please become familiar with [our definition of bug](https://github.com/awslabs/aws-lambda-powertools-dotnet/blob/develop/MAINTAINERS.md#is-that-a-bug).
+  - type: textarea
+    id: expected_behaviour
+    attributes:
+      label: Expected Behaviour
+      description: Please share details on the behaviour you expected
+    validations:
+      required: true
+  - type: textarea
+    id: current_behaviour
+    attributes:
+      label: Current Behaviour
+      description: Please share details on the current issue
+    validations:
+      required: true
+  - type: textarea
+    id: code_snippet
+    attributes:
+      label: Code snippet
+      description: Please share a code snippet to help us reproduce the issue
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Possible Solution
+      description: If known, please suggest a potential resolution
+    validations:
+      required: false
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Please share how we might be able to reproduce this issue
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: AWS Lambda Powertools for Python version
+      placeholder: "latest, 1.25.6"
+      value: latest
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: AWS Lambda function runtime
+      options:
+        - 3.6
+        - 3.7
+        - 3.8
+        - 3.9
+    validations:
+      required: true
+  - type: dropdown
+    id: packaging
+    attributes:
+      label: Packaging format used
+      options:
+        - Lambda Layers
+        - Serverless Application Repository (SAR) App
+        - PyPi
+      multiple: true
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debugging logs
+      description: If available, please share [debugging logs](https://awslabs.github.io/aws-lambda-powertools-python/#debug-mode)
+      render: python
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
 
-<!--- Provide a general summary of the issue in the Title above -->
-<!--- How has this issue affected you? What are you trying to accomplish? -->
-
-**What were you trying to accomplish?**
-
-## Expected Behavior
-<!--- If you're describing a bug, tell us what should happen -->
-<!--- If you're suggesting a change/improvement, tell us how it should work -->
-
-## Current Behavior
-<!--- If describing a bug, tell us what happens instead of the expected behavior -->
-<!--- If suggesting a change/improvement, explain the difference from current behavior -->
-
-## Possible Solution
-<!--- Not obligatory, but suggest a fix/reason for the bug, -->
-<!--- or ideas how to implement the addition or change -->
-
-## Steps to Reproduce (for bugs)
-<!--- Provide a link to a live example, or an unambiguous set of steps to -->
-<!--- reproduce this bug. Include code to reproduce, if relevant -->
-1.
-2.
-3.
-4.
-
-## Environment
-
-* **Powertools version used**:
-* **AWS Lambda function runtime:**
-* **Debugging logs**
-
-```csharp
-# paste logs here
-```
+        **Disclaimer**: We value your time and bandwidth. As such, any pull requests created on non-triaged issues might not be successful.
