@@ -9,7 +9,7 @@ nav:
   - Our tenets: tenets.md
   - References: references.md
   - Changelog: changelog.md
-  - Roadmap: https://github.com/awslabs/aws-lambda-powertools-dotnet/discussions/categories/roadmap" target="_blank
+  - Roadmap: roadmap.md
   - API Reference: api/" target="_blank
   - Core utilities:
       - core/logging.md
