@@ -80,7 +80,7 @@ body:
     attributes:
       label: Debugging logs
       description: If available, please share [debugging logs](https://awslabs.github.io/aws-lambda-powertools-dotnet/#debug-mode)
-      render: python
+      render: csharp
     validations:
       required: false
   - type: markdown
