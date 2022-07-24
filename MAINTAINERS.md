@@ -110,7 +110,7 @@ Use and enforce [semantic versioning](https://semver.org/) pull request titles, 
 
 > TODO: This is an area we want to automate using the new GitHub GraphQL API.
 
-For issues linked to a PR, make sure `pending release` label is applied to them when merging. [Upon release](#releasing-a-new-version), these issues will be notified which release version contains their change.
+For issues linked to a PR, make sure `pending-release` label is applied to them when merging. [Upon release](#releasing-a-new-version), these issues will be notified which release version contains their change.
 
 See [Common scenarios](#common-scenarios) section for additional guidance.
 
