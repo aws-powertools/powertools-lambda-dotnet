@@ -1,7 +1,7 @@
 module.exports = Object.freeze({
     /** @type {string} */
     // Values: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
-    "PR_ACTION": process.env.PR_ACTION || "",
+    "PR_ACTION": process.env.PR_ACTION?.replace(/"/g, '') || "",
 
     /** @type {string} */
     "PR_AUTHOR": process.env.PR_AUTHOR?.replace(/"/g, '') || "",
@@ -24,7 +24,7 @@ module.exports = Object.freeze({
     /** @type {string} */
     "LABEL_BLOCK_REASON": "need-issue",
 
-    // /** @type {string} */
+    /** @type {string} */
     "LABEL_PENDING_RELEASE": "pending-release",
 
     /** @type {string} */
@@ -37,6 +37,6 @@ module.exports = Object.freeze({
     "AREAS": [
         "tracing",
         "metrics",
-        "logger",
+        "logging",
     ],
 });

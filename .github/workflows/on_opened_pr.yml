@@ -12,6 +12,7 @@ jobs:
     uses: ./.github/workflows/reusable_export_pr_details.yml
     with:
       record_pr_workflow_id: ${{ github.event.workflow_run.id }}
+      workflow_origin: ${{ github.event.repository.full_name }}
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
   check_related_issue:
@@ -19,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: "Debug workflow_run event"
+        run: echo "${{ github }}"
       - name: "Ensure related issue is present"
         uses: actions/github-script@v6
         env:
