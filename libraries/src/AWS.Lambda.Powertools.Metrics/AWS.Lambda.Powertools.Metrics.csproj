@@ -12,6 +12,7 @@
         <RepositoryUrl>https://github.com/awslabs/aws-lambda-powertools-dotnet</RepositoryUrl>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
+        <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageIcon>AWSLogo128x128.png</PackageIcon>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

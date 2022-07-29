@@ -8,10 +8,12 @@
       <Company>Amazon.com, Inc</Company>
       <LangVersion>default</LangVersion>
       <Title>AWS Lambda Powertools for .NET</Title>
+      <Description>AWS Lambda Powertools for .NET - Core package.</Description>
       <Copyright>Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
       <RepositoryUrl>https://github.com/awslabs/aws-lambda-powertools-dotnet</RepositoryUrl>
       <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
       <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
+      <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
       <PackageIcon>AWSLogo128x128.png</PackageIcon>
       <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
       <AssemblyName>AWS.Lambda.Powertools.Common</AssemblyName>
