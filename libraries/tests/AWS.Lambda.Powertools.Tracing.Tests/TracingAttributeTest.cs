@@ -131,7 +131,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
     public class TracingAttributeDisableTest
     {
         [Fact]
-        public void Tracing_WhenTracerDisabled_DDisablesTracing()
+        public void Tracing_WhenTracerDisabled_DisablesTracing()
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
