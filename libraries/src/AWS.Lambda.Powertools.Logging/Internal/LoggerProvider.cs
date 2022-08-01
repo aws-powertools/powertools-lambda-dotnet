@@ -25,7 +25,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 ///     Implements the <see cref="Microsoft.Extensions.Logging.ILoggerProvider" />
 /// </summary>
 /// <seealso cref="Microsoft.Extensions.Logging.ILoggerProvider" />
-internal sealed class LoggerProvider : ILoggerProvider
+public sealed class LoggerProvider : ILoggerProvider
 {
     /// <summary>
     ///     The loggers
@@ -42,7 +42,7 @@ internal sealed class LoggerProvider : ILoggerProvider
     ///     Initializes a new instance of the <see cref="LoggerProvider" /> class.
     /// </summary>
     /// <param name="config">The configuration.</param>
-    internal LoggerProvider(IOptions<LoggerConfiguration> config)
+    public LoggerProvider(IOptions<LoggerConfiguration> config)
     {
         _currentConfig = config?.Value;
     }

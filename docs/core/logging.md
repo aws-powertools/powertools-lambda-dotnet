@@ -3,7 +3,7 @@ title: Logging
 description: Core utility
 ---
 
-Logging provides an opinionated logger with output structured as JSON.
+The logging utility provides a Lambda optimized logger with output structured as JSON.
 
 ## Key features
 
@@ -18,28 +18,48 @@ Logging requires two settings:
 
 Setting | Description | Environment variable | Attribute parameter
 ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------
-**Logging level** | Sets how verbose Logger should be (Information, by default) |  `LOG_LEVEL` | `LogLevel`
 **Service** | Sets **Service** key that will be present across all log statements | `POWERTOOLS_SERVICE_NAME` | `Service`
+**Logging level** | Sets how verbose Logger should be (Information, by default) |  `POWERTOOLS_LOG_LEVEL` | `LogLevel`
 
 ### Example using AWS Serverless Application Model (AWS SAM)
 
-You can also override log level by setting **`POWERTOOLS_LOG_LEVEL`** env var. Here is an example using AWS Serverless Application Model (AWS SAM)
+You can override log level by setting **`POWERTOOLS_LOG_LEVEL`** environment variable in the AWS SAM template.
+
+You can also explicitly set a service name via **`POWERTOOLS_SERVICE_NAME`** environment variable. This sets **Service** key that will be present across all log statements.
+
+Here is an example using the AWS SAM [Globals section](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-template-anatomy-globals.html).
 
 === "template.yaml"
 
-    ```yaml hl_lines="8 9"
-    Resources:
-       HelloWorldFunction:
-           Type: AWS::Serverless::Function
-           Properties:
-           ...
-           Environment:
-               Variables:
-                  POWERTOOLS_LOG_LEVEL: Debug
-                  POWERTOOLS_SERVICE_NAME: example
+    ```yaml hl_lines="13 14"
+    # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+    # SPDX-License-Identifier: MIT-0
+    AWSTemplateFormatVersion: "2010-09-09"
+    Transform: AWS::Serverless-2016-10-31
+    Description: >
+    Example project for Powertools Logging utility
+
+    Globals:
+        Function:
+            Timeout: 10
+            Environment:
+            Variables:
+                POWERTOOLS_SERVICE_NAME: powertools-dotnet-logging-sample
+                POWERTOOLS_LOG_LEVEL: Debug
+                POWERTOOLS_LOGGER_LOG_EVENT: true
+                POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+                POWERTOOLS_LOGGER_SAMPLE_RATE: 0
     ```
 
-You can also explicitly set a service name via **`POWERTOOLS_SERVICE_NAME`** env var. This sets **service** key that will be present across all log statements.
+### Full list of environment variables
+
+| Environment variable | Description | Default |
+| ------------------------------------------------- | --------------------------------------------------------------------------------- |  ------------------------------------------------- |
+| **POWERTOOLS_SERVICE_NAME** | Sets service name used for tracing namespace, metrics dimension and structured logging | `"service_undefined"` |
+| **POWERTOOLS_LOG_LEVEL** | Sets logging level |  `Information` |
+| **POWERTOOLS_LOGGER_CASE** | Override the default casing for log keys | `SnakeCase` |
+| **POWERTOOLS_LOGGER_LOG_EVENT** | Logs incoming event |  `false` |
+| **POWERTOOLS_LOGGER_SAMPLE_RATE** | Debug log sampling |  `0` |
 
 ## Standard structured keys
 
@@ -53,7 +73,7 @@ Key | Type | Example | Description
 **ColdStart** | bool | true| ColdStart value.
 **Service** | string | "payment" | Service name defined. "service_undefined" will be used if unknown
 **SamplingRate** | int |  0.1 | Debug logging sampling rate in percentage e.g. 10% in this case
-**Message** | string |  "Collecting payment" | Log statement value. Unserializable JSON values will be casted to string
+**Message** | string |  "Collecting payment" | Log statement value. Unserializable JSON values will be cast to string
 **FunctionName**| string | "example-powertools-HelloWorldFunction-1P1Z6B39FLU73"
 **FunctionVersion**| string | "12"
 **FunctionMemorySize**| string | "128"
@@ -63,7 +83,7 @@ Key | Type | Example | Description
 
 ## Logging incoming event
 
-When debugging in non-production environments, you can instruct Logger to log the incoming event with `LogEvent` parameter or via POWERTOOLS_LOGGER_LOG_EVENT environment variable.
+When debugging in non-production environments, you can instruct Logger to log the incoming event with `LogEvent` parameter or via `POWERTOOLS_LOGGER_LOG_EVENT` environment variable.
 
 !!! warning
     Log event is disabled by default to prevent sensitive info being logged.
@@ -191,32 +211,56 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
 !!! info "Custom keys are persisted across warm invocations"
         Always set additional keys as part of your handler to ensure they have the latest value, or explicitly clear them with [`ClearState=true`](#clearing-all-state).
 
-You can append your own keys to your existing logs via `AppendKey`.
+You can append your own keys to your existing logs via `AppendKey`. Typically this value would be passed into the function via the event. Appended keys are added to all subsequent log entries in the current execution from the point the logger method is called. To ensure the key is added to all log entries, call this method as early as possible in the Lambda handler.
 
 === "Function.cs"
 
-    ```c# hl_lines="11 19"
+    ```c# hl_lines="21"
     /**
      * Handler for requests to Lambda function.
      */
     public class Function
     {
         [Logging(LogEvent = true)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
+            ILambdaContext context)
         {
-            ...
-            Logger.AppendKey("test", "willBeLogged");
-            ...
-            var customKeys = new Dictionary<string, string>
-            {
-                {"test1", "value1"}, 
-                {"test2", "value2"}
-            };
+            var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
             
-            Logger.AppendKeys(customKeys);
-            ...
-        }
+        var lookupInfo = new Dictionary<string, object>()
+        {
+            {"LookupInfo", new Dictionary<string, object>{{ "LookupId", requestContextRequestId }}}
+        };  
+
+        // Appended keys are added to all subsequent log entries in the current execution.
+        // Call this method as early as possible in the Lambda handler.
+        // Typically this is value would be passed into the function via the event.
+        // Set the ClearState = true to force the removal of keys across invocations,
+        Logger.AppendKeys(lookupInfo);
+
+        Logger.LogInformation("Getting ip address from external service");
+
+    }
+    ```
+=== "Example CloudWatch Logs excerpt"
+
+    ```json hl_lines="4 5 6"
+    {
+        "cold_start": false,
+        "xray_trace_id": "1-622eede0-647960c56a91f3b071a9fff1",
+        "lookup_info": {
+            "lookup_id": "4c50eace-8b1e-43d3-92ba-0efacf5d1625"
+        },
+        "function_name": "PowertoolsLoggingSample-HelloWorldFunction-hm1r10VT3lCy",
+        "function_version": "$LATEST",
+        "function_memory_size": 256,
+        "function_arn": "arn:aws:lambda:ap-southeast-2:538510314095:function:PowertoolsLoggingSample-HelloWorldFunction-hm1r10VT3lCy",
+        "function_request_id": "96570b2c-f00e-471c-94ad-b25e95ba7347",
+        "timestamp": "2022-03-14T07:25:20.9418065Z",
+        "level": "Information",
+        "service": "powertools-dotnet-logging-sample",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "Getting ip address from external service"
     }
     ```
 
@@ -256,6 +300,8 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
 
 ## Extra Keys
 
+Extra keys allow you to append additional keys to a log entry. Unlike `AppendKey`, extra keys will only apply to the current log entry.
+
 Extra keys argument is available for all log levels' methods, as implemented in the standard logging library - e.g. Logger.Information, Logger.Warning.
 
 It accepts any dictionary, and all keyword arguments will be added as part of the root structure of the logs for that log statement.
@@ -272,18 +318,21 @@ It accepts any dictionary, and all keyword arguments will be added as part of th
     public class Function
     {
         [Logging(LogEvent = true)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
+            ILambdaContext context)
         {
-            ...
-            var extraKeys = new Dictionary<string, string>
-            {
-                {"extraKey1", "value1"}
-            };
+            var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
             
-            Logger.LogInformation(extraKeys, "Collecting payment");
-            ...
-        }
+            var lookupId = new Dictionary<string, object>()
+            {
+                { "LookupId", requestContextRequestId }
+            };
+
+            // Appended keys are added to all subsequent log entries in the current execution.
+            // Call this method as early as possible in the Lambda handler.
+            // Typically this is value would be passed into the function via the event.
+            // Set the ClearState = true to force the removal of keys across invocations,
+            Logger.AppendKeys(lookupId);
     }
     ```
 
@@ -375,6 +424,7 @@ via `SamplingRate` parameter on attribute.
 === "Sampling via environment variable"
 
     ```yaml hl_lines="8"
+
     Resources:
         HelloWorldFunction:
             Type: AWS::Serverless::Function
@@ -387,9 +437,9 @@ via `SamplingRate` parameter on attribute.
 
 ## Configure Log Output Casing
 
-By definition *AWS Lambda Powertools for .NET* outputs logging keys using **snake case** (e.g. *"function_memory_size": 128*). This allows developers using different AWS Lambda Powertools runtimes, to search logs across services written in languages such as Python or TypeScript.
+By definition Powertools outputs logging keys using **snake case** (e.g. *"function_memory_size": 128*). This allows developers using different Powertools runtimes, to search logs across services written in languages such as Python or TypeScript.
 
-If you want to override the default behaviour you can either set the desired casing through attributes, as described in the example below, or by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
+If you want to override the default behavior you can either set the desired casing through attributes, as described in the example below, or by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
 
 === "Output casing via attribute parameter"
 

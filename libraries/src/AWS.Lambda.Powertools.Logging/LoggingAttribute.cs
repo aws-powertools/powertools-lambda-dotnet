@@ -21,10 +21,100 @@ using Microsoft.Extensions.Logging;
 namespace AWS.Lambda.Powertools.Logging;
 
 /// <summary>
-///     Class LoggingAttribute.
-///     Implements the <see cref="MethodAspectAttribute" />
+///     Provides a Lambda optimized logger with output structured as JSON.                            <br/>
+///                                                                                                   <br/>
+///     Key features                                                                                  <br/>
+///     ---------------------                                                                         <br/> 
+///     <list type="bullet">
+///         <item>
+///             <description>Capture key fields from Lambda context and cold start</description>
+///         </item>
+///         <item>
+///             <description>Log Lambda event when instructed (disabled by default)</description>
+///         </item>
+///         <item>
+///             <description>Log sampling enables DEBUG log level for a percentage of requests (disabled by default)</description>
+///         </item>
+///         <item>
+///             <description>Append additional keys to structured log at any point in time</description>
+///         </item>
+///     </list>
+///                                                                                                   <br/> 
+///     Environment variables                                                                         <br/>
+///     ---------------------                                                                         <br/> 
+///     <list type="table">
+///         <listheader>
+///           <term>Variable name</term>
+///           <description>Description</description>
+///         </listheader>
+///         <item>
+///             <term>POWERTOOLS_SERVICE_NAME</term>
+///             <description>string, service name</description>
+///         </item>
+///         <item>
+///             <term>POWERTOOLS_LOG_LEVEL</term>
+///             <description>string, logging level (e.g. Information, Debug, and Trace)</description>
+///         </item>
+///         <item>
+///             <term>POWERTOOLS_LOGGER_CASE</term>
+///             <description>string, logger output case (e.g. CamelCase, PascalCase, and SnakeCase)</description>
+///         </item>
+///         <item>
+///             <term>POWERTOOLS_LOGGER_SAMPLE_RATE</term>
+///             <description>double, sampling rate ranging from 0 to 1, 1 being 100% sampling</description>
+///         </item>
+///     </list>
+///                                                                                                   <br/>
+///     Parameters                                                                                    <br/>
+///     -----------                                                                                   <br/>
+///     <list type="table">
+///         <listheader>
+///           <term>Parameter name</term>
+///           <description>Description</description>
+///         </listheader>
+///         <item>
+///             <term>Service</term>
+///             <description>string, service name to be appended in logs, by default "service_undefined"</description>
+///         </item>
+///         <item>
+///             <term>LogLevel</term>
+///             <description>enum, logging level (e.g. Information, Debug, and Trace), by default Information</description>
+///         </item>
+///         <item>
+///             <term>LoggerOutputCase</term>
+///             <description>enum, logger output case (e.g. CamelCase, PascalCase, and SnakeCase)</description>
+///         </item>
+///         <item>
+///             <term>SamplingRate</term>
+///             <description>double, sample rate for debug calls within execution context defaults to 0.0</description>
+///         </item>
+///         <item>
+///             <term>CorrelationIdPath</term>
+///             <description>string, pointer path to extract correlation id from input parameter</description>
+///         </item>
+///         <item>
+///             <term>ClearState</term>
+///             <description>bool, clear all custom keys on each request, by default false</description>
+///         </item>
+///     </list>
 /// </summary>
-/// <seealso cref="MethodAspectAttribute" />
+/// <example>
+///     <code>
+///         [Logging(
+///             Service = "Example",
+///             LogEvent = true,
+///             ClearState = true,
+///             LogLevel = LogLevel.Debug,
+///             LoggerOutputCase = LoggerOutputCase.SnakeCase,
+///             CorrelationIdPath = "/headers/my_request_id_header")
+///         ]
+///         public async Task&lt;APIGatewayProxyResponse&gt; FunctionHandler
+///              (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+///         {
+///             ...
+///         }
+///     </code>
+/// </example>
 [AttributeUsage(AttributeTargets.Method)]
 public class LoggingAttribute : MethodAspectAttribute
 {
@@ -57,7 +147,7 @@ public class LoggingAttribute : MethodAspectAttribute
 
     /// <summary>
     ///     Specify the minimum log level for logging (Information, by default).
-    ///     This can be also set using the environment variable <c>LOG_LEVEL</c>.
+    ///     This can be also set using the environment variable <c>POWERTOOLS_LOG_LEVEL</c>.
     /// </summary>
     /// <value>The log level.</value>
     public LogLevel LogLevel

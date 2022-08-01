@@ -35,7 +35,7 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
 
     /// <summary>
     ///     Specify the minimum log level for logging (Information, by default).
-    ///     This can be also set using the environment variable <c>LOG_LEVEL</c>.
+    ///     This can be also set using the environment variable <c>POWERTOOLS_LOG_LEVEL</c>.
     /// </summary>
     /// <value>The minimum level.</value>
     public LogLevel? MinimumLevel { get; set; }

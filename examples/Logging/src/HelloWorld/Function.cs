@@ -70,16 +70,16 @@ public class Function
     {
         var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
         
-        var lookupId = new Dictionary<string, object>()
+        var lookupInfo = new Dictionary<string, object>()
         {
-            { "LookupId", requestContextRequestId }
+            {"LookupInfo", new Dictionary<string, object>{{ "LookupId", requestContextRequestId }}}
         };
 
         // Appended keys are added to all subsequent log entries in the current execution.
         // Call this method as early as possible in the Lambda handler.
         // Typically this is value would be passed into the function via the event.
         // Set the ClearState = true to force the removal of keys across invocations,
-        Logger.AppendKeys(lookupId);
+        Logger.AppendKeys(lookupInfo);
 
         Logger.LogInformation("Getting ip address from external service");
 
@@ -101,6 +101,8 @@ public class Function
         }
         catch (Exception e)
         {
+            Logger.LogError(e.Message);
+            
             return new APIGatewayProxyResponse
             {
                 Body = e.Message,

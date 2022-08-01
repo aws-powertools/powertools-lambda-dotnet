@@ -3,18 +3,21 @@ name: Docs
 on:
   push:
     branches:
-      - develop
       - main
 
 jobs:
   docs:
+    # Force Github action to run only a single job at a time (based on the group name)
+    # This is to prevent "race-condition" in publishing a new version of doc to `gh-pages`
+    concurrency:
+      group: on-docs-build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.8"
       - name: Capture branch and tag
@@ -25,14 +28,18 @@ jobs:
       - name: Build docs website
         run: make build-docs-website
       - name: Deploy all docs
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@068dc23d9710f1ba62e86896f84735d869951305 # v3.8.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
   apidocs:
+    # Force Github action to run only a single job at a time (based on the group name)
+    # This is to prevent "race-condition" in publishing a new version of doc to `gh-pages`
+    concurrency:
+      group: on-docs-build
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Configure and build api docs generator
@@ -40,7 +47,7 @@ jobs:
           brew install -f docfx --skip-cask-deps --ignore-dependencies
           docfx apidocs/docfx.json
       - name: Release API docs to latest
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@068dc23d9710f1ba62e86896f84735d869951305 # v3.8.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./apidocs/_site

@@ -14,6 +14,7 @@
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
         <PackageIcon>AWSLogo128x128.png</PackageIcon>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <AssemblyName>AWS.Lambda.Powertools.Logging</AssemblyName>

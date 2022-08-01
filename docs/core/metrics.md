@@ -5,7 +5,7 @@ description: Core utility
 
 Metrics creates custom metrics asynchronously by logging metrics to standard output following [Amazon CloudWatch Embedded Metric Format (EMF)](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format.html).
 
-These metrics can be visualized through [Amazon CloudWatch Console](https://console.aws.amazon.com/cloudwatch/).
+These metrics can be visualized through [Amazon CloudWatch Console](https://aws.amazon.com/cloudwatch/).
 
 ## Key features
 
@@ -18,41 +18,50 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://cons
 
 If you're new to Amazon CloudWatch, there are two terminologies you must be aware of before using this utility:
 
-* **Namespace**. It's the highest level container that will group multiple metrics from multiple services for a given application, for example `ServerlessEcommerce`.
+* **Namespace**. It's the highest level container that will group multiple metrics from multiple services for a given application, for example `MyCompanyEcommerce`.
 * **Dimensions**. Metrics metadata in key-value format. They help you slice and dice metrics visualization, for example `ColdStart` metric by Payment `service`.
+
+Visit the AWS documentation for a complete explanation for [Amazon CloudWatch concepts](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html).
 
 <figure>
   <img src="../../media/metrics_terminology.png" />
   <figcaption>Metric terminology, visually explained</figcaption>
 </figure>
 
-
 ## Getting started
 
-Metric has two global settings that will be used across all metrics emitted:
+**`Metrics`** is implemented as a Singleton to keep track of your aggregate metrics in memory and make them accessible anywhere in your code. To guarantee that metrics are flushed properly the **`MetricsAttribute`** must be added on the lambda handler.
+
+Metrics has two global settings that will be used across all metrics emitted. Use your application or main service as the metric namespace to easily group all metrics:
 
 Setting | Description | Environment variable | Constructor parameter
 ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------
-**Metric namespace** | Logical container where all metrics will be placed e.g. `ServerlessAirline` |  `POWERTOOLS_METRICS_NAMESPACE` | `Namespace`
 **Service** | Optionally, sets **service** metric dimension across all metrics e.g. `payment` | `POWERTOOLS_SERVICE_NAME` | `Service`
+**Metric namespace** | Logical container where all metrics will be placed e.g. `MyCompanyEcommerce` |  `POWERTOOLS_METRICS_NAMESPACE` | `Namespace`
 
-!!! tip "Use your application or main service as the metric namespace to easily group all metrics"
+!!! info "Autocomplete Metric Units"
+    All parameters in **`Metrics Attribute`** are optional. Following rules apply:
 
-> Example using AWS Serverless Application Model (AWS SAM)
+      - **Namespace:** **`Empty`** string by default. You can either specify it in code or environment variable. If not present before flushing metrics, a **`SchemaValidationException`** will be thrown.
+      - **Service:** **`service_undefined`** by default. You can either specify it in code or environment variable.
+      - **CaptureColdStart:** **`false`** by default. 
+      - **RaiseOnEmptyMetrics:** **`false`** by default.
+
+### Example using AWS Serverless Application Model (AWS SAM)
 
 === "template.yml"
 
-```yaml hl_lines="9 10"
-Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function 
-    Properties:
-    ...
-    Environment: 
-      Variables:
-        POWERTOOLS_SERVICE_NAME: Payment
-        POWERTOOLS_METRICS_NAMESPACE: ServerlessAirline
-```
+    ```yaml hl_lines="9 10"
+    Resources:
+    HelloWorldFunction:
+        Type: AWS::Serverless::Function 
+        Properties:
+        ...
+        Environment: 
+        Variables:
+            POWERTOOLS_SERVICE_NAME: ShoppingCartService
+            POWERTOOLS_METRICS_NAMESPACE: MyCompanyEcommerce
+    ```
 
 === "Function.cs"
 
@@ -60,7 +69,7 @@ Resources:
     using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
-      Metrics(Namespace = "ServerlessAirline", Service = "Orders", CaptureColdStart = true, RaiseOnEmptyMetrics = true)]
+      Metrics(Namespace = "MyCompanyEcommerce", Service = "ShoppingCartService", CaptureColdStart = true, RaiseOnEmptyMetrics = true)]
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
         ...
@@ -68,16 +77,12 @@ Resources:
     }
     ```
 
-!!! Warning "Metrics Attribute placement"
-    **`Metrics`** is implemented as a Singleton to keep track of your aggregate metrics in memory and make them accessible anywhere in your code. To guarantee that metrics are flushed properly the **`MetricsAttribute`** must be added on the lambda handler.
+### Full list of environment variables
 
-!!! info "Autocomplete Metric Units"
-    All parameters in **`Metrics Attribute`** are optional. Following rules apply:
-      
-      - **Namespace:** **`Empty`** string by default. You can either specify it in code or environment variable. If not present before flushing metrics, a **`SchemaValidationException`** will be thrown.
-      - **Service:** **`service_undefined`** by default. You can either specify it in code or environment variable.
-      - **CaptureColdStart:** **`false`** by default. 
-      - **RaiseOnEmptyMetrics:** **`false`** by default.
+| Environment variable | Description | Default |
+| ------------------------------------------------- | --------------------------------------------------------------------------------- |  ------------------------------------------------- |
+| **POWERTOOLS_SERVICE_NAME** | Sets service name used for tracing namespace, metrics dimension and structured logging | `"service_undefined"` |
+| **POWERTOOLS_METRICS_NAMESPACE** | Sets namespace used for metrics | `None` |
 
 ### Creating metrics
 
@@ -123,7 +128,7 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
     Metric values must be a positive number otherwise an `ArgumentException` will be thrown.
 
 !!! warning "Do not create metrics or dimensions outside the handler"
-    Metrics or dimensions added in the global scope will only be added during cold start. Disregard if that's the intended behaviour.
+    Metrics or dimensions added in the global scope will only be added during cold start. Disregard if that's the intended behavior.
 
 ### Adding default dimensions
 
@@ -172,29 +177,29 @@ During metrics validation, if no metrics are provided then a warning will be log
 === "Example CloudWatch Logs excerpt"
 
     ```json hl_lines="2 7 10 15 22"
-	{
-	  "BookingConfirmation": 1.0,
-	  "_aws": {
-		"Timestamp": 1592234975665,
-		"CloudWatchMetrics": [
-		  {
-			"Namespace": "ExampleApplication",
-			"Dimensions": [
-			  [
-				"service"
-			  ]
-			],
-			"Metrics": [
-			  {
-				"Name": "BookingConfirmation",
-				"Unit": "Count"
-			  }
-			]
-		  }
-		]
-	  },
-	  "service": "ExampleService"
-	}
+    {
+    "BookingConfirmation": 1.0,
+    "_aws": {
+        "Timestamp": 1592234975665,
+        "CloudWatchMetrics": [
+            {
+        "Namespace": "ExampleApplication",
+        "Dimensions": [
+            [
+            "service"
+            ]
+        ],
+        "Metrics": [
+            {
+            "Name": "BookingConfirmation",
+            "Unit": "Count"
+            }
+        ]
+            }
+        ]
+        },
+    "service": "ExampleService"
+    }
     ```
 
 !!! tip "Metric validation"
@@ -204,7 +209,7 @@ During metrics validation, if no metrics are provided then a warning will be log
     * Namespace is set
     * Metric units must be [supported by CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricDatum.html)
 
-!!! info "We do not emit 0 as a value for ColdStart metric for cost reasons. [Let us know](https://github.com/awslabs/aws-lambda-powertools-python/issues/new?assignees=&labels=feature-request%2C+triage&template=feature_request.md&title=) if you'd prefer a flag to override it"
+!!! info "We do not emit 0 as a value for ColdStart metric for cost reasons. [Let us know](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new?assignees=&labels=feature-request%2Ctriage&template=feature_request.yml&title=Feature+request%3A+TITLE) if you'd prefer a flag to override it"
 
 #### Raising SchemaValidationException on empty metrics
 
@@ -274,30 +279,30 @@ You can add high-cardinality data as part of your Metrics log with `AddMetadata`
 === "Example CloudWatch Logs excerpt"
 
     ```json hl_lines="23"
-	{
-	  "SuccessfulBooking": 1.0,
-	  "_aws": {
-		"Timestamp": 1592234975665,
-		"CloudWatchMetrics": [
-		  {
-			"Namespace": "ExampleApplication",
-			"Dimensions": [
-			  [
-				"service"
-			  ]
-			],
-			"Metrics": [
-			  {
-				"Name": "SuccessfulBooking",
-				"Unit": "Count"
-			  }
-			]
-		  }
-		]
-	  },
-	  "Service": "Booking",
-	  "BookingId": "683EEB2D-B2F3-4075-96EE-788E6E2EED45"
-	}
+ {
+   "SuccessfulBooking": 1.0,
+   "_aws": {
+  "Timestamp": 1592234975665,
+  "CloudWatchMetrics": [
+    {
+   "Namespace": "ExampleApplication",
+   "Dimensions": [
+     [
+    "service"
+     ]
+   ],
+   "Metrics": [
+     {
+    "Name": "SuccessfulBooking",
+    "Unit": "Count"
+     }
+   ]
+    }
+  ]
+   },
+   "Service": "Booking",
+   "BookingId": "683EEB2D-B2F3-4075-96EE-788E6E2EED45"
+ }
     ```
 
 ### Single metric with a different dimension

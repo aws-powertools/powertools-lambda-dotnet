@@ -51,9 +51,9 @@ internal static class Constants
     internal const string MetricsNamespaceEnv = "POWERTOOLS_METRICS_NAMESPACE";
 
     /// <summary>
-    ///     Constant for LOG_LEVEL environment variable
+    ///     Constant for POWERTOOLS_LOG_LEVEL environment variable
     /// </summary>
-    internal const string LogLevelNameEnv = "LOG_LEVEL";
+    internal const string LogLevelNameEnv = "POWERTOOLS_LOG_LEVEL";
 
     /// <summary>
     ///     Constant for POWERTOOLS_LOGGER_SAMPLE_RATE environment variable

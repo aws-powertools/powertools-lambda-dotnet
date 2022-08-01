@@ -16,7 +16,7 @@ a provides functionality to reduce the overhead of performing common tracing tas
 * Better experience when developing with multiple threads.
 * Auto-patch supported modules by AWS X-Ray
 
-## Initialization
+## Getting Started
 
 Before you use this utility, your AWS Lambda function [must have permissions](https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html#services-xray-permissions) to send traces to AWS X-Ray.
 
@@ -42,6 +42,15 @@ To enable active tracing on an AWS Serverless Application Model (AWS SAM) AWS::S
 
 The Powertools service name is used as the X-Ray namespace. This can be set using the environment variable
 `POWERTOOLS_SERVICE_NAME`
+
+## Full list of environment variables
+
+| Environment variable | Description | Default |
+| ------------------------------------------------- | --------------------------------------------------------------------------------- |  ------------------------------------------------- |
+| **POWERTOOLS_SERVICE_NAME** | Sets service name used for tracing namespace, metrics dimension and structured logging | `"service_undefined"` |
+| **POWERTOOLS_TRACE_DISABLED** | Disables tracing | `false` |
+| **POWERTOOLS_TRACER_CAPTURE_RESPONSE** | Captures Lambda or method return as metadata. | `true` |
+| **POWERTOOLS_TRACER_CAPTURE_ERROR** | Captures Lambda or method exception as metadata. | `true` |
 
 ### Lambda handler
 
@@ -94,8 +103,7 @@ segment name that appears in traces.
     ```
 
 By default, this attribute will automatically record method responses and exceptions. You can change the default behavior by setting
-the environment variables `POWERTOOLS_TRACER_CAPTURE_RESPONSE` and `POWERTOOLS_TRACER_CAPTURE_ERROR` as needed. Optionally, you can override behavior by
-different supported `CaptureMode` to record response, exception or both.
+the environment variables `POWERTOOLS_TRACER_CAPTURE_RESPONSE` and `POWERTOOLS_TRACER_CAPTURE_ERROR` as needed. Optionally, you can override behavior by different supported `CaptureMode` to record response, exception or both.
 
 !!! warning "Returning sensitive information from your Lambda handler or functions, where `Tracing` is used?"
     You can disable attribute from capturing their responses and exception as tracing metadata with **`captureMode=DISABLED`**
