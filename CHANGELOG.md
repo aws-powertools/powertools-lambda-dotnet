@@ -7,6 +7,6 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) fo
 
 ## [Unreleased]
 
-## [0.1.0] - 2021-11-15
+## [0.0.1-preview.1] - 2022-08-01
 ### Added
-- Public beta release
+- Public preview release

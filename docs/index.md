@@ -11,7 +11,7 @@ The GitHub repository for this project can be found [here](https://github.com/aw
 
 !!! warning  "Do not use this library in production"
 
-    **AWS Lambda Powertools for .NET is currently released as a alpha developer preview** and is intended strictly for feedback purposes only. This version is not stable, and significant breaking changes might incur as part of the upcoming production-ready release.
+    **AWS Lambda Powertools for .NET is currently released in preview** and is intended strictly for feedback purposes only. This version is not stable, and significant breaking changes might incur as part of the upcoming production-ready release.
 
     Your support is much appreciated. If you encounter any problems, [please raise an issue](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new/choose).
 
@@ -24,9 +24,6 @@ The GitHub repository for this project can be found [here](https://github.com/aw
 [Tracing](./core/tracing.md) | Decorators and utilities to trace Lambda function handlers, and both synchronous and asynchronous functions
 [Logger](./core/logging.md) | Structured logging made easier, and decorator to enrich structured logging with key Lambda context details
 [Metrics](./core/metrics.md) | Custom AWS metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
-
-!!! info "Looking for a quick read through how the core features are used?"
-   Check out the [Simplifying serverless best practices with Lambda Powertools](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-powertools-for-net) blog post with a practical example.
 
 ## Install
 
@@ -62,9 +59,9 @@ To use the SAM CLI, you need the following tools.
 
 We have provided a few examples that should you how to use the each of the core Powertools features.
 
-* [Tracer](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/tracer){target="_blank"} example
-* [Logger](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/logger/){target="_blank"} example
-* [Metrics](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/metrics/){target="_blank"} example
+* [Tracing](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/Tracing){target="_blank"} example
+* [Logging](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/Logging/){target="_blank"} example
+* [Metrics](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/Metrics/){target="_blank"} example
 
 ## Other members of the AWS Lambda Powertools family
 
