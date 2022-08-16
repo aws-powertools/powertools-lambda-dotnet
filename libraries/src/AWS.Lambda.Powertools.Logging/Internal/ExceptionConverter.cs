@@ -36,7 +36,7 @@ public class ExceptionConverter: JsonConverter<Exception>
     }
 
     /// <summary>
-    ///     Converter throws any NotSupportedException. Deserializing exception is not allowed.
+    ///     Converter throws NotSupportedException. Deserializing exception is not allowed.
     /// </summary>
     /// <param name="reader"></param>
     /// <param name="typeToConvert"></param>
@@ -62,8 +62,8 @@ public class ExceptionConverter: JsonConverter<Exception>
         var exceptionType = value.GetType();
         var serializableProperties = exceptionType
             .GetProperties()
-            .Select(prop => new { prop.Name, Value = prop.GetValue(value) })
-            .Where(prop => prop.Name != nameof(Exception.TargetSite));
+            .Where(prop => prop.Name != nameof(Exception.TargetSite))
+            .Select(prop => new { prop.Name, Value = prop.GetValue(value) });
 
         if (options.DefaultIgnoreCondition == JsonIgnoreCondition.WhenWritingNull)
             serializableProperties = serializableProperties.Where(prop => prop.Value != null);
