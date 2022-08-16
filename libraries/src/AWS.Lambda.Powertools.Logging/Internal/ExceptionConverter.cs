@@ -28,7 +28,7 @@ public class ExceptionConverter: JsonConverter<Exception>
     /// <summary>
     ///     Determines whether the type can be converted.
     /// </summary>
-    /// <param name="typeToConvert"></param>
+    /// <param name="typeToConvert">The type which should be converted.</param>
     /// <returns>True if the type can be converted, False otherwise.</returns>
     public override bool CanConvert(Type typeToConvert)
     {
@@ -38,9 +38,9 @@ public class ExceptionConverter: JsonConverter<Exception>
     /// <summary>
     ///     Converter throws NotSupportedException. Deserializing exception is not allowed.
     /// </summary>
-    /// <param name="reader"></param>
-    /// <param name="typeToConvert"></param>
-    /// <param name="options"></param>
+    /// <param name="reader">Reference to the JsonReader</param>
+    /// <param name="typeToConvert">The type which should be converted.</param>
+    /// <param name="options">The Json serializer options.</param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
     public override Exception Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -51,9 +51,9 @@ public class ExceptionConverter: JsonConverter<Exception>
     /// <summary>
     ///     Write the exception value as JSON. 
     /// </summary>
-    /// <param name="writer"></param>
-    /// <param name="value"></param>
-    /// <param name="options"></param>
+    /// <param name="writer">The unicode JsonWriter.</param>
+    /// <param name="value">The exception instance.</param>
+    /// <param name="options">The Json serializer options.</param>
     public override void Write(Utf8JsonWriter writer, Exception value, JsonSerializerOptions options)
     {
         if (options.DefaultIgnoreCondition == JsonIgnoreCondition.Always)
