@@ -1008,5 +1008,91 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             Assert.Null(logger.CurrentScope?.ExtraKeys);
         }
+        
+        [Fact]
+        public void Log_WhenException_LogsExceptionDetails()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var error = new InvalidOperationException("TestError");
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);            
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                new LoggerConfiguration
+                {                     
+                    Service = null,
+                    MinimumLevel = null
+                });
+            
+            try
+            {
+                throw error;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex);
+            }
+            
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"exception\":{\"Type\":\"" + error.GetType().FullName + "\",\"Message\":\"" + error.Message + "\"")
+                    )
+                ), Times.Once);
+        }
+        
+        [Fact]
+        public void Log_WhenNestedException_LogsExceptionDetails()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var error = new InvalidOperationException("TestError");
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);            
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                new LoggerConfiguration
+                {                     
+                    Service = null,
+                    MinimumLevel = null
+                });
+            
+            try
+            {
+                throw error;
+            }
+            catch (Exception ex)
+            {
+                logger.LogInformation(new { Name = "Test Object", Error = ex });
+            }
+            
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"error\":{\"Type\":\"" + error.GetType().FullName + "\",\"Message\":\"" + error.Message + "\"")
+                    )
+                ), Times.Once);
+        }
     }
 }

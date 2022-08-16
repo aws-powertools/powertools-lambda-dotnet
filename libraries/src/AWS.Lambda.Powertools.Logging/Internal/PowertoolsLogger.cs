@@ -53,6 +53,11 @@ internal sealed class PowertoolsLogger : ILogger
     ///     The current configuration
     /// </summary>
     private LoggerConfiguration _currentConfig;
+    
+    /// <summary>
+    ///     The json serializer options
+    /// </summary>
+    private JsonSerializerOptions _jsonSerializerOptions;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="PowertoolsLogger" /> class.
@@ -93,6 +98,13 @@ internal sealed class PowertoolsLogger : ILogger
         !string.IsNullOrWhiteSpace(CurrentConfig.Service)
             ? CurrentConfig.Service
             : _powertoolsConfigurations.Service;
+
+    /// <summary>
+    ///     Get JsonSerializer options.
+    /// </summary>
+    /// <value>The current configuration.</value>
+    private JsonSerializerOptions JsonSerializerOptions =>
+        _jsonSerializerOptions ??= BuildJsonSerializerOptions();
 
     internal PowertoolsLoggerScope CurrentScope { get; private set; }
 
@@ -227,35 +239,9 @@ internal sealed class PowertoolsLogger : ILogger
         if (CurrentConfig.SamplingRate.HasValue)
             message.TryAdd(LoggingConstants.KeySamplingRate, CurrentConfig.SamplingRate.Value);
         if (exception != null)
-            message.TryAdd(LoggingConstants.KeyException, exception.Message);
+            message.TryAdd(LoggingConstants.KeyException, exception);
 
-        var options = BuildCaseSerializerOptions();
-        _systemWrapper.LogLine(JsonSerializer.Serialize(message, options));
-    }
-
-    private JsonSerializerOptions BuildCaseSerializerOptions()
-    {
-        switch (CurrentConfig.LoggerOutputCase)
-        {
-            case LoggerOutputCase.CamelCase:
-                return new(JsonSerializerDefaults.Web)
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
-                };
-            case LoggerOutputCase.PascalCase:
-                return new()
-                {
-                    PropertyNamingPolicy = PascalCaseNamingPolicy.Instance,
-                    DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance
-                };
-            default: // Snake case is the default
-                return new()
-                {
-                    PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance,
-                    DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance
-                };
-        }
+        _systemWrapper.LogLine(JsonSerializer.Serialize(message, JsonSerializerOptions));
     }
 
     /// <summary>
@@ -339,5 +325,32 @@ internal sealed class PowertoolsLogger : ILogger
 
         message = stateKeys.First(k => k.Key != "{OriginalFormat}").Value;
         return true;
+    }
+    
+    /// <summary>
+    ///     Builds JsonSerializer options.
+    /// </summary>
+    private JsonSerializerOptions BuildJsonSerializerOptions()
+    {
+        var jsonOptions = CurrentConfig.LoggerOutputCase switch
+        {
+            LoggerOutputCase.CamelCase => new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
+            },
+            LoggerOutputCase.PascalCase => new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = PascalCaseNamingPolicy.Instance,
+                DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance
+            },
+            _ => new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance,
+                DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance
+            }
+        };
+        jsonOptions.Converters.Add(new ExceptionConverter());
+        return jsonOptions;
     }
 }
