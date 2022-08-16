@@ -55,7 +55,7 @@ internal sealed class PowertoolsLogger : ILogger
     private LoggerConfiguration _currentConfig;
     
     /// <summary>
-    ///     The json serializer options
+    ///     The JsonSerializer options
     /// </summary>
     private JsonSerializerOptions _jsonSerializerOptions;
 
