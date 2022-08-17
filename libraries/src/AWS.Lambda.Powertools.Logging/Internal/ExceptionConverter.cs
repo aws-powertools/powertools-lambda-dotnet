@@ -53,7 +53,7 @@ internal class ExceptionConverter : JsonConverter<Exception>
     /// </summary>
     /// <param name="writer">The unicode JsonWriter.</param>
     /// <param name="value">The exception instance.</param>
-    /// <param name="options">The Json serializer options.</param>
+    /// <param name="options">The JsonSerializer options.</param>
     public override void Write(Utf8JsonWriter writer, Exception value, JsonSerializerOptions options)
     {
         var exceptionType = value.GetType();
@@ -69,28 +69,41 @@ internal class ExceptionConverter : JsonConverter<Exception>
             return;
 
         writer.WriteStartObject();
-        writer.WriteString("Type", exceptionType.FullName);
-
+        writer.WriteString(ApplyPropertyNamingPolicy("Type", options), exceptionType.FullName);
+        
         foreach (var prop in props)
         {
             switch (prop.Value)
             {
                 case IntPtr intPtr:
-                    writer.WriteNumber(prop.Name, intPtr.ToInt64());
+                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Name, options), intPtr.ToInt64());
                     break;
                 case UIntPtr uIntPtr:
-                    writer.WriteNumber(prop.Name, uIntPtr.ToUInt64());
+                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Name, options), uIntPtr.ToUInt64());
                     break;
                 case Type propType:
-                    writer.WriteString(prop.Name, propType.FullName);
+                    writer.WriteString(ApplyPropertyNamingPolicy(prop.Name, options), propType.FullName);
                     break;
                 default:
-                    writer.WritePropertyName(prop.Name);
+                    writer.WritePropertyName(ApplyPropertyNamingPolicy(prop.Name, options));
                     JsonSerializer.Serialize(writer, prop.Value, options);
                     break;
             }
         }
 
         writer.WriteEndObject();
+    }
+
+    /// <summary>
+    ///     Applying the property naming policy to property name
+    /// </summary>
+    /// <param name="propertyName">The name of the property</param>
+    /// <param name="options">The JsonSerializer options.</param>
+    /// <returns></returns>
+    private static string ApplyPropertyNamingPolicy(string propertyName, JsonSerializerOptions options)
+    {
+        return !string.IsNullOrWhiteSpace(propertyName) && options?.PropertyNamingPolicy is not null
+            ? options.PropertyNamingPolicy.ConvertName(propertyName)
+            : propertyName;
     }
 }

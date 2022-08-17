@@ -1047,7 +1047,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 v.LogLine(
                     It.Is<string>
                     (s =>
-                        s.Contains("\"exception\":{\"Type\":\"" + error.GetType().FullName + "\",\"Message\":\"" + error.Message + "\"")
+                        s.Contains("\"exception\":{\"type\":\"" + error.GetType().FullName + "\",\"message\":\"" + error.Message + "\"")
                     )
                 ), Times.Once);
         }
@@ -1090,7 +1090,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 v.LogLine(
                     It.Is<string>
                     (s =>
-                        s.Contains("\"error\":{\"Type\":\"" + error.GetType().FullName + "\",\"Message\":\"" + error.Message + "\"")
+                        s.Contains("\"error\":{\"type\":\"" + error.GetType().FullName + "\",\"message\":\"" + error.Message + "\"")
                     )
                 ), Times.Once);
         }
