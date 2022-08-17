@@ -23,7 +23,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// <summary>
 ///     Converts an exception to JSON.
 /// </summary>
-public class ExceptionConverter : JsonConverter<Exception>
+internal class ExceptionConverter : JsonConverter<Exception>
 {
     /// <summary>
     ///     Determines whether the type can be converted.
