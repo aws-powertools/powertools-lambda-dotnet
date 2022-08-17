@@ -56,12 +56,8 @@ public class ExceptionConverter : JsonConverter<Exception>
     /// <param name="options">The Json serializer options.</param>
     public override void Write(Utf8JsonWriter writer, Exception value, JsonSerializerOptions options)
     {
-        if (options.DefaultIgnoreCondition == JsonIgnoreCondition.Always)
-            return;
-
         var exceptionType = value.GetType();
-        var serializableProperties = exceptionType
-            .GetProperties()
+        var serializableProperties = exceptionType.GetProperties()
             .Where(prop => prop.Name != nameof(Exception.TargetSite))
             .Select(prop => new { prop.Name, Value = prop.GetValue(value) });
 
