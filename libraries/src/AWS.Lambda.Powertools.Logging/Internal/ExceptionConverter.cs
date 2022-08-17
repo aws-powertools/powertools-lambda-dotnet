@@ -57,21 +57,21 @@ public class ExceptionConverter : JsonConverter<Exception>
     public override void Write(Utf8JsonWriter writer, Exception value, JsonSerializerOptions options)
     {
         var exceptionType = value.GetType();
-        var serializableProperties = exceptionType.GetProperties()
+        var properties = exceptionType.GetProperties()
             .Where(prop => prop.Name != nameof(Exception.TargetSite))
             .Select(prop => new { prop.Name, Value = prop.GetValue(value) });
 
         if (options.DefaultIgnoreCondition == JsonIgnoreCondition.WhenWritingNull)
-            serializableProperties = serializableProperties.Where(prop => prop.Value != null);
+            properties = properties.Where(prop => prop.Value != null);
 
-        var propList = serializableProperties.ToArray();
-        if (!propList.Any())
+        var props = properties.ToArray();
+        if (!props.Any())
             return;
 
         writer.WriteStartObject();
         writer.WriteString("Type", exceptionType.FullName);
 
-        foreach (var prop in propList)
+        foreach (var prop in props)
         {
             switch (prop.Value)
             {
