@@ -13,7 +13,9 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.Reflection;
+using System.Threading.Tasks;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using Newtonsoft.Json.Linq;

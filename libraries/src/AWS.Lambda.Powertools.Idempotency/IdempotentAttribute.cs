@@ -13,12 +13,13 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Idempotency.Internal;
 
 namespace AWS.Lambda.Powertools.Idempotency;
 
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 [Injection(typeof(IdempotentAspect), Inherited = true)]
 public class IdempotentAttribute : Attribute
 {

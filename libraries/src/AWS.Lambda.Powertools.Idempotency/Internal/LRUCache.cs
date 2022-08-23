@@ -1,6 +1,8 @@
 
 #nullable disable
 
+using System.Collections.Generic;
+
 namespace AWS.Lambda.Powertools.Idempotency.Internal;
 //source: https://github.dev/microsoft/botbuilder-dotnet/blob/main/libraries/AdaptiveExpressions/LRUCache.cs
 

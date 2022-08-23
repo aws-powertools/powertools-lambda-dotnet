@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using System;
+
 namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 
 public class IdempotencyKeyException : Exception

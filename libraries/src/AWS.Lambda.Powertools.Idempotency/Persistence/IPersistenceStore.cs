@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using System;
+using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;

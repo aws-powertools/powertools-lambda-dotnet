@@ -2,9 +2,9 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-<!--        <Nullable>enable</Nullable>-->
-        <IsPackable>false</IsPackable>
-        
+        <LangVersion>default</LangVersion>
+        <AssemblyName>AWS.Lambda.Powertools.Idempotency.Tests</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Idempotency.Tests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
