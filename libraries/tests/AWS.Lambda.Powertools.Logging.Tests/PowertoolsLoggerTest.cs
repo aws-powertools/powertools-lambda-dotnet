@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
@@ -1091,6 +1092,86 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     It.Is<string>
                     (s =>
                         s.Contains("\"error\":{\"type\":\"" + error.GetType().FullName + "\",\"message\":\"" + error.Message + "\"")
+                    )
+                ), Times.Once);
+        }
+        
+        [Fact]
+        public void Log_WhenByteArray_LogsByteArrayNumbers()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var bytes = new byte[10];
+            new Random().NextBytes(bytes);
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);            
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                new LoggerConfiguration
+                {                     
+                    Service = null,
+                    MinimumLevel = null
+                });
+            
+            // Act
+            logger.LogInformation(new { Name = "Test Object", Bytes = bytes });
+            
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"bytes\":[" + string.Join(",", bytes) + "]")
+                    )
+                ), Times.Once);
+        }
+        
+        [Fact]
+        public void Log_WhenMemoryStream_LogsBase64String()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var bytes = new byte[10];
+            new Random().NextBytes(bytes);
+            var memoryStream = new MemoryStream(bytes) 
+            {
+                Position = 0
+            };
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);            
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                new LoggerConfiguration
+                {                     
+                    Service = null,
+                    MinimumLevel = null
+                });
+            
+            // Act
+            logger.LogInformation(new { Name = "Test Object", Stream = memoryStream });
+            
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"stream\":\"" + Convert.ToBase64String(bytes) + "\"")
                     )
                 ), Times.Once);
         }
