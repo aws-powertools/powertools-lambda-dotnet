@@ -18,7 +18,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AWS.Lambda.Powertools.Logging.Internal;
+namespace AWS.Lambda.Powertools.Logging.Internal.Converters;
 
 /// <summary>
 ///     Converts an exception to JSON.
@@ -36,7 +36,7 @@ internal class ExceptionConverter : JsonConverter<Exception>
     }
 
     /// <summary>
-    ///     Converter throws NotSupportedException. Deserializing exception is not allowed.
+    ///     Converter throws NotSupportedException. Deserializing Exception is not allowed.
     /// </summary>
     /// <param name="reader">Reference to the JsonReader</param>
     /// <param name="typeToConvert">The type which should be converted.</param>
@@ -45,7 +45,7 @@ internal class ExceptionConverter : JsonConverter<Exception>
     /// <exception cref="NotSupportedException"></exception>
     public override Exception Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        throw new NotSupportedException("Deserializing exception is not allowed");
+        throw new NotSupportedException("Deserializing Exception is not allowed");
     }
 
     /// <summary>

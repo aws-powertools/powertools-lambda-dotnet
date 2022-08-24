@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal.Converters;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -350,7 +351,10 @@ internal sealed class PowertoolsLogger : ILogger
                 DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance
             }
         };
+        jsonOptions.Converters.Add(new ByteArrayConverter());
         jsonOptions.Converters.Add(new ExceptionConverter());
+        jsonOptions.Converters.Add(new MemoryStreamConverter());
+        jsonOptions.Converters.Add(new ConstantClassConverter());
         return jsonOptions;
     }
 }
