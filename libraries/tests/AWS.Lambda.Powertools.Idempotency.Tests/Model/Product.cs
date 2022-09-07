@@ -19,15 +19,10 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Model;
 
 public class Product
 {
-    public long Id { get; set; }
-    public string Name { get; set; }
-    public double Price { get; set; }
-
-    public Product()
-    {
-        
-    }
-
+    public long Id { get; }
+    public string Name { get; }
+    public double Price { get; }
+    
     public Product(long id, string name, double price)
     {
         Id = id;

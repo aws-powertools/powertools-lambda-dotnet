@@ -21,7 +21,7 @@ using Xunit;
 //Source: https://github.dev/microsoft/botbuilder-dotnet/blob/main/tests/AdaptiveExpressions.Tests/LRUCacheTest.cs
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Internal;
 
-public class LRUCacheTest
+public class LRUCacheTests
 {
     [Fact]
     public void TestBasic()

@@ -23,49 +23,73 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 public class DataRecordTests
 {
     [Fact]
-    public void IsExpired_ShouldReturnTrue_WhenCurrentTimeIsGreaterThanExpiryTimestamp()
+    public void IsExpired_WhenCurrentTimeIsGreaterThanExpiryTimestamp_ShouldReturnTrue()
     {
+        // Arrange
         var now = DateTimeOffset.UtcNow;
         var dataRecord = new DataRecord(
             "123", 
             DataRecord.DataRecordStatus.INPROGRESS, 
             now.AddSeconds(-1).ToUnixTimeSeconds(),
             "abc","123");
-        dataRecord.IsExpired(now).Should().BeTrue();
+
+        // Act
+        var result =dataRecord.IsExpired(now);
+
+        // Assert
+        result.Should().BeTrue();
     }
     [Fact]
-    public void IsExpired_ShouldReturnFalse_WhenCurrentTimeIsLessThanExpiryTimestamp()
+    public void IsExpired_WhenCurrentTimeIsLessThanExpiryTimestamp_ShouldReturnFalse()
     {
+        // Arrange
         var now = DateTimeOffset.UtcNow;
         var dataRecord = new DataRecord(
             "123", 
             DataRecord.DataRecordStatus.INPROGRESS, 
             now.AddSeconds(10).ToUnixTimeSeconds(),
             "abc","123");
-        dataRecord.IsExpired(now).Should().BeFalse();
+        
+        // Act
+        var result =dataRecord.IsExpired(now);
+
+        // Assert
+        result.Should().BeFalse();
     }
     
     [Fact]
-    public void Status_ShouldBeExpired_WhenCurrentTimeIsGreaterThanExpiryTimestamp()
+    public void Status_WhenCurrentTimeIsGreaterThanExpiryTimestamp_ShouldBeExpired()
     {
+        // Arrange
         var now = DateTimeOffset.UtcNow;
         var dataRecord = new DataRecord(
             "123", 
             DataRecord.DataRecordStatus.INPROGRESS, 
             now.AddSeconds(-10).ToUnixTimeSeconds(),
             "abc","123");
-        dataRecord.Status.Should().Be(DataRecord.DataRecordStatus.EXPIRED);
+
+        // Act
+        var status =dataRecord.Status;
+
+        // Assert
+        status.Should().Be(DataRecord.DataRecordStatus.EXPIRED);
     }
     
     [Fact]
-    public void Status_ShouldBeRecordStatus_WhenCurrentTimeDidnotExpire()
+    public void Status_WhenCurrentTimeDidNotExpire_ShouldBeRecordStatus()
     {
+        // Arrange
         var now = DateTimeOffset.UtcNow;
         var dataRecord = new DataRecord(
             "123", 
             DataRecord.DataRecordStatus.INPROGRESS, 
             now.AddSeconds(10).ToUnixTimeSeconds(),
             "abc","123");
-        dataRecord.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
+        
+        // Act
+        var status =dataRecord.Status;
+
+        // Assert
+        status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
     }
 }

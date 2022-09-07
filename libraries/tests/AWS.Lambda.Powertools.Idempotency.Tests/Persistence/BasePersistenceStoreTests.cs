@@ -70,8 +70,9 @@ public class BasePersistenceStoreTests
     }
     
     [Fact]
-    public async Task SaveInProgress_DefaultConfig()
+    public async Task SaveInProgress_WhenDefaultConfig_ShouldSaveRecordInStore()
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
@@ -79,8 +80,10 @@ public class BasePersistenceStoreTests
         
         DateTimeOffset now = DateTimeOffset.UtcNow;
         
+        // Act
         await persistenceStore.SaveInProgress(JToken.FromObject(request), now);
 
+        // Assert
         var dr = persistenceStore.DataRecord;
         dr.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         dr.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
@@ -90,11 +93,10 @@ public class BasePersistenceStoreTests
         persistenceStore.Status.Should().Be(1);
     }
 
-    
-
     [Fact]
-    public async Task SaveInProgress_jmespath()
+    public async Task SaveInProgress_WhenKeyJmesPathIsSet_ShouldSaveRecordInStore_WithIdempotencyKeyEqualsKeyJmesPath()
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
@@ -103,8 +105,11 @@ public class BasePersistenceStoreTests
             .Build(), "myfunc");
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
+        
+        // Act
         await persistenceStore.SaveInProgress(JToken.FromObject(request), now);
         
+        // Assert
         var dr = persistenceStore.DataRecord;
         dr.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         dr.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
@@ -116,8 +121,9 @@ public class BasePersistenceStoreTests
     
     
     [Fact]
-    public async Task SaveInProgress_JMESPath_NotFound_ShouldThrowException()
+    public async Task SaveInProgress_WhenJMESPath_NotFound_ShouldThrowException()
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
@@ -127,7 +133,10 @@ public class BasePersistenceStoreTests
             .Build(), "");
         DateTimeOffset now = DateTimeOffset.UtcNow;
         
+        // Act
         Func<Task> act = async () => await persistenceStore.SaveInProgress(JToken.FromObject(request), now);
+        
+        // Assert
         await act.Should()
             .ThrowAsync<IdempotencyKeyException>()
             .WithMessage("No data found to create a hashed idempotency key");
@@ -136,8 +145,9 @@ public class BasePersistenceStoreTests
     }
     
     [Fact]
-    public async Task SaveInProgress_JMESpath_NotFound_ShouldNotThrowException()
+    public async Task SaveInProgress_WhenJMESpath_NotFound_ShouldNotThrowException()
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
@@ -146,16 +156,20 @@ public class BasePersistenceStoreTests
             .Build(), "");
         
         DateTimeOffset now = DateTimeOffset.UtcNow;
+        
+        // Act
         await persistenceStore.SaveInProgress(JToken.FromObject(request), now);
 
+        // Assert
         DataRecord dr = persistenceStore.DataRecord;
         dr.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         persistenceStore.Status.Should().Be(1);
     }
     
     [Fact]
-    public async Task SaveInProgress_WithLocalCache_NotExpired_ShouldThrowException()
+    public async Task SaveInProgress_WhenLocalCacheIsSet_AndNotExpired_ShouldThrowException()
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
@@ -174,8 +188,10 @@ public class BasePersistenceStoreTests
                 null, null)
         );
         
+        // Act
         Func<Task> act = () => persistenceStore.SaveInProgress(JToken.FromObject(request), now);
 
+        // Assert
         await act.Should()
             .ThrowAsync<IdempotencyItemAlreadyExistsException>();
 
@@ -183,8 +199,9 @@ public class BasePersistenceStoreTests
     }
     
     [Fact]
-    public async Task SaveInProgress_WithLocalCache_Expired_ShouldRemoveFromCache()
+    public async Task SaveInProgress_WhenLocalCacheIsSetButExpired_ShouldRemoveFromCache()
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
@@ -204,8 +221,10 @@ public class BasePersistenceStoreTests
                 null, null)
         );
         
+        // Act
         await persistenceStore.SaveInProgress(JToken.FromObject(request), now);
 
+        // Assert
         DataRecord dr = persistenceStore.DataRecord;
         dr.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         cache.Count.Should().Be(0);
@@ -215,8 +234,9 @@ public class BasePersistenceStoreTests
     ////// Save Success
     
     [Fact]
-    public async Task SaveSuccess_ShouldUpdateRecord() 
+    public async Task SaveSuccess_WhenDefaultConfig_ShouldUpdateRecord() 
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new ((int) 2);
@@ -225,8 +245,11 @@ public class BasePersistenceStoreTests
         Product product = new Product(34543, "product", 42);
         
         DateTimeOffset now = DateTimeOffset.UtcNow;
+        
+        // Act
         await persistenceStore.SaveSuccess(JToken.FromObject(request), product, now);
 
+        // Assert
         DataRecord dr = persistenceStore.DataRecord;
         dr.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
         dr.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
@@ -238,8 +261,9 @@ public class BasePersistenceStoreTests
     }
     
     [Fact]
-    public async Task SaveSuccess_WithCacheEnabled_ShouldSaveInCache()
+    public async Task SaveSuccess_WhenCacheEnabled_ShouldSaveInCache()
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new ((int) 2);
@@ -250,8 +274,10 @@ public class BasePersistenceStoreTests
         Product product = new Product(34543, "product", 42);
         DateTimeOffset now = DateTimeOffset.UtcNow;
         
+        // Act
         await persistenceStore.SaveSuccess(JToken.FromObject(request), product, now);
 
+        // Assert
         persistenceStore.Status.Should().Be(2);
         cache.Count.Should().Be(1);
     
@@ -267,8 +293,9 @@ public class BasePersistenceStoreTests
     /// Get Record
     
     [Fact]
-    public async Task GetRecord_ShouldReturnRecordFromPersistence() 
+    public async Task GetRecord_WhenRecordIsInStore_ShouldReturnRecordFromPersistence() 
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
@@ -276,7 +303,11 @@ public class BasePersistenceStoreTests
         persistenceStore.Configure(IdempotencyConfig.Builder().Build(), "myfunc", cache);
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
+        
+        // Act
         DataRecord record = await persistenceStore.GetRecord(JToken.FromObject(request), now);
+        
+        // Assert
         record.IdempotencyKey.Should().Be("testFunction.myfunc#36e3de9a3270f82fb957c645178dfab9");
         record.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         record.ResponseData.Should().Be("Response");
@@ -284,9 +315,9 @@ public class BasePersistenceStoreTests
     }
     
     [Fact]
-
-    public async Task GetRecord_CacheEnabledNotExpired_ShouldReturnRecordFromCache() 
+    public async Task GetRecord_WhenCacheEnabledNotExpired_ShouldReturnRecordFromCache() 
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new((int) 2);
@@ -303,7 +334,10 @@ public class BasePersistenceStoreTests
             null);
         cache.Set("testFunction.myfunc#36e3de9a3270f82fb957c645178dfab9", dr);
 
+        // Act
         DataRecord record = await persistenceStore.GetRecord(JToken.FromObject(request), now);
+        
+        // Assert
         record.IdempotencyKey.Should().Be("testFunction.myfunc#36e3de9a3270f82fb957c645178dfab9");
         record.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
         record.ResponseData.Should().Be("result of the function");
@@ -311,8 +345,9 @@ public class BasePersistenceStoreTests
     }
     
     [Fact]
-    public async Task GetRecord_CacheEnabledExpired_ShouldReturnRecordFromPersistence() 
+    public async Task GetRecord_WhenLocalCacheEnabledButRecordExpired_ShouldReturnRecordFromPersistence() 
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new((int) 2);
@@ -328,7 +363,10 @@ public class BasePersistenceStoreTests
             null);
         cache.Set("testFunction.myfunc#36e3de9a3270f82fb957c645178dfab9", dr);
 
+        // Act
         DataRecord record = await persistenceStore.GetRecord(JToken.FromObject(request), now);
+        
+        // Assert
         record.IdempotencyKey.Should().Be("testFunction.myfunc#36e3de9a3270f82fb957c645178dfab9");
         record.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         record.ResponseData.Should().Be("Response");
@@ -337,8 +375,9 @@ public class BasePersistenceStoreTests
     }
     
     [Fact]
-    public async Task GetRecord_InvalidPayload_ShouldThrowValidationException()
+    public async Task GetRecord_WhenInvalidPayload_ShouldThrowValidationException()
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
@@ -350,26 +389,35 @@ public class BasePersistenceStoreTests
 
         var validationHash = "different hash"; // "Lambda rocks" ==> 70c24d88041893f7fbab4105b76fd9e1
         DateTimeOffset now = DateTimeOffset.UtcNow;
+        
+        // Act
         Func<Task> act = () => persistenceStore.GetRecord(JToken.FromObject(request), now);
+        
+        // Assert
         await act.Should().ThrowAsync<IdempotencyValidationException>();
     }
     
     // Delete Record
     [Fact]
-    public async Task DeleteRecord_ShouldDeleteRecordFromPersistence() 
+    public async Task DeleteRecord_WhenRecordExist_ShouldDeleteRecordFromPersistence() 
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
         persistenceStore.Configure(IdempotencyConfig.Builder().Build(), null);
 
+        // Act
         await persistenceStore.DeleteRecord(JToken.FromObject(request), new ArithmeticException());
+        
+        // Assert
         persistenceStore.Status.Should().Be(3);
     }
     
     [Fact]
-    public async Task DeleteRecord_CacheEnabled_ShouldDeleteRecordFromCache() 
+    public async Task DeleteRecord_WhenLocalCacheEnabled_ShouldDeleteRecordFromCache() 
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new ((int) 2);
@@ -382,39 +430,57 @@ public class BasePersistenceStoreTests
                 123,
                 null, null));
         
+        // Act
         await persistenceStore.DeleteRecord(JToken.FromObject(request), new ArithmeticException());
+        
+        // Assert
         persistenceStore.Status.Should().Be(3);
         cache.Count.Should().Be(0); 
     }
     
     [Fact]
-    public void GenerateHashString_ShouldGenerateMd5ofString() 
+    public void GenerateHash_WhenInputIsString_ShouldGenerateMd5ofString() 
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         persistenceStore.Configure(IdempotencyConfig.Builder().Build(), null);
         string expectedHash = "70c24d88041893f7fbab4105b76fd9e1"; // MD5(Lambda rocks)
+        
+        // Act
         string generatedHash = persistenceStore.GenerateHash(new JValue("Lambda rocks"));
+        
+        // Assert
         generatedHash.Should().Be(expectedHash);
     }
     
     [Fact]
-    public void GenerateHashObject_ShouldGenerateMd5ofJsonObject()
+    public void GenerateHash_WhenInputIsObject_ShouldGenerateMd5ofJsonObject()
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         persistenceStore.Configure(IdempotencyConfig.Builder().Build(), null);
         Product product = new Product(42, "Product", 12);
         string expectedHash = "87dd2e12074c65c9bac728795a6ebb45"; // MD5({"Id":42,"Name":"Product","Price":12.0})
+        
+        // Act
         string generatedHash = persistenceStore.GenerateHash(JToken.FromObject(product));
+        
+        // Assert
         generatedHash.Should().Be(expectedHash);
     }
 
     [Fact]
-    public void GenerateHashDouble_ShouldGenerateMd5ofDouble() 
+    public void GenerateHash_WhenInputIsDouble_ShouldGenerateMd5ofDouble() 
     {
+        // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         persistenceStore.Configure(IdempotencyConfig.Builder().Build(), null);
         string expectedHash = "bb84c94278119c8838649706df4db42b"; // MD5(256.42)
+        
+        // Act
         var generatedHash = persistenceStore.GenerateHash(new JValue(256.42));
+        
+        // Assert
         generatedHash.Should().Be(expectedHash);
     }
     

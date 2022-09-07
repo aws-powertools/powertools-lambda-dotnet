@@ -42,15 +42,18 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
     }
     //putRecord
     [Fact]
-    public async Task PutRecord_ShouldCreateRecordInDynamoDB()
+    public async Task PutRecord_WhenRecordDoesNotExist_ShouldCreateRecordInDynamoDB()
     {
+        // Arrange
         DateTimeOffset now = DateTimeOffset.UtcNow;
         long expiry = now.AddSeconds(3600).ToUnixTimeSeconds();
+        var key = CreateKey("key");
+        
+        // Act
         await _dynamoDbPersistenceStore
             .PutRecord(new DataRecord("key", DataRecord.DataRecordStatus.COMPLETED, expiry, null, null), now);
 
-        var key = CreateKey("key");
-
+        // Assert
         var getItemResponse =
             await client.GetItemAsync(new GetItemRequest
             {
@@ -65,11 +68,12 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task PutRecord_ShouldThrowIdempotencyItemAlreadyExistsException_IfRecordAlreadyExist() 
+    public async Task PutRecord_WhenRecordAlreadyExist_ShouldThrowIdempotencyItemAlreadyExistsException() 
     {
+        // Arrange
         var key = CreateKey("key");
 
-        // GIVEN: Insert a fake item with same id
+        // Insert a fake item with same id
         Dictionary<String, AttributeValue> item = new(key);
         DateTimeOffset now = DateTimeOffset.UtcNow;
         long expiry = now.AddSeconds(30).ToUnixTimeMilliseconds();
@@ -81,9 +85,9 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
             TableName = TABLE_NAME,
             Item = item
         });
-
-        // WHEN: call putRecord
         long expiry2 = now.AddSeconds(3600).ToUnixTimeSeconds();
+
+        // Act
         Func<Task> act = () => _dynamoDbPersistenceStore.PutRecord(
             new DataRecord("key",
                 DataRecord.DataRecordStatus.INPROGRESS,
@@ -91,9 +95,11 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
                 null,
                 null
             ), now);
+        
+        // Assert
         await act.Should().ThrowAsync<IdempotencyItemAlreadyExistsException>();
         
-        // THEN: item was not updated, retrieve the initial one
+        // item was not updated, retrieve the initial one
         Dictionary<String, AttributeValue> itemInDb = (await client.GetItemAsync(new GetItemRequest
             {
                 TableName = TABLE_NAME,
@@ -107,10 +113,10 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
     
     //getRecord
     [Fact]
-    public async Task GetRecord_ShouldReturnExistingRecord()
+    public async Task GetRecord_WhenRecordExistsInDynamoDb_ShouldReturnExistingRecord()
     {
-        var key = new DictionaryEntry();
-        // GIVEN: Insert a fake item with same id
+        // Arrange
+        // Insert a fake item with same id
         Dictionary<String, AttributeValue> item = new()
         {
             {"id", new AttributeValue("key")} //key
@@ -129,10 +135,10 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
             Item = item
         });
 
-        // WHEN
+        // Act
         DataRecord record = await _dynamoDbPersistenceStore.GetRecord("key");
 
-        // THEN
+        // Assert
         record.IdempotencyKey.Should().Be("key");
         record.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
         record.ResponseData.Should().Be("Fake Data");
@@ -140,17 +146,20 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GetRecord_ShouldThrowException_WhenRecordIsAbsent()
+    public async Task GetRecord_WhenRecordIsAbsent_ShouldThrowException()
     {
+        // Act
         Func<Task> act = () => _dynamoDbPersistenceStore.GetRecord("key");
+        
+        // Assert
         await act.Should().ThrowAsync<IdempotencyItemNotFoundException>();
     }
     //updateRecord
 
     [Fact]
-    public async Task UpdateRecord_ShouldUpdateRecord()
+    public async Task UpdateRecord_WhenRecordExistsInDynamoDb_ShouldUpdateRecord()
     {
-        // GIVEN: Insert a fake item with same id
+        // Arrange: Insert a fake item with same id
         var key = CreateKey("key");
         Dictionary<String, AttributeValue> item = new(key);
         DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -169,12 +178,12 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
         _dynamoDbPersistenceStore.Configure(IdempotencyConfig.Builder().WithPayloadValidationJmesPath("path").Build(),
             null);
 
-        // WHEN
+        // Act
         expiry = now.AddSeconds(3600).ToUnixTimeMilliseconds();
         DataRecord record = new DataRecord("key", DataRecord.DataRecordStatus.COMPLETED, expiry, "Fake result", "hash");
         await _dynamoDbPersistenceStore.UpdateRecord(record);
 
-        // THEN
+        // Assert
         Dictionary<String, AttributeValue> itemInDb = (await client.GetItemAsync(new GetItemRequest
         {
             TableName = TABLE_NAME,
@@ -189,9 +198,9 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
 
     //deleteRecord
     [Fact]
-    public async Task DeleteRecord_ShouldDeleteRecord() 
+    public async Task DeleteRecord_WhenRecordExistsInDynamoDb_ShouldDeleteRecord() 
     {
-        // GIVEN: Insert a fake item with same id
+        // Arrange: Insert a fake item with same id
         var key = CreateKey("key");
         Dictionary<String, AttributeValue> item = new(key);
         DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -209,10 +218,10 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
         });
         scanResponse.Items.Count.Should().Be(1);
 
-        // WHEN
+        // Act
         await _dynamoDbPersistenceStore.DeleteRecord("key");
 
-        // THEN
+        // Assert
         scanResponse = await client.ScanAsync(new ScanRequest
         {
             TableName = TABLE_NAME
@@ -322,14 +331,19 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task IdempotencyDisabled_NoClientShouldBeCreated() 
+    public async Task GetRecord_WhenIdempotencyDisabled_ShouldNotCreateClients() 
     {
         try
         {
+            // Arrange
             Environment.SetEnvironmentVariable(Constants.IDEMPOTENCY_DISABLED_ENV, "true");
-
+            
             DynamoDBPersistenceStore store = DynamoDBPersistenceStore.Builder().WithTableName(TABLE_NAME).Build();
+            
+            // Act
             Func<Task> act = () => store.GetRecord("fake");
+            
+            // Assert
             await act.Should().ThrowAsync<NullReferenceException>();
         }
         finally
