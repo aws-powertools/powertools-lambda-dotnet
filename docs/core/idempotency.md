@@ -223,7 +223,7 @@ These are the available options for further configuration:
 | **ThrowOnNoIdempotencyKey**                       | `False` | Throw exception if no idempotency key was found in the request                                                                   |
 | **ExpirationInSeconds**                           | 3600    | The number of seconds to wait before a record is expired                                                                         |
 | **UseLocalCache**                                 | `false` | Whether to locally cache idempotency results (LRU cache)                                                                         |
-| **HashFunction**                                  | `MD5`   | Algorithm to use for calculating hashes, as supported by `java.security.MessageDigest` (eg. SHA-1, SHA-256, ...)                 |
+| **HashFunction**                                  | `MD5`   | Algorithm to use for calculating hashes, as supported by `System.Security.Cryptography.HashAlgorithm` (eg. SHA1, SHA-256, ...)                 |
 
 These features are detailed below.
 
