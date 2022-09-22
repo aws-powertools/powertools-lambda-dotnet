@@ -23,28 +23,34 @@ public abstract class ParameterProvider<TConfigurationBuilder> : ParameterProvid
 {
     protected abstract TConfigurationBuilder NewConfigurationBuilder();
 
+    private TConfigurationBuilder CreateConfigurationBuilder()
+    {
+        return NewConfigurationBuilder()
+            .WithMaxAge(Handler.GetDefaultMaxAge());
+    }
+
     public TConfigurationBuilder WithMaxAge(TimeSpan age)
     {
-        return NewConfigurationBuilder().WithMaxAge(age);
+        return CreateConfigurationBuilder().WithMaxAge(age);
     }
-    
+
     public TConfigurationBuilder ForceFetch()
     {
-        return WithMaxAge(GetDefaultMaxAge()).ForceFetch();
+        return CreateConfigurationBuilder().ForceFetch();
     }
 
     public TConfigurationBuilder WithTransformation(Transformation transformation)
     {
-        return WithMaxAge(GetDefaultMaxAge()).WithTransformation(transformation);
+        return CreateConfigurationBuilder().WithTransformation(transformation);
     }
 
     public TConfigurationBuilder WithTransformation(ITransformer transformer)
     {
-        return WithMaxAge(GetDefaultMaxAge()).WithTransformation(transformer);
+        return CreateConfigurationBuilder().WithTransformation(transformer);
     }
-    
+
     public TConfigurationBuilder WithTransformation(string transformerName)
     {
-        return WithMaxAge(GetDefaultMaxAge()).WithTransformation(transformerName);
+        return CreateConfigurationBuilder().WithTransformation(transformerName);
     }
 }

@@ -23,14 +23,14 @@ public static class ParameterProviderExtensions
     public static TProvider DefaultMaxAge<TProvider>(this TProvider instance, TimeSpan maxAge)
         where TProvider : ParameterProviderBase
     {
-        instance.SetDefaultMaxAge(maxAge);
+        instance.Handler.SetDefaultMaxAge(maxAge);
         return instance;
     }
 
     public static TProvider UseCacheManager<TProvider>(this TProvider instance, ICacheManager cacheManager)
         where TProvider : ParameterProviderBase
     {
-        instance.SetCacheManager(cacheManager);
+        instance.Handler.SetCacheManager(cacheManager);
         return instance;
     }
 
@@ -38,14 +38,14 @@ public static class ParameterProviderExtensions
         ITransformerManager transformerManager)
         where TProvider : ParameterProviderBase
     {
-        instance.SetTransformerManager(transformerManager);
+        instance.Handler.SetTransformerManager(transformerManager);
         return instance;
     }
 
     public static TProvider AddTransformer<TProvider>(this TProvider instance, string name, ITransformer transformer)
         where TProvider : ParameterProviderBase
     {
-        instance.AddCustomTransformer(name, transformer);
+        instance.Handler.AddCustomTransformer(name, transformer);
         return instance;
     }
 }

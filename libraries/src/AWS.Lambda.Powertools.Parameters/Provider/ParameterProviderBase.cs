@@ -13,117 +13,17 @@
  * permissions and limitations under the License.
  */
 
-using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
-using AWS.Lambda.Powertools.Parameters.Transform;
+using AWS.Lambda.Powertools.Parameters.Provider.Internal;
 
 namespace AWS.Lambda.Powertools.Parameters.Provider;
 
-public abstract class ParameterProviderBase : IParameterProviderBase
+public abstract class ParameterProviderBase : IProviderBase
 {
-    private ICacheManager? _cache;
-    private ITransformerManager? _transformManager;
-    private TimeSpan _defaultMaxAge = CacheManager.DefaultMaxAge;
-
-    private ICacheManager Cache => _cache ??= new CacheManager(DateTimeWrapper.Instance);
-    private ITransformerManager TransformManager => _transformManager ??= TransformerManager.Instance;
-
-    #region Internal Functions
-
-    internal void SetDefaultMaxAge(TimeSpan maxAge)
-    {
-        _defaultMaxAge = maxAge;
-    }
-
-    internal TimeSpan GetDefaultMaxAge()
-    {
-        return _defaultMaxAge;
-    }
-
-    internal void SetCacheManager(ICacheManager cacheManager)
-    {
-        _cache = cacheManager;
-    }
-
-    internal void SetTransformerManager(ITransformerManager transformerManager)
-    {
-        _transformManager = transformerManager;
-    }
-
-    internal void AddCustomTransformer(string name, ITransformer transformer)
-    {
-        TransformManager.AddTransformer(name, transformer);
-    }
-
-    public async Task<T?> GetAsync<T>(string key, ParameterProviderConfiguration? config,
-        Transformation? transformation, string? transformerName)
-    {
-        var cachedObject = config is null || !config.ForceFetch ? Cache.Get(key) : null;
-        if (cachedObject is T cachedValue)
-            return cachedValue;
-
-        var transformer = config?.Transformer;
-
-        if (transformer is null)
-        {
-            if (!string.IsNullOrWhiteSpace(transformerName))
-                transformer = TransformManager.GetTransformer(transformerName);
-            else if (transformation.HasValue)
-                transformer = TransformManager.TryGetTransformer(transformation.Value, key);
-
-            if (config is not null)
-                config.Transformer = transformer;
-        }
-
-        var value = await GetAsync(key, config).ConfigureAwait(false);
-
-        if (string.IsNullOrWhiteSpace(value))
-            return default;
-
-        var maxAge = config?.MaxAge ?? _defaultMaxAge;
-
-        T? retValue;
-        if (transformer is not null)
-            retValue = transformer.Transform<T>(value);
-        else if (value is T strVal)
-            retValue = strVal;
-        else
-            throw new Exception($"Transformer is required. '{value}' cannot be converted to type '{typeof(T)}'.");
-
-        Cache.Set(key, retValue, maxAge);
-
-        return retValue;
-    }
-
-    public async Task<IDictionary<string, string>> GetMultipleAsync(string path,
-        ParameterProviderConfiguration? config, Transformation? transformation, string? transformerName)
-    {
-        var cachedObject = config is null || !config.ForceFetch ? Cache.Get(path) : null;
-        if (cachedObject is IDictionary<string, string> cachedValue)
-            return cachedValue;
-
-        var transformer = config?.Transformer;
-        if (transformer is null && transformation.HasValue && transformation.Value != Transformation.Auto)
-        {
-            transformer = TransformManager.GetTransformer(transformation.Value);
-            if (config is not null)
-                config.Transformer = transformer;
-        }
-
-        var retValues = await GetMultipleAsync(path, config).ConfigureAwait(false);
-        if (!retValues.Any())
-            return retValues;
-
-        var maxAge = config?.MaxAge ?? _defaultMaxAge;
-        Cache.Set(path, retValues, maxAge);
-        foreach (var (key, value) in retValues)
-            Cache.Set(key, value, maxAge);
-
-        return retValues;
-    }
-
-    #endregion
-
+    private IParameterProviderBaseHandler? _handler;
+    internal IParameterProviderBaseHandler Handler =>
+        _handler ??= new ParameterProviderBaseHandler(GetAsync, GetMultipleAsync);
+    
     public string? Get(string key)
     {
         return GetAsync(key).GetAwaiter().GetResult();
@@ -131,7 +31,7 @@ public abstract class ParameterProviderBase : IParameterProviderBase
 
     public async Task<string?> GetAsync(string key)
     {
-        return await GetAsync<string>(key, null, null, null).ConfigureAwait(false);
+        return await Handler.GetAsync<string>(key, null, null, null).ConfigureAwait(false);
     }
 
     public T? Get<T>(string key) where T : class
@@ -141,7 +41,7 @@ public abstract class ParameterProviderBase : IParameterProviderBase
 
     public async Task<T?> GetAsync<T>(string key) where T : class
     {
-        return await GetAsync<T>(key, null, null, null).ConfigureAwait(false);
+        return await Handler.GetAsync<T>(key, null, null, null).ConfigureAwait(false);
     }
 
     public IDictionary<string, string> GetMultiple(string path)
@@ -151,7 +51,7 @@ public abstract class ParameterProviderBase : IParameterProviderBase
 
     public async Task<IDictionary<string, string>> GetMultipleAsync(string path)
     {
-        return await GetMultipleAsync(path, null, null, null).ConfigureAwait(false);
+        return await Handler.GetMultipleAsync(path, null, null, null).ConfigureAwait(false);
     }
 
     protected abstract Task<string?> GetAsync(string key, ParameterProviderConfiguration? config);

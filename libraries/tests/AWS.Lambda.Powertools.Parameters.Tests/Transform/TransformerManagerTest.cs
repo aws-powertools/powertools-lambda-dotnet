@@ -50,7 +50,7 @@ public class TransformerManagerTest
     }
     
     [Fact]
-    public void GetTransformer_WhenAutoTransformation_RaiseException()
+    public void GetTransformer_WhenAutoTransformation_ThrowsException()
     {
         // Arrange
         var transformerManager = new TransformerManager();
@@ -202,5 +202,77 @@ public class TransformerManagerTest
         Assert.Null(preResult);
         Assert.NotNull(result);
         Assert.Equal(result, transformer.Object);
+    }
+
+    [Fact]
+    public void AddTransformer_WhenNameIsEmpty_ThrowsException()
+    {
+        // Arrange
+        var transformer = new Mock<ITransformer>();
+        var transformation = string.Empty;
+        var transformerManager = new TransformerManager();
+
+        // Act
+        void Act() => transformerManager.AddTransformer(transformation, transformer.Object);
+
+        // Assert
+        Assert.Throws<ArgumentException>(Act);
+    }
+    
+    [Fact]
+    public void GetTransformer_WhenNameIsEmpty_ThrowsException()
+    {
+        // Arrange
+        var transformation = string.Empty;
+        var transformerManager = new TransformerManager();
+
+        // Act
+        void Act() => transformerManager.GetTransformer(transformation);
+
+        // Assert
+        Assert.Throws<ArgumentException>(Act);
+    }
+    
+    [Fact]
+    public void GetTransformer_WhenTransformerNotFoundByName_ThrowsException()
+    {
+        // Arrange
+        var transformation = Guid.NewGuid().ToString();
+        var transformerManager = new TransformerManager();
+
+        // Act
+        void Act() => transformerManager.GetTransformer(transformation);
+
+        // Assert
+        Assert.Throws<KeyNotFoundException>(Act);
+    }
+    
+    
+    [Fact]
+    public void TryGetTransformer_WhenNameIsEmpty_ThrowsException()
+    {
+        // Arrange
+        var transformation = string.Empty;
+        var transformerManager = new TransformerManager();
+
+        // Act
+        void Act() => transformerManager.TryGetTransformer(transformation);
+
+        // Assert
+        Assert.Throws<ArgumentException>(Act);
+    }
+    
+    [Fact]
+    public void TryGetTransformer_WhenTransformerNotFoundByName_ReturnsNull()
+    {
+        // Arrange
+        var transformation = Guid.NewGuid().ToString();
+        var transformerManager = new TransformerManager();
+
+        // Act
+        var result = transformerManager.TryGetTransformer(transformation);
+
+        // Assert
+        Assert.Null(result);
     }
 }

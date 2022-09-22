@@ -15,31 +15,32 @@
 
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Provider;
+using AWS.Lambda.Powertools.Parameters.Provider.Internal;
 using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Configuration;
 
-public class ParameterProviderConfigurationBuilder
+public class ParameterProviderConfigurationBuilder : IProviderBase
 {
     private bool _forceFetch;
     private Transformation? _transformation;
     private ITransformer? _transformer;
     private string? _transformerName;
     private TimeSpan _maxAge = CacheManager.DefaultMaxAge;
-    private readonly IParameterProviderBase _parameterProvider;
+    private readonly IParameterProviderBaseHandler _parameterProvider;
 
     /// <summary>
     /// Constructor for test purpose
     /// </summary>
     /// <param name="parameterProvider"></param>
-    internal ParameterProviderConfigurationBuilder(IParameterProviderBase parameterProvider)
+    internal ParameterProviderConfigurationBuilder(IParameterProviderBaseHandler parameterProvider)
     {
         _parameterProvider = parameterProvider;
     }
     
     public ParameterProviderConfigurationBuilder(ParameterProviderBase parameterProvider)
     {
-        _parameterProvider = parameterProvider;
+        _parameterProvider = parameterProvider.Handler;
     }
 
     #region Internal Functions

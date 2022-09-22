@@ -35,29 +35,29 @@ public static class ParameterManager
     public static void DefaultMaxAge(TimeSpan maxAge)
     {
         _defaultMaxAge = maxAge;
-        _ssmProvider?.SetDefaultMaxAge(maxAge);
-        _secretsProvider?.SetDefaultMaxAge(maxAge);
+        _ssmProvider?.DefaultMaxAge(maxAge);
+        _secretsProvider?.DefaultMaxAge(maxAge);
     }
 
     public static void UseCacheManager(ICacheManager cacheManager)
     {
         _cache = cacheManager;
-        _ssmProvider?.SetCacheManager(cacheManager);
-        _secretsProvider?.SetCacheManager(cacheManager);
+        _ssmProvider?.UseCacheManager(cacheManager);
+        _secretsProvider?.UseCacheManager(cacheManager);
     }
 
     public static void UseTransformerManager(ITransformerManager transformerManager)
     {
         _transformManager = transformerManager;
-        _ssmProvider?.SetTransformerManager(transformerManager);
-        _secretsProvider?.SetTransformerManager(transformerManager);
+        _ssmProvider?.UseTransformerManager(transformerManager);
+        _secretsProvider?.UseTransformerManager(transformerManager);
     }
 
     public static void AddTransformer(string name, ITransformer transformer)
     {
         TransformManager.AddTransformer(name, transformer);
-        _ssmProvider?.AddCustomTransformer(name, transformer);
-        _secretsProvider?.AddCustomTransformer(name, transformer);
+        _ssmProvider?.AddTransformer(name, transformer);
+        _secretsProvider?.AddTransformer(name, transformer);
     }
 
     public static SsmProvider SsmProvider =>

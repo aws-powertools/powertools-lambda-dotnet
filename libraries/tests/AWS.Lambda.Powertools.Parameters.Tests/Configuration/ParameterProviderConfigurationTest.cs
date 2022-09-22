@@ -14,7 +14,7 @@
  */
 
 using AWS.Lambda.Powertools.Parameters.Configuration;
-using AWS.Lambda.Powertools.Parameters.Provider;
+using AWS.Lambda.Powertools.Parameters.Provider.Internal;
 using AWS.Lambda.Powertools.Parameters.Transform;
 using Moq;
 using Xunit;
@@ -31,7 +31,7 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var duration = TimeSpan.FromSeconds(5);
 
-        var provider = new Mock<IParameterProviderBase>();
+        var provider = new Mock<IParameterProviderBaseHandler>();
         provider.Setup(c =>
             c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
                 It.IsAny<string?>())
@@ -60,7 +60,7 @@ public class ParameterProviderConfigurationTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var provider = new Mock<IParameterProviderBase>();
+        var provider = new Mock<IParameterProviderBaseHandler>();
         provider.Setup(c =>
             c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
                 It.IsAny<string?>())
@@ -90,7 +90,7 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
 
         var transformer = new Mock<ITransformer>();
-        var provider = new Mock<IParameterProviderBase>();
+        var provider = new Mock<IParameterProviderBaseHandler>();
         provider.Setup(c =>
             c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
                 It.IsAny<string?>())
@@ -120,7 +120,7 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var transformation = Transformation.Json;
 
-        var provider = new Mock<IParameterProviderBase>();
+        var provider = new Mock<IParameterProviderBaseHandler>();
         provider.Setup(c =>
             c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
                 It.IsAny<string?>())
@@ -150,7 +150,7 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var transformation = Transformation.Base64;
 
-        var provider = new Mock<IParameterProviderBase>();
+        var provider = new Mock<IParameterProviderBaseHandler>();
         provider.Setup(c =>
             c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
                 It.IsAny<string?>())
@@ -180,7 +180,7 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var transformation = Transformation.Auto;
 
-        var provider = new Mock<IParameterProviderBase>();
+        var provider = new Mock<IParameterProviderBaseHandler>();
         provider.Setup(c =>
             c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
                 It.IsAny<string?>())
@@ -210,7 +210,7 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var transformationName = Guid.NewGuid().ToString();
 
-        var provider = new Mock<IParameterProviderBase>();
+        var provider = new Mock<IParameterProviderBaseHandler>();
         provider.Setup(c =>
             c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
                 It.IsAny<string?>())
