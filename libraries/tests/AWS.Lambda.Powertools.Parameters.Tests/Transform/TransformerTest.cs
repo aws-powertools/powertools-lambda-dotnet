@@ -23,7 +23,7 @@ namespace AWS.Lambda.Powertools.Parameters.Tests.Transform;
 public class TransformerTest
 {
     [Fact]
-    public void Base64Transformer_Transform_ConvertFromBase64()
+    public void Base64Transformer_TransformToString_ConvertFromBase64()
     {
         // Arrange
         var value = Guid.NewGuid().ToString();
@@ -39,9 +39,43 @@ public class TransformerTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
+    
+    [Fact]
+    public void Base64Transformer_TransformToObject_ReturnsNull()
+    {
+        // Arrange
+        var value = Guid.NewGuid().ToString();
+        var plainTextBytes = Encoding.UTF8.GetBytes(value);
+        var convertedValue = Convert.ToBase64String(plainTextBytes);
+        
+        var transformer = new Base64Transformer();
+
+        // Act
+        var result = transformer.Transform<object>(convertedValue);
+
+        // Assert
+        Assert.Null(result);
+    }
+    
+    [Fact]
+    public void Base64Transformer_TransformToNonString_ReturnsNull()
+    {
+        // Arrange
+        var value = Guid.NewGuid().ToString();
+        var plainTextBytes = Encoding.UTF8.GetBytes(value);
+        var convertedValue = Convert.ToBase64String(plainTextBytes);
+        
+        var transformer = new Base64Transformer();
+
+        // Act
+        var result = transformer.Transform<List<int>>(convertedValue);
+
+        // Assert
+        Assert.Null(result);
+    }
 
     [Fact]
-    public void JsonTransformer_Transform_ConvertFromJsonString()
+    public void JsonTransformer_TransformToType_ConvertFromJsonString()
     {
         // Arrange
         var keyValueMap = new Dictionary<string, List<string>>();
@@ -77,5 +111,72 @@ public class TransformerTest
         Assert.Equal(value1.Last(), result?.First().Value.Last());
         Assert.Equal(value2.First(), result?.Last().Value.First());
         Assert.Equal(value2.Last(), result?.Last().Value.Last());
+    }
+    
+    [Fact]
+    public void JsonTransformer_TransformToObject_ConvertFromJsonString()
+    {
+        // Arrange
+        var keyValueMap = new Dictionary<string, List<string>>();
+
+        var key1 = Guid.NewGuid().ToString();
+        var value1 = new List<string>
+        {
+            Guid.NewGuid().ToString(),
+            Guid.NewGuid().ToString()
+        };
+        keyValueMap.Add(key1, value1);
+
+        var key2 = Guid.NewGuid().ToString();
+        var value2 = new List<string>
+        {
+            Guid.NewGuid().ToString(),
+            Guid.NewGuid().ToString()
+        };
+        keyValueMap.Add(key2, value2);
+
+        var valueStr = JsonSerializer.Serialize(keyValueMap);
+
+        var transformer = new JsonTransformer();
+
+        // Act
+        var result = transformer.Transform<object>(valueStr);
+
+        // Assert
+        Assert.NotNull(result);
+    }
+    
+    [Fact]
+    public void JsonTransformer_TransformToString_ReturnsJsonString()
+    {
+        // Arrange
+        var keyValueMap = new Dictionary<string, List<string>>();
+
+        var key1 = Guid.NewGuid().ToString();
+        var value1 = new List<string>
+        {
+            Guid.NewGuid().ToString(),
+            Guid.NewGuid().ToString()
+        };
+        keyValueMap.Add(key1, value1);
+
+        var key2 = Guid.NewGuid().ToString();
+        var value2 = new List<string>
+        {
+            Guid.NewGuid().ToString(),
+            Guid.NewGuid().ToString()
+        };
+        keyValueMap.Add(key2, value2);
+
+        var valueStr = JsonSerializer.Serialize(keyValueMap);
+
+        var transformer = new JsonTransformer();
+
+        // Act
+        var result = transformer.Transform<string>(valueStr);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(result, valueStr);
     }
 }

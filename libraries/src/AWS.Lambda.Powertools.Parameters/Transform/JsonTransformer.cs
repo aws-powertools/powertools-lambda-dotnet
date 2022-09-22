@@ -21,6 +21,12 @@ internal class JsonTransformer : ITransformer
 {
     public T? Transform<T>(string value)
     {
-        return string.IsNullOrWhiteSpace(value) ? default : JsonSerializer.Deserialize<T>(value);
+        if (typeof(T) == typeof(string))
+            return (T)(object)value;
+
+        if (string.IsNullOrWhiteSpace(value))
+            return default;
+            
+        return JsonSerializer.Deserialize<T>(value);
     }
 }

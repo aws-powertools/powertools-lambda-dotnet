@@ -23,6 +23,11 @@ public abstract class ParameterProviderBase : IProviderBase
     private IParameterProviderBaseHandler? _handler;
     internal IParameterProviderBaseHandler Handler =>
         _handler ??= new ParameterProviderBaseHandler(GetAsync, GetMultipleAsync);
+
+    internal void SetHandler(IParameterProviderBaseHandler handler)
+    {
+        _handler = handler;
+    }
     
     public string? Get(string key)
     {
