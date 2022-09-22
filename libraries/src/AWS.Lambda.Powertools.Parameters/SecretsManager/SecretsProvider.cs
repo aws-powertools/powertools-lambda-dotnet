@@ -56,6 +56,6 @@ public class SecretsProvider : ParameterProvider
 
     protected override Task<IDictionary<string, string>> GetMultipleAsync(string path, ParameterProviderConfiguration? config)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException("Impossible to get multiple values from AWS Secrets Manager");
     }
 }
