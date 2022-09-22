@@ -32,7 +32,7 @@ public class SecretsProviderTest
     private const string CurrentVersionStage = "AWSCURRENT";
     
     [Fact]
-    public async Task GetAsync_SetUpProvider_CallsHandler()
+    public async Task GetAsync_SetupProvider_CallsHandler()
     {
         // Arrange
         var key = Guid.NewGuid().ToString();

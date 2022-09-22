@@ -75,7 +75,6 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>
                     WithDecryption = (configuration?.WithDecryption).GetValueOrDefault(),
                     Recursive = (configuration?.Recursive).GetValueOrDefault(),
                     NextToken = nextToken
-
                 }).ConfigureAwait(false);
 
             // Store the keys/values that we got back into the protected Data dictionary
