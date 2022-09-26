@@ -26,9 +26,5 @@
     <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Parameters\AWS.Lambda.Powertools.Parameters.csproj" />
 </ItemGroup>
 
-<ItemGroup>
-  <Folder Include="AppConfig" />
-</ItemGroup>
-
 </Project>
 

@@ -33,7 +33,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     private IDictionary<string, string> _lastConfig = new Dictionary<string, string>();
     private IAmazonAppConfigData Client => _client ??= new AmazonAppConfigDataClient();
 
-    internal AppConfigProvider()
+    public AppConfigProvider()
     {
         _dateTimeWrapper = DateTimeWrapper.Instance;
     }
@@ -88,15 +88,12 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 
     protected override async Task<IDictionary<string, string>> GetMultipleAsync(string path, ParameterProviderConfiguration? config)
     {
-        if (config is not AppConfigProviderConfiguration configuration)
+        if (config is not AppConfigProviderConfiguration configuration ||
+            string.IsNullOrWhiteSpace(configuration.ApplicationId) ||
+            string.IsNullOrWhiteSpace(configuration.EnvironmentId) ||
+            string.IsNullOrWhiteSpace(configuration.ConfigProfileId))
             throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
-        if (string.IsNullOrWhiteSpace(configuration.ApplicationId))
-            throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
-        if (string.IsNullOrWhiteSpace(configuration.EnvironmentId))
-            throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
-        if (string.IsNullOrWhiteSpace(configuration.ConfigProfileId))
-            throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
-        
+
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(configuration);
         if (!string.Equals(path, cacheKey, StringComparison.CurrentCultureIgnoreCase))
             throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
