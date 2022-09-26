@@ -14,6 +14,7 @@
  */
 
 using AWS.Lambda.Powertools.Parameters.Cache;
+using AWS.Lambda.Powertools.Parameters.Internal.Cache;
 using Moq;
 using Xunit;
 

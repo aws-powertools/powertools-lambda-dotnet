@@ -13,17 +13,21 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.Powertools.Parameters.Cache;
+using System.Diagnostics.CodeAnalysis;
+using AWS.Lambda.Powertools.Parameters.Cache;
 
-internal class CacheObject
+namespace AWS.Lambda.Powertools.Parameters.Internal.Cache;
+
+[ExcludeFromCodeCoverage]
+internal class DateTimeWrapper : IDateTimeWrapper
 {
-    internal object Value { get; set; }
+    private static IDateTimeWrapper? _instance;
     
-    internal DateTime ExpiryTime { get; set; }
-    
-    internal CacheObject(object value, DateTime expiryTime)
+    internal static IDateTimeWrapper Instance => _instance ??= new DateTimeWrapper();
+
+    private DateTimeWrapper()
     {
-        Value = value;
-        ExpiryTime = expiryTime;
     }
+
+    public DateTime UtcNow => DateTime.UtcNow;
 }

@@ -16,6 +16,7 @@
 using System.Text;
 using AWS.Lambda.Powertools.Parameters.Transform;
 using System.Text.Json;
+using AWS.Lambda.Powertools.Parameters.Internal.Transform;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Parameters.Tests.Transform;

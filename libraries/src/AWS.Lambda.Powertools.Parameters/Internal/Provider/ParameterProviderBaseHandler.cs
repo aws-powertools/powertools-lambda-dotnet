@@ -15,9 +15,11 @@
 
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
+using AWS.Lambda.Powertools.Parameters.Internal.Cache;
+using AWS.Lambda.Powertools.Parameters.Internal.Transform;
 using AWS.Lambda.Powertools.Parameters.Transform;
 
-namespace AWS.Lambda.Powertools.Parameters.Provider.Internal;
+namespace AWS.Lambda.Powertools.Parameters.Internal.Provider;
 
 internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 {
@@ -27,7 +29,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 
     private ICacheManager? _cache;
     private ITransformerManager? _transformManager;
-    private TimeSpan _defaultMaxAge = CacheManager.DefaultMaxAge;
+    private TimeSpan? _defaultMaxAge;
     private readonly GetAsyncDelegate _getAsyncHandler;
     private readonly GetMultipleAsyncDelegate _getMultipleAsyncHandler;
 
@@ -51,13 +53,20 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
     {
         return await _getMultipleAsyncHandler(path, config);
     }
+    
+    private TimeSpan GetMaxAgeOrDefault(TimeSpan? maxAge)
+    {
+        if (maxAge.HasValue && maxAge.Value > TimeSpan.Zero) return maxAge.Value;
+        if (_defaultMaxAge.HasValue && _defaultMaxAge.Value > TimeSpan.Zero) return _defaultMaxAge.Value;
+        return CacheManager.DefaultMaxAge;
+    }
 
     public void SetDefaultMaxAge(TimeSpan maxAge)
     {
         _defaultMaxAge = maxAge;
     }
 
-    public TimeSpan GetDefaultMaxAge()
+    public TimeSpan? GetDefaultMaxAge()
     {
         return _defaultMaxAge;
     }
@@ -65,6 +74,11 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
     public void SetCacheManager(ICacheManager cacheManager)
     {
         _cache = cacheManager;
+    }
+
+    public ICacheManager GetCacheManager()
+    {
+        return Cache;
     }
 
     public void SetTransformerManager(ITransformerManager transformerManager)
@@ -108,7 +122,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         else
             throw new Exception($"Transformer is required. '{value}' cannot be converted to type '{typeof(T)}'.");
 
-        var maxAge = config?.MaxAge is not null && config.MaxAge > TimeSpan.Zero ? config.MaxAge : _defaultMaxAge;
+        var maxAge = GetMaxAgeOrDefault(config?.MaxAge);
         Cache.Set(key, retValue, maxAge);
 
         return retValue;
@@ -137,7 +151,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
                 config.Transformer = transformer;
         }
 
-        var maxAge = config?.MaxAge is not null && config.MaxAge > TimeSpan.Zero ? config.MaxAge : _defaultMaxAge;
+        var maxAge = GetMaxAgeOrDefault(config?.MaxAge);
         var retValues = new Dictionary<string, string>();
         foreach (var (key, value) in respValues)
         {

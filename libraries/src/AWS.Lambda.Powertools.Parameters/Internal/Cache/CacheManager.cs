@@ -14,8 +14,9 @@
  */
 
 using System.Collections.Concurrent;
+using AWS.Lambda.Powertools.Parameters.Cache;
 
-namespace AWS.Lambda.Powertools.Parameters.Cache;
+namespace AWS.Lambda.Powertools.Parameters.Internal.Cache;
 
 /// <summary>
 /// Class CacheManager.

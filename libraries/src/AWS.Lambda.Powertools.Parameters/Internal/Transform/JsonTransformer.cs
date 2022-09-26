@@ -13,20 +13,21 @@
  * permissions and limitations under the License.
  */
 
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using AWS.Lambda.Powertools.Parameters.Transform;
 
-namespace AWS.Lambda.Powertools.Parameters.Cache;
+namespace AWS.Lambda.Powertools.Parameters.Internal.Transform;
 
-[ExcludeFromCodeCoverage]
-internal class DateTimeWrapper : IDateTimeWrapper
+internal class JsonTransformer : ITransformer
 {
-    private static IDateTimeWrapper? _instance;
-    
-    internal static IDateTimeWrapper Instance => _instance ??= new DateTimeWrapper();
-
-    private DateTimeWrapper()
+    public T? Transform<T>(string value)
     {
-    }
+        if (typeof(T) == typeof(string))
+            return (T)(object)value;
 
-    public DateTime UtcNow => DateTime.UtcNow;
+        if (string.IsNullOrWhiteSpace(value))
+            return default;
+            
+        return JsonSerializer.Deserialize<T>(value);
+    }
 }

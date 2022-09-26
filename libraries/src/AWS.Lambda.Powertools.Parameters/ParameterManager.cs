@@ -14,6 +14,8 @@
  */
 
 using AWS.Lambda.Powertools.Parameters.Cache;
+using AWS.Lambda.Powertools.Parameters.Internal.Cache;
+using AWS.Lambda.Powertools.Parameters.Internal.Transform;
 using AWS.Lambda.Powertools.Parameters.Provider;
 using AWS.Lambda.Powertools.Parameters.SecretsManager;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -28,7 +30,7 @@ public static class ParameterManager
 
     private static ICacheManager? _cache;
     private static ITransformerManager? _transformManager;
-    private static TimeSpan _defaultMaxAge = CacheManager.DefaultMaxAge;
+    private static TimeSpan? _defaultMaxAge;
     private static ICacheManager Cache => _cache ??= new CacheManager(DateTimeWrapper.Instance);
     private static ITransformerManager TransformManager => _transformManager ??= TransformerManager.Instance;
 
@@ -60,15 +62,40 @@ public static class ParameterManager
         _secretsProvider?.AddTransformer(name, transformer);
     }
 
-    public static SsmProvider SsmProvider =>
-        _ssmProvider ??= new SsmProvider()
-            .DefaultMaxAge(_defaultMaxAge)
-            .UseCacheManager(Cache)
-            .UseTransformerManager(TransformManager);
+    public static SsmProvider SsmProvider
+    {
+        get
+        {
+            if (_ssmProvider is not null) 
+                return _ssmProvider;
+            
+            _ssmProvider = new SsmProvider()
+                .UseCacheManager(Cache)
+                .UseTransformerManager(TransformManager);
 
-    public static SecretsProvider SecretsProvider =>
-        _secretsProvider ??= new SecretsProvider()
-            .DefaultMaxAge(_defaultMaxAge)
-            .UseCacheManager(Cache)
-            .UseTransformerManager(TransformManager);
+            if (_defaultMaxAge.HasValue)
+                _ssmProvider = _ssmProvider.DefaultMaxAge(_defaultMaxAge.Value);
+
+            return _ssmProvider;
+        }
+    }
+
+    public static SecretsProvider SecretsProvider
+    {
+        get
+        {
+            if (_secretsProvider is not null)
+                return _secretsProvider;
+            
+            _secretsProvider = new SecretsProvider()
+                .UseCacheManager(Cache)
+                .UseTransformerManager(TransformManager);
+            
+            if (_defaultMaxAge.HasValue)
+                _secretsProvider = _secretsProvider.DefaultMaxAge(_defaultMaxAge.Value);
+
+            return _secretsProvider;
+        }
+    }
+    
 }

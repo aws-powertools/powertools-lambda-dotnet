@@ -13,20 +13,13 @@
  * permissions and limitations under the License.
  */
 
-using System.Text.Json;
+using AWS.Lambda.Powertools.Parameters.Configuration;
 
-namespace AWS.Lambda.Powertools.Parameters.Transform;
+namespace AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 
-internal class JsonTransformer : ITransformer
+internal class AppConfigProviderConfiguration : ParameterProviderConfiguration
 {
-    public T? Transform<T>(string value)
-    {
-        if (typeof(T) == typeof(string))
-            return (T)(object)value;
-
-        if (string.IsNullOrWhiteSpace(value))
-            return default;
-            
-        return JsonSerializer.Deserialize<T>(value);
-    }
+    internal string? EnvironmentId { get; set; }
+    internal string? ApplicationId { get; set; }
+    internal string? ConfigProfileId { get; set; }
 }

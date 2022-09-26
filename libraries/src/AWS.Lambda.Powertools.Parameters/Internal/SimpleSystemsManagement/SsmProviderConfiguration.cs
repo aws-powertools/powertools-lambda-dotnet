@@ -15,7 +15,7 @@
 
 using AWS.Lambda.Powertools.Parameters.Configuration;
 
-namespace AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
+namespace AWS.Lambda.Powertools.Parameters.Internal.SimpleSystemsManagement;
 
 internal class SsmProviderConfiguration : ParameterProviderConfiguration
 {

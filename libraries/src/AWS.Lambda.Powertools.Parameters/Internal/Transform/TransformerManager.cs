@@ -14,8 +14,9 @@
  */
 
 using System.Collections.Concurrent;
+using AWS.Lambda.Powertools.Parameters.Transform;
 
-namespace AWS.Lambda.Powertools.Parameters.Transform;
+namespace AWS.Lambda.Powertools.Parameters.Internal.Transform;
 
 internal class TransformerManager : ITransformerManager
 {

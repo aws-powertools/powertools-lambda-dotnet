@@ -15,6 +15,7 @@
 
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Provider;
+using AWS.Lambda.Powertools.Parameters.Internal.SimpleSystemsManagement;
 
 namespace AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 

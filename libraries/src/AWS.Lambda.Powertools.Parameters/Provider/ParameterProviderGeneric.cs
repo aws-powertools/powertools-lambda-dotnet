@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Transform;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 
@@ -25,8 +26,11 @@ public abstract class ParameterProvider<TConfigurationBuilder> : ParameterProvid
 
     private TConfigurationBuilder CreateConfigurationBuilder()
     {
-        return NewConfigurationBuilder()
-            .WithMaxAge(Handler.GetDefaultMaxAge());
+        var configBuilder = NewConfigurationBuilder();
+        var maxAge = Handler.GetDefaultMaxAge();
+        if(maxAge is not null)
+            configBuilder = configBuilder.WithMaxAge(maxAge.Value);
+        return configBuilder;
     }
 
     public TConfigurationBuilder WithMaxAge(TimeSpan age)

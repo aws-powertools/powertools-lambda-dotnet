@@ -18,15 +18,17 @@ using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Transform;
 
-namespace AWS.Lambda.Powertools.Parameters.Provider.Internal;
+namespace AWS.Lambda.Powertools.Parameters.Internal.Provider;
 
 public interface IParameterProviderBaseHandler
 {
     void SetDefaultMaxAge(TimeSpan maxAge);
     
-    TimeSpan GetDefaultMaxAge();
+    TimeSpan? GetDefaultMaxAge();
 
     void SetCacheManager(ICacheManager cacheManager);
+
+    ICacheManager GetCacheManager();
 
     void SetTransformerManager(ITransformerManager transformerManager);
 

@@ -13,23 +13,17 @@
  * permissions and limitations under the License.
  */
 
-using System.Text;
+namespace AWS.Lambda.Powertools.Parameters.Internal.Cache;
 
-namespace AWS.Lambda.Powertools.Parameters.Transform;
-
-internal class Base64Transformer : ITransformer
+internal class CacheObject
 {
-    public T? Transform<T>(string value)
+    internal object Value { get; set; }
+    
+    internal DateTime ExpiryTime { get; set; }
+    
+    internal CacheObject(object value, DateTime expiryTime)
     {
-        if (typeof(T) != typeof(string))
-            return default;
-        
-        if (string.IsNullOrWhiteSpace(value))
-            return (T)(object)value;
-        
-        // Base64 Decode
-        var base64EncodedBytes = Convert.FromBase64String(value);
-        value = Encoding.UTF8.GetString(base64EncodedBytes);
-        return (T)(object)value;
+        Value = value;
+        ExpiryTime = expiryTime;
     }
 }

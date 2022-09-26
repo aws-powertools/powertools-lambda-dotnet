@@ -13,15 +13,24 @@
  * permissions and limitations under the License.
  */
 
+using System.Text;
 using AWS.Lambda.Powertools.Parameters.Transform;
 
-namespace AWS.Lambda.Powertools.Parameters.Configuration;
+namespace AWS.Lambda.Powertools.Parameters.Internal.Transform;
 
-public class ParameterProviderConfiguration
+internal class Base64Transformer : ITransformer
 {
-    public bool ForceFetch { get; set; }
-    
-    public TimeSpan? MaxAge { get; set; }
-    
-    public ITransformer? Transformer { get; set; }
+    public T? Transform<T>(string value)
+    {
+        if (typeof(T) != typeof(string))
+            return default;
+        
+        if (string.IsNullOrWhiteSpace(value))
+            return (T)(object)value;
+        
+        // Base64 Decode
+        var base64EncodedBytes = Convert.FromBase64String(value);
+        value = Encoding.UTF8.GetString(base64EncodedBytes);
+        return (T)(object)value;
+    }
 }

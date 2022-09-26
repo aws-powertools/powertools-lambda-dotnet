@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using AWS.Lambda.Powertools.Parameters.Internal.Transform;
 using AWS.Lambda.Powertools.Parameters.Transform;
 using Moq;
 using Xunit;

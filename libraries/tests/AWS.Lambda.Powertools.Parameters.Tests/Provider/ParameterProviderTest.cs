@@ -15,7 +15,8 @@
 
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
-using AWS.Lambda.Powertools.Parameters.Provider.Internal;
+using AWS.Lambda.Powertools.Parameters.Internal.Cache;
+using AWS.Lambda.Powertools.Parameters.Internal.Provider;
 using AWS.Lambda.Powertools.Parameters.Transform;
 using Moq;
 using Xunit;

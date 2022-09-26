@@ -13,9 +13,8 @@
  * permissions and limitations under the License.
  */
 
-using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Provider;
-using AWS.Lambda.Powertools.Parameters.Provider.Internal;
+using AWS.Lambda.Powertools.Parameters.Internal.Provider;
 using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Configuration;
@@ -26,7 +25,7 @@ public class ParameterProviderConfigurationBuilder : IProviderBase
     private Transformation? _transformation;
     private ITransformer? _transformer;
     private string? _transformerName;
-    private TimeSpan _maxAge = CacheManager.DefaultMaxAge;
+    private TimeSpan? _maxAge;
     private readonly IParameterProviderBaseHandler _parameterProvider;
 
     /// <summary>

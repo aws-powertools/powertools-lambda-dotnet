@@ -13,8 +13,9 @@
  * permissions and limitations under the License.
  */
 
+using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
-using AWS.Lambda.Powertools.Parameters.Provider.Internal;
+using AWS.Lambda.Powertools.Parameters.Internal.Provider;
 
 namespace AWS.Lambda.Powertools.Parameters.Provider;
 
@@ -23,6 +24,8 @@ public abstract class ParameterProviderBase : IProviderBase
     private IParameterProviderBaseHandler? _handler;
     internal IParameterProviderBaseHandler Handler =>
         _handler ??= new ParameterProviderBaseHandler(GetAsync, GetMultipleAsync);
+
+    protected ICacheManager Cache => Handler.GetCacheManager();
 
     internal void SetHandler(IParameterProviderBaseHandler handler)
     {
@@ -63,4 +66,5 @@ public abstract class ParameterProviderBase : IProviderBase
 
     protected abstract Task<IDictionary<string, string>> GetMultipleAsync(string path,
         ParameterProviderConfiguration? config);
+    
 }
