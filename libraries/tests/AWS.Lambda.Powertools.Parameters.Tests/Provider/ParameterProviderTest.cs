@@ -433,8 +433,6 @@ public class ParameterProviderTest
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(value.First().Key, value.First().Value, duration), Times.Once);
-        cacheManager.Verify(v => v.Set(value.Last().Key, value.Last().Value, duration), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
@@ -476,8 +474,6 @@ public class ParameterProviderTest
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(value.First().Key, value.First().Value, duration), Times.Once);
-        cacheManager.Verify(v => v.Set(value.Last().Key, value.Last().Value, duration), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
@@ -535,10 +531,6 @@ public class ParameterProviderTest
         providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         transformer.Verify(v => v.Transform<string>(value.First().Value), Times.Once);
         transformer.Verify(v => v.Transform<string>(value.Last().Value), Times.Once);
-        cacheManager.Verify(v => v.Set(transformedValue.First().Key, transformedValue.First().Value, duration),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(transformedValue.Last().Key, transformedValue.Last().Value, duration),
-            Times.Once);
         cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
             o.First().Key == transformedValue.First().Key &&
             o.First().Value == transformedValue.First().Value &&
@@ -602,10 +594,6 @@ public class ParameterProviderTest
         providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         transformer.Verify(v => v.Transform<string>(value.First().Value), Times.Once);
         transformer.Verify(v => v.Transform<string>(value.Last().Value), Times.Once);
-        cacheManager.Verify(v => v.Set(transformedValue.First().Key, transformedValue.First().Value, duration),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(transformedValue.Last().Key, transformedValue.Last().Value, duration),
-            Times.Once);
         cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
             o.First().Key == transformedValue.First().Key &&
             o.First().Value == transformedValue.First().Value &&
@@ -669,10 +657,6 @@ public class ParameterProviderTest
         providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         transformer.Verify(v => v.Transform<string>(value.First().Value), Times.Once);
         transformer.Verify(v => v.Transform<string>(value.Last().Value), Times.Once);
-        cacheManager.Verify(v => v.Set(transformedValue.First().Key, transformedValue.First().Value, duration),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(transformedValue.Last().Key, transformedValue.Last().Value, duration),
-            Times.Once);
         cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
             o.First().Key == transformedValue.First().Key &&
             o.First().Value == transformedValue.First().Value &&
@@ -741,10 +725,6 @@ public class ParameterProviderTest
         providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         jsonTransformer.Verify(v => v.Transform<string>(value.First().Value), Times.Once);
         base64Transformer.Verify(v => v.Transform<string>(value.Last().Value), Times.Once);
-        cacheManager.Verify(v => v.Set(transformedValue.First().Key, transformedValue.First().Value, duration),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(transformedValue.Last().Key, transformedValue.Last().Value, duration),
-            Times.Once);
         cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
             o.First().Key == transformedValue.First().Key &&
             o.First().Value == transformedValue.First().Value &&

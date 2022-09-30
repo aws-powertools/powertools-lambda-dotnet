@@ -860,6 +860,368 @@ public class AppConfigProviderTest
 
         await Assert.ThrowsAsync<NotSupportedException>(Act);
     }
+
+    [Fact]
+    public async Task GetAsync_PriorToNextAllowedPollTime_ReturnsLastConfig()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var configurationToken = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+
+        var dateTimeNow = DateTime.UtcNow;
+        var nextAllowedPollTime = dateTimeNow.AddSeconds(10);
+        var lastConfig = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+
+        var cacheManager = new Mock<ICacheManager>();
+        var client = new Mock<IAmazonAppConfigData>();
+        var transformerManager = new Mock<ITransformerManager>();
+        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
+
+        cacheManager.Setup(c =>
+            c.Get(cacheKey)
+        ).Returns(null);
+
+        dateTimeWrapper.Setup(c =>
+            c.UtcNow
+        ).Returns(dateTimeNow);
+
+        var appConfigProvider = new AppConfigProvider(
+                dateTimeWrapper.Object,
+                configurationToken,
+                nextAllowedPollTime,
+                lastConfig)
+            .UseClient(client.Object)
+            .UseCacheManager(cacheManager.Object)
+            .UseTransformerManager(transformerManager.Object)
+            .WithApplicationIdentifier(applicationId)
+            .WithEnvironmentIdentifier(environmentId)
+            .WithConfigurationProfileIdentifier(configProfileId);
+
+        // Act
+        var currentConfig = await appConfigProvider.GetAsync();
+
+        // Assert
+        cacheManager.Verify(v => v.Get(cacheKey), Times.Once);
+        client.Verify(v =>
+                v.StartConfigurationSessionAsync(
+                    It.IsAny<StartConfigurationSessionRequest>(),
+                    It.IsAny<CancellationToken>()),
+            Times.Never);
+        client.Verify(v =>
+                v.GetLatestConfigurationAsync(
+                    It.IsAny<GetLatestConfigurationRequest>(),
+                    It.IsAny<CancellationToken>()),
+            Times.Never);
+        Assert.NotNull(lastConfig);
+        Assert.NotNull(currentConfig);
+        Assert.Equal(lastConfig, currentConfig);
+    }
+
+    [Fact]
+    public async Task GetAsync_AfterNextAllowedPollTime_RetrieveNewConfig()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var configurationToken = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+        
+        var dateTimeNow = DateTime.UtcNow;
+        var nextAllowedPollTime = dateTimeNow.AddSeconds(-1);
+        var nextPollInterval = TimeSpan.FromHours(24);
+        var nextPollConfigurationToken = Guid.NewGuid().ToString();
+
+        var lastConfig = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+        
+        var value = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+        
+        var contentType = "application/json";
+        var content = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
+        var response2 = new GetLatestConfigurationResponse
+        {
+            Configuration = new MemoryStream(content),
+            ContentType = contentType,
+            ContentLength = content.Length,
+            NextPollConfigurationToken = nextPollConfigurationToken,
+            NextPollIntervalInSeconds = Convert.ToInt32(nextPollInterval.TotalSeconds)
+        };
+
+        var cacheManager = new Mock<ICacheManager>();
+        var client = new Mock<IAmazonAppConfigData>();
+        var transformerManager = new Mock<ITransformerManager>();
+        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
+
+        client.Setup(c =>
+            c.GetLatestConfigurationAsync(It.IsAny<GetLatestConfigurationRequest>(), It.IsAny<CancellationToken>())
+        ).ReturnsAsync(response2);
+
+        cacheManager.Setup(c =>
+            c.Get(cacheKey)
+        ).Returns(null);
+        
+        dateTimeWrapper.Setup(c =>
+            c.UtcNow
+        ).Returns(dateTimeNow);
+
+        var appConfigProvider = new AppConfigProvider(
+                dateTimeWrapper.Object,
+                configurationToken,
+                nextAllowedPollTime,
+                lastConfig)
+            .UseClient(client.Object)
+            .UseCacheManager(cacheManager.Object)
+            .UseTransformerManager(transformerManager.Object)
+            .WithApplicationIdentifier(applicationId)
+            .WithEnvironmentIdentifier(environmentId)
+            .WithConfigurationProfileIdentifier(configProfileId);
+
+        // Act
+        var currentConfig = await appConfigProvider.GetAsync();
+        
+        // Assert
+        cacheManager.Verify(v => v.Get(cacheKey), Times.Once);
+        client.Verify(v =>
+                v.StartConfigurationSessionAsync(
+                    It.Is<StartConfigurationSessionRequest>(x =>
+                        x.ApplicationIdentifier == applicationId &&
+                        x.EnvironmentIdentifier == environmentId &&
+                        x.ConfigurationProfileIdentifier == configProfileId
+                    ),
+                    It.IsAny<CancellationToken>()),
+            Times.Never);
+        client.Verify(v =>
+                v.GetLatestConfigurationAsync(
+                    It.Is<GetLatestConfigurationRequest>(x =>
+                        x.ConfigurationToken == configurationToken
+                    ),
+                    It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.NotNull(lastConfig);
+        Assert.NotNull(currentConfig);
+        Assert.NotEqual(lastConfig, currentConfig);
+    }
+
+    [Fact]
+    public async Task GetAsync_WhenNoToken_StartsASessionAndRetrieveNewConfig()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var configurationToken = string.Empty;
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+        
+        var dateTimeNow = DateTime.UtcNow;
+        var nextAllowedPollTime = dateTimeNow.AddSeconds(-1);
+        var nextPollInterval = TimeSpan.FromHours(24);
+        var nextPollConfigurationToken = Guid.NewGuid().ToString();
+
+        var lastConfig = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+        
+        var value = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+
+        var response1 = new StartConfigurationSessionResponse
+        {
+            InitialConfigurationToken = configurationToken
+        };
+
+        var contentType = "application/json";
+        var content = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
+        var response2 = new GetLatestConfigurationResponse
+        {
+            Configuration = new MemoryStream(content),
+            ContentType = contentType,
+            ContentLength = content.Length,
+            NextPollConfigurationToken = nextPollConfigurationToken,
+            NextPollIntervalInSeconds = Convert.ToInt32(nextPollInterval.TotalSeconds)
+        };
+
+        var cacheManager = new Mock<ICacheManager>();
+        var client = new Mock<IAmazonAppConfigData>();
+        var transformerManager = new Mock<ITransformerManager>();
+        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
+
+        client.Setup(c =>
+            c.StartConfigurationSessionAsync(It.IsAny<StartConfigurationSessionRequest>(),
+                It.IsAny<CancellationToken>())
+        ).ReturnsAsync(response1);
+
+        client.Setup(c =>
+            c.GetLatestConfigurationAsync(It.IsAny<GetLatestConfigurationRequest>(), It.IsAny<CancellationToken>())
+        ).ReturnsAsync(response2);
+
+        cacheManager.Setup(c =>
+            c.Get(cacheKey)
+        ).Returns(null);
+        
+        dateTimeWrapper.Setup(c =>
+            c.UtcNow
+        ).Returns(dateTimeNow);
+
+        var appConfigProvider = new AppConfigProvider(
+                dateTimeWrapper.Object,
+                configurationToken,
+                nextAllowedPollTime,
+                lastConfig)
+            .UseClient(client.Object)
+            .UseCacheManager(cacheManager.Object)
+            .UseTransformerManager(transformerManager.Object)
+            .WithApplicationIdentifier(applicationId)
+            .WithEnvironmentIdentifier(environmentId)
+            .WithConfigurationProfileIdentifier(configProfileId);
+
+        // Act
+        var currentConfig = await appConfigProvider.GetAsync();
+        
+        // Assert
+        cacheManager.Verify(v => v.Get(cacheKey), Times.Once);
+        client.Verify(v =>
+                v.StartConfigurationSessionAsync(
+                    It.Is<StartConfigurationSessionRequest>(x =>
+                        x.ApplicationIdentifier == applicationId &&
+                        x.EnvironmentIdentifier == environmentId &&
+                        x.ConfigurationProfileIdentifier == configProfileId
+                    ),
+                    It.IsAny<CancellationToken>()),
+            Times.Once);
+        client.Verify(v =>
+                v.GetLatestConfigurationAsync(
+                    It.Is<GetLatestConfigurationRequest>(x =>
+                        x.ConfigurationToken == configurationToken
+                    ),
+                    It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.NotNull(lastConfig);
+        Assert.NotNull(currentConfig);
+        Assert.NotEqual(lastConfig, currentConfig);
+    }
+    
+    [Fact]
+    public async Task GetAsync_WhenForceFetch_RetrieveNewConfig()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var configurationToken = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+        
+        var dateTimeNow = DateTime.UtcNow;
+        var nextAllowedPollTime = dateTimeNow.AddSeconds(10);
+        var nextPollInterval = TimeSpan.FromHours(24);
+        var nextPollConfigurationToken = Guid.NewGuid().ToString();
+
+        var lastConfig = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+        
+        var value = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+
+        var response1 = new StartConfigurationSessionResponse
+        {
+            InitialConfigurationToken = configurationToken
+        };
+
+        var contentType = "application/json";
+        var content = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
+        var response2 = new GetLatestConfigurationResponse
+        {
+            Configuration = new MemoryStream(content),
+            ContentType = contentType,
+            ContentLength = content.Length,
+            NextPollConfigurationToken = nextPollConfigurationToken,
+            NextPollIntervalInSeconds = Convert.ToInt32(nextPollInterval.TotalSeconds)
+        };
+
+        var cacheManager = new Mock<ICacheManager>();
+        var client = new Mock<IAmazonAppConfigData>();
+        var transformerManager = new Mock<ITransformerManager>();
+        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
+
+        client.Setup(c =>
+            c.StartConfigurationSessionAsync(It.IsAny<StartConfigurationSessionRequest>(),
+                It.IsAny<CancellationToken>())
+        ).ReturnsAsync(response1);
+
+        client.Setup(c =>
+            c.GetLatestConfigurationAsync(It.IsAny<GetLatestConfigurationRequest>(), It.IsAny<CancellationToken>())
+        ).ReturnsAsync(response2);
+
+        cacheManager.Setup(c =>
+            c.Get(cacheKey)
+        ).Returns(null);
+        
+        dateTimeWrapper.Setup(c =>
+            c.UtcNow
+        ).Returns(dateTimeNow);
+
+        var appConfigProvider = new AppConfigProvider(
+                dateTimeWrapper.Object,
+                configurationToken,
+                nextAllowedPollTime,
+                lastConfig)
+            .UseClient(client.Object)
+            .UseCacheManager(cacheManager.Object)
+            .UseTransformerManager(transformerManager.Object)
+            .WithApplicationIdentifier(applicationId)
+            .WithEnvironmentIdentifier(environmentId)
+            .WithConfigurationProfileIdentifier(configProfileId)
+            .ForceFetch();
+
+        // Act
+        var currentConfig = await appConfigProvider.GetAsync();
+        
+        // Assert
+        client.Verify(v =>
+                v.StartConfigurationSessionAsync(
+                    It.Is<StartConfigurationSessionRequest>(x =>
+                        x.ApplicationIdentifier == applicationId &&
+                        x.EnvironmentIdentifier == environmentId &&
+                        x.ConfigurationProfileIdentifier == configProfileId
+                    ),
+                    It.IsAny<CancellationToken>()),
+            Times.Once);
+        client.Verify(v =>
+                v.GetLatestConfigurationAsync(
+                    It.Is<GetLatestConfigurationRequest>(x =>
+                        x.ConfigurationToken == configurationToken
+                    ),
+                    It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.NotNull(lastConfig);
+        Assert.NotNull(currentConfig);
+        Assert.NotEqual(lastConfig, currentConfig);
+    }
     
     [Fact]
     public async Task GetMultipleAsync_WithArguments_ThrowsException()

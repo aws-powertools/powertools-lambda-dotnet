@@ -26,6 +26,8 @@ public interface IParameterProviderBaseHandler
     
     TimeSpan? GetDefaultMaxAge();
 
+    TimeSpan GetMaxAge(ParameterProviderConfiguration? config);
+
     void SetCacheManager(ICacheManager cacheManager);
 
     ICacheManager GetCacheManager();

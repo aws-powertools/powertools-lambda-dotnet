@@ -54,8 +54,9 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         return await _getMultipleAsyncHandler(path, config);
     }
     
-    private TimeSpan GetMaxAgeOrDefault(TimeSpan? maxAge)
+    public TimeSpan GetMaxAge(ParameterProviderConfiguration? config)
     {
+        var maxAge = config?.MaxAge;
         if (maxAge.HasValue && maxAge.Value > TimeSpan.Zero) return maxAge.Value;
         if (_defaultMaxAge.HasValue && _defaultMaxAge.Value > TimeSpan.Zero) return _defaultMaxAge.Value;
         return CacheManager.DefaultMaxAge;
@@ -122,7 +123,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         else
             throw new Exception($"Transformer is required. '{value}' cannot be converted to type '{typeof(T)}'.");
 
-        var maxAge = GetMaxAgeOrDefault(config?.MaxAge);
+        var maxAge = GetMaxAge(config);
         Cache.Set(key, retValue, maxAge);
 
         return retValue;
@@ -151,7 +152,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
                 config.Transformer = transformer;
         }
 
-        var maxAge = GetMaxAgeOrDefault(config?.MaxAge);
+        var maxAge = GetMaxAge(config);
         var retValues = new Dictionary<string, string>();
         foreach (var (key, value) in respValues)
         {
@@ -162,8 +163,6 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
             var newValue = value;
             if (newTransformer is not null)
                 newValue = newTransformer.Transform<string>(value) ?? "";
-
-            Cache.Set(key, newValue, maxAge);
             retValues.Add(key, newValue);
         }
 

@@ -25,13 +25,13 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>
 {
     private IAmazonSimpleSystemsManagement? _client;
     private IAmazonSimpleSystemsManagement Client => _client ??= new AmazonSimpleSystemsManagementClient();
-    
+
     public SsmProvider UseClient(IAmazonSimpleSystemsManagement client)
     {
         _client = client;
         return this;
     }
-    
+
     public SsmProviderConfigurationBuilder WithDecryption()
     {
         return NewConfigurationBuilder().WithDecryption();
@@ -46,7 +46,7 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>
     {
         return new SsmProviderConfigurationBuilder(this);
     }
-    
+
     protected override async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
     {
         var configuration = config as SsmProviderConfiguration;
@@ -60,7 +60,8 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>
         return response?.Parameter?.Value;
     }
 
-    protected override async Task<IDictionary<string, string>> GetMultipleAsync(string path, ParameterProviderConfiguration? config)
+    protected override async Task<IDictionary<string, string>> GetMultipleAsync(string path,
+        ParameterProviderConfiguration? config)
     {
         var configuration = config as SsmProviderConfiguration;
         var retValues = new Dictionary<string, string>();
@@ -78,12 +79,12 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>
                     NextToken = nextToken
                 }).ConfigureAwait(false);
 
-            // Store the keys/values that we got back into the protected Data dictionary
+            var maxAge = Handler.GetMaxAge(config);
             foreach (var parameter in response.Parameters)
             {
-                retValues.TryAdd(parameter.Name, parameter.Value);
+                if (retValues.TryAdd(parameter.Name, parameter.Value))
+                    Cache.Set(parameter.Name, parameter.Value, maxAge);
             }
-
             // Possibly get more
             nextToken = response.NextToken;
         } while (!string.IsNullOrEmpty(nextToken));

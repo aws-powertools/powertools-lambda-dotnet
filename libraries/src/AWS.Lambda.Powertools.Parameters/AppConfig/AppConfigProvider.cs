@@ -37,10 +37,27 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     {
         _dateTimeWrapper = DateTimeWrapper.Instance;
     }
-    
-    internal AppConfigProvider(IDateTimeWrapper dateTimeWrapper)
+
+    /// <summary>
+    /// Constructor for test
+    /// </summary>
+    /// <param name="dateTimeWrapper"></param>
+    /// <param name="pollConfigurationToken"></param>
+    /// <param name="nextAllowedPollTime"></param>
+    /// <param name="lastConfig"></param>
+    internal AppConfigProvider(
+        IDateTimeWrapper dateTimeWrapper,
+        string? pollConfigurationToken = null,
+        DateTime? nextAllowedPollTime = null,
+        IDictionary<string, string>? lastConfig = null)
     {
         _dateTimeWrapper = dateTimeWrapper;
+        if (pollConfigurationToken is not null)
+            _pollConfigurationToken = pollConfigurationToken;
+        if (nextAllowedPollTime is not null)
+            _nextAllowedPollTime = nextAllowedPollTime.Value;
+        if (lastConfig is not null)
+            _lastConfig = lastConfig;
     }
 
     public AppConfigProvider UseClient(IAmazonAppConfigData client)
@@ -142,12 +159,10 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     
     private static IDictionary<string, string> ParseConfig(string contentType, Stream configuration)
     {
-        switch (contentType)
+        return contentType switch
         {
-            case "application/json":
-                return JsonConfigurationParser.Parse(configuration);
-            default:
-                throw new NotImplementedException($"Not implemented AppConfig type: {contentType}");
-        }
+            "application/json" => JsonConfigurationParser.Parse(configuration),
+            _ => throw new NotImplementedException($"Not implemented AppConfig type: {contentType}")
+        };
     }
 }
