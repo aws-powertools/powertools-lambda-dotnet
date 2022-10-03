@@ -16,14 +16,14 @@
 namespace AWS.Lambda.Powertools.Parameters.Transform;
 
 public interface ITransformerManager
-{ 
+{
     ITransformer GetTransformer(Transformation transformation);
-    
+
     ITransformer? TryGetTransformer(Transformation transformation, string key);
-    
+
     ITransformer GetTransformer(string transformerName);
 
     ITransformer? TryGetTransformer(string transformerName);
-    
+
     void AddTransformer(string transformerName, ITransformer transformer);
 }

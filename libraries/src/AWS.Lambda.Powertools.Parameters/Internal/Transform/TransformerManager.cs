@@ -22,7 +22,7 @@ internal class TransformerManager : ITransformerManager
 {
     private static ITransformerManager? _instance;
     internal static ITransformerManager Instance => _instance ??= new TransformerManager();
-    
+
     private readonly ConcurrentDictionary<string, ITransformer> _transformers = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly ITransformer _jsonTransformer;
@@ -33,7 +33,7 @@ internal class TransformerManager : ITransformerManager
         _jsonTransformer = new JsonTransformer();
         _base64Transformer = new Base64Transformer();
     }
-    
+
     public ITransformer GetTransformer(Transformation transformation)
     {
         var transformer = TryGetTransformer(transformation, string.Empty);
@@ -81,7 +81,7 @@ internal class TransformerManager : ITransformerManager
 
         if (_transformers.ContainsKey(transformerName))
             _transformers[transformerName] = transformer;
-        else 
+        else
             _transformers.TryAdd(transformerName, transformer);
     }
 }

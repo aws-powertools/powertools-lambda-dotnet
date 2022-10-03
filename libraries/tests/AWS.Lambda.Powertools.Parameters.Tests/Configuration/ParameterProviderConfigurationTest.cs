@@ -52,7 +52,7 @@ public class ParameterProviderConfigurationTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenForceFetch_CallsProvidersWithTheConfiguration()
     {
@@ -81,7 +81,7 @@ public class ParameterProviderConfigurationTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WithTransformation_CallsProvidersWithTheConfiguration()
     {
@@ -111,7 +111,7 @@ public class ParameterProviderConfigurationTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WithTransformationJson_CallsProvidersWithTheConfiguration()
     {
@@ -141,7 +141,7 @@ public class ParameterProviderConfigurationTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WithTransformationBase64_CallsProvidersWithTheConfiguration()
     {
@@ -171,7 +171,7 @@ public class ParameterProviderConfigurationTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WithTransformationAuto_CallsProvidersWithTheConfiguration()
     {
@@ -201,7 +201,7 @@ public class ParameterProviderConfigurationTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WithTransformationName_CallsProvidersWithTheConfiguration()
     {

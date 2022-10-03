@@ -24,10 +24,10 @@ internal class Base64Transformer : ITransformer
     {
         if (typeof(T) != typeof(string))
             return default;
-        
+
         if (string.IsNullOrWhiteSpace(value))
             return (T)(object)value;
-        
+
         // Base64 Decode
         var base64EncodedBytes = Convert.FromBase64String(value);
         value = Encoding.UTF8.GetString(base64EncodedBytes);

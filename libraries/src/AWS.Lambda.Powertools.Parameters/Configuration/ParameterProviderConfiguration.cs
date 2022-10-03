@@ -20,8 +20,8 @@ namespace AWS.Lambda.Powertools.Parameters.Configuration;
 public class ParameterProviderConfiguration
 {
     public bool ForceFetch { get; set; }
-    
+
     public TimeSpan? MaxAge { get; set; }
-    
+
     public ITransformer? Transformer { get; set; }
 }

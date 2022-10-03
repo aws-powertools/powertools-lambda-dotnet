@@ -36,7 +36,7 @@ public class ParameterProviderConfigurationBuilder : IProviderBase
     {
         _parameterProvider = parameterProvider;
     }
-    
+
     public ParameterProviderConfigurationBuilder(ParameterProviderBase parameterProvider)
     {
         _parameterProvider = parameterProvider.Handler;
@@ -67,7 +67,7 @@ public class ParameterProviderConfigurationBuilder : IProviderBase
 
     internal void SetTransformation(Transformation transformation)
     {
-        _transformer = null; 
+        _transformer = null;
         _transformerName = null;
         _transformation = transformation;
     }
@@ -78,14 +78,14 @@ public class ParameterProviderConfigurationBuilder : IProviderBase
         _transformerName = null;
         _transformer = transformer;
     }
-    
+
     internal void SetTransformerName(string transformerName)
     {
-        _transformation = null; 
+        _transformation = null;
         _transformer = null;
         _transformerName = transformerName;
     }
-    
+
     protected virtual ParameterProviderConfiguration NewConfiguration()
     {
         return new ParameterProviderConfiguration();

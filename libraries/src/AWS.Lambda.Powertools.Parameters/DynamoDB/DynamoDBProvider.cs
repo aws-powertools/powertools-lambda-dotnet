@@ -33,7 +33,7 @@ public class DynamoDBProvider : ParameterProvider<DynamoDBProviderConfigurationB
         _client = client;
         return this;
     }
-    
+
     public DynamoDBProvider DefaultTableName(string tableName)
     {
         _defaultTableName = tableName;
@@ -66,7 +66,7 @@ public class DynamoDBProvider : ParameterProvider<DynamoDBProviderConfigurationB
                     { "id", new AttributeValue { S = key } }
                 },
             }).ConfigureAwait(false);
-        
+
         return response?.Item is not null &&
                response.Item.TryGetValue("value", out var attributeValue)
             ? attributeValue.S

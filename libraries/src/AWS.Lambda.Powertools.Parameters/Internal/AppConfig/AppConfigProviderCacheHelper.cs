@@ -19,9 +19,9 @@ internal static class AppConfigProviderCacheHelper
 {
     internal static string GetCacheKey(AppConfigProviderConfiguration configuration)
     {
-        return GetCacheKey(configuration?.ApplicationId, configuration?.EnvironmentId, configuration?.ConfigProfileId);
+        return GetCacheKey(configuration.ApplicationId, configuration.EnvironmentId, configuration.ConfigProfileId);
     }
-    
+
     internal static string GetCacheKey(string? applicationId, string? environmentId, string? configProfileId)
     {
         if (string.IsNullOrWhiteSpace(applicationId))

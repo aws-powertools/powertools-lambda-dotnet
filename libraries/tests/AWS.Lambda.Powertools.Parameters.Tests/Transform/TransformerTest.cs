@@ -29,7 +29,7 @@ public class TransformerTest
         var value = Guid.NewGuid().ToString();
         var plainTextBytes = Encoding.UTF8.GetBytes(value);
         var convertedValue = Convert.ToBase64String(plainTextBytes);
-        
+
         var transformer = new Base64Transformer();
 
         // Act
@@ -39,7 +39,7 @@ public class TransformerTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public void Base64Transformer_TransformToObject_ReturnsNull()
     {
@@ -47,7 +47,7 @@ public class TransformerTest
         var value = Guid.NewGuid().ToString();
         var plainTextBytes = Encoding.UTF8.GetBytes(value);
         var convertedValue = Convert.ToBase64String(plainTextBytes);
-        
+
         var transformer = new Base64Transformer();
 
         // Act
@@ -56,7 +56,7 @@ public class TransformerTest
         // Assert
         Assert.Null(result);
     }
-    
+
     [Fact]
     public void Base64Transformer_TransformToNonString_ReturnsNull()
     {
@@ -64,7 +64,7 @@ public class TransformerTest
         var value = Guid.NewGuid().ToString();
         var plainTextBytes = Encoding.UTF8.GetBytes(value);
         var convertedValue = Convert.ToBase64String(plainTextBytes);
-        
+
         var transformer = new Base64Transformer();
 
         // Act
@@ -112,7 +112,7 @@ public class TransformerTest
         Assert.Equal(value2.First(), result?.Last().Value.First());
         Assert.Equal(value2.Last(), result?.Last().Value.Last());
     }
-    
+
     [Fact]
     public void JsonTransformer_TransformToObject_ConvertFromJsonString()
     {
@@ -145,7 +145,7 @@ public class TransformerTest
         // Assert
         Assert.NotNull(result);
     }
-    
+
     [Fact]
     public void JsonTransformer_TransformToString_ReturnsJsonString()
     {

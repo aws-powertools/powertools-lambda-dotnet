@@ -637,7 +637,7 @@ public class AppConfigProviderTest
         Assert.Equal("Config2", result.Last().Key);
         Assert.Equal(value.Config2, result.Last().Value);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenKeyExists_ReturnsKeyValue()
     {
@@ -701,7 +701,7 @@ public class AppConfigProviderTest
         Assert.NotNull(result);
         Assert.Equal(value.Config1, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenKeyDoesNotExist_ReturnsNull()
     {
@@ -764,19 +764,19 @@ public class AppConfigProviderTest
         // Assert
         Assert.Null(result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenApplicationIdDoesNotSet_ThrowsException()
     {
         // Arrange
         var environmentId = Guid.NewGuid().ToString();
         var configProfileId = Guid.NewGuid().ToString();
-        
+
         var cacheManager = new Mock<ICacheManager>();
         var client = new Mock<IAmazonAppConfigData>();
         var transformerManager = new Mock<ITransformerManager>();
         var dateTimeWrapper = new Mock<IDateTimeWrapper>();
-        
+
         var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object)
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
@@ -790,19 +790,19 @@ public class AppConfigProviderTest
         // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenEnvironmentIdDoesNotSet_ThrowsException()
     {
         // Arrange
         var applicationId = Guid.NewGuid().ToString();
         var configProfileId = Guid.NewGuid().ToString();
-        
+
         var cacheManager = new Mock<ICacheManager>();
         var client = new Mock<IAmazonAppConfigData>();
         var transformerManager = new Mock<ITransformerManager>();
         var dateTimeWrapper = new Mock<IDateTimeWrapper>();
-        
+
         var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object)
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
@@ -816,7 +816,7 @@ public class AppConfigProviderTest
         // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenConfigProfileIdDoesNotSet_ThrowsException()
     {
@@ -842,7 +842,7 @@ public class AppConfigProviderTest
         // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
     }
-    
+
     [Fact]
     public async Task GetMultipleAsync_ThrowsException()
     {
@@ -937,7 +937,7 @@ public class AppConfigProviderTest
         var configProfileId = Guid.NewGuid().ToString();
         var configurationToken = Guid.NewGuid().ToString();
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
-        
+
         var dateTimeNow = DateTime.UtcNow;
         var nextAllowedPollTime = dateTimeNow.AddSeconds(-1);
         var nextPollInterval = TimeSpan.FromHours(24);
@@ -948,13 +948,13 @@ public class AppConfigProviderTest
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        
+
         var value = new Dictionary<string, string>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        
+
         var contentType = "application/json";
         var content = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
         var response2 = new GetLatestConfigurationResponse
@@ -978,7 +978,7 @@ public class AppConfigProviderTest
         cacheManager.Setup(c =>
             c.Get(cacheKey)
         ).Returns(null);
-        
+
         dateTimeWrapper.Setup(c =>
             c.UtcNow
         ).Returns(dateTimeNow);
@@ -997,7 +997,7 @@ public class AppConfigProviderTest
 
         // Act
         var currentConfig = await appConfigProvider.GetAsync();
-        
+
         // Assert
         cacheManager.Verify(v => v.Get(cacheKey), Times.Once);
         client.Verify(v =>
@@ -1030,7 +1030,7 @@ public class AppConfigProviderTest
         var configProfileId = Guid.NewGuid().ToString();
         var configurationToken = string.Empty;
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
-        
+
         var dateTimeNow = DateTime.UtcNow;
         var nextAllowedPollTime = dateTimeNow.AddSeconds(-1);
         var nextPollInterval = TimeSpan.FromHours(24);
@@ -1041,7 +1041,7 @@ public class AppConfigProviderTest
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        
+
         var value = new Dictionary<string, string>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
@@ -1081,7 +1081,7 @@ public class AppConfigProviderTest
         cacheManager.Setup(c =>
             c.Get(cacheKey)
         ).Returns(null);
-        
+
         dateTimeWrapper.Setup(c =>
             c.UtcNow
         ).Returns(dateTimeNow);
@@ -1100,7 +1100,7 @@ public class AppConfigProviderTest
 
         // Act
         var currentConfig = await appConfigProvider.GetAsync();
-        
+
         // Assert
         cacheManager.Verify(v => v.Get(cacheKey), Times.Once);
         client.Verify(v =>
@@ -1123,7 +1123,7 @@ public class AppConfigProviderTest
         Assert.NotNull(currentConfig);
         Assert.NotEqual(lastConfig, currentConfig);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenForceFetch_RetrieveNewConfig()
     {
@@ -1133,7 +1133,7 @@ public class AppConfigProviderTest
         var configProfileId = Guid.NewGuid().ToString();
         var configurationToken = Guid.NewGuid().ToString();
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
-        
+
         var dateTimeNow = DateTime.UtcNow;
         var nextAllowedPollTime = dateTimeNow.AddSeconds(10);
         var nextPollInterval = TimeSpan.FromHours(24);
@@ -1144,7 +1144,7 @@ public class AppConfigProviderTest
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        
+
         var value = new Dictionary<string, string>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
@@ -1184,7 +1184,7 @@ public class AppConfigProviderTest
         cacheManager.Setup(c =>
             c.Get(cacheKey)
         ).Returns(null);
-        
+
         dateTimeWrapper.Setup(c =>
             c.UtcNow
         ).Returns(dateTimeNow);
@@ -1204,7 +1204,7 @@ public class AppConfigProviderTest
 
         // Act
         var currentConfig = await appConfigProvider.GetAsync();
-        
+
         // Assert
         client.Verify(v =>
                 v.StartConfigurationSessionAsync(
@@ -1226,7 +1226,7 @@ public class AppConfigProviderTest
         Assert.NotNull(currentConfig);
         Assert.NotEqual(lastConfig, currentConfig);
     }
-    
+
     [Fact]
     public async Task GetMultipleAsync_WithArguments_ThrowsException()
     {

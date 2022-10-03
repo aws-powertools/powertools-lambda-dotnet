@@ -49,7 +49,7 @@ public static class ParameterProviderConfigurationExtensions
         instance.SetTransformer(transformer);
         return instance;
     }
-    
+
     public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder instance,
         string transformerName)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder

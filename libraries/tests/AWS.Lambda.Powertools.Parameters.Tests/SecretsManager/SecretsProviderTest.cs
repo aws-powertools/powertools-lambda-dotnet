@@ -31,7 +31,7 @@ namespace AWS.Lambda.Powertools.Parameters.Tests.SecretsManager;
 public class SecretsProviderTest
 {
     private const string CurrentVersionStage = "AWSCURRENT";
-    
+
     [Fact]
     public async Task GetAsync_SetupProvider_CallsHandler()
     {
@@ -46,11 +46,11 @@ public class SecretsProviderTest
         var transformerManager = new Mock<ITransformerManager>();
         var transformer = new Mock<ITransformer>();
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
-        
+
         providerHandler.Setup(c =>
             c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
         ).ReturnsAsync(value);
-        
+
         var secretsProvider = new SecretsProvider();
         secretsProvider.SetHandler(providerHandler.Object);
         secretsProvider.UseClient(client.Object)
@@ -109,7 +109,7 @@ public class SecretsProviderTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WithMaxAge_CallsHandlerWithConfiguredParameters()
     {
@@ -148,7 +148,7 @@ public class SecretsProviderTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WithTransformer_CallsHandlerWithConfiguredParameters()
     {
@@ -302,14 +302,14 @@ public class SecretsProviderTest
         var result = await secretsProvider.GetAsync(key);
 
         // Assert
-        client.Verify(v => 
-                v.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), 
+        client.Verify(v =>
+                v.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(),
                     It.IsAny<CancellationToken>()),
             Times.Never);
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenForceFetch_IgnoresCachedObject()
     {
@@ -355,7 +355,7 @@ public class SecretsProviderTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenMaxAgeNotSet_StoresCachedObjectWithDefaultMaxAge()
     {
@@ -402,7 +402,7 @@ public class SecretsProviderTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenMaxAgeClientSet_StoresCachedObjectWithDefaultMaxAge()
     {
@@ -450,7 +450,7 @@ public class SecretsProviderTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenMaxAgeSet_StoresCachedObjectWithMaxAge()
     {
@@ -501,7 +501,7 @@ public class SecretsProviderTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenReturnsBinary_ReturnsAsString()
     {
@@ -511,7 +511,7 @@ public class SecretsProviderTest
         var plainTextBytes = Encoding.UTF8.GetBytes(value);
         var convertedValue = Convert.ToBase64String(plainTextBytes);
         var convertedByteArray = Encoding.UTF8.GetBytes(convertedValue);
-        
+
         var response = new GetSecretValueResponse
         {
             SecretBinary = new MemoryStream(convertedByteArray)
@@ -550,7 +550,7 @@ public class SecretsProviderTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetMultipleAsync_ThrowsException()
     {
@@ -574,6 +574,6 @@ public class SecretsProviderTest
         Task<IDictionary<string, string>> Act() => secretsProvider.GetMultipleAsync(key);
 
         await Assert.ThrowsAsync<NotSupportedException>(Act);
-        
+
     }
 }

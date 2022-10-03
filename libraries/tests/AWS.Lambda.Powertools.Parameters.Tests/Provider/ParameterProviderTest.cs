@@ -539,7 +539,7 @@ public class ParameterProviderTest
         ), duration), Times.Once);
         Assert.NotNull(result);
     }
-    
+
     [Fact]
     public async Task GetMultipleAsync_WhenTransformerNameSet_ReturnsTransformedValue()
     {
@@ -565,7 +565,7 @@ public class ParameterProviderTest
         transformer.Setup(c =>
             c.Transform<string>(value.Last().Value)
         ).Returns(transformedValue.Last().Value);
-        
+
         var transformerManager = new Mock<ITransformerManager>();
         transformerManager.Setup(c =>
             c.GetTransformer(transformerName)
@@ -602,7 +602,7 @@ public class ParameterProviderTest
         ), duration), Times.Once);
         Assert.NotNull(result);
     }
-    
+
     [Fact]
     public async Task GetMultipleAsync_WhenTransformationSet_ReturnsTransformedValue()
     {
@@ -665,7 +665,7 @@ public class ParameterProviderTest
         ), duration), Times.Once);
         Assert.NotNull(result);
     }
-    
+
     [Fact]
     public async Task GetMultipleAsync_WhenTransformationAuto_ReturnsTransformedValue()
     {
@@ -687,7 +687,7 @@ public class ParameterProviderTest
         jsonTransformer.Setup(c =>
             c.Transform<string>(value.First().Value)
         ).Returns(transformedValue.First().Value);
-        
+
         var base64Transformer = new Mock<ITransformer>();
         base64Transformer.Setup(c =>
             c.Transform<string>(value.Last().Value)

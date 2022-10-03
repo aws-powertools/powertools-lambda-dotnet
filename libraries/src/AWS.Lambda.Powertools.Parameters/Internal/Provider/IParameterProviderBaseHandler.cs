@@ -23,7 +23,7 @@ namespace AWS.Lambda.Powertools.Parameters.Internal.Provider;
 public interface IParameterProviderBaseHandler
 {
     void SetDefaultMaxAge(TimeSpan maxAge);
-    
+
     TimeSpan? GetDefaultMaxAge();
 
     TimeSpan GetMaxAge(ParameterProviderConfiguration? config);
@@ -35,7 +35,7 @@ public interface IParameterProviderBaseHandler
     void SetTransformerManager(ITransformerManager transformerManager);
 
     void AddCustomTransformer(string name, ITransformer transformer);
-    
+
     Task<T?> GetAsync<T>(string key, ParameterProviderConfiguration? config, Transformation? transformation,
         string? transformerName);
 

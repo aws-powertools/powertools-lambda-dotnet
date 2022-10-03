@@ -85,6 +85,7 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>
                 if (retValues.TryAdd(parameter.Name, parameter.Value))
                     Cache.Set(parameter.Name, parameter.Value, maxAge);
             }
+
             // Possibly get more
             nextToken = response.NextToken;
         } while (!string.IsNullOrEmpty(nextToken));

@@ -27,7 +27,7 @@ internal class JsonTransformer : ITransformer
 
         if (string.IsNullOrWhiteSpace(value))
             return default;
-            
+
         return JsonSerializer.Deserialize<T>(value);
     }
 }

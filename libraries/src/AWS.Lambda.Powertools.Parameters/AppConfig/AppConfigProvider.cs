@@ -27,7 +27,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 {
     private IAmazonAppConfigData? _client;
     private readonly IDateTimeWrapper _dateTimeWrapper;
-    
+
     private string _pollConfigurationToken = string.Empty;
     private DateTime _nextAllowedPollTime = DateTime.MinValue;
     private IDictionary<string, string> _lastConfig = new Dictionary<string, string>();
@@ -65,7 +65,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         _client = client;
         return this;
     }
-    
+
     public AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string applicationId)
     {
         return NewConfigurationBuilder().WithApplicationIdentifier(applicationId);
@@ -75,7 +75,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     {
         return NewConfigurationBuilder().WithEnvironmentIdentifier(environmentId);
     }
-    
+
     public AppConfigProviderConfigurationBuilder WithConfigurationProfileIdentifier(string configProfileId)
     {
         return NewConfigurationBuilder().WithConfigurationProfileIdentifier(configProfileId);
@@ -103,7 +103,8 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return result.TryGetValue(key, out var value) ? value : null;
     }
 
-    protected override async Task<IDictionary<string, string>> GetMultipleAsync(string path, ParameterProviderConfiguration? config)
+    protected override async Task<IDictionary<string, string>> GetMultipleAsync(string path,
+        ParameterProviderConfiguration? config)
     {
         if (config is not AppConfigProviderConfiguration configuration ||
             string.IsNullOrWhiteSpace(configuration.ApplicationId) ||
@@ -114,18 +115,18 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(configuration);
         if (!string.Equals(path, cacheKey, StringComparison.CurrentCultureIgnoreCase))
             throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
-        
+
         if (_dateTimeWrapper.UtcNow < _nextAllowedPollTime)
         {
             if (!configuration.ForceFetch)
                 return _lastConfig;
-            
+
             _pollConfigurationToken = string.Empty;
             _nextAllowedPollTime = DateTime.MinValue;
         }
 
         if (string.IsNullOrEmpty(_pollConfigurationToken))
-            _pollConfigurationToken = 
+            _pollConfigurationToken =
                 await GetInitialConfigurationTokenAsync(configuration)
                     .ConfigureAwait(false);
 
@@ -133,18 +134,18 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         {
             ConfigurationToken = _pollConfigurationToken
         };
-        
-        var response = 
+
+        var response =
             await Client.GetLatestConfigurationAsync(request)
                 .ConfigureAwait(false);
-        
+
         _pollConfigurationToken = response.NextPollConfigurationToken;
         _nextAllowedPollTime = _dateTimeWrapper.UtcNow.AddSeconds(response.NextPollIntervalInSeconds);
-        
+
         _lastConfig = ParseConfig(response.ContentType, response.Configuration);
         return _lastConfig;
     }
-    
+
     private async Task<string> GetInitialConfigurationTokenAsync(AppConfigProviderConfiguration config)
     {
         var request = new StartConfigurationSessionRequest
@@ -153,10 +154,10 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             EnvironmentIdentifier = config.EnvironmentId,
             ConfigurationProfileIdentifier = config.ConfigProfileId
         };
-        
+
         return (await Client.StartConfigurationSessionAsync(request).ConfigureAwait(false)).InitialConfigurationToken;
     }
-    
+
     private static IDictionary<string, string> ParseConfig(string contentType, Stream configuration)
     {
         return contentType switch

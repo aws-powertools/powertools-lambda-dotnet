@@ -27,7 +27,7 @@ public class TransformerManagerTest
     {
         // Arrange
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var result = transformerManager.GetTransformer(Transformation.Json);
 
@@ -35,13 +35,13 @@ public class TransformerManagerTest
         Assert.NotNull(result);
         Assert.IsType<JsonTransformer>(result);
     }
-    
+
     [Fact]
     public void GetTransformer_WhenBase64Transformation_ReturnsBase64Transformer()
     {
         // Arrange
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var result = transformerManager.GetTransformer(Transformation.Base64);
 
@@ -49,7 +49,7 @@ public class TransformerManagerTest
         Assert.NotNull(result);
         Assert.IsType<Base64Transformer>(result);
     }
-    
+
     [Fact]
     public void GetTransformer_WhenAutoTransformation_ThrowsException()
     {
@@ -62,13 +62,13 @@ public class TransformerManagerTest
         // Assert
         Assert.Throws<NotSupportedException>(Act);
     }
-    
+
     [Fact]
     public void TryGetTransformer_WhenJsonTransformation_ReturnsJsonTransformer()
     {
         // Arrange
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var result = transformerManager.TryGetTransformer(Transformation.Json, string.Empty);
 
@@ -76,13 +76,13 @@ public class TransformerManagerTest
         Assert.NotNull(result);
         Assert.IsType<JsonTransformer>(result);
     }
-    
+
     [Fact]
     public void TryGetTransformer_WhenBase64Transformation_ReturnsBase64Transformer()
     {
         // Arrange
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var result = transformerManager.TryGetTransformer(Transformation.Base64, string.Empty);
 
@@ -90,13 +90,13 @@ public class TransformerManagerTest
         Assert.NotNull(result);
         Assert.IsType<Base64Transformer>(result);
     }
-    
+
     [Fact]
     public void TryGetTransformer_WhenAutoTransformationAndJsonPostfix_ReturnsJsonTransformer()
     {
         // Arrange
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var result = transformerManager.TryGetTransformer(Transformation.Auto, "test.json");
 
@@ -104,13 +104,13 @@ public class TransformerManagerTest
         Assert.NotNull(result);
         Assert.IsType<JsonTransformer>(result);
     }
-    
+
     [Fact]
     public void TryGetTransformer_WhenAutoTransformationAndBase64Postfix_ReturnsBase64Transformer()
     {
         // Arrange
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var result = transformerManager.TryGetTransformer(Transformation.Auto, "test.base64");
 
@@ -118,13 +118,13 @@ public class TransformerManagerTest
         Assert.NotNull(result);
         Assert.IsType<Base64Transformer>(result);
     }
-    
+
     [Fact]
     public void TryGetTransformer_WhenAutoTransformationAndBinaryPostfix_ReturnsBase64Transformer()
     {
         // Arrange
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var result = transformerManager.TryGetTransformer(Transformation.Auto, "test.binary");
 
@@ -132,20 +132,20 @@ public class TransformerManagerTest
         Assert.NotNull(result);
         Assert.IsType<Base64Transformer>(result);
     }
-    
+
     [Fact]
     public void TryGetTransformer_WhenAutoTransformationAndInvalidPostfix_ReturnsNull()
     {
         // Arrange
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var result = transformerManager.TryGetTransformer(Transformation.Auto, "invalid.txt");
 
         // Assert
         Assert.Null(result);
     }
-    
+
     [Fact]
     public void AddTransformer_WhenNameIsJson_ReplacesDefaultJsonTransformer()
     {
@@ -153,7 +153,7 @@ public class TransformerManagerTest
         var transformer = new Mock<ITransformer>();
         var transformation = Transformation.Json;
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var preResult = transformerManager.GetTransformer(transformation);
         transformerManager.AddTransformer(transformation.ToString(), transformer.Object);
@@ -165,7 +165,7 @@ public class TransformerManagerTest
         Assert.NotNull(result);
         Assert.Equal(result, transformer.Object);
     }
-    
+
     [Fact]
     public void AddTransformer_WhenNameIsBase64_ReplacesDefaultBase64Transformer()
     {
@@ -173,7 +173,7 @@ public class TransformerManagerTest
         var transformer = new Mock<ITransformer>();
         var transformation = Transformation.Base64;
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var preResult = transformerManager.GetTransformer(transformation);
         transformerManager.AddTransformer(transformation.ToString(), transformer.Object);
@@ -185,7 +185,7 @@ public class TransformerManagerTest
         Assert.NotNull(result);
         Assert.Equal(result, transformer.Object);
     }
-    
+
     [Fact]
     public void AddTransformer_WhenNameIsCustom_RegisterCustomTransformer()
     {
@@ -193,7 +193,7 @@ public class TransformerManagerTest
         var transformer = new Mock<ITransformer>();
         var transformation = Guid.NewGuid().ToString();
         var transformerManager = new TransformerManager();
-        
+
         // Act
         var preResult = transformerManager.TryGetTransformer(transformation);
         transformerManager.AddTransformer(transformation, transformer.Object);
@@ -219,7 +219,7 @@ public class TransformerManagerTest
         // Assert
         Assert.Throws<ArgumentException>(Act);
     }
-    
+
     [Fact]
     public void GetTransformer_WhenNameIsEmpty_ThrowsException()
     {
@@ -233,7 +233,7 @@ public class TransformerManagerTest
         // Assert
         Assert.Throws<ArgumentException>(Act);
     }
-    
+
     [Fact]
     public void GetTransformer_WhenTransformerNotFoundByName_ThrowsException()
     {
@@ -247,8 +247,8 @@ public class TransformerManagerTest
         // Assert
         Assert.Throws<KeyNotFoundException>(Act);
     }
-    
-    
+
+
     [Fact]
     public void TryGetTransformer_WhenNameIsEmpty_ThrowsException()
     {
@@ -262,7 +262,7 @@ public class TransformerManagerTest
         // Assert
         Assert.Throws<ArgumentException>(Act);
     }
-    
+
     [Fact]
     public void TryGetTransformer_WhenTransformerNotFoundByName_ReturnsNull()
     {

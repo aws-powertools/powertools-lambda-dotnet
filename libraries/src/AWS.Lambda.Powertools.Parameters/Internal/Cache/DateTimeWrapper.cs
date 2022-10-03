@@ -22,7 +22,7 @@ namespace AWS.Lambda.Powertools.Parameters.Internal.Cache;
 internal class DateTimeWrapper : IDateTimeWrapper
 {
     private static IDateTimeWrapper? _instance;
-    
+
     internal static IDateTimeWrapper Instance => _instance ??= new DateTimeWrapper();
 
     private DateTimeWrapper()

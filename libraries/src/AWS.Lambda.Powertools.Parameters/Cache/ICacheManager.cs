@@ -18,6 +18,6 @@ namespace AWS.Lambda.Powertools.Parameters.Cache;
 public interface ICacheManager
 {
     object? Get(string key);
-    
+
     void Set(string key, object? value, TimeSpan duration);
 }

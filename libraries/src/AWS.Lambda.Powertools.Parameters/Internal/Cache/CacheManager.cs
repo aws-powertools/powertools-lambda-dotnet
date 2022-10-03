@@ -24,7 +24,7 @@ namespace AWS.Lambda.Powertools.Parameters.Internal.Cache;
 internal class CacheManager : ICacheManager
 {
     internal static TimeSpan DefaultMaxAge = TimeSpan.FromSeconds(5);
-    
+
     private readonly ConcurrentDictionary<string, CacheObject> _cache = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly IDateTimeWrapper _dateTimeWrapper;

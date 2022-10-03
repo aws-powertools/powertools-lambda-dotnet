@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-using System.Net.Mime;
 using System.Text;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
@@ -25,10 +24,10 @@ namespace AWS.Lambda.Powertools.Parameters.SecretsManager;
 public class SecretsProvider : ParameterProvider
 {
     private const string CurrentVersionStage = "AWSCURRENT";
-    
+
     private IAmazonSecretsManager? _client;
     private IAmazonSecretsManager Client => _client ??= new AmazonSecretsManagerClient();
-    
+
     public SecretsProvider UseClient(IAmazonSecretsManager client)
     {
         _client = client;
@@ -44,9 +43,9 @@ public class SecretsProvider : ParameterProvider
                 VersionStage = CurrentVersionStage
             }).ConfigureAwait(false);
 
-        if (response.SecretString is not null) 
+        if (response.SecretString is not null)
             return response.SecretString;
-        
+
         var memoryStream = response.SecretBinary;
         var reader = new StreamReader(memoryStream);
         var base64String = await reader.ReadToEndAsync();
@@ -54,7 +53,8 @@ public class SecretsProvider : ParameterProvider
         return decodedBinarySecret;
     }
 
-    protected override Task<IDictionary<string, string>> GetMultipleAsync(string path, ParameterProviderConfiguration? config)
+    protected override Task<IDictionary<string, string>> GetMultipleAsync(string path,
+        ParameterProviderConfiguration? config)
     {
         throw new NotSupportedException("Impossible to get multiple values from AWS Secrets Manager");
     }

@@ -22,6 +22,7 @@ namespace AWS.Lambda.Powertools.Parameters.Provider;
 public abstract class ParameterProviderBase : IProviderBase
 {
     private IParameterProviderBaseHandler? _handler;
+
     internal IParameterProviderBaseHandler Handler =>
         _handler ??= new ParameterProviderBaseHandler(GetAsync, GetMultipleAsync);
 
@@ -31,7 +32,7 @@ public abstract class ParameterProviderBase : IProviderBase
     {
         _handler = handler;
     }
-    
+
     public string? Get(string key)
     {
         return GetAsync(key).GetAwaiter().GetResult();
@@ -66,5 +67,4 @@ public abstract class ParameterProviderBase : IProviderBase
 
     protected abstract Task<IDictionary<string, string>> GetMultipleAsync(string path,
         ParameterProviderConfiguration? config);
-    
 }
