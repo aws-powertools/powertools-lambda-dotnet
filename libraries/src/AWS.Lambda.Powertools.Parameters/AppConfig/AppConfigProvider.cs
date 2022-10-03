@@ -66,14 +66,14 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return this;
     }
     
-    public AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string application)
+    public AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string applicationId)
     {
-        return NewConfigurationBuilder().WithApplicationIdentifier(application);
+        return NewConfigurationBuilder().WithApplicationIdentifier(applicationId);
     }
 
-    public AppConfigProviderConfigurationBuilder WithEnvironmentIdentifier(string environment)
+    public AppConfigProviderConfigurationBuilder WithEnvironmentIdentifier(string environmentId)
     {
-        return NewConfigurationBuilder().WithEnvironmentIdentifier(environment);
+        return NewConfigurationBuilder().WithEnvironmentIdentifier(environmentId);
     }
     
     public AppConfigProviderConfigurationBuilder WithConfigurationProfileIdentifier(string configProfileId)
@@ -114,15 +114,15 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(configuration);
         if (!string.Equals(path, cacheKey, StringComparison.CurrentCultureIgnoreCase))
             throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
-
-        if (configuration.ForceFetch)
+        
+        if (_dateTimeWrapper.UtcNow < _nextAllowedPollTime)
         {
+            if (!configuration.ForceFetch)
+                return _lastConfig;
+            
             _pollConfigurationToken = string.Empty;
             _nextAllowedPollTime = DateTime.MinValue;
         }
-
-        if(_dateTimeWrapper.UtcNow < _nextAllowedPollTime)
-            return _lastConfig;
 
         if (string.IsNullOrEmpty(_pollConfigurationToken))
             _pollConfigurationToken = 

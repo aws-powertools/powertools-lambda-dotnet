@@ -1352,5 +1352,4 @@ public class SsmProviderTest
         Assert.Equal(response2.Parameters.First().Name, result.Last().Key);
         Assert.Equal(response2.Parameters.First().Value, result.Last().Value);
     }
-
 }

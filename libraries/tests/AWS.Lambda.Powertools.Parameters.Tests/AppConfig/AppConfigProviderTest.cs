@@ -787,6 +787,7 @@ public class AppConfigProviderTest
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
 
+        // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
     }
     
@@ -812,6 +813,7 @@ public class AppConfigProviderTest
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
 
+        // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
     }
     
@@ -837,6 +839,7 @@ public class AppConfigProviderTest
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
 
+        // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
     }
     
@@ -858,6 +861,7 @@ public class AppConfigProviderTest
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetMultipleAsync(key);
 
+        // Assert
         await Assert.ThrowsAsync<NotSupportedException>(Act);
     }
 
