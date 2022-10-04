@@ -510,17 +510,19 @@ public class DynamoDBProviderTest
     }
 
     [Fact]
-    public async Task GetAsync_WhenDefaultTableNameSet_CallsClientWithDefaultTableName()
+    public async Task GetAsync_WhenTableNameSet_CallsClientWithTableName()
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
-        var defaultTableName = Guid.NewGuid().ToString();
+        var tableName = Guid.NewGuid().ToString();
+        var primaryKeyAttr = "id";
+        var valueAttr = "value";
         var response = new GetItemResponse
         {
             Item = new Dictionary<string, AttributeValue>()
             {
-                { "value", new AttributeValue { S = value } }
+                { valueAttr, new AttributeValue { S = value } }
             }
         };
 
@@ -540,7 +542,7 @@ public class DynamoDBProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .DefaultTableName(defaultTableName);
+            .UseTable(tableName);
 
         // Act
         var result = await provider
@@ -551,27 +553,28 @@ public class DynamoDBProviderTest
         client.Verify(v =>
                 v.GetItemAsync(
                     It.Is<GetItemRequest>(x =>
-                        x.Key["id"].S == key && x.TableName == defaultTableName
+                        x.Key[primaryKeyAttr].S == key && x.TableName == tableName
                     ),
                     It.IsAny<CancellationToken>()),
             Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-
+    
     [Fact]
-    public async Task GetAsync_WithTableName_CallsClientWithTableName()
+    public async Task GetAsync_WhenTableInfoSet_CallsClientWithTableInfo()
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
-        var defaultTableName = Guid.NewGuid().ToString();
         var tableName = Guid.NewGuid().ToString();
+        var primaryKeyAttr = Guid.NewGuid().ToString();
+        var valueAttr = Guid.NewGuid().ToString();
         var response = new GetItemResponse
         {
             Item = new Dictionary<string, AttributeValue>()
             {
-                { "value", new AttributeValue { S = value } }
+                { valueAttr, new AttributeValue { S = value } }
             }
         };
 
@@ -591,11 +594,10 @@ public class DynamoDBProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .DefaultTableName(defaultTableName);
+            .UseTable(tableName, primaryKeyAttr, valueAttr);
 
         // Act
         var result = await provider
-            .WithTableName(tableName)
             .GetAsync(key);
 
         // Assert
@@ -603,7 +605,7 @@ public class DynamoDBProviderTest
         client.Verify(v =>
                 v.GetItemAsync(
                     It.Is<GetItemRequest>(x =>
-                        x.Key["id"].S == key && x.TableName == tableName
+                        x.Key[primaryKeyAttr].S == key && x.TableName == tableName
                     ),
                     It.IsAny<CancellationToken>()),
             Times.Once);
@@ -871,7 +873,6 @@ public class DynamoDBProviderTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-
 
     [Fact]
     public async Task GetMultipleAsync_WhenCachedObjectExists_ReturnsCachedObject()
@@ -1194,11 +1195,14 @@ public class DynamoDBProviderTest
     }
 
     [Fact]
-    public async Task GetMultipleAsync_WhenDefaultTableNameSet_CallsClientWithDefaultTableName()
+    public async Task GetMultipleAsync_WhenTableNameSet_CallsClientWithTableName()
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var defaultTableName = Guid.NewGuid().ToString();
+        var tableName = Guid.NewGuid().ToString();
+        var primaryKeyAttribute = "id";
+        var sortKeyAttribute = "sk";
+        var valueAttribute = "value";
         var value = new Dictionary<string, string>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
@@ -1209,8 +1213,8 @@ public class DynamoDBProviderTest
             Items = value.Select(kv =>
                 new Dictionary<string, AttributeValue>()
                 {
-                    { "sk", new AttributeValue { S = kv.Key } },
-                    { "value", new AttributeValue { S = kv.Value } }
+                    { sortKeyAttribute, new AttributeValue { S = kv.Key } },
+                    { valueAttribute, new AttributeValue { S = kv.Value } }
                 }).ToList()
         };
 
@@ -1230,7 +1234,7 @@ public class DynamoDBProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .DefaultTableName(defaultTableName);
+            .UseTable(tableName);
 
         // Act
         var result = await provider
@@ -1241,7 +1245,9 @@ public class DynamoDBProviderTest
         client.Verify(v =>
                 v.QueryAsync(
                     It.Is<QueryRequest>(x =>
-                        x.TableName == defaultTableName &&
+                        x.TableName == tableName &&
+                        x.KeyConditionExpression.Split('=', StringSplitOptions.TrimEntries).First() ==
+                        primaryKeyAttribute &&
                         x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
                             .Split('=', StringSplitOptions.TrimEntries).Last() &&
                         x.ExpressionAttributeValues.First().Value.S == key
@@ -1255,14 +1261,16 @@ public class DynamoDBProviderTest
         Assert.Equal(value.Last().Key, result.Last().Key);
         Assert.Equal(value.Last().Value, result.Last().Value);
     }
-
+    
     [Fact]
-    public async Task GetMultipleAsync_WithTableName_CallsClientWithTableName()
+    public async Task GetMultipleAsync_WhenTableInfoSet_CallsClientWithTableInfo()
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var defaultTableName = Guid.NewGuid().ToString();
         var tableName = Guid.NewGuid().ToString();
+        var primaryKeyAttribute = Guid.NewGuid().ToString();
+        var sortKeyAttribute = Guid.NewGuid().ToString();
+        var valueAttribute = Guid.NewGuid().ToString();
         var value = new Dictionary<string, string>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
@@ -1273,8 +1281,8 @@ public class DynamoDBProviderTest
             Items = value.Select(kv =>
                 new Dictionary<string, AttributeValue>()
                 {
-                    { "sk", new AttributeValue { S = kv.Key } },
-                    { "value", new AttributeValue { S = kv.Value } }
+                    { sortKeyAttribute, new AttributeValue { S = kv.Key } },
+                    { valueAttribute, new AttributeValue { S = kv.Value } }
                 }).ToList()
         };
 
@@ -1294,11 +1302,10 @@ public class DynamoDBProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .DefaultTableName(defaultTableName);
+            .UseTable(tableName, primaryKeyAttribute, sortKeyAttribute, valueAttribute);
 
         // Act
         var result = await provider
-            .WithTableName(tableName)
             .GetMultipleAsync(key);
 
         // Assert
@@ -1307,6 +1314,8 @@ public class DynamoDBProviderTest
                 v.QueryAsync(
                     It.Is<QueryRequest>(x =>
                         x.TableName == tableName &&
+                        x.KeyConditionExpression.Split('=', StringSplitOptions.TrimEntries).First() ==
+                        primaryKeyAttribute &&
                         x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
                             .Split('=', StringSplitOptions.TrimEntries).Last() &&
                         x.ExpressionAttributeValues.First().Value.S == key
