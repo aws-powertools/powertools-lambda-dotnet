@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using AWS.Lambda.Powertools.Parameters.Transform;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 
 namespace AWS.Lambda.Powertools.Parameters.Provider;
@@ -22,5 +23,45 @@ public abstract class ParameterProvider : ParameterProvider<ParameterProviderCon
     protected override ParameterProviderConfigurationBuilder NewConfigurationBuilder()
     {
         return new ParameterProviderConfigurationBuilder(this);
+    }
+}
+
+public abstract class ParameterProvider<TConfigurationBuilder> : ParameterProviderBase
+    where TConfigurationBuilder : ParameterProviderConfigurationBuilder
+{
+    protected abstract TConfigurationBuilder NewConfigurationBuilder();
+
+    private TConfigurationBuilder CreateConfigurationBuilder()
+    {
+        var configBuilder = NewConfigurationBuilder();
+        var maxAge = Handler.GetDefaultMaxAge();
+        if (maxAge is not null)
+            configBuilder = configBuilder.WithMaxAge(maxAge.Value);
+        return configBuilder;
+    }
+
+    public TConfigurationBuilder WithMaxAge(TimeSpan age)
+    {
+        return CreateConfigurationBuilder().WithMaxAge(age);
+    }
+
+    public TConfigurationBuilder ForceFetch()
+    {
+        return CreateConfigurationBuilder().ForceFetch();
+    }
+
+    public TConfigurationBuilder WithTransformation(Transformation transformation)
+    {
+        return CreateConfigurationBuilder().WithTransformation(transformation);
+    }
+
+    public TConfigurationBuilder WithTransformation(ITransformer transformer)
+    {
+        return CreateConfigurationBuilder().WithTransformation(transformer);
+    }
+
+    public TConfigurationBuilder WithTransformation(string transformerName)
+    {
+        return CreateConfigurationBuilder().WithTransformation(transformerName);
     }
 }

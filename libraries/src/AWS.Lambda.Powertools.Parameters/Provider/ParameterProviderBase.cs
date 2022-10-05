@@ -19,7 +19,7 @@ using AWS.Lambda.Powertools.Parameters.Internal.Provider;
 
 namespace AWS.Lambda.Powertools.Parameters.Provider;
 
-public abstract class ParameterProviderBase : IProviderBase
+public abstract class ParameterProviderBase : IParameterProviderBase
 {
     private IParameterProviderBaseHandler? _handler;
 

@@ -15,7 +15,7 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Provider;
 
-public interface IProviderBase
+public interface IParameterProviderBase
 {
     string? Get(string key);
     Task<string?> GetAsync(string key);

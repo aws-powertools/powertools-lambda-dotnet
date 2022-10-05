@@ -25,7 +25,7 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 
 namespace AWS.Lambda.Powertools.Parameters.AppConfig;
 
-public class AppConfigProvider : ParameterProvider<AppConfigProviderConfigurationBuilder>
+public class AppConfigProvider : ParameterProvider<AppConfigProviderConfigurationBuilder>, IAppConfigProvider
 {
     private IAmazonAppConfigData? _client;
     private readonly IDateTimeWrapper _dateTimeWrapper;
@@ -62,75 +62,75 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             _lastConfig = lastConfig;
     }
 
-    public AppConfigProvider UseClient(IAmazonAppConfigData client)
+    public IAppConfigProvider UseClient(IAmazonAppConfigData client)
     {
         _client = client;
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(RegionEndpoint region)
+    public IAppConfigProvider ConfigureClient(RegionEndpoint region)
     {
         _client = new AmazonAppConfigDataClient(region);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(AmazonAppConfigDataConfig config)
+    public IAppConfigProvider ConfigureClient(AmazonAppConfigDataConfig config)
     {
         _client = new AmazonAppConfigDataClient(config);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(AWSCredentials credentials)
+    public IAppConfigProvider ConfigureClient(AWSCredentials credentials)
     {
         _client = new AmazonAppConfigDataClient(credentials);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
+    public IAppConfigProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
     {
         _client = new AmazonAppConfigDataClient(credentials, region);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(AWSCredentials credentials, AmazonAppConfigDataConfig config)
+    public IAppConfigProvider ConfigureClient(AWSCredentials credentials, AmazonAppConfigDataConfig config)
     {
         _client = new AmazonAppConfigDataClient(credentials, config);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
+    public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
+    public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, region);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey,
+    public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey,
         AmazonAppConfigDataConfig config)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, config);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
+    public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
+    public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
         RegionEndpoint region)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, region);
         return this;
     }
 
-    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
+    public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
         AmazonAppConfigDataConfig config)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);

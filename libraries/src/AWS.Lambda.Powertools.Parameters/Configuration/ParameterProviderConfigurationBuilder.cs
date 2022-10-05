@@ -19,7 +19,7 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Configuration;
 
-public class ParameterProviderConfigurationBuilder : IProviderBase
+public class ParameterProviderConfigurationBuilder
 {
     private bool _forceFetch;
     private Transformation? _transformation;

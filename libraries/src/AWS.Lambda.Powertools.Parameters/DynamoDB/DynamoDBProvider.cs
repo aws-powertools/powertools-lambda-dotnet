@@ -22,7 +22,7 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 
 namespace AWS.Lambda.Powertools.Parameters.DynamoDB;
 
-public class DynamoDBProvider : ParameterProvider
+public class DynamoDBProvider : ParameterProvider, IDynamoDBProvider
 {
     private IAmazonDynamoDB? _client;
     private string? _defaultTableName;
@@ -32,85 +32,85 @@ public class DynamoDBProvider : ParameterProvider
     
     private IAmazonDynamoDB Client => _client ??= new AmazonDynamoDBClient();
     
-    public DynamoDBProvider UseClient(IAmazonDynamoDB client)
+    public IDynamoDBProvider UseClient(IAmazonDynamoDB client)
     {
         _client = client;
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(RegionEndpoint region)
+    public IDynamoDBProvider ConfigureClient(RegionEndpoint region)
     {
         _client = new AmazonDynamoDBClient(region);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(AmazonDynamoDBConfig config)
+    public IDynamoDBProvider ConfigureClient(AmazonDynamoDBConfig config)
     {
         _client = new AmazonDynamoDBClient(config);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(AWSCredentials credentials)
+    public IDynamoDBProvider ConfigureClient(AWSCredentials credentials)
     {
         _client = new AmazonDynamoDBClient(credentials);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
+    public IDynamoDBProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
     {
         _client = new AmazonDynamoDBClient(credentials, region);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(AWSCredentials credentials, AmazonDynamoDBConfig config)
+    public IDynamoDBProvider ConfigureClient(AWSCredentials credentials, AmazonDynamoDBConfig config)
     {
         _client = new AmazonDynamoDBClient(credentials, config);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
+    public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
+    public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, region);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, AmazonDynamoDBConfig config)
+    public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, AmazonDynamoDBConfig config)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, config);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
+    public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, RegionEndpoint region)
+    public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, RegionEndpoint region)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, region);
         return this;
     }
     
-    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, AmazonDynamoDBConfig config)
+    public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, AmazonDynamoDBConfig config)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);
         return this;
     }
 
-    public DynamoDBProvider UseTable(string tableName)
+    public IDynamoDBProvider UseTable(string tableName)
     {
         _defaultTableName = tableName;
         return this;
     }
     
-    public DynamoDBProvider UseTable(string tableName, string primaryKeyAttribute, string valueAttribute)
+    public IDynamoDBProvider UseTable(string tableName, string primaryKeyAttribute, string valueAttribute)
     {
         _defaultTableName = tableName;
         _defaultPrimaryKeyAttribute = primaryKeyAttribute;
@@ -118,7 +118,7 @@ public class DynamoDBProvider : ParameterProvider
         return this;
     }
     
-    public DynamoDBProvider UseTable(string tableName, string primaryKeyAttribute, string sortKeyAttribute, string valueAttribute)
+    public IDynamoDBProvider UseTable(string tableName, string primaryKeyAttribute, string sortKeyAttribute, string valueAttribute)
     {
         _defaultTableName = tableName;
         _defaultPrimaryKeyAttribute = primaryKeyAttribute;

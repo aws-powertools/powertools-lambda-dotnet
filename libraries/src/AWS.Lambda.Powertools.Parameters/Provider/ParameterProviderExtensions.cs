@@ -21,31 +21,31 @@ namespace AWS.Lambda.Powertools.Parameters.Provider;
 public static class ParameterProviderExtensions
 {
     public static TProvider DefaultMaxAge<TProvider>(this TProvider instance, TimeSpan maxAge)
-        where TProvider : ParameterProviderBase
+        where TProvider : IParameterProviderBase
     {
-        instance.Handler.SetDefaultMaxAge(maxAge);
+        ((ParameterProviderBase)(object)instance).Handler.SetDefaultMaxAge(maxAge);
         return instance;
     }
 
     public static TProvider UseCacheManager<TProvider>(this TProvider instance, ICacheManager cacheManager)
-        where TProvider : ParameterProviderBase
+        where TProvider : IParameterProviderBase
     {
-        instance.Handler.SetCacheManager(cacheManager);
+        ((ParameterProviderBase)(object)instance).Handler.SetCacheManager(cacheManager);
         return instance;
     }
 
     public static TProvider UseTransformerManager<TProvider>(this TProvider instance,
         ITransformerManager transformerManager)
-        where TProvider : ParameterProviderBase
+        where TProvider : IParameterProviderBase
     {
-        instance.Handler.SetTransformerManager(transformerManager);
+        ((ParameterProviderBase)(object)instance).Handler.SetTransformerManager(transformerManager);
         return instance;
     }
 
     public static TProvider AddTransformer<TProvider>(this TProvider instance, string name, ITransformer transformer)
-        where TProvider : ParameterProviderBase
+        where TProvider : IParameterProviderBase
     {
-        instance.Handler.AddCustomTransformer(name, transformer);
+        ((ParameterProviderBase)(object)instance).Handler.AddCustomTransformer(name, transformer);
         return instance;
     }
 }

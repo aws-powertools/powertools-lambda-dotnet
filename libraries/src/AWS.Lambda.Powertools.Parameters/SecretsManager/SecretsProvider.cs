@@ -23,80 +23,80 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 
 namespace AWS.Lambda.Powertools.Parameters.SecretsManager;
 
-public class SecretsProvider : ParameterProvider
+public class SecretsProvider : ParameterProvider, ISecretsProvider
 {
     private const string CurrentVersionStage = "AWSCURRENT";
 
     private IAmazonSecretsManager? _client;
     private IAmazonSecretsManager Client => _client ??= new AmazonSecretsManagerClient();
 
-    public SecretsProvider UseClient(IAmazonSecretsManager client)
+    public ISecretsProvider UseClient(IAmazonSecretsManager client)
     {
         _client = client;
         return this;
     }
     
-    public SecretsProvider ConfigureClient(RegionEndpoint region)
+    public ISecretsProvider ConfigureClient(RegionEndpoint region)
     {
         _client = new AmazonSecretsManagerClient(region);
         return this;
     }
     
-    public SecretsProvider ConfigureClient(AmazonSecretsManagerConfig config)
+    public ISecretsProvider ConfigureClient(AmazonSecretsManagerConfig config)
     {
         _client = new AmazonSecretsManagerClient(config);
         return this;
     }
     
-    public SecretsProvider ConfigureClient(AWSCredentials credentials)
+    public ISecretsProvider ConfigureClient(AWSCredentials credentials)
     {
         _client = new AmazonSecretsManagerClient(credentials);
         return this;
     }
     
-    public SecretsProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
+    public ISecretsProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
     {
         _client = new AmazonSecretsManagerClient(credentials, region);
         return this;
     }
 
-    public SecretsProvider ConfigureClient(AWSCredentials credentials, AmazonSecretsManagerConfig config)
+    public ISecretsProvider ConfigureClient(AWSCredentials credentials, AmazonSecretsManagerConfig config)
     {
         _client = new AmazonSecretsManagerClient(credentials, config);
         return this;
     }
     
-    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
+    public ISecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
     {
         _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey);
         return this;
     }
     
-    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
+    public ISecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
     {
         _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, region);
         return this;
     }
     
-    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, AmazonSecretsManagerConfig config)
+    public ISecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, AmazonSecretsManagerConfig config)
     {
         _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, config);
         return this;
     }
     
-    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
+    public ISecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
     {
         _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
         return this;
     }
     
-    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, RegionEndpoint region)
+    public ISecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, RegionEndpoint region)
     {
         _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, region);
         return this;
     }
     
-    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, AmazonSecretsManagerConfig config)
+    public ISecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, AmazonSecretsManagerConfig config)
     {
         _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);
         return this;
