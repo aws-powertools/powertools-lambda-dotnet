@@ -21,7 +21,7 @@ namespace AWS.Lambda.Powertools.Idempotency;
 /// <summary>
 /// Configuration of the idempotency feature. Use the Builder to create an instance.
 /// </summary>
-public class IdempotencyConfig
+public class IdempotencyOptions
 {
     public string EventKeyJmesPath { get; }
     public string PayloadValidationJmesPath { get; }
@@ -32,7 +32,7 @@ public class IdempotencyConfig
     public string HashFunction { get; }
     public ILog Log { get; }
 
-    private IdempotencyConfig(
+    internal IdempotencyOptions(
         string eventKeyJmesPath, 
         string payloadValidationJmesPath, 
         bool throwOnNoIdempotencyKey, 
@@ -51,13 +51,8 @@ public class IdempotencyConfig
         HashFunction = hashFunction;
         Log = log;
     }
-
-    public static IdempotencyConfigBuilder Builder()
-    {
-        return new IdempotencyConfigBuilder();
-    }
-    
-    public class IdempotencyConfigBuilder
+}
+public class IdempotencyConfigBuilder
     {
         private int _localCacheMaxItems = 256;
         private bool _useLocalCache = false;
@@ -76,8 +71,8 @@ public class IdempotencyConfig
         /// Idempotency.Config().WithConfig(config).Configure();
         /// </summary>
         /// <returns>an instance of IdempotencyConfig</returns>
-        public IdempotencyConfig Build() =>
-            new IdempotencyConfig(_eventKeyJmesPath, 
+        public IdempotencyOptions Build() =>
+            new IdempotencyOptions(_eventKeyJmesPath, 
                 _payloadValidationJmesPath, 
                 _throwOnNoIdempotencyKey,
                 _useLocalCache, 
@@ -158,15 +153,11 @@ public class IdempotencyConfig
         /// <summary>
         /// Logs to a custom logger.
         /// </summary>
-        /// <param name="builder"></param>
         /// <param name="log">The logger.</param>
-        /// <returns>
-        /// The same builder
-        /// </returns>
+        /// <returns>the instance of the builder (to chain operations)</returns>
         public IdempotencyConfigBuilder LogTo(ILog log)
         {
             _log = log;
             return this;
         }
     }
-}

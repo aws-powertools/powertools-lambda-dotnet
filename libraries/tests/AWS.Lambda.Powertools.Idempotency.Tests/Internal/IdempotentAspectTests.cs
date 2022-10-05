@@ -34,12 +34,11 @@ public class IdempotentAspectTests
     {
         //Arrange
         var store = new Mock<BasePersistenceStore>();
-        Idempotency.Config()
-            .WithPersistenceStore(store.Object)
-            .WithConfig(IdempotencyConfig.Builder()
-                .WithEventKeyJmesPath("Id")
-                .Build()
-            ).Configure();
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store.Object)
+                .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
+            );
         
         IdempotencyEnabledFunction function = new IdempotencyEnabledFunction();
         Product product = new Product(42, "fake product", 12);
@@ -65,15 +64,14 @@ public class IdempotentAspectTests
         var store = new Mock<BasePersistenceStore>();
         store.Setup(x=>x.SaveInProgress(It.IsAny<JToken>(), It.IsAny<DateTimeOffset>()))
             .Throws<IdempotencyItemAlreadyExistsException>();
-
+    
         // GIVEN
-        Idempotency.Config()
-            .WithPersistenceStore(store.Object)
-            .WithConfig(IdempotencyConfig.Builder()
-                .WithEventKeyJmesPath("Id")
-                .Build()
-            ).Configure();
-
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store.Object)
+                .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
+            );
+    
         Product product = new Product(42, "fake product", 12);
         Basket basket = new Basket(product);
         DataRecord record = new DataRecord(
@@ -84,32 +82,31 @@ public class IdempotentAspectTests
             null);
         store.Setup(x=>x.GetRecord(It.IsAny<JToken>(), It.IsAny<DateTimeOffset>()))
             .ReturnsAsync(record);
-
+    
         IdempotencyEnabledFunction function = new IdempotencyEnabledFunction();
-
+    
         // Act
         Basket resultBasket = await function.Handle(product, new TestLambdaContext());
-
+    
         // Assert
         resultBasket.Should().Be(basket);
         function.HandlerExecuted.Should().BeFalse();
     }
-
+    
     [Fact]
     public async Task Handle_WhenSecondCall_AndStatusInProgress_ShouldThrowIdempotencyAlreadyInProgressException()
     {
         // Arrange
         var store = new Mock<BasePersistenceStore>();
         
-        Idempotency.Config()
-            .WithPersistenceStore(store.Object)
-            .WithConfig(IdempotencyConfig.Builder()
-                .WithEventKeyJmesPath("Id")
-                .Build()
-            ).Configure();
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store.Object)
+                .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
+            );
         store.Setup(x=>x.SaveInProgress(It.IsAny<JToken>(), It.IsAny<DateTimeOffset>()))
             .Throws<IdempotencyItemAlreadyExistsException>();
-
+    
         Product product = new Product(42, "fake product", 12);
         Basket basket = new Basket(product);
         DataRecord record = new DataRecord(
@@ -120,11 +117,11 @@ public class IdempotentAspectTests
             null);
         store.Setup(x=>x.GetRecord(It.IsAny<JToken>(), It.IsAny<DateTimeOffset>()))
             .ReturnsAsync(record);
-
+    
         // Act
         IdempotencyEnabledFunction function = new IdempotencyEnabledFunction();
         Func<Task> act = async () => await function.Handle(product, new TestLambdaContext());
-
+    
         // Assert
         await act.Should().ThrowAsync<IdempotencyAlreadyInProgressException>();
     }
@@ -134,26 +131,25 @@ public class IdempotentAspectTests
     {
         // Arrange
         var store = new Mock<BasePersistenceStore>();
-
-        Idempotency.Config()
-            .WithPersistenceStore(store.Object)
-            .WithConfig(IdempotencyConfig.Builder()
-                .WithEventKeyJmesPath("Id")
-                .Build()
-            ).Configure();
+    
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store.Object)
+                .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
+            );
         
         IdempotencyWithErrorFunction function = new IdempotencyWithErrorFunction();
         Product product = new Product(42, "fake product", 12);
-
+    
         // Act
         Func<Task> act = async () => await function.Handle(product, new TestLambdaContext());
-
+    
         // Assert
         await act.Should().ThrowAsync<IndexOutOfRangeException>();
         store.Verify(
             x => x.DeleteRecord(It.IsAny<JToken>(), It.IsAny<IndexOutOfRangeException>()));
     }
-
+    
     [Fact]
     public async Task Handle_WhenIdempotencyDisabled_ShouldJustRunTheFunction()
     {
@@ -163,19 +159,18 @@ public class IdempotentAspectTests
             var store = new Mock<BasePersistenceStore>();
             Environment.SetEnvironmentVariable(Constants.IDEMPOTENCY_DISABLED_ENV, "true");
             
-            Idempotency.Config()
-                .WithPersistenceStore(store.Object)
-                .WithConfig(IdempotencyConfig.Builder()
-                    .WithEventKeyJmesPath("Id")
-                    .Build()
-                ).Configure();
+            Idempotency.Configure(builder =>
+                builder
+                    .WithPersistenceStore(store.Object)
+                    .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
+                );
             
             IdempotencyEnabledFunction function = new IdempotencyEnabledFunction();
             Product product = new Product(42, "fake product", 12);
             
             // Act
             Basket basket = await function.Handle(product, new TestLambdaContext());
-
+    
             // Assert
             store.Invocations.Count.Should().Be(0);
             basket.Products.Count.Should().Be(1);

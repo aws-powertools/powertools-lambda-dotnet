@@ -29,13 +29,13 @@ namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 
 public abstract class BasePersistenceStore : IPersistenceStore
 {
-    private IdempotencyConfig _idempotencyConfig;
+    private IdempotencyOptions _idempotencyOptions;
     private string? _functionName;
     protected bool PayloadValidationEnabled;
     private LRUCache<string, DataRecord> _cache = null!;
     protected ILog Log;
 
-    public void Configure(IdempotencyConfig idempotencyConfig, string? functionName)
+    public void Configure(IdempotencyOptions idempotencyOptions, string? functionName)
     {
         string? funcEnv = Environment.GetEnvironmentVariable(Constants.LAMBDA_FUNCTION_NAME_ENV);
         _functionName = funcEnv != null ? funcEnv : "testFunction";
@@ -43,28 +43,28 @@ public abstract class BasePersistenceStore : IPersistenceStore
         {
             _functionName += "." + functionName;
         }
-        _idempotencyConfig = idempotencyConfig;
-        Log = _idempotencyConfig.Log;
+        _idempotencyOptions = idempotencyOptions;
+        Log = _idempotencyOptions.Log;
 
         //TODO: optimize to not reconfigure
-        if (!string.IsNullOrWhiteSpace(_idempotencyConfig.PayloadValidationJmesPath))
+        if (!string.IsNullOrWhiteSpace(_idempotencyOptions.PayloadValidationJmesPath))
         {
             PayloadValidationEnabled = true;
         }
         
-        var useLocalCache = _idempotencyConfig.UseLocalCache;
+        var useLocalCache = _idempotencyOptions.UseLocalCache;
         if (useLocalCache)
         {
-            _cache = new (_idempotencyConfig.LocalCacheMaxItems);
+            _cache = new (_idempotencyOptions.LocalCacheMaxItems);
         }
     }
     
     /// <summary>
     /// For test purpose only (adding a cache to mock)
     /// </summary>
-    internal void Configure(IdempotencyConfig config, string functionName, LRUCache<string, DataRecord> cache)
+    internal void Configure(IdempotencyOptions options, string functionName, LRUCache<string, DataRecord> cache)
     {
-        Configure(config, functionName);
+        Configure(options, functionName);
         _cache = cache;
     }
 
@@ -153,7 +153,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="dataRecord">DataRecord to save in cache</param>
     private void SaveToCache(DataRecord dataRecord)
     {
-        if (!_idempotencyConfig.UseLocalCache)
+        if (!_idempotencyOptions.UseLocalCache)
             return;
         if (dataRecord.Status == DataRecord.DataRecordStatus.INPROGRESS)
             return;
@@ -182,7 +182,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     
     private DataRecord? RetrieveFromCache(string idempotencyKey, DateTimeOffset now)
     {
-        if (!_idempotencyConfig.UseLocalCache)
+        if (!_idempotencyOptions.UseLocalCache)
             return null;
         
         if (_cache.TryGet(idempotencyKey, out DataRecord record) && record!=null)
@@ -198,7 +198,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     }
     private void DeleteFromCache(string idempotencyKey)
     {
-        if (!_idempotencyConfig.UseLocalCache)
+        if (!_idempotencyOptions.UseLocalCache)
             return;
         
         _cache.Delete(idempotencyKey);
@@ -218,7 +218,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         
         var jmes = new JmesPath();
         jmes.FunctionRepository.Register<JsonFunction>();
-        var result = jmes.Transform(data.ToString(), _idempotencyConfig.PayloadValidationJmesPath);
+        var result = jmes.Transform(data.ToString(), _idempotencyOptions.PayloadValidationJmesPath);
         var node = JToken.Parse(result);
         return GenerateHash(node);
     }
@@ -232,7 +232,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <returns>unix timestamp of expiry date for idempotency record</returns>
     private long GetExpiryEpochSecond(DateTimeOffset now)
     {
-        return now.AddSeconds(_idempotencyConfig.ExpirationInSeconds).ToUnixTimeSeconds();
+        return now.AddSeconds(_idempotencyOptions.ExpirationInSeconds).ToUnixTimeSeconds();
     }
 
     /// <summary>
@@ -244,7 +244,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     private string GetHashedIdempotencyKey(JToken data)
     {
         JToken node = data;
-        var eventKeyJmesPath = _idempotencyConfig.EventKeyJmesPath;
+        var eventKeyJmesPath = _idempotencyOptions.EventKeyJmesPath;
         if (eventKeyJmesPath != null) 
         {
             var jmes = new JmesPath();
@@ -255,11 +255,11 @@ public abstract class BasePersistenceStore : IPersistenceStore
 
         if (IsMissingIdemPotencyKey(node))
         {
-            if (_idempotencyConfig.ThrowOnNoIdempotencyKey)
+            if (_idempotencyOptions.ThrowOnNoIdempotencyKey)
             {
                 throw new IdempotencyKeyException("No data found to create a hashed idempotency key");
             }
-            Log.WriteWarning("No data found to create a hashed idempotency key. JMESPath: {0}", _idempotencyConfig.EventKeyJmesPath);
+            Log.WriteWarning("No data found to create a hashed idempotency key. JMESPath: {0}", _idempotencyOptions.EventKeyJmesPath);
         }
 
         string hash = GenerateHash(node);
@@ -301,7 +301,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         else node = data; // anything else
 
         
-        using var hashAlgorithm = HashAlgorithm.Create(_idempotencyConfig.HashFunction);
+        using var hashAlgorithm = HashAlgorithm.Create(_idempotencyOptions.HashFunction);
         if (hashAlgorithm == null)
         {
             throw new ArgumentException("Invalid HashAlgorithm");

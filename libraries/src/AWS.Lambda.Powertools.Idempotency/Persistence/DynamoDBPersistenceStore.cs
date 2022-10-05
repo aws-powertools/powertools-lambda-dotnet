@@ -35,7 +35,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     private readonly string _validationAttr;
     private readonly AmazonDynamoDBClient _dynamoDbClient;
 
-    private DynamoDBPersistenceStore(string tableName,
+    internal DynamoDBPersistenceStore(string tableName,
         string keyAttr,
         string staticPkValue,
         string? sortKeyAttr,
@@ -229,146 +229,146 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         return key;
     }
 
-    public static DynamoDBPersistenceStoreBuilder Builder() => new DynamoDBPersistenceStoreBuilder();
+}
 
-    public class DynamoDBPersistenceStoreBuilder
+public class DynamoDBPersistenceStoreBuilder
+{
+    private static readonly string? FuncEnv = Environment.GetEnvironmentVariable(Constants.LAMBDA_FUNCTION_NAME_ENV);
+
+    private string _tableName = null!;
+    private string _keyAttr = "id";
+    private string _staticPkValue = string.Format("idempotency#%s", FuncEnv ?? "");
+    private string? _sortKeyAttr = null;
+    private string _expiryAttr = "expiration";
+    private string _statusAttr = "status";
+    private string _dataAttr = "data";
+    private string _validationAttr = "validation";
+    private AmazonDynamoDBClient _dynamoDbClient;
+
+    /// <summary>
+    /// Initialize and return a new instance of {@link DynamoDBPersistenceStore}.
+    /// Example:
+    ///    DynamoDBPersistenceStore.builder().withTableName("idempotency_store").build();
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public DynamoDBPersistenceStore Build()
     {
-        private static readonly string? FuncEnv = Environment.GetEnvironmentVariable(Constants.LAMBDA_FUNCTION_NAME_ENV);
-
-        private string _tableName = null!;
-        private string _keyAttr = "id";
-        private string _staticPkValue = string.Format("idempotency#%s", FuncEnv ?? "");
-        private string? _sortKeyAttr = null;
-        private string _expiryAttr = "expiration";
-        private string _statusAttr = "status";
-        private string _dataAttr = "data";
-        private string _validationAttr = "validation";
-        private AmazonDynamoDBClient _dynamoDbClient;
-        
-        /// <summary>
-        /// Initialize and return a new instance of {@link DynamoDBPersistenceStore}.
-        /// Example:
-        ///    DynamoDBPersistenceStore.builder().withTableName("idempotency_store").build();
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public DynamoDBPersistenceStore Build() 
+        if (string.IsNullOrWhiteSpace(_tableName))
         {
-            if (string.IsNullOrWhiteSpace(_tableName))
-            {
-                throw new ArgumentNullException("Table name is not specified");
-            }
-            return new DynamoDBPersistenceStore(_tableName, 
-                _keyAttr, 
-                _staticPkValue, 
-                _sortKeyAttr, 
-                _expiryAttr, 
-                _statusAttr, 
-                _dataAttr, 
-                _validationAttr, 
-                _dynamoDbClient);
-        }
-        
-        /// <summary>
-        /// Name of the table to use for storing execution records (mandatory)
-        /// </summary>
-        /// <param name="tableName">tableName Name of the DynamoDB table</param>
-        /// <returns>the builder instance (to chain operations)</returns>
-        public DynamoDBPersistenceStoreBuilder WithTableName(string tableName)
-        {
-            _tableName = tableName;
-            return this;
-        }
-        
-        /// <summary>
-        /// DynamoDB attribute name for partition key (optional), by default "id"
-        /// </summary>
-        /// <param name="keyAttr">keyAttr name of the key attribute in the table</param>
-        /// <returns>the builder instance (to chain operations)</returns>
-        public DynamoDBPersistenceStoreBuilder WithKeyAttr(string keyAttr)
-        {
-            _keyAttr = keyAttr;
-            return this;
+            throw new ArgumentNullException("Table name is not specified");
         }
 
-        /// <summary>
-        /// DynamoDB attribute value for partition key (optional), by default "idempotency#[function-name]".
-        /// This will be used if the {@link #sortKeyAttr} is set.
-        /// </summary>
-        /// <param name="staticPkValue">staticPkValue name of the partition key attribute in the table</param>
-        /// <returns>the builder instance (to chain operations)</returns>
-        public DynamoDBPersistenceStoreBuilder WithStaticPkValue(string staticPkValue)
-        {
-            _staticPkValue = staticPkValue;
-            return this;
-        }
-        
-        /// <summary>
-        /// DynamoDB attribute name for the sort key (optional)
-        /// </summary>
-        /// <param name="sortKeyAttr">sortKeyAttr name of the sort key attribute in the table</param>
-        /// <returns>the builder instance (to chain operations)</returns>
-        public DynamoDBPersistenceStoreBuilder WithSortKeyAttr(string sortKeyAttr)
-        {
-            _sortKeyAttr = sortKeyAttr;
-            return this;
-        }
-        
-        /// <summary>
-        /// DynamoDB attribute name for expiry timestamp (optional), by default "expiration"
-        /// </summary>
-        /// <param name="expiryAttr">expiryAttr name of the expiry attribute in the table</param>
-        /// <returns>the builder instance (to chain operations)</returns>
-        public DynamoDBPersistenceStoreBuilder WithExpiryAttr(string expiryAttr)
-        {
-            _expiryAttr = expiryAttr;
-            return this;
-        }
-        
-        /// <summary>
-        /// DynamoDB attribute name for status (optional), by default "status"
-        /// </summary>
-        /// <param name="statusAttr">statusAttr name of the status attribute in the table</param>
-        /// <returns>the builder instance (to chain operations)</returns>
-        public DynamoDBPersistenceStoreBuilder WithStatusAttr(string statusAttr)
-        {
-            _statusAttr = statusAttr;
-            return this;
-        }
-        
-        /// <summary>
-        /// DynamoDB attribute name for response data (optional), by default "data"
-        /// </summary>
-        /// <param name="dataAttr">dataAttr name of the data attribute in the table</param>
-        /// <returns>the builder instance (to chain operations)</returns>
-        public DynamoDBPersistenceStoreBuilder WithDataAttr(string dataAttr)
-        {
-            _dataAttr = dataAttr;
-            return this;
-        }
-        
-        /// <summary>
-        /// DynamoDB attribute name for validation (optional), by default "validation"
-        /// </summary>
-        /// <param name="validationAttr">validationAttr name of the validation attribute in the table</param>
-        /// <returns>the builder instance (to chain operations)</returns>
-        public DynamoDBPersistenceStoreBuilder WithValidationAttr(string validationAttr)
-        {
-            _validationAttr = validationAttr;
-            return this;
-        }
-        
-        /// <summary>
-        /// Custom DynamoDbClient used to query DynamoDB (optional).
-        /// The default one uses UrlConnectionHttpClient as a http client and
-        /// </summary>
-        /// <param name="dynamoDbClient">dynamoDbClient the DynamoDbClient instance to use</param>
-        /// <returns>the builder instance (to chain operations)</returns>
-        // ReSharper disable once InconsistentNaming
-        public DynamoDBPersistenceStoreBuilder WithDynamoDBClient(AmazonDynamoDBClient dynamoDbClient)
-        {
-            _dynamoDbClient = dynamoDbClient;
-            return this;
-        }
+        return new DynamoDBPersistenceStore(_tableName,
+            _keyAttr,
+            _staticPkValue,
+            _sortKeyAttr,
+            _expiryAttr,
+            _statusAttr,
+            _dataAttr,
+            _validationAttr,
+            _dynamoDbClient);
+    }
+
+    /// <summary>
+    /// Name of the table to use for storing execution records (mandatory)
+    /// </summary>
+    /// <param name="tableName">tableName Name of the DynamoDB table</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    public DynamoDBPersistenceStoreBuilder WithTableName(string tableName)
+    {
+        _tableName = tableName;
+        return this;
+    }
+
+    /// <summary>
+    /// DynamoDB attribute name for partition key (optional), by default "id"
+    /// </summary>
+    /// <param name="keyAttr">keyAttr name of the key attribute in the table</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    public DynamoDBPersistenceStoreBuilder WithKeyAttr(string keyAttr)
+    {
+        _keyAttr = keyAttr;
+        return this;
+    }
+
+    /// <summary>
+    /// DynamoDB attribute value for partition key (optional), by default "idempotency#[function-name]".
+    /// This will be used if the {@link #sortKeyAttr} is set.
+    /// </summary>
+    /// <param name="staticPkValue">staticPkValue name of the partition key attribute in the table</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    public DynamoDBPersistenceStoreBuilder WithStaticPkValue(string staticPkValue)
+    {
+        _staticPkValue = staticPkValue;
+        return this;
+    }
+
+    /// <summary>
+    /// DynamoDB attribute name for the sort key (optional)
+    /// </summary>
+    /// <param name="sortKeyAttr">sortKeyAttr name of the sort key attribute in the table</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    public DynamoDBPersistenceStoreBuilder WithSortKeyAttr(string sortKeyAttr)
+    {
+        _sortKeyAttr = sortKeyAttr;
+        return this;
+    }
+
+    /// <summary>
+    /// DynamoDB attribute name for expiry timestamp (optional), by default "expiration"
+    /// </summary>
+    /// <param name="expiryAttr">expiryAttr name of the expiry attribute in the table</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    public DynamoDBPersistenceStoreBuilder WithExpiryAttr(string expiryAttr)
+    {
+        _expiryAttr = expiryAttr;
+        return this;
+    }
+
+    /// <summary>
+    /// DynamoDB attribute name for status (optional), by default "status"
+    /// </summary>
+    /// <param name="statusAttr">statusAttr name of the status attribute in the table</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    public DynamoDBPersistenceStoreBuilder WithStatusAttr(string statusAttr)
+    {
+        _statusAttr = statusAttr;
+        return this;
+    }
+
+    /// <summary>
+    /// DynamoDB attribute name for response data (optional), by default "data"
+    /// </summary>
+    /// <param name="dataAttr">dataAttr name of the data attribute in the table</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    public DynamoDBPersistenceStoreBuilder WithDataAttr(string dataAttr)
+    {
+        _dataAttr = dataAttr;
+        return this;
+    }
+
+    /// <summary>
+    /// DynamoDB attribute name for validation (optional), by default "validation"
+    /// </summary>
+    /// <param name="validationAttr">validationAttr name of the validation attribute in the table</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    public DynamoDBPersistenceStoreBuilder WithValidationAttr(string validationAttr)
+    {
+        _validationAttr = validationAttr;
+        return this;
+    }
+
+    /// <summary>
+    /// Custom DynamoDbClient used to query DynamoDB (optional).
+    /// The default one uses UrlConnectionHttpClient as a http client and
+    /// </summary>
+    /// <param name="dynamoDbClient">dynamoDbClient the DynamoDbClient instance to use</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    // ReSharper disable once InconsistentNaming
+    public DynamoDBPersistenceStoreBuilder WithDynamoDBClient(AmazonDynamoDBClient dynamoDbClient)
+    {
+        _dynamoDbClient = dynamoDbClient;
+        return this;
     }
 }

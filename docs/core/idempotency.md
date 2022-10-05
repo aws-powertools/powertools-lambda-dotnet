@@ -3,16 +3,13 @@ title: Idempotency
 description: Utility
 ---
 
-The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which
-are safe to retry.
+The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
 
 ## Terminology
 
-The property of idempotency means that an operation does not cause additional side effects if it is called more than
-once with the same input parameters.
+The property of idempotency means that an operation does not cause additional side effects if it is called more than once with the same input parameters.
 
-**Idempotent operations will return the same result when they are called multiple
-times with the same parameters**. This makes idempotent operations safe to retry. [Read more](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/) about idempotency.
+**Idempotent operations will return the same result when they are called multiple times with the same parameters**. This makes idempotent operations safe to retry. [Read more](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/) about idempotency.
 
 **Idempotency key** is a hash representation of either the entire event or a specific configured subset of the event, and invocation results are **JSON serialized** and stored in your persistence storage layer.
 
@@ -20,7 +17,7 @@ times with the same parameters**. This makes idempotent operations safe to retry
 
 * Prevent Lambda handler function from executing more than once on the same event payload during a time window
 * Ensure Lambda handler returns the same result when called with the same payload
-* Select a subset of the event as the idempotency key using JMESPath expressions
+* Select a subset of the event as the idempotency key using [JMESPath](https://jmespath.org/) expressions
 * Set a time window in which records with the same payload should be considered duplicates
 
 ## Getting started
@@ -29,13 +26,13 @@ times with the same parameters**. This makes idempotent operations safe to retry
 You should install with NuGet:
 
 ```
-Install-Package Amazon.Lambda.PowerTools.Idempotency
+Install-Package AWS.Lambda.Powertools.Idempotency
 ```
 
 Or via the .NET Core command line interface:
 
 ```
-dotnet add package Amazon.Lambda.PowerTools.Idempotency
+dotnet add package AWS.Lambda.Powertools.Idempotency
 ```
 
 ### Required resources
@@ -56,34 +53,36 @@ If you're not [changing the default configuration for the DynamoDB persistence l
 !!! Tip "Tip: You can share a single state table for all functions"
     You can reuse the same DynamoDB table to store idempotency state. We add your function name in addition to the idempotency key as a hash key.
 
-```yaml hl_lines="5-13 21-23 26" title="AWS Serverless Application Model (SAM) example"
-Resources:
-  IdempotencyTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      TimeToLiveSpecification:
-        AttributeName: expiration
-        Enabled: true
-      BillingMode: PAY_PER_REQUEST
+=== "template.yml"
 
-  IdempotencyFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: Function
-      Handler: HelloWorld::HelloWorld.Function::FunctionHandler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref IdempotencyTable
-      Environment:
-        Variables:
-          IDEMPOTENCY_TABLE: !Ref IdempotencyTable
-```
+    ```yaml hl_lines="5-13 21-23 26" title="AWS Serverless Application Model (SAM) example"
+    Resources:
+    IdempotencyTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+        AttributeDefinitions:
+            - AttributeName: id
+            AttributeType: S
+        KeySchema:
+            - AttributeName: id
+            KeyType: HASH
+        TimeToLiveSpecification:
+            AttributeName: expiration
+            Enabled: true
+        BillingMode: PAY_PER_REQUEST
+
+    IdempotencyFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+        CodeUri: Function
+        Handler: HelloWorld::HelloWorld.Function::FunctionHandler
+        Policies:
+            - DynamoDBCrudPolicy:
+                TableName: !Ref IdempotencyTable
+        Environment:
+            Variables:
+            IDEMPOTENCY_TABLE: !Ref IdempotencyTable
+    ```
 
 !!! warning "Warning: Large responses with DynamoDB persistence layer"
     When using this utility with DynamoDB, your function's responses must be [smaller than 400KB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Limits.html#limits-items).
@@ -97,25 +96,17 @@ Resources:
 
 ### Idempotent attribute
 
-You can quickly start by initializing the `DynamoDBPersistenceStore` and using it with the `Idempotent` attribute on your Lambda function.
+You can quickly start by configuring `Idempotency` and using it with the `Idempotent` attribute on your Lambda function.
 
 !!! warning "Important"
-    Initialization and configuration of the `DynamoDBPersistenceStore` must be performed outside the handler, preferably in the constructor.
+    Initialization and configuration of the `Idempotency` must be performed outside the handler, preferably in the constructor.
 
     ```csharp
     public class Function
     {
         public Function()
         {
-            Idempotency.Config()
-                .WithConfig(
-                    IdempotencyConfig.Builder()
-                        .Build())
-                .WithPersistenceStore(
-                    DynamoDBPersistenceStore.Builder()
-                        .WithTableName("Lambda_Is_Cool")
-                        .Build()
-                ).Configure();
+            Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
         }
         
         [Idempotent]
@@ -142,18 +133,14 @@ Imagine the function executes successfully, but the client never receives the re
 !!! warning "Warning: Idempotency for JSON payloads"
     The payload extracted by the `EventKeyJmesPath` is treated as a string by default, so will be sensitive to differences in whitespace even when the JSON payload itself is identical.
 
-    To alter this behaviour, you can use the [JMESPath built-in function](utilities.md#powertools_json-function) `powertools_json()` to treat the payload as a JSON object rather than a string.
+    To alter this behaviour, you can use the JMESPath built-in function `powertools_json()` to treat the payload as a JSON object rather than a string.
 
     ```csharp
-    Idempotency.Config()
-        .WithConfig(
-            IdempotencyConfig.Builder()
-                .Build())
-        .WithPersistenceStore(
-            DynamoDBPersistenceStore.Builder()
-                .WithTableName("Lambda_Is_Cool")
-                .Build()
-        ).Configure();
+    Idempotency.Configure(builder =>
+            builder
+                .WithOptions(optionsBuilder =>
+                    optionsBuilder.WithEventKeyJmesPath("powertools_json(Body).address"))
+                .UseDynamoDb("idempotency_table"));
     ```
 
 ### Handling exceptions
@@ -174,14 +161,14 @@ This persistence store is built-in, and you can either use an existing DynamoDB 
 
 Use the builder to customize the table structure:
 ```csharp title="Customizing DynamoDBPersistenceStore to suit your table structure"
-DynamoDBPersistenceStore.Builder()
-                        .WithTableName(System.getenv("TABLE_NAME"))
-                        .WithKeyAttr("idempotency_key")
-                        .WithExpiryAttr("expires_at")
-                        .WithStatusAttr("current_status")
-                        .WithDataAttr("result_data")
-                        .WithValidationAttr("validation_key")
-                        .Build()
+new DynamoDBPersistenceStoreBuilder()
+    .WithTableName(System.getenv("TABLE_NAME"))
+    .WithKeyAttr("idempotency_key")
+    .WithExpiryAttr("expires_at")
+    .WithStatusAttr("current_status")
+    .WithDataAttr("result_data")
+    .WithValidationAttr("validation_key")
+    .Build()
 ```
 
 When using DynamoDB as a persistence layer, you can alter the attribute names by passing these parameters when initializing the persistence layer:
@@ -204,26 +191,26 @@ When using DynamoDB as a persistence layer, you can alter the attribute names by
 Idempotency behavior can be further configured with **`IdempotencyConfig`** using a builder:
 
 ```csharp
-IdempotencyConfig.Builder()
-            .WithEventKeyJmesPath("id")
-            .WithPayloadValidationJmesPath("paymentId")
-            .WithThrowOnNoIdempotencyKey(true)
-            .WithExpiration(TimeSpan.FromMinutes(1))
-            .WithUseLocalCache(true)
-            .WithHashFunction("MD5")
-            .Build();
+new IdempotencyConfigBuilder()
+    .WithEventKeyJmesPath("id")
+    .WithPayloadValidationJmesPath("paymentId")
+    .WithThrowOnNoIdempotencyKey(true)
+    .WithExpiration(TimeSpan.FromMinutes(1))
+    .WithUseLocalCache(true)
+    .WithHashFunction("MD5")
+    .Build();
 ```
 
 These are the available options for further configuration:
 
 | Parameter                                         | Default | Description                                                                                                                      |
 |---------------------------------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------|
-| **EventKeyJMESPath**                              | `""`    | JMESPath expression to extract the idempotency key from the event record. See available [built-in functions](serialization) |
+| **EventKeyJMESPath**                              | `""`    | JMESPath expression to extract the idempotency key from the event record.                                                        |
 | **PayloadValidationJMESPath**                     | `""`    | JMESPath expression to validate whether certain parameters have changed in the event                                             |
 | **ThrowOnNoIdempotencyKey**                       | `False` | Throw exception if no idempotency key was found in the request                                                                   |
 | **ExpirationInSeconds**                           | 3600    | The number of seconds to wait before a record is expired                                                                         |
 | **UseLocalCache**                                 | `false` | Whether to locally cache idempotency results (LRU cache)                                                                         |
-| **HashFunction**                                  | `MD5`   | Algorithm to use for calculating hashes, as supported by `System.Security.Cryptography.HashAlgorithm` (eg. SHA1, SHA-256, ...)                 |
+| **HashFunction**                                  | `MD5`   | Algorithm to use for calculating hashes, as supported by `System.Security.Cryptography.HashAlgorithm` (eg. SHA1, SHA-256, ...)   |
 
 These features are detailed below.
 
@@ -245,7 +232,7 @@ This is a locking mechanism for correctness. Since we don't know the result from
 
 You can enable it as seen before with:
 ```csharp title="Enable local cache"
-    IdempotencyConfig.Builder()
+    new IdempotencyConfigBuilder()
         .WithUseLocalCache(true)
         .Build()
 ```
@@ -264,7 +251,7 @@ In most cases, it is not desirable to store the idempotency records forever. Rat
 
 You can change this window with the **`ExpirationInSeconds`** parameter:
 ```csharp title="Customizing expiration time"
-IdempotencyConfig.Builder()
+new IdempotencyConfigBuilder()
     .WithExpiration(TimeSpan.FromMinutes(5))
     .Build()
 ```
@@ -283,18 +270,16 @@ By default, we will return the same result as it returned before, however in thi
 
 With **`PayloadValidationJMESPath`**, you can provide an additional JMESPath expression to specify which part of the event body should be validated against previous idempotent invocations
 
-=== "App.java"
+=== "Function.cs"
 
     ```csharp
-   Idempotency.Config()
-    .WithPersistenceStore(DynamoDBPersistenceStore.Builder()
-        .WithTableName("TABLE_NAME")
-        .Build())
-    .WithConfig(IdempotencyConfig.Builder()
-        .WithEventKeyJmesPath("[userDetail, productId]")
-        .WithPayloadValidationJmesPath("amount")
-        .Build())
-    .Configure();
+    Idempotency.Configure(builder =>
+            builder
+                .WithOptions(optionsBuilder =>
+                    optionsBuilder
+                        .WithEventKeyJmesPath("[userDetail, productId]")
+                        .WithPayloadValidationJmesPath("amount"))
+                .UseDynamoDb("TABLE_NAME"));
     ```
 
 === "Example Event 1"
@@ -345,16 +330,14 @@ This means that we will throw **`IdempotencyKeyException`** if the evaluation of
     ```csharp
     public App() 
     {
-      Idempotency.Config()
-        .WithPersistenceStore(DynamoDBPersistenceStore.Builder()
-            .WithTableName("TABLE_NAME")
-            .Build())
-        .WithConfig(IdempotencyConfig.Builder()
-            // Requires "user"."uid" and "orderId" to be present
-            .WithEventKeyJmesPath("[user.uid, orderId]")
-            .WithThrowOnNoIdempotencyKey(true)
-            .Build())
-        .Configure();
+      Idempotency.Configure(builder =>
+            builder
+                .WithOptions(optionsBuilder =>
+                    optionsBuilder
+                        // Requires "user"."uid" and "orderId" to be present
+                        .WithEventKeyJmesPath("[user.uid, orderId]")
+                        .WithThrowOnNoIdempotencyKey(true))
+                .UseDynamoDb("TABLE_NAME"));
     }
 
     [Idempotent]
@@ -401,12 +384,12 @@ When creating the `DynamoDBPersistenceStore`, you can set a custom [`AmazonDynam
     {
         AmazonDynamoDBClient customClient = new AmazonDynamoDBClient(RegionEndpoint.APSouth1);
       
-        Idempotency.Config().WithPersistenceStore(
-            DynamoDBPersistenceStore.Builder()
-                .WithTableName("TABLE_NAME")
-                .WithDynamoDBClient(customClient)
-                .Build()
-        ).Configure();
+        Idempotency.Configure(builder => 
+            builder.UseDynamoDb(storeBuilder => 
+                storeBuilder.
+                    WithTableName("TABLE_NAME")
+                    .WithDynamoDBClient(customClient)
+            ));
     }
     ```
 
@@ -419,13 +402,12 @@ With this setting, we will save the idempotency key in the sort key instead of t
 You can optionally set a static value for the partition key using the `StaticPkValue` parameter.
 
 ```csharp title="Reusing a DynamoDB table that uses a composite primary key"
-Idempotency.Config()
-    .WithPersistenceStore(
-        DynamoDBPersistenceStore.Builder()
-            .WithTableName(("TABLE_NAME"))
+Idempotency.Configure(builder => 
+    builder.UseDynamoDb(storeBuilder => 
+        storeBuilder.
+            WithTableName("TABLE_NAME")
             .WithSortKeyAttr("sort_key")
-            .Build())
-    .Configure();
+    ));
 ```
 
 Data would then be stored in DynamoDB like this:
@@ -435,8 +417,6 @@ Data would then be stored in DynamoDB like this:
 | idempotency#MyLambdaFunction | 1e956ef7da78d0cb890be999aecc0c9e | 1636549553 | COMPLETED   | {"id": 12391, "message": "success"}  |
 | idempotency#MyLambdaFunction | 2b2cdb5f86361e97b4383087c1ffdf27 | 1636549571 | COMPLETED   | {"id": 527212, "message": "success"} |
 | idempotency#MyLambdaFunction | f091d2527ad1c78f05d54cc3f363be80 | 1636549585 | IN_PROGRESS |                                      |
-
-## Compatibility with other utilities
 
 ## Testing your code
 

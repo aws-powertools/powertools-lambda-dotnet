@@ -33,12 +33,11 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
     public override async Task InitializeAsync()
     {
         await base.InitializeAsync();
-        _dynamoDbPersistenceStore = DynamoDBPersistenceStore
-            .Builder()
+        _dynamoDbPersistenceStore = new DynamoDBPersistenceStoreBuilder()
             .WithTableName(TABLE_NAME)
             .WithDynamoDBClient(client)
             .Build();
-        _dynamoDbPersistenceStore.Configure(IdempotencyConfig.Builder().Build(),functionName: null);
+        _dynamoDbPersistenceStore.Configure(new IdempotencyConfigBuilder().Build(),functionName: null);
     }
     //putRecord
     [Fact]
@@ -175,7 +174,7 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
             Item = item
         });
         // enable payload validation
-        _dynamoDbPersistenceStore.Configure(IdempotencyConfig.Builder().WithPayloadValidationJmesPath("path").Build(),
+        _dynamoDbPersistenceStore.Configure(new IdempotencyConfigBuilder().WithPayloadValidationJmesPath("path").Build(),
             null);
 
         // Act
@@ -251,7 +250,7 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
                 BillingMode = BillingMode.PAY_PER_REQUEST
             };
             await client.CreateTableAsync(createTableRequest);
-            DynamoDBPersistenceStore persistenceStore = DynamoDBPersistenceStore.Builder()
+            DynamoDBPersistenceStore persistenceStore = new DynamoDBPersistenceStoreBuilder()
                 .WithTableName(TABLE_NAME_CUSTOM)
                 .WithDynamoDBClient(client)
                 .WithDataAttr("result")
@@ -262,7 +261,7 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
                 .WithStatusAttr("state")
                 .WithValidationAttr("valid")
                 .Build();
-            persistenceStore.Configure(IdempotencyConfig.Builder().Build(),functionName: null);
+            persistenceStore.Configure(new IdempotencyConfigBuilder().Build(),functionName: null);
 
             DateTimeOffset now = DateTimeOffset.UtcNow;
             DataRecord record = new DataRecord(
@@ -338,7 +337,7 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
             // Arrange
             Environment.SetEnvironmentVariable(Constants.IDEMPOTENCY_DISABLED_ENV, "true");
             
-            DynamoDBPersistenceStore store = DynamoDBPersistenceStore.Builder().WithTableName(TABLE_NAME).Build();
+            DynamoDBPersistenceStore store = new DynamoDBPersistenceStoreBuilder().WithTableName(TABLE_NAME).Build();
             
             // Act
             Func<Task> act = () => store.GetRecord("fake");

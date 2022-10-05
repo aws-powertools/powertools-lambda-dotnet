@@ -17,10 +17,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.Idempotency.Persistence;
 using Newtonsoft.Json.Linq;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
@@ -31,18 +31,18 @@ public class IdempotencyFunction
 
     public IdempotencyFunction(AmazonDynamoDBClient client)
     {
-        AWS.Lambda.Powertools.Idempotency.Idempotency.Config()
-            .WithConfig(
-                IdempotencyConfig.Builder()
-                    .WithEventKeyJmesPath("powertools_json(Body).address")
-                    .Build())
-            .WithPersistenceStore(
-                DynamoDBPersistenceStore.Builder()
-                    .WithTableName("idempotency_table")
-                    .WithDynamoDBClient(client)
-                    .Build()
-            ).Configure();
+        Idempotency.Configure(builder =>
+            builder
+                .WithOptions(optionsBuilder =>
+                    optionsBuilder.WithEventKeyJmesPath("powertools_json(Body).address"))
+                .UseDynamoDb(storeBuilder =>
+                    storeBuilder
+                        .WithTableName("idempotency_table")
+                        .WithDynamoDBClient(client)
+                ));
 
+        
+        
     }
 
     [Idempotent]
@@ -66,7 +66,7 @@ public class IdempotencyFunction
         try
         {
             string address = JToken.Parse(apigProxyEvent.Body)["address"].Value<string>();
-            string pageContents = await getPageContents(address);
+            string pageContents = await GetPageContents(address);
             string output = $"{{ \"message\": \"hello world\", \"location\": \"{pageContents}\" }}";
 
             return new APIGatewayProxyResponse
@@ -77,7 +77,7 @@ public class IdempotencyFunction
             };
 
         }
-        catch (IOException e)
+        catch (IOException)
         {
             return new APIGatewayProxyResponse
             {
@@ -89,7 +89,7 @@ public class IdempotencyFunction
     }
     
     // we could actually also put the @Idempotent annotation here
-    private async Task<string> getPageContents(string address)
+    private async Task<string> GetPageContents(string address)
     {
         HttpClient client = new HttpClient();
         using HttpResponseMessage response = await client.GetAsync(address);

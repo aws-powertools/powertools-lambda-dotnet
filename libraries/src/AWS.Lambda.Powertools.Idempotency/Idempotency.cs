@@ -23,39 +23,27 @@ namespace AWS.Lambda.Powertools.Idempotency;
 ///     The persistence layer to use for persisting the request and response of the function (mandatory).
 ///     The general configuration for idempotency (optional, see {@link IdempotencyConfig.Builder} methods to see defaults values.
 /// Use it before the function handler get called.
-/// Example: Idempotency.Config().WithPersistenceStore(...).Configure();
+/// Example: Idempotency.Configure(builder => builder.WithPersistenceStore(...));
 /// </summary>
 public class Idempotency 
 {
-    private IdempotencyConfig _idempotencyConfig;
-    private BasePersistenceStore _persistenceStore;
+    public IdempotencyOptions IdempotencyOptions { get; private set; }
+    public BasePersistenceStore PersistenceStore { get; private set; }
 
     private Idempotency()
     {
     }
+    
+    
 
-    public IdempotencyConfig GetIdempotencyConfig()
+    private void SetConfig(IdempotencyOptions options)
     {
-        return _idempotencyConfig;
-    }
-
-    public BasePersistenceStore GetPersistenceStore()
-    {
-        if (_persistenceStore == null)
-        {
-            throw new NullReferenceException("Persistence Store is null, did you call 'Configure()'?");
-        }
-        return _persistenceStore;
-    }
-
-    private void SetConfig(IdempotencyConfig config)
-    {
-        _idempotencyConfig = config;
+        IdempotencyOptions = options;
     }
 
     private void SetPersistenceStore(BasePersistenceStore persistenceStore)
     {
-        _persistenceStore = persistenceStore;
+        PersistenceStore = persistenceStore;
     }
 
     private static class Holder {
@@ -65,49 +53,70 @@ public class Idempotency
     public static Idempotency Instance() => Holder.IdempotencyInstance;
 
     /// <summary>
-    /// Acts like a builder that can be used to configure Idempotency
+    /// Use this method to configure persistence layer (mandatory) and idempotency options (optional)
     /// </summary>
     /// <returns></returns>
-    public static IdempotencyBuilder Config()
+    public static void Configure(Action<IdempotencyBuilder> configurationAction)
     {
-        return new IdempotencyBuilder();
+        var builder = new IdempotencyBuilder();
+        configurationAction(builder);
+        if (builder.Store == null)
+        {
+            throw new NullReferenceException("Persistence Layer is null, configure one with 'WithPersistenceStore()'");
+        }
+        if (builder.Options != null)
+        {
+            Instance().SetConfig(builder.Options);
+        }
+        else
+        {
+            Instance().SetConfig(new IdempotencyConfigBuilder().Build());
+        }
+        Instance().SetPersistenceStore(builder.Store);
     }
 
     public class IdempotencyBuilder {
 
-        private IdempotencyConfig _config;
+        private IdempotencyOptions _options;
         private BasePersistenceStore _store;
-        
-        /// <summary>
-        /// Use this method after configuring persistence layer (mandatory) and idem potency configuration (optional)
-        /// </summary>
-        /// <exception cref="NullReferenceException"></exception>
-        public void Configure()
-        {
-            if (_store == null)
-            {
-                throw new NullReferenceException("Persistence Layer is null, configure one with 'WithPersistenceStore()'");
-            }
-            if (_config == null)
-            {
-                _config = IdempotencyConfig.Builder().Build();
-            }
-            Idempotency.Instance().SetConfig(_config);
-            Idempotency.Instance().SetPersistenceStore(_store);
-        }
+
+        public IdempotencyOptions Options => _options;
+        public BasePersistenceStore Store => _store;
 
         public IdempotencyBuilder WithPersistenceStore(BasePersistenceStore persistenceStore)
         {
-            this._store = persistenceStore;
+            _store = persistenceStore;
+            return this;
+        }
+        public IdempotencyBuilder UseDynamoDb(Action<DynamoDBPersistenceStoreBuilder> builderAction)
+        {
+            DynamoDBPersistenceStoreBuilder builder =
+                new DynamoDBPersistenceStoreBuilder();
+            builderAction(builder);
+            _store = builder.Build();
             return this;
         }
 
-        public IdempotencyBuilder WithConfig(IdempotencyConfig config)
+        public IdempotencyBuilder UseDynamoDb(string tableName)
         {
-            this._config = config;
+            DynamoDBPersistenceStoreBuilder builder =
+                new DynamoDBPersistenceStoreBuilder();
+            _store = builder.WithTableName(tableName).Build();
+            return this;
+        }
+
+        public IdempotencyBuilder WithOptions(Action<IdempotencyConfigBuilder> builderAction)
+        {
+            IdempotencyConfigBuilder builder = new IdempotencyConfigBuilder();
+            builderAction(builder);
+            _options = builder.Build();
+            return this;
+        }
+        
+        public IdempotencyBuilder WithOptions(IdempotencyOptions options)
+        {
+            _options = options;
             return this;
         }
     }
-
-
 }
