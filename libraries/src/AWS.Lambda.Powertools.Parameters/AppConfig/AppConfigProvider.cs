@@ -13,8 +13,10 @@
  * permissions and limitations under the License.
  */
 
+using Amazon;
 using Amazon.AppConfigData;
 using Amazon.AppConfigData.Model;
+using Amazon.Runtime;
 using AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
@@ -27,10 +29,10 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 {
     private IAmazonAppConfigData? _client;
     private readonly IDateTimeWrapper _dateTimeWrapper;
-
     private string _pollConfigurationToken = string.Empty;
     private DateTime _nextAllowedPollTime = DateTime.MinValue;
     private IDictionary<string, string> _lastConfig = new Dictionary<string, string>();
+
     private IAmazonAppConfigData Client => _client ??= new AmazonAppConfigDataClient();
 
     public AppConfigProvider()
@@ -63,6 +65,75 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     public AppConfigProvider UseClient(IAmazonAppConfigData client)
     {
         _client = client;
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(RegionEndpoint region)
+    {
+        _client = new AmazonAppConfigDataClient(region);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(AmazonAppConfigDataConfig config)
+    {
+        _client = new AmazonAppConfigDataClient(config);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(AWSCredentials credentials)
+    {
+        _client = new AmazonAppConfigDataClient(credentials);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
+    {
+        _client = new AmazonAppConfigDataClient(credentials, region);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(AWSCredentials credentials, AmazonAppConfigDataConfig config)
+    {
+        _client = new AmazonAppConfigDataClient(credentials, config);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
+    {
+        _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
+    {
+        _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, region);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey,
+        AmazonAppConfigDataConfig config)
+    {
+        _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, config);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
+    {
+        _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
+        RegionEndpoint region)
+    {
+        _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, region);
+        return this;
+    }
+
+    public AppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
+        AmazonAppConfigDataConfig config)
+    {
+        _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);
         return this;
     }
 

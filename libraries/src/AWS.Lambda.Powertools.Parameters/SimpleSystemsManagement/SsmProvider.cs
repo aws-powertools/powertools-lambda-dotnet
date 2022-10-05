@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using Amazon;
+using Amazon.Runtime;
 using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
 using AWS.Lambda.Powertools.Parameters.Configuration;
@@ -24,11 +26,81 @@ namespace AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>
 {
     private IAmazonSimpleSystemsManagement? _client;
+
     private IAmazonSimpleSystemsManagement Client => _client ??= new AmazonSimpleSystemsManagementClient();
 
     public SsmProvider UseClient(IAmazonSimpleSystemsManagement client)
     {
         _client = client;
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(RegionEndpoint region)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(region);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(AmazonSimpleSystemsManagementConfig config)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(config);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(AWSCredentials credentials)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(credentials);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(credentials, region);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(AWSCredentials credentials, AmazonSimpleSystemsManagementConfig config)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(credentials, config);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(awsAccessKeyId, awsSecretAccessKey);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(awsAccessKeyId, awsSecretAccessKey, region);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey,
+        AmazonSimpleSystemsManagementConfig config)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(awsAccessKeyId, awsSecretAccessKey, config);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
+        RegionEndpoint region)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, region);
+        return this;
+    }
+
+    public SsmProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
+        AmazonSimpleSystemsManagementConfig config)
+    {
+        _client = new AmazonSimpleSystemsManagementClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);
         return this;
     }
 

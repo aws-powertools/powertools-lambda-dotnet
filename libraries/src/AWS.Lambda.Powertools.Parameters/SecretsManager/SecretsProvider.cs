@@ -14,6 +14,8 @@
  */
 
 using System.Text;
+using Amazon;
+using Amazon.Runtime;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using AWS.Lambda.Powertools.Parameters.Configuration;
@@ -31,6 +33,72 @@ public class SecretsProvider : ParameterProvider
     public SecretsProvider UseClient(IAmazonSecretsManager client)
     {
         _client = client;
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(RegionEndpoint region)
+    {
+        _client = new AmazonSecretsManagerClient(region);
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(AmazonSecretsManagerConfig config)
+    {
+        _client = new AmazonSecretsManagerClient(config);
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(AWSCredentials credentials)
+    {
+        _client = new AmazonSecretsManagerClient(credentials);
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
+    {
+        _client = new AmazonSecretsManagerClient(credentials, region);
+        return this;
+    }
+
+    public SecretsProvider ConfigureClient(AWSCredentials credentials, AmazonSecretsManagerConfig config)
+    {
+        _client = new AmazonSecretsManagerClient(credentials, config);
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
+    {
+        _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey);
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
+    {
+        _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, region);
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, AmazonSecretsManagerConfig config)
+    {
+        _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, config);
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
+    {
+        _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, RegionEndpoint region)
+    {
+        _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, region);
+        return this;
+    }
+    
+    public SecretsProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, AmazonSecretsManagerConfig config)
+    {
+        _client = new AmazonSecretsManagerClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);
         return this;
     }
 

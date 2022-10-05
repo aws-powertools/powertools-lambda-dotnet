@@ -13,8 +13,10 @@
  * permissions and limitations under the License.
  */
 
+using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Amazon.Runtime;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Provider;
 
@@ -23,16 +25,82 @@ namespace AWS.Lambda.Powertools.Parameters.DynamoDB;
 public class DynamoDBProvider : ParameterProvider
 {
     private IAmazonDynamoDB? _client;
-    private IAmazonDynamoDB Client => _client ??= new AmazonDynamoDBClient();
-
     private string? _defaultTableName;
     private string? _defaultPrimaryKeyAttribute;
     private string? _defaultSortKeyAttribute;
     private string? _defaultValueAttribute;
-
+    
+    private IAmazonDynamoDB Client => _client ??= new AmazonDynamoDBClient();
+    
     public DynamoDBProvider UseClient(IAmazonDynamoDB client)
     {
         _client = client;
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(RegionEndpoint region)
+    {
+        _client = new AmazonDynamoDBClient(region);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(AmazonDynamoDBConfig config)
+    {
+        _client = new AmazonDynamoDBClient(config);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(AWSCredentials credentials)
+    {
+        _client = new AmazonDynamoDBClient(credentials);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
+    {
+        _client = new AmazonDynamoDBClient(credentials, region);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(AWSCredentials credentials, AmazonDynamoDBConfig config)
+    {
+        _client = new AmazonDynamoDBClient(credentials, config);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
+    {
+        _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
+    {
+        _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, region);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, AmazonDynamoDBConfig config)
+    {
+        _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, config);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
+    {
+        _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, RegionEndpoint region)
+    {
+        _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, region);
+        return this;
+    }
+    
+    public DynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, AmazonDynamoDBConfig config)
+    {
+        _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);
         return this;
     }
 
