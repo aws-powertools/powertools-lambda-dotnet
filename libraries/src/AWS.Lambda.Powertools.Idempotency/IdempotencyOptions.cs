@@ -99,7 +99,7 @@ public class IdempotencyOptionsBuilder
     private string _payloadValidationJmesPath;
     private bool _throwOnNoIdempotencyKey = false;
     private string _hashFunction = "MD5";
-    private ILog _log = new ConsoleLog();
+    private ILog _log = new NullLog();
 
     /// <summary>
     /// Initialize and return an instance of IdempotencyConfig.
