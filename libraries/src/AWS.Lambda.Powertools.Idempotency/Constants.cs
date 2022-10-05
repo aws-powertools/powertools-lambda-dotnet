@@ -15,8 +15,20 @@
 
 namespace AWS.Lambda.Powertools.Idempotency;
 
-public class Constants {
-    public static readonly string LAMBDA_FUNCTION_NAME_ENV = "AWS_LAMBDA_FUNCTION_NAME";
-    public static readonly string AWS_REGION_ENV = "AWS_REGION";
-    public static readonly string IDEMPOTENCY_DISABLED_ENV = "POWERTOOLS_IDEMPOTENCY_DISABLED";
+/// <summary>
+///     Class Constants
+/// </summary>
+internal class Constants {
+    /// <summary>
+    /// Constant for LAMBDA_FUNCTION_NAME_ENV environment variable
+    /// </summary>
+    internal const string LambdaFunctionNameEnv = "AWS_LAMBDA_FUNCTION_NAME";
+    /// <summary>
+    /// Constant for AWS_REGION_ENV environment variable
+    /// </summary>
+    internal const string AwsRegionEnv = "AWS_REGION";
+    /// <summary>
+    /// Constant for IDEMPOTENCY_DISABLED_ENV environment variable
+    /// </summary>
+    internal const string IdempotencyDisabledEnv = "POWERTOOLS_IDEMPOTENCY_DISABLED";
 }

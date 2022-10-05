@@ -48,7 +48,7 @@ public class IdempotentAspect
 
     private static async Task<T> WrapAsync<T>(Func<object[], object> target, object[] args, MethodBase method)
     {
-        string? idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IDEMPOTENCY_DISABLED_ENV);
+        string? idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv);
         if (idempotencyDisabledEnv is "true")
         {
             return await (Task<T>)target(args);

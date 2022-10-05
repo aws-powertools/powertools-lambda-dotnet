@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
@@ -157,7 +158,7 @@ public class IdempotentAspectTests
         {
             // Arrange
             var store = new Mock<BasePersistenceStore>();
-            Environment.SetEnvironmentVariable(Constants.IDEMPOTENCY_DISABLED_ENV, "true");
+            Environment.SetEnvironmentVariable(Constants.IdempotencyDisabledEnv, "true");
             
             Idempotency.Configure(builder =>
                 builder
@@ -178,7 +179,7 @@ public class IdempotentAspectTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable(Constants.IDEMPOTENCY_DISABLED_ENV, "false");
+            Environment.SetEnvironmentVariable(Constants.IdempotencyDisabledEnv, "false");
         }
     }
 }

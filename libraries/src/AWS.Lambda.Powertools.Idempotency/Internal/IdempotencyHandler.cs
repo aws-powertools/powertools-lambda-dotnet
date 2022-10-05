@@ -23,9 +23,9 @@ using Newtonsoft.Json.Linq;
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal;
 
-public class IdempotencyHandler<T>
+internal class IdempotencyHandler<T>
 {
-    private static readonly int MAX_RETRIES = 2;
+    private const int MaxRetries = 2;
 
     private readonly Func<object[], object> _target;
     private readonly object[] _args;
@@ -65,7 +65,7 @@ public class IdempotencyHandler<T>
             }
             catch (IdempotencyInconsistentStateException)
             {
-                if (i == MAX_RETRIES)
+                if (i == MaxRetries)
                 {
                     throw;
                 }

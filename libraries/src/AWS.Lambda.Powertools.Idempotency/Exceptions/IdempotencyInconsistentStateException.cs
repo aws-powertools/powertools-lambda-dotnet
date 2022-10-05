@@ -17,16 +17,25 @@ using System;
 
 namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 
+/// <summary>
+/// Exception can happen under rare but expected cases
+/// when persistent state changes in the small-time between put and get requests.
+/// </summary>
 public class IdempotencyInconsistentStateException : Exception
 {
+    /// <summary>
+    /// Creates a new IdempotencyInconsistentStateException 
+    /// </summary>
     public IdempotencyInconsistentStateException()
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyInconsistentStateException(string? message) : base(message)
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyInconsistentStateException(string? message, Exception? innerException) : base(message, innerException)
     {
     }

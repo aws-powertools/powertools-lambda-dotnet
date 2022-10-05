@@ -18,13 +18,18 @@ using Newtonsoft.Json.Linq;
 
 namespace AWS.Lambda.Powertools.Idempotency.Serialization;
 
+/// <summary>
+/// Creates JMESPath function <c>powertools_json()</c> to treat the payload as a JSON object rather than a string.
+/// </summary>
 public class JsonFunction : JmesPathFunction
 {
-    public JsonFunction() 
+    /// <inheritdoc />
+    public JsonFunction()
         : base("powertools_json", 1)
     {
     }
 
+    /// <inheritdoc />
     public override JToken Execute(params JmesPathFunctionArgument[] args)
     {
         System.Diagnostics.Debug.Assert(args.Length == 1);

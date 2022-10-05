@@ -17,16 +17,27 @@ using System;
 
 namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 
+/// <summary>
+/// This exception is thrown when the same payload is sent
+/// while the previous one was not yet fully stored in the persistence layer (marked as COMPLETED).
+/// Implements the <see cref="System.Exception" />
+/// </summary>
+/// <seealso cref="System.Exception" />
 public class IdempotencyAlreadyInProgressException: Exception
 {
+    /// <summary>
+    /// Creates a new IdempotencyAlreadyInProgressException
+    /// </summary>
     public IdempotencyAlreadyInProgressException()
     {
     }
-
+    
+    /// <inheritdoc />
     public IdempotencyAlreadyInProgressException(string? message) : base(message)
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyAlreadyInProgressException(string? message, Exception? innerException) : base(message, innerException)
     {
     }

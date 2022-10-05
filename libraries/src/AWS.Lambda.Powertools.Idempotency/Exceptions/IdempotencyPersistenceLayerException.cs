@@ -17,16 +17,24 @@ using System;
 
 namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 
+/// <summary>
+/// Exception thrown when a technical error occurred with the persistence layer (eg. insertion, deletion, ... in database)
+/// </summary>
 public class IdempotencyPersistenceLayerException : Exception
 {
+    /// <summary>
+    /// Creates a new IdempotencyPersistenceLayerException 
+    /// </summary>
     public IdempotencyPersistenceLayerException()
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyPersistenceLayerException(string? message) : base(message)
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyPersistenceLayerException(string? message, Exception? innerException) : base(message, innerException)
     {
     }

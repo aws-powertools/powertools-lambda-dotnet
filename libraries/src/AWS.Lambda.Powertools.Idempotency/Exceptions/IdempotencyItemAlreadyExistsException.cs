@@ -17,16 +17,24 @@ using System;
 
 namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 
+/// <summary>
+/// Exception thrown when trying to store an item which already exists.
+/// </summary>
 public class IdempotencyItemAlreadyExistsException : Exception
 {
+    /// <summary>
+    /// Creates a new IdempotencyItemAlreadyExistsException
+    /// </summary>
     public IdempotencyItemAlreadyExistsException()
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyItemAlreadyExistsException(string? message) : base(message)
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyItemAlreadyExistsException(string? message, Exception? innerException) : base(message, innerException)
     {
     }

@@ -17,7 +17,7 @@ using System;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Model;
 
-public class Product
+public class Product : IEquatable<Product>
 {
     public long Id { get; }
     public string Name { get; }
@@ -30,12 +30,16 @@ public class Product
         Price = price;
     }
 
-    protected bool Equals(Product other)
+    public bool Equals(Product other)
     {
+        if (other == null)
+        {
+            return false;
+        }
         return Id == other.Id && Name == other.Name && Price.Equals(other.Price);
     }
 
-    public override bool Equals(object? obj)
+    public override bool Equals(object obj)
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;

@@ -17,16 +17,24 @@ using System;
 
 namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 
+/// <summary>
+/// Exception thrown when the item was not found in the persistence store.
+/// </summary>
 public class IdempotencyItemNotFoundException : Exception
 {
+    /// <summary>
+    /// Creates a new IdempotencyItemNotFoundException 
+    /// </summary>
     public IdempotencyItemNotFoundException()
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyItemNotFoundException(string? message) : base(message)
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyItemNotFoundException(string? message, Exception? innerException) : base(message, innerException)
     {
     }

@@ -19,6 +19,38 @@ using AWS.Lambda.Powertools.Idempotency.Internal;
 
 namespace AWS.Lambda.Powertools.Idempotency;
 
+/// <summary>
+/// Idempotent is used to signal that the annotated method is idempotent:
+/// Calling this method one or multiple times with the same parameter will always return the same result.
+/// This annotation can be placed on any method of a Lambda function
+/// <code>
+/// [Idempotent]
+/// public Task&lt;string&gt; FunctionHandler(string input, ILambdaContext context)
+/// {
+///  return Task.FromResult(input.ToUpper());
+/// }
+/// </code>
+///     Environment variables                                                                         <br/>
+///     ---------------------                                                                         <br/> 
+///     <list type="table">
+///         <listheader>
+///           <term>Variable name</term>
+///           <description>Description</description>
+///         </listheader>
+///         <item>
+///             <term>AWS_LAMBDA_FUNCTION_NAME</term>
+///             <description>string, function name</description>
+///         </item>
+///         <item>
+///             <term>AWS_REGION</term>
+///             <description>string, AWS region</description>
+///         </item>
+///         <item>
+///             <term>POWERTOOLS_IDEMPOTENCY_DISABLED</term>
+///             <description>string, Enable or disable the Idempotency</description>
+///         </item>
+///     </list>
+/// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 [Injection(typeof(IdempotentAspect), Inherited = true)]
 public class IdempotentAttribute : Attribute

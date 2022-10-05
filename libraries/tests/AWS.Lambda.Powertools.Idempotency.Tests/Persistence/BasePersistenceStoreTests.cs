@@ -76,7 +76,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
-        persistenceStore.Configure(new IdempotencyConfigBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
         
         DateTimeOffset now = DateTimeOffset.UtcNow;
         
@@ -100,7 +100,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithEventKeyJmesPath("powertools_json(Body).id")
             .Build(), "myfunc");
 
@@ -127,7 +127,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithEventKeyJmesPath("unavailable")
             .WithThrowOnNoIdempotencyKey(true) // should throw
             .Build(), "");
@@ -151,7 +151,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithEventKeyJmesPath("unavailable")
             .Build(), "");
         
@@ -174,7 +174,7 @@ public class BasePersistenceStoreTests
         var request = LoadApiGatewayProxyRequest();
         
         LRUCache<string, DataRecord> cache = new ((int) 2);
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true)
             .WithEventKeyJmesPath("powertools_json(Body).id")
             .Build(), null, cache);
@@ -206,7 +206,7 @@ public class BasePersistenceStoreTests
         var request = LoadApiGatewayProxyRequest();
         
         LRUCache<string, DataRecord> cache = new ((int) 2);
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithEventKeyJmesPath("powertools_json(Body).id")
             .WithUseLocalCache(true)
             .WithExpiration(TimeSpan.FromSeconds(2))
@@ -240,7 +240,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new ((int) 2);
-        persistenceStore.Configure(new IdempotencyConfigBuilder().Build(), null, cache);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, cache);
 
         Product product = new Product(34543, "product", 42);
         
@@ -268,7 +268,7 @@ public class BasePersistenceStoreTests
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new ((int) 2);
         
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), null, cache);
 
         Product product = new Product(34543, "product", 42);
@@ -300,7 +300,7 @@ public class BasePersistenceStoreTests
         var request = LoadApiGatewayProxyRequest();
         
         LRUCache<string, DataRecord> cache = new((int) 2);
-        persistenceStore.Configure(new IdempotencyConfigBuilder().Build(), "myfunc", cache);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "myfunc", cache);
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
         
@@ -322,7 +322,7 @@ public class BasePersistenceStoreTests
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new((int) 2);
         
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), "myfunc", cache);
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -351,7 +351,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new((int) 2);
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), "myfunc", cache);
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -381,13 +381,12 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
                 .WithEventKeyJmesPath("powertools_json(Body).id")
                 .WithPayloadValidationJmesPath("powertools_json(Body).message")
                 .Build(),
             "myfunc");
-
-        var validationHash = "different hash"; // "Lambda rocks" ==> 70c24d88041893f7fbab4105b76fd9e1
+        
         DateTimeOffset now = DateTimeOffset.UtcNow;
         
         // Act
@@ -405,7 +404,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
-        persistenceStore.Configure(new IdempotencyConfigBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
 
         // Act
         await persistenceStore.DeleteRecord(JToken.FromObject(request), new ArithmeticException());
@@ -421,7 +420,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new ((int) 2);
-        persistenceStore.Configure(new IdempotencyConfigBuilder()
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), null, cache);
 
         cache.Set("testFunction#36e3de9a3270f82fb957c645178dfab9",
@@ -443,7 +442,7 @@ public class BasePersistenceStoreTests
     {
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
-        persistenceStore.Configure(new IdempotencyConfigBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
         string expectedHash = "70c24d88041893f7fbab4105b76fd9e1"; // MD5(Lambda rocks)
         
         // Act
@@ -458,7 +457,7 @@ public class BasePersistenceStoreTests
     {
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
-        persistenceStore.Configure(new IdempotencyConfigBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
         Product product = new Product(42, "Product", 12);
         string expectedHash = "87dd2e12074c65c9bac728795a6ebb45"; // MD5({"Id":42,"Name":"Product","Price":12.0})
         
@@ -474,7 +473,7 @@ public class BasePersistenceStoreTests
     {
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
-        persistenceStore.Configure(new IdempotencyConfigBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
         string expectedHash = "bb84c94278119c8838649706df4db42b"; // MD5(256.42)
         
         // Act

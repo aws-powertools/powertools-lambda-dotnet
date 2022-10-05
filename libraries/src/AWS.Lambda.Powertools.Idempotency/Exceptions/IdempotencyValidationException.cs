@@ -17,16 +17,25 @@ using System;
 
 namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 
+/// <summary>
+/// Exception thrown only when using <see cref="IdempotencyOptions.PayloadValidationJmesPath"/> is configured
+/// and the payload changed between two calls (but with the same idempotency key).
+/// </summary>
 public class IdempotencyValidationException : Exception
 {
+    /// <summary>
+    /// Creates a new IdempotencyValidationException
+    /// </summary>
     public IdempotencyValidationException()
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyValidationException(string? message) : base(message)
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyValidationException(string? message, Exception? innerException) : base(message, innerException)
     {
     }

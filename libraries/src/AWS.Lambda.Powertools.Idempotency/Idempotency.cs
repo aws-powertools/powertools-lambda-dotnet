@@ -21,20 +21,25 @@ namespace AWS.Lambda.Powertools.Idempotency;
 /// <summary>
 /// Holds the configuration for idempotency:
 ///     The persistence layer to use for persisting the request and response of the function (mandatory).
-///     The general configuration for idempotency (optional, see {@link IdempotencyConfig.Builder} methods to see defaults values.
+///     The general configurations for idempotency (optional, see {@link IdempotencyConfig.Builder} methods to see defaults values.
 /// Use it before the function handler get called.
 /// Example: Idempotency.Configure(builder => builder.WithPersistenceStore(...));
 /// </summary>
 public class Idempotency 
 {
+    /// <summary>
+    /// The general configurations for the idempotency
+    /// </summary>
     public IdempotencyOptions IdempotencyOptions { get; private set; }
+    
+    /// <summary>
+    /// The persistence layer to use for persisting the request and response of the function
+    /// </summary>
     public BasePersistenceStore PersistenceStore { get; private set; }
 
     private Idempotency()
     {
     }
-    
-    
 
     private void SetConfig(IdempotencyOptions options)
     {
@@ -70,24 +75,38 @@ public class Idempotency
         }
         else
         {
-            Instance().SetConfig(new IdempotencyConfigBuilder().Build());
+            Instance().SetConfig(new IdempotencyOptionsBuilder().Build());
         }
         Instance().SetPersistenceStore(builder.Store);
     }
 
-    public class IdempotencyBuilder {
-
+    /// <summary>
+    /// Create a builder that can be used to configure and create <see cref="Idempotency"/>
+    /// </summary>
+    public class IdempotencyBuilder
+    {
         private IdempotencyOptions _options;
         private BasePersistenceStore _store;
 
-        public IdempotencyOptions Options => _options;
-        public BasePersistenceStore Store => _store;
+        internal IdempotencyOptions Options => _options;
+        internal BasePersistenceStore Store => _store;
 
+        /// <summary>
+        /// Set the persistence layer to use for storing the request and response
+        /// </summary>
+        /// <param name="persistenceStore"></param>
+        /// <returns></returns>
         public IdempotencyBuilder WithPersistenceStore(BasePersistenceStore persistenceStore)
         {
             _store = persistenceStore;
             return this;
         }
+
+        /// <summary>
+        /// Configure Idempotency to use DynamoDBPersistenceStore
+        /// </summary>
+        /// <param name="builderAction">The builder being used to configure the <see cref="BasePersistenceStore"/></param>
+        /// <returns></returns>
         public IdempotencyBuilder UseDynamoDb(Action<DynamoDBPersistenceStoreBuilder> builderAction)
         {
             DynamoDBPersistenceStoreBuilder builder =
@@ -97,6 +116,11 @@ public class Idempotency
             return this;
         }
 
+        /// <summary>
+        /// Configure Idempotency to use DynamoDBPersistenceStore
+        /// </summary>
+        /// <param name="tableName">The DynamoDb table name</param>
+        /// <returns></returns>
         public IdempotencyBuilder UseDynamoDb(string tableName)
         {
             DynamoDBPersistenceStoreBuilder builder =
@@ -105,14 +129,24 @@ public class Idempotency
             return this;
         }
 
-        public IdempotencyBuilder WithOptions(Action<IdempotencyConfigBuilder> builderAction)
+        /// <summary>
+        /// Set the idempotency configurations
+        /// </summary>
+        /// <param name="builderAction">The builder being used to configure the <see cref="IdempotencyOptions"/>.</param>
+        /// <returns></returns>
+        public IdempotencyBuilder WithOptions(Action<IdempotencyOptionsBuilder> builderAction)
         {
-            IdempotencyConfigBuilder builder = new IdempotencyConfigBuilder();
+            IdempotencyOptionsBuilder builder = new IdempotencyOptionsBuilder();
             builderAction(builder);
             _options = builder.Build();
             return this;
         }
-        
+
+        /// <summary>
+        /// Set the default idempotency configurations
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
         public IdempotencyBuilder WithOptions(IdempotencyOptions options)
         {
             _options = options;

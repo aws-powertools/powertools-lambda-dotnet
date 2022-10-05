@@ -13,9 +13,11 @@
  * permissions and limitations under the License.
  */
 
-//TODO: Replace with core PowerTools logging
 namespace AWS.Lambda.Powertools.Idempotency.Output;
 
+/// <summary>
+/// Implemented by objects which record internal details of idempotency
+/// </summary>
 public interface ILog
 {
     /// <summary>

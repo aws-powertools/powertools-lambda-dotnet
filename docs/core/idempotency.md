@@ -191,7 +191,7 @@ When using DynamoDB as a persistence layer, you can alter the attribute names by
 Idempotency behavior can be further configured with **`IdempotencyConfig`** using a builder:
 
 ```csharp
-new IdempotencyConfigBuilder()
+new IdempotencyOptionsBuilder()
     .WithEventKeyJmesPath("id")
     .WithPayloadValidationJmesPath("paymentId")
     .WithThrowOnNoIdempotencyKey(true)
@@ -232,7 +232,7 @@ This is a locking mechanism for correctness. Since we don't know the result from
 
 You can enable it as seen before with:
 ```csharp title="Enable local cache"
-    new IdempotencyConfigBuilder()
+    new IdempotencyOptionsBuilder()
         .WithUseLocalCache(true)
         .Build()
 ```
@@ -251,7 +251,7 @@ In most cases, it is not desirable to store the idempotency records forever. Rat
 
 You can change this window with the **`ExpirationInSeconds`** parameter:
 ```csharp title="Customizing expiration time"
-new IdempotencyConfigBuilder()
+new IdempotencyOptionsBuilder()
     .WithExpiration(TimeSpan.FromMinutes(5))
     .Build()
 ```

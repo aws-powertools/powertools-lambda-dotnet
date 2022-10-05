@@ -23,6 +23,10 @@ using AWS.Lambda.Powertools.Idempotency.Exceptions;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 
+/// <summary>
+/// DynamoDB version of the <see cref="BasePersistenceStore"/>. Will store idempotency data in DynamoDB.
+/// </summary>
+// ReSharper disable once InconsistentNaming
 public class DynamoDBPersistenceStore : BasePersistenceStore
 {
     private readonly string _tableName;
@@ -33,7 +37,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     private readonly string _statusAttr;
     private readonly string _dataAttr;
     private readonly string _validationAttr;
-    private readonly AmazonDynamoDBClient _dynamoDbClient;
+    private readonly AmazonDynamoDBClient? _dynamoDbClient;
 
     internal DynamoDBPersistenceStore(string tableName,
         string keyAttr,
@@ -43,7 +47,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         string statusAttr,
         string dataAttr,
         string validationAttr,
-        AmazonDynamoDBClient client)
+        AmazonDynamoDBClient? client)
     {
         _tableName = tableName;
         _keyAttr = keyAttr;
@@ -60,12 +64,12 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         } 
         else 
         {
-            string? idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IDEMPOTENCY_DISABLED_ENV);
+            string? idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv);
             if (idempotencyDisabledEnv == null || idempotencyDisabledEnv.Equals("false")) 
             {
                 AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
                 {
-                    RegionEndpoint = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable(Constants.AWS_REGION_ENV))
+                    RegionEndpoint = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable(Constants.AwsRegionEnv))
                 };
                 _dynamoDbClient = new AmazonDynamoDBClient(clientConfig);
             } else {
@@ -77,6 +81,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     }
 
 
+    /// <inheritdoc />
     public override async Task<DataRecord> GetRecord(string idempotencyKey)
     {
         var getItemRequest = new GetItemRequest()
@@ -85,7 +90,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
             ConsistentRead = true,
             Key = GetKey(idempotencyKey)
         };
-        GetItemResponse response = await _dynamoDbClient.GetItemAsync(getItemRequest);
+        GetItemResponse response = await _dynamoDbClient!.GetItemAsync(getItemRequest);
 
         if (!response.IsItemSet)
         {
@@ -96,6 +101,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     }
 
 
+    /// <inheritdoc />
     public override async Task PutRecord(DataRecord record, DateTimeOffset now)
     {
         Dictionary<String, AttributeValue> item = new(GetKey(record.IdempotencyKey));
@@ -131,7 +137,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
                     {":now", new AttributeValue() {N = now.ToUnixTimeSeconds().ToString()}}
                 }
             };
-            await _dynamoDbClient.PutItemAsync(request);
+            await _dynamoDbClient!.PutItemAsync(request);
         }
         catch (ConditionalCheckFailedException e)
         {
@@ -140,8 +146,9 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
                 "Failed to put record for already existing idempotency key: " + record.IdempotencyKey, e);
         }
     }
-    
-    
+
+
+    /// <inheritdoc />
     public override async Task UpdateRecord(DataRecord record) 
     {
         Log.WriteDebug("Updating record for idempotency key: {0}", record.IdempotencyKey);
@@ -176,9 +183,10 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
             ExpressionAttributeNames = expressionAttributeNames,
             ExpressionAttributeValues = expressionAttributeValues
         };
-        await _dynamoDbClient.UpdateItemAsync(request);
+        await _dynamoDbClient!.UpdateItemAsync(request);
     }
-    
+
+    /// <inheritdoc />
     public override async Task DeleteRecord(string idempotencyKey) 
     {
         Log.WriteDebug("Deleting record for idempotency key: {0}", idempotencyKey);
@@ -187,7 +195,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
             TableName = _tableName,
             Key = GetKey(idempotencyKey)
         };
-        await _dynamoDbClient.DeleteItemAsync(request);
+        await _dynamoDbClient!.DeleteItemAsync(request);
     }
 
     /// <summary>
@@ -231,9 +239,16 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
 
 }
 
+/// <summary>
+/// Use this builder to get an instance of <see cref="DynamoDBPersistenceStore"/>.<br/>
+/// With this builder you can configure the characteristics of the DynamoDB Table
+/// (name, key, sort key, and other field names).<br/>
+/// You can also set a custom AmazonDynamoDBClient for further tuning.
+/// </summary>
+// ReSharper disable once InconsistentNaming
 public class DynamoDBPersistenceStoreBuilder
 {
-    private static readonly string? FuncEnv = Environment.GetEnvironmentVariable(Constants.LAMBDA_FUNCTION_NAME_ENV);
+    private static readonly string? FuncEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
 
     private string _tableName = null!;
     private string _keyAttr = "id";
@@ -243,7 +258,7 @@ public class DynamoDBPersistenceStoreBuilder
     private string _statusAttr = "status";
     private string _dataAttr = "data";
     private string _validationAttr = "validation";
-    private AmazonDynamoDBClient _dynamoDbClient;
+    private AmazonDynamoDBClient? _dynamoDbClient;
 
     /// <summary>
     /// Initialize and return a new instance of {@link DynamoDBPersistenceStore}.
@@ -256,7 +271,7 @@ public class DynamoDBPersistenceStoreBuilder
     {
         if (string.IsNullOrWhiteSpace(_tableName))
         {
-            throw new ArgumentNullException("Table name is not specified");
+            throw new ArgumentNullException($"Table name is not specified");
         }
 
         return new DynamoDBPersistenceStore(_tableName,

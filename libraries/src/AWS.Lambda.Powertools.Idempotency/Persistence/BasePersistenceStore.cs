@@ -27,17 +27,33 @@ using Newtonsoft.Json.Linq;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 
+/// <summary>
+/// Persistence layer that will store the idempotency result.
+/// Base implementation. See <see cref="DynamoDBPersistenceStore"/> for an implementation (default one)
+/// Extends this class to use your own implementation (DocumentDB, Elasticache, ...)
+/// </summary>
 public abstract class BasePersistenceStore : IPersistenceStore
 {
-    private IdempotencyOptions _idempotencyOptions;
+    private IdempotencyOptions _idempotencyOptions = null!;
     private string? _functionName;
+    /// <summary>
+    /// Boolean to indicate whether or not payload validation is enabled
+    /// </summary>
     protected bool PayloadValidationEnabled;
     private LRUCache<string, DataRecord> _cache = null!;
-    protected ILog Log;
+    /// <summary>
+    /// Instance of ILog to log the internal details of idempotency
+    /// </summary>
+    protected ILog Log = null!;
 
+    /// <summary>
+    /// Initialize the base persistence layer from the configuration settings
+    /// </summary>
+    /// <param name="idempotencyOptions">Idempotency configuration settings</param>
+    /// <param name="functionName">The name of the function being decorated</param>
     public void Configure(IdempotencyOptions idempotencyOptions, string? functionName)
     {
-        string? funcEnv = Environment.GetEnvironmentVariable(Constants.LAMBDA_FUNCTION_NAME_ENV);
+        string? funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
         _functionName = funcEnv != null ? funcEnv : "testFunction";
         if (!string.IsNullOrWhiteSpace(functionName))
         {
@@ -68,6 +84,12 @@ public abstract class BasePersistenceStore : IPersistenceStore
         _cache = cache;
     }
 
+    /// <summary>
+    /// Save record of function's execution completing successfully
+    /// </summary>
+    /// <param name="data">Payload</param>
+    /// <param name="result">the response from the function</param>
+    /// <param name="now">The current date time</param>
     public virtual async Task SaveSuccess(JToken data, object result, DateTimeOffset now)
     {
         string responseJson = JsonConvert.SerializeObject(result);
@@ -83,6 +105,12 @@ public abstract class BasePersistenceStore : IPersistenceStore
         SaveToCache(record);
     }
 
+    /// <summary>
+    /// Save record of function's execution being in progress
+    /// </summary>
+    /// <param name="data">Payload</param>
+    /// <param name="now">The current date time</param>
+    /// <exception cref="IdempotencyItemAlreadyExistsException"></exception>
     public virtual async Task SaveInProgress(JToken data, DateTimeOffset now)
     {
         string idempotencyKey = GetHashedIdempotencyKey(data);
@@ -275,6 +303,12 @@ public abstract class BasePersistenceStore : IPersistenceStore
                (data.Type == JTokenType.Null);
     }
     
+    /// <summary>
+    /// Generate a hash value from the provided data
+    /// </summary>
+    /// <param name="data">data to hash</param>
+    /// <returns>Hashed representation of the provided data</returns>
+    /// <exception cref="ArgumentException"></exception>
     internal string GenerateHash(JToken data)
     {
         JToken node;
@@ -332,11 +366,15 @@ public abstract class BasePersistenceStore : IPersistenceStore
         return sBuilder.ToString();
     }
 
+    /// <inheritdoc />
     public abstract Task<DataRecord> GetRecord(string idempotencyKey);
 
+    /// <inheritdoc />
     public abstract Task PutRecord(DataRecord record, DateTimeOffset now);
 
+    /// <inheritdoc />
     public abstract Task UpdateRecord(DataRecord record);
 
+    /// <inheritdoc />
     public abstract Task DeleteRecord(string idempotencyKey);
 }

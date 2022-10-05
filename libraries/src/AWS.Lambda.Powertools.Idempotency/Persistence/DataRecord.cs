@@ -17,10 +17,21 @@ using System;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 
+/// <summary>
+/// Data Class for idempotency records. This is actually the item that will be stored in the persistence layer.
+/// </summary>
 public class DataRecord
 {
     private readonly string _status;
 
+    /// <summary>
+    /// Creates a new DataRecord
+    /// </summary>
+    /// <param name="idempotencyKey">Hash representation of either entire event or specific configured subject of the event</param>
+    /// <param name="status">The DataRecordStatus</param>
+    /// <param name="expiryTimestamp">Unix timestamp of when record expires</param>
+    /// <param name="responseData">JSON serialized invocation results</param>
+    /// <param name="payloadHash">A hash representation of the entire event</param>
     public DataRecord(string idempotencyKey, 
             DataRecordStatus status,
             long expiryTimestamp,
@@ -34,9 +45,21 @@ public class DataRecord
         PayloadHash = payloadHash;
     }
 
+    /// <summary>
+    /// A hash representation of either the entire event or a specific configured subset of the event
+    /// </summary>
     public string IdempotencyKey { get; }
+    /// <summary>
+    /// Unix timestamp of when record expires
+    /// </summary>
     public long ExpiryTimestamp { get; }
+    /// <summary>
+    /// JSON serialized invocation results
+    /// </summary>
     public string? ResponseData { get; }
+    /// <summary>
+    /// A hash representation of the entire event
+    /// </summary>
     public string? PayloadHash { get; }
     
 
@@ -50,6 +73,10 @@ public class DataRecord
         return ExpiryTimestamp != 0 && now.ToUnixTimeSeconds() > ExpiryTimestamp;
     }
 
+    
+    /// <summary>
+    /// Represents the <see cref="DataRecordStatus"/> Status
+    /// </summary>
     public DataRecordStatus Status
     {
         get
@@ -64,6 +91,11 @@ public class DataRecord
         }
     }
 
+    /// <summary>
+    /// Determines whether the specified DataRecord is equal to the current DataRecord 
+    /// </summary>
+    /// <param name="other">The DataRecord to compare with the current object.</param>
+    /// <returns>true if the specified DataRecord is equal to the current DataRecord; otherwise, false.</returns>
     protected bool Equals(DataRecord other)
     {
         return _status == other._status 
@@ -73,6 +105,7 @@ public class DataRecord
                && PayloadHash == other.PayloadHash;
     }
 
+    /// <inheritdoc />
     public override bool Equals(object? obj)
     {
         if (ReferenceEquals(null, obj)) return false;
@@ -81,6 +114,7 @@ public class DataRecord
         return Equals((DataRecord) obj);
     }
 
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         return HashCode.Combine(IdempotencyKey, _status, ExpiryTimestamp, ResponseData, PayloadHash);
@@ -93,8 +127,20 @@ public class DataRecord
     /// -- EXPIRED: record expired, idempotency will not happen
     /// </summary>
     public enum DataRecordStatus {
+        /// <summary>
+        /// record initialized when function starts
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
         INPROGRESS,
+        /// <summary>
+        /// record updated with the result of the function when it ends
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
         COMPLETED,
+        /// <summary>
+        /// record expired, idempotency will not happen
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
         EXPIRED
     }
 }

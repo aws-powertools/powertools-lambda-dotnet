@@ -50,9 +50,6 @@ internal class PowertoolsLambdaContext
     /// </summary>
     internal int MemoryLimitInMB { get; private set; }
     
-    /// <summary>
-    ///     The instance
-    /// </summary>
     internal static PowertoolsLambdaContext Instance { get; private set; }
     
     /// <summary>

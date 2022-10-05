@@ -17,16 +17,25 @@ using System;
 
 namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 
+/// <summary>
+/// Exception thrown only when using <see cref="IdempotencyOptions.ThrowOnNoIdempotencyKey"/>
+/// and if a key could not be found in the event (for example when having a bad JMESPath configured)
+/// </summary>
 public class IdempotencyKeyException : Exception
 {
+    /// <summary>
+    /// Creates a new IdempotencyKeyException 
+    /// </summary>
     public IdempotencyKeyException()
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyKeyException(string? message) : base(message)
     {
     }
 
+    /// <inheritdoc />
     public IdempotencyKeyException(string? message, Exception? innerException) : base(message, innerException)
     {
     }

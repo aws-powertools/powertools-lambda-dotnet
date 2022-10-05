@@ -37,7 +37,7 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
             .WithTableName(TABLE_NAME)
             .WithDynamoDBClient(client)
             .Build();
-        _dynamoDbPersistenceStore.Configure(new IdempotencyConfigBuilder().Build(),functionName: null);
+        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null);
     }
     //putRecord
     [Fact]
@@ -174,7 +174,7 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
             Item = item
         });
         // enable payload validation
-        _dynamoDbPersistenceStore.Configure(new IdempotencyConfigBuilder().WithPayloadValidationJmesPath("path").Build(),
+        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().WithPayloadValidationJmesPath("path").Build(),
             null);
 
         // Act
@@ -261,7 +261,7 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
                 .WithStatusAttr("state")
                 .WithValidationAttr("valid")
                 .Build();
-            persistenceStore.Configure(new IdempotencyConfigBuilder().Build(),functionName: null);
+            persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null);
 
             DateTimeOffset now = DateTimeOffset.UtcNow;
             DataRecord record = new DataRecord(
@@ -335,7 +335,7 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
         try
         {
             // Arrange
-            Environment.SetEnvironmentVariable(Constants.IDEMPOTENCY_DISABLED_ENV, "true");
+            Environment.SetEnvironmentVariable(Constants.IdempotencyDisabledEnv, "true");
             
             DynamoDBPersistenceStore store = new DynamoDBPersistenceStoreBuilder().WithTableName(TABLE_NAME).Build();
             
@@ -347,7 +347,7 @@ public class DynamoDBPersistenceStoreTests : IntegrationTestBase
         }
         finally
         {
-            Environment.SetEnvironmentVariable(Constants.IDEMPOTENCY_DISABLED_ENV, "false");
+            Environment.SetEnvironmentVariable(Constants.IdempotencyDisabledEnv, "false");
         }
     }
     private static Dictionary<string, AttributeValue> CreateKey(string keyValue)
