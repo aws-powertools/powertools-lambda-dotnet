@@ -59,18 +59,35 @@ namespace AWS.Lambda.Powertools.Idempotency;
 [Injection(typeof(UniversalWrapperAspect), Inherited = true)]
 public class IdempotentAttribute : UniversalWrapperAttribute
 {
+    /// <summary>
+    ///     Wraps as a synchronous operation, simply throws IdempotencyConfigurationException
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="target">The target.</param>
+    /// <param name="args">The arguments.</param>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    /// <returns>T.</returns>
     protected sealed override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
     {
         throw new IdempotencyConfigurationException("Idempotent attribute can be used on async methods only");
     }
 
-    protected sealed override async Task<T> WrapAsync<T>(Func<object[], Task<T>> target, object[] args,
-        AspectEventArgs eventArgs)
+    /// <summary>
+    ///     Wrap as an asynchronous operation.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="target">The target.</param>
+    /// <param name="args">The arguments.</param>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    /// <returns>A Task&lt;T&gt; representing the asynchronous operation.</returns>
+    protected sealed override async Task<T> WrapAsync<T>(
+        Func<object[], Task<T>> target, object[] args, AspectEventArgs eventArgs)
     {
+        
         string? idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv);
         if (idempotencyDisabledEnv is "true")
         {
-            return await (Task<T>)target(args);
+            return await base.WrapAsync(target, args, eventArgs);
         }
         JToken payload = JToken.FromObject(args[0]);
         if (payload == null)
@@ -80,7 +97,11 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         
         var types = new[] {typeof(T)};
         var genericType = typeof(IdempotencyHandler<>).MakeGenericType(types);
-        var idempotencyHandler = (IdempotencyHandler<T>)Activator.CreateInstance(genericType,target, args, eventArgs.Method.Name, payload);
+        var idempotencyHandler = Activator.CreateInstance(genericType,target, args, eventArgs.Method.Name, payload) as IdempotencyHandler<T>;
+        if (idempotencyHandler == null)
+        {
+            throw new Exception("Failed to create an instance of IdempotencyHandler");
+        }
         var result = await idempotencyHandler.Handle();
         return result;
     }

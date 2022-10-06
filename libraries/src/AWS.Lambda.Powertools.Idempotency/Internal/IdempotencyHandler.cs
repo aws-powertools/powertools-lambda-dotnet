@@ -80,7 +80,6 @@ internal class IdempotencyHandler<T>
     /// <exception cref="IdempotencyPersistenceLayerException"></exception>
     private async Task<T> ProcessIdempotency()
     {
-        
         try
         {
             // We call saveInProgress first as an optimization for the most common case where no idempotent record
