@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
+using AWS.Lambda.Powertools.Idempotency.Internal;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 using FluentAssertions;
 using Xunit;

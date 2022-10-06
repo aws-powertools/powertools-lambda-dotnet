@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.Powertools.Idempotency;
+namespace AWS.Lambda.Powertools.Idempotency.Internal;
 
 /// <summary>
 ///     Class Constants

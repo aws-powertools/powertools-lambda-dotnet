@@ -20,6 +20,7 @@ using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
+using AWS.Lambda.Powertools.Idempotency.Internal;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 

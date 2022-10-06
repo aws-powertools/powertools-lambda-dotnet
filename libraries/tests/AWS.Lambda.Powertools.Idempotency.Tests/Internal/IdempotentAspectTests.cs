@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
+using AWS.Lambda.Powertools.Idempotency.Internal;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 using AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 using AWS.Lambda.Powertools.Idempotency.Tests.Model;

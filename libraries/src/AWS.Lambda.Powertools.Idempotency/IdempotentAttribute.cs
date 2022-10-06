@@ -14,8 +14,12 @@
  */
 
 using System;
+using System.Threading.Tasks;
 using AspectInjector.Broker;
+using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
+using Newtonsoft.Json.Linq;
 
 namespace AWS.Lambda.Powertools.Idempotency;
 
@@ -51,8 +55,33 @@ namespace AWS.Lambda.Powertools.Idempotency;
 ///         </item>
 ///     </list>
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-[Injection(typeof(IdempotentAspect), Inherited = true)]
-public class IdempotentAttribute : Attribute
+[AttributeUsage(AttributeTargets.Method)]
+[Injection(typeof(UniversalWrapperAspect), Inherited = true)]
+public class IdempotentAttribute : UniversalWrapperAttribute
 {
+    protected sealed override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
+    {
+        throw new IdempotencyConfigurationException("Idempotent attribute can be used on async methods only");
+    }
+
+    protected sealed override async Task<T> WrapAsync<T>(Func<object[], Task<T>> target, object[] args,
+        AspectEventArgs eventArgs)
+    {
+        string? idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv);
+        if (idempotencyDisabledEnv is "true")
+        {
+            return await (Task<T>)target(args);
+        }
+        JToken payload = JToken.FromObject(args[0]);
+        if (payload == null)
+        {
+            throw new IdempotencyConfigurationException("Unable to get payload from the method. Ensure there is at least one parameter or that you use @IdempotencyKey");
+        }
+        
+        var types = new[] {typeof(T)};
+        var genericType = typeof(IdempotencyHandler<>).MakeGenericType(types);
+        var idempotencyHandler = (IdempotencyHandler<T>)Activator.CreateInstance(genericType,target, args, eventArgs.Method.Name, payload);
+        var result = await idempotencyHandler.Handle();
+        return result;
+    }
 }
