@@ -30,12 +30,12 @@ public class Idempotency
     /// <summary>
     /// The general configurations for the idempotency
     /// </summary>
-    public IdempotencyOptions IdempotencyOptions { get; private set; }
-    
+    public IdempotencyOptions IdempotencyOptions { get; private set; } = null!;
+
     /// <summary>
     /// The persistence layer to use for persisting the request and response of the function
     /// </summary>
-    public BasePersistenceStore PersistenceStore { get; private set; }
+    public BasePersistenceStore PersistenceStore { get; private set; } = null!;
 
     private Idempotency()
     {
@@ -85,11 +85,11 @@ public class Idempotency
     /// </summary>
     public class IdempotencyBuilder
     {
-        private IdempotencyOptions _options;
-        private BasePersistenceStore _store;
+        private IdempotencyOptions? _options;
+        private BasePersistenceStore? _store;
 
-        internal IdempotencyOptions Options => _options;
-        internal BasePersistenceStore Store => _store;
+        internal IdempotencyOptions? Options => _options;
+        internal BasePersistenceStore? Store => _store;
 
         /// <summary>
         /// Set the persistence layer to use for storing the request and response

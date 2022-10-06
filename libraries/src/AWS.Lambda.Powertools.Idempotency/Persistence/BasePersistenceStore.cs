@@ -287,7 +287,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
             {
                 throw new IdempotencyKeyException("No data found to create a hashed idempotency key");
             }
-            Log.WriteWarning("No data found to create a hashed idempotency key. JMESPath: {0}", _idempotencyOptions.EventKeyJmesPath);
+            Log.WriteWarning("No data found to create a hashed idempotency key. JMESPath: {0}", _idempotencyOptions.EventKeyJmesPath ?? string.Empty);
         }
 
         string hash = GenerateHash(node);

@@ -166,7 +166,11 @@ internal class IdempotencyHandler<T>
         try
         {
             _log.WriteDebug("Response for key '{0}' retrieved from idempotency store, skipping the function", record.IdempotencyKey);
-            var result = JsonConvert.DeserializeObject<T>(record.ResponseData);
+            T? result = JsonConvert.DeserializeObject<T>(record.ResponseData!);
+            if (result is null)
+            {
+                throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);
+            }
             return Task.FromResult(result);
         }
         catch (Exception e)
@@ -206,7 +210,7 @@ internal class IdempotencyHandler<T>
 
         try
         {
-            await _persistenceStore.SaveSuccess(_data, response, DateTimeOffset.UtcNow);
+            await _persistenceStore.SaveSuccess(_data, response!, DateTimeOffset.UtcNow);
         }
         catch (Exception e)
         {
