@@ -33,7 +33,7 @@ public class BasePersistenceStoreTests
     class InMemoryPersistenceStore : BasePersistenceStore
     {
         private string _validationHash = null;
-        public DataRecord? DataRecord = null;
+        public DataRecord DataRecord = null;
         public int Status = -1;
         public override Task<DataRecord> GetRecord(string idempotencyKey)
         {

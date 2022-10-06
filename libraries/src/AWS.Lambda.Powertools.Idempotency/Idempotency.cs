@@ -25,7 +25,7 @@ namespace AWS.Lambda.Powertools.Idempotency;
 /// Use it before the function handler get called.
 /// Example: Idempotency.Configure(builder => builder.WithPersistenceStore(...));
 /// </summary>
-public class Idempotency 
+public sealed class Idempotency 
 {
     /// <summary>
     /// The general configurations for the idempotency
@@ -51,11 +51,21 @@ public class Idempotency
         PersistenceStore = persistenceStore;
     }
 
-    private static class Holder {
-        public static readonly Idempotency IdempotencyInstance = new Idempotency();
+    private class Holder
+    {
+        // Explicit static constructor to tell C# compiler
+        // not to mark type as beforefieldinit
+        static Holder()
+        {
+        }
+
+        internal static readonly Idempotency IdempotencyInstance = new Idempotency();
     }
 
-    public static Idempotency Instance() => Holder.IdempotencyInstance;
+    /// <summary>
+    /// Holds the configuration for idempotency:
+    /// </summary>
+    public static Idempotency Instance => Holder.IdempotencyInstance;
 
     /// <summary>
     /// Use this method to configure persistence layer (mandatory) and idempotency options (optional)
@@ -71,13 +81,13 @@ public class Idempotency
         }
         if (builder.Options != null)
         {
-            Instance().SetConfig(builder.Options);
+            Instance.SetConfig(builder.Options);
         }
         else
         {
-            Instance().SetConfig(new IdempotencyOptionsBuilder().Build());
+            Instance.SetConfig(new IdempotencyOptionsBuilder().Build());
         }
-        Instance().SetPersistenceStore(builder.Store);
+        Instance.SetPersistenceStore(builder.Store);
     }
 
     /// <summary>

@@ -42,9 +42,9 @@ internal class IdempotencyHandler<T>
         _target = target;
         _args = args;
         _data = payload;
-        _persistenceStore = Idempotency.Instance().PersistenceStore;
-        _persistenceStore.Configure(Idempotency.Instance().IdempotencyOptions, functionName);
-        _log = Idempotency.Instance().IdempotencyOptions.Log;
+        _persistenceStore = Idempotency.Instance.PersistenceStore;
+        _persistenceStore.Configure(Idempotency.Instance.IdempotencyOptions, functionName);
+        _log = Idempotency.Instance.IdempotencyOptions.Log;
     }
 
     /// <summary>
