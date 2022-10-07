@@ -766,6 +766,84 @@ public class AppConfigProviderTest
     }
 
     [Fact]
+    public async Task GetAsync_DefaultApplicationIdDoesNotSet_ThrowsException()
+    {
+        // Arrange
+        var environmentId = Guid.NewGuid().ToString();
+        var applicationId = string.Empty;
+        var configProfileId = Guid.NewGuid().ToString();
+
+        var cacheManager = new Mock<ICacheManager>();
+        var client = new Mock<IAmazonAppConfigData>();
+        var transformerManager = new Mock<ITransformerManager>();
+        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object)
+            .UseClient(client.Object)
+            .UseCacheManager(cacheManager.Object)
+            .UseTransformerManager(transformerManager.Object)
+            .ConfigureSource(environmentId, applicationId, configProfileId);
+
+        // Act
+        Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
+
+        // Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(Act);
+    }
+
+    [Fact]
+    public async Task GetAsync_DefaultEnvironmentIdDoesNotSet_ThrowsException()
+    {
+        // Arrange
+        var environmentId = string.Empty;
+        var applicationId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+
+        var cacheManager = new Mock<ICacheManager>();
+        var client = new Mock<IAmazonAppConfigData>();
+        var transformerManager = new Mock<ITransformerManager>();
+        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object)
+            .UseClient(client.Object)
+            .UseCacheManager(cacheManager.Object)
+            .UseTransformerManager(transformerManager.Object)
+            .ConfigureSource(environmentId, applicationId, configProfileId);
+
+        // Act
+        Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
+
+        // Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(Act);
+    }
+
+    [Fact]
+    public async Task GetAsync_DefaultConfigProfileIdDoesNotSet_ThrowsException()
+    {
+        // Arrange
+        var environmentId = Guid.NewGuid().ToString();
+        var applicationId = Guid.NewGuid().ToString();
+        var configProfileId = string.Empty;
+
+        var cacheManager = new Mock<ICacheManager>();
+        var client = new Mock<IAmazonAppConfigData>();
+        var transformerManager = new Mock<ITransformerManager>();
+        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object)
+            .UseClient(client.Object)
+            .UseCacheManager(cacheManager.Object)
+            .UseTransformerManager(transformerManager.Object)
+            .ConfigureSource(environmentId, applicationId, configProfileId);
+
+        // Act
+        Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
+
+        // Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(Act);
+    }
+    
+    [Fact]
     public async Task GetAsync_WhenApplicationIdDoesNotSet_ThrowsException()
     {
         // Arrange

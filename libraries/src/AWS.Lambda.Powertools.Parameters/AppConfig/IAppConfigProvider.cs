@@ -34,7 +34,7 @@ public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfig
     IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
         AmazonAppConfigDataConfig config);
     
-    void ConfigureSource(string applicationId, string environmentId, string configProfileId);
+    IAppConfigProvider ConfigureSource(string applicationId, string environmentId, string configProfileId);
 
     AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string applicationId);
 

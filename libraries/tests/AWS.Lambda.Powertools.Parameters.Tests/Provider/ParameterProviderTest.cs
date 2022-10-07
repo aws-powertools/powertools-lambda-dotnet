@@ -180,6 +180,123 @@ public class ParameterProviderTest
     }
 
     [Fact]
+    public async Task GetAsync_WhenCacheModeIsGetResultOnly_StoresCachedObject()
+    {
+        // Arrange
+        var key = Guid.NewGuid().ToString();
+        var value = Guid.NewGuid().ToString();
+        var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
+        var cacheMode = ParameterProviderCacheMode.GetResultOnly;
+        var config = new ParameterProviderConfiguration
+        {
+            MaxAge = duration
+        };
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(key)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                cacheMode);
+        providerHandler.SetCacheManager(cacheManager.Object);
+
+        // Act
+        var result = await providerHandler.GetAsync<string>(key, config, null, null);
+
+        // Assert
+        cacheManager.Verify(v => v.Get(key), Times.Once);
+        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        Assert.NotNull(result);
+        Assert.Equal(value, result);
+    }
+    
+    [Fact]
+    public async Task GetAsync_WhenCacheModeIsGetMultipleResultOnly_DoesNotStoreCachedObject()
+    {
+        // Arrange
+        var key = Guid.NewGuid().ToString();
+        var value = Guid.NewGuid().ToString();
+        var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
+        var cacheMode = ParameterProviderCacheMode.GetMultipleResultOnly;
+        var config = new ParameterProviderConfiguration
+        {
+            MaxAge = duration
+        };
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(key)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                cacheMode);
+        providerHandler.SetCacheManager(cacheManager.Object);
+
+        // Act
+        var result = await providerHandler.GetAsync<string>(key, config, null, null);
+
+        // Assert
+        cacheManager.Verify(v => v.Get(key), Times.Once);
+        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
+        Assert.NotNull(result);
+        Assert.Equal(value, result);
+    }
+    
+    [Fact]
+    public async Task GetAsync_WhenCacheModeIsDisabled_DoesNotStoreCachedObject()
+    {
+        // Arrange
+        var key = Guid.NewGuid().ToString();
+        var value = Guid.NewGuid().ToString();
+        var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
+        var cacheMode = ParameterProviderCacheMode.Disabled;
+        var config = new ParameterProviderConfiguration
+        {
+            MaxAge = duration
+        };
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(key)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                cacheMode);
+        providerHandler.SetCacheManager(cacheManager.Object);
+
+        // Act
+        var result = await providerHandler.GetAsync<string>(key, config, null, null);
+
+        // Assert
+        cacheManager.Verify(v => v.Get(key), Times.Once);
+        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
+        Assert.NotNull(result);
+        Assert.Equal(value, result);
+    }
+
+    [Fact]
     public async Task GetAsync_WhenTransformerSet_ReturnsTransformedValue()
     {
         // Arrange
@@ -491,6 +608,132 @@ public class ParameterProviderTest
         Assert.Equal(value, result);
     }
 
+    [Fact]
+    public async Task GetMultipleAsync_WhenCacheModeIsGetMultipleResultOnly_StoresCachedObject()
+    {
+        // Arrange
+        var key = Guid.NewGuid().ToString();
+        var value = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+        var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
+        var cacheMode = ParameterProviderCacheMode.GetMultipleResultOnly;
+        var config = new ParameterProviderConfiguration
+        {
+            MaxAge = duration
+        };
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(key)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                cacheMode);
+        providerHandler.SetCacheManager(cacheManager.Object);
+
+        // Act
+        var result = await providerHandler.GetMultipleAsync(key, config, null, null);
+
+        // Assert
+        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        Assert.NotNull(result);
+        Assert.Equal(value, result);
+    }
+
+    [Fact]
+    public async Task GetMultipleAsync_WhenCacheModeIsGetResultOnly_DoesNotStoreCachedObject()
+    {
+        // Arrange
+        var key = Guid.NewGuid().ToString();
+        var value = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+        var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
+        var cacheMode = ParameterProviderCacheMode.GetResultOnly;
+        var config = new ParameterProviderConfiguration
+        {
+            MaxAge = duration
+        };
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(key)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                cacheMode);
+        providerHandler.SetCacheManager(cacheManager.Object);
+
+        // Act
+        var result = await providerHandler.GetMultipleAsync(key, config, null, null);
+
+        // Assert
+        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
+        Assert.NotNull(result);
+        Assert.Equal(value, result);
+    }
+    
+    [Fact]
+    public async Task GetMultipleAsync_WhenCacheModeDisabled_DoesNotStoreCachedObject()
+    {
+        // Arrange
+        var key = Guid.NewGuid().ToString();
+        var value = new Dictionary<string, string>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+        var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
+        var cacheMode = ParameterProviderCacheMode.Disabled;
+        var config = new ParameterProviderConfiguration
+        {
+            MaxAge = duration
+        };
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(key)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                cacheMode);
+        providerHandler.SetCacheManager(cacheManager.Object);
+
+        // Act
+        var result = await providerHandler.GetMultipleAsync(key, config, null, null);
+
+        // Assert
+        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
+        Assert.NotNull(result);
+        Assert.Equal(value, result);
+    }
+    
     [Fact]
     public async Task GetMultipleAsync_WhenTransformerSet_ReturnsTransformedValue()
     {

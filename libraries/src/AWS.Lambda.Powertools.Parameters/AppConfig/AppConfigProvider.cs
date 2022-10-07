@@ -143,11 +143,12 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return this;
     }
 
-    public void ConfigureSource(string applicationId, string environmentId, string configProfileId)
+    public IAppConfigProvider ConfigureSource(string applicationId, string environmentId, string configProfileId)
     {
         _applicationId = applicationId;
         _environmentId = environmentId;
         _configProfileId = configProfileId;
+        return this;
     }
 
     public AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string applicationId)
