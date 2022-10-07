@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Transform;

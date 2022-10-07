@@ -17,6 +17,7 @@ using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Internal.Cache;
 using AWS.Lambda.Powertools.Parameters.Internal.Transform;
+using AWS.Lambda.Powertools.Parameters.Provider;
 using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.Provider;
@@ -32,15 +33,18 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
     private TimeSpan? _defaultMaxAge;
     private readonly GetAsyncDelegate _getAsyncHandler;
     private readonly GetMultipleAsyncDelegate _getMultipleAsyncHandler;
+    private readonly ParameterProviderCacheMode _cacheMode;
 
     private ICacheManager Cache => _cache ??= new CacheManager(DateTimeWrapper.Instance);
     private ITransformerManager TransformManager => _transformManager ??= TransformerManager.Instance;
 
     internal ParameterProviderBaseHandler(GetAsyncDelegate getAsyncHandler,
-        GetMultipleAsyncDelegate getMultipleAsyncHandler)
+        GetMultipleAsyncDelegate getMultipleAsyncHandler,
+        ParameterProviderCacheMode cacheMode)
     {
         _getAsyncHandler = getAsyncHandler;
         _getMultipleAsyncHandler = getMultipleAsyncHandler;
+        _cacheMode = cacheMode;
     }
     
     private async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
@@ -114,7 +118,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
             if (config is not null)
                 config.Transformer = transformer;
         }
-        
+
         T? retValue;
         if (transformer is not null)
             retValue = transformer.Transform<T>(value);
@@ -123,8 +127,8 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         else
             throw new Exception($"Transformer is required. '{value}' cannot be converted to type '{typeof(T)}'.");
 
-        var maxAge = GetMaxAge(config);
-        Cache.Set(key, retValue, maxAge);
+        if (_cacheMode is ParameterProviderCacheMode.All or ParameterProviderCacheMode.GetResultOnly)
+            Cache.Set(key, retValue, GetMaxAge(config));
 
         return retValue;
     }
@@ -152,7 +156,6 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
                 config.Transformer = transformer;
         }
 
-        var maxAge = GetMaxAge(config);
         var retValues = new Dictionary<string, string>();
         foreach (var (key, value) in respValues)
         {
@@ -166,7 +169,9 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
             retValues.Add(key, newValue);
         }
 
-        Cache.Set(path, retValues, maxAge);
+        if (_cacheMode is ParameterProviderCacheMode.All or ParameterProviderCacheMode.GetMultipleResultOnly)
+            Cache.Set(path, retValues, GetMaxAge(config));
+
         return respValues;
     }
 }

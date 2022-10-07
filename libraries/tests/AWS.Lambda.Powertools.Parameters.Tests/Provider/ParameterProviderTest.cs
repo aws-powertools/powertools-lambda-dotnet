@@ -17,6 +17,7 @@ using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Internal.Cache;
 using AWS.Lambda.Powertools.Parameters.Internal.Provider;
+using AWS.Lambda.Powertools.Parameters.Provider;
 using AWS.Lambda.Powertools.Parameters.Transform;
 using Moq;
 using Xunit;
@@ -54,7 +55,8 @@ public class ParameterProviderTest
         ).Returns(valueFromCache);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -90,7 +92,8 @@ public class ParameterProviderTest
         ).Returns(valueFromCache);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -122,7 +125,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -160,7 +164,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -204,7 +209,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -250,7 +256,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -297,7 +304,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -344,7 +352,8 @@ public class ParameterProviderTest
         ).Returns(valueFromCache);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -388,7 +397,8 @@ public class ParameterProviderTest
         ).Returns(valueFromCache);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -424,7 +434,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -465,7 +476,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -520,7 +532,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -582,7 +595,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -645,7 +659,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -713,7 +728,8 @@ public class ParameterProviderTest
         ).Returns(null);
 
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync);
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 

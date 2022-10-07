@@ -151,7 +151,7 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>, I
                     NextToken = nextToken
                 }).ConfigureAwait(false);
 
-            var maxAge = Handler.GetMaxAge(config);
+            var maxAge = GetMaxAge(config);
             foreach (var parameter in response.Parameters)
             {
                 if (retValues.TryAdd(parameter.Name, parameter.Value))

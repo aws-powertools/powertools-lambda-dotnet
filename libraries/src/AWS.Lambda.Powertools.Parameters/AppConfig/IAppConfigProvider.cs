@@ -33,11 +33,17 @@ public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfig
 
     IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
         AmazonAppConfigDataConfig config);
+    
+    void ConfigureSource(string applicationId, string environmentId, string configProfileId);
 
     AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string applicationId);
 
     AppConfigProviderConfigurationBuilder WithEnvironmentIdentifier(string environmentId);
 
     AppConfigProviderConfigurationBuilder WithConfigurationProfileIdentifier(string configProfileId);
+    
+    IDictionary<string, string> Get();
+
+    Task<IDictionary<string, string>> GetAsync();
 }
 

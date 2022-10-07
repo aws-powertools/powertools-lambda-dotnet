@@ -27,6 +27,9 @@ namespace AWS.Lambda.Powertools.Parameters.AppConfig;
 
 public class AppConfigProvider : ParameterProvider<AppConfigProviderConfigurationBuilder>, IAppConfigProvider
 {
+    private string? _applicationId;
+    private string? _environmentId;
+    private string? _configProfileId;
     private IAmazonAppConfigData? _client;
     private readonly IDateTimeWrapper _dateTimeWrapper;
     private string _pollConfigurationToken = string.Empty;
@@ -34,6 +37,9 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     private IDictionary<string, string> _lastConfig = new Dictionary<string, string>();
 
     private IAmazonAppConfigData Client => _client ??= new AmazonAppConfigDataClient();
+    
+    protected override ParameterProviderCacheMode CacheMode => 
+        ParameterProviderCacheMode.GetMultipleResultOnly;
 
     public AppConfigProvider()
     {
@@ -137,6 +143,13 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return this;
     }
 
+    public void ConfigureSource(string applicationId, string environmentId, string configProfileId)
+    {
+        _applicationId = applicationId;
+        _environmentId = environmentId;
+        _configProfileId = configProfileId;
+    }
+
     public AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string applicationId)
     {
         return NewConfigurationBuilder().WithApplicationIdentifier(applicationId);
@@ -157,19 +170,30 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return new AppConfigProviderConfigurationBuilder(this);
     }
 
+    public IDictionary<string, string> Get()
+    {
+        return GetAsync().GetAwaiter().GetResult();
+    }
+
+    public async Task<IDictionary<string, string>> GetAsync()
+    {
+        return await GetMultipleAsync(
+                AppConfigProviderCacheHelper.GetCacheKey(_applicationId, _environmentId,
+                    _configProfileId))
+            .ConfigureAwait(false);
+    }
+
     protected override async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
     {
-        if (config is not AppConfigProviderConfiguration configuration)
-            throw new ArgumentNullException(nameof(config));
-        if (string.IsNullOrWhiteSpace(configuration.ApplicationId))
-            throw new ArgumentNullException(nameof(configuration.ApplicationId));
-        if (string.IsNullOrWhiteSpace(configuration.EnvironmentId))
-            throw new ArgumentNullException(nameof(configuration.EnvironmentId));
-        if (string.IsNullOrWhiteSpace(configuration.ConfigProfileId))
-            throw new ArgumentNullException(nameof(configuration.ConfigProfileId));
+        var configuration = GetProviderConfiguration(config, false);
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(configuration);
 
-        var result =
-            await GetMultipleAsync(AppConfigProviderCacheHelper.GetCacheKey(configuration), configuration);
+        var result = !configuration.ForceFetch ? Cache.Get(cacheKey) as IDictionary<string, string> : null;
+        if (result is null)
+        {
+            result = await GetLastConfigurationAsync(configuration).ConfigureAwait(false);
+            Cache.Set(cacheKey, result, GetMaxAge(config));
+        }
 
         return result.TryGetValue(key, out var value) ? value : null;
     }
@@ -177,19 +201,60 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     protected override async Task<IDictionary<string, string>> GetMultipleAsync(string path,
         ParameterProviderConfiguration? config)
     {
-        if (config is not AppConfigProviderConfiguration configuration ||
-            string.IsNullOrWhiteSpace(configuration.ApplicationId) ||
-            string.IsNullOrWhiteSpace(configuration.EnvironmentId) ||
-            string.IsNullOrWhiteSpace(configuration.ConfigProfileId))
-            throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
-
+        var configuration = GetProviderConfiguration(config, true);
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(configuration);
+        
         if (!string.Equals(path, cacheKey, StringComparison.CurrentCultureIgnoreCase))
             throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
 
+        return await GetLastConfigurationAsync(configuration)
+            .ConfigureAwait(false);
+    }
+
+    private AppConfigProviderConfiguration GetProviderConfiguration(ParameterProviderConfiguration? config, bool multipleValues)
+    {
+        if (config is not AppConfigProviderConfiguration configuration)
+        {
+            configuration = new AppConfigProviderConfiguration
+            {
+                ApplicationId = _applicationId,
+                EnvironmentId = _environmentId,
+                ConfigProfileId = _configProfileId
+            };
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(configuration.ApplicationId))
+                configuration.ApplicationId = _applicationId;
+        
+            if (string.IsNullOrWhiteSpace(configuration.EnvironmentId))
+                configuration.EnvironmentId = _environmentId;
+        
+            if (string.IsNullOrWhiteSpace(configuration.ConfigProfileId))
+                configuration.ConfigProfileId = _configProfileId;
+        }
+
+        if (string.IsNullOrWhiteSpace(configuration.ApplicationId))
+            throw multipleValues
+                ? new NotSupportedException("Impossible to get multiple values from AWS AppConfig")
+                : new ArgumentNullException(nameof(configuration.ApplicationId));
+        if (string.IsNullOrWhiteSpace(configuration.EnvironmentId))
+            throw multipleValues
+                ? new NotSupportedException("Impossible to get multiple values from AWS AppConfig")
+                : new ArgumentNullException(nameof(configuration.EnvironmentId));
+        if (string.IsNullOrWhiteSpace(configuration.ConfigProfileId))
+            throw multipleValues
+                ? new NotSupportedException("Impossible to get multiple values from AWS AppConfig")
+                : new ArgumentNullException(nameof(configuration.EnvironmentId));
+
+        return configuration;
+    }
+    
+    private async Task<IDictionary<string, string>> GetLastConfigurationAsync(AppConfigProviderConfiguration config)
+    {
         if (_dateTimeWrapper.UtcNow < _nextAllowedPollTime)
         {
-            if (!configuration.ForceFetch)
+            if (!config.ForceFetch)
                 return _lastConfig;
 
             _pollConfigurationToken = string.Empty;
@@ -198,7 +263,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 
         if (string.IsNullOrEmpty(_pollConfigurationToken))
             _pollConfigurationToken =
-                await GetInitialConfigurationTokenAsync(configuration)
+                await GetInitialConfigurationTokenAsync(config)
                     .ConfigureAwait(false);
 
         var request = new GetLatestConfigurationRequest
@@ -237,4 +302,5 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             _ => throw new NotImplementedException($"Not implemented AppConfig type: {contentType}")
         };
     }
+    
 }

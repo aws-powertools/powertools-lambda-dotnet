@@ -24,9 +24,16 @@ public abstract class ParameterProviderBase : IParameterProviderBase
     private IParameterProviderBaseHandler? _handler;
 
     internal IParameterProviderBaseHandler Handler =>
-        _handler ??= new ParameterProviderBaseHandler(GetAsync, GetMultipleAsync);
+        _handler ??= new ParameterProviderBaseHandler(GetAsync, GetMultipleAsync, CacheMode);
 
     protected ICacheManager Cache => Handler.GetCacheManager();
+
+    protected virtual ParameterProviderCacheMode CacheMode => ParameterProviderCacheMode.All;
+
+    protected TimeSpan GetMaxAge(ParameterProviderConfiguration? config)
+    {
+        return Handler.GetMaxAge(config);
+    }
 
     internal void SetHandler(IParameterProviderBaseHandler handler)
     {
