@@ -162,7 +162,7 @@ This persistence store is built-in, and you can either use an existing DynamoDB 
 Use the builder to customize the table structure:
 ```csharp title="Customizing DynamoDBPersistenceStore to suit your table structure"
 new DynamoDBPersistenceStoreBuilder()
-    .WithTableName(System.getenv("TABLE_NAME"))
+    .WithTableName("TABLE_NAME")
     .WithKeyAttr("idempotency_key")
     .WithExpiryAttr("expires_at")
     .WithStatusAttr("current_status")
@@ -188,7 +188,7 @@ When using DynamoDB as a persistence layer, you can alter the attribute names by
 
 ### Customizing the default behavior
 
-Idempotency behavior can be further configured with **`IdempotencyConfig`** using a builder:
+Idempotency behavior can be further configured with **`IdempotencyOptions`** using a builder:
 
 ```csharp
 new IdempotencyOptionsBuilder()
