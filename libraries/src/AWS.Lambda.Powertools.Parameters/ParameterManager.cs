@@ -38,10 +38,10 @@ public static class ParameterManager
     private static ICacheManager Cache => _cache ??= new CacheManager(DateTimeWrapper.Instance);
     private static ITransformerManager TransformManager => _transformManager ??= TransformerManager.Instance;
 
-    public static ISsmProvider SsmProvider => _ssmProvider ??= NewSsmProvider();
-    public static ISecretsProvider SecretsProvider => _secretsProvider ??= NewSecretsProvider();
-    public static IAppConfigProvider AppConfigProvide => _appConfigProvider ??= NewAppConfigProvider();
-    public static IDynamoDBProvider DynamoDBProvider => _dynamoDBProvider ??= NewDynamoDBProvider();
+    public static ISsmProvider SsmProvider => _ssmProvider ??= CreateSsmProvider();
+    public static ISecretsProvider SecretsProvider => _secretsProvider ??= CreateSecretsProvider();
+    public static IAppConfigProvider AppConfigProvide => _appConfigProvider ??= CreateAppConfigProvider();
+    public static IDynamoDBProvider DynamoDBProvider => _dynamoDBProvider ??= CreateDynamoDBProvider();
 
     public static void DefaultMaxAge(TimeSpan maxAge)
     {
@@ -79,7 +79,7 @@ public static class ParameterManager
         _dynamoDBProvider?.AddTransformer(name, transformer);
     }
 
-    public static ISsmProvider NewSsmProvider()
+    public static ISsmProvider CreateSsmProvider()
     {
         var provider = new SsmProvider()
             .UseCacheManager(Cache)
@@ -91,7 +91,7 @@ public static class ParameterManager
         return provider;
     }
 
-    public static ISecretsProvider NewSecretsProvider()
+    public static ISecretsProvider CreateSecretsProvider()
     {
         var provider = new SecretsProvider()
             .UseCacheManager(Cache)
@@ -103,7 +103,7 @@ public static class ParameterManager
         return provider;
     }
 
-    public static IAppConfigProvider NewAppConfigProvider()
+    public static IAppConfigProvider CreateAppConfigProvider()
     {
         var provider = new AppConfigProvider()
             .UseCacheManager(Cache)
@@ -115,7 +115,7 @@ public static class ParameterManager
         return provider;
     }
 
-    public static IDynamoDBProvider NewDynamoDBProvider()
+    public static IDynamoDBProvider CreateDynamoDBProvider()
     {
         var provider = new DynamoDBProvider()
             .UseCacheManager(Cache)

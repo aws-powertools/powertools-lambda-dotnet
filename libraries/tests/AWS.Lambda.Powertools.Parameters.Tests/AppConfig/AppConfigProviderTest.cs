@@ -369,9 +369,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         var result = await appConfigProvider.ForceFetch().GetAsync();
@@ -454,9 +454,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         var result = await appConfigProvider.GetAsync();
@@ -532,9 +532,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId)
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId)
             .WithMaxAge(duration);
 
         // Act
@@ -613,9 +613,9 @@ public class AppConfigProviderTest
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
             .DefaultMaxAge(defaultMaxAge)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         var result = await appConfigProvider.WithMaxAge(duration).GetAsync();
@@ -690,9 +690,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         var result = await appConfigProvider.GetAsync("Config1");
@@ -754,9 +754,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         var result = await appConfigProvider.GetAsync("Config3");
@@ -770,7 +770,6 @@ public class AppConfigProviderTest
     {
         // Arrange
         var environmentId = Guid.NewGuid().ToString();
-        var applicationId = string.Empty;
         var configProfileId = Guid.NewGuid().ToString();
 
         var cacheManager = new Mock<ICacheManager>();
@@ -782,7 +781,8 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .ConfigureSource(environmentId, applicationId, configProfileId);
+            .DefaultEnvironment(environmentId)
+            .DefaultConfigProfile(configProfileId);
 
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
@@ -795,7 +795,6 @@ public class AppConfigProviderTest
     public async Task GetAsync_DefaultEnvironmentIdDoesNotSet_ThrowsException()
     {
         // Arrange
-        var environmentId = string.Empty;
         var applicationId = Guid.NewGuid().ToString();
         var configProfileId = Guid.NewGuid().ToString();
 
@@ -808,7 +807,8 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .ConfigureSource(environmentId, applicationId, configProfileId);
+            .DefaultApplication(applicationId)
+            .DefaultConfigProfile(configProfileId);
 
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
@@ -823,7 +823,6 @@ public class AppConfigProviderTest
         // Arrange
         var environmentId = Guid.NewGuid().ToString();
         var applicationId = Guid.NewGuid().ToString();
-        var configProfileId = string.Empty;
 
         var cacheManager = new Mock<ICacheManager>();
         var client = new Mock<IAmazonAppConfigData>();
@@ -834,7 +833,8 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .ConfigureSource(environmentId, applicationId, configProfileId);
+            .DefaultApplication(applicationId)
+            .DefaultEnvironment(environmentId);
 
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
@@ -859,8 +859,8 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
@@ -885,8 +885,8 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
@@ -911,8 +911,8 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId);
 
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
@@ -982,9 +982,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         var currentConfig = await appConfigProvider.GetAsync();
@@ -1069,9 +1069,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         var currentConfig = await appConfigProvider.GetAsync();
@@ -1172,9 +1172,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         var currentConfig = await appConfigProvider.GetAsync();
@@ -1275,9 +1275,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId)
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId)
             .ForceFetch();
 
         // Act
@@ -1323,9 +1323,9 @@ public class AppConfigProviderTest
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
-            .WithApplicationIdentifier(applicationId)
-            .WithEnvironmentIdentifier(environmentId)
-            .WithConfigurationProfileIdentifier(configProfileId);
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
 
         // Act
         Task<IDictionary<string, string>> Act() => appConfigProvider.GetMultipleAsync(key);

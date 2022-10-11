@@ -27,9 +27,9 @@ namespace AWS.Lambda.Powertools.Parameters.AppConfig;
 
 public class AppConfigProvider : ParameterProvider<AppConfigProviderConfigurationBuilder>, IAppConfigProvider
 {
-    private string? _applicationId;
-    private string? _environmentId;
-    private string? _configProfileId;
+    private string? _defaultApplicationId;
+    private string? _defaultEnvironmentId;
+    private string? _defaultConfigProfileId;
     private IAmazonAppConfigData? _client;
     private readonly IDateTimeWrapper _dateTimeWrapper;
     private string _pollConfigurationToken = string.Empty;
@@ -143,27 +143,41 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return this;
     }
 
-    public IAppConfigProvider ConfigureSource(string applicationId, string environmentId, string configProfileId)
+    public IAppConfigProvider DefaultApplication(string applicationId)
     {
-        _applicationId = applicationId;
-        _environmentId = environmentId;
-        _configProfileId = configProfileId;
+        if (string.IsNullOrWhiteSpace(applicationId))
+            throw new ArgumentNullException(nameof(applicationId));
+        _defaultApplicationId = applicationId;
         return this;
     }
-
-    public AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string applicationId)
+    
+    public IAppConfigProvider DefaultEnvironment(string environmentId)
     {
-        return NewConfigurationBuilder().WithApplicationIdentifier(applicationId);
+        if (string.IsNullOrWhiteSpace(environmentId))
+            throw new ArgumentNullException(nameof(environmentId));
+        _defaultEnvironmentId = environmentId;
+        return this;
+    }
+    
+    public IAppConfigProvider DefaultConfigProfile(string configProfileId)
+    {
+        _defaultConfigProfileId = configProfileId;
+        return this;
+    }
+    
+    public AppConfigProviderConfigurationBuilder WithApplication(string applicationId)
+    {
+        return NewConfigurationBuilder().WithApplication(applicationId);
     }
 
-    public AppConfigProviderConfigurationBuilder WithEnvironmentIdentifier(string environmentId)
+    public AppConfigProviderConfigurationBuilder WithEnvironment(string environmentId)
     {
-        return NewConfigurationBuilder().WithEnvironmentIdentifier(environmentId);
+        return NewConfigurationBuilder().WithEnvironment(environmentId);
     }
 
-    public AppConfigProviderConfigurationBuilder WithConfigurationProfileIdentifier(string configProfileId)
+    public AppConfigProviderConfigurationBuilder WithConfigProfile(string configProfileId)
     {
-        return NewConfigurationBuilder().WithConfigurationProfileIdentifier(configProfileId);
+        return NewConfigurationBuilder().WithConfigProfile(configProfileId);
     }
 
     protected override AppConfigProviderConfigurationBuilder NewConfigurationBuilder()
@@ -179,8 +193,8 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     public async Task<IDictionary<string, string>> GetAsync()
     {
         return await GetMultipleAsync(
-                AppConfigProviderCacheHelper.GetCacheKey(_applicationId, _environmentId,
-                    _configProfileId))
+                AppConfigProviderCacheHelper.GetCacheKey(_defaultApplicationId, _defaultEnvironmentId,
+                    _defaultConfigProfileId))
             .ConfigureAwait(false);
     }
 
@@ -218,21 +232,21 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         {
             configuration = new AppConfigProviderConfiguration
             {
-                ApplicationId = _applicationId,
-                EnvironmentId = _environmentId,
-                ConfigProfileId = _configProfileId
+                ApplicationId = _defaultApplicationId,
+                EnvironmentId = _defaultEnvironmentId,
+                ConfigProfileId = _defaultConfigProfileId
             };
         }
         else
         {
             if (string.IsNullOrWhiteSpace(configuration.ApplicationId))
-                configuration.ApplicationId = _applicationId;
+                configuration.ApplicationId = _defaultApplicationId;
         
             if (string.IsNullOrWhiteSpace(configuration.EnvironmentId))
-                configuration.EnvironmentId = _environmentId;
+                configuration.EnvironmentId = _defaultEnvironmentId;
         
             if (string.IsNullOrWhiteSpace(configuration.ConfigProfileId))
-                configuration.ConfigProfileId = _configProfileId;
+                configuration.ConfigProfileId = _defaultConfigProfileId;
         }
 
         if (string.IsNullOrWhiteSpace(configuration.ApplicationId))

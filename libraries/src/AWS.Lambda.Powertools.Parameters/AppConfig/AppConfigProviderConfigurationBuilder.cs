@@ -30,24 +30,24 @@ public class AppConfigProviderConfigurationBuilder : ParameterProviderConfigurat
     {
     }
 
-    public AppConfigProviderConfigurationBuilder WithEnvironmentIdentifier(string environmentId)
+    public AppConfigProviderConfigurationBuilder WithEnvironment(string environmentId)
     {
         _environmentId = environmentId;
         return this;
     }
 
-    public AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string applicationId)
+    public AppConfigProviderConfigurationBuilder WithApplication(string applicationId)
     {
         _applicationId = applicationId;
         return this;
     }
 
-    public AppConfigProviderConfigurationBuilder WithConfigurationProfileIdentifier(string configProfileId)
+    public AppConfigProviderConfigurationBuilder WithConfigProfile(string configProfileId)
     {
         _configProfileId = configProfileId;
         return this;
     }
-
+    
     protected override ParameterProviderConfiguration NewConfiguration()
     {
         return new AppConfigProviderConfiguration

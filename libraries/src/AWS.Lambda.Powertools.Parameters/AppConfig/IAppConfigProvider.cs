@@ -33,14 +33,18 @@ public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfig
 
     IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
         AmazonAppConfigDataConfig config);
-    
-    IAppConfigProvider ConfigureSource(string applicationId, string environmentId, string configProfileId);
 
-    AppConfigProviderConfigurationBuilder WithApplicationIdentifier(string applicationId);
+    IAppConfigProvider DefaultApplication(string applicationId);
 
-    AppConfigProviderConfigurationBuilder WithEnvironmentIdentifier(string environmentId);
+    IAppConfigProvider DefaultEnvironment(string environmentId);
 
-    AppConfigProviderConfigurationBuilder WithConfigurationProfileIdentifier(string configProfileId);
+    IAppConfigProvider DefaultConfigProfile(string configProfileId);
+
+    AppConfigProviderConfigurationBuilder WithApplication(string applicationId);
+
+    AppConfigProviderConfigurationBuilder WithEnvironment(string environmentId);
+
+    AppConfigProviderConfigurationBuilder WithConfigProfile(string configProfileId);
     
     IDictionary<string, string> Get();
 
