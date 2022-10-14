@@ -58,12 +58,12 @@ public class AppConfigProviderConfigurationBuilder : ParameterProviderConfigurat
         };
     }
 
-    public IDictionary<string, string> Get()
+    public IDictionary<string, string?> Get()
     {
         return GetAsync().GetAwaiter().GetResult();
     }
 
-    public async Task<IDictionary<string, string>> GetAsync()
+    public async Task<IDictionary<string, string?>> GetAsync()
     {
         return await GetMultipleAsync(
                 AppConfigProviderCacheHelper.GetCacheKey(_applicationId, _environmentId,

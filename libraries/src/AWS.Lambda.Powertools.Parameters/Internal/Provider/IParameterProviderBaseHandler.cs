@@ -36,8 +36,8 @@ public interface IParameterProviderBaseHandler
     void AddCustomTransformer(string name, ITransformer transformer);
 
     Task<T?> GetAsync<T>(string key, ParameterProviderConfiguration? config, Transformation? transformation,
-        string? transformerName);
+        string? transformerName) where T: class;
 
-    Task<IDictionary<string, string>> GetMultipleAsync(string path,
-        ParameterProviderConfiguration? config, Transformation? transformation, string? transformerName);
+    Task<IDictionary<string, T?>> GetMultipleAsync<T>(string path,
+        ParameterProviderConfiguration? config, Transformation? transformation, string? transformerName) where T: class;
 }

@@ -25,7 +25,8 @@ namespace AWS.Lambda.Powertools.Parameters.Internal.Provider;
 internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 {
     internal delegate Task<string?> GetAsyncDelegate(string key, ParameterProviderConfiguration? config);
-    internal delegate Task<IDictionary<string, string>> GetMultipleAsyncDelegate(string path,
+
+    internal delegate Task<IDictionary<string, string?>> GetMultipleAsyncDelegate(string path,
         ParameterProviderConfiguration? config);
 
     private ICacheManager? _cache;
@@ -46,18 +47,18 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         _getMultipleAsyncHandler = getMultipleAsyncHandler;
         _cacheMode = cacheMode;
     }
-    
+
     private async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
     {
         return await _getAsyncHandler(key, config);
     }
 
-    private async Task<IDictionary<string, string>> GetMultipleAsync(string path,
+    private async Task<IDictionary<string, string?>> GetMultipleAsync(string path,
         ParameterProviderConfiguration? config)
     {
         return await _getMultipleAsyncHandler(path, config);
     }
-    
+
     public TimeSpan GetMaxAge(ParameterProviderConfiguration? config)
     {
         var maxAge = config?.MaxAge;
@@ -97,7 +98,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
     }
 
     public async Task<T?> GetAsync<T>(string key, ParameterProviderConfiguration? config,
-        Transformation? transformation, string? transformerName)
+        Transformation? transformation, string? transformerName) where T : class
     {
         var cachedObject = config is null || !config.ForceFetch ? Cache.Get(key) : null;
         if (cachedObject is T cachedValue)
@@ -133,16 +134,20 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         return retValue;
     }
 
-    public async Task<IDictionary<string, string>> GetMultipleAsync(string path,
-        ParameterProviderConfiguration? config, Transformation? transformation, string? transformerName)
+    public async Task<IDictionary<string, T?>> GetMultipleAsync<T>(string path,
+        ParameterProviderConfiguration? config, Transformation? transformation, string? transformerName) where T : class
     {
         var cachedObject = config is null || !config.ForceFetch ? Cache.Get(path) : null;
-        if (cachedObject is IDictionary<string, string> cachedValue)
+        if (cachedObject is IDictionary<string, T?> cachedValue)
             return cachedValue;
 
-        var respValues = await GetMultipleAsync(path, config).ConfigureAwait(false);
+        var retValues = new Dictionary<string, T?>();
+
+        var respValues = await GetMultipleAsync(path, config)
+            .ConfigureAwait(false);
+
         if (!respValues.Any())
-            return respValues;
+            return retValues;
 
         var transformer = config?.Transformer;
         if (transformer is null)
@@ -156,22 +161,30 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
                 config.Transformer = transformer;
         }
 
-        var retValues = new Dictionary<string, string>();
         foreach (var (key, value) in respValues)
         {
             var newTransformer = transformer;
             if (newTransformer is null && transformation == Transformation.Auto)
                 newTransformer = TransformManager.TryGetTransformer(transformation.Value, key);
 
-            var newValue = value;
-            if (newTransformer is not null)
-                newValue = newTransformer.Transform<string>(value) ?? "";
+            T? newValue = default;
+            if (value is not null)
+            {
+                if (newTransformer is not null)
+                    newValue = newTransformer.Transform<T>(value);
+                else if (value is T strVal)
+                    newValue = strVal;
+                else
+                    throw new Exception(
+                        $"Transformer is required. '{value}' cannot be converted to type '{typeof(T)}'.");
+            }
+
             retValues.Add(key, newValue);
         }
 
         if (_cacheMode is ParameterProviderCacheMode.All or ParameterProviderCacheMode.GetMultipleResultOnly)
             Cache.Set(path, retValues, GetMaxAge(config));
 
-        return respValues;
+        return retValues;
     }
 }

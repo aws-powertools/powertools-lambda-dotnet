@@ -47,7 +47,7 @@ public abstract class ParameterProviderBase : IParameterProviderBase
 
     public async Task<string?> GetAsync(string key)
     {
-        return await Handler.GetAsync<string>(key, null, null, null).ConfigureAwait(false);
+        return await GetAsync<string>(key).ConfigureAwait(false);
     }
 
     public T? Get<T>(string key) where T : class
@@ -60,18 +60,28 @@ public abstract class ParameterProviderBase : IParameterProviderBase
         return await Handler.GetAsync<T>(key, null, null, null).ConfigureAwait(false);
     }
 
-    public IDictionary<string, string> GetMultiple(string path)
+    public IDictionary<string, string?> GetMultiple(string path)
     {
         return GetMultipleAsync(path).GetAwaiter().GetResult();
     }
 
-    public async Task<IDictionary<string, string>> GetMultipleAsync(string path)
+    public async Task<IDictionary<string, string?>> GetMultipleAsync(string path)
     {
-        return await Handler.GetMultipleAsync(path, null, null, null).ConfigureAwait(false);
+        return await GetMultipleAsync<string>(path).ConfigureAwait(false);
+    }
+    
+    public IDictionary<string, T?> GetMultiple<T>(string path) where T : class
+    {
+        return GetMultipleAsync<T>(path).GetAwaiter().GetResult();
+    }
+
+    public async Task<IDictionary<string, T?>> GetMultipleAsync<T>(string path) where T : class
+    {
+        return await Handler.GetMultipleAsync<T>(path, null, null, null).ConfigureAwait(false);
     }
 
     protected abstract Task<string?> GetAsync(string key, ParameterProviderConfiguration? config);
 
-    protected abstract Task<IDictionary<string, string>> GetMultipleAsync(string path,
+    protected abstract Task<IDictionary<string, string?>> GetMultipleAsync(string path,
         ParameterProviderConfiguration? config);
 }

@@ -30,7 +30,7 @@ public class ParameterProviderTest
     {
         Task<string?> GetAsync(string key, ParameterProviderConfiguration? config);
 
-        Task<IDictionary<string, string>> GetMultipleAsync(string path,
+        Task<IDictionary<string, string?>> GetMultipleAsync(string path,
             ParameterProviderConfiguration? config);
     }
 
@@ -447,12 +447,12 @@ public class ParameterProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        var valueFromCache = new Dictionary<string, string>
+        var valueFromCache = new Dictionary<string, string?>
         {
             { value.First().Key, Guid.NewGuid().ToString() },
             { value.Last().Key, Guid.NewGuid().ToString() }
@@ -474,7 +474,7 @@ public class ParameterProviderTest
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(key, null, null, null);
+        var result = await providerHandler.GetMultipleAsync<string>(key, null, null, null);
 
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Once);
@@ -488,12 +488,12 @@ public class ParameterProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        var valueFromCache = new Dictionary<string, string>
+        var valueFromCache = new Dictionary<string, string?>
         {
             { value.First().Key, Guid.NewGuid().ToString() },
             { value.Last().Key, Guid.NewGuid().ToString() }
@@ -519,7 +519,7 @@ public class ParameterProviderTest
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(key, config, null, null);
+        var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Never);
@@ -533,7 +533,7 @@ public class ParameterProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -556,7 +556,7 @@ public class ParameterProviderTest
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(key, null, null, null);
+        var result = await providerHandler.GetMultipleAsync<string>(key, null, null, null);
 
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Once);
@@ -571,7 +571,7 @@ public class ParameterProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -598,7 +598,7 @@ public class ParameterProviderTest
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(key, config, null, null);
+        var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Once);
@@ -613,7 +613,7 @@ public class ParameterProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -641,7 +641,7 @@ public class ParameterProviderTest
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(key, config, null, null);
+        var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
@@ -655,7 +655,7 @@ public class ParameterProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -683,7 +683,7 @@ public class ParameterProviderTest
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(key, config, null, null);
+        var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
@@ -697,7 +697,7 @@ public class ParameterProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -725,7 +725,7 @@ public class ParameterProviderTest
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(key, config, null, null);
+        var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
@@ -739,12 +739,12 @@ public class ParameterProviderTest
     {
         // Arrange
         var path = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        var transformedValue = new Dictionary<string, string>
+        var transformedValue = new Dictionary<string, string?>
         {
             { value.First().Key, Guid.NewGuid().ToString() },
             { value.Last().Key, Guid.NewGuid().ToString() }
@@ -753,10 +753,10 @@ public class ParameterProviderTest
 
         var transformer = new Mock<ITransformer>();
         transformer.Setup(c =>
-            c.Transform<string>(value.First().Value)
+            c.Transform<string>(value.First().Value ?? "")
         ).Returns(transformedValue.First().Value);
         transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value)
+            c.Transform<string>(value.Last().Value ?? "")
         ).Returns(transformedValue.Last().Value);
 
         var config = new ParameterProviderConfiguration
@@ -780,13 +780,13 @@ public class ParameterProviderTest
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(path, config, null, null);
+        var result = await providerHandler.GetMultipleAsync<string>(path, config, null, null);
 
         // Assert
         cacheManager.Verify(v => v.Get(path), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.First().Value), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.Last().Value), Times.Once);
+        transformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
+        transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
         cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
             o.First().Key == transformedValue.First().Key &&
             o.First().Value == transformedValue.First().Value &&
@@ -801,12 +801,12 @@ public class ParameterProviderTest
     {
         // Arrange
         var path = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        var transformedValue = new Dictionary<string, string>
+        var transformedValue = new Dictionary<string, string?>
         {
             { value.First().Key, Guid.NewGuid().ToString() },
             { value.Last().Key, Guid.NewGuid().ToString() }
@@ -816,10 +816,10 @@ public class ParameterProviderTest
 
         var transformer = new Mock<ITransformer>();
         transformer.Setup(c =>
-            c.Transform<string>(value.First().Value)
+            c.Transform<string>(value.First().Value ?? "")
         ).Returns(transformedValue.First().Value);
         transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value)
+            c.Transform<string>(value.Last().Value ?? "")
         ).Returns(transformedValue.Last().Value);
 
         var transformerManager = new Mock<ITransformerManager>();
@@ -844,13 +844,13 @@ public class ParameterProviderTest
         providerHandler.SetTransformerManager(transformerManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(path, null, null, transformerName);
+        var result = await providerHandler.GetMultipleAsync<string>(path, null, null, transformerName);
 
         // Assert
         cacheManager.Verify(v => v.Get(path), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.First().Value), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.Last().Value), Times.Once);
+        transformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
+        transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
         cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
             o.First().Key == transformedValue.First().Key &&
             o.First().Value == transformedValue.First().Value &&
@@ -865,12 +865,12 @@ public class ParameterProviderTest
     {
         // Arrange
         var path = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        var transformedValue = new Dictionary<string, string>
+        var transformedValue = new Dictionary<string, string?>
         {
             { value.First().Key, Guid.NewGuid().ToString() },
             { value.Last().Key, Guid.NewGuid().ToString() }
@@ -879,10 +879,10 @@ public class ParameterProviderTest
 
         var transformer = new Mock<ITransformer>();
         transformer.Setup(c =>
-            c.Transform<string>(value.First().Value)
+            c.Transform<string>(value.First().Value ?? "")
         ).Returns(transformedValue.First().Value);
         transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value)
+            c.Transform<string>(value.Last().Value ?? "")
         ).Returns(transformedValue.Last().Value);
 
         var transformation = Transformation.Json;
@@ -908,13 +908,13 @@ public class ParameterProviderTest
         providerHandler.SetTransformerManager(transformerManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(path, null, transformation, null);
+        var result = await providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
 
         // Assert
         cacheManager.Verify(v => v.Get(path), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.First().Value), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.Last().Value), Times.Once);
+        transformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
+        transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
         cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
             o.First().Key == transformedValue.First().Key &&
             o.First().Value == transformedValue.First().Value &&
@@ -929,12 +929,12 @@ public class ParameterProviderTest
     {
         // Arrange
         var path = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { $"{Guid.NewGuid()}.json", Guid.NewGuid().ToString() },
             { $"{Guid.NewGuid()}.binary", Guid.NewGuid().ToString() }
         };
-        var transformedValue = new Dictionary<string, string>
+        var transformedValue = new Dictionary<string, string?>
         {
             { value.First().Key, Guid.NewGuid().ToString() },
             { value.Last().Key, Guid.NewGuid().ToString() }
@@ -943,12 +943,12 @@ public class ParameterProviderTest
 
         var jsonTransformer = new Mock<ITransformer>();
         jsonTransformer.Setup(c =>
-            c.Transform<string>(value.First().Value)
-        ).Returns(transformedValue.First().Value);
+            c.Transform<string>(value.First().Value ?? "")
+        ).Returns(transformedValue.First().Value ?? "");
 
         var base64Transformer = new Mock<ITransformer>();
         base64Transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value)
+            c.Transform<string>(value.Last().Value ?? "")
         ).Returns(transformedValue.Last().Value);
 
         var transformation = Transformation.Auto;
@@ -977,13 +977,13 @@ public class ParameterProviderTest
         providerHandler.SetTransformerManager(transformerManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync(path, null, transformation, null);
+        var result = await providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
 
         // Assert
         cacheManager.Verify(v => v.Get(path), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        jsonTransformer.Verify(v => v.Transform<string>(value.First().Value), Times.Once);
-        base64Transformer.Verify(v => v.Transform<string>(value.Last().Value), Times.Once);
+        jsonTransformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
+        base64Transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
         cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
             o.First().Key == transformedValue.First().Key &&
             o.First().Value == transformedValue.First().Value &&

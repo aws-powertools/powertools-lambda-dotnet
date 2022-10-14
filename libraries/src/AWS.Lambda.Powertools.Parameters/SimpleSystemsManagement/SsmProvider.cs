@@ -132,11 +132,11 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>, I
         return response?.Parameter?.Value;
     }
 
-    protected override async Task<IDictionary<string, string>> GetMultipleAsync(string path,
+    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string path,
         ParameterProviderConfiguration? config)
     {
         var configuration = config as SsmProviderConfiguration;
-        var retValues = new Dictionary<string, string>();
+        var retValues = new Dictionary<string, string?>();
 
         string? nextToken = default;
         do

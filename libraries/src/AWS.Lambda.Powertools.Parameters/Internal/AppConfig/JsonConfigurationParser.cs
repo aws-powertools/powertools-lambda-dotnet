@@ -21,13 +21,13 @@ namespace AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 
 internal class JsonConfigurationParser
 {
-    private readonly IDictionary<string, string> _data =
-        new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private readonly IDictionary<string, string?> _data =
+        new SortedDictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
 
     private readonly Stack<string> _context = new();
     private string _currentPath = string.Empty;
 
-    public static IDictionary<string, string> Parse(Stream input)
+    public static IDictionary<string, string?> Parse(Stream input)
     {
         using var doc = JsonDocument.Parse(input);
         var parser = new JsonConfigurationParser();
@@ -35,7 +35,7 @@ internal class JsonConfigurationParser
         return parser._data;
     }
 
-    public static IDictionary<string, string> Parse(string input)
+    public static IDictionary<string, string?> Parse(string input)
     {
         using var doc = JsonDocument.Parse(input);
         var parser = new JsonConfigurationParser();
@@ -89,8 +89,7 @@ internal class JsonConfigurationParser
     private void VisitNull()
     {
         var key = _currentPath;
-        //_data[key] = null;
-        _data[key] = string.Empty;
+        _data[key] = null;
     }
 
     private void VisitPrimitive(JsonElement data)

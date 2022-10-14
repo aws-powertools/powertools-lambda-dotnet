@@ -785,7 +785,7 @@ public class AppConfigProviderTest
             .DefaultConfigProfile(configProfileId);
 
         // Act
-        Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
+        Task<IDictionary<string, string?>> Act() => appConfigProvider.GetAsync();
 
         // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
@@ -811,7 +811,7 @@ public class AppConfigProviderTest
             .DefaultConfigProfile(configProfileId);
 
         // Act
-        Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
+        Task<IDictionary<string, string?>> Act() => appConfigProvider.GetAsync();
 
         // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
@@ -837,7 +837,7 @@ public class AppConfigProviderTest
             .DefaultEnvironment(environmentId);
 
         // Act
-        Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
+        Task<IDictionary<string, string?>> Act() => appConfigProvider.GetAsync();
 
         // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
@@ -863,7 +863,7 @@ public class AppConfigProviderTest
             .WithConfigProfile(configProfileId);
 
         // Act
-        Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
+        Task<IDictionary<string, string?>> Act() => appConfigProvider.GetAsync();
 
         // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
@@ -889,7 +889,7 @@ public class AppConfigProviderTest
             .WithConfigProfile(configProfileId);
 
         // Act
-        Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
+        Task<IDictionary<string, string?>> Act() => appConfigProvider.GetAsync();
 
         // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
@@ -915,7 +915,7 @@ public class AppConfigProviderTest
             .WithEnvironment(environmentId);
 
         // Act
-        Task<IDictionary<string, string>> Act() => appConfigProvider.GetAsync();
+        Task<IDictionary<string, string?>> Act() => appConfigProvider.GetAsync();
 
         // Assert
         await Assert.ThrowsAsync<ArgumentNullException>(Act);
@@ -937,7 +937,7 @@ public class AppConfigProviderTest
             .UseTransformerManager(transformerManager.Object);
 
         // Act
-        Task<IDictionary<string, string>> Act() => appConfigProvider.GetMultipleAsync(key);
+        Task<IDictionary<string, string?>> Act() => appConfigProvider.GetMultipleAsync(key);
 
         // Assert
         await Assert.ThrowsAsync<NotSupportedException>(Act);
@@ -955,7 +955,7 @@ public class AppConfigProviderTest
 
         var dateTimeNow = DateTime.UtcNow;
         var nextAllowedPollTime = dateTimeNow.AddSeconds(10);
-        var lastConfig = new Dictionary<string, string>
+        var lastConfig = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -1021,13 +1021,13 @@ public class AppConfigProviderTest
         var nextPollInterval = TimeSpan.FromHours(24);
         var nextPollConfigurationToken = Guid.NewGuid().ToString();
 
-        var lastConfig = new Dictionary<string, string>
+        var lastConfig = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -1114,13 +1114,13 @@ public class AppConfigProviderTest
         var nextPollInterval = TimeSpan.FromHours(24);
         var nextPollConfigurationToken = Guid.NewGuid().ToString();
 
-        var lastConfig = new Dictionary<string, string>
+        var lastConfig = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -1217,13 +1217,13 @@ public class AppConfigProviderTest
         var nextPollInterval = TimeSpan.FromHours(24);
         var nextPollConfigurationToken = Guid.NewGuid().ToString();
 
-        var lastConfig = new Dictionary<string, string>
+        var lastConfig = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var value = new Dictionary<string, string>
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -1328,7 +1328,7 @@ public class AppConfigProviderTest
             .WithConfigProfile(configProfileId);
 
         // Act
-        Task<IDictionary<string, string>> Act() => appConfigProvider.GetMultipleAsync(key);
+        Task<IDictionary<string, string?>> Act() => appConfigProvider.GetMultipleAsync(key);
 
         await Assert.ThrowsAsync<NotSupportedException>(Act);
     }

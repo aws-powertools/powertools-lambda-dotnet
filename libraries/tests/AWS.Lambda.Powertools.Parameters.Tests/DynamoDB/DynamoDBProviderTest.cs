@@ -618,7 +618,7 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string?>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -633,7 +633,7 @@ public class DynamoDBProviderTest
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
 
         providerHandler.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
+            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
         ).ReturnsAsync(value);
 
         var provider = new DynamoDBProvider();
@@ -648,7 +648,7 @@ public class DynamoDBProviderTest
         var result = await provider.GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(v => v.GetMultipleAsync(key, null, null, null), Times.Once);
+        providerHandler.Verify(v => v.GetMultipleAsync<string>(key, null, null, null), Times.Once);
         providerHandler.Verify(v => v.SetCacheManager(cacheManager.Object), Times.Once);
         providerHandler.Verify(v => v.SetTransformerManager(transformerManager.Object), Times.Once);
         providerHandler.Verify(v => v.SetDefaultMaxAge(duration), Times.Once);
@@ -662,7 +662,7 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string?>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -674,7 +674,7 @@ public class DynamoDBProviderTest
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
 
         providerHandler.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
+            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
         ).ReturnsAsync(value);
 
         var provider = new DynamoDBProvider();
@@ -690,7 +690,7 @@ public class DynamoDBProviderTest
 
         // Assert
         providerHandler.Verify(
-            v => v.GetMultipleAsync(key,
+            v => v.GetMultipleAsync<string>(key,
                 It.Is<ParameterProviderConfiguration?>(x =>
                     x != null && x.ForceFetch
                 ), null,
@@ -704,7 +704,7 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string?>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -717,7 +717,7 @@ public class DynamoDBProviderTest
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
 
         providerHandler.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
+            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
         ).ReturnsAsync(value);
 
         var provider = new DynamoDBProvider();
@@ -733,7 +733,7 @@ public class DynamoDBProviderTest
 
         // Assert
         providerHandler.Verify(
-            v => v.GetMultipleAsync(key,
+            v => v.GetMultipleAsync<string>(key,
                 It.Is<ParameterProviderConfiguration?>(x =>
                     x != null && x.MaxAge == duration
                 ), null,
@@ -747,7 +747,7 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string?>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -760,7 +760,7 @@ public class DynamoDBProviderTest
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
 
         providerHandler.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
+            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
         ).ReturnsAsync(value);
 
         var provider = new DynamoDBProvider();
@@ -776,7 +776,7 @@ public class DynamoDBProviderTest
 
         // Assert
         providerHandler.Verify(
-            v => v.GetMultipleAsync(key,
+            v => v.GetMultipleAsync<string>(key,
                 It.Is<ParameterProviderConfiguration?>(x =>
                     x != null && x.Transformer == transformer.Object
                 ), null,
@@ -790,7 +790,7 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string?>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -803,7 +803,7 @@ public class DynamoDBProviderTest
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
 
         providerHandler.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>(), transformation, null)
+            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), transformation, null)
         ).ReturnsAsync(value);
 
         var provider = new DynamoDBProvider();
@@ -819,7 +819,7 @@ public class DynamoDBProviderTest
 
         // Assert
         providerHandler.Verify(
-            v => v.GetMultipleAsync(key,
+            v => v.GetMultipleAsync<string>(key,
                 It.Is<ParameterProviderConfiguration?>(x =>
                     x != null && !x.ForceFetch
                 ),
@@ -834,7 +834,7 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string?>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -847,7 +847,7 @@ public class DynamoDBProviderTest
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
 
         providerHandler.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>(), null, transformerName)
+            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, transformerName)
         ).ReturnsAsync(value);
 
         var provider = new DynamoDBProvider();
@@ -863,7 +863,7 @@ public class DynamoDBProviderTest
 
         // Assert
         providerHandler.Verify(
-            v => v.GetMultipleAsync(key,
+            v => v.GetMultipleAsync<string>(key,
                 It.Is<ParameterProviderConfiguration?>(x =>
                     x != null && !x.ForceFetch
                 ),
@@ -879,12 +879,12 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var valueFromCache = new Dictionary<string, string>()
+        var valueFromCache = new Dictionary<string, string?>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string?>()
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }

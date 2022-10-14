@@ -25,7 +25,7 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters;
 
-public static class ParameterManager
+public static class ParametersManager
 {
     private static ISsmProvider? _ssmProvider;
     private static ISecretsProvider? _secretsProvider;

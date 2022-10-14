@@ -46,8 +46,8 @@ public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfig
 
     AppConfigProviderConfigurationBuilder WithConfigProfile(string configProfileId);
     
-    IDictionary<string, string> Get();
+    IDictionary<string, string?> Get();
 
-    Task<IDictionary<string, string>> GetAsync();
+    Task<IDictionary<string, string?>> GetAsync();
 }
 

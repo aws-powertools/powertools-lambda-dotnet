@@ -25,7 +25,11 @@ public interface IParameterProviderBase
 
     Task<T?> GetAsync<T>(string key) where T : class;
 
-    IDictionary<string, string> GetMultiple(string path);
+    IDictionary<string, string?> GetMultiple(string path);
 
-    Task<IDictionary<string, string>> GetMultipleAsync(string path);
+    Task<IDictionary<string, string?>> GetMultipleAsync(string path);
+    
+    IDictionary<string, T?> GetMultiple<T>(string path) where T : class;
+
+    Task<IDictionary<string, T?>> GetMultipleAsync<T>(string path) where T : class;
 }

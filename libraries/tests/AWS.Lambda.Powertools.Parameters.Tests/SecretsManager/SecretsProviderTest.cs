@@ -571,7 +571,7 @@ public class SecretsProviderTest
             .UseTransformerManager(transformerManager.Object);
 
         // Act
-        Task<IDictionary<string, string>> Act() => secretsProvider.GetMultipleAsync(key);
+        Task<IDictionary<string, string?>> Act() => secretsProvider.GetMultipleAsync(key);
 
         await Assert.ThrowsAsync<NotSupportedException>(Act);
 

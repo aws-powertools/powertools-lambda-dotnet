@@ -34,7 +34,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     private readonly IDateTimeWrapper _dateTimeWrapper;
     private string _pollConfigurationToken = string.Empty;
     private DateTime _nextAllowedPollTime = DateTime.MinValue;
-    private IDictionary<string, string> _lastConfig = new Dictionary<string, string>();
+    private IDictionary<string, string?> _lastConfig = new Dictionary<string, string?>();
 
     private IAmazonAppConfigData Client => _client ??= new AmazonAppConfigDataClient();
     
@@ -57,7 +57,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         IDateTimeWrapper dateTimeWrapper,
         string? pollConfigurationToken = null,
         DateTime? nextAllowedPollTime = null,
-        IDictionary<string, string>? lastConfig = null)
+        IDictionary<string, string?>? lastConfig = null)
     {
         _dateTimeWrapper = dateTimeWrapper;
         if (pollConfigurationToken is not null)
@@ -185,12 +185,12 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return new AppConfigProviderConfigurationBuilder(this);
     }
 
-    public IDictionary<string, string> Get()
+    public IDictionary<string, string?> Get()
     {
         return GetAsync().GetAwaiter().GetResult();
     }
 
-    public async Task<IDictionary<string, string>> GetAsync()
+    public async Task<IDictionary<string, string?>> GetAsync()
     {
         return await GetMultipleAsync(
                 AppConfigProviderCacheHelper.GetCacheKey(_defaultApplicationId, _defaultEnvironmentId,
@@ -203,7 +203,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         var configuration = GetProviderConfiguration(config, false);
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(configuration);
 
-        var result = !configuration.ForceFetch ? Cache.Get(cacheKey) as IDictionary<string, string> : null;
+        var result = !configuration.ForceFetch ? Cache.Get(cacheKey) as IDictionary<string, string?> : null;
         if (result is null)
         {
             result = await GetLastConfigurationAsync(configuration).ConfigureAwait(false);
@@ -213,7 +213,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return result.TryGetValue(key, out var value) ? value : null;
     }
 
-    protected override async Task<IDictionary<string, string>> GetMultipleAsync(string path,
+    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string path,
         ParameterProviderConfiguration? config)
     {
         var configuration = GetProviderConfiguration(config, true);
@@ -265,7 +265,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return configuration;
     }
     
-    private async Task<IDictionary<string, string>> GetLastConfigurationAsync(AppConfigProviderConfiguration config)
+    private async Task<IDictionary<string, string?>> GetLastConfigurationAsync(AppConfigProviderConfiguration config)
     {
         if (_dateTimeWrapper.UtcNow < _nextAllowedPollTime)
         {
@@ -309,7 +309,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return (await Client.StartConfigurationSessionAsync(request).ConfigureAwait(false)).InitialConfigurationToken;
     }
 
-    private static IDictionary<string, string> ParseConfig(string contentType, Stream configuration)
+    private static IDictionary<string, string?> ParseConfig(string contentType, Stream configuration)
     {
         return contentType switch
         {

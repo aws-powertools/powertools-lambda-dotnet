@@ -102,9 +102,7 @@ public class ParameterProviderConfigurationBuilder
 
     public async Task<string?> GetAsync(string key)
     {
-        return await _parameterProvider
-            .GetAsync<string>(key, GetConfiguration(), _transformation, _transformerName)
-            .ConfigureAwait(false);
+        return await GetAsync<string>(key).ConfigureAwait(false);
     }
 
     public T? Get<T>(string key) where T : class
@@ -119,15 +117,25 @@ public class ParameterProviderConfigurationBuilder
             .ConfigureAwait(false);
     }
 
-    public IDictionary<string, string> GetMultiple(string path)
+    public IDictionary<string, string?> GetMultiple(string path)
     {
         return GetMultipleAsync(path).GetAwaiter().GetResult();
     }
 
-    public async Task<IDictionary<string, string>> GetMultipleAsync(string path)
+    public async Task<IDictionary<string, string?>> GetMultipleAsync(string path)
+    {
+        return await GetMultipleAsync<string>(path).ConfigureAwait(false);
+    }
+
+    public IDictionary<string, T?> GetMultiple<T>(string path) where T : class
+    {
+        return GetMultipleAsync<T>(path).GetAwaiter().GetResult();
+    }
+
+    public async Task<IDictionary<string, T?>> GetMultipleAsync<T>(string path) where T : class
     {
         return await _parameterProvider
-            .GetMultipleAsync(path, GetConfiguration(), _transformation, _transformerName)
+            .GetMultipleAsync<T>(path, GetConfiguration(), _transformation, _transformerName)
             .ConfigureAwait(false);
     }
 

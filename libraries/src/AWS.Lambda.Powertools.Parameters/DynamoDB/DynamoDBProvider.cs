@@ -155,12 +155,12 @@ public class DynamoDBProvider : ParameterProvider, IDynamoDBProvider
             : null;
     }
 
-    protected override async Task<IDictionary<string, string>> GetMultipleAsync(string path,
+    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string path,
         ParameterProviderConfiguration? config)
     {
         var tableInfo = GetTableInfo();
 
-        var retValues = new Dictionary<string, string>();
+        var retValues = new Dictionary<string, string?>();
         var response = await Client.QueryAsync(
             new QueryRequest
             {
