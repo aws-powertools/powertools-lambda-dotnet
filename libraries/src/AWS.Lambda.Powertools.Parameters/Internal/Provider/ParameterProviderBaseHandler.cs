@@ -76,7 +76,11 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
             {
                 transformedValue = default;
                 if (_raiseTransformationError)
-                    throw new TransformationException("", e);
+                {
+                    if (e is not TransformationException error)
+                        error = new TransformationException(e.Message, e);
+                    throw error;
+                }
             }
         }
         else if (value is T strVal)

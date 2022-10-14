@@ -1024,21 +1024,27 @@ public class ParameterProviderTest
             { $"{Guid.NewGuid()}.json", Guid.NewGuid().ToString() },
             { $"{Guid.NewGuid()}.binary", Guid.NewGuid().ToString() }
         };
-        var transformedValue = new Dictionary<string, string?>
+        var transformedValue = new Dictionary<string, object?>
         {
-            { value.First().Key, Guid.NewGuid().ToString() },
+            {
+                value.First().Key, new
+                {
+                    FirstName = Guid.NewGuid().ToString(),
+                    LastName = Guid.NewGuid().ToString()
+                }
+            },
             { value.Last().Key, Guid.NewGuid().ToString() }
         };
         var duration = CacheManager.DefaultMaxAge;
-
+        
         var jsonTransformer = new Mock<ITransformer>();
         jsonTransformer.Setup(c =>
-            c.Transform<string>(value.First().Value ?? "")
-        ).Returns(transformedValue.First().Value ?? "");
+            c.Transform<object>(value.First().Value ?? "")
+        ).Returns(transformedValue.First().Value);
 
         var base64Transformer = new Mock<ITransformer>();
         base64Transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value ?? "")
+            c.Transform<object>(value.Last().Value ?? "")
         ).Returns(transformedValue.Last().Value);
 
         var transformation = Transformation.Auto;
@@ -1067,14 +1073,14 @@ public class ParameterProviderTest
         providerHandler.SetTransformerManager(transformerManager.Object);
 
         // Act
-        var result = await providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
+        var result = await providerHandler.GetMultipleAsync<object>(path, null, transformation, null);
 
         // Assert
         cacheManager.Verify(v => v.Get(path), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        jsonTransformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
-        base64Transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
-        cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
+        jsonTransformer.Verify(v => v.Transform<object>(value.First().Value ?? ""), Times.Once);
+        base64Transformer.Verify(v => v.Transform<object>(value.Last().Value ?? ""), Times.Once);
+        cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, object?>>(o =>
             o.First().Key == transformedValue.First().Key &&
             o.First().Value == transformedValue.First().Value &&
             o.Last().Key == transformedValue.Last().Key &&

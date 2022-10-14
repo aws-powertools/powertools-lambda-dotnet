@@ -35,12 +35,17 @@ public static class ParametersManager
     private static ICacheManager? _cache;
     private static ITransformerManager? _transformManager;
     private static TimeSpan? _defaultMaxAge;
+    
     private static ICacheManager Cache => _cache ??= new CacheManager(DateTimeWrapper.Instance);
+    
     private static ITransformerManager TransformManager => _transformManager ??= TransformerManager.Instance;
 
     public static ISsmProvider SsmProvider => _ssmProvider ??= CreateSsmProvider();
+    
     public static ISecretsProvider SecretsProvider => _secretsProvider ??= CreateSecretsProvider();
+    
     public static IAppConfigProvider AppConfigProvide => _appConfigProvider ??= CreateAppConfigProvider();
+    
     public static IDynamoDBProvider DynamoDBProvider => _dynamoDBProvider ??= CreateDynamoDBProvider();
 
     public static void DefaultMaxAge(TimeSpan maxAge)
