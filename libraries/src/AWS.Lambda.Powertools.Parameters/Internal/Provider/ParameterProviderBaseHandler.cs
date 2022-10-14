@@ -35,6 +35,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
     private readonly GetAsyncDelegate _getAsyncHandler;
     private readonly GetMultipleAsyncDelegate _getMultipleAsyncHandler;
     private readonly ParameterProviderCacheMode _cacheMode;
+    private bool _raiseTransformationError;
 
     private ICacheManager Cache => _cache ??= new CacheManager(DateTimeWrapper.Instance);
     private ITransformerManager TransformManager => _transformManager ??= TransformerManager.Instance;
@@ -57,6 +58,34 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         ParameterProviderConfiguration? config)
     {
         return await _getMultipleAsyncHandler(path, config);
+    }
+    
+    private T? TryTransform<T>(ITransformer? transformer, string? value)
+    {
+        T? transformedValue = default;
+        if (value is null)
+            return transformedValue;
+        
+        if (transformer is not null)
+        {
+            try
+            {
+                transformedValue = transformer.Transform<T>(value);
+            }
+            catch (Exception e)
+            {
+                transformedValue = default;
+                if (_raiseTransformationError)
+                    throw new TransformationException("", e);
+            }
+        }
+        else if (value is T strVal)
+            transformedValue = strVal;
+        else
+            throw new TransformationException(
+                $"Transformer is required. '{value}' cannot be converted to type '{typeof(T)}'.");
+
+        return transformedValue;
     }
 
     public TimeSpan GetMaxAge(ParameterProviderConfiguration? config)
@@ -97,6 +126,11 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         TransformManager.AddTransformer(name, transformer);
     }
 
+    public void SetRaiseTransformationError(bool raiseError)
+    {
+        _raiseTransformationError = raiseError;
+    }
+
     public async Task<T?> GetAsync<T>(string key, ParameterProviderConfiguration? config,
         Transformation? transformation, string? transformerName) where T : class
     {
@@ -119,15 +153,11 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
             if (config is not null)
                 config.Transformer = transformer;
         }
-
-        T? retValue;
-        if (transformer is not null)
-            retValue = transformer.Transform<T>(value);
-        else if (value is T strVal)
-            retValue = strVal;
-        else
-            throw new Exception($"Transformer is required. '{value}' cannot be converted to type '{typeof(T)}'.");
-
+        
+        var retValue = TryTransform<T>(transformer, value);
+        if (retValue is null) 
+            return retValue;
+        
         if (_cacheMode is ParameterProviderCacheMode.All or ParameterProviderCacheMode.GetResultOnly)
             Cache.Set(key, retValue, GetMaxAge(config));
 
@@ -166,20 +196,8 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
             var newTransformer = transformer;
             if (newTransformer is null && transformation == Transformation.Auto)
                 newTransformer = TransformManager.TryGetTransformer(transformation.Value, key);
-
-            T? newValue = default;
-            if (value is not null)
-            {
-                if (newTransformer is not null)
-                    newValue = newTransformer.Transform<T>(value);
-                else if (value is T strVal)
-                    newValue = strVal;
-                else
-                    throw new Exception(
-                        $"Transformer is required. '{value}' cannot be converted to type '{typeof(T)}'.");
-            }
-
-            retValues.Add(key, newValue);
+            
+            retValues.Add(key, TryTransform<T>(newTransformer, value));
         }
 
         if (_cacheMode is ParameterProviderCacheMode.All or ParameterProviderCacheMode.GetMultipleResultOnly)

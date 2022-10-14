@@ -78,6 +78,22 @@ public static class ParametersManager
         _appConfigProvider?.AddTransformer(name, transformer);
         _dynamoDBProvider?.AddTransformer(name, transformer);
     }
+    
+    public static void RaiseTransformationError()
+    {
+        _ssmProvider?.RaiseTransformationError();
+        _secretsProvider?.RaiseTransformationError();
+        _appConfigProvider?.RaiseTransformationError();
+        _dynamoDBProvider?.RaiseTransformationError();
+    }
+    
+    public static void RaiseTransformationError(bool raiseError)
+    {
+        _ssmProvider?.RaiseTransformationError(raiseError);
+        _secretsProvider?.RaiseTransformationError(raiseError);
+        _appConfigProvider?.RaiseTransformationError(raiseError);
+        _dynamoDBProvider?.RaiseTransformationError(raiseError);
+    }
 
     public static ISsmProvider CreateSsmProvider()
     {

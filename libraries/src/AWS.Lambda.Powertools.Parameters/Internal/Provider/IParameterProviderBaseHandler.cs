@@ -34,6 +34,8 @@ public interface IParameterProviderBaseHandler
     void SetTransformerManager(ITransformerManager transformerManager);
 
     void AddCustomTransformer(string name, ITransformer transformer);
+    
+    void SetRaiseTransformationError(bool raiseError);
 
     Task<T?> GetAsync<T>(string key, ParameterProviderConfiguration? config, Transformation? transformation,
         string? transformerName) where T: class;

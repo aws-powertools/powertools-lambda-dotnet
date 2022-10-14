@@ -437,6 +437,96 @@ public class ParameterProviderTest
         Assert.NotNull(result);
         Assert.Equal(transformedValue, result);
     }
+    
+    [Fact]
+    public async Task GetAsync_WhenRaiseTransformationErrorNotSet_ReturnsNullOnError()
+    {
+        // Arrange
+        var key = Guid.NewGuid().ToString();
+        var value = Guid.NewGuid().ToString();
+        var transformationError = new Exception("Test Error");
+        var transformation = Transformation.Json;
+
+        var transformer = new Mock<ITransformer>();
+        transformer.Setup(c =>
+            c.Transform<string>(value)
+        ).Throws(transformationError);
+
+        var transformerManager = new Mock<ITransformerManager>();
+        transformerManager.Setup(c =>
+            c.TryGetTransformer(transformation, key)
+        ).Returns(transformer.Object);
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(key)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
+        providerHandler.SetCacheManager(cacheManager.Object);
+        providerHandler.SetTransformerManager(transformerManager.Object);
+
+        // Act
+        var result = await providerHandler.GetAsync<string>(key, null, transformation, null);
+
+        // Assert
+        cacheManager.Verify(v => v.Get(key), Times.Once);
+        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        transformer.Verify(v => v.Transform<string>(value), Times.Once);
+        cacheManager.Verify(v => v.Set(key, It.IsAny<object?>(), It.IsAny<TimeSpan>()), Times.Never);
+        Assert.Null(result);
+    }
+    
+    [Fact]
+    public async Task GetAsync_WhenRaiseTransformationErrorSet_ThrowsException()
+    {
+        // Arrange
+        var key = Guid.NewGuid().ToString();
+        var value = Guid.NewGuid().ToString();
+        var transformationError = new Exception("Test Error");
+        var transformation = Transformation.Json;
+        var raiseTransformationError = true;
+
+        var transformer = new Mock<ITransformer>();
+        transformer.Setup(c =>
+            c.Transform<string>(value)
+        ).Throws(transformationError);
+
+        var transformerManager = new Mock<ITransformerManager>();
+        transformerManager.Setup(c =>
+            c.TryGetTransformer(transformation, key)
+        ).Returns(transformer.Object);
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(key)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
+        providerHandler.SetCacheManager(cacheManager.Object);
+        providerHandler.SetTransformerManager(transformerManager.Object);
+        providerHandler.SetRaiseTransformationError(raiseTransformationError);
+
+        // Act
+        Task<string?> Act() => providerHandler.GetAsync<string>(key, null, transformation, null);
+
+        // Assert
+        await Assert.ThrowsAsync<TransformationException>(Act);
+    }
 
     #endregion
 
@@ -991,6 +1081,124 @@ public class ParameterProviderTest
             o.Last().Value == transformedValue.Last().Value
         ), duration), Times.Once);
         Assert.NotNull(result);
+    }
+
+    [Fact]
+    public async Task GetMultipleAsync_WhenRaiseTransformationErrorNotSet_ReturnsNullOnError()
+    {
+        // Arrange
+        var path = Guid.NewGuid().ToString();
+        var value = new Dictionary<string, string?>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+
+        var transformedValue = Guid.NewGuid().ToString();
+        var transformationError = new Exception("Test Error");
+        var duration = CacheManager.DefaultMaxAge;
+
+        var transformer = new Mock<ITransformer>();
+        transformer.Setup(c =>
+            c.Transform<string>(value.First().Value ?? "")
+        ).Throws(transformationError);
+
+        transformer.Setup(c =>
+            c.Transform<string>(value.Last().Value ?? "")
+        ).Returns(transformedValue);
+
+        var transformation = Transformation.Json;
+        var transformerManager = new Mock<ITransformerManager>();
+        transformerManager.Setup(c =>
+            c.GetTransformer(transformation)
+        ).Returns(transformer.Object);
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(path)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
+        providerHandler.SetCacheManager(cacheManager.Object);
+        providerHandler.SetTransformerManager(transformerManager.Object);
+
+        // Act
+        var result = await providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
+
+        // Assert
+        cacheManager.Verify(v => v.Get(path), Times.Once);
+        providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        transformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
+        transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
+        cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string?>>(o =>
+            o.First().Key == value.First().Key &&
+            o.First().Value == null &&
+            o.Last().Key == value.Last().Key &&
+            o.Last().Value == transformedValue
+        ), duration), Times.Once);
+        
+        Assert.NotNull(result);
+    }
+    
+    [Fact]
+    public async Task GetMultipleAsync_WhenRaiseTransformationErrorSet_ThrowsException()
+    {
+        // Arrange
+        var path = Guid.NewGuid().ToString();
+        var value = new Dictionary<string, string?>
+        {
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
+        };
+
+        var transformedValue = Guid.NewGuid().ToString();
+        var transformationError = new Exception("Test Error");
+        var raiseTransformationError = true;
+
+        var transformer = new Mock<ITransformer>();
+        transformer.Setup(c =>
+            c.Transform<string>(value.First().Value ?? "")
+        ).Throws(transformationError);
+
+        transformer.Setup(c =>
+            c.Transform<string>(value.Last().Value ?? "")
+        ).Returns(transformedValue);
+
+        var transformation = Transformation.Json;
+        var transformerManager = new Mock<ITransformerManager>();
+        transformerManager.Setup(c =>
+            c.GetTransformer(transformation)
+        ).Returns(transformer.Object);
+
+        var providerProxy = new Mock<IParameterProviderProxy>();
+        providerProxy.Setup(c =>
+            c.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>())
+        ).ReturnsAsync(value);
+
+        var cacheManager = new Mock<ICacheManager>();
+        cacheManager.Setup(c =>
+            c.Get(path)
+        ).Returns(null);
+
+        var providerHandler =
+            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
+                ParameterProviderCacheMode.All);
+        providerHandler.SetCacheManager(cacheManager.Object);
+        providerHandler.SetTransformerManager(transformerManager.Object);
+        providerHandler.SetRaiseTransformationError(raiseTransformationError);
+        
+        // Act
+        Task<IDictionary<string, string?>> Act() => providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
+
+        // Assert
+        await Assert.ThrowsAsync<TransformationException>(Act);
     }
 
     #endregion

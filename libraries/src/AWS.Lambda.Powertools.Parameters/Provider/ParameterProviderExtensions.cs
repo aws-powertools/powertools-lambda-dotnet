@@ -48,4 +48,18 @@ public static class ParameterProviderExtensions
         ((ParameterProviderBase)(object)instance).Handler.AddCustomTransformer(name, transformer);
         return instance;
     }
+    
+    public static TProvider RaiseTransformationError<TProvider>(this TProvider instance)
+        where TProvider : IParameterProviderBase
+    {
+        RaiseTransformationError(instance, true);
+        return instance;
+    }
+    
+    public static TProvider RaiseTransformationError<TProvider>(this TProvider instance, bool raiseError)
+        where TProvider : IParameterProviderBase
+    {
+        ((ParameterProviderBase)(object)instance).Handler.SetRaiseTransformationError(raiseError);
+        return instance;
+    }
 }
