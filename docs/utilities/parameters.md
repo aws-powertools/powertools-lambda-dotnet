@@ -252,6 +252,196 @@ in order to get data from other regions or use specific credentials.
     }
     ```
 
+
+## App Configurations
+
+For application configurations in AWS AppConfig, use `AppConfigProvider`.
+
+Alternatively, you can retrieve the instance of provider and configure its underlying SDK client,
+in order to get data from other regions or use specific credentials.
+
+
+=== "AppConfigProvider"
+
+     ```c# hl_lines="12-14 18-20"
+    using AWS.Lambda.Powertools.Parameters;
+    using AWS.Lambda.Powertools.Parameters.AppConfig;
+
+    public class Function
+    {
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            // Get AppConfig Provider instance
+            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
+                .DefaultApplication("MyApplicationId")
+                .DefaultEnvironment("MyEnvironmentId")
+                .DefaultConfigProfile("MyConfigProfileId");
+                
+            // Retrieve a single configuration, latest version
+            IDictionary<string, string?> value = await appConfigProvider
+                .GetAsync()
+                .ConfigureAwait(false);
+        }
+    }
+    ```
+
+=== "AppConfigProvider with an explicit region"
+
+     ```c# hl_lines="12-14 18-20"
+    using AWS.Lambda.Powertools.Parameters;
+    using AWS.Lambda.Powertools.Parameters.AppConfig;
+
+    public class Function
+    {
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            // Get AppConfig Provider instance
+            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
+                .ConfigureClient(RegionEndpoint.EUCentral1)
+                .DefaultApplication("MyApplicationId")
+                .DefaultEnvironment("MyEnvironmentId")
+                .DefaultConfigProfile("MyConfigProfileId");
+                
+            // Retrieve a single configuration, latest version
+            IDictionary<string, string?> value = await appConfigProvider
+                .GetAsync()
+                .ConfigureAwait(false);
+        }
+    }
+    ```
+
+## DynamoDB Parameter Store
+
+For parameters stored in a DynamoDB table, use `DynamoDBProvider`.
+
+**DynamoDB table structure for single parameters**
+
+For single parameters, you must use `id` as the [partition key](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html#HowItWorks.CoreComponents.PrimaryKey) for that table.
+
+???+ example
+
+	DynamoDB table with `id` partition key and `value` as attribute
+
+ | id           | value    |
+ | ------------ | -------- |
+ | my-parameter | my-value |
+
+With this table, `DynamoDBProvider.Get("my-param")` will return `my-value`.
+
+
+=== "DynamoDBProvider"
+
+     ```c# hl_lines="12-14 18-20"
+    using AWS.Lambda.Powertools.Parameters;
+    using AWS.Lambda.Powertools.Parameters.DynamoDB;
+
+    public class Function
+    {
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            // Get DynamoDB Provider instance
+            IDynamoDBProvider dynamoDbProvider = ParametersManager.DynamoDBProvider
+                .UseTable
+                (
+                    "my-table",  // DynamoDB table name, required
+                    "id",        // Partition Key attribute name, optional, default is 'id'
+                    "value"      // Value attribute name, optional, default is 'value'
+                );
+                
+            // Retrieve a single parameter
+            string? value = await dynamoDbProvider
+                .GetAsync("my-param")
+                .ConfigureAwait(false);
+        }
+    }
+    ```
+
+**DynamoDB table structure for multiple values parameters**
+
+You can retrieve multiple parameters sharing the same `id` by having a sort key named `sk`.
+
+???+ example
+
+	DynamoDB table with `id` primary key, `sk` as sort key` and `value` as attribute
+
+ | id          | sk      | value      |
+ | ----------- | ------- | ---------- |
+ | my-hash-key | param-a | my-value-a |
+ | my-hash-key | param-b | my-value-b |
+ | my-hash-key | param-c | my-value-c |
+
+With this table, `DynamoDBProvider.GetMultiple("my-hash-key")` will return a dictionary response in the shape of `sk:value`.
+
+=== "DynamoDBProvider"
+
+     ```c# hl_lines="12-14 18-20"
+    using AWS.Lambda.Powertools.Parameters;
+    using AWS.Lambda.Powertools.Parameters.DynamoDB;
+
+    public class Function
+    {
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            // Get DynamoDB Provider instance
+            IDynamoDBProvider dynamoDbProvider = ParametersManager.DynamoDBProvider
+                .UseTable("my-table");
+                
+            // Retrieve a single parameter
+            IDictionary<string, string?> value = await dynamoDbProvider
+                .GetAsync("my-hash-key")
+                .ConfigureAwait(false);
+        }
+    }
+    ```
+
+=== "parameters dictionary response"
+
+	```json
+	{
+		"param-a": "my-value-a",
+		"param-b": "my-value-b",
+		"param-c": "my-value-c"
+	}
+
+**Customizing DynamoDBProvider**
+
+DynamoDB provider can be customized at initialization to match your table structure:
+
+| Parameter      | Mandatory | Default | Description                                                                                                |
+| -------------- | --------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| **table_name** | **Yes**   | *(N/A)* | Name of the DynamoDB table containing the parameter values.                                                |
+| **key_attr**   | No        | `id`    | Hash key for the DynamoDB table.                                                                           |
+| **sort_attr**  | No        | `sk`    | Range key for the DynamoDB table. You don't need to set this if you don't use the `GetMultiple()` method. |
+| **value_attr** | No        | `value` | Name of the attribute containing the parameter value.                
+
+=== "DynamoDBProvider"
+
+     ```c# hl_lines="12-14 18-20"
+    using AWS.Lambda.Powertools.Parameters;
+    using AWS.Lambda.Powertools.Parameters.DynamoDB;
+
+    public class Function
+    {
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            // Get DynamoDB Provider instance
+            IDynamoDBProvider dynamoDbProvider = ParametersManager.DynamoDBProvider
+                .UseTable
+                (
+                    tableName: "TableName",    // DynamoDB table name, Required.
+                    primaryKeyAttribute: "id", // Partition Key attribute name, optional, default is 'id'
+                    sortKeyAttribute: "sk",    // Sort Key attribute name, optional, default is 'sk'
+                    valueAttribute: "value"    // Value attribute name, optional, default is 'value'
+                );
+        }
+    }
+    ```
+
 ## Advanced configuration
 
 ### Caching

@@ -44,7 +44,7 @@ public static class ParametersManager
     
     public static ISecretsProvider SecretsProvider => _secretsProvider ??= CreateSecretsProvider();
     
-    public static IAppConfigProvider AppConfigProvide => _appConfigProvider ??= CreateAppConfigProvider();
+    public static IAppConfigProvider AppConfigProvider => _appConfigProvider ??= CreateAppConfigProvider();
     
     public static IDynamoDBProvider DynamoDBProvider => _dynamoDBProvider ??= CreateDynamoDBProvider();
 
