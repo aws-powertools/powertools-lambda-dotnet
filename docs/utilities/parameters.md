@@ -44,7 +44,7 @@ in order to get data from other regions or use specific credentials.
 
 === "SsmProvider"
 
-    ```c# hl_lines="12-14 18-20"
+    ```c# hl_lines="10"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -72,7 +72,7 @@ in order to get data from other regions or use specific credentials.
     
 === "SsmProvider with an explicit region"
 
-    ```c# hl_lines="9-12 16-19"
+    ```c# hl_lines="10 11"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -101,7 +101,7 @@ in order to get data from other regions or use specific credentials.
 
 === "SsmProvider with a custom client"
 
-    ```c# hl_lines="9-12 16-19"
+    ```c# hl_lines="11 14 15"
     using Amazon.SimpleSystemsManagement;
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -145,7 +145,7 @@ The AWS Systems Manager Parameter Store provider supports two additional argumen
 
 === "Function.cs"
 
-    ```c# hl_lines="12-14 18-20"
+    ```c# hl_lines="13-16 20-23"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -183,7 +183,7 @@ in order to get data from other regions or use specific credentials.
 
 === "SecretsProvider"
 
-     ```c# hl_lines="12-14 18-20"
+     ```c# hl_lines="13-15"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SecretsManager;
 
@@ -204,7 +204,7 @@ in order to get data from other regions or use specific credentials.
     ```
 === "SecretsProvider with an explicit region"
 
-    ```c# hl_lines="9-12 16-19"
+    ```c# hl_lines="10-11 14-16"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SecretsManager;
 
@@ -227,7 +227,7 @@ in order to get data from other regions or use specific credentials.
 
 === "SecretsProvider with a custom clieent"
 
-    ```c# hl_lines="9-12 16-19"
+    ```c# hl_lines="11 14 15"
     using Amazon.SecretsManager;
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SecretsManager;
@@ -252,7 +252,6 @@ in order to get data from other regions or use specific credentials.
     }
     ```
 
-
 ## App Configurations
 
 For application configurations in AWS AppConfig, use `AppConfigProvider`.
@@ -263,7 +262,7 @@ in order to get data from other regions or use specific credentials.
 
 === "AppConfigProvider"
 
-     ```c# hl_lines="12-14 18-20"
+     ```c# hl_lines="10-13 16-18"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.AppConfig;
 
@@ -288,7 +287,7 @@ in order to get data from other regions or use specific credentials.
 
 === "AppConfigProvider with an explicit region"
 
-     ```c# hl_lines="12-14 18-20"
+     ```c# hl_lines="10-14"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.AppConfig;
 
@@ -312,7 +311,7 @@ in order to get data from other regions or use specific credentials.
     }
     ```
 
-## DynamoDB Parameter Store
+## DynamoDB Provider
 
 For parameters stored in a DynamoDB table, use `DynamoDBProvider`.
 
@@ -333,7 +332,7 @@ With this table, `DynamoDBProvider.Get("my-param")` will return `my-value`.
 
 === "DynamoDBProvider"
 
-     ```c# hl_lines="12-14 18-20"
+     ```c# hl_lines="10 11 14-16"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.DynamoDB;
 
@@ -344,12 +343,7 @@ With this table, `DynamoDBProvider.Get("my-param")` will return `my-value`.
         {
             // Get DynamoDB Provider instance
             IDynamoDBProvider dynamoDbProvider = ParametersManager.DynamoDBProvider
-                .UseTable
-                (
-                    "my-table",  // DynamoDB table name, required
-                    "id",        // Partition Key attribute name, optional, default is 'id'
-                    "value"      // Value attribute name, optional, default is 'value'
-                );
+                .UseTable("my-table");
                 
             // Retrieve a single parameter
             string? value = await dynamoDbProvider
@@ -377,7 +371,7 @@ With this table, `DynamoDBProvider.GetMultiple("my-hash-key")` will return a dic
 
 === "DynamoDBProvider"
 
-     ```c# hl_lines="12-14 18-20"
+     ```c# hl_lines="10 11 14-16"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.DynamoDB;
 
@@ -392,7 +386,7 @@ With this table, `DynamoDBProvider.GetMultiple("my-hash-key")` will return a dic
                 
             // Retrieve a single parameter
             IDictionary<string, string?> value = await dynamoDbProvider
-                .GetAsync("my-hash-key")
+                .GetMultipleAsync("my-hash-key")
                 .ConfigureAwait(false);
         }
     }
@@ -420,7 +414,7 @@ DynamoDB provider can be customized at initialization to match your table struct
 
 === "DynamoDBProvider"
 
-     ```c# hl_lines="12-14 18-20"
+     ```c# hl_lines="10-17"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.DynamoDB;
 
@@ -455,7 +449,7 @@ If you'd like to always ensure you fetch the latest parameter from the store reg
 
 === "Provider with default Max age"
 
-    ```c# hl_lines="9"
+    ```c# hl_lines="10 11"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -478,7 +472,7 @@ If you'd like to always ensure you fetch the latest parameter from the store reg
 
 === "Provider with age for each parameter"
 
-    ```c# hl_lines="9"
+    ```c# hl_lines="13-16"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -501,7 +495,7 @@ If you'd like to always ensure you fetch the latest parameter from the store reg
 
 === "Force to fetch the latest parameter"
 
-    ```c# hl_lines="9"
+    ```c# hl_lines="13-16"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -524,12 +518,12 @@ If you'd like to always ensure you fetch the latest parameter from the store reg
 
 ### Transform values
 
-Parameter values can be transformed using ```WithTransformation(TransformationEnum)```. Base64 and JSON transformations are provided.
+Parameter values can be transformed using ```WithTransformation()```. Base64 and JSON transformations are provided.
 For more complex transformation, you need to specify how to deserialize by writing your own transfomer.
 
 === "JSON Transformation"
 
-    ```c# hl_lines="9"
+    ```c# hl_lines="13-16"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -552,7 +546,7 @@ For more complex transformation, you need to specify how to deserialize by writi
 
 === "Base64 Transformation"
 
-    ```c# hl_lines="9"
+    ```c# hl_lines="13-16"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -581,7 +575,7 @@ You can override this by using ```RaiseTransformationError()```. If you do so, a
 
 === "Function.cs"
 
-    ```c# hl_lines="9"
+    ```c# hl_lines="10 11"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -611,7 +605,7 @@ You can do this with a single request by using `Transformation.Auto`. This will 
     
 === "Function.cs"
 
-    ```c# hl_lines="9"
+    ```c# hl_lines="14-17"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
@@ -656,7 +650,7 @@ For example, if you wish to deserialize XML into an object.
 
 === "XmlTransformer.cs"
 
-    ```c# hl_lines="1"
+    ```c# hl_lines="1 3"
     public class XmlTransformer : ITransformer
     {
         public T? Transform<T>(string value)
@@ -682,7 +676,7 @@ For example, if you wish to deserialize XML into an object.
 
 === "Adding XmlTransformer as transformer"
 
-    ```c#
+    ```c# hl_lines="2 3 7"
         // Get SSM Provider instance
         ISsmProvider ssmProvider = ParametersManager.SsmProvider
             .AddTransformer("XML", new XmlTransformer());
@@ -700,7 +694,7 @@ To simplify the use of the library, you can chain all method calls before a get.
 
 === "Fluent API call"
 
-    ```java
+    ```c#
         ssmProvider
           .DefaultMaxAge(TimeSpan.FromSeconds(10))  // will set 10 seconds as the default cache TTL
           .WithMaxAge(TimeSpan.FromMinutes(1))      // will set the cache TTL for this value at 1 minute
@@ -788,7 +782,7 @@ You can create your own custom parameter provider by inheriting the ```BaseProvi
 
 === "Using custom parameter store"
 
-    ```c# hl_lines="3"
+    ```c#
         var provider = new S3Provider();
         
         var value = await provider
