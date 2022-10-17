@@ -15,7 +15,16 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Transform;
 
+/// <summary>
+/// Represents a type used to transform a parameter value.
+/// </summary>
 public interface ITransformer
 {
+    /// <summary>
+    /// Transforms the string value to specified type.
+    /// </summary>
+    /// <param name="value">Parameter value.</param>
+    /// <typeparam name="T">Target transformation type.</typeparam>
+    /// <returns>The transformed value.</returns>
     T? Transform<T>(string value);
 }

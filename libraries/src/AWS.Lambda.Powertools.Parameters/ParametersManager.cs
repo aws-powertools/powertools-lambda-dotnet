@@ -25,31 +25,93 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters;
 
+/// <summary>
+/// Class ParametersManager
+/// </summary>
 public static class ParametersManager
 {
+    /// <summary>
+    /// The SsmProvider instance
+    /// </summary>
     private static ISsmProvider? _ssmProvider;
+    
+    /// <summary>
+    /// The SecretsProvider instance
+    /// </summary>
     private static ISecretsProvider? _secretsProvider;
+    
+    /// <summary>
+    /// The AppConfigProvider instance
+    /// </summary>
     private static IAppConfigProvider? _appConfigProvider;
+    
+    /// <summary>
+    /// The DynamoDBProvider instance
+    /// </summary>
     private static IDynamoDBProvider? _dynamoDBProvider;
 
+    /// <summary>
+    /// The CacheManager instance
+    /// </summary>
     private static ICacheManager? _cache;
+    
+    /// <summary>
+    /// The TransformerManager instance
+    /// </summary>
     private static ITransformerManager? _transformManager;
+    
+    /// <summary>
+    /// The DefaultMaxAge across all providers
+    /// </summary>
     private static TimeSpan? _defaultMaxAge;
     
+    /// <summary>
+    /// Gets the CacheManager instance.
+    /// </summary>
+    /// <value>The CacheManager instance.</value>
     private static ICacheManager Cache => _cache ??= new CacheManager(DateTimeWrapper.Instance);
     
+    /// <summary>
+    /// Gets the TransformerManager instance.
+    /// </summary>
+    /// <value>The TransformerManager instance.</value>
     private static ITransformerManager TransformManager => _transformManager ??= TransformerManager.Instance;
 
+    /// <summary>
+    /// Gets the SsmProvider instance.
+    /// </summary>
+    /// <value>The SsmProvider instance.</value>
     public static ISsmProvider SsmProvider => _ssmProvider ??= CreateSsmProvider();
     
+    /// <summary>
+    /// Gets the SecretsProvider instance.
+    /// </summary>
+    /// <value>The SecretsProvider instance.</value>
     public static ISecretsProvider SecretsProvider => _secretsProvider ??= CreateSecretsProvider();
     
+    /// <summary>
+    /// Gets the AppConfigProvider instance.
+    /// </summary>
+    /// <value>The AppConfigProvider instance.</value>
     public static IAppConfigProvider AppConfigProvider => _appConfigProvider ??= CreateAppConfigProvider();
     
+    /// <summary>
+    /// Gets the DynamoDBProvider instance.
+    /// </summary>
+    /// <value>The DynamoDBProvider instance.</value>
     public static IDynamoDBProvider DynamoDBProvider => _dynamoDBProvider ??= CreateDynamoDBProvider();
 
+    /// <summary>
+    /// Set the caching default maximum age for all providers.
+    /// </summary>
+    /// <param name="maxAge">The maximum age.</param>
+    /// <exception cref="System.ArgumentOutOfRangeException">maxAge</exception>
     public static void DefaultMaxAge(TimeSpan maxAge)
     {
+        if (maxAge <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(maxAge),
+                "The value for maximum age must be greater than zero.");
+            
         _defaultMaxAge = maxAge;
         _ssmProvider?.DefaultMaxAge(maxAge);
         _secretsProvider?.DefaultMaxAge(maxAge);
@@ -57,6 +119,10 @@ public static class ParametersManager
         _dynamoDBProvider?.DefaultMaxAge(maxAge);
     }
 
+    /// <summary>
+    /// Set the CacheManager instance for all providers.
+    /// </summary>
+    /// <param name="cacheManager">The CacheManager instance.</param>
     public static void UseCacheManager(ICacheManager cacheManager)
     {
         _cache = cacheManager;
@@ -66,6 +132,10 @@ public static class ParametersManager
         _dynamoDBProvider?.UseCacheManager(cacheManager);
     }
 
+    /// <summary>
+    /// Set the TransformerManager instance for all providers.
+    /// </summary>
+    /// <param name="transformerManager">The TransformerManager instance.</param>
     public static void UseTransformerManager(ITransformerManager transformerManager)
     {
         _transformManager = transformerManager;
@@ -75,6 +145,11 @@ public static class ParametersManager
         _dynamoDBProvider?.UseTransformerManager(transformerManager);
     }
 
+    /// <summary>
+    /// Registers a new transformer instance by name for all providers.
+    /// </summary>
+    /// <param name="name">The transformer unique name.</param>
+    /// <param name="transformer">The transformer instance.</param>
     public static void AddTransformer(string name, ITransformer transformer)
     {
         TransformManager.AddTransformer(name, transformer);
@@ -84,6 +159,9 @@ public static class ParametersManager
         _dynamoDBProvider?.AddTransformer(name, transformer);
     }
     
+    /// <summary>
+    /// Configure the transformer to raise exception on transformation error
+    /// </summary>
     public static void RaiseTransformationError()
     {
         _ssmProvider?.RaiseTransformationError();
@@ -92,6 +170,10 @@ public static class ParametersManager
         _dynamoDBProvider?.RaiseTransformationError();
     }
     
+    /// <summary>
+    /// Configure the transformer to raise exception or return Null on transformation error
+    /// </summary>
+    /// <param name="raiseError">true for raise error, false for return Null.</param>
     public static void RaiseTransformationError(bool raiseError)
     {
         _ssmProvider?.RaiseTransformationError(raiseError);
@@ -100,6 +182,10 @@ public static class ParametersManager
         _dynamoDBProvider?.RaiseTransformationError(raiseError);
     }
 
+    /// <summary>
+    /// Create a new instance of SsmProvider.
+    /// </summary>
+    /// <value>The SsmProvider instance.</value>
     public static ISsmProvider CreateSsmProvider()
     {
         var provider = new SsmProvider()
@@ -112,6 +198,10 @@ public static class ParametersManager
         return provider;
     }
 
+    /// <summary>
+    /// Create a new instance of SecretsProvider.
+    /// </summary>
+    /// <value>The SecretsProvider instance.</value>
     public static ISecretsProvider CreateSecretsProvider()
     {
         var provider = new SecretsProvider()
@@ -124,6 +214,10 @@ public static class ParametersManager
         return provider;
     }
 
+    /// <summary>
+    /// Create a new instance of AppConfigProvider.
+    /// </summary>
+    /// <value>The AppConfigProvider instance.</value>
     public static IAppConfigProvider CreateAppConfigProvider()
     {
         var provider = new AppConfigProvider()
@@ -136,6 +230,10 @@ public static class ParametersManager
         return provider;
     }
 
+    /// <summary>
+    /// Create a new instance of DynamoDBProvider.
+    /// </summary>
+    /// <value>The DynamoDBProvider instance.</value>
     public static IDynamoDBProvider CreateDynamoDBProvider()
     {
         var provider = new DynamoDBProvider()

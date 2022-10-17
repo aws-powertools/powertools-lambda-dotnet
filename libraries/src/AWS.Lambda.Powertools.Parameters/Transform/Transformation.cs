@@ -15,9 +15,23 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Transform;
 
+/// <summary>
+/// Enum Transformation
+/// </summary>
 public enum Transformation
 {
+    /// <summary>
+    /// Auto
+    /// </summary>
     Auto,
+    
+    /// <summary>
+    /// Json
+    /// </summary>
     Json,
+    
+    /// <summary>
+    /// Base64
+    /// </summary>
     Base64
 }

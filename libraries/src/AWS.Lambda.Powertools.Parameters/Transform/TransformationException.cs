@@ -15,15 +15,28 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Transform;
 
+/// <summary>
+/// Class TransformationException.
+/// Implements the <see cref="System.Exception" />
+/// </summary>
+/// <seealso cref="System.Exception" />
+[Serializable]
 public class TransformationException : Exception
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransformationException" /> class.
+    /// </summary>
+    /// <param name="message">The exception message.</param>
     public TransformationException(string message) : base(message)
     {
-
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransformationException" /> class.
+    /// </summary>
+    /// <param name="message">The exception message.</param>
+    /// <param name="innerException">The inner exception.</param>
     public TransformationException(string message, Exception innerException) : base(message, innerException)
     {
-
     }
 }
