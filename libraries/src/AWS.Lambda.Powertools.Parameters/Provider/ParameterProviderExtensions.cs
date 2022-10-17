@@ -18,48 +18,93 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Provider;
 
+/// <summary>
+/// Class ParameterProviderExtensions.
+/// </summary>
 public static class ParameterProviderExtensions
 {
-    public static TProvider DefaultMaxAge<TProvider>(this TProvider instance, TimeSpan maxAge)
+    /// <summary>
+    /// Set the cache maximum age.
+    /// </summary>
+    /// <param name="provider">The provider instance.</param>
+    /// <param name="maxAge">The cache maximum age.</param>
+    /// <typeparam name="TProvider">The provider type.</typeparam>
+    /// <returns>The provider instance.</returns>
+    public static TProvider DefaultMaxAge<TProvider>(this TProvider provider, TimeSpan maxAge)
         where TProvider : IParameterProviderBase
     {
-        ((ParameterProviderBase)(object)instance).Handler.SetDefaultMaxAge(maxAge);
-        return instance;
+        ((ParameterProviderBase)(object)provider).Handler.SetDefaultMaxAge(maxAge);
+        return provider;
     }
 
-    public static TProvider UseCacheManager<TProvider>(this TProvider instance, ICacheManager cacheManager)
+    /// <summary>
+    /// Set the CacheManager instance.
+    /// </summary>
+    /// <param name="provider">The provider instance.</param>
+    /// <param name="cacheManager">The CacheManager instance.</param>
+    /// <typeparam name="TProvider">The provider type.</typeparam>
+    /// <returns>The provider instance.</returns>
+    public static TProvider UseCacheManager<TProvider>(this TProvider provider, ICacheManager cacheManager)
         where TProvider : IParameterProviderBase
     {
-        ((ParameterProviderBase)(object)instance).Handler.SetCacheManager(cacheManager);
-        return instance;
+        ((ParameterProviderBase)(object)provider).Handler.SetCacheManager(cacheManager);
+        return provider;
     }
 
-    public static TProvider UseTransformerManager<TProvider>(this TProvider instance,
+    /// <summary>
+    /// Set the TransformerManager instance.
+    /// </summary>
+    /// <param name="provider">The provider instance.</param>
+    /// <param name="transformerManager">The TransformerManager instance.</param>
+    /// <typeparam name="TProvider">The provider type.</typeparam>
+    /// <returns>The provider instance.</returns>
+    public static TProvider UseTransformerManager<TProvider>(this TProvider provider,
         ITransformerManager transformerManager)
         where TProvider : IParameterProviderBase
     {
-        ((ParameterProviderBase)(object)instance).Handler.SetTransformerManager(transformerManager);
-        return instance;
+        ((ParameterProviderBase)(object)provider).Handler.SetTransformerManager(transformerManager);
+        return provider;
     }
 
-    public static TProvider AddTransformer<TProvider>(this TProvider instance, string name, ITransformer transformer)
+    /// <summary>
+    /// Registers a new transformer instance by name.
+    /// </summary>
+    /// <param name="provider">The provider instance.</param>
+    /// <param name="name">The transformer name.</param>
+    /// <param name="transformer">The transformer instance.</param>
+    /// <typeparam name="TProvider">The provider type.</typeparam>
+    /// <returns>The provider instance.</returns>
+    public static TProvider AddTransformer<TProvider>(this TProvider provider, string name, ITransformer transformer)
         where TProvider : IParameterProviderBase
     {
-        ((ParameterProviderBase)(object)instance).Handler.AddCustomTransformer(name, transformer);
-        return instance;
+        ((ParameterProviderBase)(object)provider).Handler.AddCustomTransformer(name, transformer);
+        return provider;
     }
     
-    public static TProvider RaiseTransformationError<TProvider>(this TProvider instance)
+    /// <summary>
+    /// Configure the transformer to raise exception on transformation error
+    /// </summary>
+    /// <param name="provider">The provider instance.</param>
+    /// <typeparam name="TProvider">The provider type.</typeparam>
+    /// <returns>The provider instance.</returns>
+    public static TProvider RaiseTransformationError<TProvider>(this TProvider provider)
         where TProvider : IParameterProviderBase
     {
-        RaiseTransformationError(instance, true);
-        return instance;
+        RaiseTransformationError(provider, true);
+        return provider;
     }
     
-    public static TProvider RaiseTransformationError<TProvider>(this TProvider instance, bool raiseError)
+    /// <summary>
+    /// Configure the transformer to raise exception or return Null on transformation error
+    /// </summary>
+    /// <param name="provider">The provider instance.</param>
+    /// <param name="raiseError">true for raise error, false for return Null.</param>
+    /// <typeparam name="TProvider">The provider type.</typeparam>
+    /// <returns>The provider instance.</returns>
+    public static TProvider RaiseTransformationError<TProvider>(this TProvider provider, bool raiseError)
         where TProvider : IParameterProviderBase
     {
-        ((ParameterProviderBase)(object)instance).Handler.SetRaiseTransformationError(raiseError);
-        return instance;
+        ((ParameterProviderBase)(object)provider).Handler.SetRaiseTransformationError(raiseError);
+        return provider;
     }
 }
