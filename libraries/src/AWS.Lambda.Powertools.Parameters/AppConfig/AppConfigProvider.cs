@@ -213,13 +213,13 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return result.TryGetValue(key, out var value) ? value : null;
     }
 
-    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string path,
+    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string key,
         ParameterProviderConfiguration? config)
     {
         var configuration = GetProviderConfiguration(config, true);
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(configuration);
         
-        if (!string.Equals(path, cacheKey, StringComparison.CurrentCultureIgnoreCase))
+        if (!string.Equals(key, cacheKey, StringComparison.CurrentCultureIgnoreCase))
             throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
 
         return await GetLastConfigurationAsync(configuration)

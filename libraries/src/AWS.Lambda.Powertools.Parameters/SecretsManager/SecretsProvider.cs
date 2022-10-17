@@ -121,7 +121,7 @@ public class SecretsProvider : ParameterProvider, ISecretsProvider
         return decodedBinarySecret;
     }
 
-    protected override Task<IDictionary<string, string?>> GetMultipleAsync(string path,
+    protected override Task<IDictionary<string, string?>> GetMultipleAsync(string key,
         ParameterProviderConfiguration? config)
     {
         throw new NotSupportedException("Impossible to get multiple values from AWS Secrets Manager");

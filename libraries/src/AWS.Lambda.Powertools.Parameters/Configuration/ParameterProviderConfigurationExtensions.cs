@@ -27,10 +27,10 @@ public static class ParameterProviderConfigurationExtensions
     }
 
     public static TConfigurationBuilder WithMaxAge<TConfigurationBuilder>(this TConfigurationBuilder instance,
-        TimeSpan age)
+        TimeSpan maxAge)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder
     {
-        instance.SetMaxAge(age);
+        instance.SetMaxAge(maxAge);
         return instance;
     }
 

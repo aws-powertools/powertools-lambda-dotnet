@@ -26,7 +26,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 {
     internal delegate Task<string?> GetAsyncDelegate(string key, ParameterProviderConfiguration? config);
 
-    internal delegate Task<IDictionary<string, string?>> GetMultipleAsyncDelegate(string path,
+    internal delegate Task<IDictionary<string, string?>> GetMultipleAsyncDelegate(string key,
         ParameterProviderConfiguration? config);
 
     private ICacheManager? _cache;
@@ -54,10 +54,10 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         return await _getAsyncHandler(key, config);
     }
 
-    private async Task<IDictionary<string, string?>> GetMultipleAsync(string path,
+    private async Task<IDictionary<string, string?>> GetMultipleAsync(string key,
         ParameterProviderConfiguration? config)
     {
-        return await _getMultipleAsyncHandler(path, config);
+        return await _getMultipleAsyncHandler(key, config);
     }
     
     private T? TryTransform<T>(ITransformer? transformer, string? value)
@@ -168,16 +168,16 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         return retValue;
     }
 
-    public async Task<IDictionary<string, T?>> GetMultipleAsync<T>(string path,
+    public async Task<IDictionary<string, T?>> GetMultipleAsync<T>(string key,
         ParameterProviderConfiguration? config, Transformation? transformation, string? transformerName) where T : class
     {
-        var cachedObject = config is null || !config.ForceFetch ? Cache.Get(path) : null;
+        var cachedObject = config is null || !config.ForceFetch ? Cache.Get(key) : null;
         if (cachedObject is IDictionary<string, T?> cachedValue)
             return cachedValue;
 
         var retValues = new Dictionary<string, T?>();
 
-        var respValues = await GetMultipleAsync(path, config)
+        var respValues = await GetMultipleAsync(key, config)
             .ConfigureAwait(false);
 
         if (!respValues.Any())
@@ -195,17 +195,17 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
                 config.Transformer = transformer;
         }
 
-        foreach (var (key, value) in respValues)
+        foreach (var (k, v) in respValues)
         {
             var newTransformer = transformer;
             if (newTransformer is null && transformation == Transformation.Auto)
-                newTransformer = TransformManager.TryGetTransformer(transformation.Value, key);
+                newTransformer = TransformManager.TryGetTransformer(transformation.Value, k);
             
-            retValues.Add(key, TryTransform<T>(newTransformer, value));
+            retValues.Add(k, TryTransform<T>(newTransformer, v));
         }
 
         if (_cacheMode is ParameterProviderCacheMode.All or ParameterProviderCacheMode.GetMultipleResultOnly)
-            Cache.Set(path, retValues, GetMaxAge(config));
+            Cache.Set(key, retValues, GetMaxAge(config));
 
         return retValues;
     }

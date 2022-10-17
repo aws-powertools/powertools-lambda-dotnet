@@ -40,6 +40,6 @@ public interface IParameterProviderBaseHandler
     Task<T?> GetAsync<T>(string key, ParameterProviderConfiguration? config, Transformation? transformation,
         string? transformerName) where T: class;
 
-    Task<IDictionary<string, T?>> GetMultipleAsync<T>(string path,
+    Task<IDictionary<string, T?>> GetMultipleAsync<T>(string key,
         ParameterProviderConfiguration? config, Transformation? transformation, string? transformerName) where T: class;
 }

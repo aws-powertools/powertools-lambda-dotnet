@@ -155,7 +155,7 @@ public class DynamoDBProvider : ParameterProvider, IDynamoDBProvider
             : null;
     }
 
-    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string path,
+    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string key,
         ParameterProviderConfiguration? config)
     {
         var tableInfo = GetTableInfo();
@@ -168,7 +168,7 @@ public class DynamoDBProvider : ParameterProvider, IDynamoDBProvider
                 KeyConditionExpression = $"{tableInfo.PrimaryKeyAttribute} = :v_id",
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    { ":v_id", new AttributeValue { S = path } }
+                    { ":v_id", new AttributeValue { S = key } }
                 }
             }).ConfigureAwait(false);
 

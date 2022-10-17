@@ -132,7 +132,7 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>, I
         return response?.Parameter?.Value;
     }
 
-    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string path,
+    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string key,
         ParameterProviderConfiguration? config)
     {
         var configuration = config as SsmProviderConfiguration;
@@ -145,7 +145,7 @@ public class SsmProvider : ParameterProvider<SsmProviderConfigurationBuilder>, I
             var response = await Client.GetParametersByPathAsync(
                 new GetParametersByPathRequest
                 {
-                    Path = path,
+                    Path = key,
                     WithDecryption = (configuration?.WithDecryption).GetValueOrDefault(),
                     Recursive = (configuration?.Recursive).GetValueOrDefault(),
                     NextToken = nextToken

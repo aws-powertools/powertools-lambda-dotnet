@@ -15,10 +15,28 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Provider;
 
+/// <summary>
+/// Enum ParameterProviderCacheMode
+/// </summary>
 public enum ParameterProviderCacheMode
 {
+    /// <summary>
+    /// All
+    /// </summary>
     All,
+
+    /// <summary>
+    /// Disabled
+    /// </summary>
     Disabled,
+
+    /// <summary>
+    /// GetResultOnly
+    /// </summary>
     GetResultOnly,
+
+    /// <summary>
+    /// GetMultipleResultOnly
+    /// </summary>
     GetMultipleResultOnly
 }
