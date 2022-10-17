@@ -5,7 +5,7 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 namespace AWS.Lambda.Powertools.Parameters.SecretsManager;
 
 public interface ISecretsProvider : IParameterProvider,
-    IAmazonConfigurableClient<ISecretsProvider, IAmazonSecretsManager, AmazonSecretsManagerConfig>
+    IParameterProviderConfigurableClient<ISecretsProvider, IAmazonSecretsManager, AmazonSecretsManagerConfig>
 {
    
 }

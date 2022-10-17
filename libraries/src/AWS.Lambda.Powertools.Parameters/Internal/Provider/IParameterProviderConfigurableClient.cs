@@ -18,7 +18,7 @@ using Amazon.Runtime;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.Provider;
 
-public interface IAmazonConfigurableClient<out TProvider, in TClient, in TConfig>
+public interface IParameterProviderConfigurableClient<out TProvider, in TClient, in TConfig>
 {
     TProvider UseClient(TClient client);
     

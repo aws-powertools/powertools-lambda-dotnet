@@ -5,7 +5,7 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 namespace AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
 public interface ISsmProvider : IParameterProvider<SsmProviderConfigurationBuilder>,
-    IAmazonConfigurableClient<ISsmProvider, IAmazonSimpleSystemsManagement, AmazonSimpleSystemsManagementConfig>
+    IParameterProviderConfigurableClient<ISsmProvider, IAmazonSimpleSystemsManagement, AmazonSimpleSystemsManagementConfig>
 {
     SsmProviderConfigurationBuilder WithDecryption();
     

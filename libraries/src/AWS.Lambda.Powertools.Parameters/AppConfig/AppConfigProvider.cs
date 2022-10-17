@@ -292,7 +292,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 
         _pollConfigurationToken = response.NextPollConfigurationToken;
         _nextAllowedPollTime = _dateTimeWrapper.UtcNow.AddSeconds(response.NextPollIntervalInSeconds);
-
+        
         _lastConfig = ParseConfig(response.ContentType, response.Configuration);
         return _lastConfig;
     }

@@ -5,7 +5,7 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 namespace AWS.Lambda.Powertools.Parameters.AppConfig;
 
 public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfigurationBuilder>,
-    IAmazonConfigurableClient<IAppConfigProvider, IAmazonAppConfigData, AmazonAppConfigDataConfig>
+    IParameterProviderConfigurableClient<IAppConfigProvider, IAmazonAppConfigData, AmazonAppConfigDataConfig>
 {
     IAppConfigProvider DefaultApplication(string applicationId);
 

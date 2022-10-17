@@ -5,7 +5,7 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 namespace AWS.Lambda.Powertools.Parameters.DynamoDB;
 
 public interface IDynamoDBProvider : IParameterProvider,
-    IAmazonConfigurableClient<IDynamoDBProvider, IAmazonDynamoDB, AmazonDynamoDBConfig>
+    IParameterProviderConfigurableClient<IDynamoDBProvider, IAmazonDynamoDB, AmazonDynamoDBConfig>
 {
     IDynamoDBProvider UseTable(string tableName);
 
