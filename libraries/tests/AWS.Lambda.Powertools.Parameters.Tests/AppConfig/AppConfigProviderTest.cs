@@ -40,17 +40,23 @@ public class AppConfigProviderTest
         var value = Guid.NewGuid().ToString();
         var transformerName = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
-
+        
         var cacheManager = new Mock<ICacheManager>();
         var client = new Mock<IAmazonAppConfigData>();
         var transformerManager = new Mock<ITransformerManager>();
         var transformer = new Mock<ITransformer>();
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
         var dateTimeWrapper = new Mock<IDateTimeWrapper>();
+        
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+        var appConfig = new Dictionary<string, string?> { { key, value } };
 
         providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+            c.GetAsync<IDictionary<string, string?>>(cacheKey, It.IsAny<ParameterProviderConfiguration?>(), null, null)
+        ).ReturnsAsync(appConfig);
 
         var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object);
         appConfigProvider.SetHandler(providerHandler.Object);
@@ -59,12 +65,19 @@ public class AppConfigProviderTest
             .UseTransformerManager(transformerManager.Object);
         appConfigProvider.DefaultMaxAge(duration);
         appConfigProvider.AddTransformer(transformerName, transformer.Object);
+        appConfigProvider.DefaultApplication(applicationId);
+        appConfigProvider.DefaultEnvironment(environmentId);
+        appConfigProvider.DefaultConfigProfile(configProfileId);
 
         // Act
         var result = await appConfigProvider.GetAsync(key);
 
         // Assert
-        providerHandler.Verify(v => v.GetAsync<string>(key, null, null, null), Times.Once);
+        providerHandler.Verify(
+            v => v.GetAsync<IDictionary<string, string?>>(cacheKey,
+                It.Is<AppConfigProviderConfiguration?>(x =>
+                    x != null && x.ApplicationId == applicationId && x.EnvironmentId == environmentId &&
+                    x.ConfigProfileId == configProfileId), null, null), Times.Once);
         providerHandler.Verify(v => v.SetCacheManager(cacheManager.Object), Times.Once);
         providerHandler.Verify(v => v.SetTransformerManager(transformerManager.Object), Times.Once);
         providerHandler.Verify(v => v.SetDefaultMaxAge(duration), Times.Once);
@@ -86,15 +99,24 @@ public class AppConfigProviderTest
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
         var dateTimeWrapper = new Mock<IDateTimeWrapper>();
 
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+        var appConfig = new Dictionary<string, string?> { { key, value } };
+
         providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+            c.GetAsync<IDictionary<string, string?>>(cacheKey, It.IsAny<ParameterProviderConfiguration?>(), null, null)
+        ).ReturnsAsync(appConfig);
 
         var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object);
         appConfigProvider.SetHandler(providerHandler.Object);
         appConfigProvider.UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object);
+        appConfigProvider.DefaultApplication(applicationId);
+        appConfigProvider.DefaultEnvironment(environmentId);
+        appConfigProvider.DefaultConfigProfile(configProfileId);
 
         // Act
         var result = await appConfigProvider
@@ -103,8 +125,8 @@ public class AppConfigProviderTest
 
         // Assert
         providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
+            v => v.GetAsync<IDictionary<string, string?>>(cacheKey,
+                It.Is<AppConfigProviderConfiguration?>(x =>
                     x != null && x.ForceFetch
                 ), null,
                 null), Times.Once);
@@ -126,15 +148,24 @@ public class AppConfigProviderTest
         var providerHandler = new Mock<IParameterProviderBaseHandler>();
         var dateTimeWrapper = new Mock<IDateTimeWrapper>();
 
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+        var appConfig = new Dictionary<string, string?> { { key, value } };
+
         providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+            c.GetAsync<IDictionary<string, string?>>(cacheKey, It.IsAny<ParameterProviderConfiguration?>(), null, null)
+        ).ReturnsAsync(appConfig);
 
         var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object);
         appConfigProvider.SetHandler(providerHandler.Object);
         appConfigProvider.UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object);
+        appConfigProvider.DefaultApplication(applicationId);
+        appConfigProvider.DefaultEnvironment(environmentId);
+        appConfigProvider.DefaultConfigProfile(configProfileId);
 
         // Act
         var result = await appConfigProvider
@@ -143,7 +174,7 @@ public class AppConfigProviderTest
 
         // Assert
         providerHandler.Verify(
-            v => v.GetAsync<string>(key,
+            v => v.GetAsync<IDictionary<string, string?>>(cacheKey,
                 It.Is<ParameterProviderConfiguration?>(x =>
                     x != null && x.MaxAge == duration
                 ), null,
@@ -151,154 +182,41 @@ public class AppConfigProviderTest
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-
-    [Fact]
-    public async Task GetAsync_WithTransformer_CallsHandlerWithConfiguredParameters()
-    {
-        // Arrange
-        var key = Guid.NewGuid().ToString();
-        var value = Guid.NewGuid().ToString();
-
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonAppConfigData>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
-        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
-
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
-
-        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object);
-        appConfigProvider.SetHandler(providerHandler.Object);
-        appConfigProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
-
-        // Act
-        var result = await appConfigProvider
-            .WithTransformation(transformer.Object)
-            .GetAsync(key);
-
-        // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.Transformer == transformer.Object
-                ), null,
-                null), Times.Once);
-        Assert.NotNull(result);
-        Assert.Equal(value, result);
-    }
-
-    [Fact]
-    public async Task GetAsync_WithTransformation_CallsHandlerWithConfiguredParameters()
-    {
-        // Arrange
-        var key = Guid.NewGuid().ToString();
-        var value = Guid.NewGuid().ToString();
-
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonAppConfigData>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformation = Transformation.Auto;
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
-        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
-
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), transformation, null)
-        ).ReturnsAsync(value);
-
-        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object);
-        appConfigProvider.SetHandler(providerHandler.Object);
-        appConfigProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
-
-        // Act
-        var result = await appConfigProvider
-            .WithTransformation(transformation)
-            .GetAsync(key);
-
-        // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
-                It.Is<Transformation?>(x => x == transformation),
-                null), Times.Once);
-        Assert.NotNull(result);
-        Assert.Equal(value, result);
-    }
-
-    [Fact]
-    public async Task GetAsync_WithTransformerName_CallsHandlerWithConfiguredParameters()
-    {
-        // Arrange
-        var key = Guid.NewGuid().ToString();
-        var value = Guid.NewGuid().ToString();
-
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonAppConfigData>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformerName = Guid.NewGuid().ToString();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
-        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
-
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, transformerName)
-        ).ReturnsAsync(value);
-
-        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object);
-        appConfigProvider.SetHandler(providerHandler.Object);
-        appConfigProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
-
-        // Act
-        var result = await appConfigProvider
-            .WithTransformation(transformerName)
-            .GetAsync(key);
-
-        // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
-                null,
-                It.Is<string?>(x => x == transformerName))
-            , Times.Once);
-        Assert.NotNull(result);
-        Assert.Equal(value, result);
-    }
-
+    
     [Fact]
     public async Task GetAsync_WhenCachedObjectExists_ReturnsCachedObject()
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
         var valueFromCache = Guid.NewGuid().ToString();
+        var appConfig = new Dictionary<string, string?> { { key, valueFromCache } };
 
         var cacheManager = new Mock<ICacheManager>();
         var client = new Mock<IAmazonAppConfigData>();
         var transformerManager = new Mock<ITransformerManager>();
         var dateTimeWrapper = new Mock<IDateTimeWrapper>();
 
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+        
         client.Setup(c =>
             c.GetLatestConfigurationAsync(It.IsAny<GetLatestConfigurationRequest>(), It.IsAny<CancellationToken>())
         ).ReturnsAsync(new GetLatestConfigurationResponse());
 
         cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+            c.Get(cacheKey)
+        ).Returns(appConfig);
 
         var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object)
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object);
+        
+        appConfigProvider.DefaultApplication(applicationId);
+        appConfigProvider.DefaultEnvironment(environmentId);
+        appConfigProvider.DefaultConfigProfile(configProfileId);
 
         // Act
         var result = await appConfigProvider.GetAsync(key);
@@ -580,9 +498,10 @@ public class AppConfigProviderTest
         {
             InitialConfigurationToken = configurationToken
         };
-
+        
         var contentType = "application/json";
-        var content = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
+        var jsonStr = JsonSerializer.Serialize(value);
+        var content = Encoding.UTF8.GetBytes(jsonStr);
         var response2 = new GetLatestConfigurationResponse
         {
             Configuration = new MemoryStream(content),
@@ -973,12 +892,17 @@ public class AppConfigProviderTest
         dateTimeWrapper.Setup(c =>
             c.UtcNow
         ).Returns(dateTimeNow);
+        
+        var appConfigResult = new AppConfigResult
+        {
+            PollConfigurationToken = configurationToken,
+            NextAllowedPollTime = nextAllowedPollTime,
+            LastConfig = JsonSerializer.Serialize(lastConfig)
+        };
 
-        var appConfigProvider = new AppConfigProvider(
-                dateTimeWrapper.Object,
-                configurationToken,
-                nextAllowedPollTime,
-                lastConfig)
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object,
+                AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId),
+                appConfigResult)
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
@@ -1061,11 +985,16 @@ public class AppConfigProviderTest
             c.UtcNow
         ).Returns(dateTimeNow);
 
-        var appConfigProvider = new AppConfigProvider(
-                dateTimeWrapper.Object,
-                configurationToken,
-                nextAllowedPollTime,
-                lastConfig)
+        var appConfigResult = new AppConfigResult
+        {
+            PollConfigurationToken = configurationToken,
+            NextAllowedPollTime = nextAllowedPollTime,
+            LastConfig = JsonSerializer.Serialize(lastConfig)
+        };
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object,
+                AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId),
+                appConfigResult)
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
@@ -1164,11 +1093,16 @@ public class AppConfigProviderTest
             c.UtcNow
         ).Returns(dateTimeNow);
 
-        var appConfigProvider = new AppConfigProvider(
-                dateTimeWrapper.Object,
-                configurationToken,
-                nextAllowedPollTime,
-                lastConfig)
+        var appConfigResult = new AppConfigResult
+        {
+            PollConfigurationToken = configurationToken,
+            NextAllowedPollTime = nextAllowedPollTime,
+            LastConfig = JsonSerializer.Serialize(lastConfig)
+        };
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object,
+                AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId),
+                appConfigResult)
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)
@@ -1267,11 +1201,16 @@ public class AppConfigProviderTest
             c.UtcNow
         ).Returns(dateTimeNow);
 
-        var appConfigProvider = new AppConfigProvider(
-                dateTimeWrapper.Object,
-                configurationToken,
-                nextAllowedPollTime,
-                lastConfig)
+        var appConfigResult = new AppConfigResult
+        {
+            PollConfigurationToken = configurationToken,
+            NextAllowedPollTime = nextAllowedPollTime,
+            LastConfig = JsonSerializer.Serialize(lastConfig)
+        };
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper.Object,
+                AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId),
+                appConfigResult)
             .UseClient(client.Object)
             .UseCacheManager(cacheManager.Object)
             .UseTransformerManager(transformerManager.Object)

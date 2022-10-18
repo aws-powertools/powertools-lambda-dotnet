@@ -63,5 +63,9 @@ public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfig
     /// </summary>
     /// <returns>Application Configuration.</returns>
     Task<IDictionary<string, string?>> GetAsync();
+
+    T? Get<T>() where T : class;
+
+    Task<T?> GetAsync<T>() where T : class;
 }
 

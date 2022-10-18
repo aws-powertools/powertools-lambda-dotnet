@@ -15,17 +15,11 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 
-internal static class AppConfigProviderCacheHelper
+internal class AppConfigResult
 {
-    internal static string GetCacheKey(string? applicationId, string? environmentId, string? configProfileId)
-    {
-        if (string.IsNullOrWhiteSpace(applicationId))
-            throw new ArgumentNullException(nameof(applicationId));
-        if (string.IsNullOrWhiteSpace(environmentId))
-            throw new ArgumentNullException(nameof(environmentId));
-        if (string.IsNullOrWhiteSpace(configProfileId))
-            throw new ArgumentNullException(nameof(configProfileId));
-
-        return $"{applicationId}_{environmentId}_{configProfileId}";
-    }
+    internal string PollConfigurationToken { get; set; } = string.Empty;
+    
+    internal DateTime NextAllowedPollTime { get; set; } = DateTime.MinValue;
+    
+    internal string? LastConfig { get; set; } = null;
 }

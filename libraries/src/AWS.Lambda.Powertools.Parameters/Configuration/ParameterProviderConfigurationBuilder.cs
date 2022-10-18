@@ -182,7 +182,7 @@ public class ParameterProviderConfigurationBuilder
     /// <param name="key">The parameter key.</param>
     /// <typeparam name="T">Target transformation type.</typeparam>
     /// <returns>The parameter transformed value.</returns>
-    public async Task<T?> GetAsync<T>(string key) where T : class
+    public virtual async Task<T?> GetAsync<T>(string key) where T : class
     {
         return await _handler
             .GetAsync<T>(key, GetConfiguration(), _transformation, _transformerName)
@@ -224,7 +224,7 @@ public class ParameterProviderConfigurationBuilder
     /// </summary>
     /// <param name="key">The parameter key.</param>
     /// <returns>Returns a collection parameter key/transformed value pairs.</returns>
-    public async Task<IDictionary<string, T?>> GetMultipleAsync<T>(string key) where T : class
+    public virtual async Task<IDictionary<string, T?>> GetMultipleAsync<T>(string key) where T : class
     {
         return await _handler
             .GetMultipleAsync<T>(key, GetConfiguration(), _transformation, _transformerName)

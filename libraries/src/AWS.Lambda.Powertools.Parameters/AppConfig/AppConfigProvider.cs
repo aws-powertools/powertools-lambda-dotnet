@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System.Collections.Concurrent;
 using Amazon;
 using Amazon.AppConfigData;
 using Amazon.AppConfigData.Model;
@@ -30,45 +31,29 @@ namespace AWS.Lambda.Powertools.Parameters.AppConfig;
 /// </summary>
 public class AppConfigProvider : ParameterProvider<AppConfigProviderConfigurationBuilder>, IAppConfigProvider
 {
-    private string? _defaultApplicationId;
-    private string? _defaultEnvironmentId;
-    private string? _defaultConfigProfileId;
+    private string _defaultApplicationId = string.Empty;
+    private string _defaultEnvironmentId = string.Empty;
+    private string _defaultConfigProfileId = string.Empty;
+    
     private IAmazonAppConfigData? _client;
     private readonly IDateTimeWrapper _dateTimeWrapper;
-    private string _pollConfigurationToken = string.Empty;
-    private DateTime _nextAllowedPollTime = DateTime.MinValue;
-    private IDictionary<string, string?> _lastConfig = new Dictionary<string, string?>();
+    private readonly ConcurrentDictionary<string, AppConfigResult> _results = new(StringComparer.OrdinalIgnoreCase);
 
     private IAmazonAppConfigData Client => _client ??= new AmazonAppConfigDataClient();
-    
-    protected override ParameterProviderCacheMode CacheMode => 
-        ParameterProviderCacheMode.GetMultipleResultOnly;
 
     public AppConfigProvider()
     {
         _dateTimeWrapper = DateTimeWrapper.Instance;
     }
 
-    /// <summary>
-    /// Constructor for test
-    /// </summary>
-    /// <param name="dateTimeWrapper"></param>
-    /// <param name="pollConfigurationToken"></param>
-    /// <param name="nextAllowedPollTime"></param>
-    /// <param name="lastConfig"></param>
     internal AppConfigProvider(
         IDateTimeWrapper dateTimeWrapper,
-        string? pollConfigurationToken = null,
-        DateTime? nextAllowedPollTime = null,
-        IDictionary<string, string?>? lastConfig = null)
+        string? appConfigResultKey = null,
+        AppConfigResult? appConfigResult = null)
     {
         _dateTimeWrapper = dateTimeWrapper;
-        if (pollConfigurationToken is not null)
-            _pollConfigurationToken = pollConfigurationToken;
-        if (nextAllowedPollTime is not null)
-            _nextAllowedPollTime = nextAllowedPollTime.Value;
-        if (lastConfig is not null)
-            _lastConfig = lastConfig;
+        if (appConfigResultKey is not null && appConfigResult is not null)
+            _results.TryAdd(appConfigResultKey, appConfigResult);
     }
 
     public IAppConfigProvider UseClient(IAmazonAppConfigData client)
@@ -167,7 +152,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         _defaultConfigProfileId = configProfileId;
         return this;
     }
-    
+
     public AppConfigProviderConfigurationBuilder WithApplication(string applicationId)
     {
         return NewConfigurationBuilder().WithApplication(applicationId);
@@ -185,7 +170,24 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 
     protected override AppConfigProviderConfigurationBuilder NewConfigurationBuilder()
     {
-        return new AppConfigProviderConfigurationBuilder(this);
+        return new AppConfigProviderConfigurationBuilder(this)
+            .WithApplication(_defaultApplicationId)
+            .WithEnvironment(_defaultEnvironmentId)
+            .WithConfigProfile(_defaultConfigProfileId);
+        
+    }
+
+    /// <summary>
+    /// Get parameter transformed value for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <typeparam name="T">Target transformation type.</typeparam>
+    /// <returns>The parameter transformed value.</returns>
+    public override async Task<T?> GetAsync<T>(string key) where T : class
+    {
+        return await NewConfigurationBuilder()
+            .GetAsync<T>(key)
+            .ConfigureAwait(false);
     }
 
     public IDictionary<string, string?> Get()
@@ -195,111 +197,93 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 
     public async Task<IDictionary<string, string?>> GetAsync()
     {
-        return await GetMultipleAsync(
-                AppConfigProviderCacheHelper.GetCacheKey(_defaultApplicationId, _defaultEnvironmentId,
-                    _defaultConfigProfileId))
+        return await NewConfigurationBuilder()
+            .GetAsync()
             .ConfigureAwait(false);
-    }
-
-    protected override async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
-    {
-        var configuration = GetProviderConfiguration(config, false);
-        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(configuration);
-
-        var result = !configuration.ForceFetch ? Cache.Get(cacheKey) as IDictionary<string, string?> : null;
-        if (result is null)
-        {
-            result = await GetLastConfigurationAsync(configuration).ConfigureAwait(false);
-            Cache.Set(cacheKey, result, GetMaxAge(config));
-        }
-
-        return result.TryGetValue(key, out var value) ? value : null;
-    }
-
-    protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string key,
-        ParameterProviderConfiguration? config)
-    {
-        var configuration = GetProviderConfiguration(config, true);
-        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(configuration);
-        
-        if (!string.Equals(key, cacheKey, StringComparison.CurrentCultureIgnoreCase))
-            throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
-
-        return await GetLastConfigurationAsync(configuration)
-            .ConfigureAwait(false);
-    }
-
-    private AppConfigProviderConfiguration GetProviderConfiguration(ParameterProviderConfiguration? config, bool multipleValues)
-    {
-        if (config is not AppConfigProviderConfiguration configuration)
-        {
-            configuration = new AppConfigProviderConfiguration
-            {
-                ApplicationId = _defaultApplicationId,
-                EnvironmentId = _defaultEnvironmentId,
-                ConfigProfileId = _defaultConfigProfileId
-            };
-        }
-        else
-        {
-            if (string.IsNullOrWhiteSpace(configuration.ApplicationId))
-                configuration.ApplicationId = _defaultApplicationId;
-        
-            if (string.IsNullOrWhiteSpace(configuration.EnvironmentId))
-                configuration.EnvironmentId = _defaultEnvironmentId;
-        
-            if (string.IsNullOrWhiteSpace(configuration.ConfigProfileId))
-                configuration.ConfigProfileId = _defaultConfigProfileId;
-        }
-
-        if (string.IsNullOrWhiteSpace(configuration.ApplicationId))
-            throw multipleValues
-                ? new NotSupportedException("Impossible to get multiple values from AWS AppConfig")
-                : new ArgumentNullException(nameof(configuration.ApplicationId));
-        if (string.IsNullOrWhiteSpace(configuration.EnvironmentId))
-            throw multipleValues
-                ? new NotSupportedException("Impossible to get multiple values from AWS AppConfig")
-                : new ArgumentNullException(nameof(configuration.EnvironmentId));
-        if (string.IsNullOrWhiteSpace(configuration.ConfigProfileId))
-            throw multipleValues
-                ? new NotSupportedException("Impossible to get multiple values from AWS AppConfig")
-                : new ArgumentNullException(nameof(configuration.EnvironmentId));
-
-        return configuration;
     }
     
-    private async Task<IDictionary<string, string?>> GetLastConfigurationAsync(AppConfigProviderConfiguration config)
+    public T? Get<T>() where T: class
     {
-        if (_dateTimeWrapper.UtcNow < _nextAllowedPollTime)
+        return GetAsync<T>().GetAwaiter().GetResult();
+    }
+    
+    public async Task<T?> GetAsync<T>()  where T: class
+    {
+        return await NewConfigurationBuilder()
+            .GetAsync<T>()
+            .ConfigureAwait(false);
+    }
+    
+    protected override async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
+    {
+        if(config is not AppConfigProviderConfiguration configuration)
+            throw new ArgumentNullException(nameof(config));
+
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey
+        (
+            configuration.ApplicationId,
+            configuration.EnvironmentId,
+            configuration.ConfigProfileId
+        );
+
+        var result = GetAppConfigResult(cacheKey);
+        
+        if (_dateTimeWrapper.UtcNow < result.NextAllowedPollTime)
         {
             if (!config.ForceFetch)
-                return _lastConfig;
+                return result.LastConfig;
 
-            _pollConfigurationToken = string.Empty;
-            _nextAllowedPollTime = DateTime.MinValue;
+            result.PollConfigurationToken = string.Empty;
+            result.NextAllowedPollTime = DateTime.MinValue;
         }
 
-        if (string.IsNullOrEmpty(_pollConfigurationToken))
-            _pollConfigurationToken =
-                await GetInitialConfigurationTokenAsync(config)
+        if (string.IsNullOrWhiteSpace(result.PollConfigurationToken))
+            result.PollConfigurationToken =
+                await GetInitialConfigurationTokenAsync(configuration)
                     .ConfigureAwait(false);
 
         var request = new GetLatestConfigurationRequest
         {
-            ConfigurationToken = _pollConfigurationToken
+            ConfigurationToken = result.PollConfigurationToken
         };
 
         var response =
             await Client.GetLatestConfigurationAsync(request)
                 .ConfigureAwait(false);
 
-        _pollConfigurationToken = response.NextPollConfigurationToken;
-        _nextAllowedPollTime = _dateTimeWrapper.UtcNow.AddSeconds(response.NextPollIntervalInSeconds);
-        
-        _lastConfig = ParseConfig(response.ContentType, response.Configuration);
-        return _lastConfig;
+        result.PollConfigurationToken = response.NextPollConfigurationToken;
+        result.NextAllowedPollTime = _dateTimeWrapper.UtcNow.AddSeconds(response.NextPollIntervalInSeconds);
+
+        if (!string.Equals(response.ContentType, "application/json", StringComparison.CurrentCultureIgnoreCase))
+            throw new NotImplementedException($"Not implemented AppConfig type: {response.ContentType}");
+
+        using (var reader = new StreamReader(response.Configuration))
+        {
+            result.LastConfig = 
+                await reader.ReadToEndAsync()
+                    .ConfigureAwait(false);
+        }
+
+        return result.LastConfig;
     }
 
+    protected override Task<IDictionary<string, string?>> GetMultipleAsync(string key,
+        ParameterProviderConfiguration? config)
+    {
+        throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
+    }
+    
+    private AppConfigResult GetAppConfigResult(string cacheKey)
+    {
+        if (_results.TryGetValue(cacheKey, out var cachedResult))
+            return cachedResult;
+
+        cachedResult = new AppConfigResult();
+        _results.TryAdd(cacheKey, cachedResult);
+
+        return cachedResult;
+    }
+    
     private async Task<string> GetInitialConfigurationTokenAsync(AppConfigProviderConfiguration config)
     {
         var request = new StartConfigurationSessionRequest
@@ -311,14 +295,4 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 
         return (await Client.StartConfigurationSessionAsync(request).ConfigureAwait(false)).InitialConfigurationToken;
     }
-
-    private static IDictionary<string, string?> ParseConfig(string contentType, Stream configuration)
-    {
-        return contentType switch
-        {
-            "application/json" => JsonConfigurationParser.Parse(configuration),
-            _ => throw new NotImplementedException($"Not implemented AppConfig type: {contentType}")
-        };
-    }
-    
 }

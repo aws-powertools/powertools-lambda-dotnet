@@ -19,7 +19,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 
-internal class JsonConfigurationParser
+internal class AppConfigJsonConfigurationParser
 {
     private readonly IDictionary<string, string?> _data =
         new SortedDictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
@@ -30,7 +30,7 @@ internal class JsonConfigurationParser
     public static IDictionary<string, string?> Parse(Stream input)
     {
         using var doc = JsonDocument.Parse(input);
-        var parser = new JsonConfigurationParser();
+        var parser = new AppConfigJsonConfigurationParser();
         parser.VisitElement(doc.RootElement);
         return parser._data;
     }
@@ -38,7 +38,7 @@ internal class JsonConfigurationParser
     public static IDictionary<string, string?> Parse(string input)
     {
         using var doc = JsonDocument.Parse(input);
-        var parser = new JsonConfigurationParser();
+        var parser = new AppConfigJsonConfigurationParser();
         parser.VisitElement(doc.RootElement);
         return parser._data;
     }
