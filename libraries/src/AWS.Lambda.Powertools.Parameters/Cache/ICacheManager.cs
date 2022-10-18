@@ -15,9 +15,23 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Cache;
 
+/// <summary>
+/// Represents a type used to manage cache.
+/// </summary>
 public interface ICacheManager
 {
+    /// <summary>
+    /// Retrieves a cached value by key. 
+    /// </summary>
+    /// <param name="key">The key to retrieve.</param>
+    /// <returns>The cached object.</returns>
     object? Get(string key);
 
+    /// <summary>
+    /// Adds a value to the cache by key for a specific duration. 
+    /// </summary>
+    /// <param name="key">The key to store the value.</param>
+    /// <param name="value">The value to store.</param>
+    /// <param name="duration">The expiry duration.</param>
     void Set(string key, object? value, TimeSpan duration);
 }

@@ -18,8 +18,17 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.Transform;
 
+/// <summary>
+/// Transformer to transform Base64 string
+/// </summary>
 internal class Base64Transformer : ITransformer
 {
+    /// <summary>
+    /// Transform a value from Base64 string to UTF8 string.
+    /// </summary>
+    /// <param name="value">The Base64 string value</param>
+    /// <typeparam name="T">The type to transform to. Should be string</typeparam>
+    /// <returns>The UTF8 string value</returns>
     public T? Transform<T>(string value)
     {
         if (typeof(T) != typeof(string))

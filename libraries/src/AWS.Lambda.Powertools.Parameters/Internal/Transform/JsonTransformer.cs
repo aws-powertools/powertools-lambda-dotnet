@@ -18,8 +18,17 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.Transform;
 
+/// <summary>
+/// Transformer to deserialize JSON values from JSON strings.
+/// </summary>
 internal class JsonTransformer : ITransformer
 {
+    /// <summary>
+    /// Deserialize a JSON value from a JSON string.
+    /// </summary>
+    /// <param name="value">JSON string.</param>
+    /// <typeparam name="T">JSON value type.</typeparam>
+    /// <returns>JSON value.</returns>
     public T? Transform<T>(string value)
     {
         if (typeof(T) == typeof(string))

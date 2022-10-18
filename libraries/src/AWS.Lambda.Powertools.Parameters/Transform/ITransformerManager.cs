@@ -25,6 +25,7 @@ public interface ITransformerManager
     /// </summary>
     /// <param name="transformation">Type of the transformation.</param>
     /// <returns>The transformer instance</returns>
+    /// <exception cref="NotSupportedException"></exception>
     ITransformer GetTransformer(Transformation transformation);
 
     /// <summary>
@@ -40,6 +41,7 @@ public interface ITransformerManager
     /// </summary>
     /// <param name="transformerName">The unique name for the transformer</param>
     /// <returns>The transformer instance</returns>
+    /// <exception cref="KeyNotFoundException"></exception>
     ITransformer GetTransformer(string transformerName);
 
     /// <summary>
@@ -47,6 +49,7 @@ public interface ITransformerManager
     /// </summary>
     /// <param name="transformerName">The unique name for the transformer</param>
     /// <returns>The transformer instance</returns>
+    /// <exception cref="ArgumentException"></exception>
     ITransformer? TryGetTransformer(string transformerName);
 
     /// <summary>
@@ -54,5 +57,6 @@ public interface ITransformerManager
     /// </summary>
     /// <param name="transformerName">name of the transformer</param>
     /// <param name="transformer">the transformer instance</param>
+    /// <exception cref="ArgumentException"></exception>
     void AddTransformer(string transformerName, ITransformer transformer);
 }

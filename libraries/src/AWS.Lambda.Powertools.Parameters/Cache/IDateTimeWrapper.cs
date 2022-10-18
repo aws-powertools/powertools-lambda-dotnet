@@ -15,7 +15,13 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Cache;
 
+/// <summary>
+/// Represents a type used to wrap datetime.
+/// </summary>
 public interface IDateTimeWrapper
 {
+    /// <summary>
+    /// Gets the current UTC time.
+    /// </summary>
     DateTime UtcNow { get; }
 }

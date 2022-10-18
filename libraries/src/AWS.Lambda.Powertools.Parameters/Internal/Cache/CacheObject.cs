@@ -15,12 +15,26 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.Cache;
 
+/// <summary>
+/// Class CacheObject.
+/// </summary>
 internal class CacheObject
 {
+    /// <summary>
+    /// The value to cache.
+    /// </summary>
     internal object Value { get; set; }
 
+    /// <summary>
+    /// The expiry time.
+    /// </summary>
     internal DateTime ExpiryTime { get; set; }
 
+    /// <summary>
+    /// CacheObject constructor.
+    /// </summary>
+    /// <param name="value">The value to cache.</param>
+    /// <param name="expiryTime">The expiry time.</param>
     internal CacheObject(object value, DateTime expiryTime)
     {
         Value = value;

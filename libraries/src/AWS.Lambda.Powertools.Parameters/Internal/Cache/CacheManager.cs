@@ -23,17 +23,35 @@ namespace AWS.Lambda.Powertools.Parameters.Internal.Cache;
 /// </summary>
 internal class CacheManager : ICacheManager
 {
+    /// <summary>
+    /// The DefaultMaxAge of five seconds
+    /// </summary>
     internal static TimeSpan DefaultMaxAge = TimeSpan.FromSeconds(5);
 
+    /// <summary>
+    /// Thread safe dictionary to cache objects  
+    /// </summary>
     private readonly ConcurrentDictionary<string, CacheObject> _cache = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Instance of datetime wrapper.
+    /// </summary>
     private readonly IDateTimeWrapper _dateTimeWrapper;
 
+    /// <summary>
+    /// CacheManager Constructor
+    /// </summary>
+    /// <param name="dateTimeWrapper">Instance of datetime wrapper</param>
     internal CacheManager(IDateTimeWrapper dateTimeWrapper)
     {
         _dateTimeWrapper = dateTimeWrapper;
     }
 
+    /// <summary>
+    /// Retrieves a cached value by key. 
+    /// </summary>
+    /// <param name="key">The key to retrieve.</param>
+    /// <returns>The cached object.</returns>
     public object? Get(string key)
     {
         if (!_cache.TryGetValue(key, out var cacheObject))
@@ -46,6 +64,12 @@ internal class CacheManager : ICacheManager
         return null;
     }
 
+    /// <summary>
+    /// Adds a value to the cache by key for a specific duration. 
+    /// </summary>
+    /// <param name="key">The key to store the value.</param>
+    /// <param name="value">The value to store.</param>
+    /// <param name="duration">The expiry duration.</param>
     public void Set(string key, object? value, TimeSpan duration)
     {
         if (string.IsNullOrWhiteSpace(key) || value is null)

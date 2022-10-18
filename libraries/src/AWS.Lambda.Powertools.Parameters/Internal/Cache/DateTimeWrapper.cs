@@ -18,16 +18,31 @@ using AWS.Lambda.Powertools.Parameters.Cache;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.Cache;
 
+/// <summary>
+/// Class DateTimeWrapper.
+/// </summary>
 [ExcludeFromCodeCoverage]
 internal class DateTimeWrapper : IDateTimeWrapper
 {
+    /// <summary>
+    /// The instance of DateTimeWrapper.
+    /// </summary>
     private static IDateTimeWrapper? _instance;
 
+    /// <summary>
+    /// Gets the instance of DateTimeWrapper.
+    /// </summary>
     internal static IDateTimeWrapper Instance => _instance ??= new DateTimeWrapper();
 
+    /// <summary>
+    /// DateTimeWrapper constructor
+    /// </summary>
     private DateTimeWrapper()
     {
     }
 
+    /// <summary>
+    /// Gets the current UTC time.
+    /// </summary>
     public DateTime UtcNow => DateTime.UtcNow;
 }

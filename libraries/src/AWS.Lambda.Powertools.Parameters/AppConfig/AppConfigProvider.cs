@@ -25,6 +25,9 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 
 namespace AWS.Lambda.Powertools.Parameters.AppConfig;
 
+/// <summary>
+/// The AppConfigProvider to retrieve parameter values from a AWS AppConfig.
+/// </summary>
 public class AppConfigProvider : ParameterProvider<AppConfigProviderConfigurationBuilder>, IAppConfigProvider
 {
     private string? _defaultApplicationId;

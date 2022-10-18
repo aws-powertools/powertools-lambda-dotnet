@@ -18,22 +18,51 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.Transform;
 
+/// <summary>
+/// The TransformerManager class to manage transformers.
+/// </summary>
 internal class TransformerManager : ITransformerManager
 {
+    /// <summary>
+    /// The TransformerManager instance.
+    /// </summary>
     private static ITransformerManager? _instance;
+    
+    /// <summary>
+    /// The JsonTransformer instance.
+    /// </summary>
+    private readonly ITransformer _jsonTransformer;
+    
+    /// <summary>
+    /// The Base64Transformer instance.
+    /// </summary>
+    private readonly ITransformer _base64Transformer;
+    
+    /// <summary>
+    /// Gets the TransformerManager instance.
+    /// </summary>
     internal static ITransformerManager Instance => _instance ??= new TransformerManager();
 
+    /// <summary>
+    /// Gets the list of transformer instances.
+    /// </summary>
     private readonly ConcurrentDictionary<string, ITransformer> _transformers = new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly ITransformer _jsonTransformer;
-    private readonly ITransformer _base64Transformer;
-
+    /// <summary>
+    /// TransformerManager constructor.
+    /// </summary>
     internal TransformerManager()
     {
         _jsonTransformer = new JsonTransformer();
         _base64Transformer = new Base64Transformer();
     }
 
+    /// <summary>
+    /// Gets an instance of transformer for the provided transformation type.
+    /// </summary>
+    /// <param name="transformation">Type of the transformation.</param>
+    /// <returns>The transformer instance</returns>
+    /// <exception cref="NotSupportedException"></exception>
     public ITransformer GetTransformer(Transformation transformation)
     {
         var transformer = TryGetTransformer(transformation, string.Empty);
@@ -42,6 +71,12 @@ internal class TransformerManager : ITransformerManager
         return transformer;
     }
 
+    /// <summary>
+    /// Gets an instance of transformer for the provided transformation type and parameter key. 
+    /// </summary>
+    /// <param name="transformation">Type of the transformation.</param>
+    /// <param name="key">Parameter key, it's required for Transformation.Auto</param>
+    /// <returns>The transformer instance</returns>
     public ITransformer? TryGetTransformer(Transformation transformation, string key)
     {
         return transformation switch
@@ -58,6 +93,12 @@ internal class TransformerManager : ITransformerManager
         };
     }
 
+    /// <summary>
+    /// Gets an instance of transformer for the provided transformer name. 
+    /// </summary>
+    /// <param name="transformerName">The unique name for the transformer</param>
+    /// <returns>The transformer instance</returns>
+    /// <exception cref="KeyNotFoundException"></exception>
     public ITransformer GetTransformer(string transformerName)
     {
         var transformer = TryGetTransformer(transformerName);
@@ -66,6 +107,12 @@ internal class TransformerManager : ITransformerManager
         return transformer;
     }
 
+    /// <summary>
+    /// Gets an instance of transformer for the provided transformer name. 
+    /// </summary>
+    /// <param name="transformerName">The unique name for the transformer</param>
+    /// <returns>The transformer instance</returns>
+    /// <exception cref="ArgumentException"></exception>
     public ITransformer? TryGetTransformer(string transformerName)
     {
         if (string.IsNullOrWhiteSpace(transformerName))
@@ -74,6 +121,12 @@ internal class TransformerManager : ITransformerManager
         return transformer;
     }
 
+    /// <summary>
+    /// Add an instance of a transformer by a unique name
+    /// </summary>
+    /// <param name="transformerName">name of the transformer</param>
+    /// <param name="transformer">the transformer instance</param>
+    /// <exception cref="ArgumentException"></exception>
     public void AddTransformer(string transformerName, ITransformer transformer)
     {
         if (string.IsNullOrWhiteSpace(transformerName))
