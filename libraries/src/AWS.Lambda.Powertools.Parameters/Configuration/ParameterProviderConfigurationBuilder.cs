@@ -21,29 +21,60 @@ namespace AWS.Lambda.Powertools.Parameters.Configuration;
 
 public class ParameterProviderConfigurationBuilder
 {
+    /// <summary>
+    /// the force fetch.
+    /// </summary>
     private bool _forceFetch;
+    
+    /// <summary>
+    /// The transformation.
+    /// </summary>
     private Transformation? _transformation;
+    
+    /// <summary>
+    /// The transformer instance.
+    /// </summary>
     private ITransformer? _transformer;
+    
+    /// <summary>
+    /// The transformer name.
+    /// </summary>
     private string? _transformerName;
+    
+    /// <summary>
+    /// The cache maximum age.
+    /// </summary>
     private TimeSpan? _maxAge;
-    private readonly IParameterProviderBaseHandler _parameterProvider;
+    
+    /// <summary>
+    /// The parameter provider handler instance.
+    /// </summary>
+    private readonly IParameterProviderBaseHandler _handler;
 
     /// <summary>
-    /// Constructor for test purpose
+    /// Constructor for test purpose.
     /// </summary>
-    /// <param name="parameterProvider"></param>
-    internal ParameterProviderConfigurationBuilder(IParameterProviderBaseHandler parameterProvider)
+    /// <param name="handler">The parameter provider handler instance</param>
+    internal ParameterProviderConfigurationBuilder(IParameterProviderBaseHandler handler)
     {
-        _parameterProvider = parameterProvider;
+        _handler = handler;
     }
 
+    /// <summary>
+    /// ParameterProviderConfigurationBuilder Constructor.
+    /// </summary>
+    /// <param name="parameterProvider">The parameter provider instance</param>
     public ParameterProviderConfigurationBuilder(ParameterProviderBase parameterProvider)
     {
-        _parameterProvider = parameterProvider.Handler;
+        _handler = parameterProvider.Handler;
     }
 
     #region Internal Functions
 
+    /// <summary>
+    /// Creates, configures and returns an instance of parameter provider configuration.
+    /// </summary>
+    /// <returns>The parameter provider configuration</returns>
     private ParameterProviderConfiguration GetConfiguration()
     {
         var config = NewConfiguration();
@@ -55,16 +86,25 @@ public class ParameterProviderConfigurationBuilder
         return config;
     }
 
+    /// <summary>
+    /// Set the force fetch.
+    /// </summary>
     internal void SetForceFetch(bool forceFetch)
     {
         _forceFetch = forceFetch;
     }
 
+    /// <summary>
+    /// Set the max age.
+    /// </summary>
     internal void SetMaxAge(TimeSpan age)
     {
         _maxAge = age;
     }
 
+    /// <summary>
+    /// Set the transformation.
+    /// </summary>
     internal void SetTransformation(Transformation transformation)
     {
         _transformer = null;
@@ -72,6 +112,9 @@ public class ParameterProviderConfigurationBuilder
         _transformation = transformation;
     }
 
+    /// <summary>
+    /// Set the transformer.
+    /// </summary>
     internal void SetTransformer(ITransformer transformer)
     {
         _transformation = null;
@@ -79,6 +122,9 @@ public class ParameterProviderConfigurationBuilder
         _transformer = transformer;
     }
 
+    /// <summary>
+    /// Set the transformer name.
+    /// </summary>
     internal void SetTransformerName(string transformerName)
     {
         _transformation = null;
@@ -86,6 +132,10 @@ public class ParameterProviderConfigurationBuilder
         _transformerName = transformerName;
     }
 
+    /// <summary>
+    /// Creates and returns an instance of parameter provider configuration.
+    /// </summary>
+    /// <returns>The parameter provider configuration</returns>
     protected virtual ParameterProviderConfiguration NewConfiguration()
     {
         return new ParameterProviderConfiguration();
@@ -95,46 +145,88 @@ public class ParameterProviderConfigurationBuilder
 
     #region Public Functions
 
+    /// <summary>
+    /// Get parameter value for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>The parameter value.</returns>
     public string? Get(string key)
     {
         return GetAsync(key).GetAwaiter().GetResult();
     }
 
+    /// <summary>
+    /// Get parameter value for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>The parameter value.</returns>
     public async Task<string?> GetAsync(string key)
     {
         return await GetAsync<string>(key).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Get parameter transformed value for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <typeparam name="T">Target transformation type.</typeparam>
+    /// <returns>The parameter transformed value.</returns>
     public T? Get<T>(string key) where T : class
     {
         return GetAsync<T>(key).GetAwaiter().GetResult();
     }
 
+    /// <summary>
+    /// Get parameter transformed value for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <typeparam name="T">Target transformation type.</typeparam>
+    /// <returns>The parameter transformed value.</returns>
     public async Task<T?> GetAsync<T>(string key) where T : class
     {
-        return await _parameterProvider
+        return await _handler
             .GetAsync<T>(key, GetConfiguration(), _transformation, _transformerName)
             .ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Get multiple parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>Returns a collection parameter key/value pairs.</returns>
     public IDictionary<string, string?> GetMultiple(string key)
     {
         return GetMultipleAsync(key).GetAwaiter().GetResult();
     }
 
+    /// <summary>
+    /// Get multiple parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>Returns a collection parameter key/value pairs.</returns>
     public async Task<IDictionary<string, string?>> GetMultipleAsync(string key)
     {
         return await GetMultipleAsync<string>(key).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Get multiple transformed parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>Returns a collection parameter key/transformed value pairs.</returns>
     public IDictionary<string, T?> GetMultiple<T>(string key) where T : class
     {
         return GetMultipleAsync<T>(key).GetAwaiter().GetResult();
     }
 
+    /// <summary>
+    /// Get multiple transformed parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>Returns a collection parameter key/transformed value pairs.</returns>
     public async Task<IDictionary<string, T?>> GetMultipleAsync<T>(string key) where T : class
     {
-        return await _parameterProvider
+        return await _handler
             .GetMultipleAsync<T>(key, GetConfiguration(), _transformation, _transformerName)
             .ConfigureAwait(false);
     }

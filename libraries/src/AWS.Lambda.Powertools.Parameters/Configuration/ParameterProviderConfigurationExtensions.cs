@@ -17,44 +17,60 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Configuration;
 
+/// <summary>
+/// Class ParameterProviderConfigurationExtensions.
+/// </summary>
 public static class ParameterProviderConfigurationExtensions
 {
-    public static TConfigurationBuilder ForceFetch<TConfigurationBuilder>(this TConfigurationBuilder instance)
+    /// <summary>
+    /// Forces provider to fetch the latest value from the store regardless if already available in cache.
+    /// </summary>
+    /// <param name="builder">The configuration builder instance.</param>
+    /// <typeparam name="TConfigurationBuilder">The configuration builder type.</typeparam>
+    /// <returns>The configuration builder instance.</returns>
+    public static TConfigurationBuilder ForceFetch<TConfigurationBuilder>(this TConfigurationBuilder builder)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder
     {
-        instance.SetForceFetch(true);
-        return instance;
+        builder.SetForceFetch(true);
+        return builder;
     }
 
-    public static TConfigurationBuilder WithMaxAge<TConfigurationBuilder>(this TConfigurationBuilder instance,
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder">The configuration builder instance.</param>
+    /// <param name="maxAge"></param>
+    /// <typeparam name="TConfigurationBuilder">The configuration builder type.</typeparam>
+    /// <returns>The configuration builder instance.</returns>
+    public static TConfigurationBuilder WithMaxAge<TConfigurationBuilder>(this TConfigurationBuilder builder,
         TimeSpan maxAge)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder
     {
-        instance.SetMaxAge(maxAge);
-        return instance;
+        builder.SetMaxAge(maxAge);
+        return builder;
     }
 
-    public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder instance,
+    public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder builder,
         Transformation transformation)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder
     {
-        instance.SetTransformation(transformation);
-        return instance;
+        builder.SetTransformation(transformation);
+        return builder;
     }
 
-    public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder instance,
+    public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder builder,
         ITransformer transformer)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder
     {
-        instance.SetTransformer(transformer);
-        return instance;
+        builder.SetTransformer(transformer);
+        return builder;
     }
 
-    public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder instance,
+    public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder builder,
         string transformerName)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder
     {
-        instance.SetTransformerName(transformerName);
-        return instance;
+        builder.SetTransformerName(transformerName);
+        return builder;
     }
 }

@@ -60,7 +60,7 @@ public abstract class ParameterProvider<TConfigurationBuilder> : ParameterProvid
     }
 
     /// <summary>
-    /// Set the cache maximum age
+    /// Set the cache maximum age.
     /// </summary>
     /// <param name="maxAge"></param>
     /// <returns>Provider Configuration Builder instance</returns>

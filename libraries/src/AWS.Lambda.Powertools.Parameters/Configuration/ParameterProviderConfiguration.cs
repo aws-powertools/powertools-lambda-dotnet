@@ -17,11 +17,23 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Configuration;
 
+/// <summary>
+/// ParameterProviderConfiguration class.
+/// </summary>
 public class ParameterProviderConfiguration
 {
+    /// <summary>
+    /// Fetches the latest value from the store regardless if already available in cache.
+    /// </summary>
     public bool ForceFetch { get; set; }
 
+    /// <summary>
+    /// The cache maximum age.
+    /// </summary>
     public TimeSpan? MaxAge { get; set; }
 
+    /// <summary>
+    /// The transformer instance.
+    /// </summary>
     public ITransformer? Transformer { get; set; }
 }

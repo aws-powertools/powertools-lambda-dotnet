@@ -15,21 +15,66 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Provider;
 
+/// <summary>
+/// Represents a base type used to retrieve parameter values from a store.
+/// </summary>
 public interface IParameterProviderBase
 {
+    /// <summary>
+    /// Get parameter value for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>The parameter value.</returns>
     string? Get(string key);
     
+    /// <summary>
+    /// Get parameter value for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>The parameter value.</returns>
     Task<string?> GetAsync(string key);
 
+    /// <summary>
+    /// Get parameter transformed value for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <typeparam name="T">Target transformation type.</typeparam>
+    /// <returns>The parameter transformed value.</returns>
     T? Get<T>(string key) where T : class;
 
+    /// <summary>
+    /// Get parameter transformed value for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <typeparam name="T">Target transformation type.</typeparam>
+    /// <returns>The parameter transformed value.</returns>
     Task<T?> GetAsync<T>(string key) where T : class;
 
+    /// <summary>
+    /// Get multiple parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>Returns a collection parameter key/value pairs.</returns>
     IDictionary<string, string?> GetMultiple(string key);
 
+    /// <summary>
+    /// Get multiple parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>Returns a collection parameter key/value pairs.</returns>
     Task<IDictionary<string, string?>> GetMultipleAsync(string key);
     
+    /// <summary>
+    /// Get multiple transformed parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>Returns a collection parameter key/transformed value pairs.</returns>
     IDictionary<string, T?> GetMultiple<T>(string key) where T : class;
 
+    /// <summary>
+    /// Get multiple transformed parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <returns>Returns a collection parameter key/transformed value pairs.</returns>
     Task<IDictionary<string, T?>> GetMultipleAsync<T>(string key) where T : class;
 }
