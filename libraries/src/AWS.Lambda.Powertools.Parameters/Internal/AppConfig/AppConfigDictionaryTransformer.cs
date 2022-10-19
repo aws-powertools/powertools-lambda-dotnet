@@ -17,17 +17,35 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 
+/// <summary>
+/// Transformer to deserialize dictionary from JSON string.
+/// </summary>
 internal class AppConfigDictionaryTransformer : ITransformer
 {
+    /// <summary>
+    /// The transformer instance.
+    /// </summary>
     private static AppConfigDictionaryTransformer? _instance;
 
+    /// <summary>
+    /// Gets the transformer instance.
+    /// </summary>
     internal static AppConfigDictionaryTransformer Instance => _instance ??= new AppConfigDictionaryTransformer();
 
+    /// <summary>
+    /// AppConfigDictionaryTransformer constructor.
+    /// </summary>
     private AppConfigDictionaryTransformer()
     {
         
     }
 
+    /// <summary>
+    /// Deserialize a dictionary from a JSON string.
+    /// </summary>
+    /// <param name="value">JSON string.</param>
+    /// <typeparam name="T">JSON value type.</typeparam>
+    /// <returns>Key/value pair collection.</returns>
     public T? Transform<T>(string value)
     {
         if (typeof(T) == typeof(string))

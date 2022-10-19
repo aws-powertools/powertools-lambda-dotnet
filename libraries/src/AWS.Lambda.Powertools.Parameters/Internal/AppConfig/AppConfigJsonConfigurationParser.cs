@@ -19,14 +19,32 @@ using Microsoft.Extensions.Configuration;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 
+/// <summary>
+/// AppConfigJsonConfigurationParser class
+/// </summary>
 internal class AppConfigJsonConfigurationParser
 {
+    /// <summary>
+    /// The processed data.
+    /// </summary>
     private readonly IDictionary<string, string?> _data =
         new SortedDictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Stack for processing the document.
+    /// </summary>
     private readonly Stack<string> _context = new();
+    
+    /// <summary>
+    /// Pointer to the current path.
+    /// </summary>
     private string _currentPath = string.Empty;
 
+    /// <summary>
+    /// Parse dictionary from AppConfig JSON stream.
+    /// </summary>
+    /// <param name="input">AppConfig JSON stream.</param>
+    /// <returns>JSON Dictionary.</returns>
     public static IDictionary<string, string?> Parse(Stream input)
     {
         using var doc = JsonDocument.Parse(input);
@@ -35,6 +53,11 @@ internal class AppConfigJsonConfigurationParser
         return parser._data;
     }
 
+    /// <summary>
+    /// Parse dictionary from AppConfig JSON string.
+    /// </summary>
+    /// <param name="input">AppConfig JSON string.</param>
+    /// <returns>JSON Dictionary.</returns>
     public static IDictionary<string, string?> Parse(string input)
     {
         using var doc = JsonDocument.Parse(input);
@@ -43,6 +66,10 @@ internal class AppConfigJsonConfigurationParser
         return parser._data;
     }
 
+    /// <summary>
+    /// Process single JSON element.
+    /// </summary>
+    /// <param name="element">The JSON element</param>
     private void VisitElement(JsonElement element)
     {
         switch (element.ValueKind)
@@ -73,6 +100,10 @@ internal class AppConfigJsonConfigurationParser
         }
     }
 
+    /// <summary>
+    /// Process array JSON element.
+    /// </summary>
+    /// <param name="array">The JSON array</param>
     private void VisitArray(JsonElement array)
     {
         var index = 0;
@@ -86,12 +117,20 @@ internal class AppConfigJsonConfigurationParser
         }
     }
 
+    /// <summary>
+    /// Process JSON null element.
+    /// </summary>
     private void VisitNull()
     {
         var key = _currentPath;
         _data[key] = null;
     }
 
+    /// <summary>
+    /// Process JSON primitive element.
+    /// </summary>
+    /// <param name="data">The JSON element.</param>
+    /// <exception cref="FormatException"></exception>
     private void VisitPrimitive(JsonElement data)
     {
         var key = _currentPath;
@@ -104,12 +143,19 @@ internal class AppConfigJsonConfigurationParser
         _data[key] = data.ToString();
     }
 
+    /// <summary>
+    /// Enter into a context of a new element to process.
+    /// </summary>
+    /// <param name="context">The context</param>
     private void EnterContext(string context)
     {
         _context.Push(context);
         _currentPath = ConfigurationPath.Combine(_context.Reverse());
     }
 
+    /// <summary>
+    /// Enter from context of an element which is processed.
+    /// </summary>
     private void ExitContext()
     {
         _context.Pop();

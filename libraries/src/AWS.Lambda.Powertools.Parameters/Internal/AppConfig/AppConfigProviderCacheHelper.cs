@@ -15,8 +15,19 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 
+/// <summary>
+/// AppConfigProviderCacheHelper class.
+/// </summary>
 internal static class AppConfigProviderCacheHelper
 {
+    /// <summary>
+    /// Gets a new  key for caching from provided inputs.
+    /// </summary>
+    /// <param name="applicationId">The application Id.</param>
+    /// <param name="environmentId">The environment Id.</param>
+    /// <param name="configProfileId">the configuration profile Id.</param>
+    /// <returns>The cache key</returns>
+    /// <exception cref="ArgumentNullException"></exception>
     internal static string GetCacheKey(string? applicationId, string? environmentId, string? configProfileId)
     {
         if (string.IsNullOrWhiteSpace(applicationId))

@@ -17,9 +17,23 @@ using AWS.Lambda.Powertools.Parameters.Configuration;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 
+/// <summary>
+/// AppConfigProviderConfiguration class.
+/// </summary>
 internal class AppConfigProviderConfiguration : ParameterProviderConfiguration
 {
-    internal string? EnvironmentId { get; set; }
+    /// <summary>
+    /// The application Id.
+    /// </summary>
     internal string? ApplicationId { get; set; }
+    
+    /// <summary>
+    /// The environment Id.
+    /// </summary>
+    internal string? EnvironmentId { get; set; }
+
+    /// <summary>
+    /// The configuration profile Id.
+    /// </summary>
     internal string? ConfigProfileId { get; set; }
 }

@@ -15,11 +15,23 @@
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 
+/// <summary>
+/// AppConfigResult class.
+/// </summary>
 internal class AppConfigResult
 {
+    /// <summary>
+    /// Token for polling the configuration.
+    /// </summary>
     internal string PollConfigurationToken { get; set; } = string.Empty;
     
+    /// <summary>
+    /// Next time poll is allowed.
+    /// </summary>
     internal DateTime NextAllowedPollTime { get; set; } = DateTime.MinValue;
     
+    /// <summary>
+    /// Last configuration value
+    /// </summary>
     internal string? LastConfig { get; set; } = null;
 }
