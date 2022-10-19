@@ -36,10 +36,10 @@ public static class ParameterProviderConfigurationExtensions
     }
 
     /// <summary>
-    /// 
+    /// Set the cache maximum age.
     /// </summary>
     /// <param name="builder">The configuration builder instance.</param>
-    /// <param name="maxAge"></param>
+    /// <param name="maxAge">The maximum cache age</param>
     /// <typeparam name="TConfigurationBuilder">The configuration builder type.</typeparam>
     /// <returns>The configuration builder instance.</returns>
     public static TConfigurationBuilder WithMaxAge<TConfigurationBuilder>(this TConfigurationBuilder builder,
@@ -50,6 +50,13 @@ public static class ParameterProviderConfigurationExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Transforms the latest value from after retrieved from the store.
+    /// </summary>
+    /// <param name="builder">The configuration builder instance.</param>
+    /// <param name="transformation">The transformation type.</param>
+    /// <typeparam name="TConfigurationBuilder">The configuration builder type.</typeparam>
+    /// <returns>The configuration builder instance.</returns>
     public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder builder,
         Transformation transformation)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder
@@ -58,6 +65,13 @@ public static class ParameterProviderConfigurationExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Transforms the latest value from after retrieved from the store.
+    /// </summary>
+    /// <param name="builder">The configuration builder instance.</param>
+    /// <param name="transformer">The instance of the transformer.</param>
+    /// <typeparam name="TConfigurationBuilder">The configuration builder type.</typeparam>
+    /// <returns>The configuration builder instance.</returns>
     public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder builder,
         ITransformer transformer)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder
@@ -66,6 +80,13 @@ public static class ParameterProviderConfigurationExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Transforms the latest value from after retrieved from the store.
+    /// </summary>
+    /// <param name="builder">The configuration builder instance.</param>
+    /// <param name="transformerName">The name of the registered transformer.</param>
+    /// <typeparam name="TConfigurationBuilder">The configuration builder type.</typeparam>
+    /// <returns>The configuration builder instance.</returns>
     public static TConfigurationBuilder WithTransformation<TConfigurationBuilder>(this TConfigurationBuilder builder,
         string transformerName)
         where TConfigurationBuilder : ParameterProviderConfigurationBuilder

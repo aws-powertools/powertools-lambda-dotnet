@@ -22,24 +22,73 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 
 namespace AWS.Lambda.Powertools.Parameters.Internal.Provider;
 
+/// <summary>
+/// ParameterProviderBaseHandler class.
+/// </summary>
 internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 {
+    /// <summary>
+    /// The parameter provider GetAsync callback.
+    /// </summary>
     internal delegate Task<string?> GetAsyncDelegate(string key, ParameterProviderConfiguration? config);
 
+    /// <summary>
+    /// The parameter provider GetMultipleAsync callback.
+    /// </summary>
     internal delegate Task<IDictionary<string, string?>> GetMultipleAsyncDelegate(string key,
         ParameterProviderConfiguration? config);
 
+    /// <summary>
+    /// The CacheManager instance.
+    /// </summary>
     private ICacheManager? _cache;
+    
+    /// <summary>
+    /// The TransformerManager instance.
+    /// </summary>
     private ITransformerManager? _transformManager;
+    
+    /// <summary>
+    /// The DefaultMaxAge.
+    /// </summary>
     private TimeSpan? _defaultMaxAge;
-    private readonly GetAsyncDelegate _getAsyncHandler;
-    private readonly GetMultipleAsyncDelegate _getMultipleAsyncHandler;
-    private readonly ParameterProviderCacheMode _cacheMode;
+    
+    /// <summary>
+    /// The flag to raise exception on transformation error.
+    /// </summary>
     private bool _raiseTransformationError;
+    
+    /// <summary>
+    /// The CacheMode.
+    /// </summary>
+    private readonly ParameterProviderCacheMode _cacheMode;
+    
+    /// <summary>
+    /// The parameter provider GetAsync callback handler.
+    /// </summary>
+    private readonly GetAsyncDelegate _getAsyncHandler;
+    
+    /// <summary>
+    /// The parameter provider GetMultipleAsync callback handler.
+    /// </summary>
+    private readonly GetMultipleAsyncDelegate _getMultipleAsyncHandler;
 
+    /// <summary>
+    /// Gets the CacheManager instance.
+    /// </summary>
     private ICacheManager Cache => _cache ??= new CacheManager(DateTimeWrapper.Instance);
+    
+    /// <summary>
+    /// Gets the TransformManager instance.
+    /// </summary>
     private ITransformerManager TransformManager => _transformManager ??= TransformerManager.Instance;
 
+    /// <summary>
+    /// ParameterProviderBaseHandler constructor
+    /// </summary>
+    /// <param name="getAsyncHandler">The parameter provider GetAsync callback handler.</param>
+    /// <param name="getMultipleAsyncHandler">The parameter provider GetMultipleAsync callback handler.</param>
+    /// <param name="cacheMode">The CacheMode.</param>
     internal ParameterProviderBaseHandler(GetAsyncDelegate getAsyncHandler,
         GetMultipleAsyncDelegate getMultipleAsyncHandler,
         ParameterProviderCacheMode cacheMode)
@@ -48,18 +97,15 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         _getMultipleAsyncHandler = getMultipleAsyncHandler;
         _cacheMode = cacheMode;
     }
-
-    private async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
-    {
-        return await _getAsyncHandler(key, config);
-    }
-
-    private async Task<IDictionary<string, string?>> GetMultipleAsync(string key,
-        ParameterProviderConfiguration? config)
-    {
-        return await _getMultipleAsyncHandler(key, config);
-    }
     
+    /// <summary>
+    /// Try transform a value using a transformer.
+    /// </summary>
+    /// <param name="transformer">The transformer instance to use.</param>
+    /// <param name="value">The value to transform.</param>
+    /// <typeparam name="T">Target transformation type.</typeparam>
+    /// <returns>The transformed value.</returns>
+    /// <exception cref="TransformationException"></exception>
     private T? TryTransform<T>(ITransformer? transformer, string? value)
     {
         T? transformedValue = default;
@@ -92,6 +138,29 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         return transformedValue;
     }
 
+    /// <summary>
+    /// Sets the cache maximum age.
+    /// </summary>
+    /// <param name="maxAge">The cache maximum age </param>
+    public void SetDefaultMaxAge(TimeSpan maxAge)
+    {
+        _defaultMaxAge = maxAge;
+    }
+
+    /// <summary>
+    /// Gets the maximum age or default value.
+    /// </summary>
+    /// <returns>the maxAge</returns>
+    public TimeSpan? GetDefaultMaxAge()
+    {
+        return _defaultMaxAge;
+    }
+    
+    /// <summary>
+    /// Gets the maximum age or default value.
+    /// </summary>
+    /// <param name="config"></param>
+    /// <returns>the maxAge</returns>
     public TimeSpan GetMaxAge(ParameterProviderConfiguration? config)
     {
         var maxAge = config?.MaxAge;
@@ -100,41 +169,61 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         return CacheManager.DefaultMaxAge;
     }
 
-    public void SetDefaultMaxAge(TimeSpan maxAge)
-    {
-        _defaultMaxAge = maxAge;
-    }
-
-    public TimeSpan? GetDefaultMaxAge()
-    {
-        return _defaultMaxAge;
-    }
-
+    /// <summary>
+    /// Sets the CacheManager.
+    /// </summary>
+    /// <param name="cacheManager">The CacheManager instance.</param>
     public void SetCacheManager(ICacheManager cacheManager)
     {
         _cache = cacheManager;
     }
 
+    /// <summary>
+    /// Gets the CacheManager instance.
+    /// </summary>
+    /// <returns>The CacheManager instance</returns>
     public ICacheManager GetCacheManager()
     {
         return Cache;
     }
 
+    /// <summary>
+    /// Sets the TransformerManager.
+    /// </summary>
+    /// <param name="transformerManager">The TransformerManager instance.</param>
     public void SetTransformerManager(ITransformerManager transformerManager)
     {
         _transformManager = transformerManager;
     }
 
+    /// <summary>
+    /// Registers a new transformer instance by name.
+    /// </summary>
+    /// <param name="name">The transformer unique name.</param>
+    /// <param name="transformer">The transformer instance.</param>
     public void AddCustomTransformer(string name, ITransformer transformer)
     {
         TransformManager.AddTransformer(name, transformer);
     }
 
+    /// <summary>
+    /// Configure the transformer to raise exception or return Null on transformation error
+    /// </summary>
+    /// <param name="raiseError">true for raise error, false for return Null.</param>
     public void SetRaiseTransformationError(bool raiseError)
     {
         _raiseTransformationError = raiseError;
     }
 
+    /// <summary>
+    /// Gets parameter value for the provided key and configuration.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <param name="config">The optional parameter provider configuration.</param>
+    /// <param name="transformation">The optional transformation.</param>
+    /// <param name="transformerName">The optional transformer name.</param>
+    /// <typeparam name="T">Target transformation type.</typeparam>
+    /// <returns>The parameter value.</returns>
     public async Task<T?> GetAsync<T>(string key, ParameterProviderConfiguration? config,
         Transformation? transformation, string? transformerName) where T : class
     {
@@ -142,7 +231,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         if (cachedObject is T cachedValue)
             return cachedValue;
 
-        var value = await GetAsync(key, config).ConfigureAwait(false);
+        var value = await _getAsyncHandler(key, config).ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(value))
             return default;
 
@@ -168,6 +257,15 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
         return retValue;
     }
 
+    /// <summary>
+    /// Gets multiple parameter values for the provided key and configuration.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <param name="config">The optional parameter provider configuration.</param>
+    /// <param name="transformation">The optional transformation.</param>
+    /// <param name="transformerName">The optional transformer name.</param>
+    /// <typeparam name="T">Target transformation type.</typeparam>
+    /// <returns>Returns a collection parameter key/value pairs.</returns>
     public async Task<IDictionary<string, T?>> GetMultipleAsync<T>(string key,
         ParameterProviderConfiguration? config, Transformation? transformation, string? transformerName) where T : class
     {
@@ -177,7 +275,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 
         var retValues = new Dictionary<string, T?>();
 
-        var respValues = await GetMultipleAsync(key, config)
+        var respValues = await _getMultipleAsyncHandler(key, config)
             .ConfigureAwait(false);
 
         if (!respValues.Any())

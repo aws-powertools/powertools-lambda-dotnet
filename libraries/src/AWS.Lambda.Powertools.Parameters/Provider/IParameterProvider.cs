@@ -21,7 +21,7 @@ public interface IParameterProvider<out TConfigurationBuilder> : IParameterProvi
     /// <summary>
     /// Set the cache maximum age
     /// </summary>
-    /// <param name="maxAge"></param>
+    /// <param name="maxAge">The maximum cache age</param>
     /// <returns>Provider Configuration Builder instance</returns>
     TConfigurationBuilder WithMaxAge(TimeSpan maxAge);
 
