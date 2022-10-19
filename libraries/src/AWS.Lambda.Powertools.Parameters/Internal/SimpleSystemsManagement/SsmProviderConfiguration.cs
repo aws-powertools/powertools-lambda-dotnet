@@ -19,6 +19,13 @@ namespace AWS.Lambda.Powertools.Parameters.Internal.SimpleSystemsManagement;
 
 internal class SsmProviderConfiguration : ParameterProviderConfiguration
 {
+    /// <summary>
+    /// Automatically decrypt the parameter.
+    /// </summary>
     internal bool? WithDecryption { get; set; }
+    
+    /// <summary>
+    /// Fetches all parameter values recursively based on a path prefix.
+    /// </summary>
     internal bool? Recursive { get; set; }
 }

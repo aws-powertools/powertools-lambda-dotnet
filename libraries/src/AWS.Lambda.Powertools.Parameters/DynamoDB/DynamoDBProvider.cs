@@ -22,94 +22,210 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 
 namespace AWS.Lambda.Powertools.Parameters.DynamoDB;
 
+/// <summary>
+/// Provider to retrieve parameter values from Amazon DynamoDB table.
+/// </summary>
 public class DynamoDBProvider : ParameterProvider, IDynamoDBProvider
 {
-    private IAmazonDynamoDB? _client;
+    /// <summary>
+    /// The default table name.
+    /// </summary>
     private string? _defaultTableName;
+    
+    /// <summary>
+    /// The primary key attribute name.
+    /// </summary>
     private string? _defaultPrimaryKeyAttribute;
+    
+    /// <summary>
+    /// The sort key attribute name.
+    /// </summary>
     private string? _defaultSortKeyAttribute;
+    
+    /// <summary>
+    /// The value attribute name.
+    /// </summary>
     private string? _defaultValueAttribute;
     
+    #region IParameterProviderConfigurableClient implementation
+    
+    /// <summary>
+    /// The client instance.
+    /// </summary>
+    private IAmazonDynamoDB? _client;
+    
+    /// <summary>
+    /// Gets the client instance.
+    /// </summary>
     private IAmazonDynamoDB Client => _client ??= new AmazonDynamoDBClient();
     
+    /// <summary>
+    /// Use a custom client
+    /// </summary>
+    /// <param name="client">The custom client</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider UseClient(IAmazonDynamoDB client)
     {
         _client = client;
         return this;
     }
     
+    /// <summary>
+    /// Configure client with the credentials loaded from the application's default configuration.
+    /// </summary>
+    /// <param name="region">The region to connect.</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(RegionEndpoint region)
     {
         _client = new AmazonDynamoDBClient(region);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with the credentials loaded from the application's default configuration.
+    /// </summary>
+    /// <param name="config">The client configuration object.</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(AmazonDynamoDBConfig config)
     {
         _client = new AmazonDynamoDBClient(config);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with AWS credentials.
+    /// </summary>
+    /// <param name="credentials">AWS credentials.</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(AWSCredentials credentials)
     {
         _client = new AmazonDynamoDBClient(credentials);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with AWS credentials.
+    /// </summary>
+    /// <param name="credentials">AWS credentials.</param>
+    /// <param name="region">The region to connect.</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
     {
         _client = new AmazonDynamoDBClient(credentials, region);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with AWS credentials and a client configuration object.
+    /// </summary>
+    /// <param name="credentials">AWS credentials.</param>
+    /// <param name="config">The client configuration object.</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(AWSCredentials credentials, AmazonDynamoDBConfig config)
     {
         _client = new AmazonDynamoDBClient(credentials, config);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key.
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key.
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="region">The region to connect.</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, region);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key and a client configuration object.
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="config">The client configuration object.</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, AmazonDynamoDBConfig config)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, config);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key. 
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="awsSessionToken">AWS Session Token</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key. 
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="awsSessionToken">AWS Session Token</param>
+    /// <param name="region">The region to connect.</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, RegionEndpoint region)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, region);
         return this;
     }
     
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key and a client configuration object.
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="awsSessionToken">AWS Session Token</param>
+    /// <param name="config">The client configuration object.</param>
+    /// <returns>Provider instance</returns>
     public IDynamoDBProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken, AmazonDynamoDBConfig config)
     {
         _client = new AmazonDynamoDBClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);
         return this;
     }
 
+    #endregion
+    
+    /// <summary>
+    /// Specify the DynamoDB table
+    /// </summary>
+    /// <param name="tableName">DynamoDB table name.</param>
+    /// <returns>Provider instance.</returns>
     public IDynamoDBProvider UseTable(string tableName)
     {
         _defaultTableName = tableName;
         return this;
     }
     
+    /// <summary>
+    /// Specify the DynamoDB table
+    /// </summary>
+    /// <param name="tableName">DynamoDB table name.</param>
+    /// <param name="primaryKeyAttribute">The primary key attribute name.</param>
+    /// <param name="valueAttribute">The value attribute name.</param>
+    /// <returns>Provider instance.</returns>
     public IDynamoDBProvider UseTable(string tableName, string primaryKeyAttribute, string valueAttribute)
     {
         _defaultTableName = tableName;
@@ -118,6 +234,14 @@ public class DynamoDBProvider : ParameterProvider, IDynamoDBProvider
         return this;
     }
     
+    /// <summary>
+    /// Specify the DynamoDB table
+    /// </summary>
+    /// <param name="tableName">DynamoDB table name.</param>
+    /// <param name="primaryKeyAttribute">The primary key attribute name.</param>
+    /// <param name="sortKeyAttribute">The sort key attribute name.</param>
+    /// <param name="valueAttribute">The value attribute name.</param>
+    /// <returns>Provider instance.</returns>
     public IDynamoDBProvider UseTable(string tableName, string primaryKeyAttribute, string sortKeyAttribute, string valueAttribute)
     {
         _defaultTableName = tableName;
@@ -127,6 +251,10 @@ public class DynamoDBProvider : ParameterProvider, IDynamoDBProvider
         return this;
     }
 
+    /// <summary>
+    /// Gets DynamoDB table information.
+    /// </summary>
+    /// <returns></returns>
     private (string TableName, string PrimaryKeyAttribute, string SortKeyAttribute, string ValueAttribute) GetTableInfo()
     {
         var tableName = _defaultTableName ?? "";
@@ -136,6 +264,12 @@ public class DynamoDBProvider : ParameterProvider, IDynamoDBProvider
         return (tableName, primaryKeyAttribute, sortKeyAttribute, valueAttribute);
     }
 
+    /// <summary>
+    /// Get parameter value for the provided key. 
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <param name="config">The parameter provider configuration</param>
+    /// <returns>The parameter value.</returns>
     protected override async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
     {
         var tableInfo = GetTableInfo();
@@ -155,6 +289,12 @@ public class DynamoDBProvider : ParameterProvider, IDynamoDBProvider
             : null;
     }
 
+    /// <summary>
+    /// Get multiple parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <param name="config">The parameter provider configuration</param>
+    /// <returns>Returns a collection parameter key/value pairs.</returns>
     protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string key,
         ParameterProviderConfiguration? config)
     {
