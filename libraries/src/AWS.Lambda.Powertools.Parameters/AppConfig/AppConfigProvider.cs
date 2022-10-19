@@ -31,21 +31,52 @@ namespace AWS.Lambda.Powertools.Parameters.AppConfig;
 /// </summary>
 public class AppConfigProvider : ParameterProvider<AppConfigProviderConfigurationBuilder>, IAppConfigProvider
 {
+    /// <summary>
+    /// The default application Id.
+    /// </summary>
     private string _defaultApplicationId = string.Empty;
+    
+    /// <summary>
+    /// The default environment Id.
+    /// </summary>
     private string _defaultEnvironmentId = string.Empty;
+    
+    /// <summary>
+    /// The default configuration profile Id.
+    /// </summary>
     private string _defaultConfigProfileId = string.Empty;
     
-    private IAmazonAppConfigData? _client;
+    /// <summary>
+    /// Instance of datetime wrapper.
+    /// </summary>
     private readonly IDateTimeWrapper _dateTimeWrapper;
+    
+    /// <summary>
+    /// Thread safe dictionary to store results.  
+    /// </summary>
     private readonly ConcurrentDictionary<string, AppConfigResult> _results = new(StringComparer.OrdinalIgnoreCase);
-
+    
+    /// <summary>
+    /// The client instance.
+    /// </summary>
+    private IAmazonAppConfigData? _client;
+    
+    /// <summary>
+    /// Gets the client instance.
+    /// </summary>
     private IAmazonAppConfigData Client => _client ??= new AmazonAppConfigDataClient();
 
+    /// <summary>
+    /// AppConfigProvider constructor.
+    /// </summary>
     public AppConfigProvider()
     {
         _dateTimeWrapper = DateTimeWrapper.Instance;
     }
 
+    /// <summary>
+    /// AppConfigProvider constructor for test.
+    /// </summary>
     internal AppConfigProvider(
         IDateTimeWrapper dateTimeWrapper,
         string? appConfigResultKey = null,
@@ -56,54 +87,108 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             _results.TryAdd(appConfigResultKey, appConfigResult);
     }
 
+    #region IParameterProviderConfigurableClient implementation
+    
+    /// <summary>
+    /// Use a custom client
+    /// </summary>
+    /// <param name="client">The custom client</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider UseClient(IAmazonAppConfigData client)
     {
         _client = client;
         return this;
     }
 
+    /// <summary>
+    /// Configure client with the credentials loaded from the application's default configuration.
+    /// </summary>
+    /// <param name="region">The region to connect.</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(RegionEndpoint region)
     {
         _client = new AmazonAppConfigDataClient(region);
         return this;
     }
 
+    /// <summary>
+    /// Configure client with the credentials loaded from the application's default configuration.
+    /// </summary>
+    /// <param name="config">The client configuration object.</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(AmazonAppConfigDataConfig config)
     {
         _client = new AmazonAppConfigDataClient(config);
         return this;
     }
 
+    /// <summary>
+    /// Configure client with AWS credentials.
+    /// </summary>
+    /// <param name="credentials">AWS credentials.</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(AWSCredentials credentials)
     {
         _client = new AmazonAppConfigDataClient(credentials);
         return this;
     }
 
+    /// <summary>
+    /// Configure client with AWS credentials.
+    /// </summary>
+    /// <param name="credentials">AWS credentials.</param>
+    /// <param name="region">The region to connect.</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(AWSCredentials credentials, RegionEndpoint region)
     {
         _client = new AmazonAppConfigDataClient(credentials, region);
         return this;
     }
 
+    /// <summary>
+    /// Configure client with AWS credentials and a client configuration object.
+    /// </summary>
+    /// <param name="credentials">AWS credentials.</param>
+    /// <param name="config">The client configuration object.</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(AWSCredentials credentials, AmazonAppConfigDataConfig config)
     {
         _client = new AmazonAppConfigDataClient(credentials, config);
         return this;
     }
 
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key.
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey);
         return this;
     }
 
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key.
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="region">The region to connect.</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, RegionEndpoint region)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, region);
         return this;
     }
 
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key and a client configuration object.
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="config">The client configuration object.</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey,
         AmazonAppConfigDataConfig config)
     {
@@ -111,12 +196,27 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return this;
     }
 
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key. 
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="awsSessionToken">AWS Session Token</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken);
         return this;
     }
 
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key. 
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="awsSessionToken">AWS Session Token</param>
+    /// <param name="region">The region to connect.</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
         RegionEndpoint region)
     {
@@ -124,13 +224,28 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return this;
     }
 
+    /// <summary>
+    /// Configure client with AWS Access Key ID and AWS Secret Key and a client configuration object.
+    /// </summary>
+    /// <param name="awsAccessKeyId">AWS Access Key ID</param>
+    /// <param name="awsSecretAccessKey">AWS Secret Access Key</param>
+    /// <param name="awsSessionToken">AWS Session Token</param>
+    /// <param name="config">The client configuration object.</param>
+    /// <returns>Provider instance</returns>
     public IAppConfigProvider ConfigureClient(string awsAccessKeyId, string awsSecretAccessKey, string awsSessionToken,
         AmazonAppConfigDataConfig config)
     {
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);
         return this;
     }
+    
+    #endregion
 
+    /// <summary>
+    /// Sets the default application ID or name.
+    /// </summary>
+    /// <param name="applicationId">The application ID or name.</param>
+    /// <returns>The AppConfigProvider instance.</returns>
     public IAppConfigProvider DefaultApplication(string applicationId)
     {
         if (string.IsNullOrWhiteSpace(applicationId))
@@ -139,6 +254,11 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return this;
     }
     
+    /// <summary>
+    /// Sets the default environment ID or name.
+    /// </summary>
+    /// <param name="environmentId">The environment ID or name.</param>
+    /// <returns>The AppConfigProvider instance.</returns>
     public IAppConfigProvider DefaultEnvironment(string environmentId)
     {
         if (string.IsNullOrWhiteSpace(environmentId))
@@ -147,27 +267,51 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return this;
     }
     
+    /// <summary>
+    /// Sets the default configuration profile ID or name.
+    /// </summary>
+    /// <param name="configProfileId">The configuration profile ID or name.</param>
+    /// <returns>The AppConfigProvider instance.</returns>
     public IAppConfigProvider DefaultConfigProfile(string configProfileId)
     {
         _defaultConfigProfileId = configProfileId;
         return this;
     }
 
+    /// <summary>
+    /// Sets the application ID or name.
+    /// </summary>
+    /// <param name="applicationId">The application ID or name.</param>
+    /// <returns>The AppConfigProvider configuration builder.</returns>
     public AppConfigProviderConfigurationBuilder WithApplication(string applicationId)
     {
         return NewConfigurationBuilder().WithApplication(applicationId);
     }
 
+    /// <summary>
+    /// Sets the environment ID or name.
+    /// </summary>
+    /// <param name="environmentId">The environment ID or name.</param>
+    /// <returns>The AppConfigProvider configuration builder.</returns>
     public AppConfigProviderConfigurationBuilder WithEnvironment(string environmentId)
     {
         return NewConfigurationBuilder().WithEnvironment(environmentId);
     }
 
+    /// <summary>
+    /// Sets the configuration profile ID or name.
+    /// </summary>
+    /// <param name="configProfileId">The configuration profile ID or name.</param>
+    /// <returns>The AppConfigProvider configuration builder.</returns>
     public AppConfigProviderConfigurationBuilder WithConfigProfile(string configProfileId)
     {
         return NewConfigurationBuilder().WithConfigProfile(configProfileId);
     }
 
+    /// <summary>
+    /// Creates and configures a new AppConfigProviderConfigurationBuilder
+    /// </summary>
+    /// <returns></returns>
     protected override AppConfigProviderConfigurationBuilder NewConfigurationBuilder()
     {
         return new AppConfigProviderConfigurationBuilder(this)
@@ -178,11 +322,11 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     }
 
     /// <summary>
-    /// Get parameter transformed value for the provided key.
+    /// Get AppConfig transformed value for the provided key.
     /// </summary>
     /// <param name="key">The parameter key.</param>
     /// <typeparam name="T">Target transformation type.</typeparam>
-    /// <returns>The parameter transformed value.</returns>
+    /// <returns>The AppConfig transformed value.</returns>
     public override async Task<T?> GetAsync<T>(string key) where T : class
     {
         return await NewConfigurationBuilder()
@@ -190,11 +334,19 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             .ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Get last AppConfig value.
+    /// </summary>
+    /// <returns>Application Configuration.</returns>
     public IDictionary<string, string?> Get()
     {
         return GetAsync().GetAwaiter().GetResult();
     }
 
+    /// <summary>
+    /// Get last AppConfig value.
+    /// </summary>
+    /// <returns>The AppConfig value.</returns>
     public async Task<IDictionary<string, string?>> GetAsync()
     {
         return await NewConfigurationBuilder()
@@ -202,11 +354,21 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             .ConfigureAwait(false);
     }
     
+    /// <summary>
+    /// Get last AppConfig value and transform it to JSON value.
+    /// </summary>
+    /// <typeparam name="T">JSON value type.</typeparam>
+    /// <returns>The AppConfig JSON value.</returns>
     public T? Get<T>() where T: class
     {
         return GetAsync<T>().GetAwaiter().GetResult();
     }
     
+    /// <summary>
+    /// Get last AppConfig value and transform it to JSON value.
+    /// </summary>
+    /// <typeparam name="T">JSON value type.</typeparam>
+    /// <returns>The AppConfig JSON value.</returns>
     public async Task<T?> GetAsync<T>()  where T: class
     {
         return await NewConfigurationBuilder()
@@ -214,6 +376,12 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             .ConfigureAwait(false);
     }
     
+    /// <summary>
+    /// Get parameter value for the provided key. 
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <param name="config">The parameter provider configuration</param>
+    /// <returns>The parameter value.</returns>
     protected override async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
     {
         if(config is not AppConfigProviderConfiguration configuration)
@@ -267,12 +435,23 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return result.LastConfig;
     }
 
+    /// <summary>
+    /// Get multiple parameter values for the provided key.
+    /// </summary>
+    /// <param name="key">The parameter key.</param>
+    /// <param name="config">The parameter provider configuration</param>
+    /// <returns>Returns a collection parameter key/value pairs.</returns>
     protected override Task<IDictionary<string, string?>> GetMultipleAsync(string key,
         ParameterProviderConfiguration? config)
     {
         throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
     }
     
+    /// <summary>
+    /// Gets Or Adds AppConfigResult with provided key
+    /// </summary>
+    /// <param name="cacheKey">The cache key</param>
+    /// <returns>AppConfigResult</returns>
     private AppConfigResult GetAppConfigResult(string cacheKey)
     {
         if (_results.TryGetValue(cacheKey, out var cachedResult))
@@ -284,6 +463,11 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         return cachedResult;
     }
     
+    /// <summary>
+    /// Starts a configuration session used to retrieve a deployed configuration.
+    /// </summary>
+    /// <param name="config">Teh AppConfig provider configuration</param>
+    /// <returns>The initial configuration token</returns>
     private async Task<string> GetInitialConfigurationTokenAsync(AppConfigProviderConfiguration config)
     {
         var request = new StartConfigurationSessionRequest

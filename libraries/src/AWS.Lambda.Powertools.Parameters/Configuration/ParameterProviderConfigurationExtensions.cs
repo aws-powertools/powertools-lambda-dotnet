@@ -18,7 +18,7 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 namespace AWS.Lambda.Powertools.Parameters.Configuration;
 
 /// <summary>
-/// Class ParameterProviderConfigurationExtensions.
+/// ParameterProviderConfigurationExtensions class extensions.
 /// </summary>
 public static class ParameterProviderConfigurationExtensions
 {

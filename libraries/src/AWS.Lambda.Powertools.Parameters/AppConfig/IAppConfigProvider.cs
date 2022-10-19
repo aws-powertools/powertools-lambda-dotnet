@@ -11,44 +11,44 @@ public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfig
     IParameterProviderConfigurableClient<IAppConfigProvider, IAmazonAppConfigData, AmazonAppConfigDataConfig>
 {
     /// <summary>
-    /// Set the default application.
+    /// Sets the default application ID or name.
     /// </summary>
-    /// <param name="applicationId"></param>
+    /// <param name="applicationId">The application ID or name.</param>
     /// <returns>The AppConfigProvider instance.</returns>
     IAppConfigProvider DefaultApplication(string applicationId);
 
     /// <summary>
-    /// Set the default environment.
+    /// Sets the default environment ID or name.
     /// </summary>
-    /// <param name="environmentId"></param>
+    /// <param name="environmentId">The environment ID or name.</param>
     /// <returns>The AppConfigProvider instance.</returns>
     IAppConfigProvider DefaultEnvironment(string environmentId);
 
     /// <summary>
-    /// Set the default configuration profile.
+    /// Sets the default configuration profile ID or name.
     /// </summary>
-    /// <param name="configProfileId"></param>
+    /// <param name="configProfileId">The configuration profile ID or name.</param>
     /// <returns>The AppConfigProvider instance.</returns>
     IAppConfigProvider DefaultConfigProfile(string configProfileId);
 
     /// <summary>
-    /// Set the application for the current query.
+    /// Sets the application ID or name.
     /// </summary>
-    /// <param name="applicationId"></param>
+    /// <param name="applicationId">The application ID or name.</param>
     /// <returns>The AppConfigProvider configuration builder.</returns>
     AppConfigProviderConfigurationBuilder WithApplication(string applicationId);
 
     /// <summary>
-    /// Set the environment for the current query.
+    /// Sets the environment ID or name.
     /// </summary>
-    /// <param name="environmentId"></param>
+    /// <param name="environmentId">The environment ID or name.</param>
     /// <returns>The AppConfigProvider configuration builder.</returns>
     AppConfigProviderConfigurationBuilder WithEnvironment(string environmentId);
 
     /// <summary>
-    /// Set the configuration profile for the current query.
+    /// Sets the configuration profile ID or name.
     /// </summary>
-    /// <param name="configProfileId"></param>
+    /// <param name="configProfileId">The configuration profile ID or name.</param>
     /// <returns>The AppConfigProvider configuration builder.</returns>
     AppConfigProviderConfigurationBuilder WithConfigProfile(string configProfileId);
 
@@ -61,21 +61,21 @@ public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfig
     /// <summary>
     /// Get last AppConfig value.
     /// </summary>
-    /// <returns>Application Configuration.</returns>
+    /// <returns>The AppConfig value.</returns>
     Task<IDictionary<string, string?>> GetAsync();
 
     /// <summary>
     /// Get last AppConfig value and transform it to JSON value.
     /// </summary>
     /// <typeparam name="T">JSON value type.</typeparam>
-    /// <returns>JSON value.</returns>
+    /// <returns>The AppConfig JSON value.</returns>
     T? Get<T>() where T : class;
 
     /// <summary>
     /// Get last AppConfig value and transform it to JSON value.
     /// </summary>
     /// <typeparam name="T">JSON value type.</typeparam>
-    /// <returns>JSON value.</returns>
+    /// <returns>The AppConfig JSON value.</returns>
     Task<T?> GetAsync<T>() where T : class;
 }
 
