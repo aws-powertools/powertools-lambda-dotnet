@@ -25,11 +25,6 @@ public class AppConfigProviderConfigurationBuilder : ParameterProviderConfigurat
     private string? _environmentId;
     private string? _applicationId;
     private string? _configProfileId;
-    
-    private ITransformer? _dictionaryTransformer;
-    
-    private ITransformer DictionaryTransformer => _dictionaryTransformer ??= AppConfigDictionaryTransformer.Instance;
-
 
     public AppConfigProviderConfigurationBuilder(ParameterProviderBase parameterProvider) :
         base(parameterProvider)
@@ -101,13 +96,19 @@ public class AppConfigProviderConfigurationBuilder : ParameterProviderConfigurat
         return GetAsync<T>().GetAwaiter().GetResult();
     }
 
-    public async Task<T?> GetAsync<T>() where T : class
+    private void SetDefaultTransformer<T>() where T : class
     {
         if (typeof(T) == typeof(IDictionary<string, string?>))
-            SetTransformer(DictionaryTransformer);
+            SetTransformer(AppConfigDictionaryTransformer.Instance);
         else
             SetTransformation(Transformation.Json);
+    }
 
+    public async Task<T?> GetAsync<T>() where T : class
+    {
+        if (!HasTransformation)
+            SetDefaultTransformer<T>();
+        
         return await base.GetAsync<T>(AppConfigProviderCacheHelper.GetCacheKey(_applicationId, _environmentId,
             _configProfileId)).ConfigureAwait(false);
     }

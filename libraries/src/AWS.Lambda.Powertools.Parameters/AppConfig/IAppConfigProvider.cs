@@ -64,8 +64,18 @@ public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfig
     /// <returns>Application Configuration.</returns>
     Task<IDictionary<string, string?>> GetAsync();
 
+    /// <summary>
+    /// Get last AppConfig value and transform it to JSON value.
+    /// </summary>
+    /// <typeparam name="T">JSON value type.</typeparam>
+    /// <returns>JSON value.</returns>
     T? Get<T>() where T : class;
 
+    /// <summary>
+    /// Get last AppConfig value and transform it to JSON value.
+    /// </summary>
+    /// <typeparam name="T">JSON value type.</typeparam>
+    /// <returns>JSON value.</returns>
     Task<T?> GetAsync<T>() where T : class;
 }
 

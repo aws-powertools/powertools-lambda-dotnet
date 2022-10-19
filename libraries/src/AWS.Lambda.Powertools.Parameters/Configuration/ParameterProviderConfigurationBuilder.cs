@@ -47,6 +47,11 @@ public class ParameterProviderConfigurationBuilder
     private TimeSpan? _maxAge;
     
     /// <summary>
+    /// Has transformation or custom transformer
+    /// </summary>
+    protected bool HasTransformation { get; private set; }
+    
+    /// <summary>
     /// The parameter provider handler instance.
     /// </summary>
     private readonly IParameterProviderBaseHandler _handler;
@@ -110,6 +115,7 @@ public class ParameterProviderConfigurationBuilder
         _transformer = null;
         _transformerName = null;
         _transformation = transformation;
+        HasTransformation = true;
     }
 
     /// <summary>
@@ -120,6 +126,7 @@ public class ParameterProviderConfigurationBuilder
         _transformation = null;
         _transformerName = null;
         _transformer = transformer;
+        HasTransformation = true;
     }
 
     /// <summary>
@@ -130,6 +137,7 @@ public class ParameterProviderConfigurationBuilder
         _transformation = null;
         _transformer = null;
         _transformerName = transformerName;
+        HasTransformation = true;
     }
 
     /// <summary>
