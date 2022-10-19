@@ -21,26 +21,50 @@ namespace AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 
 public class SsmProviderConfigurationBuilder : ParameterProviderConfigurationBuilder
 {
+    /// <summary>
+    /// Fetches the latest value from the store regardless if already available in cache.
+    /// </summary>
     private bool? _recursive;
+    
+    /// <summary>
+    /// Fetches the latest value from the store regardless if already available in cache.
+    /// </summary>
     private bool? _withDecryption;
 
+    /// <summary>
+    /// SsmProviderConfigurationBuilder constructor.
+    /// </summary>
+    /// <param name="parameterProvider"></param>
     public SsmProviderConfigurationBuilder(ParameterProviderBase parameterProvider) :
         base(parameterProvider)
     {
     }
 
+    /// <summary>
+    /// Automatically decrypt the parameter.
+    /// </summary>
+    /// <returns>The provider configuration builder.</returns>
+    public SsmProviderConfigurationBuilder WithDecryption()
+    {
+        _withDecryption = true;
+        return this;
+    }
+    
+    /// <summary>
+    /// Fetches all parameter values recursively based on a path prefix.
+    /// For GetMultiple() only.
+    /// </summary>
+    /// <returns>The provider configuration builder.</returns>
     public SsmProviderConfigurationBuilder Recursive()
     {
         _recursive = true;
         return this;
     }
 
-    public SsmProviderConfigurationBuilder WithDecryption()
-    {
-        _withDecryption = true;
-        return this;
-    }
-
+    /// <summary>
+    /// Creates and configures a new instance of SsmProviderConfiguration.
+    /// </summary>
+    /// <returns>A new instance of SsmProviderConfiguration.</returns>
     protected override ParameterProviderConfiguration NewConfiguration()
     {
         return new SsmProviderConfiguration
