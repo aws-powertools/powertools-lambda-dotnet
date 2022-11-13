@@ -1,0 +1,134 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Example project for AWS Lambda Powertools BatchProcessing utility
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 10
+    Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: powertools-dotnet-batch-processing-sample
+        POWERTOOLS_LOG_LEVEL: Debug
+        POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+
+Resources:
+  SampleSqsBatchProcessorFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      FunctionName: powertools-dotnet-sample-batch-processor-sqs
+      Runtime: dotnet6
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::SqsHandlerUsingAttribute
+      MemorySize: 256
+      ReservedConcurrentExecutions: 1
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - SQSPollerPolicy:
+            QueueName: !GetAtt SampleSqsQueue.QueueName
+      Environment:
+        Variables:
+          POWERTOOLS_BATCH_PROCESSING_EVENT_TYPE: SQS
+      Events:
+        SqsBatchEsm:
+          Type: SQS # More info about SQS Event Source: https://github.com/aws/serverless-application-model/blob/master/versions/2016-10-31.md#sqs
+          Properties:
+            Enabled: true
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+            Queue: !GetAtt SampleSqsQueue.Arn
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 5
+
+  SampleSqsDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: powertools-dotnet-sample-sqs-dlq
+
+  SampleSqsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: powertools-dotnet-sample-sqs-queue
+      VisibilityTimeout: 10
+      RedrivePolicy:
+        maxReceiveCount: 2
+        deadLetterTargetArn: !GetAtt SampleSqsDLQ.Arn
+
+  SampleDynamoDBStreamBatchProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: powertools-dotnet-sample-batch-processor-dynamodb-stream
+      Runtime: dotnet6
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::DynamoDbStreamHandlerUsingAttribute
+      MemorySize: 256
+      ReservedConcurrentExecutions: 1
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBStreamReadPolicy:
+            TableName: !Ref SampleDynamoDBTable
+            StreamName: !Select [3, !Split ["/", !GetAtt SampleDynamoDBTable.StreamArn]]
+      Environment:
+        Variables:
+          POWERTOOLS_BATCH_PROCESSING_EVENT_TYPE: DYNAMODB_STREAM
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt SampleDynamoDBTable.StreamArn
+            BatchSize: 10
+            StartingPosition: TRIM_HORIZON
+
+  SampleDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: powertools-dotnet-sample-dynamodb-table
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  SampleKinesisDataStreamBatchProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: powertools-dotnet-sample-batch-processor-kinesis-data-stream
+      Runtime: dotnet6
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::KinesisDataStreamHandlerUsingAttribute
+      MemorySize: 256
+      ReservedConcurrentExecutions: 1
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - KinesisStreamReadPolicy:
+            StreamName: !Ref SampleKinesisDataStream
+      Environment:
+        Variables:
+          POWERTOOLS_BATCH_PROCESSING_EVENT_TYPE: KINESIS_DATA_STREAM
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt SampleKinesisDataStream.Arn
+            BatchSize: 100
+            StartingPosition: LATEST
+
+  SampleKinesisDataStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: powertools-dotnet-sample-kinesis-data-stream
+      ShardCount: 1
+
+Outputs:
+  SampleSqsBatchProcessorFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt SampleSqsBatchProcessorFunction.Arn
+  SampleSqsBatchProcessorFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt SampleSqsBatchProcessorFunctionRole.Arn
