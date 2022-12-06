@@ -73,7 +73,7 @@ Not using .NET? No problem we have you covered. Here are the other members of th
 
 ## Connect
 
-* **AWS Lambda Powertools on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET){target="_blank"}**
+* **AWS Lambda Powertools on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET)**
 * **Email**: aws-lambda-powertools-feedback@amazon.com
 
 ## Credits
