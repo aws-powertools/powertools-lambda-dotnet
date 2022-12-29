@@ -13,7 +13,7 @@ Globals:
       Variables:
         POWERTOOLS_SERVICE_NAME: powertools-dotnet-logging-sample
         POWERTOOLS_LOG_LEVEL: Debug
-        POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+        POWERTOOLS_LOGGER_CASE: PascalCase # Allowed values are: CamelCase, PascalCase and SnakeCase
 
 Resources:
   HelloWorldFunction:
