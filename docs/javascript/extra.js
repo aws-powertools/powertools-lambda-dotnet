@@ -9,9 +9,17 @@ const awsconfig = {
 	"aws_kinesis_firehose_stream_name": "ClickStreamKinesisFirehose-OGX7PQdrynUo",
 };
 
-const RUNTIME = "python"
+const RUNTIME = "dotnet"
+const BASE_ORIGIN = "awslabs.github.io"
 
-const attachListeners = () => {
+function copyToClipboard(e) {
+	e.preventDefault()
+	navigator.clipboard.writeText(e.target.textContent)
+  	alert$.next("Copied to clipboard")
+}
+
+function enableSearchOnBlurElement() {
+	if (document.location.hostname != BASE_ORIGIN) return // prevent unnecessary data
 	/* Register handler to log search on blur */
 	document.addEventListener("DOMContentLoaded", function () {
 		recordPageView({
@@ -39,6 +47,18 @@ const attachListeners = () => {
 			prevLocation: document.referrer
 		})
 	};
+}
+
+function enableClipboardElements() {
+	let copyElements = document.querySelectorAll('.copyMe');
+	copyElements.forEach(element => {
+		element.addEventListener('click', copyToClipboard);
+	})
+}
+
+const attachListeners = () => {
+	enableSearchOnBlurElement()
+	enableClipboardElements()
 }
 
 const init = () => {
