@@ -47,7 +47,7 @@ Here is an example using the AWS SAM [Globals section](https://docs.aws.amazon.c
                 POWERTOOLS_SERVICE_NAME: powertools-dotnet-logging-sample
                 POWERTOOLS_LOG_LEVEL: Debug
                 POWERTOOLS_LOGGER_LOG_EVENT: true
-                POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+                POWERTOOLS_LOGGER_CASE: PascalCase # Allowed values are: CamelCase, PascalCase and SnakeCase
                 POWERTOOLS_LOGGER_SAMPLE_RATE: 0
     ```
 
