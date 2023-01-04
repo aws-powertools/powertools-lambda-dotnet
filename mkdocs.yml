@@ -6,11 +6,11 @@ edit_uri: edit/develop/docs
 
 nav:
   - Homepage: index.md
-  - Our tenets: tenets.md
   - References: references.md
   - Changelog: changelog.md
   - Roadmap: roadmap.md
   - API Reference: api/" target="_blank
+  - We Made This (Community): we_made_this.md
   - Core utilities:
       - core/logging.md
       - core/metrics.md
@@ -18,6 +18,8 @@ nav:
 
 theme:
   name: material
+  font:
+    text: Ubuntu
   palette:  
     - scheme: default
       primary: blue
@@ -32,6 +34,7 @@ theme:
         icon: material/toggle-switch
         name: Switch to light mode
   features:
+    - header.autohide
     - navigation.sections
     - navigation.expand
     - navigation.top
