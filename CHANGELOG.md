@@ -1,3 +1,6 @@
+<!-- changelog is partially generated, so it doesn't follow headings and required structure, so we disable it. -->
+<!-- markdownlint-disable -->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

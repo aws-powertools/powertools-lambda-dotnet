@@ -3,11 +3,22 @@ title: AWS Lambda Powertools for .NET (developer preview)
 description: AWS Lambda Powertools for .NET (developer preview)
 ---
 
+<!-- markdownlint-disable MD043 MD013 -->
+
 # AWS Lambda Powertools for .NET
 
-AWS Lambda Powertools for .NET (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, Powertools is **optimized for .NET 6 only**.
+AWS Lambda Powertools for .NET (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, **Powertools is optimized for .NET 6+**.
 
-The GitHub repository for this project can be found [here](https://github.com/awslabs/aws-lambda-powertools-dotnet).
+???+ tip
+    Powertools is also available for [Python](https://awslabs.github.io/aws-lambda-powertools-python/){target="_blank"}, [Java](https://awslabs.github.io/aws-lambda-powertools-java/){target="_blank"}, and [TypeScript](https://awslabs.github.io/aws-lambda-powertools-typescript/latest/){target="_blank"}.
+
+??? hint "Support this project by becoming a reference customer or sharing your work :heart:"
+
+    You can choose to support us in three ways:
+
+    1) [**Become a reference customers**](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new?assignees=&labels=customer-reference&template=support_powertools.yml&title=%5BSupport+Lambda+Powertools%5D%3A+%3Cyour+organization+name%3E). This gives us permission to list your company in our documentation.
+
+    2) [**Share your work**](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new?assignees=&labels=community-content&template=share_your_work.yml&title=%5BI+Made+This%5D%3A+%3CTITLE%3E). Blog posts, video, sample projects you used Powertools!
 
 !!! warning  "Do not use this library in production"
 
@@ -17,7 +28,9 @@ The GitHub repository for this project can be found [here](https://github.com/aw
 
     **Do not use this library for production workloads.**
 
-## Available Powertools libraries
+## Features
+
+Core utilities such as Tracing, Logging, and Metrics will be available across all Lambda Powertools languages. Additional utilities are subjective to each language ecosystem and customer demand.
 
 | Utility | Description
 | ------------------------------------------------- | ---------------------------------------------------------------------------------
@@ -55,7 +68,7 @@ To use the SAM CLI, you need the following tools.
 * .NET 6.0 (LTS)  - [Install .NET 6.0](https://www.microsoft.com/net/download)
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 
-### Examples
+## Examples
 
 We have provided a few examples that should you how to use the each of the core Powertools features.
 
@@ -63,19 +76,18 @@ We have provided a few examples that should you how to use the each of the core 
 * [Logging](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/Logging/){target="_blank"} example
 * [Metrics](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/Metrics/){target="_blank"} example
 
-## Other members of the AWS Lambda Powertools family
-
-Not using .NET? No problem we have you covered. Here are the other members of the AWS Lambda Powertools family:
-
-* [AWS Lambda Powertools for Python](https://github.com/awslabs/aws-lambda-powertools-python)
-* [AWS Lambda Powertools for Java](https://github.com/awslabs/aws-lambda-powertools-java)
-* [AWS Lambda Powertools for TypeScript](https://github.com/awslabs/aws-lambda-powertools-typescript)
-
 ## Connect
 
 * **AWS Lambda Powertools on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET){target="_blank"}**
 * **Email**: aws-lambda-powertools-feedback@amazon.com
 
-## Credits
+## Tenets
 
-* Credits for the Lambda Powertools idea go to [DAZN](https://github.com/getndazn){target="_blank"} and their [DAZN Lambda Powertools](https://github.com/getndazn/dazn-lambda-powertools/){target="_blank"}.
+These are our core principles to guide our decision making.
+
+* **AWS Lambda only**. We optimize for AWS Lambda function environments and supported runtimes only. Utilities might work with web frameworks and non-Lambda environments, though they are not officially supported.
+* **Eases the adoption of best practices**. The main priority of the utilities is to facilitate best practices adoption, as defined in the AWS Well-Architected Serverless Lens; all other functionality is optional.
+* **Keep it lean**. Additional dependencies are carefully considered for security and ease of maintenance, and prevent negatively impacting startup time.
+* **We strive for backwards compatibility**. New features and changes should keep backwards compatibility. If a breaking change cannot be avoided, the deprecation and migration process should be clearly defined.
+* **We work backwards from the community**. We aim to strike a balance of what would work best for 80% of customers. Emerging practices are considered and discussed via Requests for Comment (RFCs)
+* **Idiomatic**. Utilities follow programming language idioms and language-specific best practices.
