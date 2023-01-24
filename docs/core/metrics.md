@@ -279,30 +279,30 @@ You can add high-cardinality data as part of your Metrics log with `AddMetadata`
 === "Example CloudWatch Logs excerpt"
 
     ```json hl_lines="23"
- {
-   "SuccessfulBooking": 1.0,
-   "_aws": {
-  "Timestamp": 1592234975665,
-  "CloudWatchMetrics": [
     {
-   "Namespace": "ExampleApplication",
-   "Dimensions": [
-     [
-    "service"
-     ]
-   ],
-   "Metrics": [
-     {
-    "Name": "SuccessfulBooking",
-    "Unit": "Count"
-     }
-   ]
+      "SuccessfulBooking": 1.0,
+      "_aws": {
+      "Timestamp": 1592234975665,
+      "CloudWatchMetrics": [
+        {
+      "Namespace": "ExampleApplication",
+      "Dimensions": [
+        [
+        "service"
+        ]
+      ],
+      "Metrics": [
+        {
+        "Name": "SuccessfulBooking",
+        "Unit": "Count"
+        }
+      ]
+        }
+      ]
+      },
+      "Service": "Booking",
+      "BookingId": "683EEB2D-B2F3-4075-96EE-788E6E2EED45"
     }
-  ]
-   },
-   "Service": "Booking",
-   "BookingId": "683EEB2D-B2F3-4075-96EE-788E6E2EED45"
- }
     ```
 
 ### Single metric with a different dimension

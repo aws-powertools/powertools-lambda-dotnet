@@ -1,4 +1,4 @@
-# AWS Lambda Powertools for .NET - Logging Example
+# AWS Lambda Powertools for .NET - Metrics Example
 
 This project contains source code and supporting files for a serverless application that you can deploy with the AWS Serverless Application Model Command Line Interface (AWS SAM CLI). It includes the following files and folders.
 

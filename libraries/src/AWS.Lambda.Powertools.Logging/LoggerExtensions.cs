@@ -580,7 +580,9 @@ public static class LoggerExtensions
     public static void Log<T>(this ILogger logger, LogLevel logLevel, T extraKeys, EventId eventId, Exception exception,
         string message, params object[] args) where T : class
     {
-        if (extraKeys is not null)
+        if (extraKeys is Exception ex && exception is null)
+            logger.Log(logLevel, eventId, ex, message, args);
+        else if (extraKeys is not null)
             using (logger.BeginScope(extraKeys))
                 logger.Log(logLevel, eventId, exception, message, args);
         else

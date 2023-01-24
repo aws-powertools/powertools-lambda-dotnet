@@ -17,7 +17,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal.Converters;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -93,6 +95,18 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     Specify to clear Lambda Context on exit
     /// </summary>
     private bool _clearLambdaContext;
+    
+    /// <summary>
+    ///     The JsonSerializer options
+    /// </summary>
+    private static JsonSerializerOptions _jsonSerializerOptions;
+    
+    /// <summary>
+    ///     Get JsonSerializer options.
+    /// </summary>
+    /// <value>The current configuration.</value>
+    private static JsonSerializerOptions JsonSerializerOptions =>
+        _jsonSerializerOptions ??= BuildJsonSerializerOptions();
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LoggingAspectHandler" /> class.
@@ -259,6 +273,22 @@ internal class LoggingAspectHandler : IMethodAspectHandler
             _systemWrapper.LogLine(
                 "Skipping Lambda Context injection because ILambdaContext context parameter not found.");
     }
+    
+    /// <summary>
+    ///     Builds JsonSerializer options.
+    /// </summary>
+    private static JsonSerializerOptions BuildJsonSerializerOptions()
+    {
+        var jsonOptions = new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        };
+        jsonOptions.Converters.Add(new ByteArrayConverter());
+        jsonOptions.Converters.Add(new ExceptionConverter());
+        jsonOptions.Converters.Add(new MemoryStreamConverter());
+        jsonOptions.Converters.Add(new ConstantClassConverter());
+        return jsonOptions;
+    }
 
     /// <summary>
     ///     Captures the correlation identifier.
@@ -286,7 +316,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         try
         {
             var correlationId = string.Empty;
-            var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg));
+            var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, JsonSerializerOptions));
             var element = jsonDoc.RootElement;
 
             for (var i = 0; i < correlationIdPaths.Length; i++)
