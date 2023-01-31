@@ -1,9 +1,9 @@
 name: Docs
 
-on: workflow_dispatch
-  # push:
-  #   branches:
-  #     - main
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   docs:
