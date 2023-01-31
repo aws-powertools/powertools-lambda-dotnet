@@ -11,6 +11,9 @@
         }
       ],
       "dest": "api",
+      "properties": {
+        "TargetFramework": "net6.0"
+      },
       "disableGitFeatures": false,
       "disableDefaultFilter": false
     }
@@ -46,7 +49,7 @@
       "_enableNewTab": true,
       "_disableContribution": true,
       "_enableSearch": "true",
-      "_appFooter": "AWS Lambda Powertools for .NET"
+      "_appFooter": "AWS Lambda Powertools for .NET API Documentation"
     },
     "fileMetadataFiles": [],
     "template": ["default", "templates/material"],
