@@ -43,13 +43,14 @@ jobs:
       - name: Setup .NET 6.0
         uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
         with:
-          dotnet-version: 6.0.302
+          dotnet-version: 6.0.405
       - name: Install solution dependencies
         run: |
-          dotnet tool install -g docfx
+          dotnet new tool-manifest
+          dotnet tool install docfx
       - name: Create API docs
         run: |
-          docfx apidocs/docfx.json
+          dotnet docfx apidocs/docfx.json
       - name: Release API docs to latest
         uses: peaceiris/actions-gh-pages@bd8c6b06eba6b3d25d72b7a1767993c0aeee42e7 # v3.9.2
         with:
