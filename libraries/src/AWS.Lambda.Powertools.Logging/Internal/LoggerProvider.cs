@@ -22,9 +22,9 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 
 /// <summary>
 ///     Class LoggerProvider. This class cannot be inherited.
-///     Implements the <see cref="Microsoft.Extensions.Logging.ILoggerProvider" />
+///     Implements the <see cref="T:Microsoft.Extensions.Logging.ILoggerProvider" />
 /// </summary>
-/// <seealso cref="Microsoft.Extensions.Logging.ILoggerProvider" />
+/// <seealso cref="T:Microsoft.Extensions.Logging.ILoggerProvider" />
 public sealed class LoggerProvider : ILoggerProvider
 {
     /// <summary>
