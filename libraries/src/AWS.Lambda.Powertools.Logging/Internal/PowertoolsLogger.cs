@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
@@ -355,6 +356,9 @@ internal sealed class PowertoolsLogger : ILogger
         jsonOptions.Converters.Add(new ExceptionConverter());
         jsonOptions.Converters.Add(new MemoryStreamConverter());
         jsonOptions.Converters.Add(new ConstantClassConverter());
+        
+        jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+        
         return jsonOptions;
     }
 }
