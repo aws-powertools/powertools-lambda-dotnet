@@ -30,6 +30,7 @@ public class Metadata
     public Metadata()
     {
         CloudWatchMetrics = new List<MetricDirective> {new()};
+        Timestamp = DateTime.Now;
         CustomMetadata = new Dictionary<string, object>();
     }
 
@@ -38,7 +39,7 @@ public class Metadata
     /// </summary>
     /// <value>The timestamp.</value>
     [JsonConverter(typeof(UnixMillisecondDateTimeConverter))]
-    public DateTime Timestamp => DateTime.Now;
+    public DateTime Timestamp { get; }
 
     /// <summary>
     ///     Gets the cloud watch metrics.
