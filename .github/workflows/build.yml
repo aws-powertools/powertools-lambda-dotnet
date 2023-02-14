@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET 6.0
         uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
         with:
-          dotnet-version: 6.0.302
+          dotnet-version: 6.0.405
       - name: Install solution dependencies
         run: dotnet restore
       - name: Build

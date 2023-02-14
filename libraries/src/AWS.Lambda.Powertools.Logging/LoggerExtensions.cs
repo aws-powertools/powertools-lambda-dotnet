@@ -29,7 +29,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes a trace log message as JSON.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="message">The object to be serialized as JSON.</param>
     /// <example>logger.LogTrace(new {User = user, Address = address})</example>
     public static void LogTrace(this ILogger logger, object message)
@@ -40,7 +40,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes an trace log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="exception">The exception to log.</param>
     /// <example>logger.LogTrace(exception)</example>
     public static void LogTrace(this ILogger logger, Exception exception)
@@ -51,7 +51,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes a debug log message as JSON.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="message">The object to be serialized as JSON.</param>
     /// <example>logger.LogDebug(new {User = user, Address = address})</example>
     public static void LogDebug(this ILogger logger, object message)
@@ -62,7 +62,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes an debug log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="exception">The exception to log.</param>
     /// <example>logger.LogDebug(exception)</example>
     public static void LogDebug(this ILogger logger, Exception exception)
@@ -73,7 +73,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes an information log message as JSON.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="message">The object to be serialized as JSON.</param>
     /// <example>logger.LogInformation(new {User = user, Address = address})</example>
     public static void LogInformation(this ILogger logger, object message)
@@ -84,7 +84,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes an information log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="exception">The exception to log.</param>
     /// <example>logger.LogInformation(exception)</example>
     public static void LogInformation(this ILogger logger, Exception exception)
@@ -95,7 +95,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes a warning log message as JSON.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="message">The object to be serialized as JSON.</param>
     /// <example>logger.LogWarning(new {User = user, Address = address})</example>
     public static void LogWarning(this ILogger logger, object message)
@@ -106,7 +106,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes an warning log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="exception">The exception to log.</param>
     /// <example>logger.LogWarning(exception)</example>
     public static void LogWarning(this ILogger logger, Exception exception)
@@ -117,7 +117,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes a error log message as JSON.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="message">The object to be serialized as JSON.</param>
     /// <example>logger.LogCritical(new {User = user, Address = address})</example>
     public static void LogError(this ILogger logger, object message)
@@ -128,7 +128,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes an error log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="exception">The exception to log.</param>
     /// <example>logger.LogError(exception)</example>
     public static void LogError(this ILogger logger, Exception exception)
@@ -139,7 +139,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes a critical log message as JSON.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="message">The object to be serialized as JSON.</param>
     /// <example>logger.LogCritical(new {User = user, Address = address})</example>
     public static void LogCritical(this ILogger logger, object message)
@@ -150,7 +150,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes an critical log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="exception">The exception to log.</param>
     /// <example>logger.LogCritical(exception)</example>
     public static void LogCritical(this ILogger logger, Exception exception)
@@ -161,7 +161,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes a log message as JSON at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="message">The object to be serialized as JSON.</param>
     /// <example>logger.Log(LogLevel.Information, new {User = user, Address = address})</example>
@@ -173,7 +173,7 @@ public static class LoggerExtensions
     /// <summary>
     ///     Formats and writes a log message at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger" /> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="exception">The exception to log.</param>
     /// <example>logger.Log(LogLevel.Information, exception)</example>
@@ -191,7 +191,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a debug log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
@@ -207,7 +207,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a debug log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -222,7 +222,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a debug log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -237,7 +237,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a debug log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
@@ -254,7 +254,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a trace log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
@@ -270,7 +270,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a trace log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -285,7 +285,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a trace log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -300,7 +300,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a trace log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
@@ -317,7 +317,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an informational log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
@@ -333,7 +333,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an informational log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -348,7 +348,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an informational log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -363,7 +363,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an informational log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
@@ -380,7 +380,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a warning log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
@@ -396,7 +396,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a warning log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -411,7 +411,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a warning log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -426,7 +426,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a warning log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
@@ -443,7 +443,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an error log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
@@ -459,7 +459,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an error log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -474,7 +474,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an error log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -489,7 +489,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an error log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
@@ -506,7 +506,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a critical log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
@@ -522,7 +522,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a critical log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -537,7 +537,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a critical log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
@@ -552,7 +552,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a critical log message.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
@@ -569,7 +569,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a log message at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
@@ -592,7 +592,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a log message at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
@@ -608,7 +608,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a log message at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
@@ -624,7 +624,7 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a log message at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="ILogger"/> to write to.</param>
+    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
