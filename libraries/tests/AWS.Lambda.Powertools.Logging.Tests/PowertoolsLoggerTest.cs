@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
@@ -1163,6 +1164,50 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     MinimumLevel = null
                 });
             
+            // Act
+            logger.LogInformation(new { Name = "Test Object", Stream = memoryStream });
+            
+            // Assert
+            systemWrapper.Verify(v =>
+                v.LogLine(
+                    It.Is<string>
+                    (s =>
+                        s.Contains("\"stream\":\"" + Convert.ToBase64String(bytes) + "\"")
+                    )
+                ), Times.Once);
+        }
+        
+        [Fact]
+        public void Log_WhenMemoryStream_LogsBase64String_UnsafeRelaxedJsonEscaping()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            
+            // This will produce the encoded string dW5zYWZlIHN0cmluZyB+IHRlc3Q= (which has a plus sign to test unsafe escaping)
+            var bytes = Encoding.UTF8.GetBytes("unsafe string ~ test");
+
+            var memoryStream = new MemoryStream(bytes) 
+            {
+                Position = 0
+            };
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+
+            var systemWrapper = new Mock<ISystemWrapper>();
+            systemWrapper.Setup(c => c.GetRandom()).Returns(randomSampleRate);            
+
+            var logger = new PowertoolsLogger(loggerName, configurations.Object, systemWrapper.Object, () =>
+                new LoggerConfiguration
+                {                     
+                    Service = null,
+                    MinimumLevel = null
+                });
+
             // Act
             logger.LogInformation(new { Name = "Test Object", Stream = memoryStream });
             
