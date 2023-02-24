@@ -1,6 +1,6 @@
 ---
-title: AWS Lambda Powertools for .NET (developer preview)
-description: AWS Lambda Powertools for .NET (developer preview)
+title: AWS Lambda Powertools for .NET
+description: AWS Lambda Powertools for .NET
 ---
 
 <!-- markdownlint-disable MD043 MD013 -->
@@ -19,14 +19,6 @@ AWS Lambda Powertools for .NET (which from here will be referred as Powertools) 
     1) [**Become a reference customers**](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new?assignees=&labels=customer-reference&template=support_powertools.yml&title=%5BSupport+Lambda+Powertools%5D%3A+%3Cyour+organization+name%3E). This gives us permission to list your company in our documentation.
 
     2) [**Share your work**](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new?assignees=&labels=community-content&template=share_your_work.yml&title=%5BI+Made+This%5D%3A+%3CTITLE%3E). Blog posts, video, sample projects you used Powertools!
-
-!!! warning  "Do not use this library in production"
-
-    **AWS Lambda Powertools for .NET is currently released in preview** and is intended strictly for feedback purposes only. This version is not stable, and significant breaking changes might incur as part of the upcoming production-ready release.
-
-    Your support is much appreciated. If you encounter any problems, [please raise an issue](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new/choose).
-
-    **Do not use this library for production workloads.**
 
 ## Features
 
