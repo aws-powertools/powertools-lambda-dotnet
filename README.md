@@ -4,7 +4,7 @@
 [![Build](https://github.com/awslabs/aws-lambda-powertools-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/awslabs/aws-lambda-powertools-dotnet/actions/workflows/build.yml)
 [![Join our Discord](https://dcbadge.vercel.app/api/server/B8zZKbbyET)](https://discord.gg/B8zZKbbyET)
 
-AWS Lambda Powertools for .NET (C#) is a suite of utilities for AWS Lambda functions to simplify implementation of serverless observability best practices such as tracing, structured logging, and custom metrics.
+Powertools is a developer toolkit to implement Serverless [best practices and increase developer velocity](https://awslabs.github.io/aws-lambda-powertools-dotnet/#features).
 
 **[📜 Documentation](https://awslabs.github.io/aws-lambda-powertools-dotnet/)** | **[NuGet](https://www.nuget.org/)** | **[Roadmap](https://github.com/awslabs/aws-lambda-powertools-roadmap/projects/1)** | **[Examples](#examples)**
 

@@ -78,8 +78,14 @@ internal class MetricsAspectHandler : IMethodAspectHandler
     /// <param name="eventArgs">Aspect Arguments</param>
     public void OnEntry(AspectEventArgs eventArgs)
     {
-        if (!_isColdStart || !_captureColdStartEnabled) return;
-
+        if (!_isColdStart)
+            return;
+        
+        _isColdStart = false;
+        
+        if (!_captureColdStartEnabled) 
+            return;
+        
         var nameSpace = _metrics.GetNamespace();
         var service = _metrics.GetService();
         Dictionary<string, string> dimensions = null;
@@ -102,8 +108,6 @@ internal class MetricsAspectHandler : IMethodAspectHandler
             service,
             dimensions
         );
-
-        _isColdStart = false;
     }
 
     /// <summary>
