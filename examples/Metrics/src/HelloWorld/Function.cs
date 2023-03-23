@@ -74,8 +74,7 @@ public class Function
     /// <returns>API Gateway Proxy response</returns>
     [Logging(LogEvent = true)]
     [Metrics(CaptureColdStart = true)]
-    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
-        ILambdaContext context)
+    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent, ILambdaContext context)
     {
         var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
 
