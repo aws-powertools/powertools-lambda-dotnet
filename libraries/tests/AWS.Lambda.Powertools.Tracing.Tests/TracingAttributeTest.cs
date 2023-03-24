@@ -590,7 +590,8 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             configurations.Setup(c => c.TracerCaptureError).Returns(true);
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
-
+            var message = GetException(exception);
+            
             var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
@@ -604,7 +605,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
                 v.AddMetadata(
                     It.Is<string>(i => i == nameSpace),
                     It.Is<string>(i => i == $"{methodName} error"),
-                    It.Is<Exception>(i => i == exception
+                    It.Is<string>(i => i == message
                     )
                 ), Times.Once);
         }
@@ -650,7 +651,8 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             configurations.Setup(c => c.TracingDisabled).Returns(false);
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
-
+            var message = GetException(exception);
+            
             var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Error,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
@@ -664,7 +666,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
                 v.AddMetadata(
                     It.Is<string>(i => i == nameSpace),
                     It.Is<string>(i => i == $"{methodName} error"),
-                    It.Is<Exception>(i => i == exception
+                    It.Is<string>(i => i == message
                     )
                 ), Times.Once);
         }
@@ -680,7 +682,8 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             configurations.Setup(c => c.TracingDisabled).Returns(false);
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
-
+            var message = GetException(exception);
+            
             var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ResponseAndError,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
@@ -694,7 +697,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
                 v.AddMetadata(
                     It.Is<string>(i => i == nameSpace),
                     It.Is<string>(i => i == $"{methodName} error"),
-                    It.Is<Exception>(i => i == exception
+                    It.Is<string>(i => i == message
                     )
                 ), Times.Once);
         }
@@ -757,6 +760,27 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
                     It.IsAny<string>(),
                     It.IsAny<Exception>()
                 ), Times.Never);
+        }
+
+        #endregion
+        
+        #region Utilities
+
+        static string GetException(Exception exception)
+        {
+            var message =
+                "Exception type " + exception.GetType() + Environment.NewLine +
+                "Exception message: " + exception.Message + Environment.NewLine +
+                "Stack trace: " + exception.StackTrace + Environment.NewLine;
+            if (exception.InnerException != null)
+            {
+                message += "---BEGIN InnerException--- " + Environment.NewLine +
+                           "Exception type " + exception.InnerException.GetType() + Environment.NewLine +
+                           "Exception message: " + exception.InnerException.Message + Environment.NewLine +
+                           "Stack trace: " + exception.InnerException.StackTrace + Environment.NewLine +
+                           "---END Inner Exception";
+            }
+            return message;
         }
 
         #endregion

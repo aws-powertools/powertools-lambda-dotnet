@@ -163,12 +163,25 @@ internal class TracingAspectHandler : IMethodAspectHandler
         if (CaptureError())
         {
             var nameSpace = GetNamespace();
-
+            
+            var message =
+                "Exception type " + exception.GetType() + Environment.NewLine +
+                "Exception message: " + exception.Message + Environment.NewLine +
+                "Stack trace: " + exception.StackTrace + Environment.NewLine;
+            if (exception.InnerException != null)
+            {
+                message += "---BEGIN InnerException--- " + Environment.NewLine +
+                           "Exception type " + exception.InnerException.GetType() + Environment.NewLine +
+                           "Exception message: " + exception.InnerException.Message + Environment.NewLine +
+                           "Stack trace: " + exception.InnerException.StackTrace + Environment.NewLine +
+                           "---END Inner Exception";
+            }
+            
             _xRayRecorder.AddMetadata
             (
                 nameSpace,
                 $"{eventArgs.Name} error",
-                exception
+                message
             );
         }
 
