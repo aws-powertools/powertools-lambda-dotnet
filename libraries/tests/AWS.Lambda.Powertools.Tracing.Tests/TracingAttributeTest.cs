@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Tracing.Internal;
 using Moq;
@@ -590,7 +591,8 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             configurations.Setup(c => c.TracerCaptureError).Returns(true);
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
-
+            var message = GetException(exception);
+            
             var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
@@ -604,7 +606,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
                 v.AddMetadata(
                     It.Is<string>(i => i == nameSpace),
                     It.Is<string>(i => i == $"{methodName} error"),
-                    It.Is<Exception>(i => i == exception
+                    It.Is<string>(i => i == message
                     )
                 ), Times.Once);
         }
@@ -650,7 +652,8 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             configurations.Setup(c => c.TracingDisabled).Returns(false);
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
-
+            var message = GetException(exception);
+            
             var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Error,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
@@ -664,7 +667,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
                 v.AddMetadata(
                     It.Is<string>(i => i == nameSpace),
                     It.Is<string>(i => i == $"{methodName} error"),
-                    It.Is<Exception>(i => i == exception
+                    It.Is<string>(i => i == message
                     )
                 ), Times.Once);
         }
@@ -680,7 +683,8 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             configurations.Setup(c => c.TracingDisabled).Returns(false);
             var recorder = new Mock<IXRayRecorder>();
             var exception = new Exception("Test Exception");
-
+            var message = GetException(exception);
+            
             var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ResponseAndError,
                 configurations.Object, recorder.Object);
             var eventArgs = new AspectEventArgs {Name = methodName};
@@ -694,7 +698,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
                 v.AddMetadata(
                     It.Is<string>(i => i == nameSpace),
                     It.Is<string>(i => i == $"{methodName} error"),
-                    It.Is<Exception>(i => i == exception
+                    It.Is<string>(i => i == message
                     )
                 ), Times.Once);
         }
@@ -757,6 +761,28 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
                     It.IsAny<string>(),
                     It.IsAny<Exception>()
                 ), Times.Never);
+        }
+
+        #endregion
+        
+        #region Utilities
+
+        static string GetException(Exception exception)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Exception type: {exception.GetType()}");
+            sb.AppendLine($"Exception message: {exception.Message}");
+            sb.AppendLine($"Stack trace: {exception.StackTrace}");
+
+            if (exception.InnerException != null)
+            {
+                sb.AppendLine("---BEGIN InnerException--- ");
+                sb.AppendLine($"Exception type {exception.InnerException.GetType()}");
+                sb.AppendLine($"Exception message: {exception.InnerException.Message}");
+                sb.AppendLine($"Stack trace: {exception.InnerException.StackTrace}");
+                sb.AppendLine("---END Inner Exception");
+            }
+            return sb.ToString();
         }
 
         #endregion

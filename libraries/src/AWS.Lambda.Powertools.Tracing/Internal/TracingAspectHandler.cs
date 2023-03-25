@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Text;
 using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Tracing.Internal;
@@ -163,12 +164,26 @@ internal class TracingAspectHandler : IMethodAspectHandler
         if (CaptureError())
         {
             var nameSpace = GetNamespace();
+            
+            var sb = new StringBuilder();
+            sb.AppendLine($"Exception type: {exception.GetType()}");
+            sb.AppendLine($"Exception message: {exception.Message}");
+            sb.AppendLine($"Stack trace: {exception.StackTrace}");
 
+            if (exception.InnerException != null)
+            {
+                sb.AppendLine("---BEGIN InnerException--- ");
+                sb.AppendLine($"Exception type {exception.InnerException.GetType()}");
+                sb.AppendLine($"Exception message: {exception.InnerException.Message}");
+                sb.AppendLine($"Stack trace: {exception.InnerException.StackTrace}");
+                sb.AppendLine("---END Inner Exception");
+            }
+            
             _xRayRecorder.AddMetadata
             (
                 nameSpace,
                 $"{eventArgs.Name} error",
-                exception
+                sb.ToString()
             );
         }
 
