@@ -69,7 +69,7 @@ Setting | Description | Environment variable | Constructor parameter
     using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
-      Metrics(Namespace = "MyCompanyEcommerce", Service = "ShoppingCartService", CaptureColdStart = true, RaiseOnEmptyMetrics = true)]
+      [Metrics(Namespace = "MyCompanyEcommerce", Service = "ShoppingCartService", CaptureColdStart = true, RaiseOnEmptyMetrics = true)]
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
         ...
@@ -98,7 +98,7 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
       [Metrics(Namespace = "ExampleApplication", Service = "Booking")]
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.COUNT);
+        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
       }
     }
     ```
@@ -113,7 +113,7 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
         Metrics.AddDimension("Environment","Prod");
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.COUNT);
+        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
       }
     }
     ```
@@ -149,7 +149,7 @@ You can use **`SetDefaultDimensions`** method to persist dimensions across Lambd
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
         Metrics.SetDefaultDimensions(_defaultDimensions);
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.COUNT);
+        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
       }
     }
     ```
@@ -170,7 +170,7 @@ During metrics validation, if no metrics are provided then a warning will be log
       [Metrics(Namespace = "ExampleApplication", Service = "Booking")]
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.COUNT);
+        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
       }
     }
     ```
@@ -271,7 +271,7 @@ You can add high-cardinality data as part of your Metrics log with `AddMetadata`
       [Metrics(Namespace = ExampleApplication, Service = "Booking")]
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.COUNT);
+        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
         Metrics.AddMetadata("BookingId", "683EEB2D-B2F3-4075-96EE-788E6E2EED45");
         ...
     ```
@@ -327,7 +327,7 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
         Metrics.PushSingleMetric(
                     metricName: "ColdStart",
                     value: 1,
-                    unit: MetricUnit.COUNT,
+                    unit: MetricUnit.Count,
                     nameSpace: "ExampleApplication",
                     service: "Booking",
                     defaultDimensions: new Dictionary<string, string>
