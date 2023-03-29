@@ -103,7 +103,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var result = consoleOut.ToString();
 
             // Assert
-            Assert.Contains("\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}]", result);
+            Assert.Contains("\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\",\"StorageResolution\":60}]", result);
             Assert.Contains("\"ColdStart\":1", result);
 
             handler.ResetForTest();
@@ -146,7 +146,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var metricsOutput = consoleOut.ToString();
 
             // Assert
-            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]", metricsOutput);
+            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"Count\",\"StorageResolution\":60}],\"Dimensions\":[[\"Service\"]", metricsOutput);
 
             // Reset
             handler.ResetForTest();
@@ -490,7 +490,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var result = consoleOut.ToString();
 
             // Assert
-            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}],\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]}]},\"Service\":\"testService\",\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100.7}"
+            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\",\"StorageResolution\":60}],\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]}]},\"Service\":\"testService\",\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100.7}"
                 , result);
 
             // Reset
@@ -531,9 +531,93 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var result = consoleOut.ToString();
 
             // Assert
-            Assert.Contains("\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}]"
+            Assert.Contains("\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\",\"StorageResolution\":60}]"
                 , result);
             Assert.Contains("\"Time\":[100.5,200]"
+                , result);
+
+            // Reset
+            handler.ResetForTest();
+        }
+        
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void WhenMetricsWithStandardResolutionAdded_ValidateMetricArray()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+
+            var logger = new Metrics(
+                configurations.Object,
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
+            );
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act 
+            handler.OnEntry(eventArgs);
+            Metrics.AddDimension("functionVersion", "$LATEST");
+            Metrics.AddMetric("Time", 100.5, MetricUnit.Milliseconds, MetricResolution.Standard);
+            handler.OnExit(eventArgs);
+
+            var result = consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\",\"StorageResolution\":60}]"
+                , result);
+            Assert.Contains("\"Time\":100.5"
+                , result);
+
+            // Reset
+            handler.ResetForTest();
+        }
+        
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void WhenMetricsWithHighResolutionAdded_ValidateMetricArray()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+
+            var logger = new Metrics(
+                configurations.Object,
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
+            );
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act 
+            handler.OnEntry(eventArgs);
+            Metrics.AddDimension("functionVersion", "$LATEST");
+            Metrics.AddMetric("Time", 100.5, MetricUnit.Milliseconds, MetricResolution.High);
+            handler.OnExit(eventArgs);
+
+            var result = consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\",\"StorageResolution\":1}]"
+                , result);
+            Assert.Contains("\"Time\":100.5"
                 , result);
 
             // Reset

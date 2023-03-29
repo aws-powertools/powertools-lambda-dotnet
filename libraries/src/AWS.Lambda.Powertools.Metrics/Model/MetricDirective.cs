@@ -133,8 +133,9 @@ public class MetricDirective
     /// <param name="name">Metric name. Cannot be null, empty or whitespace</param>
     /// <param name="value">Metric value</param>
     /// <param name="unit">Metric unit</param>
+    /// <param name="metricResolution">Metric Resolution, Standard (default), High</param>
     /// <exception cref="System.ArgumentOutOfRangeException">Metrics - Cannot add more than 100 metrics at the same time.</exception>
-    public void AddMetric(string name, double value, MetricUnit unit)
+    public void AddMetric(string name, double value, MetricUnit unit, MetricResolution metricResolution)
     {
         if (Metrics.Count < PowertoolsConfigurations.MaxMetrics)
         {
@@ -142,7 +143,7 @@ public class MetricDirective
             if (metric != null)
                 metric.AddValue(value);
             else
-                Metrics.Add(new MetricDefinition(name, unit, value));
+                Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
         }
         else
         {
