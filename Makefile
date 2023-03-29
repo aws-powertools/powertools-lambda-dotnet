@@ -17,7 +17,7 @@ docs-local-docker:
 	docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
 
 changelog:
-	git fetch --tags upstream
+	git fetch --tags origin
 	CURRENT_VERSION=$(shell git describe --abbrev=0 --tag) ;\
 	echo "[+] Pre-generating CHANGELOG for tag: $$CURRENT_VERSION" ;\
 	docker run -v "${PWD}":/workdir --platform linux/amd64 quay.io/git-chglog/git-chglog:0.15.4 > CHANGELOG.md
