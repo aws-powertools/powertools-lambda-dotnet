@@ -20,4 +20,4 @@ changelog:
 	git fetch --tags upstream
 	CURRENT_VERSION=$(shell git describe --abbrev=0 --tag) ;\
 	echo "[+] Pre-generating CHANGELOG for tag: $$CURRENT_VERSION" ;\
-	docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4 > CHANGELOG.md
+	docker run -v "${PWD}":/workdir --platform linux/amd64 quay.io/git-chglog/git-chglog:0.15.4 > CHANGELOG.md
