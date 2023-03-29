@@ -1,20 +1,10 @@
 <!-- changelog is partially generated, so it doesn't follow headings and required structure, so we disable it. -->
 <!-- markdownlint-disable -->
 
-{{ if .Versions -}}
-<a name="unreleased"></a>
-# Unreleased
+# Changelog
 
-{{ if .Unreleased.CommitGroups -}}
-{{ range .Unreleased.CommitGroups -}}
-## {{ .Title }}
-
-{{ range .Commits -}}
-* {{ if .Scope }}**{{ .Scope }}:** {{ end }}{{ .Subject }}
-{{ end }}
-{{ end -}}
-{{ end -}}
-{{ end -}}
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 {{ range .Versions }}
 <a name="{{ .Tag.Name }}"></a>
