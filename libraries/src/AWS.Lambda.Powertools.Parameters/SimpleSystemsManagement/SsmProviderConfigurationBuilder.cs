@@ -38,7 +38,7 @@ public class SsmProviderConfigurationBuilder : ParameterProviderConfigurationBui
     /// SsmProviderConfigurationBuilder constructor.
     /// </summary>
     /// <param name="parameterProvider"></param>
-    public SsmProviderConfigurationBuilder(ParameterProviderBase parameterProvider) :
+    public SsmProviderConfigurationBuilder(ParameterProvider parameterProvider) :
         base(parameterProvider)
     {
     }

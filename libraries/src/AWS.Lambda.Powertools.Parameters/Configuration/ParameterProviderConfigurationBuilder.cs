@@ -72,7 +72,7 @@ public class ParameterProviderConfigurationBuilder
     /// ParameterProviderConfigurationBuilder Constructor.
     /// </summary>
     /// <param name="parameterProvider">The parameter provider instance</param>
-    public ParameterProviderConfigurationBuilder(ParameterProviderBase parameterProvider)
+    public ParameterProviderConfigurationBuilder(ParameterProvider parameterProvider)
     {
         _handler = parameterProvider.Handler;
     }

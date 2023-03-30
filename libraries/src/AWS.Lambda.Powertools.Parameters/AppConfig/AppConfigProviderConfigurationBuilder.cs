@@ -44,7 +44,7 @@ public class AppConfigProviderConfigurationBuilder : ParameterProviderConfigurat
     /// AppConfigProviderConfigurationBuilder constructor
     /// </summary>
     /// <param name="parameterProvider">The AppConfigProvider instance</param>
-    public AppConfigProviderConfigurationBuilder(ParameterProviderBase parameterProvider) :
+    public AppConfigProviderConfigurationBuilder(ParameterProvider parameterProvider) :
         base(parameterProvider)
     {
     }

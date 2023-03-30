@@ -31,9 +31,9 @@ public static class ParameterProviderExtensions
     /// <typeparam name="TProvider">The provider type.</typeparam>
     /// <returns>The provider instance.</returns>
     public static TProvider DefaultMaxAge<TProvider>(this TProvider provider, TimeSpan maxAge)
-        where TProvider : IParameterProviderBase
+        where TProvider : IParameterProvider
     {
-        ((ParameterProviderBase)(object)provider).Handler.SetDefaultMaxAge(maxAge);
+        ((ParameterProvider)(object)provider).Handler.SetDefaultMaxAge(maxAge);
         return provider;
     }
 
@@ -45,9 +45,9 @@ public static class ParameterProviderExtensions
     /// <typeparam name="TProvider">The provider type.</typeparam>
     /// <returns>The provider instance.</returns>
     public static TProvider UseCacheManager<TProvider>(this TProvider provider, ICacheManager cacheManager)
-        where TProvider : IParameterProviderBase
+        where TProvider : IParameterProvider
     {
-        ((ParameterProviderBase)(object)provider).Handler.SetCacheManager(cacheManager);
+        ((ParameterProvider)(object)provider).Handler.SetCacheManager(cacheManager);
         return provider;
     }
 
@@ -60,9 +60,9 @@ public static class ParameterProviderExtensions
     /// <returns>The provider instance.</returns>
     public static TProvider UseTransformerManager<TProvider>(this TProvider provider,
         ITransformerManager transformerManager)
-        where TProvider : IParameterProviderBase
+        where TProvider : IParameterProvider
     {
-        ((ParameterProviderBase)(object)provider).Handler.SetTransformerManager(transformerManager);
+        ((ParameterProvider)(object)provider).Handler.SetTransformerManager(transformerManager);
         return provider;
     }
 
@@ -75,9 +75,9 @@ public static class ParameterProviderExtensions
     /// <typeparam name="TProvider">The provider type.</typeparam>
     /// <returns>The provider instance.</returns>
     public static TProvider AddTransformer<TProvider>(this TProvider provider, string name, ITransformer transformer)
-        where TProvider : IParameterProviderBase
+        where TProvider : IParameterProvider
     {
-        ((ParameterProviderBase)(object)provider).Handler.AddCustomTransformer(name, transformer);
+        ((ParameterProvider)(object)provider).Handler.AddCustomTransformer(name, transformer);
         return provider;
     }
     
@@ -88,7 +88,7 @@ public static class ParameterProviderExtensions
     /// <typeparam name="TProvider">The provider type.</typeparam>
     /// <returns>The provider instance.</returns>
     public static TProvider RaiseTransformationError<TProvider>(this TProvider provider)
-        where TProvider : IParameterProviderBase
+        where TProvider : IParameterProvider
     {
         RaiseTransformationError(provider, true);
         return provider;
@@ -102,9 +102,9 @@ public static class ParameterProviderExtensions
     /// <typeparam name="TProvider">The provider type.</typeparam>
     /// <returns>The provider instance.</returns>
     public static TProvider RaiseTransformationError<TProvider>(this TProvider provider, bool raiseError)
-        where TProvider : IParameterProviderBase
+        where TProvider : IParameterProvider
     {
-        ((ParameterProviderBase)(object)provider).Handler.SetRaiseTransformationError(raiseError);
+        ((ParameterProvider)(object)provider).Handler.SetRaiseTransformationError(raiseError);
         return provider;
     }
 }
