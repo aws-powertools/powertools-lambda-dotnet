@@ -61,7 +61,6 @@ Not using .NET? No problem, we have you covered. Here are the other members of t
 
 We welcome contributions from developers of all levels to our open-source project on GitHub. If you'd like to contribute, please check our contributing guidelines and help make this project more accessible.
 
-
 [![Star History Chart](https://api.star-history.com/svg?repos=awslabs/aws-lambda-powertools-dotnet&type=Date)](https://star-history.com/#awslabs/aws-lambda-powertools-dotnet&Date)
 
 ## Connect
