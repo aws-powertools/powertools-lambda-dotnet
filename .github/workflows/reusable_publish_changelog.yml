@@ -30,11 +30,12 @@ jobs:
           git pull origin "${BRANCH}"
       - name: "Generate latest changelog"
         run: make changelog
-      - name: Update Changelog in trunk
+      - name: Update Changelog with PR
         run: |
           HAS_CHANGE=$(git status --porcelain)
           test -z "${HAS_CHANGE}" && echo "Nothing to update" && exit 0
+          git checkout -b update-changelog-${{github.run_id}}
           git add CHANGELOG.md
           git commit -m "update changelog with latest changes"
           git pull origin "${BRANCH}" # prevents concurrent branch update failing push
-          git push origin HEAD:refs/heads/"${BRANCH}"
+          git push origin update-changelog-${{github.run_id}}
