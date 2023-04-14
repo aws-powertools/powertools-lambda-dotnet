@@ -76,6 +76,8 @@ internal sealed class PowertoolsLogger : ILogger
     {
         (_name, _powertoolsConfigurations, _systemWrapper, _getCurrentConfig) = (name,
             powertoolsConfigurations, systemWrapper, getCurrentConfig);
+        
+        systemWrapper.SetExecutionEnvironment(this);
     }
 
     /// <summary>

@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Text;
 
 namespace AWS.Lambda.Powertools.Common;
 
@@ -24,6 +25,8 @@ namespace AWS.Lambda.Powertools.Common;
 /// <seealso cref="ISystemWrapper" />
 public class SystemWrapper : ISystemWrapper
 {
+    private readonly IPowertoolsEnvironment _powertoolsEnvironment;
+
     /// <summary>
     ///     The instance
     /// </summary>
@@ -32,15 +35,17 @@ public class SystemWrapper : ISystemWrapper
     /// <summary>
     ///     Prevents a default instance of the <see cref="SystemWrapper" /> class from being created.
     /// </summary>
-    private SystemWrapper()
+    public SystemWrapper(IPowertoolsEnvironment powertoolsEnvironment)
     {
+        _powertoolsEnvironment = powertoolsEnvironment;
+        _instance ??= this;
     }
 
     /// <summary>
     ///     Gets the instance.
     /// </summary>
     /// <value>The instance.</value>
-    public static ISystemWrapper Instance => _instance ??= new SystemWrapper();
+    public static ISystemWrapper Instance => _instance ??= new SystemWrapper(new PowertoolsEnvironment());
 
     /// <summary>
     ///     Gets the environment variable.
@@ -49,7 +54,7 @@ public class SystemWrapper : ISystemWrapper
     /// <returns>System.String.</returns>
     public string GetEnvironmentVariable(string variable)
     {
-        return Environment.GetEnvironmentVariable(variable);
+        return _powertoolsEnvironment.GetEnvironmentVariable(variable);
     }
 
     /// <summary>
@@ -77,5 +82,32 @@ public class SystemWrapper : ISystemWrapper
     public double GetRandom()
     {
         return new Random().NextDouble();
+    }
+
+    /// <inheritdoc />
+    public void SetEnvironmentVariable(string variable, string value)
+    {
+        _powertoolsEnvironment.SetEnvironmentVariable(variable, value);
+    }
+
+    /// <inheritdoc />
+    public void SetExecutionEnvironment<T>(T type)
+    {
+        const string envName = "AWS_EXECUTION_ENV";
+
+        var envValue = new StringBuilder();
+
+        // If there is an existing execution environment variable add the annotations package as a suffix.
+        if(!string.IsNullOrEmpty(GetEnvironmentVariable(envName)))
+        {
+            envValue.Append($"{GetEnvironmentVariable(envName)}_");
+        }
+
+        var assemblyVersion = _powertoolsEnvironment.GetAssemblyVersion(type);
+        var assemblyName =_powertoolsEnvironment.GetAssemblyName(type);
+
+        envValue.Append($"{assemblyName}_{assemblyVersion}");
+
+        SetEnvironmentVariable(envName, envValue.ToString());
     }
 }
