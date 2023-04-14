@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using AWS.Lambda.Powertools.Common;
@@ -163,12 +164,29 @@ internal sealed class PowertoolsLogger : ILogger
                 }
                 break;
             }
+            case KeyValuePair<string, string>(var key, var value):
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                    keys.TryAdd(key, value);
+                break;
+            }
+            case KeyValuePair<string, object>(var key, var value):
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                    keys.TryAdd(key, value);
+                break;
+            }
+            case ITuple pair:
+            {
+                if (pair.Length == 2 && pair[0] is string key && !string.IsNullOrWhiteSpace(key))
+                    keys.TryAdd(key, pair[1]);
+                else
+                    keys.TryAdd(LoggingConstants.KeyExtra, state);
+                break;
+            }
             default:
             {
-                foreach (var property in state.GetType().GetProperties())
-                {
-                    keys.TryAdd(property.Name, property.GetValue(state));
-                }
+                keys.TryAdd(LoggingConstants.KeyExtra, state);
                 break;
             }
         }

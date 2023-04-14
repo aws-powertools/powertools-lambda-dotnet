@@ -311,7 +311,7 @@ It accepts any dictionary, and all keyword arguments will be added as part of th
 
 === "Function.cs"
 
-    ```c# hl_lines="16"
+    ```c# hl_lines="15 18 27"
     /**
      * Handler for requests to Lambda function.
      */
@@ -323,16 +323,81 @@ It accepts any dictionary, and all keyword arguments will be added as part of th
         {
             var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
             
-            var lookupId = new Dictionary<string, object>()
+            var lookupInfo = new { LookupId = requestContextRequestId };
+            
+            // Simply pass an object for logging additional data
+            Logger.LogInformation(lookupInfo, "This is a log with additional data");
+
+            // Specify the key name for extra additional data
+            Logger.LogInformation(("LookupInfo", lookupInfo), "This is a log with an extra variable");
+
+            var extraKeys = new Dictionary<string, object>()
             {
-                { "LookupId", requestContextRequestId }
+                { "LookupInfo", lookupInfo },
+                { "CorrelationIds", new { MyCorrelationId = "correlation_id_value" } }
             };
 
-            // Appended keys are added to all subsequent log entries in the current execution.
-            // Call this method as early as possible in the Lambda handler.
-            // Typically this is value would be passed into the function via the event.
-            // Set the ClearState = true to force the removal of keys across invocations,
-            Logger.AppendKeys(lookupId);
+            // Specify the key name for extra additional data
+            Logger.LogInformation(extraKeys, "This is a log with multiple extra variables");
+    }
+    ```
+
+=== "Example CloudWatch Logs excerpt"
+
+    ```json hl_lines="4-6 21-23 38-43"
+    {
+        "cold_start": true,
+        "xray_trace_id": "1-61b7add4-66532bb81441e1b060389429",
+        "extra": {
+            "lookup_id": "4c50eace-8b1e-43d3-92ba-0efacf5d1625"
+        },
+        "function_name": "test",
+        "function_version": "$LATEST",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "level": "Information",
+        "service": "lambda-example",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "This is a log with additional data",
+    }
+    {
+        "cold_start": true,
+        "xray_trace_id": "1-61b7add4-66532bb81441e1b060389429",
+        "lookup_info": {
+            "lookup_id": "4c50eace-8b1e-43d3-92ba-0efacf5d1625"
+        },
+        "function_name": "test",
+        "function_version": "$LATEST",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "level": "Information",
+        "service": "lambda-example",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "This is a log with an extra variable",
+    }
+    {
+        "cold_start": true,
+        "xray_trace_id": "1-61b7add4-66532bb81441e1b060389429",
+        "lookup_info": {
+            "lookup_id": "4c50eace-8b1e-43d3-92ba-0efacf5d1625"
+        },
+        "correlation_ids": {
+            "my_correlation_id": "correlation_id_value"
+        },
+        "function_name": "test",
+        "function_version": "$LATEST",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "level": "Information",
+        "service": "lambda-example",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "This is a log with multiple extra variables",
     }
     ```
 
