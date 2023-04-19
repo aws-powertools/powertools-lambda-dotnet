@@ -1,5 +1,3 @@
-using System;
-
 namespace AWS.Lambda.Powertools.Common;
 
 /// <summary>
@@ -35,32 +33,4 @@ public interface IPowertoolsEnvironment
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     string GetAssemblyVersion<T>(T type);
-}
-
-/// <inheritdoc />
-public class PowertoolsEnvironment : IPowertoolsEnvironment
-{
-    /// <inheritdoc />
-    public string GetEnvironmentVariable(string variableName)
-    {
-        return Environment.GetEnvironmentVariable(variableName);
-    }
-
-    /// <inheritdoc />
-    public void SetEnvironmentVariable(string variableName, string value)
-    {
-        Environment.SetEnvironmentVariable(variableName, value);
-    }
-
-    /// <inheritdoc />
-    public string GetAssemblyName<T>(T type)
-    {
-        return type.GetType().Assembly.GetName().Name;
-    }
-
-    /// <inheritdoc />
-    public string GetAssemblyVersion<T>(T type)
-    {
-        return type.GetType().Assembly.GetName().Version?.ToString();
-    }
 }

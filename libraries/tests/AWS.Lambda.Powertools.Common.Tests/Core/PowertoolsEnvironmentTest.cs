@@ -36,6 +36,9 @@ public class PowertoolsEnvironmentTest
     }
 }
 
+/// <summary>
+/// Fake Environment for testing
+/// </summary>
 class MockEnvironment : IPowertoolsEnvironment
 {
     private readonly Dictionary<string, string> _mockEnvironment = new();

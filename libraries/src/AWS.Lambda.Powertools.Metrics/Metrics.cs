@@ -71,6 +71,8 @@ public class Metrics : IMetrics
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
         _captureColdStartEnabled = captureColdStartEnabled;
         _context = InitializeContext(nameSpace, service, null);
+        
+        _powertoolsConfigurations.SetExecutionEnvironment(this);
     }
 
     /// <summary>

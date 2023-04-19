@@ -25,7 +25,7 @@ namespace AWS.Lambda.Powertools.Common;
 /// <seealso cref="ISystemWrapper" />
 public class SystemWrapper : ISystemWrapper
 {
-    private readonly IPowertoolsEnvironment _powertoolsEnvironment;
+    private static IPowertoolsEnvironment _powertoolsEnvironment;
 
     /// <summary>
     ///     The instance
@@ -45,7 +45,7 @@ public class SystemWrapper : ISystemWrapper
     ///     Gets the instance.
     /// </summary>
     /// <value>The instance.</value>
-    public static ISystemWrapper Instance => _instance ??= new SystemWrapper(new PowertoolsEnvironment());
+    public static ISystemWrapper Instance => _instance ??= new SystemWrapper(PowertoolsEnvironment.Instance);
 
     /// <summary>
     ///     Gets the environment variable.
