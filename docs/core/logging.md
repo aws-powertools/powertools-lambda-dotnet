@@ -324,20 +324,20 @@ It accepts any dictionary, and all keyword arguments will be added as part of th
             var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
             
             // Pass an object for logging additional data
-            var lookupInfo = new { LookupId = requestContextRequestId };
-            Logger.LogInformation(lookupInfo, "This is a log with anonymous type object additional data");
+            var lookupInfo1 = new { LookupId = requestContextRequestId };
+            Logger.LogInformation(lookupInfo1, "This is a log with anonymous type object additional data");
 
             // Specify the key name for extra additional data
-            Logger.LogInformation(("LookupInfo", lookupInfo), "This is a log specifying the key name for additional data");
+            Logger.LogInformation(("LookupInfo", lookupInfo1), "This is a log specifying the key name for additional data");
 
             // Pass a typed object for logging additional data
-            var vLookupInfo = new LookupInfo { LookupId = requestContextRequestId };
-            Logger.LogInformation(vLookupInfo, "This is a log with typed object additional data");
+            var lookupInfo2 = new LookupInfo { LookupId = requestContextRequestId };
+            Logger.LogInformation(lookupInfo2, "This is a log with typed object additional data");
 
             // Pass multiple extra key/value pairs
             var extraKeys = new Dictionary<string, object>()
             {
-                { "LookupInfo", lookupInfo },
+                { "LookupInfo", new { LookupId = requestContextRequestId } },
                 { "CorrelationIds", new { MyCorrelationId = "correlation_id_value" } }
             };
             Logger.LogInformation(extraKeys, "This is a log with multiple extra key/value pairs");
