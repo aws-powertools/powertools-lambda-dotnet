@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Moq;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Common.Tests;
 
-public class PowertoolsEnvironmentTest
+public class PowertoolsEnvironmentTest : IDisposable
 {
     [Fact]
     public void Set_Execution_Environment()
@@ -17,7 +16,7 @@ public class PowertoolsEnvironmentTest
         systemWrapper.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal("Lambda_Powertools_1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+        Assert.Equal("PTFeature/Fake/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
     }
     
     [Fact]
@@ -26,13 +25,61 @@ public class PowertoolsEnvironmentTest
         // Arrange
         var systemWrapper = new SystemWrapper(new MockEnvironment());
         
-        systemWrapper.SetEnvironmentVariable("AWS_EXECUTION_ENV", "ExistingValue");
+        systemWrapper.SetEnvironmentVariable("AWS_EXECUTION_ENV", "ExistingValuesInUserAgent");
         
         // Act
         systemWrapper.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal("ExistingValue_Lambda_Powertools_1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+        Assert.Equal("ExistingValuesInUserAgent PTFeature/Fake/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+    }
+    
+    [Fact]
+    public void Set_Multiple_Execution_Environment()
+    {
+        // Arrange
+        var systemWrapper = new SystemWrapper(new MockEnvironment());
+        
+        // Act
+        systemWrapper.SetExecutionEnvironment(this);
+        systemWrapper.SetExecutionEnvironment(this);
+
+        // Assert
+        Assert.Equal("PTFeature/Fake/1.0.0 PTFeature/Fake/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+    }
+    
+    [Fact]
+    public void Set_Execution_Real_Environment()
+    {
+        // Arrange
+        var systemWrapper = new SystemWrapper(new PowertoolsEnvironment());
+        
+        // Act
+        systemWrapper.SetExecutionEnvironment(this);
+
+        // Assert
+        Assert.Equal("PTFeature/Tests/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+    }
+    
+    [Fact]
+    public void Set_Execution_Real_Environment_Multiple()
+    {
+        // Arrange
+        var systemWrapper = new SystemWrapper(new PowertoolsEnvironment());
+        
+        // Act
+        systemWrapper.SetExecutionEnvironment(this);
+        systemWrapper.SetExecutionEnvironment(this);
+
+        // Assert
+        Assert.Equal("PTFeature/Tests/1.0.0 PTFeature/Tests/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+    }
+
+    public void Dispose()
+    {
+        //Do cleanup actions here
+        
+        Environment.SetEnvironmentVariable("AWS_EXECUTION_ENV", null);
     }
 }
 
@@ -56,7 +103,7 @@ class MockEnvironment : IPowertoolsEnvironment
 
     public string GetAssemblyName<T>(T type)
     {
-        return "Lambda_Powertools";
+        return "AWS.Lambda.Powertools.Fake";
     }
 
     public string GetAssemblyVersion<T>(T type)

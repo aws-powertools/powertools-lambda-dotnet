@@ -37,6 +37,7 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     /// <inheritdoc />
     public string GetAssemblyVersion<T>(T type)
     {
-        return type.GetType().Assembly.GetName().Version?.ToString();
+        var version = type.GetType().Assembly.GetName().Version;
+        return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : string.Empty;
     }
 }

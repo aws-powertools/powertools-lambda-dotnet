@@ -1226,7 +1226,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
-            var assemblyName = "LambdaPowertools";
+            var assemblyName = "AWS.Lambda.Powertools.Logger";
             var assemblyVersion = "1.0.0";
             
             var configurations = new Mock<IPowertoolsConfigurations>();
@@ -1248,7 +1248,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Assert
             env.Verify(v =>
                 v.SetEnvironmentVariable(
-                    "AWS_EXECUTION_ENV", $"{assemblyName}_{assemblyVersion}"
+                    "AWS_EXECUTION_ENV", $"PTFeature/Logger/{assemblyVersion}"
                 ), Times.Once);
             
             env.Verify(v =>

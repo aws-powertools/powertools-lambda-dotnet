@@ -100,14 +100,34 @@ public class SystemWrapper : ISystemWrapper
         // If there is an existing execution environment variable add the annotations package as a suffix.
         if(!string.IsNullOrEmpty(GetEnvironmentVariable(envName)))
         {
-            envValue.Append($"{GetEnvironmentVariable(envName)}_");
+            envValue.Append($"{GetEnvironmentVariable(envName)} ");
         }
 
         var assemblyVersion = _powertoolsEnvironment.GetAssemblyVersion(type);
         var assemblyName =_powertoolsEnvironment.GetAssemblyName(type);
 
-        envValue.Append($"{assemblyName}_{assemblyVersion}");
+        envValue.Append($"{ParseAssemblyName(assemblyName)}/{assemblyVersion}");
 
         SetEnvironmentVariable(envName, envValue.ToString());
+    }
+
+    /// <summary>
+    /// Parsing the name to conform with the required naming convention for the UserAgent header (PTFeature/Name/Version)
+    /// Fallback to Assembly Name on exception
+    /// </summary>
+    /// <param name="assemblyName"></param>
+    /// <returns></returns>
+    private string ParseAssemblyName(string assemblyName)
+    {
+        try
+        {
+            var parsedName = assemblyName.Substring(assemblyName.LastIndexOf(".", StringComparison.Ordinal)+1);
+            return $"PTFeature/{parsedName}";
+        }
+        catch
+        {
+            //NOOP
+        }
+        return $"PTFeature/{assemblyName}";
     }
 }
