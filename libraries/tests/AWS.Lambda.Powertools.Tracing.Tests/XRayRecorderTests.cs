@@ -30,7 +30,7 @@ public class XRayRecorderTests
         // Assert
         env.Verify(v =>
             v.SetEnvironmentVariable(
-                "AWS_EXECUTION_ENV", $"PTFeature/Tracing/{assemblyVersion}"
+                "AWS_EXECUTION_ENV", $"{Constants.FeatureContextIdentifier}/Tracing/{assemblyVersion}"
             ), Times.Once);
             
         env.Verify(v =>

@@ -25,7 +25,7 @@ public class MetricsTests
         // Assert
         env.Verify(v =>
             v.SetEnvironmentVariable(
-                "AWS_EXECUTION_ENV", $"PTFeature/Metrics/{assemblyVersion}"
+                "AWS_EXECUTION_ENV", $"{Constants.FeatureContextIdentifier}/Metrics/{assemblyVersion}"
             ), Times.Once);
             
         env.Verify(v =>

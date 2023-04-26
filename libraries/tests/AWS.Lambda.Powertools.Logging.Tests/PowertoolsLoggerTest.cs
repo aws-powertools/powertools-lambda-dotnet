@@ -1229,15 +1229,16 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var assemblyName = "AWS.Lambda.Powertools.Logger";
             var assemblyVersion = "1.0.0";
             
-            var configurations = new Mock<IPowertoolsConfigurations>();
-
             var env = new Mock<IPowertoolsEnvironment>();
             env.Setup(x => x.GetAssemblyName(It.IsAny<PowertoolsLogger>())).Returns(assemblyName);
             env.Setup(x => x.GetAssemblyVersion(It.IsAny<PowertoolsLogger>())).Returns(assemblyVersion);
 
-            var systemWrapper = new SystemWrapper(env.Object);
+            // Act
             
-            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper, () => 
+            var wrapper = new SystemWrapper(env.Object);
+            var conf = new PowertoolsConfigurations(wrapper);
+            
+            var logger = new PowertoolsLogger(loggerName,conf, wrapper, () => 
                 new LoggerConfiguration
                 {
                     Service = null,
@@ -1248,7 +1249,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Assert
             env.Verify(v =>
                 v.SetEnvironmentVariable(
-                    "AWS_EXECUTION_ENV", $"PTFeature/Logger/{assemblyVersion}"
+                    "AWS_EXECUTION_ENV", $"{Constants.FeatureContextIdentifier}/Logger/{assemblyVersion}"
                 ), Times.Once);
             
             env.Verify(v =>

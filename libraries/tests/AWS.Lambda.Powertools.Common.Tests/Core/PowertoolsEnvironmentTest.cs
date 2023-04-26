@@ -16,7 +16,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         systemWrapper.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal("PTFeature/Fake/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Fake/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
     }
     
     [Fact]
@@ -31,7 +31,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         systemWrapper.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal("ExistingValuesInUserAgent PTFeature/Fake/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+        Assert.Equal($"ExistingValuesInUserAgent {Constants.FeatureContextIdentifier}/Fake/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
     }
     
     [Fact]
@@ -45,7 +45,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         systemWrapper.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal("PTFeature/Fake/1.0.0 PTFeature/Fake/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Fake/1.0.0 {Constants.FeatureContextIdentifier}/Fake/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
     }
     
     [Fact]
@@ -58,7 +58,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         systemWrapper.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal("PTFeature/Tests/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
     }
     
     [Fact]
@@ -72,7 +72,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         systemWrapper.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal("PTFeature/Tests/1.0.0 PTFeature/Tests/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 {Constants.FeatureContextIdentifier}/Tests/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
     }
 
     public void Dispose()

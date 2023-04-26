@@ -93,7 +93,7 @@ public class SystemWrapper : ISystemWrapper
     /// <inheritdoc />
     public void SetExecutionEnvironment<T>(T type)
     {
-        const string envName = "AWS_EXECUTION_ENV";
+        const string envName = Constants.AwsExecutionEnvironmentVariableName;
 
         var envValue = new StringBuilder();
 
@@ -122,12 +122,12 @@ public class SystemWrapper : ISystemWrapper
         try
         {
             var parsedName = assemblyName.Substring(assemblyName.LastIndexOf(".", StringComparison.Ordinal)+1);
-            return $"PTFeature/{parsedName}";
+            return $"{Constants.FeatureContextIdentifier}/{parsedName}";
         }
         catch
         {
             //NOOP
         }
-        return $"PTFeature/{assemblyName}";
+        return $"{Constants.FeatureContextIdentifier}/{assemblyName}";
     }
 }
