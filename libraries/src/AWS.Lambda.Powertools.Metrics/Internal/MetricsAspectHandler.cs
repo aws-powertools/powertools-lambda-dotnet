@@ -106,8 +106,7 @@ internal class MetricsAspectHandler : IMethodAspectHandler
             MetricUnit.Count,
             nameSpace,
             service,
-            dimensions,
-            MetricResolution.Standard
+            dimensions
         );
     }
 

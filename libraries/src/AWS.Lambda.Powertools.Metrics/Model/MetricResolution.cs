@@ -18,4 +18,9 @@ public enum MetricResolution
     ///     High resolution, with data at a granularity of one second
     /// </summary>
     High = 1,
+    
+    /// <summary>
+    /// When not set default to not sending metric resolution
+    /// </summary>
+    Default = 0
 }

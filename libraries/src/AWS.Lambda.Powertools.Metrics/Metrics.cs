@@ -264,7 +264,7 @@ public class Metrics : IMetrics
     /// <param name="unit">Metric Unit</param>
     /// <param name="metricResolution"></param>
     public static void AddMetric(string key, double value, MetricUnit unit = MetricUnit.None,
-        MetricResolution metricResolution = MetricResolution.Standard)
+        MetricResolution metricResolution = MetricResolution.Default)
     {
         _instance.AddMetric(key, value, unit, metricResolution);
     }
@@ -340,7 +340,7 @@ public class Metrics : IMetrics
     /// <param name="defaultDimensions">Default dimensions list</param>
     /// <param name="metricResolution">Metrics resolution</param>
     public static void PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace = null,
-        string service = null, Dictionary<string, string> defaultDimensions = null, MetricResolution metricResolution = MetricResolution.Standard)
+        string service = null, Dictionary<string, string> defaultDimensions = null, MetricResolution metricResolution = MetricResolution.Default)
     {
         _instance.PushSingleMetric(metricName, value, unit, nameSpace, service, defaultDimensions, metricResolution);
     }

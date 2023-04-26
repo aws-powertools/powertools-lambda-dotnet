@@ -28,7 +28,7 @@ public class MetricDefinition
     /// </summary>
     /// <param name="name">Metric name</param>
     /// <param name="value">Metric value</param>
-    public MetricDefinition(string name, double value) : this(name, MetricUnit.None, new List<double> {value}, MetricResolution.Standard)
+    public MetricDefinition(string name, double value) : this(name, MetricUnit.None, new List<double> {value}, MetricResolution.Default)
     {
     }
 
@@ -84,6 +84,7 @@ public class MetricDefinition
     /// </summary>
     /// <value>The unit.</value>
     [JsonPropertyName(nameof(StorageResolution))]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public MetricResolution StorageResolution { get; set; }
 
     /// <summary>

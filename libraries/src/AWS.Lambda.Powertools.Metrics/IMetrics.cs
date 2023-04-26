@@ -65,7 +65,7 @@ public interface IMetrics : IDisposable
     /// <param name="defaultDimensions">Metric default dimensions</param>
     /// <param name="metricResolution">Metrics resolution</param>
     void PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace = null,
-        string service = null, Dictionary<string, string> defaultDimensions = null, MetricResolution metricResolution = MetricResolution.Standard);
+        string service = null, Dictionary<string, string> defaultDimensions = null, MetricResolution metricResolution = MetricResolution.Default);
 
     /// <summary>
     ///     Sets the namespace
