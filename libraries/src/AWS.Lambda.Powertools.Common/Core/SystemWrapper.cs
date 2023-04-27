@@ -94,19 +94,25 @@ public class SystemWrapper : ISystemWrapper
     public void SetExecutionEnvironment<T>(T type)
     {
         const string envName = Constants.AwsExecutionEnvironmentVariableName;
-
         var envValue = new StringBuilder();
-
+        var currentEnvValue = GetEnvironmentVariable(envName);
+        var assemblyName = ParseAssemblyName(_powertoolsEnvironment.GetAssemblyName(type));
+        
         // If there is an existing execution environment variable add the annotations package as a suffix.
-        if(!string.IsNullOrEmpty(GetEnvironmentVariable(envName)))
+        if(!string.IsNullOrEmpty(currentEnvValue))
         {
-            envValue.Append($"{GetEnvironmentVariable(envName)} ");
+            // Avoid duplication - should not happen since the calling Instances are Singletons - defensive purposes
+            if (currentEnvValue.Contains(assemblyName))
+            {
+                return;
+            }
+            
+            envValue.Append($"{currentEnvValue} ");
         }
 
         var assemblyVersion = _powertoolsEnvironment.GetAssemblyVersion(type);
-        var assemblyName =_powertoolsEnvironment.GetAssemblyName(type);
-
-        envValue.Append($"{ParseAssemblyName(assemblyName)}/{assemblyVersion}");
+        
+        envValue.Append($"{assemblyName}/{assemblyVersion}");
 
         SetEnvironmentVariable(envName, envValue.ToString());
     }
