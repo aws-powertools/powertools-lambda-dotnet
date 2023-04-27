@@ -139,7 +139,8 @@ public class MetricsAttribute : MethodAspectAttribute
             PowertoolsConfigurations.Instance,
             Namespace,
             Service,
-            RaiseOnEmptyMetrics
+            RaiseOnEmptyMetrics,
+            CaptureColdStart
         );
 
     /// <summary>

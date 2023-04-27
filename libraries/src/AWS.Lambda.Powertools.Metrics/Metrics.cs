@@ -45,6 +45,11 @@ public class Metrics : IMetrics
     ///     If true, Powertools will throw an exception on empty metrics when trying to flush
     /// </summary>
     private readonly bool _raiseOnEmptyMetrics;
+    
+    /// <summary>
+    ///     The capture cold start enabled
+    /// </summary>
+    private readonly bool _captureColdStartEnabled;
 
     /// <summary>
     ///     Creates a Metrics object that provides features to send metrics to Amazon Cloudwatch using the Embedded metric
@@ -55,14 +60,16 @@ public class Metrics : IMetrics
     /// <param name="nameSpace">Metrics Namespace Identifier</param>
     /// <param name="service">Metrics Service Name</param>
     /// <param name="raiseOnEmptyMetrics">Instructs metrics validation to throw exception if no metrics are provided</param>
+    /// <param name="captureColdStartEnabled">Instructs metrics capturing the ColdStart is enabled</param>
     internal Metrics(IPowertoolsConfigurations powertoolsConfigurations, string nameSpace = null, string service = null,
-        bool raiseOnEmptyMetrics = false)
+        bool raiseOnEmptyMetrics = false, bool captureColdStartEnabled = false)
     {
         if (_instance != null) return;
 
         _instance = this;
         _powertoolsConfigurations = powertoolsConfigurations;
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
+        _captureColdStartEnabled = captureColdStartEnabled;
         _context = InitializeContext(nameSpace, service, null);
     }
 
@@ -80,7 +87,7 @@ public class Metrics : IMetrics
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(
-                "'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+                $"'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
         
         if (value < 0) {
             throw new ArgumentException(
@@ -132,7 +139,7 @@ public class Metrics : IMetrics
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(
-                "'AddDimension' method requires a valid dimension key. 'Null' or empty values are not allowed.");
+                $"'AddDimension' method requires a valid dimension key. 'Null' or empty values are not allowed.");
 
         _context.AddDimension(key, value);
     }
@@ -150,7 +157,7 @@ public class Metrics : IMetrics
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(
-                "'AddMetadata' method requires a valid metadata key. 'Null' or empty values are not allowed.");
+                $"'AddMetadata' method requires a valid metadata key. 'Null' or empty values are not allowed.");
 
         _context.AddMetadata(key, value);
     }
@@ -168,7 +175,7 @@ public class Metrics : IMetrics
         foreach (var item in defaultDimensions)
             if (string.IsNullOrWhiteSpace(item.Key) || string.IsNullOrWhiteSpace(item.Value))
                 throw new ArgumentNullException(
-                    "'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty values are not allowed.");
+                    $"'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty values are not allowed.");
 
         _context.SetDefaultDimensions(DictionaryToList(defaultDimensions));
     }
@@ -197,8 +204,9 @@ public class Metrics : IMetrics
         }
         else
         {
-            Console.WriteLine(
-                "##WARNING## Metrics and Metadata have not been specified. No data will be sent to Cloudwatch Metrics.");
+            if (!_captureColdStartEnabled)
+                Console.WriteLine(
+                    "##WARNING## Metrics and Metadata have not been specified. No data will be sent to Cloudwatch Metrics.");
         }
     }
 
@@ -230,7 +238,7 @@ public class Metrics : IMetrics
     {
         if (string.IsNullOrWhiteSpace(metricName))
             throw new ArgumentNullException(
-                "'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+                $"'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
 
         using var context = InitializeContext(nameSpace, service, defaultDimensions);
         context.AddMetric(metricName, value, unit);
