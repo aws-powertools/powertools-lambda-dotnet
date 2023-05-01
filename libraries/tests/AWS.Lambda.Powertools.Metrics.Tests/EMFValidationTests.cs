@@ -34,6 +34,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var consoleOut = new StringWriter();
+            const bool captureColdStartEnabled = true;
             Console.SetOut(consoleOut);
 
             var configurations = new Mock<IPowertoolsConfigurations>();
@@ -41,12 +42,13 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var logger = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
-                service: "testService"
+                service: "testService",
+                captureColdStartEnabled: captureColdStartEnabled
             );
 
             var handler = new MetricsAspectHandler(
                 logger,
-                true
+                captureColdStartEnabled
             );
 
             var eventArgs = new AspectEventArgs { Name = methodName };
@@ -74,6 +76,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var consoleOut = new StringWriter();
+            const bool captureColdStartEnabled = true;
             Console.SetOut(consoleOut);
 
             var configurations = new Mock<IPowertoolsConfigurations>();
@@ -81,12 +84,13 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var logger = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
-                service: "testService"
+                service: "testService",
+                captureColdStartEnabled: captureColdStartEnabled
             );
 
             var handler = new MetricsAspectHandler(
                 logger,
-                true
+                captureColdStartEnabled
             );
 
             var eventArgs = new AspectEventArgs { Name = methodName };

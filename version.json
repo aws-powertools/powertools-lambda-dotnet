@@ -1,8 +1,8 @@
 {
   "Core": {
-    "Common": "0.0.1-preview.1",
-    "Logging": "0.0.1-preview.1",
-    "Metrics": "0.0.1-preview.1",
-    "Tracing": "0.0.1-preview.1"
+    "Common": "1.0.1",
+    "Logging": "1.0.1",
+    "Metrics": "1.0.1",
+    "Tracing": "1.0.1"
   }
 }

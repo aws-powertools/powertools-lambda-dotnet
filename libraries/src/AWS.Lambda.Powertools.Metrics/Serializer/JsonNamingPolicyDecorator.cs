@@ -19,7 +19,11 @@ public class JsonNamingPolicyDecorator : JsonNamingPolicy
         _underlyingNamingPolicy = underlyingNamingPolicy;
     }
     
-    /// <inheritdoc />
+    /// <summary>
+    /// When overridden in a derived class, converts the specified name according to the policy.
+    /// </summary>
+    /// <param name="name">The name to convert.</param>
+    /// <returns>The converted name.</returns>
     public override string ConvertName(string name)
     {
         return _underlyingNamingPolicy == null ? name : _underlyingNamingPolicy.ConvertName(name);

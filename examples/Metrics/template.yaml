@@ -13,7 +13,7 @@ Globals:
       Variables:
         POWERTOOLS_SERVICE_NAME: powertools-dotnet-metrics-sample # This can also be set using the Metrics decorator on your handler [Metrics(Namespace = "aws-lambda-powertools"]
         POWERTOOLS_LOG_LEVEL: Debug
-        POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase (default)
+        POWERTOOLS_LOGGER_CASE: PascalCase # Allowed values are: CamelCase, PascalCase and SnakeCase (default)
         POWERTOOLS_METRICS_NAMESPACE: AWSLambdaPowertools # This can also be set using the Metrics decorator on your handler [Metrics(Namespace = "aws-lambda-powertools"]
 
 Resources:
