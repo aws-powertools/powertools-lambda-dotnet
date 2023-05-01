@@ -29,9 +29,7 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHand
     private readonly IBatchProcessor<TEvent, TRecord> _batchProcessor;
     private readonly IRecordHandler<TRecord> _recordHandler;
 
-    public BatchProcessingAspectHandler(
-        IBatchProcessor<TEvent, TRecord> batchProcessor,
-        IRecordHandler<TRecord> recordHandler)
+    public BatchProcessingAspectHandler(IBatchProcessor<TEvent, TRecord> batchProcessor, IRecordHandler<TRecord> recordHandler)
     {
         _batchProcessor = batchProcessor;
         _recordHandler = recordHandler;
@@ -46,13 +44,11 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHand
     /// </param>
     public void OnEntry(AspectEventArgs eventArgs)
     {
-        Console.WriteLine("Aspect: OnEntry");
-
         // Try get event from args
         var @event = eventArgs.Args.OfType<TEvent>().SingleOrDefault();
         if (@event == null)
         {
-            throw new InvalidOperationException($"Function handler must accept a single '{typeof(TEvent).Name}' argument.");
+            throw new InvalidOperationException($"Function handler must accept an argument of type: '{typeof(TEvent).Name}'.");
         }
 
         // Run processor
@@ -70,7 +66,6 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHand
     /// <param name="result">The result.</param>
     public void OnSuccess(AspectEventArgs eventArgs, object result)
     {
-        Console.WriteLine("Aspect: OnSuccess");
     }
 
     /// <summary>
@@ -85,7 +80,6 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHand
     /// <returns>T.</returns>
     public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
     {
-        Console.WriteLine("Aspect: OnException");
         throw exception;
     }
 
@@ -98,7 +92,6 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHand
     /// </param>
     public void OnExit(AspectEventArgs eventArgs)
     {
-        Console.WriteLine("Aspect: OnExit");
     }
 
     /// <summary>

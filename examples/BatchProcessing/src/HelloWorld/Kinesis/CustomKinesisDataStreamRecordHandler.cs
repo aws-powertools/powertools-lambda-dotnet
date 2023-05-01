@@ -8,7 +8,7 @@ internal class CustomKinesisDataStreamRecordHandler : IRecordHandler<KinesisEven
 {
     public async Task HandleAsync(KinesisEvent.KinesisEventRecord record)
     {
-        Logger.LogInformation($"Handling Kinesis event with sequence number: {record.Kinesis.SequenceNumber}");
+        Logger.LogInformation($"Handling Kinesis record with sequence number: '{record.Kinesis.SequenceNumber}'.");
         await Task.CompletedTask;
     }
 }

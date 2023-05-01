@@ -11,9 +11,9 @@ public class RecordHandler<TRecord> : IRecordHandler<TRecord>
         _handlerFunc = handlerFunc;
     }
 
-    public async Task HandleAsync(TRecord sqsMessage)
+    public async Task HandleAsync(TRecord record)
     {
-        await _handlerFunc.Invoke(sqsMessage);
+        await _handlerFunc.Invoke(record);
     }
 
     public static IRecordHandler<TRecord> From(Action<TRecord> handlerAction)

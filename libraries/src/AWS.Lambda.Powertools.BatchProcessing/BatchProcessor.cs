@@ -14,7 +14,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
         // Clear item failures from any previous run
         BatchResponse.BatchItemFailures.Clear();
 
-        // Prepare records. We assume all records fails by default to avoid loss of data.
+        // Prepare records. We assume all records fail by default to avoid loss of data.
         var allRecords = GetRecordsFromEvent(@event).ToDictionary(x => x, GetRecordId);
         var failedRecordIds = new HashSet<string>(allRecords.Values);
 
@@ -62,8 +62,6 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
         return BatchResponse;
     }
 
-    protected abstract BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(TEvent @event);
-
     protected virtual async Task BeforeBatchProcessingAsync(TEvent @event) => await Task.CompletedTask;
 
     protected virtual async Task HandleRecordAsync(TRecord record, IRecordHandler<TRecord> recordHandler)
@@ -76,6 +74,8 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
     protected virtual async Task HandleRecordFailureAsync(TRecord record, Exception exception) => await Task.CompletedTask;
 
     protected virtual async Task AfterBatchProcessingAsync(TEvent @event, HashSet<string> failedRecordIds) => await Task.CompletedTask;
+
+    protected abstract BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(TEvent @event);
 
     protected abstract ICollection<TRecord> GetRecordsFromEvent(TEvent @event);
 

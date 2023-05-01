@@ -8,7 +8,7 @@ internal class CustomSqsBatchProcessorProvider : IBatchProcessorProvider<SQSEven
 {
     public IBatchProcessor<SQSEvent, SQSEvent.SQSMessage> Create()
     {
-        Logger.LogInformation("Creating custom batch processor from IoC...");
+        Logger.LogInformation($"Creating SQS batch processor using: '{GetType().Name}'.");
         return Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
     }
 }

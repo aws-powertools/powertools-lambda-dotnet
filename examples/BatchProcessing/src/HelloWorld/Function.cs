@@ -38,8 +38,22 @@ public class Function
 {
     static Function()
     {
-        Logger.LogInformation("Initializing IoC using the static constructor...");
+        Logger.LogInformation("Initializing IoC container using the static constructor...");
         Services.Init();
+    }
+
+    [BatchProcesser(EventType = EventType.DynamoDbStream, RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
+    [Logging(LogEvent = true)]
+    public BatchResponse DynamoDbStreamHandlerUsingAttribute(DynamoDBEvent _)
+    {
+        return DynamoDbStreamBatchProcessor.Instance.BatchResponse;
+    }
+
+    [BatchProcesser(EventType = EventType.KinesisDataStream, RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
+    [Logging(LogEvent = true)]
+    public BatchResponse KinesisDataStreamHandlerUsingAttribute(KinesisEvent _)
+    {
+        return KinesisDataStreamBatchProcessor.Instance.BatchResponse;
     }
 
     [BatchProcesser(EventType = EventType.Sqs, RecordHandler = typeof(CustomSqsRecordHandler))]
@@ -49,30 +63,16 @@ public class Function
         return SqsBatchProcessor.Instance.BatchResponse;
     }
 
-    [BatchProcesser(EventType = EventType.DynamoDbStreams, RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
-    [Logging(LogEvent = true)]
-    public BatchResponse DynamoDbStreamHandlerUsingAttribute(DynamoDBEvent _)
-    {
-        return DynamoDbStreamBatchProcessor.Instance.BatchResponse;
-    }
+    #region More example handlers...
 
-    [BatchProcesser(EventType = EventType.KinesisDataStreams, RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
-    [Logging(LogEvent = true)]
-    public BatchResponse KinesisDataStreamHandlerUsingAttribute(KinesisEvent _)
-    {
-        return KinesisDataStreamBatchProcessor.Instance.BatchResponse;
-    }
-
-    #region Other
-
-    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
+    [BatchProcesser(EventType = EventType.Sqs, RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
     public BatchResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
     {
         return SqsBatchProcessor.Instance.BatchResponse;
     }
 
-    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
+    [BatchProcesser(EventType = EventType.Sqs, RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
     [Logging(LogEvent = true)]
     public BatchResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
     {
@@ -85,7 +85,7 @@ public class Function
     {
         return await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent, RecordHandler<SQSEvent.SQSMessage>.From(x =>
         {
-            Logger.LogInformation($"Inline handling of sqs message with body: {x.Body}");
+            Logger.LogInformation($"Inline handling of SQS message with body: '{x.Body}'.");
         }));
     }
 

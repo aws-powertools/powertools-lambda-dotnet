@@ -30,42 +30,42 @@ namespace AWS.Lambda.Powertools.BatchProcessing;
 public class BatchProcesserAttribute : MethodAspectAttribute
 {
     /// <summary>
-    /// SQS batch processor.
+    /// Type of batch processor.
     /// </summary>
     public Type BatchProcessor;
 
     /// <summary>
-    /// SQS batch processor provider.
+    /// Type of batch processor provider.
     /// </summary>
     public Type BatchProcessorProvider;
 
     /// <summary>
-    /// SQS record handler.
+    /// Type of batch record handler.
     /// </summary>
     public Type RecordHandler;
 
     /// <summary>
-    /// Event source type.
+    /// Event source (i.e. SQS Queue, DynamoDB Stream or Kinesis Data Stream).
     /// </summary>
     public EventType EventType;
 
     private static readonly Dictionary<EventType, Type> BatchProcessorTypes = new()
     {
-        {EventType.DynamoDbStreams,    typeof(IBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
-        {EventType.KinesisDataStreams, typeof(IBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>)},
-        {EventType.Sqs,                typeof(IBatchProcessor<SQSEvent, SQSEvent.SQSMessage>)}
+        {EventType.DynamoDbStream,    typeof(IBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
+        {EventType.KinesisDataStream, typeof(IBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>)},
+        {EventType.Sqs,               typeof(IBatchProcessor<SQSEvent, SQSEvent.SQSMessage>)}
     };
     private static readonly Dictionary<EventType, Type> BatchProcessorProviderTypes = new()
     {
-        {EventType.DynamoDbStreams,    typeof(IBatchProcessorProvider<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
-        {EventType.KinesisDataStreams, typeof(IBatchProcessorProvider<KinesisEvent, KinesisEvent.KinesisEventRecord>)},
-        {EventType.Sqs,                typeof(IBatchProcessorProvider<SQSEvent, SQSEvent.SQSMessage>)}
+        {EventType.DynamoDbStream,    typeof(IBatchProcessorProvider<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
+        {EventType.KinesisDataStream, typeof(IBatchProcessorProvider<KinesisEvent, KinesisEvent.KinesisEventRecord>)},
+        {EventType.Sqs,               typeof(IBatchProcessorProvider<SQSEvent, SQSEvent.SQSMessage>)}
     };
     private static readonly Dictionary<EventType, Type> RecordHandlerTypes = new()
     {
-        {EventType.DynamoDbStreams,    typeof(IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>)},
-        {EventType.KinesisDataStreams, typeof(IRecordHandler<KinesisEvent.KinesisEventRecord>)},
-        {EventType.Sqs,                typeof(IRecordHandler<SQSEvent.SQSMessage>)}
+        {EventType.DynamoDbStream,    typeof(IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>)},
+        {EventType.KinesisDataStream, typeof(IRecordHandler<KinesisEvent.KinesisEventRecord>)},
+        {EventType.Sqs,               typeof(IRecordHandler<SQSEvent.SQSMessage>)}
     };
 
     /// <inheritdoc />
@@ -74,28 +74,28 @@ public class BatchProcesserAttribute : MethodAspectAttribute
         // Check type of batch processor (optional)
         if (BatchProcessor != null && !BatchProcessor.IsAssignableTo(BatchProcessorTypes[EventType]))
         {
-            throw new ArgumentException($"The SQS batch processor must implement {BatchProcessorTypes[EventType]}.", nameof(BatchProcessor));
+            throw new ArgumentException($"The provided batch processor must implement: '{BatchProcessorTypes[EventType]}'.", nameof(BatchProcessor));
         }
 
         // Check type of batch processor provider (optional)
         if (BatchProcessorProvider != null && !BatchProcessorProvider.IsAssignableTo(BatchProcessorProviderTypes[EventType]))
         {
-            throw new ArgumentException($"The SQS batch processor provider must implement {BatchProcessorProviderTypes[EventType]}.", nameof(BatchProcessorProvider));
+            throw new ArgumentException($"The provided batch processor provider must implement: '{BatchProcessorProviderTypes[EventType]}'.", nameof(BatchProcessorProvider));
         }
 
         // Check type of record handler (required)
-        if (!RecordHandler.IsAssignableTo(RecordHandlerTypes[EventType]))
+        if (RecordHandler == null || !RecordHandler.IsAssignableTo(RecordHandlerTypes[EventType]))
         {
-            throw new ArgumentException($"The SQS record handler is required and must implement {RecordHandlerTypes[EventType]}.", nameof(RecordHandler));
+            throw new ArgumentException($"A record handler is required and must implement: '{RecordHandlerTypes[EventType]}'.", nameof(RecordHandler));
         }
 
         // Create aspect handler
         return EventType switch
         {
-            EventType.DynamoDbStreams => CreateHandlerInternal(() => DynamoDbStreamBatchProcessor.Instance),
-            EventType.KinesisDataStreams => CreateHandlerInternal(() => KinesisDataStreamBatchProcessor.Instance),
+            EventType.DynamoDbStream => CreateHandlerInternal(() => DynamoDbStreamBatchProcessor.Instance),
+            EventType.KinesisDataStream => CreateHandlerInternal(() => KinesisDataStreamBatchProcessor.Instance),
             EventType.Sqs => CreateHandlerInternal(() => SqsBatchProcessor.Instance),
-            _ => throw new ArgumentOutOfRangeException(nameof(EventType))
+            _ => throw new ArgumentOutOfRangeException(nameof(EventType), EventType, "Unsupported event type.")
         };
     }
 
@@ -111,7 +111,7 @@ public class BatchProcesserAttribute : MethodAspectAttribute
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Could not create instance of {BatchProcessor.Name}", ex);
+                throw new InvalidOperationException($"Error during creation of: '{BatchProcessor.Name}'.", ex);
             }
         }
         else if (BatchProcessorProvider != null)
@@ -123,7 +123,7 @@ public class BatchProcesserAttribute : MethodAspectAttribute
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException($"Could not create instance of {BatchProcessorProvider.Name}", ex);
+                throw new InvalidOperationException($"Error during creation of batch processor using provider: '{BatchProcessorProvider.Name}'.", ex);
             }
         }
         else
@@ -139,7 +139,7 @@ public class BatchProcesserAttribute : MethodAspectAttribute
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Could not create instance of {RecordHandler.Name}", ex);
+            throw new InvalidOperationException($"Error during creation of record handler: '{RecordHandler.Name}'.", ex);
         }
 
         return new BatchProcessingAspectHandler<TEvent, TRecord>(batchProcessor, recordHandler);

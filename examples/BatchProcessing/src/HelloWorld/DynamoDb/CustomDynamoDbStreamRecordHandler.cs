@@ -8,7 +8,7 @@ internal class CustomDynamoDbStreamRecordHandler : IRecordHandler<DynamoDBEvent.
 {
     public async Task HandleAsync(DynamoDBEvent.DynamodbStreamRecord record)
     {
-        Logger.LogInformation($"Handling DynamoDB event with sequence number: {record.Dynamodb.SequenceNumber}");
+        Logger.LogInformation($"Handling DynamoDB record with sequence number: '{record.Dynamodb.SequenceNumber}'.");
         await Task.CompletedTask;
     }
 }

@@ -2,6 +2,6 @@
 public enum EventType
 {
     Sqs,
-    DynamoDbStreams,
-    KinesisDataStreams
+    DynamoDbStream,
+    KinesisDataStream
 }
