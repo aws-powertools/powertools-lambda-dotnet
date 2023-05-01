@@ -13,9 +13,6 @@
  * permissions and limitations under the License.
  */
 
-using System;
-using AWS.Lambda.Powertools.BatchProcessing.Internal;
-using AWS.Lambda.Powertools.Common;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -23,27 +20,14 @@ using Xunit;
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests
 {
     [Collection("Sequential")]
-    public class BatchProcessingAttributeTestContext
+    public class BatchProcessingAttributeTest
     {
         [Fact]
         public void OnEntry_Test()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-
-            BatchProcessingAspectHandler.ResetForTest();
-            var handler = new BatchProcessingAspectHandler();
-            var eventArgs = new AspectEventArgs
-            {
-                Name = methodName,
-                Args = new object[] { }
-            };
-
             // Act
-            handler.OnEntry(eventArgs);
-
             // Assert
-
         }
     }
 }

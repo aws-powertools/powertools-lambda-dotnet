@@ -15,8 +15,6 @@
 
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests
 {
     [Collection("Sequential")]
