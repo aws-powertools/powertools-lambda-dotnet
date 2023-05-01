@@ -71,6 +71,10 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
 
     protected virtual async Task HandleRecordSuccesssAsync(TRecord record) => await Task.CompletedTask;
 
+    /*
+     * TODO: Should we log this by default? In that case, can we take a dependency on the Powertools logger?
+     * Example: https://github.com/awslabs/aws-lambda-powertools-python/blob/develop/aws_lambda_powertools/utilities/batch/base.py#L198
+     */
     protected virtual async Task HandleRecordFailureAsync(TRecord record, Exception exception) => await Task.CompletedTask;
 
     protected virtual async Task AfterBatchProcessingAsync(TEvent @event, HashSet<string> failedRecordIds) => await Task.CompletedTask;

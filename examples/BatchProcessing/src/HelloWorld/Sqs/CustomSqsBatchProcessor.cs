@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
@@ -11,5 +12,11 @@ internal class CustomSqsBatchProcessor : SqsBatchProcessor
     {
         Logger.LogInformation($"Processing {@event.Records.Count} record(s) using: '{GetType().Name}'.");
         return base.ProcessAsync(@event, recordHandler);
+    }
+
+    protected override async Task HandleRecordFailureAsync(SQSEvent.SQSMessage record, Exception exception)
+    {
+        Logger.LogWarning(exception, $"Failed to process record: '{record.MessageId}'.");
+        await base.HandleRecordFailureAsync(record, exception);
     }
 }
