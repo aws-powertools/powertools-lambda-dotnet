@@ -65,6 +65,13 @@ public class Function
 
     #region More example handlers...
 
+    [BatchProcesser(EventType = EventType.Sqs, RecordHandlerProvider = typeof(CustomSqsRecordHandlerProvider))]
+    [Logging(LogEvent = true)]
+    public BatchResponse HandlerUsingAttributeAndCustomRecordHandlerProvider(SQSEvent _)
+    {
+        return SqsBatchProcessor.Instance.BatchResponse;
+    }
+
     [BatchProcesser(EventType = EventType.Sqs, RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
     public BatchResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)

@@ -40,9 +40,14 @@ public class BatchProcesserAttribute : MethodAspectAttribute
     public Type BatchProcessorProvider;
 
     /// <summary>
-    /// Type of batch record handler.
+    /// Type of record handler.
     /// </summary>
     public Type RecordHandler;
+
+    /// <summary>
+    /// Type of record handler provider.
+    /// </summary>
+    public Type RecordHandlerProvider;
 
     /// <summary>
     /// Event source (i.e. SQS Queue, DynamoDB Stream or Kinesis Data Stream).
@@ -67,6 +72,12 @@ public class BatchProcesserAttribute : MethodAspectAttribute
         {EventType.KinesisDataStream, typeof(IRecordHandler<KinesisEvent.KinesisEventRecord>)},
         {EventType.Sqs,               typeof(IRecordHandler<SQSEvent.SQSMessage>)}
     };
+    private static readonly Dictionary<EventType, Type> RecordHandlerProviderTypes = new()
+    {
+        {EventType.DynamoDbStream,    typeof(IRecordHandlerProvider<DynamoDBEvent.DynamodbStreamRecord>)},
+        {EventType.KinesisDataStream, typeof(IRecordHandlerProvider<KinesisEvent.KinesisEventRecord>)},
+        {EventType.Sqs,               typeof(IRecordHandlerProvider<SQSEvent.SQSMessage>)}
+    };
 
     /// <inheritdoc />
     protected override IMethodAspectHandler CreateHandler()
@@ -83,10 +94,16 @@ public class BatchProcesserAttribute : MethodAspectAttribute
             throw new ArgumentException($"The provided batch processor provider must implement: '{BatchProcessorProviderTypes[EventType]}'.", nameof(BatchProcessorProvider));
         }
 
-        // Check type of record handler (required)
-        if (RecordHandler == null || !RecordHandler.IsAssignableTo(RecordHandlerTypes[EventType]))
+        // Check type of record handler (conditionally required)
+        if (RecordHandler != null && !RecordHandler.IsAssignableTo(RecordHandlerTypes[EventType]))
         {
-            throw new ArgumentException($"A record handler is required and must implement: '{RecordHandlerTypes[EventType]}'.", nameof(RecordHandler));
+            throw new ArgumentException($"The provided record handler must implement: '{RecordHandlerTypes[EventType]}'.", nameof(RecordHandler));
+        }
+
+        // Check type of record handler provider (conditionally required)
+        if (RecordHandlerProvider != null && !RecordHandlerProvider.IsAssignableTo(RecordHandlerProviderTypes[EventType]))
+        {
+            throw new ArgumentException($"The provided record handler provider must implement: '{RecordHandlerProviderTypes[EventType]}'.", nameof(RecordHandlerProvider));
         }
 
         // Create aspect handler
@@ -133,13 +150,32 @@ public class BatchProcesserAttribute : MethodAspectAttribute
 
         // Create record handler
         IRecordHandler<TRecord> recordHandler;
-        try
+        if (RecordHandler != null)
         {
-            recordHandler = (IRecordHandler<TRecord>)Activator.CreateInstance(RecordHandler)!;
+            try
+            {
+                recordHandler = (IRecordHandler<TRecord>)Activator.CreateInstance(RecordHandler)!;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error during creation of: '{RecordHandler.Name}'.", ex);
+            }
         }
-        catch (Exception ex)
+        else if (RecordHandlerProvider != null)
         {
-            throw new InvalidOperationException($"Error during creation of record handler: '{RecordHandler.Name}'.", ex);
+            try
+            {
+                var recordHandlerProvider = (IRecordHandlerProvider<TRecord>)Activator.CreateInstance(RecordHandlerProvider)!;
+                recordHandler = recordHandlerProvider.Create();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error during creation of record handler using provider: '{RecordHandlerProvider.Name}'.", ex);
+            }
+        }
+        else
+        {
+            throw new InvalidOperationException("A record handler or record handler provider is required.");
         }
 
         return new BatchProcessingAspectHandler<TEvent, TRecord>(batchProcessor, recordHandler);
