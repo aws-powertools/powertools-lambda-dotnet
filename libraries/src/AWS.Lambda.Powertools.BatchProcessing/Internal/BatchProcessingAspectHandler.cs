@@ -35,13 +35,7 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHand
         _recordHandler = recordHandler;
     }
 
-    /// <summary>
-    ///     Handles the <see cref="E:Entry" /> event.
-    /// </summary>
-    /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
-    ///     event data.
-    /// </param>
+    /// <inheritdoc />
     public void OnEntry(AspectEventArgs eventArgs)
     {
         // Try get event from args
@@ -51,45 +45,23 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHand
             throw new InvalidOperationException($"Function handler must accept an argument of type: '{typeof(TEvent).Name}'.");
         }
 
-        // Run processor
-        // TODO: Consider framework support for async aspect events
+        // Run batch processor
+        // TODO: Consider framework support for async aspect events?
         _batchProcessor.ProcessAsync(@event, _recordHandler).GetAwaiter().GetResult();
     }
 
-    /// <summary>
-    ///     Called when [success].
-    /// </summary>
-    /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
-    ///     event data.
-    /// </param>
-    /// <param name="result">The result.</param>
+    /// <inheritdoc />
     public void OnSuccess(AspectEventArgs eventArgs, object result)
     {
     }
 
-    /// <summary>
-    ///     Called when [exception].
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
-    ///     event data.
-    /// </param>
-    /// <param name="exception">The exception.</param>
-    /// <returns>T.</returns>
+    /// <inheritdoc />
     public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
     {
         throw exception;
     }
 
-    /// <summary>
-    ///     Handles the <see cref="E:Exit" /> event.
-    /// </summary>
-    /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
-    ///     event data.
-    /// </param>
+    /// <inheritdoc />
     public void OnExit(AspectEventArgs eventArgs)
     {
     }
