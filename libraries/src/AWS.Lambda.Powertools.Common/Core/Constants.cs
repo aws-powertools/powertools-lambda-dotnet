@@ -80,4 +80,14 @@ internal static class Constants
     ///     Constant for LAMBDA_TASK_ROOT environment variable
     /// </summary>
     internal const string LambdaTaskRoot = "LAMBDA_TASK_ROOT";
+    
+    /// <summary>
+    ///     Constant for AWS_EXECUTION_ENV environment variable
+    /// </summary>
+    internal const string AwsExecutionEnvironmentVariableName = "AWS_EXECUTION_ENV";
+    
+    /// <summary>
+    ///     Constant for Powertools feature identifier fo AWS_EXECUTION_ENV environment variable
+    /// </summary>
+    internal const string FeatureContextIdentifier = "PT";
 }

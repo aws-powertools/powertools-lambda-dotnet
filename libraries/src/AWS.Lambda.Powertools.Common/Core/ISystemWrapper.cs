@@ -44,4 +44,17 @@ public interface ISystemWrapper
     /// </summary>
     /// <returns>System.Double.</returns>
     double GetRandom();
+    
+    /// <summary>
+    ///     Sets the environment variable.
+    /// </summary>
+    /// <param name="variable">The variable.</param>
+    /// <param name="value"></param>
+    void SetEnvironmentVariable(string variable, string value);
+    
+    /// <summary>
+    /// Sets the execution Environment Variable (AWS_EXECUTION_ENV)
+    /// </summary>
+    /// <param name="type"></param>
+    void SetExecutionEnvironment<T>(T type);
 }

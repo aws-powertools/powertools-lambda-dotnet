@@ -18,6 +18,7 @@ using Amazon.XRay.Recorder.Core;
 using Amazon.XRay.Recorder.Core.Internal.Emitters;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
 using Amazon.XRay.Recorder.Core.Strategies;
+using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Tracing.Internal;
 
@@ -28,6 +29,9 @@ namespace AWS.Lambda.Powertools.Tracing.Internal;
 /// <seealso cref="IXRayRecorder" />
 internal class XRayRecorder : IXRayRecorder
 {
+    private static IAWSXRayRecorder _awsxRayRecorder;
+    private static IPowertoolsConfigurations _powertoolsConfigurations;
+
     /// <summary>
     ///     The instance
     /// </summary>
@@ -37,25 +41,34 @@ internal class XRayRecorder : IXRayRecorder
     ///     Gets the instance.
     /// </summary>
     /// <value>The instance.</value>
-    public static IXRayRecorder Instance => _instance ??= new XRayRecorder();
+    public static IXRayRecorder Instance => _instance ??= new XRayRecorder(AWSXRayRecorder.Instance, PowertoolsConfigurations.Instance);
+
+    public XRayRecorder(IAWSXRayRecorder awsxRayRecorder, IPowertoolsConfigurations powertoolsConfigurations)
+    {
+        _instance = this;
+        _powertoolsConfigurations = powertoolsConfigurations;
+        _powertoolsConfigurations.SetExecutionEnvironment(this);
+        _isLambda = _powertoolsConfigurations.IsLambdaEnvironment;
+        _awsxRayRecorder = awsxRayRecorder;
+    }
 
     /// <summary>
     ///     Checks whether current execution is in AWS Lambda.
     /// </summary>
     /// <returns>Returns true if current execution is in AWS Lambda.</returns>
-    private static readonly bool _isLambda = AWSXRayRecorder.IsLambda();
+    private static bool _isLambda; 
 
     /// <summary>
     ///     Gets the emitter.
     /// </summary>
     /// <value>The emitter.</value>
-    public ISegmentEmitter Emitter => _isLambda ? AWSXRayRecorder.Instance.Emitter : null;
+    public ISegmentEmitter Emitter => _isLambda ? _awsxRayRecorder.Emitter : null;
 
     /// <summary>
     ///     Gets the streaming strategy.
     /// </summary>
     /// <value>The streaming strategy.</value>
-    public IStreamingStrategy StreamingStrategy => _isLambda ? AWSXRayRecorder.Instance.StreamingStrategy : null;
+    public IStreamingStrategy StreamingStrategy => _isLambda ? _awsxRayRecorder.StreamingStrategy : null;
 
     /// <summary>
     ///     Begins the subsegment.
@@ -64,7 +77,7 @@ internal class XRayRecorder : IXRayRecorder
     public void BeginSubsegment(string name)
     {
         if (_isLambda)
-            AWSXRayRecorder.Instance.BeginSubsegment(name);
+            _awsxRayRecorder.BeginSubsegment(name);
     }
 
     /// <summary>
@@ -74,7 +87,7 @@ internal class XRayRecorder : IXRayRecorder
     public void SetNamespace(string value)
     {
         if (_isLambda)
-            AWSXRayRecorder.Instance.SetNamespace(value);
+            _awsxRayRecorder.SetNamespace(value);
     }
 
     /// <summary>
@@ -85,7 +98,7 @@ internal class XRayRecorder : IXRayRecorder
     public void AddAnnotation(string key, object value)
     {
         if (_isLambda)
-            AWSXRayRecorder.Instance.AddAnnotation(key, value);
+            _awsxRayRecorder.AddAnnotation(key, value);
     }
 
     /// <summary>
@@ -97,7 +110,7 @@ internal class XRayRecorder : IXRayRecorder
     public void AddMetadata(string nameSpace, string key, object value)
     {
         if (_isLambda)
-            AWSXRayRecorder.Instance.AddMetadata(nameSpace, key, value);
+            _awsxRayRecorder.AddMetadata(nameSpace, key, value);
     }
 
     /// <summary>
@@ -106,7 +119,7 @@ internal class XRayRecorder : IXRayRecorder
     public void EndSubsegment()
     {
         if (_isLambda)
-            AWSXRayRecorder.Instance.EndSubsegment();
+            _awsxRayRecorder.EndSubsegment();
     }
 
     /// <summary>
@@ -116,7 +129,7 @@ internal class XRayRecorder : IXRayRecorder
     public Entity GetEntity()
     {
         return _isLambda
-            ? AWSXRayRecorder.Instance.GetEntity()
+            ? _awsxRayRecorder.TraceContext.GetEntity()
             : new Subsegment("Root");
     }
 
@@ -127,7 +140,7 @@ internal class XRayRecorder : IXRayRecorder
     public void SetEntity(Entity entity)
     {
         if (_isLambda)
-            AWSXRayRecorder.Instance.SetEntity(entity);
+            _awsxRayRecorder.TraceContext.SetEntity(entity);
     }
 
     /// <summary>
@@ -137,7 +150,7 @@ internal class XRayRecorder : IXRayRecorder
     public void AddException(Exception exception)
     {
         if (_isLambda)
-            AWSXRayRecorder.Instance.AddException(exception);
+            _awsxRayRecorder.AddException(exception);
     }
 
     /// <summary>
@@ -148,6 +161,6 @@ internal class XRayRecorder : IXRayRecorder
     public void AddHttpInformation(string key, object value)
     {
         if (_isLambda)
-            AWSXRayRecorder.Instance.AddHttpInformation(key, value);
+            _awsxRayRecorder.AddHttpInformation(key, value);
     }
 }
