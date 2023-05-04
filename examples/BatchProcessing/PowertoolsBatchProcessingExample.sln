@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AWS.Lambda.Powertools", "AW
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.Logging", "..\..\libraries\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj", "{2873A729-199E-4E2B-A5DE-8E6FF6957237}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.BatchProcessing.Tests", "..\..\libraries\tests\AWS.Lambda.Powertools.BatchProcessing.Tests\AWS.Lambda.Powertools.BatchProcessing.Tests.csproj", "{1A7798BB-1252-4AB6-809C-2745D0696104}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{2873A729-199E-4E2B-A5DE-8E6FF6957237}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2873A729-199E-4E2B-A5DE-8E6FF6957237}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2873A729-199E-4E2B-A5DE-8E6FF6957237}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A7798BB-1252-4AB6-809C-2745D0696104}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A7798BB-1252-4AB6-809C-2745D0696104}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A7798BB-1252-4AB6-809C-2745D0696104}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A7798BB-1252-4AB6-809C-2745D0696104}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -49,6 +55,7 @@ Global
 		{ABC127A6-0D28-437A-8F1A-0E82C9EAACD4} = {8343B350-7DD1-46F1-B246-68B3E757D2BA}
 		{6C34537E-EB3E-4115-AAF1-5F4E8D355001} = {8343B350-7DD1-46F1-B246-68B3E757D2BA}
 		{2873A729-199E-4E2B-A5DE-8E6FF6957237} = {8343B350-7DD1-46F1-B246-68B3E757D2BA}
+		{1A7798BB-1252-4AB6-809C-2745D0696104} = {8343B350-7DD1-46F1-B246-68B3E757D2BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88150D7B-EC92-4EA2-BC32-9261804FC072}

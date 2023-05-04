@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
@@ -15,16 +16,16 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
         BatchResponse.BatchItemFailures.Clear();
 
         // Prepare records. We assume all records fail by default to avoid loss of data.
-        var allRecords = GetRecordsFromEvent(@event).ToDictionary(x => x, GetRecordId);
-        var failedRecordIds = new HashSet<string>(allRecords.Values);
+        var batchRecords = GetRecordsFromEvent(@event).ToDictionary(GetRecordId, x => x);
+        var failedRecords = batchRecords.ToDictionary(x => x.Key, _ => (Exception) null);
 
         // Get error handling policy
         var errorHandlingPolicy = GetErrorHandlingPolicyForEvent(@event);
 
         // Invoke hook
-        await BeforeBatchProcessingAsync(@event);
+        await BeforeBatchProcessingAsync(@event, batchRecords);
 
-        foreach (var (record, recordId) in allRecords)
+        foreach (var (recordId, record) in batchRecords)
         {
             try
             {
@@ -32,37 +33,59 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
                 await HandleRecordAsync(record, recordHandler);
 
                 // Register success
-                failedRecordIds.Remove(recordId);
+                failedRecords.Remove(recordId);
 
-                // Invoke hook
-                await HandleRecordSuccesssAsync(record);
+                try
+                {
+                    // Invoke hook
+                    await HandleRecordSuccesssAsync(record);
+                }
+                catch
+                {
+                    // NOOP
+                }
             }
             catch (Exception ex)
             {
-                // Invoke hook
-                await HandleRecordFailureAsync(record, ex);
+                // Capture exception
+                failedRecords[recordId] = new HandleRecordException($"Failed processing record: '{recordId}'. See inner exception for details.", ex);
 
-                // For some event sources, we should stop record processing on first error
+                try
+                {
+                    // Invoke hook
+                    await HandleRecordFailureAsync(record, ex);
+                }
+                catch
+                {
+                    // NOOP
+                }
+
+                // Check if we should stop record processing on first error
                 if (errorHandlingPolicy == BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)
                 {
+                    var cbException = new CircuitBreakerException($"A previous record: '{recordId}' failed processing.");
+                    foreach (var failedRecordId in failedRecords.Keys)
+                    {
+                        failedRecords[failedRecordId] ??= cbException;
+                    }
                     break;
                 }
             }
         }
 
         // Invoke hook
-        await AfterBatchProcessingAsync(@event, failedRecordIds);
+        await AfterBatchProcessingAsync(@event, batchRecords, failedRecords);
 
         // Collect results
-        BatchResponse.BatchItemFailures.AddRange(failedRecordIds.Select(x => new BatchResponse.BatchItemFailure
+        BatchResponse.BatchItemFailures.AddRange(failedRecords.Select(x => new BatchResponse.BatchItemFailure
         {
-            ItemIdentifier = x
+            ItemIdentifier = x.Key
         }));
 
         return BatchResponse;
     }
 
-    protected virtual async Task BeforeBatchProcessingAsync(TEvent @event) => await Task.CompletedTask;
+    protected virtual async Task BeforeBatchProcessingAsync(TEvent @event, IReadOnlyDictionary<string, TRecord> batchRecords) => await Task.CompletedTask;
 
     protected virtual async Task HandleRecordAsync(TRecord record, IRecordHandler<TRecord> recordHandler)
     {
@@ -77,7 +100,14 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
      */
     protected virtual async Task HandleRecordFailureAsync(TRecord record, Exception exception) => await Task.CompletedTask;
 
-    protected virtual async Task AfterBatchProcessingAsync(TEvent @event, HashSet<string> failedRecordIds) => await Task.CompletedTask;
+    protected virtual async Task AfterBatchProcessingAsync(TEvent @event, IReadOnlyDictionary<string, TRecord> batchRecords, IReadOnlyDictionary<string, Exception> failedRecords)
+    {
+        if (batchRecords.Count == failedRecords.Count)
+        {
+            throw new BatchProcessingException($"Entire batch of '{batchRecords.Count}' record(s) failed processing. See inner exceptions for details.", failedRecords.Values);
+        }
+        await Task.CompletedTask;
+    }
 
     protected abstract BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(TEvent @event);
 
