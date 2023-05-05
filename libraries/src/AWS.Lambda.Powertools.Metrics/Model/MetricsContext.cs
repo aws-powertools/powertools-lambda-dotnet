@@ -83,9 +83,10 @@ public class MetricsContext : IDisposable
     /// <param name="key">Metric key. Cannot be null, empty or whitespace</param>
     /// <param name="value">Metric value</param>
     /// <param name="unit">Metric unit</param>
-    public void AddMetric(string key, double value, MetricUnit unit)
+    /// <param name="metricResolution">Metric Resolution, Standard (default), High</param>
+    public void AddMetric(string key, double value, MetricUnit unit, MetricResolution metricResolution)
     {
-        _rootNode.AWS.AddMetric(key, value, unit);
+        _rootNode.AWS.AddMetric(key, value, unit, metricResolution);
     }
 
     /// <summary>
