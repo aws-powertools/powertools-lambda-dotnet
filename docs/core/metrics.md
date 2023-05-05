@@ -10,16 +10,26 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://aws.
 ## Key features
 
 * Aggregate up to 100 metrics using a single CloudWatch EMF object (large JSON blob)
-* Validate against common metric definitions mistakes (metric unit, values, max dimensions, max metrics, etc)
-* Metrics are created asynchronously by CloudWatch service, no custom stacks needed
+* Validating your metrics against common metric definitions mistakes (for example, metric unit, values, max dimensions, max metrics)
+* Metrics are created asynchronously by the CloudWatch service. You do not need any custom stacks, and there is no impact to Lambda function latency
 * Context manager to create a one off metric with a different dimension
+
+<br />
+
+<figure>
+  <img src="../../media/metrics_utility_showcase.png" loading="lazy" alt="Screenshot of the Amazon CloudWatch Console showing an example of business metrics in the Metrics Explorer" />
+  <figcaption>Metrics showcase - Metrics Explorer</figcaption>
+</figure>
 
 ## Terminologies
 
 If you're new to Amazon CloudWatch, there are two terminologies you must be aware of before using this utility:
 
-* **Namespace**. It's the highest level container that will group multiple metrics from multiple services for a given application, for example `MyCompanyEcommerce`.
+* **Namespace**. It's the highest level container that will group multiple metrics from multiple services for a given application, for example `ServerlessEcommerce`.
 * **Dimensions**. Metrics metadata in key-value format. They help you slice and dice metrics visualization, for example `ColdStart` metric by Payment `service`.
+* **Metric**. It's the name of the metric, for example: SuccessfulBooking or UpdatedBooking.
+* **Unit**. It's a value representing the unit of measure for the corresponding metric, for example: Count or Seconds.
+* **Resolution**. It's a value representing the storage resolution for the corresponding metric. Metrics can be either Standard or High resolution. Read more [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html#Resolution_definition).
 
 Visit the AWS documentation for a complete explanation for [Amazon CloudWatch concepts](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html).
 
@@ -129,6 +139,38 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
 
 !!! warning "Do not create metrics or dimensions outside the handler"
     Metrics or dimensions added in the global scope will only be added during cold start. Disregard if that's the intended behavior.
+
+### Adding high-resolution metrics
+
+You can create [high-resolution metrics](https://aws.amazon.com/about-aws/whats-new/2023/02/amazon-cloudwatch-high-resolution-metric-extraction-structured-logs/) passing `MetricResolution` as parameter to `AddMetric`.
+
+!!! tip "When is it useful?"
+    High-resolution metrics are data with a granularity of one second and are very useful in several situations such as telemetry, time series, real-time incident management, and others.
+
+=== "Metrics with high resolution"
+
+    ```csharp hl_lines="9 12 15"
+    using AWS.Lambda.Powertools.Metrics;
+
+    public class Function {
+           
+      [Metrics(Namespace = "ExampleApplication", Service = "Booking")]
+      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+      {
+        // Publish a metric with standard resolution i.e. StorageResolution = 60
+        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count, MetricResolution.Standard);
+    
+        // Publish a metric with high resolution i.e. StorageResolution = 1
+        Metrics.AddMetric("FailedBooking", 1, MetricUnit.Count, MetricResolution.High);
+    
+        // The last parameter (storage resolution) is optional
+        Metrics.AddMetric("SuccessfulUpgrade", 1, MetricUnit.Count);
+      }
+    }
+    ```
+
+!!! tip "Autocomplete Metric Resolutions"
+    Use the `MetricResolution` enum to easily find a supported metric resolution by CloudWatch.
 
 ### Adding default dimensions
 
