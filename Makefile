@@ -1,5 +1,13 @@
 .PHONY: build-docs build-docs-website docs-local docs-local-docker
 
+dev:
+	pip install --upgrade pip pre-commit poetry
+	poetry install --extras "all"
+	pre-commit install
+	
+pre-commit:
+	pre-commit run --show-diff-on-failure
+
 build-docs:
 	@$(MAKE) build-docs-website
 
