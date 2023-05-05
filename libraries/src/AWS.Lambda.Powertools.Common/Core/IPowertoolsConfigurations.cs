@@ -120,4 +120,10 @@ public interface IPowertoolsConfigurations
     /// <param name="defaultValue">if set to <c>true</c> [default value].</param>
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     bool GetEnvironmentVariableOrDefault(string variable, bool defaultValue);
+    
+    /// <summary>
+    /// Sets the execution Environment Variable (AWS_EXECUTION_ENV)
+    /// </summary>
+    /// <param name="type"></param>
+    void SetExecutionEnvironment<T>(T type);
 }
