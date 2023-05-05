@@ -14,12 +14,12 @@
  */
 
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
-using Newtonsoft.Json.Linq;
 
 namespace AWS.Lambda.Powertools.Idempotency;
 
@@ -89,7 +89,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         {
             return await base.WrapAsync(target, args, eventArgs);
         }
-        JToken payload = JToken.FromObject(args[0]);
+        var payload = JsonSerializer.SerializeToDocument(args[0]);
         if (payload == null)
         {
             throw new IdempotencyConfigurationException("Unable to get payload from the method. Ensure there is at least one parameter or that you use @IdempotencyKey");

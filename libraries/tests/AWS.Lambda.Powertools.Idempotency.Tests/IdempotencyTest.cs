@@ -13,30 +13,40 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 using FluentAssertions;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests;
 
-public class IdempotencyTest : IntegrationTestBase
+public class IdempotencyTest
 {
+    protected const string TABLE_NAME = "idempotency_table";
+    
     [Fact]
     public async Task EndToEndTest() 
     {
+        var client = new AmazonDynamoDBClient();
+        
         IdempotencyFunction function = new IdempotencyFunction(client);
+        
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
         
         //var persistenceStore = new InMemoryPersistenceStore();
         TestLambdaContext context = new TestLambdaContext();
-        var request = JsonConvert.DeserializeObject<APIGatewayProxyRequest>(File.ReadAllText("./resources/apigw_event2.json"));
+        var request = JsonSerializer.Deserialize<APIGatewayProxyRequest>(File.ReadAllText("./resources/apigw_event2.json"),options);
         
-
         APIGatewayProxyResponse response = await function.Handle(request, context);
         function.HandlerExecuted.Should().BeTrue();
 
@@ -45,7 +55,7 @@ public class IdempotencyTest : IntegrationTestBase
         var response2 = await function.Handle(request, context);
         function.HandlerExecuted.Should().BeFalse();
 
-        JsonConvert.SerializeObject(response).Should().Be(JsonConvert.SerializeObject(response));
+        JsonSerializer.Serialize(response).Should().Be(JsonSerializer.Serialize(response));
         response2.Body.Should().Contain("hello world");
 
         var scanResponse = await client.ScanAsync(new ScanRequest

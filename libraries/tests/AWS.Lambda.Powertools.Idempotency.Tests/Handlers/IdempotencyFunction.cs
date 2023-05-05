@@ -13,15 +13,17 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using Newtonsoft.Json.Linq;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 
@@ -34,15 +36,14 @@ public class IdempotencyFunction
         Idempotency.Configure(builder =>
             builder
                 .WithOptions(optionsBuilder =>
-                    optionsBuilder.WithEventKeyJmesPath("powertools_json(Body).address"))
+                    optionsBuilder
+                        .WithEventKeyJmesPath("powertools_json(Body).address")
+                        .WithExpiration(TimeSpan.FromSeconds(20)))
                 .UseDynamoDb(storeBuilder =>
                     storeBuilder
                         .WithTableName("idempotency_table")
                         .WithDynamoDBClient(client)
                 ));
-
-        
-        
     }
 
     [Idempotent]
@@ -65,7 +66,7 @@ public class IdempotencyFunction
 
         try
         {
-            string address = JToken.Parse(apigProxyEvent.Body)["address"].Value<string>();
+            string address = JsonDocument.Parse(apigProxyEvent.Body).RootElement.GetProperty("address").GetString();
             string pageContents = await GetPageContents(address);
             string output = $"{{ \"message\": \"hello world\", \"location\": \"{pageContents}\" }}";
 

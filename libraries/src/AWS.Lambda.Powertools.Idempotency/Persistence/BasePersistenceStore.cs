@@ -16,14 +16,14 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
 using AWS.Lambda.Powertools.Idempotency.Output;
 using AWS.Lambda.Powertools.Idempotency.Serialization;
 using DevLab.JmesPath;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 
@@ -90,9 +90,9 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="data">Payload</param>
     /// <param name="result">the response from the function</param>
     /// <param name="now">The current date time</param>
-    public virtual async Task SaveSuccess(JToken data, object result, DateTimeOffset now)
+    public virtual async Task SaveSuccess(JsonDocument data, object result, DateTimeOffset now)
     {
-        string responseJson = JsonConvert.SerializeObject(result);
+        string responseJson = JsonSerializer.Serialize(result);
         var record = new DataRecord(
             GetHashedIdempotencyKey(data),
             DataRecord.DataRecordStatus.COMPLETED,
@@ -111,7 +111,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="data">Payload</param>
     /// <param name="now">The current date time</param>
     /// <exception cref="IdempotencyItemAlreadyExistsException"></exception>
-    public virtual async Task SaveInProgress(JToken data, DateTimeOffset now)
+    public virtual async Task SaveInProgress(JsonDocument data, DateTimeOffset now)
     {
         string idempotencyKey = GetHashedIdempotencyKey(data);
         
@@ -136,7 +136,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     /// <param name="data">Payload</param>
     /// <param name="throwable">The throwable thrown by the function</param>
-    public virtual async Task DeleteRecord(JToken data, Exception throwable)
+    public virtual async Task DeleteRecord(JsonDocument data, Exception throwable)
     {
         string idemPotencyKey = GetHashedIdempotencyKey(data);
 
@@ -155,7 +155,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="data">Payload</param>
     /// <param name="now"></param>
     /// <returns>DataRecord representation of existing record found in persistence store</returns>
-    public virtual async Task<DataRecord> GetRecord(JToken data, DateTimeOffset now)
+    public virtual async Task<DataRecord> GetRecord(JsonDocument data, DateTimeOffset now)
     {
         string idempotencyKey = GetHashedIdempotencyKey(data);
 
@@ -195,7 +195,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="data">Payload</param>
     /// <param name="dataRecord">DataRecord instance</param>
     /// <exception cref="IdempotencyValidationException"></exception>
-    private void ValidatePayload(JToken data, DataRecord dataRecord)
+    private void ValidatePayload(JsonDocument data, DataRecord dataRecord)
     {
         if (PayloadValidationEnabled)
         {
@@ -237,7 +237,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     /// <param name="data">Payload</param>
     /// <returns>Hashed representation of the data extracted by the jmespath expression</returns>
-    private string GetHashedPayload(JToken data)
+    private string GetHashedPayload(JsonDocument data)
     {
         if (!PayloadValidationEnabled)
         {
@@ -246,9 +246,9 @@ public abstract class BasePersistenceStore : IPersistenceStore
         
         var jmes = new JmesPath();
         jmes.FunctionRepository.Register<JsonFunction>();
-        var result = jmes.Transform(data.ToString(), _idempotencyOptions.PayloadValidationJmesPath);
-        var node = JToken.Parse(result);
-        return GenerateHash(node);
+        var result = jmes.Transform(data.RootElement.ToString(), _idempotencyOptions.PayloadValidationJmesPath);
+        var node = JsonDocument.Parse(result);
+        return GenerateHash(node.RootElement);
     }
     
     
@@ -269,16 +269,16 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="data">incoming data</param>
     /// <returns>Hashed representation of the data extracted by the jmespath expression</returns>
     /// <exception cref="IdempotencyKeyException"></exception>
-    private string GetHashedIdempotencyKey(JToken data)
+    private string GetHashedIdempotencyKey(JsonDocument data)
     {
-        JToken node = data;
+        var node = data.RootElement;
         var eventKeyJmesPath = _idempotencyOptions.EventKeyJmesPath;
         if (eventKeyJmesPath != null) 
         {
             var jmes = new JmesPath();
             jmes.FunctionRepository.Register<JsonFunction>();
-            var result = jmes.Transform(data.ToString(), eventKeyJmesPath);
-            node = JToken.Parse(result);
+            var result = jmes.Transform(node.ToString(), eventKeyJmesPath);
+            node = JsonDocument.Parse(result).RootElement;
         }
 
         if (IsMissingIdemPotencyKey(node))
@@ -294,13 +294,14 @@ public abstract class BasePersistenceStore : IPersistenceStore
         return _functionName + "#" + hash;
     }
 
-    private bool IsMissingIdemPotencyKey(JToken data)
+    private bool IsMissingIdemPotencyKey(JsonElement data)
     {
-        return (data == null) ||
-               (data.Type == JTokenType.Array && !data.HasValues) ||
-               (data.Type == JTokenType.Object && !data.HasValues) ||
-               (data.Type == JTokenType.String && data.ToString() == String.Empty) ||
-               (data.Type == JTokenType.Null);
+        return data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined;
+        // return (data == null) ||
+        //        (data is JsonArray && !data.) ||
+        //        (data.ValueKind == JsonValueKind.Array && !data.get) ||
+        //        (data.Type == JsonNodeType.String && data.ToString() == String.Empty) ||
+        //        (data.Type == JsonNodeType.Null);
     }
     
     /// <summary>
@@ -309,30 +310,30 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="data">data to hash</param>
     /// <returns>Hashed representation of the provided data</returns>
     /// <exception cref="ArgumentException"></exception>
-    internal string GenerateHash(JToken data)
+    internal string GenerateHash(JsonElement data)
     {
-        JToken node;
-        if (data is JObject or JArray) // if array or object, use the json string representation, otherwise get the real value
-        {
-            node = data;
-        }
-        else if (data.Type == JTokenType.String)
-        {
-            node = data.Value<string>();
-        }
-        else if (data.Type == JTokenType.Integer)
-        {
-            node = data.Value<long>();
-        }
-        else if (data.Type == JTokenType.Float)
-        {
-            node = data.Value<double>();
-        }
-        else if (data.Type == JTokenType.Boolean)
-        {
-            node = data.Value<bool>();
-        }
-        else node = data; // anything else
+        var node = data;
+        // if (data is JObject or JArray) // if array or object, use the json string representation, otherwise get the real value
+        // {
+        //     node = data;
+        // }
+        // else if (data.Type == JsonNodeType.String)
+        // {
+        //     node = data.Value<string>();
+        // }
+        // else if (data.Type == JsonNodeType.Integer)
+        // {
+        //     node = data.Value<long>();
+        // }
+        // else if (data.Type == JsonNodeType.Float)
+        // {
+        //     node = data.Value<double>();
+        // }
+        // else if (data.Type == JsonNodeType.Boolean)
+        // {
+        //     node = data.Value<bool>();
+        // }
+        // else node = data; // anything else
 
         
         using var hashAlgorithm = HashAlgorithm.Create(_idempotencyOptions.HashFunction);
@@ -340,7 +341,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         {
             throw new ArgumentException("Invalid HashAlgorithm");
         }
-        var stringToHash = node is JValue ? node.ToString() : node.ToString(Formatting.None);
+        var stringToHash = node.ToString();
         string hash = GetHash(hashAlgorithm, stringToHash);
         
         return hash;

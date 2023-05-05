@@ -14,7 +14,8 @@
  */
 
 using System;
-using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
@@ -24,7 +25,6 @@ using AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 using AWS.Lambda.Powertools.Idempotency.Tests.Model;
 using FluentAssertions;
 using Moq;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Internal;
@@ -53,10 +53,10 @@ public class IdempotentAspectTests
         function.HandlerExecuted.Should().BeTrue();
 
         store
-            .Verify(x=>x.SaveInProgress(It.Is<JToken>(t=> t.ToString() == JToken.FromObject(product).ToString()), It.IsAny<DateTimeOffset>()));
+            .Verify(x=>x.SaveInProgress(It.Is<JsonDocument>(t=> t.ToString() == JsonSerializer.SerializeToDocument(product, It.IsAny<JsonSerializerOptions>()).ToString()), It.IsAny<DateTimeOffset>()));
 
         store
-            .Verify(x=>x.SaveSuccess(It.IsAny<JToken>(), It.Is<Basket>(y => y.Equals(basket)), It.IsAny<DateTimeOffset>()));
+            .Verify(x=>x.SaveSuccess(It.IsAny<JsonDocument>(), It.Is<Basket>(y => y.Equals(basket)), It.IsAny<DateTimeOffset>()));
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class IdempotentAspectTests
     {
         //Arrange
         var store = new Mock<BasePersistenceStore>();
-        store.Setup(x=>x.SaveInProgress(It.IsAny<JToken>(), It.IsAny<DateTimeOffset>()))
+        store.Setup(x=>x.SaveInProgress(It.IsAny<JsonDocument>(), It.IsAny<DateTimeOffset>()))
             .Throws<IdempotencyItemAlreadyExistsException>();
     
         // GIVEN
@@ -80,9 +80,9 @@ public class IdempotentAspectTests
             "42",
             DataRecord.DataRecordStatus.COMPLETED,
             DateTimeOffset.UtcNow.AddSeconds(356).ToUnixTimeSeconds(),
-            JToken.FromObject(basket).ToString(),
+            JsonSerializer.SerializeToNode(basket)!.ToString(),
             null);
-        store.Setup(x=>x.GetRecord(It.IsAny<JToken>(), It.IsAny<DateTimeOffset>()))
+        store.Setup(x=>x.GetRecord(It.IsAny<JsonDocument>(), It.IsAny<DateTimeOffset>()))
             .ReturnsAsync(record);
     
         IdempotencyEnabledFunction function = new IdempotencyEnabledFunction();
@@ -106,7 +106,7 @@ public class IdempotentAspectTests
                 .WithPersistenceStore(store.Object)
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
             );
-        store.Setup(x=>x.SaveInProgress(It.IsAny<JToken>(), It.IsAny<DateTimeOffset>()))
+        store.Setup(x=>x.SaveInProgress(It.IsAny<JsonDocument>(), It.IsAny<DateTimeOffset>()))
             .Throws<IdempotencyItemAlreadyExistsException>();
     
         Product product = new Product(42, "fake product", 12);
@@ -115,9 +115,9 @@ public class IdempotentAspectTests
             "42",
             DataRecord.DataRecordStatus.INPROGRESS,
             DateTimeOffset.UtcNow.AddSeconds(356).ToUnixTimeSeconds(),
-            JToken.FromObject(basket).ToString(),
+            JsonSerializer.SerializeToNode(basket)!.ToString(),
             null);
-        store.Setup(x=>x.GetRecord(It.IsAny<JToken>(), It.IsAny<DateTimeOffset>()))
+        store.Setup(x=>x.GetRecord(It.IsAny<JsonDocument>(), It.IsAny<DateTimeOffset>()))
             .ReturnsAsync(record);
     
         // Act
@@ -149,7 +149,7 @@ public class IdempotentAspectTests
         // Assert
         await act.Should().ThrowAsync<IndexOutOfRangeException>();
         store.Verify(
-            x => x.DeleteRecord(It.IsAny<JToken>(), It.IsAny<IndexOutOfRangeException>()));
+            x => x.DeleteRecord(It.IsAny<JsonDocument>(), It.IsAny<IndexOutOfRangeException>()));
     }
     
     [Fact]

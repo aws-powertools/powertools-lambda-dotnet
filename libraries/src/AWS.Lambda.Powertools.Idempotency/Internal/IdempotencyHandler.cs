@@ -14,12 +14,13 @@
  */
 
 using System;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Output;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal;
 
@@ -29,7 +30,7 @@ internal class IdempotencyHandler<T>
 
     private readonly Func<object[], object> _target;
     private readonly object[] _args;
-    private readonly JToken _data;
+    private readonly JsonDocument _data;
     private readonly BasePersistenceStore _persistenceStore;
     private readonly ILog _log;
 
@@ -37,7 +38,7 @@ internal class IdempotencyHandler<T>
         Func<object[], object> target, 
         object[] args,
         string functionName,
-        JToken payload)
+        JsonDocument payload)
     {
         _target = target;
         _args = args;
@@ -166,7 +167,7 @@ internal class IdempotencyHandler<T>
         try
         {
             _log.WriteDebug("Response for key '{0}' retrieved from idempotency store, skipping the function", record.IdempotencyKey);
-            T? result = JsonConvert.DeserializeObject<T>(record.ResponseData!);
+            T? result = JsonSerializer.Deserialize<T>(record.ResponseData!);
             if (result is null)
             {
                 throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);
