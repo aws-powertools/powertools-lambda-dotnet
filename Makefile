@@ -24,6 +24,14 @@ docs-local-docker:
 	docker build -t squidfunk/mkdocs-material ./docs/
 	docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
 
+release-docs:
+	@echo "Rebuilding docs"
+	rm -rf site api
+	@echo "Updating website docs"
+	poetry run mike deploy --push --update-aliases ${VERSION} ${ALIAS}
+	@echo "Building API docs"
+	@$(MAKE) build-docs-api VERSION=${VERSION}
+
 changelog:
 	git fetch --tags origin
 	CURRENT_VERSION=$(shell git describe --abbrev=0 --tag) ;\
