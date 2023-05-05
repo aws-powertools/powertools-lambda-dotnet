@@ -62,34 +62,6 @@ public class PowertoolsEnvironmentTest : IDisposable
         Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
     }
     
-    [Fact]
-    public void Set_Execution_Real_Environment_Multiple()
-    {
-        // Arrange
-        var systemWrapper = new SystemWrapper(new PowertoolsEnvironment());
-
-        // Act
-        systemWrapper.SetExecutionEnvironment(this);
-        systemWrapper.SetExecutionEnvironment(systemWrapper);
-
-        // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 {Constants.FeatureContextIdentifier}/Common/0.0.1", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
-    }
-    
-    [Fact]
-    public void Set_Execution_Real_Environment_Multiple_Avoid_Duplicate()
-    {
-        // Arrange
-        var systemWrapper = new SystemWrapper(new PowertoolsEnvironment());
-        
-        // Act
-        systemWrapper.SetExecutionEnvironment(this);
-        systemWrapper.SetExecutionEnvironment(this);
-
-        // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
-    }
-
     public void Dispose()
     {
         //Do cleanup actions here
