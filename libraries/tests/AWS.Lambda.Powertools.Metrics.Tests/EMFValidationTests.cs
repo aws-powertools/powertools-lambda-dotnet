@@ -539,6 +539,90 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             // Reset
             handler.ResetForTest();
         }
+        
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void WhenMetricsWithStandardResolutionAdded_ValidateMetricArray()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+
+            var logger = new Metrics(
+                configurations.Object,
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
+            );
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act 
+            handler.OnEntry(eventArgs);
+            Metrics.AddDimension("functionVersion", "$LATEST");
+            Metrics.AddMetric("Time", 100.5, MetricUnit.Milliseconds, MetricResolution.Standard);
+            handler.OnExit(eventArgs);
+
+            var result = consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\",\"StorageResolution\":60}]"
+                , result);
+            Assert.Contains("\"Time\":100.5"
+                , result);
+
+            // Reset
+            handler.ResetForTest();
+        }
+        
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void WhenMetricsWithHighResolutionAdded_ValidateMetricArray()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+
+            var logger = new Metrics(
+                configurations.Object,
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
+            );
+
+            var handler = new MetricsAspectHandler(
+                logger,
+                false
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act 
+            handler.OnEntry(eventArgs);
+            Metrics.AddDimension("functionVersion", "$LATEST");
+            Metrics.AddMetric("Time", 100.5, MetricUnit.Milliseconds, MetricResolution.High);
+            handler.OnExit(eventArgs);
+
+            var result = consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\",\"StorageResolution\":1}]"
+                , result);
+            Assert.Contains("\"Time\":100.5"
+                , result);
+
+            // Reset
+            handler.ResetForTest();
+        }
 
         #region Helpers
 
