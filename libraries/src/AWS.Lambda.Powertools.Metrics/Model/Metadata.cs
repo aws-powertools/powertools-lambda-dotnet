@@ -82,9 +82,10 @@ public class Metadata
     /// <param name="key">Metric key. Cannot be null, empty or whitespace</param>
     /// <param name="value">Metric value</param>
     /// <param name="unit">Metric Unit</param>
-    internal void AddMetric(string key, double value, MetricUnit unit)
+    /// <param name="metricResolution">Metric Resolution, Standard (default), High</param>
+    internal void AddMetric(string key, double value, MetricUnit unit, MetricResolution metricResolution)
     {
-        _metricDirective.AddMetric(key, value, unit);
+        _metricDirective.AddMetric(key, value, unit, metricResolution);
     }
 
     /// <summary>

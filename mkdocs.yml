@@ -44,6 +44,9 @@ theme:
     - navigation.indexes
     - navigation.tracking
     - content.code.annotate
+    - toc.follow
+    - toc.integrate
+    - announce.dismiss
   icon:
     repo: fontawesome/brands/github
   logo: media/aws-logo-light.svg
@@ -69,7 +72,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.superfences
 
-copyright: Copyright &copy; 2022 Amazon Web Services
+copyright: Copyright &copy; 2023 Amazon Web Services
 
 plugins:
   - git-revision-date
