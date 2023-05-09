@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-using AWS.Lambda.Powertools.Parameters.AppConfig;
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.DynamoDB;
 using AWS.Lambda.Powertools.Parameters.Internal.Cache;
@@ -39,12 +38,7 @@ public static class ParametersManager
     /// The SecretsProvider instance
     /// </summary>
     private static ISecretsProvider? _secretsProvider;
-    
-    /// <summary>
-    /// The AppConfigProvider instance
-    /// </summary>
-    private static IAppConfigProvider? _appConfigProvider;
-    
+
     /// <summary>
     /// The DynamoDBProvider instance
     /// </summary>
@@ -88,13 +82,7 @@ public static class ParametersManager
     /// </summary>
     /// <value>The SecretsProvider instance.</value>
     public static ISecretsProvider SecretsProvider => _secretsProvider ??= CreateSecretsProvider();
-    
-    /// <summary>
-    /// Gets the AppConfigProvider instance.
-    /// </summary>
-    /// <value>The AppConfigProvider instance.</value>
-    public static IAppConfigProvider AppConfigProvider => _appConfigProvider ??= CreateAppConfigProvider();
-    
+
     /// <summary>
     /// Gets the DynamoDBProvider instance.
     /// </summary>
@@ -115,7 +103,6 @@ public static class ParametersManager
         _defaultMaxAge = maxAge;
         _ssmProvider?.DefaultMaxAge(maxAge);
         _secretsProvider?.DefaultMaxAge(maxAge);
-        _appConfigProvider?.DefaultMaxAge(maxAge);
         _dynamoDBProvider?.DefaultMaxAge(maxAge);
     }
 
@@ -128,7 +115,6 @@ public static class ParametersManager
         _cache = cacheManager;
         _ssmProvider?.UseCacheManager(cacheManager);
         _secretsProvider?.UseCacheManager(cacheManager);
-        _appConfigProvider?.UseCacheManager(cacheManager);
         _dynamoDBProvider?.UseCacheManager(cacheManager);
     }
 
@@ -141,7 +127,6 @@ public static class ParametersManager
         _transformManager = transformerManager;
         _ssmProvider?.UseTransformerManager(transformerManager);
         _secretsProvider?.UseTransformerManager(transformerManager);
-        _appConfigProvider?.UseTransformerManager(transformerManager);
         _dynamoDBProvider?.UseTransformerManager(transformerManager);
     }
 
@@ -155,7 +140,6 @@ public static class ParametersManager
         TransformManager.AddTransformer(name, transformer);
         _ssmProvider?.AddTransformer(name, transformer);
         _secretsProvider?.AddTransformer(name, transformer);
-        _appConfigProvider?.AddTransformer(name, transformer);
         _dynamoDBProvider?.AddTransformer(name, transformer);
     }
     
@@ -166,7 +150,6 @@ public static class ParametersManager
     {
         _ssmProvider?.RaiseTransformationError();
         _secretsProvider?.RaiseTransformationError();
-        _appConfigProvider?.RaiseTransformationError();
         _dynamoDBProvider?.RaiseTransformationError();
     }
     
@@ -178,7 +161,6 @@ public static class ParametersManager
     {
         _ssmProvider?.RaiseTransformationError(raiseError);
         _secretsProvider?.RaiseTransformationError(raiseError);
-        _appConfigProvider?.RaiseTransformationError(raiseError);
         _dynamoDBProvider?.RaiseTransformationError(raiseError);
     }
 
@@ -205,22 +187,6 @@ public static class ParametersManager
     public static ISecretsProvider CreateSecretsProvider()
     {
         var provider = new SecretsProvider()
-            .UseCacheManager(Cache)
-            .UseTransformerManager(TransformManager);
-
-        if (_defaultMaxAge.HasValue)
-            provider = provider.DefaultMaxAge(_defaultMaxAge.Value);
-
-        return provider;
-    }
-
-    /// <summary>
-    /// Create a new instance of AppConfigProvider.
-    /// </summary>
-    /// <value>The AppConfigProvider instance.</value>
-    public static IAppConfigProvider CreateAppConfigProvider()
-    {
-        var provider = new AppConfigProvider()
             .UseCacheManager(Cache)
             .UseTransformerManager(TransformManager);
 

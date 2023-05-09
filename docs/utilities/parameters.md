@@ -4,7 +4,7 @@ description: Utility
 ---
 
 <!-- markdownlint-disable MD013 -->
-The parameters utility provides high-level functions to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, [AWS AppConfig](https://docs.aws.amazon.com/appconfig/latest/userguide/what-is-appconfig.html){target="_blank"}, [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}, or bring your own.
+The parameters utility provides high-level functions to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}, or bring your own.
 
 ## Key features
 
@@ -32,7 +32,6 @@ SSM Parameter Store | `SsmProvider.GetMultiple(string)` `SsmProvider.GetMultiple
 Secrets Manager | `SecretsProvider.Get(string)` `SecretsProvider.Get<T>(string)` | `secretsmanager:GetSecretValue`
 DynamoDB | `DynamoDBProvider.Get(string)` `DynamoDBProvider.Get<T>(string)` | `dynamodb:GetItem`
 DynamoDB | `DynamoDBProvider.GetMultiple(string)` `DynamoDBProvider.GetMultiple<T>(string)` | `dynamodb:Query`
-App Config | `DynamoDBProvider.Get()` | `appconfig:StartConfigurationSession appconfig:GetLatestConfiguration`
 
 ## SSM Parameter Store
 
@@ -247,65 +246,6 @@ in order to get data from other regions or use specific credentials.
             // Retrieve a single secret
             string? value = await secretsProvider
                 .GetAsync("/my/secret")
-                .ConfigureAwait(false);
-        }
-    }
-    ```
-
-## App Configurations
-
-For application configurations in AWS AppConfig, use `AppConfigProvider`.
-
-Alternatively, you can retrieve the instance of provider and configure its underlying SDK client,
-in order to get data from other regions or use specific credentials.
-
-
-=== "AppConfigProvider"
-
-     ```c# hl_lines="10-13 16-18"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.AppConfig;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get AppConfig Provider instance
-            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
-                .DefaultApplication("MyApplicationId")
-                .DefaultEnvironment("MyEnvironmentId")
-                .DefaultConfigProfile("MyConfigProfileId");
-                
-            // Retrieve a single configuration, latest version
-            IDictionary<string, string?> value = await appConfigProvider
-                .GetAsync()
-                .ConfigureAwait(false);
-        }
-    }
-    ```
-
-=== "AppConfigProvider with an explicit region"
-
-     ```c# hl_lines="10-14"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.AppConfig;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get AppConfig Provider instance
-            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
-                .ConfigureClient(RegionEndpoint.EUCentral1)
-                .DefaultApplication("MyApplicationId")
-                .DefaultEnvironment("MyEnvironmentId")
-                .DefaultConfigProfile("MyConfigProfileId");
-                
-            // Retrieve a single configuration, latest version
-            IDictionary<string, string?> value = await appConfigProvider
-                .GetAsync()
                 .ConfigureAwait(false);
         }
     }
