@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Transform;
 using AWS.Lambda.Powertools.Parameters.Configuration;
@@ -25,7 +26,7 @@ namespace AWS.Lambda.Powertools.Parameters.Provider;
 /// </summary>
 public abstract class ParameterProvider : IParameterProvider
 {
-        /// <summary>
+    /// <summary>
     /// The parameter provider handler instance.
     /// </summary>
     private IParameterProviderBaseHandler? _handler;
@@ -34,7 +35,12 @@ public abstract class ParameterProvider : IParameterProvider
     /// Gets parameter provider handler instance.
     /// </summary>
     internal IParameterProviderBaseHandler Handler =>
-        _handler ??= new ParameterProviderBaseHandler(GetAsync, GetMultipleAsync, CacheMode);
+        _handler ??= new ParameterProviderBaseHandler(
+            GetAsync,
+            GetMultipleAsync,
+            CacheMode,
+            PowertoolsConfigurations.Instance
+        );
 
     /// <summary>
     /// Gets the CacheManager instance.

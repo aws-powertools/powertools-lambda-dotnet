@@ -7,11 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AWSSDK.AppConfigData" Version="3.7.0.110" />
-      <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.5.10" />
-      <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.2.88" />
-      <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.18.2" />
-      <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
+      <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.103.1" />
+      <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.102.38" />
+      <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.104.29" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
     </ItemGroup>
 
 </Project>

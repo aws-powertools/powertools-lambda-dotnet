@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Internal.Cache;
@@ -89,15 +90,18 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
     /// <param name="getAsyncHandler">The parameter provider GetAsync callback handler.</param>
     /// <param name="getMultipleAsyncHandler">The parameter provider GetMultipleAsync callback handler.</param>
     /// <param name="cacheMode">The CacheMode.</param>
+    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     internal ParameterProviderBaseHandler(GetAsyncDelegate getAsyncHandler,
         GetMultipleAsyncDelegate getMultipleAsyncHandler,
-        ParameterProviderCacheMode cacheMode)
+        ParameterProviderCacheMode cacheMode,
+        IPowertoolsConfigurations powertoolsConfigurations)
     {
         _getAsyncHandler = getAsyncHandler;
         _getMultipleAsyncHandler = getMultipleAsyncHandler;
         _cacheMode = cacheMode;
+        powertoolsConfigurations.SetExecutionEnvironment(this);
     }
-    
+
     /// <summary>
     /// Try transform a value using a transformer.
     /// </summary>

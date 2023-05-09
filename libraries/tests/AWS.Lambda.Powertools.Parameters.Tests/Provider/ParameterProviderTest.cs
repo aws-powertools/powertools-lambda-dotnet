@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Internal.Cache;
@@ -53,10 +54,12 @@ public class ParameterProviderTest
         cacheManager.Setup(c =>
             c.Get(key)
         ).Returns(valueFromCache);
-
+        
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -65,6 +68,7 @@ public class ParameterProviderTest
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Never);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
@@ -91,9 +95,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(valueFromCache);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -102,6 +108,7 @@ public class ParameterProviderTest
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Never);
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -123,10 +130,12 @@ public class ParameterProviderTest
         cacheManager.Setup(c =>
             c.Get(key)
         ).Returns(null);
+        
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
 
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -136,6 +145,7 @@ public class ParameterProviderTest
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -162,10 +172,12 @@ public class ParameterProviderTest
         cacheManager.Setup(c =>
             c.Get(key)
         ).Returns(null);
+        
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
 
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -175,6 +187,7 @@ public class ParameterProviderTest
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -202,9 +215,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode);
+                cacheMode, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -214,6 +229,7 @@ public class ParameterProviderTest
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -240,10 +256,12 @@ public class ParameterProviderTest
         cacheManager.Setup(c =>
             c.Get(key)
         ).Returns(null);
+        
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
 
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode);
+                cacheMode, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -253,6 +271,7 @@ public class ParameterProviderTest
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -280,9 +299,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode);
+                cacheMode, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -292,6 +313,7 @@ public class ParameterProviderTest
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -325,9 +347,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -338,6 +362,7 @@ public class ParameterProviderTest
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         transformer.Verify(v => v.Transform<string>(value), Times.Once);
         cacheManager.Verify(v => v.Set(key, transformedValue, duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(transformedValue, result);
     }
@@ -372,9 +397,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -386,6 +413,7 @@ public class ParameterProviderTest
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         transformer.Verify(v => v.Transform<string>(value), Times.Once);
         cacheManager.Verify(v => v.Set(key, transformedValue, duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(transformedValue, result);
     }
@@ -420,9 +448,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -434,6 +464,7 @@ public class ParameterProviderTest
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         transformer.Verify(v => v.Transform<string>(value), Times.Once);
         cacheManager.Verify(v => v.Set(key, transformedValue, duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(transformedValue, result);
     }
@@ -467,9 +498,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -481,6 +514,7 @@ public class ParameterProviderTest
         providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         transformer.Verify(v => v.Transform<string>(value), Times.Once);
         cacheManager.Verify(v => v.Set(key, It.IsAny<object?>(), It.IsAny<TimeSpan>()), Times.Never);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.Null(result);
     }
     
@@ -514,9 +548,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
         providerHandler.SetRaiseTransformationError(raiseTransformationError);
@@ -525,6 +561,7 @@ public class ParameterProviderTest
         Task<string?> Act() => providerHandler.GetAsync<string>(key, null, transformation, null);
 
         // Assert
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         await Assert.ThrowsAsync<TransformationException>(Act);
     }
 
@@ -558,9 +595,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(valueFromCache);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -569,6 +608,7 @@ public class ParameterProviderTest
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Never);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
@@ -603,9 +643,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(valueFromCache);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -614,6 +656,7 @@ public class ParameterProviderTest
         // Assert
         cacheManager.Verify(v => v.Get(key), Times.Never);
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -640,9 +683,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -652,6 +697,7 @@ public class ParameterProviderTest
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -682,9 +728,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -694,6 +742,7 @@ public class ParameterProviderTest
         cacheManager.Verify(v => v.Get(key), Times.Once);
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -725,9 +774,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode);
+                cacheMode, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -736,6 +787,7 @@ public class ParameterProviderTest
         // Assert
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -767,9 +819,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode);
+                cacheMode, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -778,6 +832,7 @@ public class ParameterProviderTest
         // Assert
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -809,9 +864,11 @@ public class ParameterProviderTest
             c.Get(key)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode);
+                cacheMode, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -820,6 +877,7 @@ public class ParameterProviderTest
         // Assert
         providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
         cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -864,9 +922,11 @@ public class ParameterProviderTest
             c.Get(path)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
 
         // Act
@@ -883,6 +943,7 @@ public class ParameterProviderTest
             o.Last().Key == transformedValue.Last().Key &&
             o.Last().Value == transformedValue.Last().Value
         ), duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
     }
 
@@ -927,9 +988,11 @@ public class ParameterProviderTest
             c.Get(path)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -947,6 +1010,7 @@ public class ParameterProviderTest
             o.Last().Key == transformedValue.Last().Key &&
             o.Last().Value == transformedValue.Last().Value
         ), duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
     }
 
@@ -991,9 +1055,11 @@ public class ParameterProviderTest
             c.Get(path)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -1011,6 +1077,7 @@ public class ParameterProviderTest
             o.Last().Key == transformedValue.Last().Key &&
             o.Last().Value == transformedValue.Last().Value
         ), duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
     }
 
@@ -1065,10 +1132,12 @@ public class ParameterProviderTest
         cacheManager.Setup(c =>
             c.Get(path)
         ).Returns(null);
+        
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
 
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -1086,6 +1155,7 @@ public class ParameterProviderTest
             o.Last().Key == transformedValue.Last().Key &&
             o.Last().Value == transformedValue.Last().Value
         ), duration), Times.Once);
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
     }
 
@@ -1129,9 +1199,11 @@ public class ParameterProviderTest
             c.Get(path)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
 
@@ -1149,7 +1221,7 @@ public class ParameterProviderTest
             o.Last().Key == value.Last().Key &&
             o.Last().Value == transformedValue
         ), duration), Times.Once);
-        
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         Assert.NotNull(result);
     }
     
@@ -1193,9 +1265,11 @@ public class ParameterProviderTest
             c.Get(path)
         ).Returns(null);
 
+        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        
         var providerHandler =
             new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All);
+                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
         providerHandler.SetCacheManager(cacheManager.Object);
         providerHandler.SetTransformerManager(transformerManager.Object);
         providerHandler.SetRaiseTransformationError(raiseTransformationError);
@@ -1204,6 +1278,7 @@ public class ParameterProviderTest
         Task<IDictionary<string, string?>> Act() => providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
 
         // Assert
+        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         await Assert.ThrowsAsync<TransformationException>(Act);
     }
 
