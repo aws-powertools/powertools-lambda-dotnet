@@ -3,19 +3,22 @@ title: Parameters
 description: Utility
 ---
 
+???+ warning
+	**This utility is currently in developer preview** and is intended strictly for feedback and testing purposes **and not for production workloads**. The version and all future versions tagged with the `-preview` suffix should be treated as not stable. Until this utility is [General Availability](https://github.com/awslabs/aws-lambda-powertools-dotnet/milestone/2) we may introduce significant breaking changes and improvements in response to customers feedback.
+
 <!-- markdownlint-disable MD013 -->
-The parameters utility provides high-level functions to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}, or bring your own.
+The Parameters utility provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
 
 ## Key features
 
 * Retrieve one or multiple parameters from the underlying provider
 * Cache parameter values for a given amount of time (defaults to 5 seconds)
 * Transform parameter values from JSON or base 64 encoded strings
-* Bring Your Own Parameter Store Provider
+* Bring your own parameter store provider
 
-## Install
+## Installation
 
-Powertools are available as NuGet packages. You can install the packages from NuGet gallery or from Visual Studio editor. Search `AWS.Lambda.Powertools*` to see various utilities available.
+Powertools are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
 
 * [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Parameters):
 
@@ -35,8 +38,8 @@ DynamoDB | `DynamoDBProvider.GetMultiple(string)` `DynamoDBProvider.GetMultiple<
 
 ## SSM Parameter Store
 
-You can retrieve a single parameter using SsmProvider.Get() and pass the key of the parameter.
-For multiple parameters, you can use SsmProvider.GetMultiple() and pass the path to retrieve them all.
+You can retrieve a single parameter using `SsmProvider.Get()` and pass the key of the parameter.
+For multiple parameters, you can use `SsmProvider.GetMultiple()` and pass the path to retrieve them all.
 
 Alternatively, you can retrieve the instance of provider and configure its underlying SDK client,
 in order to get data from other regions or use specific credentials.
@@ -179,10 +182,9 @@ For secrets stored in Secrets Manager, use `SecretsProvider`.
 Alternatively, you can retrieve the instance of provider and configure its underlying SDK client,
 in order to get data from other regions or use specific credentials.
 
-
 === "SecretsProvider"
 
-     ```c# hl_lines="13-15"
+    ```c# hl_lines="13-15"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.SecretsManager;
 
@@ -224,7 +226,7 @@ in order to get data from other regions or use specific credentials.
     }
     ```
 
-=== "SecretsProvider with a custom clieent"
+=== "SecretsProvider with a custom client"
 
     ```c# hl_lines="11 14 15"
     using Amazon.SecretsManager;
@@ -263,16 +265,15 @@ For single parameters, you must use `id` as the [partition key](https://docs.aws
 
 	DynamoDB table with `id` partition key and `value` as attribute
 
- | id           | value    |
- | ------------ | -------- |
- | my-parameter | my-value |
+    | id           | value    |
+    | ------------ | -------- |
+    | my-parameter | my-value |
 
-With this table, `DynamoDBProvider.Get("my-param")` will return `my-value`.
-
+    With this table, `DynamoDBProvider.Get("my-param")` will return `my-value`.
 
 === "DynamoDBProvider"
 
-     ```c# hl_lines="10 11 14-16"
+    ```c# hl_lines="10 11 14-16"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.DynamoDB;
 
@@ -301,17 +302,17 @@ You can retrieve multiple parameters sharing the same `id` by having a sort key 
 
 	DynamoDB table with `id` primary key, `sk` as sort key` and `value` as attribute
 
- | id          | sk      | value      |
- | ----------- | ------- | ---------- |
- | my-hash-key | param-a | my-value-a |
- | my-hash-key | param-b | my-value-b |
- | my-hash-key | param-c | my-value-c |
+    | id          | sk      | value      |
+    | ----------- | ------- | ---------- |
+    | my-hash-key | param-a | my-value-a |
+    | my-hash-key | param-b | my-value-b |
+    | my-hash-key | param-c | my-value-c |
 
-With this table, `DynamoDBProvider.GetMultiple("my-hash-key")` will return a dictionary response in the shape of `sk:value`.
+    With this table, `DynamoDBProvider.GetMultiple("my-hash-key")` will return a dictionary response in the shape of `sk:value`.
 
 === "DynamoDBProvider"
 
-     ```c# hl_lines="10 11 14-16"
+    ```c# hl_lines="10 11 14-16"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.DynamoDB;
 
@@ -354,7 +355,7 @@ DynamoDB provider can be customized at initialization to match your table struct
 
 === "DynamoDBProvider"
 
-     ```c# hl_lines="10-17"
+    ```c# hl_lines="10-17"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.DynamoDB;
 
@@ -383,7 +384,7 @@ DynamoDB provider can be customized at initialization to match your table struct
 By default, all parameters and their corresponding values are cached for 5 seconds.
 
 You can customize this default value using `DefaultMaxAge`. You can also customize this value for each parameter using 
-`WithMaxAge`. 
+`WithMaxAge`.
 
 If you'd like to always ensure you fetch the latest parameter from the store regardless if already available in cache, use `ForceFetch`.
 

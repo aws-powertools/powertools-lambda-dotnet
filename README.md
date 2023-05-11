@@ -1,6 +1,6 @@
 # AWS Lambda Powertools for .NET
 
-![aws provider](https://img.shields.io/badge/provider-AWS-orange?logo=amazon-aws&color=ff9900) 
+![aws provider](https://img.shields.io/badge/provider-AWS-orange?logo=amazon-aws&color=ff9900)
 [![Build](https://github.com/awslabs/aws-lambda-powertools-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/awslabs/aws-lambda-powertools-dotnet/actions/workflows/build.yml)
 [![Join our Discord](https://dcbadge.vercel.app/api/server/B8zZKbbyET)](https://discord.gg/B8zZKbbyET)
 
@@ -20,9 +20,11 @@ Lambda Powertools provides three core utilities:
 
 * **[Tracing](https://awslabs.github.io/aws-lambda-powertools-dotnet/core/tracing/)** - provides a simple way to send traces from functions to AWS X-Ray to provide visibility into function calls, interactions with other AWS services, or external HTTP requests. Annotations can easily be added to traces to allow filtering traces based on key information. For example, when using Tracer, a ColdStart annotation is created for you so you can easily group and analyze traces where there was an initialization overhead.
 
+* **[Parameters (developer preview)](https://awslabs.github.io/aws-lambda-powertools-dotnet/core/parameters/)** - provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
+
 ### Installation
 
-The AWS Lambda Powertools for .NET utilities (.NET 6) are available as NuGet packages. You can install the packages from the NuGet gallery or from within the Visual Studio IDE. Search `AWS.Lambda.Powertools*` to see various utilities available. Powertools is available on NuGet.
+The AWS Lambda Powertools for .NET utilities (.NET 6) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
 
 * [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
 
@@ -35,6 +37,10 @@ The AWS Lambda Powertools for .NET utilities (.NET 6) are available as NuGet pac
 * [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
 
     `dotnet add package AWS.Lambda.Powertools.Tracing`
+
+* [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Parameters):
+
+    `dotnet add package AWS.Lambda.Powertools.AWS.Lambda.Powertools.Parameters`
 
 ## Examples
 
@@ -66,7 +72,7 @@ We welcome contributions from developers of all levels to our open-source projec
 ## Connect
 
 * **AWS Lambda Powertools on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET)**
-* **Email**: aws-lambda-powertools-feedback@amazon.com
+* **Email**: <aws-lambda-powertools-feedback@amazon.com>
 
 ## License
 
