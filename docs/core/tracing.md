@@ -10,11 +10,19 @@ a provides functionality to reduce the overhead of performing common tracing tas
 
 ## Key Features
 
-* Helper methods to improve the developer experience for creating [custom AWS X-Ray subsegments](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-subsegments.html).
+* Helper methods to improve the developer experience for creating [custom AWS X-Ray subsegments](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-subsegments.html){target=blank}.
 * Capture cold start as annotation.
 * Capture function responses and full exceptions as metadata.
 * Better experience when developing with multiple threads.
 * Auto-patch supported modules by AWS X-Ray
+
+## Installation
+
+Powertools are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+
+* [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
+
+    `dotnet nuget add AWS.Lambda.Powertools.Tracing`
 
 ## Getting Started
 

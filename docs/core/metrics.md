@@ -9,7 +9,7 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://aws.
 
 ## Key features
 
-* Aggregate up to 100 metrics using a single CloudWatch EMF object (large JSON blob)
+* Aggregate up to 100 metrics using a single [CloudWatch EMF](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html){target="_blank"} object (large JSON blob)
 * Validating your metrics against common metric definitions mistakes (for example, metric unit, values, max dimensions, max metrics)
 * Metrics are created asynchronously by the CloudWatch service. You do not need any custom stacks, and there is no impact to Lambda function latency
 * Context manager to create a one off metric with a different dimension
@@ -20,6 +20,14 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://aws.
   <img src="../../media/metrics_utility_showcase.png" loading="lazy" alt="Screenshot of the Amazon CloudWatch Console showing an example of business metrics in the Metrics Explorer" />
   <figcaption>Metrics showcase - Metrics Explorer</figcaption>
 </figure>
+
+## Installation
+
+Powertools are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+
+* [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Metrics):
+
+    `dotnet nuget add AWS.Lambda.Powertools.Metrics`
 
 ## Terminologies
 
@@ -378,3 +386,21 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
                     });
         ...
     ```
+
+## Testing your code
+
+### Environment variables
+
+???+ tip
+	Ignore this section, if:
+
+    * You are explicitly setting namespace/default dimension via `namespace` and `service` parameters
+    * You're not instantiating `Metrics` in the global namespace
+
+	For example, `Metrics(namespace="ExampleApplication", service="booking")`
+
+Make sure to set `POWERTOOLS_METRICS_NAMESPACE` and `POWERTOOLS_SERVICE_NAME` before running your tests to prevent failing on `SchemaValidation` exception. You can set it before you run tests by adding the environment variable.
+
+```csharp title="Injecting Metric Namespace before running tests"
+Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE","AWSLambdaPowertools");
+```
