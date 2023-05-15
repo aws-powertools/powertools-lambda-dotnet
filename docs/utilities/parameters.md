@@ -28,13 +28,14 @@ Powertools are available as NuGet packages. You can install the packages from [N
 
 This utility requires additional permissions to work as expected. See the table below:
 
-Provider | Function/Method | IAM Permission
-------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------
-SSM Parameter Store | `SsmProvider.Get(string)` `SsmProvider.Get<T>(string)` | `ssm:GetParameter`
-SSM Parameter Store | `SsmProvider.GetMultiple(string)` `SsmProvider.GetMultiple<T>(string)` | `ssm:GetParametersByPath`
-Secrets Manager | `SecretsProvider.Get(string)` `SecretsProvider.Get<T>(string)` | `secretsmanager:GetSecretValue`
-DynamoDB | `DynamoDBProvider.Get(string)` `DynamoDBProvider.Get<T>(string)` | `dynamodb:GetItem`
-DynamoDB | `DynamoDBProvider.GetMultiple(string)` `DynamoDBProvider.GetMultiple<T>(string)` | `dynamodb:Query`
+| Provider            | Function/Method                                                                  | IAM Permission                                          |
+| ------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| SSM Parameter Store | `SsmProvider.Get(string)` `SsmProvider.Get<T>(string)`                           | `ssm:GetParameter`                                      |
+| SSM Parameter Store | `SsmProvider.GetMultiple(string)` `SsmProvider.GetMultiple<T>(string)`           | `ssm:GetParametersByPath`                               |
+| SSM Parameter Store | If using **`WithDecryption()`** option                                           | You must add an additional permission `kms:Decrypt`     |
+| Secrets Manager     | `SecretsProvider.Get(string)` `SecretsProvider.Get<T>(string)`                   | `secretsmanager:GetSecretValue`                         |
+| DynamoDB            | `DynamoDBProvider.Get(string)` `DynamoDBProvider.Get<T>(string)`                 | `dynamodb:GetItem`                                      |
+| DynamoDB            | `DynamoDBProvider.GetMultiple(string)` `DynamoDBProvider.GetMultiple<T>(string)` | `dynamodb:Query`                                        |
 
 ## SSM Parameter Store
 
@@ -138,10 +139,12 @@ in order to get data from other regions or use specific credentials.
 
 The AWS Systems Manager Parameter Store provider supports two additional arguments for the `Get()` and `GetMultiple()` methods:
 
-| Option     | Default | Description |
-|---------------|---------|-------------|
-| **WithDecryption()**   | `False` | Will automatically decrypt the parameter. |
-| **Recursive()** | `False`  | For `GetMultiple()` only, will fetch all parameter values recursively based on a path prefix. |
+| Option               | Default | Description                                                                                   |
+| -------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| **WithDecryption()** | `False` | Will automatically decrypt the parameter.                                                     |
+| **Recursive()**      | `False` | For `GetMultiple()` only, will fetch all parameter values recursively based on a path prefix. |
+
+You can create `SecureString` parameters, which are parameters that have a plaintext parameter name and an encrypted parameter value. If you don't use the `WithDecryption()` option, you will get an encrypted value. Read [here](https://docs.aws.amazon.com/kms/latest/developerguide/services-parameter-store.html) about best practices using KMS to secure your parameters.
 
 **Example:**
 
@@ -350,8 +353,8 @@ DynamoDB provider can be customized at initialization to match your table struct
 | -------------- | --------- | ------- | ---------------------------------------------------------------------------------------------------------- |
 | **table_name** | **Yes**   | *(N/A)* | Name of the DynamoDB table containing the parameter values.                                                |
 | **key_attr**   | No        | `id`    | Hash key for the DynamoDB table.                                                                           |
-| **sort_attr**  | No        | `sk`    | Range key for the DynamoDB table. You don't need to set this if you don't use the `GetMultiple()` method. |
-| **value_attr** | No        | `value` | Name of the attribute containing the parameter value.                
+| **sort_attr**  | No        | `sk`    | Range key for the DynamoDB table. You don't need to set this if you don't use the `GetMultiple()` method.  |
+| **value_attr** | No        | `value` | Name of the attribute containing the parameter value.                                                      |
 
 === "DynamoDBProvider"
 
