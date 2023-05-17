@@ -44,7 +44,7 @@ jobs:
         uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
         with:
           dotnet-version: 6.0.405
-      - uses: nikeee/docfx-action@v1.0.0
+      - uses: nikeee/docfx-action@b9c2cf92e3b4aa06878a1410833a8828b4bdcd26 #1.0.0
         name: Build Documentation
         with:
           args: apidocs/docfx.json
