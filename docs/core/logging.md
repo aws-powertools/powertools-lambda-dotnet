@@ -12,6 +12,14 @@ The logging utility provides a Lambda optimized logger with output structured as
 * Log sampling enables DEBUG log level for a percentage of requests (disabled by default)
 * Append additional keys to structured log at any point in time
 
+## Installation
+
+Powertools are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+
+* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
+
+    `dotnet add package AWS.Lambda.Powertools.Logging`
+
 ## Getting started
 
 Logging requires two settings:
