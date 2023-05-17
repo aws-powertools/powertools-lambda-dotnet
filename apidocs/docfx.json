@@ -3,11 +3,8 @@
     {
       "src": [
         {
-          "files": [
-            "**/*.csproj"
-          ],
-          "src": "../libraries/src/",
-          "force": true
+          "files": ["**/*.csproj"],
+          "src": "../libraries/src/"
         }
       ],
       "dest": "api",
@@ -21,23 +18,16 @@
   "build": {
     "content": [
       {
-        "files": ["api/**.yml", "api/index.md"]
+        "files": ["api/**"]
       },
       {
-        "files": ["toc.yml", "*.md"]
+        "files": ["toc.yml", "*.md"],
+        "exclude": ["_site/**", "**/bin/**", "**/obj/**", "**/[Tt]ests/**"]
       }
     ],
     "resource": [
       {
-        "files": [
-          "images/**"
-        ]
-      }
-    ],
-    "overwrite": [
-      {
-        "files": ["apidoc/**.md"],
-        "exclude": ["obj/**", "_site/**"]
+        "files": ["images/**"]
       }
     ],
     "dest": "_site",
