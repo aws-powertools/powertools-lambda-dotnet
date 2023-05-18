@@ -7,6 +7,56 @@ All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 
+<a name="1.3.0"></a>
+## [1.3.0] - 2023-05-12
+## Documentation
+
+* fixed formatting and updated content
+
+## Features
+
+* add package readme
+
+## Maintenance
+
+* **ci:** skip analytics on forks
+
+## Pull Requests
+
+* Merge pull request [#268](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/268) from amirkaws/amirkaws-release-version-1.3.0
+* Merge pull request [#167](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/167) from amirkaws/amirkaws-feature-parameters
+* Merge pull request [#1](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/1) from sliedig/amirkaws-feature-parameters
+* Merge pull request [#264](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/264) from awslabs/chore(ci)-skip-analytics-on-forks
+* Merge pull request [#262](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/262) from awslabs/chorebump-version-1.2.0-release
+
+
+<a name="1.2.0"></a>
+## [1.2.0] - 2023-05-05
+## Pull Requests
+
+* Merge pull request [#258](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/258) from amirkaws/amirkaws-release-version-1.2.0
+* Merge pull request [#226](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/226) from hjgraca/feat_support_high_resolution_metrics
+
+
+<a name="1.1.0"></a>
+## [1.1.0] - 2023-05-05
+## Maintenance
+
+* add Lambda Powertools for Python in issue templates
+* add workflow to dispatch analytics fetching
+* **ci:** add workflow to dispatch analytics fetching
+
+## Pull Requests
+
+* Merge pull request [#255](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/255) from awslabs/fix-remove-real-env-tests
+* Merge pull request [#253](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/253) from amirkaws/amirkaws-release-v1.1.0
+* Merge pull request [#246](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/246) from hjgraca/feat_set-execution-context
+* Merge pull request [#251](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/251) from leandrodamascena/issues-templates/python
+* Merge pull request [#241](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/241) from awslabs/update-changelog-4691350388
+* Merge pull request [#237](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/237) from hjgraca/changelog-update-pipeline
+* Merge pull request [#235](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/235) from amirkaws/amirkaws-update-examples-nuget-references-release-v1.0.1
+
+
 <a name="v1.0.1"></a>
 ## [v1.0.1] - 2023-04-06
 ## Pull Requests
@@ -279,7 +329,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Merge pull request [#1](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/1) from sliedig/develop
 
 
-[Unreleased]: https://github.com/awslabs/aws-lambda-powertools-dotnet/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/awslabs/aws-lambda-powertools-dotnet/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/awslabs/aws-lambda-powertools-dotnet/compare/1.2.0...1.3.0
+[1.2.0]: https://github.com/awslabs/aws-lambda-powertools-dotnet/compare/1.1.0...1.2.0
+[1.1.0]: https://github.com/awslabs/aws-lambda-powertools-dotnet/compare/v1.0.1...1.1.0
 [v1.0.1]: https://github.com/awslabs/aws-lambda-powertools-dotnet/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/awslabs/aws-lambda-powertools-dotnet/compare/v0.0.2-preview...v1.0.0
 [v0.0.2-preview]: https://github.com/awslabs/aws-lambda-powertools-dotnet/compare/v0.0.1-preview.1...v0.0.2-preview
