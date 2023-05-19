@@ -53,21 +53,10 @@ public sealed class Idempotency
         PersistenceStore = persistenceStore;
     }
 
-    private class Holder
-    {
-        // Explicit static constructor to tell C# compiler
-        // not to mark type as beforefieldinit
-        static Holder()
-        {
-        }
-
-        internal static readonly Idempotency IdempotencyInstance = new Idempotency(PowertoolsConfigurations.Instance);
-    }
-
     /// <summary>
     /// Holds the configuration for idempotency:
     /// </summary>
-    public static Idempotency Instance => Holder.IdempotencyInstance;
+    public static Idempotency Instance { get; } = new Idempotency(PowertoolsConfigurations.Instance);
 
     /// <summary>
     /// Use this method to configure persistence layer (mandatory) and idempotency options (optional)
