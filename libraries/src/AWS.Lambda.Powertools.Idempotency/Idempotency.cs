@@ -54,14 +54,13 @@ public sealed class Idempotency
     }
 
     /// <summary>
-    /// Holds the configuration for idempotency:
+    /// Holds the idempotency Instance:
     /// </summary>
     public static Idempotency Instance { get; } = new Idempotency(PowertoolsConfigurations.Instance);
 
     /// <summary>
     /// Use this method to configure persistence layer (mandatory) and idempotency options (optional)
     /// </summary>
-    /// <returns></returns>
     public static void Configure(Action<IdempotencyBuilder> configurationAction)
     {
         var builder = new IdempotencyBuilder();
@@ -96,7 +95,7 @@ public sealed class Idempotency
         /// Set the persistence layer to use for storing the request and response
         /// </summary>
         /// <param name="persistenceStore"></param>
-        /// <returns></returns>
+        /// <returns>IdempotencyBuilder</returns>
         public IdempotencyBuilder WithPersistenceStore(BasePersistenceStore persistenceStore)
         {
             _store = persistenceStore;
@@ -107,7 +106,7 @@ public sealed class Idempotency
         /// Configure Idempotency to use DynamoDBPersistenceStore
         /// </summary>
         /// <param name="builderAction">The builder being used to configure the <see cref="BasePersistenceStore"/></param>
-        /// <returns></returns>
+        /// <returns>IdempotencyBuilder</returns>
         public IdempotencyBuilder UseDynamoDb(Action<DynamoDBPersistenceStoreBuilder> builderAction)
         {
             var builder =
@@ -121,7 +120,7 @@ public sealed class Idempotency
         /// Configure Idempotency to use DynamoDBPersistenceStore
         /// </summary>
         /// <param name="tableName">The DynamoDb table name</param>
-        /// <returns></returns>
+        /// <returns>IdempotencyBuilder</returns>
         public IdempotencyBuilder UseDynamoDb(string tableName)
         {
             var builder =
@@ -134,7 +133,7 @@ public sealed class Idempotency
         /// Set the idempotency configurations
         /// </summary>
         /// <param name="builderAction">The builder being used to configure the <see cref="IdempotencyOptions"/>.</param>
-        /// <returns></returns>
+        /// <returns>IdempotencyBuilder</returns>
         public IdempotencyBuilder WithOptions(Action<IdempotencyOptionsBuilder> builderAction)
         {
             var builder = new IdempotencyOptionsBuilder();
@@ -147,7 +146,7 @@ public sealed class Idempotency
         /// Set the default idempotency configurations
         /// </summary>
         /// <param name="options"></param>
-        /// <returns></returns>
+        /// <returns>IdempotencyBuilder</returns>
         public IdempotencyBuilder WithOptions(IdempotencyOptions options)
         {
             _options = options;

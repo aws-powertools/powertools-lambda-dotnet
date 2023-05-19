@@ -31,9 +31,8 @@
 
     <ItemGroup>
       <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
-      <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.43" />
-      <PackageReference Include="JmesPath.Net" Version="1.0.182" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.103.7" />
+      <PackageReference Include="JmesPath.Net" Version="1.0.308" />
     </ItemGroup>
 
     <ItemGroup>
