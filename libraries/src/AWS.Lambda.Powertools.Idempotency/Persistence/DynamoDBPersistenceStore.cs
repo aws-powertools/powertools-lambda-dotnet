@@ -19,8 +19,9 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
-using AWS.Lambda.Powertools.Idempotency.Internal;
+using Constants = AWS.Lambda.Powertools.Idempotency.Internal.Constants;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 
@@ -33,22 +34,22 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     private readonly string _tableName;
     private readonly string _keyAttr;
     private readonly string _staticPkValue;
-    private readonly string? _sortKeyAttr;
+    private readonly string _sortKeyAttr;
     private readonly string _expiryAttr;
     private readonly string _statusAttr;
     private readonly string _dataAttr;
     private readonly string _validationAttr;
-    private readonly AmazonDynamoDBClient? _dynamoDbClient;
+    private readonly AmazonDynamoDBClient _dynamoDbClient;
 
     internal DynamoDBPersistenceStore(string tableName,
         string keyAttr,
         string staticPkValue,
-        string? sortKeyAttr,
+        string sortKeyAttr,
         string expiryAttr,
         string statusAttr,
         string dataAttr,
         string validationAttr,
-        AmazonDynamoDBClient? client)
+        AmazonDynamoDBClient client)
     {
         _tableName = tableName;
         _keyAttr = keyAttr;
@@ -65,10 +66,9 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         } 
         else 
         {
-            string? idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv);
-            if (idempotencyDisabledEnv == null || idempotencyDisabledEnv.Equals("false")) 
+            if (PowertoolsConfigurations.Instance.IdempotencyDisabled) 
             {
-                AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig
+                var clientConfig = new AmazonDynamoDBConfig
                 {
                     RegionEndpoint = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable(Constants.AwsRegionEnv))
                 };
@@ -91,7 +91,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
             ConsistentRead = true,
             Key = GetKey(idempotencyKey)
         };
-        GetItemResponse response = await _dynamoDbClient!.GetItemAsync(getItemRequest);
+        var response = await _dynamoDbClient!.GetItemAsync(getItemRequest);
 
         if (!response.IsItemSet)
         {
@@ -105,12 +105,16 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     /// <inheritdoc />
     public override async Task PutRecord(DataRecord record, DateTimeOffset now)
     {
-        Dictionary<String, AttributeValue> item = new(GetKey(record.IdempotencyKey));
-        item.Add(this._expiryAttr, new AttributeValue()
+        Dictionary<string, AttributeValue> item = new(GetKey(record.IdempotencyKey))
         {
-            N = record.ExpiryTimestamp.ToString()
-        });
-        item.Add(this._statusAttr, new AttributeValue(record.Status.ToString()));
+            {
+                this._expiryAttr, new AttributeValue()
+                {
+                    N = record.ExpiryTimestamp.ToString()
+                }
+            },
+            { this._statusAttr, new AttributeValue(record.Status.ToString()) }
+        };
 
         if (PayloadValidationEnabled)
         {
@@ -127,7 +131,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
                 {"#expiry", this._expiryAttr}
             };
 
-            PutItemRequest request = new PutItemRequest()
+            var request = new PutItemRequest()
             {
                 TableName = _tableName,
                 Item = item,
@@ -153,7 +157,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     public override async Task UpdateRecord(DataRecord record) 
     {
         Log.WriteDebug("Updating record for idempotency key: {0}", record.IdempotencyKey);
-        string updateExpression = "SET #response_data = :response_data, #expiry = :expiry, #status = :status";
+        var updateExpression = "SET #response_data = :response_data, #expiry = :expiry, #status = :status";
 
         var expressionAttributeNames = new Dictionary<string, string>
         {
@@ -207,10 +211,10 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     private DataRecord ItemToRecord(Dictionary<String, AttributeValue> item)
     {
         // data and validation payload may be null
-        var hasDataAttribute = item.TryGetValue(_dataAttr, out AttributeValue? data);
-        var hasValidationAttribute = item.TryGetValue(_validationAttr, out AttributeValue? validation);
+        var hasDataAttribute = item.TryGetValue(_dataAttr, out var data);
+        var hasValidationAttribute = item.TryGetValue(_validationAttr, out var validation);
 
-        return new DataRecord(item[_sortKeyAttr != null ? _sortKeyAttr : _keyAttr].S,
+        return new DataRecord(item[_sortKeyAttr ?? _keyAttr].S,
             Enum.Parse<DataRecord.DataRecordStatus>(item[_statusAttr].S),
             long.Parse(item[_expiryAttr].N),
             hasDataAttribute ? data?.S : null,
@@ -249,17 +253,17 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
 // ReSharper disable once InconsistentNaming
 public class DynamoDBPersistenceStoreBuilder
 {
-    private static readonly string? FuncEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
+    private static readonly string FuncEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
 
     private string _tableName = null!;
     private string _keyAttr = "id";
     private string _staticPkValue = string.Format("idempotency#%s", FuncEnv ?? "");
-    private string? _sortKeyAttr = null;
+    private string _sortKeyAttr;
     private string _expiryAttr = "expiration";
     private string _statusAttr = "status";
     private string _dataAttr = "data";
     private string _validationAttr = "validation";
-    private AmazonDynamoDBClient? _dynamoDbClient;
+    private AmazonDynamoDBClient _dynamoDbClient;
 
     /// <summary>
     /// Initialize and return a new instance of {@link DynamoDBPersistenceStore}.

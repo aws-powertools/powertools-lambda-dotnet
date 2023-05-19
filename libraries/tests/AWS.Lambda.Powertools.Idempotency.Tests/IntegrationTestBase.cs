@@ -26,23 +26,25 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests;
 
 public class IntegrationTestBase : IAsyncLifetime
 {
-    protected const string TABLE_NAME = "idempotency_table";
-    protected AmazonDynamoDBClient client;
-    private protected DynamoDBPersistenceStore _dynamoDbPersistenceStore;
+    protected const string TableName = "idempotency_table";
+    protected AmazonDynamoDBClient Client;
+    private protected DynamoDBPersistenceStore DynamoDbPersistenceStore;
 
     public async Task InitializeAsync()
     {
+        // initialize TestContainers or Ductus.FluentDocker or have DynamoDb local docker running
+        
         var credentials = new BasicAWSCredentials("FAKE", "FAKE");
         var amazonDynamoDbConfig = new AmazonDynamoDBConfig()
         {
             ServiceURL = new UriBuilder("http", "localhost", 8000).Uri.ToString(),
             AuthenticationRegion = "us-east-1"
         };
-        client = new AmazonDynamoDBClient(credentials, amazonDynamoDbConfig);
+        Client = new AmazonDynamoDBClient(credentials, amazonDynamoDbConfig);
 
         var createTableRequest = new CreateTableRequest
         {
-            TableName = TABLE_NAME,
+            TableName = TableName,
             KeySchema = new List<KeySchemaElement>()
             {
                 new("id", KeyType.HASH)
@@ -59,8 +61,8 @@ public class IntegrationTestBase : IAsyncLifetime
         };
         try
         {
-            await client.CreateTableAsync(createTableRequest);
-            var response = await client.DescribeTableAsync(TABLE_NAME);
+            await Client.CreateTableAsync(createTableRequest);
+            var response = await Client.DescribeTableAsync(TableName);
             if (response == null)
             {
                 throw new NullReferenceException("Table was not created within the expected time");
@@ -71,17 +73,17 @@ public class IntegrationTestBase : IAsyncLifetime
             Console.WriteLine(e.Message);
         }
         
-        _dynamoDbPersistenceStore = new DynamoDBPersistenceStoreBuilder()
-            .WithTableName(TABLE_NAME)
-            .WithDynamoDBClient(client)
+        DynamoDbPersistenceStore = new DynamoDBPersistenceStoreBuilder()
+            .WithTableName(TableName)
+            .WithDynamoDBClient(Client)
             .Build();
-        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null);
+        DynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null);
     }
 
     public Task DisposeAsync()
     {
         // Make sure delete item after each test
-        _dynamoDbPersistenceStore.DeleteRecord("key").ConfigureAwait(false);
+        DynamoDbPersistenceStore.DeleteRecord("key").ConfigureAwait(false);
         //_dynamoContainer.DisposeAsync().ConfigureAwait(false);
         return Task.CompletedTask;
     }

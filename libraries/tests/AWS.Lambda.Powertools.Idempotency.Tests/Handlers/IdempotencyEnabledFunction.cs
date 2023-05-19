@@ -27,7 +27,7 @@ public class IdempotencyEnabledFunction
     public Task<Basket> Handle(Product input, ILambdaContext context)
     {
         HandlerExecuted = true;
-        Basket basket = new Basket();
+        var basket = new Basket();
         basket.Add(input);
         var result = Task.FromResult(basket);
 

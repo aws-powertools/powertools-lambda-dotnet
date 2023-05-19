@@ -20,6 +20,7 @@ using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
+using Constants = AWS.Lambda.Powertools.Common.Constants;
 
 namespace AWS.Lambda.Powertools.Idempotency;
 
@@ -67,11 +68,11 @@ public class IdempotentAttribute : UniversalWrapperAttribute
     /// <param name="args">The arguments.</param>
     /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
     /// <returns>T.</returns>
-    protected sealed override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
+    protected internal sealed override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
     {
         throw new IdempotencyConfigurationException("Idempotent attribute can be used on async methods only");
     }
-
+    
     /// <summary>
     ///     Wrap as an asynchronous operation.
     /// </summary>
@@ -80,27 +81,24 @@ public class IdempotentAttribute : UniversalWrapperAttribute
     /// <param name="args">The arguments.</param>
     /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
     /// <returns>A Task&lt;T&gt; representing the asynchronous operation.</returns>
-    protected sealed override async Task<T> WrapAsync<T>(
+    protected internal sealed override async Task<T> WrapAsync<T>(
         Func<object[], Task<T>> target, object[] args, AspectEventArgs eventArgs)
     {
-        
-        string? idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv);
+        var idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv);
         if (idempotencyDisabledEnv is "true")
         {
             return await base.WrapAsync(target, args, eventArgs);
         }
-        var payload = JsonSerializer.SerializeToDocument(args[0]);
+        var payload = JsonDocument.Parse(JsonSerializer.Serialize(args[0]));
         if (payload == null)
         {
             throw new IdempotencyConfigurationException("Unable to get payload from the method. Ensure there is at least one parameter or that you use @IdempotencyKey");
         }
         
-        var types = new[] {typeof(T)};
-        var genericType = typeof(IdempotencyHandler<>).MakeGenericType(types);
-        var idempotencyHandler = Activator.CreateInstance(genericType,target, args, eventArgs.Method.Name, payload) as IdempotencyHandler<T>;
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(target, args, eventArgs.Method.Name, payload);
         if (idempotencyHandler == null)
         {
-            throw new Exception("Failed to create an instance of IdempotencyHandler");
+            throw new Exception("Failed to create an instance of IdempotencyAspectHandler");
         }
         var result = await idempotencyHandler.Handle();
         return result;

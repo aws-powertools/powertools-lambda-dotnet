@@ -29,14 +29,14 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests;
 
 public class IdempotencyTest
 {
-    protected const string TABLE_NAME = "idempotency_table";
+    private const string TableName = "idempotency_table";
     
     [Fact]
     public async Task EndToEndTest() 
     {
         var client = new AmazonDynamoDBClient();
         
-        IdempotencyFunction function = new IdempotencyFunction(client);
+        var function = new IdempotencyFunction(client);
         
         var options = new JsonSerializerOptions
         {
@@ -44,10 +44,10 @@ public class IdempotencyTest
         };
         
         //var persistenceStore = new InMemoryPersistenceStore();
-        TestLambdaContext context = new TestLambdaContext();
-        var request = JsonSerializer.Deserialize<APIGatewayProxyRequest>(File.ReadAllText("./resources/apigw_event2.json"),options);
+        var context = new TestLambdaContext();
+        var request = JsonSerializer.Deserialize<APIGatewayProxyRequest>(await File.ReadAllTextAsync("./resources/apigw_event2.json"),options);
         
-        APIGatewayProxyResponse response = await function.Handle(request, context);
+        var response = await function.Handle(request, context);
         function.HandlerExecuted.Should().BeTrue();
 
         function.HandlerExecuted = false;
@@ -60,7 +60,7 @@ public class IdempotencyTest
 
         var scanResponse = await client.ScanAsync(new ScanRequest
         {
-            TableName = TABLE_NAME
+            TableName = TableName
         });
         scanResponse.Count.Should().Be(1);
     }

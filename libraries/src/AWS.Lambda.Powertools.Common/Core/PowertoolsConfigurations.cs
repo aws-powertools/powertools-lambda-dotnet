@@ -190,4 +190,8 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     {
         _systemWrapper.SetExecutionEnvironment(type);
     }
+
+    /// <inheritdoc />
+    public bool IdempotencyDisabled =>
+        GetEnvironmentVariableOrDefault(Constants.IdempotencyDisabledEnv, false);
 }

@@ -30,12 +30,12 @@ public class IdempotencyPersistenceLayerException : Exception
     }
 
     /// <inheritdoc />
-    public IdempotencyPersistenceLayerException(string? message) : base(message)
+    public IdempotencyPersistenceLayerException(string message) : base(message)
     {
     }
 
     /// <inheritdoc />
-    public IdempotencyPersistenceLayerException(string? message, Exception? innerException) : base(message, innerException)
+    public IdempotencyPersistenceLayerException(string message, Exception innerException) : base(message, innerException)
     {
     }
 }

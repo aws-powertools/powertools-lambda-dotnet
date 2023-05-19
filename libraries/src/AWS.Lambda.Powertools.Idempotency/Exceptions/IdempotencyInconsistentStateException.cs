@@ -31,12 +31,12 @@ public class IdempotencyInconsistentStateException : Exception
     }
 
     /// <inheritdoc />
-    public IdempotencyInconsistentStateException(string? message) : base(message)
+    public IdempotencyInconsistentStateException(string message) : base(message)
     {
     }
 
     /// <inheritdoc />
-    public IdempotencyInconsistentStateException(string? message, Exception? innerException) : base(message, innerException)
+    public IdempotencyInconsistentStateException(string message, Exception innerException) : base(message, innerException)
     {
     }
 }

@@ -31,12 +31,12 @@ public class IdempotencyOptions
     /// <c>Records[0].Sns.Message | powertools_json(@)</c> for SNSEvent
     /// <c>Detail</c> for ScheduledEvent (EventBridge / CloudWatch events)
     /// </summary>
-    public string? EventKeyJmesPath { get; }
+    public string EventKeyJmesPath { get; }
     /// <summary>
     /// JMES Path of a part of the payload to be used for validation
     /// See <seealso href="https://jmespath.org/">https://jmespath.org/</seealso>
     /// </summary>
-    public string? PayloadValidationJmesPath { get; }
+    public string PayloadValidationJmesPath { get; }
     /// <summary>
     /// Boolean to indicate if we must throw an Exception when
     /// idempotency key could not be found in the payload.
@@ -66,8 +66,8 @@ public class IdempotencyOptions
     public ILog Log { get; }
 
     internal IdempotencyOptions(
-        string? eventKeyJmesPath, 
-        string? payloadValidationJmesPath, 
+        string eventKeyJmesPath, 
+        string payloadValidationJmesPath, 
         bool throwOnNoIdempotencyKey, 
         bool useLocalCache, 
         int localCacheMaxItems, 

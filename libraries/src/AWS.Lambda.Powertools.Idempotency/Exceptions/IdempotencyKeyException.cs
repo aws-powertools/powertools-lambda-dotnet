@@ -31,12 +31,12 @@ public class IdempotencyKeyException : Exception
     }
 
     /// <inheritdoc />
-    public IdempotencyKeyException(string? message) : base(message)
+    public IdempotencyKeyException(string message) : base(message)
     {
     }
 
     /// <inheritdoc />
-    public IdempotencyKeyException(string? message, Exception? innerException) : base(message, innerException)
+    public IdempotencyKeyException(string message, Exception innerException) : base(message, innerException)
     {
     }
 }

@@ -78,7 +78,7 @@ public class BasePersistenceStoreTests
         
         persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
         
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         
         // Act
         await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
@@ -104,7 +104,7 @@ public class BasePersistenceStoreTests
             .WithEventKeyJmesPath("powertools_json(Body).id")
             .Build(), "myfunc");
 
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         
         // Act
         await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
@@ -115,6 +115,32 @@ public class BasePersistenceStoreTests
         dr.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
         dr.ResponseData.Should().BeNull();
         dr.IdempotencyKey.Should().Be("testFunction.myfunc#2fef178cc82be5ce3da6c5e0466a6182");
+        dr.PayloadHash.Should().BeEmpty();
+        persistenceStore.Status.Should().Be(1);
+    }
+    
+    [Fact]
+    public async Task SaveInProgress_WhenKeyJmesPathIsSetToMultipleFields_ShouldSaveRecordInStore_WithIdempotencyKeyEqualsKeyJmesPath()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+        
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithEventKeyJmesPath("powertools_json(Body).[id, message]") //[43876123454654,"Lambda rocks"]
+            .Build(), "myfunc");
+
+        var now = DateTimeOffset.UtcNow;
+        
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        
+        // Assert
+        var dr = persistenceStore.DataRecord;
+        dr.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
+        dr.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
+        dr.ResponseData.Should().BeNull();
+        dr.IdempotencyKey.Should().Be("testFunction.myfunc#5ca4c8c44d427e9d43ca918a24d6cf42");
         dr.PayloadHash.Should().BeEmpty();
         persistenceStore.Status.Should().Be(1);
     }
@@ -131,10 +157,10 @@ public class BasePersistenceStoreTests
             .WithEventKeyJmesPath("unavailable")
             .WithThrowOnNoIdempotencyKey(true) // should throw
             .Build(), "");
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         
         // Act
-        Func<Task> act = async () => await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        var act = async () => await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
         
         // Assert
         await act.Should()
@@ -155,13 +181,13 @@ public class BasePersistenceStoreTests
             .WithEventKeyJmesPath("unavailable")
             .Build(), "");
         
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         
         // Act
         await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
 
         // Assert
-        DataRecord dr = persistenceStore.DataRecord;
+        var dr = persistenceStore.DataRecord;
         dr.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         persistenceStore.Status.Should().Be(1);
     }
@@ -179,7 +205,7 @@ public class BasePersistenceStoreTests
             .WithEventKeyJmesPath("powertools_json(Body).id")
             .Build(), null, cache);
         
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         cache.Set("testFunction#2fef178cc82be5ce3da6c5e0466a6182",
             new DataRecord(
                 "testFunction#2fef178cc82be5ce3da6c5e0466a6182",
@@ -189,7 +215,7 @@ public class BasePersistenceStoreTests
         );
         
         // Act
-        Func<Task> act = () => persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        var act = () => persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
 
         // Assert
         await act.Should()
@@ -212,7 +238,7 @@ public class BasePersistenceStoreTests
             .WithExpiration(TimeSpan.FromSeconds(2))
             .Build(), null, cache);
         
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         cache.Set("testFunction#2fef178cc82be5ce3da6c5e0466a6182",
             new DataRecord(
                 "testFunction#2fef178cc82be5ce3da6c5e0466a6182",
@@ -225,7 +251,7 @@ public class BasePersistenceStoreTests
         await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
 
         // Assert
-        DataRecord dr = persistenceStore.DataRecord;
+        var dr = persistenceStore.DataRecord;
         dr.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         cache.Count.Should().Be(0);
         persistenceStore.Status.Should().Be(1);
@@ -242,15 +268,15 @@ public class BasePersistenceStoreTests
         LRUCache<string, DataRecord> cache = new ((int) 2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, cache);
 
-        Product product = new Product(34543, "product", 42);
+        var product = new Product(34543, "product", 42);
         
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         
         // Act
         await persistenceStore.SaveSuccess(JsonSerializer.SerializeToDocument(request)!, product, now);
 
         // Assert
-        DataRecord dr = persistenceStore.DataRecord;
+        var dr = persistenceStore.DataRecord;
         dr.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
         dr.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
         dr.ResponseData.Should().Be(JsonSerializer.Serialize(product));
@@ -271,8 +297,8 @@ public class BasePersistenceStoreTests
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), null, cache);
 
-        Product product = new Product(34543, "product", 42);
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var product = new Product(34543, "product", 42);
+        var now = DateTimeOffset.UtcNow;
         
         // Act
         await persistenceStore.SaveSuccess(JsonSerializer.SerializeToDocument(request)!, product, now);
@@ -281,7 +307,7 @@ public class BasePersistenceStoreTests
         persistenceStore.Status.Should().Be(2);
         cache.Count.Should().Be(1);
     
-        var foundDataRecord = cache.TryGet("testFunction#b105f675a45bab746c0723da594d3b06", out DataRecord record);
+        var foundDataRecord = cache.TryGet("testFunction#b105f675a45bab746c0723da594d3b06", out var record);
         foundDataRecord.Should().BeTrue();
         record.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
         record.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
@@ -302,10 +328,10 @@ public class BasePersistenceStoreTests
         LRUCache<string, DataRecord> cache = new((int) 2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "myfunc", cache);
 
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         
         // Act
-        DataRecord record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
+        var record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
         
         // Assert
         record.IdempotencyKey.Should().Be("testFunction.myfunc#b105f675a45bab746c0723da594d3b06");
@@ -325,8 +351,8 @@ public class BasePersistenceStoreTests
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), "myfunc", cache);
 
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        DataRecord dr = new DataRecord(
+        var now = DateTimeOffset.UtcNow;
+        var dr = new DataRecord(
             "testFunction.myfunc#b105f675a45bab746c0723da594d3b06",
             DataRecord.DataRecordStatus.COMPLETED,
             now.AddSeconds(3600).ToUnixTimeSeconds(),
@@ -335,7 +361,7 @@ public class BasePersistenceStoreTests
         cache.Set("testFunction.myfunc#b105f675a45bab746c0723da594d3b06", dr);
 
         // Act
-        DataRecord record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
+        var record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
         
         // Assert
         record.IdempotencyKey.Should().Be("testFunction.myfunc#b105f675a45bab746c0723da594d3b06");
@@ -354,8 +380,8 @@ public class BasePersistenceStoreTests
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), "myfunc", cache);
 
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        DataRecord dr = new DataRecord(
+        var now = DateTimeOffset.UtcNow;
+        var dr = new DataRecord(
             "testFunction.myfunc#b105f675a45bab746c0723da594d3b06",
             DataRecord.DataRecordStatus.COMPLETED,
             now.AddSeconds(-3).ToUnixTimeSeconds(),
@@ -364,7 +390,7 @@ public class BasePersistenceStoreTests
         cache.Set("testFunction.myfunc#b105f675a45bab746c0723da594d3b06", dr);
 
         // Act
-        DataRecord record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
+        var record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
         
         // Assert
         record.IdempotencyKey.Should().Be("testFunction.myfunc#b105f675a45bab746c0723da594d3b06");
@@ -387,7 +413,7 @@ public class BasePersistenceStoreTests
                 .Build(),
             "myfunc");
         
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         
         // Act
         Func<Task> act = () => persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
@@ -443,11 +469,11 @@ public class BasePersistenceStoreTests
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
-        string expectedHash = "70c24d88041893f7fbab4105b76fd9e1"; // MD5(Lambda rocks)
+        var expectedHash = "70c24d88041893f7fbab4105b76fd9e1"; // MD5(Lambda rocks)
         
         // Act
         var jsonValue = JsonValue.Create("Lambda rocks");
-        string generatedHash = persistenceStore.GenerateHash( JsonDocument.Parse(jsonValue.ToJsonString()).RootElement);
+        var generatedHash = persistenceStore.GenerateHash(JsonDocument.Parse(jsonValue!.ToJsonString()).RootElement);
         
         // Assert
         generatedHash.Should().Be(expectedHash);
@@ -459,11 +485,12 @@ public class BasePersistenceStoreTests
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
-        Product product = new Product(42, "Product", 12);
-        string expectedHash = "c83e720b399b3b4898c8734af177c53a"; // MD5({"Id":42,"Name":"Product","Price":12})
+        var product = new Product(42, "Product", 12);
+        var expectedHash = "c83e720b399b3b4898c8734af177c53a"; // MD5({"Id":42,"Name":"Product","Price":12})
         
         // Act
-        string generatedHash = persistenceStore.GenerateHash(JsonSerializer.SerializeToDocument(product)!.RootElement);
+        var jsonValue = JsonValue.Create(product);
+        var generatedHash = persistenceStore.GenerateHash(JsonDocument.Parse(jsonValue!.ToJsonString()).RootElement);
         
         // Assert
         generatedHash.Should().Be(expectedHash);
@@ -475,7 +502,7 @@ public class BasePersistenceStoreTests
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
-        string expectedHash = "bb84c94278119c8838649706df4db42b"; // MD5(256.42)
+        var expectedHash = "bb84c94278119c8838649706df4db42b"; // MD5(256.42)
         
         // Act
         var generatedHash = persistenceStore.GenerateHash(JsonDocument.Parse("256.42").RootElement);

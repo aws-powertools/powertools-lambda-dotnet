@@ -30,12 +30,12 @@ public class IdempotencyItemAlreadyExistsException : Exception
     }
 
     /// <inheritdoc />
-    public IdempotencyItemAlreadyExistsException(string? message) : base(message)
+    public IdempotencyItemAlreadyExistsException(string message) : base(message)
     {
     }
 
     /// <inheritdoc />
-    public IdempotencyItemAlreadyExistsException(string? message, Exception? innerException) : base(message, innerException)
+    public IdempotencyItemAlreadyExistsException(string message, Exception innerException) : base(message, innerException)
     {
     }
 }

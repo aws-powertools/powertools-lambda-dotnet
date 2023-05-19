@@ -17,7 +17,6 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
@@ -35,7 +34,7 @@ namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 public abstract class BasePersistenceStore : IPersistenceStore
 {
     private IdempotencyOptions _idempotencyOptions = null!;
-    private string? _functionName;
+    private string _functionName;
     /// <summary>
     /// Boolean to indicate whether or not payload validation is enabled
     /// </summary>
@@ -51,10 +50,10 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     /// <param name="idempotencyOptions">Idempotency configuration settings</param>
     /// <param name="functionName">The name of the function being decorated</param>
-    public void Configure(IdempotencyOptions idempotencyOptions, string? functionName)
+    public void Configure(IdempotencyOptions idempotencyOptions, string functionName)
     {
-        string? funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
-        _functionName = funcEnv != null ? funcEnv : "testFunction";
+        var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
+        _functionName = funcEnv ?? "testFunction";
         if (!string.IsNullOrWhiteSpace(functionName))
         {
             _functionName += "." + functionName;
@@ -71,7 +70,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         var useLocalCache = _idempotencyOptions.UseLocalCache;
         if (useLocalCache)
         {
-            _cache = new (_idempotencyOptions.LocalCacheMaxItems);
+            _cache = new LRUCache<string, DataRecord>(_idempotencyOptions.LocalCacheMaxItems);
         }
     }
     
@@ -92,7 +91,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="now">The current date time</param>
     public virtual async Task SaveSuccess(JsonDocument data, object result, DateTimeOffset now)
     {
-        string responseJson = JsonSerializer.Serialize(result);
+        var responseJson = JsonSerializer.Serialize(result);
         var record = new DataRecord(
             GetHashedIdempotencyKey(data),
             DataRecord.DataRecordStatus.COMPLETED,
@@ -113,14 +112,14 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <exception cref="IdempotencyItemAlreadyExistsException"></exception>
     public virtual async Task SaveInProgress(JsonDocument data, DateTimeOffset now)
     {
-        string idempotencyKey = GetHashedIdempotencyKey(data);
+        var idempotencyKey = GetHashedIdempotencyKey(data);
         
         if (RetrieveFromCache(idempotencyKey, now) != null)
         {
             throw new IdempotencyItemAlreadyExistsException();
         }
 
-        DataRecord record = new DataRecord(
+        var record = new DataRecord(
             idempotencyKey,
             DataRecord.DataRecordStatus.INPROGRESS,
             GetExpiryEpochSecond(now),
@@ -138,7 +137,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="throwable">The throwable thrown by the function</param>
     public virtual async Task DeleteRecord(JsonDocument data, Exception throwable)
     {
-        string idemPotencyKey = GetHashedIdempotencyKey(data);
+        var idemPotencyKey = GetHashedIdempotencyKey(data);
 
         Log.WriteDebug("Function raised an exception {0}. " +
                   "Clearing in progress record in persistence store for idempotency key: {1}",
@@ -157,9 +156,9 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <returns>DataRecord representation of existing record found in persistence store</returns>
     public virtual async Task<DataRecord> GetRecord(JsonDocument data, DateTimeOffset now)
     {
-        string idempotencyKey = GetHashedIdempotencyKey(data);
+        var idempotencyKey = GetHashedIdempotencyKey(data);
 
-        DataRecord? cachedRecord = RetrieveFromCache(idempotencyKey, now);
+        var cachedRecord = RetrieveFromCache(idempotencyKey, now);
         if (cachedRecord != null)
         {
             Log.WriteDebug("Idempotency record found in cache with idempotency key: {0}", idempotencyKey);
@@ -167,7 +166,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
             return cachedRecord;
         }
 
-        DataRecord record = await GetRecord(idempotencyKey);
+        var record = await GetRecord(idempotencyKey);
         SaveToCache(record);
         ValidatePayload(data, record);
         return record;
@@ -197,23 +196,21 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <exception cref="IdempotencyValidationException"></exception>
     private void ValidatePayload(JsonDocument data, DataRecord dataRecord)
     {
-        if (PayloadValidationEnabled)
-        {
-            string dataHash = GetHashedPayload(data);
+        if (!PayloadValidationEnabled) return;
+        var dataHash = GetHashedPayload(data);
 
-            if (dataHash != dataRecord.PayloadHash)
-            {
-                throw new IdempotencyValidationException("Payload does not match stored record for this event key");
-            }
+        if (dataHash != dataRecord.PayloadHash)
+        {
+            throw new IdempotencyValidationException("Payload does not match stored record for this event key");
         }
     }
     
-    private DataRecord? RetrieveFromCache(string idempotencyKey, DateTimeOffset now)
+    private DataRecord RetrieveFromCache(string idempotencyKey, DateTimeOffset now)
     {
         if (!_idempotencyOptions.UseLocalCache)
             return null;
         
-        if (_cache.TryGet(idempotencyKey, out DataRecord record) && record!=null)
+        if (_cache.TryGet(idempotencyKey, out var record) && record!=null)
         {
             if (!record.IsExpired(now)) 
             {
@@ -290,7 +287,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
             Log.WriteWarning("No data found to create a hashed idempotency key. JMESPath: {0}", _idempotencyOptions.EventKeyJmesPath ?? string.Empty);
         }
 
-        string hash = GenerateHash(node);
+        var hash = GenerateHash(node);
         return _functionName + "#" + hash;
     }
 
@@ -312,37 +309,13 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <exception cref="ArgumentException"></exception>
     internal string GenerateHash(JsonElement data)
     {
-        var node = data;
-        // if (data is JObject or JArray) // if array or object, use the json string representation, otherwise get the real value
-        // {
-        //     node = data;
-        // }
-        // else if (data.Type == JsonNodeType.String)
-        // {
-        //     node = data.Value<string>();
-        // }
-        // else if (data.Type == JsonNodeType.Integer)
-        // {
-        //     node = data.Value<long>();
-        // }
-        // else if (data.Type == JsonNodeType.Float)
-        // {
-        //     node = data.Value<double>();
-        // }
-        // else if (data.Type == JsonNodeType.Boolean)
-        // {
-        //     node = data.Value<bool>();
-        // }
-        // else node = data; // anything else
-
-        
         using var hashAlgorithm = HashAlgorithm.Create(_idempotencyOptions.HashFunction);
         if (hashAlgorithm == null)
         {
             throw new ArgumentException("Invalid HashAlgorithm");
         }
-        var stringToHash = node.ToString();
-        string hash = GetHash(hashAlgorithm, stringToHash);
+        var stringToHash = data.ToString();
+        var hash = GetHash(hashAlgorithm, stringToHash);
         
         return hash;
     }
@@ -350,7 +323,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     private static string GetHash(HashAlgorithm hashAlgorithm, string input)
     {
         // Convert the input string to a byte array and compute the hash.
-        byte[] data = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
+        var data = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
         
         // Create a new Stringbuilder to collect the bytes
         // and create a string.
@@ -358,7 +331,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         
         // Loop through each byte of the hashed data
         // and format each one as a hexadecimal string.
-        for (int i = 0; i < data.Length; i++)
+        for (var i = 0; i < data.Length; i++)
         {
             sBuilder.Append(data[i].ToString("x2"));
         }

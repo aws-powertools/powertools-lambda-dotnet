@@ -11,8 +11,8 @@ public class IdempotencyOptionsBuilder
     private int _localCacheMaxItems = 256;
     private bool _useLocalCache = false;
     private long _expirationInSeconds = 60 * 60; // 1 hour
-    private string? _eventKeyJmesPath = null;
-    private string? _payloadValidationJmesPath = null;
+    private string _eventKeyJmesPath = null;
+    private string _payloadValidationJmesPath = null;
     private bool _throwOnNoIdempotencyKey = false;
     private string _hashFunction = "MD5";
     private ILog _log = new NullLog();

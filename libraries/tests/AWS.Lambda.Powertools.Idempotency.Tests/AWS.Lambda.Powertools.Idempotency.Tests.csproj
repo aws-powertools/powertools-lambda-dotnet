@@ -27,6 +27,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>

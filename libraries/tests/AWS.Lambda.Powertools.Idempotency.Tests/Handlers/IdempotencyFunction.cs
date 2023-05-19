@@ -19,6 +19,7 @@ using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
@@ -37,6 +38,7 @@ public class IdempotencyFunction
             builder
                 .WithOptions(optionsBuilder =>
                     optionsBuilder
+                        //.WithUseLocalCache(true)
                         .WithEventKeyJmesPath("powertools_json(Body).address")
                         .WithExpiration(TimeSpan.FromSeconds(20)))
                 .UseDynamoDb(storeBuilder =>
@@ -50,6 +52,7 @@ public class IdempotencyFunction
     public async Task<APIGatewayProxyResponse> Handle(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
         HandlerExecuted = true;
+
         var result= await InternalFunctionHandler(apigProxyEvent,context);
 
         return result;
@@ -66,9 +69,9 @@ public class IdempotencyFunction
 
         try
         {
-            string address = JsonDocument.Parse(apigProxyEvent.Body).RootElement.GetProperty("address").GetString();
-            string pageContents = await GetPageContents(address);
-            string output = $"{{ \"message\": \"hello world\", \"location\": \"{pageContents}\" }}";
+            var address = JsonDocument.Parse(apigProxyEvent.Body).RootElement.GetProperty("address").GetString();
+            var pageContents = await GetPageContents(address);
+            var output = $"{{ \"message\": \"hello world\", \"location\": \"{pageContents}\" }}";
 
             return new APIGatewayProxyResponse
             {
@@ -92,10 +95,10 @@ public class IdempotencyFunction
     // we could actually also put the @Idempotent annotation here
     private async Task<string> GetPageContents(string address)
     {
-        HttpClient client = new HttpClient();
-        using HttpResponseMessage response = await client.GetAsync(address);
-        using HttpContent content = response.Content;
-        string pageContent = await content.ReadAsStringAsync();
+        var client = new HttpClient();
+        using var response = await client.GetAsync(address);
+        using var content = response.Content;
+        var pageContent = await content.ReadAsStringAsync();
         
         return pageContent;
     }

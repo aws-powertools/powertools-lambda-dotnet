@@ -30,12 +30,12 @@ public class IdempotencyItemNotFoundException : Exception
     }
 
     /// <inheritdoc />
-    public IdempotencyItemNotFoundException(string? message) : base(message)
+    public IdempotencyItemNotFoundException(string message) : base(message)
     {
     }
 
     /// <inheritdoc />
-    public IdempotencyItemNotFoundException(string? message, Exception? innerException) : base(message, innerException)
+    public IdempotencyItemNotFoundException(string message, Exception innerException) : base(message, innerException)
     {
     }
 }

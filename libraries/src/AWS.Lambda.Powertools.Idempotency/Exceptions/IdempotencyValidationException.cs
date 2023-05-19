@@ -31,12 +31,12 @@ public class IdempotencyValidationException : Exception
     }
 
     /// <inheritdoc />
-    public IdempotencyValidationException(string? message) : base(message)
+    public IdempotencyValidationException(string message) : base(message)
     {
     }
 
     /// <inheritdoc />
-    public IdempotencyValidationException(string? message, Exception? innerException) : base(message, innerException)
+    public IdempotencyValidationException(string message, Exception innerException) : base(message, innerException)
     {
     }
 }

@@ -33,12 +33,12 @@ public class IdempotencyConfigurationException : Exception
     }
 
     /// <inheritdoc />
-    public IdempotencyConfigurationException(string? message) : base(message)
+    public IdempotencyConfigurationException(string message) : base(message)
     {
     }
 
     /// <inheritdoc />
-    public IdempotencyConfigurationException(string? message, Exception? innerException) : base(message, innerException)
+    public IdempotencyConfigurationException(string message, Exception innerException) : base(message, innerException)
     {
     }
 }

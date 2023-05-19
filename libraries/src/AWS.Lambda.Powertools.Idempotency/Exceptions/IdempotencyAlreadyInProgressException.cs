@@ -33,12 +33,12 @@ public class IdempotencyAlreadyInProgressException: Exception
     }
     
     /// <inheritdoc />
-    public IdempotencyAlreadyInProgressException(string? message) : base(message)
+    public IdempotencyAlreadyInProgressException(string message) : base(message)
     {
     }
 
     /// <inheritdoc />
-    public IdempotencyAlreadyInProgressException(string? message, Exception? innerException) : base(message, innerException)
+    public IdempotencyAlreadyInProgressException(string message, Exception innerException) : base(message, innerException)
     {
     }
 }

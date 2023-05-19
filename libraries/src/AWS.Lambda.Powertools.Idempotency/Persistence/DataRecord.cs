@@ -35,8 +35,8 @@ public class DataRecord
     public DataRecord(string idempotencyKey, 
             DataRecordStatus status,
             long expiryTimestamp,
-            string? responseData,
-            string? payloadHash)
+            string responseData,
+            string payloadHash)
     {
         IdempotencyKey = idempotencyKey;
         _status = status.ToString();
@@ -56,11 +56,11 @@ public class DataRecord
     /// <summary>
     /// JSON serialized invocation results
     /// </summary>
-    public string? ResponseData { get; }
+    public string ResponseData { get; }
     /// <summary>
     /// A hash representation of the entire event
     /// </summary>
-    public string? PayloadHash { get; }
+    public string PayloadHash { get; }
     
 
     /// <summary>
@@ -106,7 +106,7 @@ public class DataRecord
     }
 
     /// <inheritdoc />
-    public override bool Equals(object? obj)
+    public override bool Equals(object obj)
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;

@@ -15,7 +15,6 @@
 
 using System;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Output;
@@ -24,7 +23,7 @@ using AWS.Lambda.Powertools.Idempotency.Persistence;
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal;
 
-internal class IdempotencyHandler<T>
+internal class IdempotencyAspectHandler<T>
 {
     private const int MaxRetries = 2;
 
@@ -34,7 +33,7 @@ internal class IdempotencyHandler<T>
     private readonly BasePersistenceStore _persistenceStore;
     private readonly ILog _log;
 
-    public IdempotencyHandler(
+    public IdempotencyAspectHandler(
         Func<object[], object> target, 
         object[] args,
         string functionName,
@@ -57,7 +56,7 @@ internal class IdempotencyHandler<T>
         // IdempotencyInconsistentStateException can happen under rare but expected cases
         // when persistent state changes in the small time between put & get requests.
         // In most cases we can retry successfully on this exception.
-        for (int i = 0; true; i++)
+        for (var i = 0; true; i++)
         {
             try
             {
@@ -89,7 +88,7 @@ internal class IdempotencyHandler<T>
         }
         catch (IdempotencyItemAlreadyExistsException)
         {
-            DataRecord record = await GetIdempotencyRecord();
+            var record = await GetIdempotencyRecord();
             return await HandleForStatus(record);
         }
         catch (IdempotencyKeyException)
@@ -167,7 +166,7 @@ internal class IdempotencyHandler<T>
         try
         {
             _log.WriteDebug("Response for key '{0}' retrieved from idempotency store, skipping the function", record.IdempotencyKey);
-            T? result = JsonSerializer.Deserialize<T>(record.ResponseData!);
+            var result = JsonSerializer.Deserialize<T>(record.ResponseData!);
             if (result is null)
             {
                 throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);

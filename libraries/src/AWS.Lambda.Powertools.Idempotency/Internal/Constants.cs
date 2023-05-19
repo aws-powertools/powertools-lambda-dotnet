@@ -27,8 +27,4 @@ internal class Constants {
     /// Constant for AWS_REGION_ENV environment variable
     /// </summary>
     internal const string AwsRegionEnv = "AWS_REGION";
-    /// <summary>
-    /// Constant for IDEMPOTENCY_DISABLED_ENV environment variable
-    /// </summary>
-    internal const string IdempotencyDisabledEnv = "POWERTOOLS_IDEMPOTENCY_DISABLED";
 }

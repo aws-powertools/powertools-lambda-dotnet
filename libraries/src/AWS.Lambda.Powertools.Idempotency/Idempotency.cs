@@ -14,6 +14,7 @@
  */
 
 using System;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 
 namespace AWS.Lambda.Powertools.Idempotency;
@@ -37,8 +38,9 @@ public sealed class Idempotency
     /// </summary>
     public BasePersistenceStore PersistenceStore { get; private set; } = null!;
 
-    private Idempotency()
+    internal Idempotency(IPowertoolsConfigurations powertoolsConfigurations)
     {
+        powertoolsConfigurations.SetExecutionEnvironment(this);
     }
 
     private void SetConfig(IdempotencyOptions options)
@@ -59,7 +61,7 @@ public sealed class Idempotency
         {
         }
 
-        internal static readonly Idempotency IdempotencyInstance = new Idempotency();
+        internal static readonly Idempotency IdempotencyInstance = new Idempotency(PowertoolsConfigurations.Instance);
     }
 
     /// <summary>
@@ -95,11 +97,11 @@ public sealed class Idempotency
     /// </summary>
     public class IdempotencyBuilder
     {
-        private IdempotencyOptions? _options;
-        private BasePersistenceStore? _store;
+        private IdempotencyOptions _options;
+        private BasePersistenceStore _store;
 
-        internal IdempotencyOptions? Options => _options;
-        internal BasePersistenceStore? Store => _store;
+        internal IdempotencyOptions Options => _options;
+        internal BasePersistenceStore Store => _store;
 
         /// <summary>
         /// Set the persistence layer to use for storing the request and response
@@ -119,7 +121,7 @@ public sealed class Idempotency
         /// <returns></returns>
         public IdempotencyBuilder UseDynamoDb(Action<DynamoDBPersistenceStoreBuilder> builderAction)
         {
-            DynamoDBPersistenceStoreBuilder builder =
+            var builder =
                 new DynamoDBPersistenceStoreBuilder();
             builderAction(builder);
             _store = builder.Build();
@@ -133,7 +135,7 @@ public sealed class Idempotency
         /// <returns></returns>
         public IdempotencyBuilder UseDynamoDb(string tableName)
         {
-            DynamoDBPersistenceStoreBuilder builder =
+            var builder =
                 new DynamoDBPersistenceStoreBuilder();
             _store = builder.WithTableName(tableName).Build();
             return this;
@@ -146,7 +148,7 @@ public sealed class Idempotency
         /// <returns></returns>
         public IdempotencyBuilder WithOptions(Action<IdempotencyOptionsBuilder> builderAction)
         {
-            IdempotencyOptionsBuilder builder = new IdempotencyOptionsBuilder();
+            var builder = new IdempotencyOptionsBuilder();
             builderAction(builder);
             _options = builder.Build();
             return this;

@@ -90,4 +90,9 @@ internal static class Constants
     ///     Constant for Powertools feature identifier fo AWS_EXECUTION_ENV environment variable
     /// </summary>
     internal const string FeatureContextIdentifier = "PT";
+
+    /// <summary>
+    ///     Constant for IDEMPOTENCY_DISABLED_ENV environment variable
+    /// </summary>
+    internal const string IdempotencyDisabledEnv = "POWERTOOLS_IDEMPOTENCY_DISABLED";
 }
