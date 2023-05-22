@@ -88,7 +88,7 @@ public class BasePersistenceStoreTests
         dr.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         dr.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
         dr.ResponseData.Should().BeNull();
-        dr.IdempotencyKey.Should().Be("testFunction#b105f675a45bab746c0723da594d3b06");
+        dr.IdempotencyKey.Should().Be("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6");
         dr.PayloadHash.Should().BeEmpty();
         persistenceStore.Status.Should().Be(1);
     }
@@ -280,7 +280,7 @@ public class BasePersistenceStoreTests
         dr.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
         dr.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
         dr.ResponseData.Should().Be(JsonSerializer.Serialize(product));
-        dr.IdempotencyKey.Should().Be("testFunction#b105f675a45bab746c0723da594d3b06");
+        dr.IdempotencyKey.Should().Be("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6");
         dr.PayloadHash.Should().BeEmpty();
         persistenceStore.Status.Should().Be(2);
         cache.Count.Should().Be(0);
@@ -307,12 +307,12 @@ public class BasePersistenceStoreTests
         persistenceStore.Status.Should().Be(2);
         cache.Count.Should().Be(1);
     
-        var foundDataRecord = cache.TryGet("testFunction#b105f675a45bab746c0723da594d3b06", out var record);
+        var foundDataRecord = cache.TryGet("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6", out var record);
         foundDataRecord.Should().BeTrue();
         record.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
         record.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
         record.ResponseData.Should().Be(JsonSerializer.Serialize(product));
-        record.IdempotencyKey.Should().Be("testFunction#b105f675a45bab746c0723da594d3b06");
+        record.IdempotencyKey.Should().Be("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6");
         record.PayloadHash.Should().BeEmpty();
     }
     
@@ -334,7 +334,7 @@ public class BasePersistenceStoreTests
         var record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
         
         // Assert
-        record.IdempotencyKey.Should().Be("testFunction.myfunc#b105f675a45bab746c0723da594d3b06");
+        record.IdempotencyKey.Should().Be("testFunction.myfunc#5eff007a9ed2789a9f9f6bc182fc6ae6");
         record.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         record.ResponseData.Should().Be("Response");
         persistenceStore.Status.Should().Be(0);
@@ -353,18 +353,18 @@ public class BasePersistenceStoreTests
 
         var now = DateTimeOffset.UtcNow;
         var dr = new DataRecord(
-            "testFunction.myfunc#b105f675a45bab746c0723da594d3b06",
+            "testFunction.myfunc#5eff007a9ed2789a9f9f6bc182fc6ae6",
             DataRecord.DataRecordStatus.COMPLETED,
             now.AddSeconds(3600).ToUnixTimeSeconds(),
             "result of the function",
             null);
-        cache.Set("testFunction.myfunc#b105f675a45bab746c0723da594d3b06", dr);
+        cache.Set("testFunction.myfunc#5eff007a9ed2789a9f9f6bc182fc6ae6", dr);
 
         // Act
         var record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
         
         // Assert
-        record.IdempotencyKey.Should().Be("testFunction.myfunc#b105f675a45bab746c0723da594d3b06");
+        record.IdempotencyKey.Should().Be("testFunction.myfunc#5eff007a9ed2789a9f9f6bc182fc6ae6");
         record.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
         record.ResponseData.Should().Be("result of the function");
         persistenceStore.Status.Should().Be(-1);
@@ -382,18 +382,18 @@ public class BasePersistenceStoreTests
 
         var now = DateTimeOffset.UtcNow;
         var dr = new DataRecord(
-            "testFunction.myfunc#b105f675a45bab746c0723da594d3b06",
+            "testFunction.myfunc#5eff007a9ed2789a9f9f6bc182fc6ae6",
             DataRecord.DataRecordStatus.COMPLETED,
             now.AddSeconds(-3).ToUnixTimeSeconds(),
             "result of the function",
             null);
-        cache.Set("testFunction.myfunc#b105f675a45bab746c0723da594d3b06", dr);
+        cache.Set("testFunction.myfunc#5eff007a9ed2789a9f9f6bc182fc6ae6", dr);
 
         // Act
         var record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
         
         // Assert
-        record.IdempotencyKey.Should().Be("testFunction.myfunc#b105f675a45bab746c0723da594d3b06");
+        record.IdempotencyKey.Should().Be("testFunction.myfunc#5eff007a9ed2789a9f9f6bc182fc6ae6");
         record.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
         record.ResponseData.Should().Be("Response");
         persistenceStore.Status.Should().Be(0);
@@ -449,8 +449,8 @@ public class BasePersistenceStoreTests
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), null, cache);
 
-        cache.Set("testFunction#b105f675a45bab746c0723da594d3b06",
-            new DataRecord("testFunction#b105f675a45bab746c0723da594d3b06", 
+        cache.Set("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6",
+            new DataRecord("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6", 
                 DataRecord.DataRecordStatus.COMPLETED,
                 123,
                 null, null));

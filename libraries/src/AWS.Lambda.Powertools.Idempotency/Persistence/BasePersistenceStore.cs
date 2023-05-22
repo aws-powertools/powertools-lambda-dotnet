@@ -293,12 +293,8 @@ public abstract class BasePersistenceStore : IPersistenceStore
 
     private bool IsMissingIdemPotencyKey(JsonElement data)
     {
-        return data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined;
-        // return (data == null) ||
-        //        (data is JsonArray && !data.) ||
-        //        (data.ValueKind == JsonValueKind.Array && !data.get) ||
-        //        (data.Type == JsonNodeType.String && data.ToString() == String.Empty) ||
-        //        (data.Type == JsonNodeType.Null);
+        return data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined
+            || (data.ValueKind == JsonValueKind.String && data.ToString() == string.Empty);
     }
     
     /// <summary>

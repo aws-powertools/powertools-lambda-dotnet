@@ -76,10 +76,10 @@ public class LRUCacheTests
         Assert.False(cache.TryGet(9998, out var result));
 
         Assert.True(cache.TryGet(maxIdx - 1, out result));
-        Assert.Equal(result, fib9999);
+        Assert.Equal(fib9999, result);
 
         Assert.True(cache.TryGet(maxIdx, out result));
-        Assert.Equal(result, fib100000);
+        Assert.Equal(fib100000, result);
     }
 
     
@@ -105,10 +105,10 @@ public class LRUCacheTests
         Assert.False(cache.TryGet(1, out var result));
 
         Assert.True(cache.TryGet(maxIdx - 1, out result));
-        Assert.Equal(result, fib9999);
+        Assert.Equal(fib9999, result);
 
         Assert.True(cache.TryGet(maxIdx, out result));
-        Assert.Equal(result, fib100000);
+        Assert.Equal(fib100000, result);
     }
 
     [Fact]
