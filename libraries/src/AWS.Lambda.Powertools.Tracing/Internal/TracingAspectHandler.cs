@@ -52,7 +52,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     private readonly string _namespace;
 
     /// <summary>
-    ///     The Powertools configurations
+    ///     The Powertools for AWS Lambda (.NET) configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
@@ -77,7 +77,7 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <param name="segmentName">Name of the segment.</param>
     /// <param name="nameSpace">The namespace.</param>
     /// <param name="captureMode">The capture mode.</param>
-    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
+    /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
     /// <param name="xRayRecorder">The X-Ray recorder.</param>
     internal TracingAspectHandler
     (

@@ -1,6 +1,6 @@
 # AWS.Lambda.Powertools.Tracing
 
-Powertools tracing is an opinionated thin wrapper for [AWS X-Ray .NET SDK](https://github.com/aws/aws-xray-sdk-dotnet/)
+Powertools for AWS Lambda (.NET) tracing is an opinionated thin wrapper for [AWS X-Ray .NET SDK](https://github.com/aws/aws-xray-sdk-dotnet/)
 a provides functionality to reduce the overhead of performing common tracing tasks.
 
 ## Key Features
@@ -42,7 +42,7 @@ public class Function
         var location = await GetCallingIp().ConfigureAwait(false);
 
         var lookupRecord = new LookupRecord(lookupId: requestContextRequestId,
-            greeting: "Hello AWS Lambda Powertools for .NET", ipAddress: location);
+            greeting: "Hello Powertools for AWS Lambda (.NET)", ipAddress: location);
 
         // Trace Fluent API
         Tracing.WithSubsegment("LoggingResponse",

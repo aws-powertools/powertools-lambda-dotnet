@@ -12,11 +12,11 @@ Themes are key activities maintainers are focusing on, besides bug reports. Thes
 
 We are beta testing the [new GitHub Projects Beta](https://github.com/orgs/awslabs/projects/56/views/1?query=is%3Aopen+sort%3Aupdated-desc){target="_blank"} to provide more visibility on our current activities. This also includes new GitHub Issue Forms Beta to streamline feature requests, bug reports, RFCs, etc., including a new mechanism to add external links like `Ask a Question`.
 
-Once complete, we will repurpose our [central roadmap repository](https://github.com/awslabs/aws-lambda-powertools-roadmap){target="_blank"} to provide a landing page for all Powertools languages, including an experiment to better highlight feature parity across them.
+Once complete, we will repurpose our [central roadmap repository](https://github.com/awslabs/aws-lambda-powertools-roadmap){target="_blank"} to provide a landing page for all Powertools for AWS Lambda languages, including an experiment to better highlight feature parity across them.
 
 ## Disclaimer
 
-The AWS Lambda Powertools team values feedback and guidance from its community of users, although final decisions on inclusion into the project will be made by AWS.
+The Powertools for AWS Lambda team values feedback and guidance from its community of users, although final decisions on inclusion into the project will be made by AWS.
 
 We determine the high-level direction for our open roadmap based on customer feedback and popularity (👍🏽 and comments), security and operational impacts, and business value. Where features don’t meet our goals and longer-term strategy, we will communicate that clearly and openly as quickly as possible with an explanation of why the decision was made.
 

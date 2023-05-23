@@ -83,7 +83,7 @@ namespace HelloWorld.Tests
             var body = new Dictionary<string, string>
             {
                 { "LookupId", requestId },
-                { "Greeting", "Hello AWS Lambda Powertools for .NET" },
+                { "Greeting", "Hello Powertools for AWS Lambda (.NET)" },
                 { "IpAddress", location },
             };
 

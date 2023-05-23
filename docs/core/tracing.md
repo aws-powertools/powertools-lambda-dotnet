@@ -3,7 +3,7 @@ title: Tracing
 description: Core utility
 ---
 
-Powertools tracing is an opinionated thin wrapper for [AWS X-Ray .NET SDK](https://github.com/aws/aws-xray-sdk-dotnet/)
+Powertools for AWS Lambda (.NET) tracing is an opinionated thin wrapper for [AWS X-Ray .NET SDK](https://github.com/aws/aws-xray-sdk-dotnet/)
 a provides functionality to reduce the overhead of performing common tracing tasks.
 
 ![Tracing showcase](../media/tracer_utility_showcase.png)
@@ -18,7 +18,7 @@ a provides functionality to reduce the overhead of performing common tracing tas
 
 ## Installation
 
-Powertools are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+Powertools for AWS Lambda (.NET) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
 
 * [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
 
@@ -48,7 +48,7 @@ To enable active tracing on an AWS Serverless Application Model (AWS SAM) AWS::S
                     POWERTOOLS_SERVICE_NAME: example
     ```
 
-The Powertools service name is used as the X-Ray namespace. This can be set using the environment variable
+The Powertools for AWS Lambda (.NET) service name is used as the X-Ray namespace. This can be set using the environment variable
 `POWERTOOLS_SERVICE_NAME`
 
 ## Full list of environment variables
@@ -62,7 +62,7 @@ The Powertools service name is used as the X-Ray namespace. This can be set usin
 
 ### Lambda handler
 
-To enable Powertools tracing to your function add the `[Tracing]` attribute to your `FunctionHandler` method or on
+To enable Powertools for AWS Lambda (.NET) tracing to your function add the `[Tracing]` attribute to your `FunctionHandler` method or on
 any method will capture the method as a separate subsegment automatically. You can optionally choose to customize
 segment name that appears in traces.
 
