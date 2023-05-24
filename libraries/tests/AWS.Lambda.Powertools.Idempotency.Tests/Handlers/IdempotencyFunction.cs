@@ -18,10 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Threading;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
@@ -30,7 +27,7 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 
 public class IdempotencyFunction
 {
-    public bool HandlerExecuted = false;
+    public bool HandlerExecuted;
 
     public IdempotencyFunction(AmazonDynamoDBClient client)
     {

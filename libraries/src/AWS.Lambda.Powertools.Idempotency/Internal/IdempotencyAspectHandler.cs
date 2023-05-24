@@ -20,7 +20,6 @@ using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Output;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 
-
 namespace AWS.Lambda.Powertools.Idempotency.Internal;
 
 internal class IdempotencyAspectHandler<T>
@@ -56,7 +55,7 @@ internal class IdempotencyAspectHandler<T>
         // IdempotencyInconsistentStateException can happen under rare but expected cases
         // when persistent state changes in the small time between put & get requests.
         // In most cases we can retry successfully on this exception.
-        for (var i = 0; true; i++)
+        for (var i = 0;; i++)
         {
             try
             {
@@ -151,31 +150,30 @@ internal class IdempotencyAspectHandler<T>
     /// <exception cref="IdempotencyPersistenceLayerException"></exception>
     private Task<T> HandleForStatus(DataRecord record)
     {
-        // This code path will only be triggered if the record becomes expired between the saveInProgress call and here
-        if (DataRecord.DataRecordStatus.EXPIRED == record.Status)
+        switch (record.Status)
         {
-            throw new IdempotencyInconsistentStateException("saveInProgress and getRecord return inconsistent results");
-        }
-
-        if (DataRecord.DataRecordStatus.INPROGRESS == record.Status)
-        {
-            throw new IdempotencyAlreadyInProgressException("Execution already in progress with idempotency key: " +
-                                                            record.IdempotencyKey);
-        }
-
-        try
-        {
-            _log.WriteDebug("Response for key '{0}' retrieved from idempotency store, skipping the function", record.IdempotencyKey);
-            var result = JsonSerializer.Deserialize<T>(record.ResponseData!);
-            if (result is null)
-            {
-                throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);
-            }
-            return Task.FromResult(result);
-        }
-        catch (Exception e)
-        {
-            throw new IdempotencyPersistenceLayerException("Unable to get function response as " + typeof(T).Name, e);
+            // This code path will only be triggered if the record becomes expired between the saveInProgress call and here
+            case DataRecord.DataRecordStatus.EXPIRED:
+                throw new IdempotencyInconsistentStateException("saveInProgress and getRecord return inconsistent results");
+            case DataRecord.DataRecordStatus.INPROGRESS:
+                throw new IdempotencyAlreadyInProgressException("Execution already in progress with idempotency key: " +
+                                                                record.IdempotencyKey);
+            case DataRecord.DataRecordStatus.COMPLETED:
+            default:
+                try
+                {
+                    _log.WriteDebug("Response for key '{0}' retrieved from idempotency store, skipping the function", record.IdempotencyKey);
+                    var result = JsonSerializer.Deserialize<T>(record.ResponseData!);
+                    if (result is null)
+                    {
+                        throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);
+                    }
+                    return Task.FromResult(result);
+                }
+                catch (Exception e)
+                {
+                    throw new IdempotencyPersistenceLayerException("Unable to get function response as " + typeof(T).Name, e);
+                }
         }
     }
 

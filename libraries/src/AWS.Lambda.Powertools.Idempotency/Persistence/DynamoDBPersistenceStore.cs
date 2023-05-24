@@ -21,7 +21,6 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
-using Constants = AWS.Lambda.Powertools.Idempotency.Internal.Constants;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 
@@ -64,19 +63,22 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         {
             _dynamoDbClient = client;
         } 
-        else 
+        else
         {
-            if (PowertoolsConfigurations.Instance.IdempotencyDisabled) 
-            {
+            var isIdempotencyDisabled = bool.TryParse(Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv), out var result) && result;
+            
+            if (isIdempotencyDisabled) 
+            {                
+                // we do not want to create a DynamoDbClient if idempotency is disabled
+                // null is ok as idempotency won't be called
+                _dynamoDbClient = null;
+                
+            } else {
                 var clientConfig = new AmazonDynamoDBConfig
                 {
                     RegionEndpoint = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable(Constants.AwsRegionEnv))
                 };
                 _dynamoDbClient = new AmazonDynamoDBClient(clientConfig);
-            } else {
-                // we do not want to create a DynamoDbClient if idempotency is disabled
-                // null is ok as idempotency won't be called
-                _dynamoDbClient = null;
             }
         }
     }
@@ -85,7 +87,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     /// <inheritdoc />
     public override async Task<DataRecord> GetRecord(string idempotencyKey)
     {
-        var getItemRequest = new GetItemRequest()
+        var getItemRequest = new GetItemRequest
         {
             TableName = _tableName,
             ConsistentRead = true,
@@ -108,30 +110,30 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         Dictionary<string, AttributeValue> item = new(GetKey(record.IdempotencyKey))
         {
             {
-                this._expiryAttr, new AttributeValue()
+                _expiryAttr, new AttributeValue
                 {
                     N = record.ExpiryTimestamp.ToString()
                 }
             },
-            { this._statusAttr, new AttributeValue(record.Status.ToString()) }
+            { _statusAttr, new AttributeValue(record.Status.ToString()) }
         };
 
         if (PayloadValidationEnabled)
         {
-            item.Add(this._validationAttr, new AttributeValue(record.PayloadHash));
+            item.Add(_validationAttr, new AttributeValue(record.PayloadHash));
         }
 
         try
         {
             Log.WriteDebug("Putting record for idempotency key: {0}", record.IdempotencyKey);
 
-            var expressionAttributeNames = new Dictionary<String, String>
+            var expressionAttributeNames = new Dictionary<string, string>
             {
-                {"#id", this._keyAttr},
-                {"#expiry", this._expiryAttr}
+                {"#id", _keyAttr},
+                {"#expiry", _expiryAttr}
             };
 
-            var request = new PutItemRequest()
+            var request = new PutItemRequest
             {
                 TableName = _tableName,
                 Item = item,
@@ -139,7 +141,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
                 ExpressionAttributeNames = expressionAttributeNames,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":now", new AttributeValue() {N = now.ToUnixTimeSeconds().ToString()}}
+                    {":now", new AttributeValue {N = now.ToUnixTimeSeconds().ToString()}}
                 }
             };
             await _dynamoDbClient!.PutItemAsync(request);
@@ -161,22 +163,22 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
 
         var expressionAttributeNames = new Dictionary<string, string>
         {
-            {"#response_data", this._dataAttr},
-            {"#expiry", this._expiryAttr},
-            {"#status", this._statusAttr}
+            {"#response_data", _dataAttr},
+            {"#expiry", _expiryAttr},
+            {"#status", _statusAttr}
         };
 
         var expressionAttributeValues = new Dictionary<string, AttributeValue>
         {
             {":response_data", new AttributeValue(record.ResponseData)},
-            {":expiry", new AttributeValue(){N=record.ExpiryTimestamp.ToString()}},
+            {":expiry", new AttributeValue {N=record.ExpiryTimestamp.ToString()}},
             {":status", new AttributeValue(record.Status.ToString())}
         };
 
         if (PayloadValidationEnabled)
         {
             updateExpression += ", #validation_key = :validation_key";
-            expressionAttributeNames.Add("#validation_key", this._validationAttr);
+            expressionAttributeNames.Add("#validation_key", _validationAttr);
             expressionAttributeValues.Add(":validation_key", new AttributeValue(record.PayloadHash));
         }
 
@@ -208,7 +210,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     /// </summary>
     /// <param name="item">item Item from dynamodb response</param>
     /// <returns>DataRecord instance</returns>
-    private DataRecord ItemToRecord(Dictionary<String, AttributeValue> item)
+    private DataRecord ItemToRecord(Dictionary<string, AttributeValue> item)
     {
         // data and validation payload may be null
         var hasDataAttribute = item.TryGetValue(_dataAttr, out var data);
@@ -228,10 +230,10 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     /// <returns></returns>
     private Dictionary<string, AttributeValue> GetKey(string idempotencyKey)
     {
-        Dictionary<String, AttributeValue> key = new();
+        Dictionary<string, AttributeValue> key = new();
         if (_sortKeyAttr != null)
         {
-            key[_keyAttr] = new AttributeValue(this._staticPkValue);
+            key[_keyAttr] = new AttributeValue(_staticPkValue);
             key[_sortKeyAttr] = new AttributeValue(idempotencyKey);
         }
         else
@@ -257,7 +259,7 @@ public class DynamoDBPersistenceStoreBuilder
 
     private string _tableName = null!;
     private string _keyAttr = "id";
-    private string _staticPkValue = string.Format("idempotency#%s", FuncEnv ?? "");
+    private string _staticPkValue = $"idempotency#{FuncEnv}";
     private string _sortKeyAttr;
     private string _expiryAttr = "expiration";
     private string _statusAttr = "status";

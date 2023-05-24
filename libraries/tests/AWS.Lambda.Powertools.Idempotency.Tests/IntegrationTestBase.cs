@@ -35,7 +35,7 @@ public class IntegrationTestBase : IAsyncLifetime
         // initialize TestContainers or Ductus.FluentDocker or have DynamoDb local docker running
         
         var credentials = new BasicAWSCredentials("FAKE", "FAKE");
-        var amazonDynamoDbConfig = new AmazonDynamoDBConfig()
+        var amazonDynamoDbConfig = new AmazonDynamoDBConfig
         {
             ServiceURL = new UriBuilder("http", "localhost", 8000).Uri.ToString(),
             AuthenticationRegion = "us-east-1"
@@ -45,11 +45,11 @@ public class IntegrationTestBase : IAsyncLifetime
         var createTableRequest = new CreateTableRequest
         {
             TableName = TableName,
-            KeySchema = new List<KeySchemaElement>()
+            KeySchema = new List<KeySchemaElement>
             {
                 new("id", KeyType.HASH)
             },
-            AttributeDefinitions = new List<AttributeDefinition>()
+            AttributeDefinitions = new List<AttributeDefinition>
             {
                 new()
                 {

@@ -18,7 +18,7 @@ internal sealed class LRUCache<TKey, TValue>
     /// </summary>
     private const int DefaultCapacity = 255;
 
-    private readonly object _lockObj = new object();
+    private readonly object _lockObj = new();
     private readonly int _capacity;
     private readonly Dictionary<TKey, Entry> _cacheMap;
     private readonly LinkedList<TKey> _cacheList;
@@ -62,7 +62,7 @@ internal sealed class LRUCache<TKey, TValue>
             }
         }
 
-        value = default(TValue);
+        value = default;
         return false;
     }
 
@@ -81,9 +81,16 @@ internal sealed class LRUCache<TKey, TValue>
                 if (_cacheMap.Count >= _capacity)
                 {
                     node = _cacheList.Last;
-                    _cacheMap.Remove(node.Value);
-                    _cacheList.RemoveLast();
-                    node.Value = key;
+                    if (node != null)
+                    {
+                        _cacheMap.Remove(node.Value);
+                        _cacheList.RemoveLast();
+                        node.Value = key;
+                    }
+                    else
+                    {
+                        node = new LinkedListNode<TKey>(key);
+                    }
                 }
                 else
                 {
@@ -111,26 +118,38 @@ internal sealed class LRUCache<TKey, TValue>
         }
     }
 
-    public int Count => _cacheList.Count;
+    public int Count
+    {
+        get
+        {
+            lock (_lockObj)
+            {
+                return _cacheList.Count;
+            }
+        }
+    }
 
     private void Touch(LinkedListNode<TKey> node)
     {
-        if (node != _cacheList.First)
+        lock (_lockObj)
         {
-            _cacheList.Remove(node);
-            _cacheList.AddFirst(node);
+            if (node != _cacheList.First)
+            {
+                _cacheList.Remove(node);
+                _cacheList.AddFirst(node);
+            }
         }
     }
 
     private struct Entry
     {
-        public LinkedListNode<TKey> Node;
+        public readonly LinkedListNode<TKey> Node;
         public TValue Value;
 
         public Entry(LinkedListNode<TKey> node, TValue value)
         {
-            this.Node = node;
-            this.Value = value;
+            Node = node;
+            Value = value;
         }
     }
 }

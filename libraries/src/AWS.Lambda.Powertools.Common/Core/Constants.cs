@@ -95,4 +95,14 @@ internal static class Constants
     ///     Constant for IDEMPOTENCY_DISABLED_ENV environment variable
     /// </summary>
     internal const string IdempotencyDisabledEnv = "POWERTOOLS_IDEMPOTENCY_DISABLED";
+    
+    /// <summary>
+    /// Constant for AWS_REGION_ENV environment variable
+    /// </summary>
+    internal const string AwsRegionEnv = "AWS_REGION";
+    
+    /// <summary>
+    /// Constant for LAMBDA_FUNCTION_NAME_ENV environment variable
+    /// </summary>
+    internal const string LambdaFunctionNameEnv = "AWS_LAMBDA_FUNCTION_NAME";
 }

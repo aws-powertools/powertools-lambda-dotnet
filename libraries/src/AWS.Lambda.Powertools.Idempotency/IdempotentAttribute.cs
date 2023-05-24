@@ -20,7 +20,6 @@ using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
-using Constants = AWS.Lambda.Powertools.Common.Constants;
 
 namespace AWS.Lambda.Powertools.Idempotency;
 

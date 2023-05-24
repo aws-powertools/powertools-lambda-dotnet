@@ -19,8 +19,11 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Model;
 
 public class Product : IEquatable<Product>
 {
+    // ReSharper disable once MemberCanBePrivate.Global
     public long Id { get; }
+    // ReSharper disable once MemberCanBePrivate.Global
     public string Name { get; }
+    // ReSharper disable once MemberCanBePrivate.Global
     public double Price { get; }
     
     public Product(long id, string name, double price)
@@ -43,7 +46,7 @@ public class Product : IEquatable<Product>
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
+        if (obj.GetType() != GetType()) return false;
         return Equals((Product) obj);
     }
 

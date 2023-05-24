@@ -123,14 +123,15 @@ public class LRUCacheTests
         const int numOfOps = 1000;
         for (var i = 0; i < numOfThreads; i++)
         {
-            tasks.Add(Task.Run(() => StoreElement(cache, numOfOps, i)));
+            var idx = i;
+            tasks.Add(Task.Run(() => StoreElement(cache, numOfOps)));
         }
 
         await Task.WhenAll(tasks).ConfigureAwait(false);
 
         for (var i = numOfOps - numOfThreads; i < numOfOps; i++)
         {
-            Assert.True(cache.TryGet(i, out var result));
+            Assert.True(cache.TryGet(i, out _));
         }
     }
     
@@ -155,13 +156,11 @@ public class LRUCacheTests
         Assert.Equal("num3", result);
     }
 
-    private void StoreElement(LRUCache<int, int> cache, int numOfOps, int idx)
+    private static void StoreElement(LRUCache<int, int> cache, int numOfOps)
     {
         for (var i = 0; i < numOfOps; i++)
         {
-            var key = i;
-            var value = i;
-            cache.Set(key, value);
+            cache.Set(i, i);
         }
     }
 }

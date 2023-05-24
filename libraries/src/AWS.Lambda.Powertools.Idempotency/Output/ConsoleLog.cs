@@ -50,7 +50,7 @@ public class ConsoleLog : ILog
     /// <param name="args">The args.</param>
     public void WriteDebug(string format, params object[] args) => Write(ConsoleColor.Cyan, format, args);
 
-    static void Write(ConsoleColor color, string format, object[] args)
+    private static void Write(ConsoleColor color, string format, object[] args)
     {
         var oldColor = Console.ForegroundColor;
         Console.ForegroundColor = color;

@@ -8,12 +8,12 @@ namespace AWS.Lambda.Powertools.Idempotency;
 /// </summary>
 public class IdempotencyOptionsBuilder
 {
-    private int _localCacheMaxItems = 256;
-    private bool _useLocalCache = false;
+    private readonly int _localCacheMaxItems = 256;
+    private bool _useLocalCache;
     private long _expirationInSeconds = 60 * 60; // 1 hour
-    private string _eventKeyJmesPath = null;
-    private string _payloadValidationJmesPath = null;
-    private bool _throwOnNoIdempotencyKey = false;
+    private string _eventKeyJmesPath;
+    private string _payloadValidationJmesPath;
+    private bool _throwOnNoIdempotencyKey;
     private string _hashFunction = "MD5";
     private ILog _log = new NullLog();
 
@@ -26,7 +26,7 @@ public class IdempotencyOptionsBuilder
     /// </summary>
     /// <returns>an instance of IdempotencyConfig</returns>
     public IdempotencyOptions Build() =>
-        new IdempotencyOptions(_eventKeyJmesPath,
+        new(_eventKeyJmesPath,
             _payloadValidationJmesPath,
             _throwOnNoIdempotencyKey,
             _useLocalCache,

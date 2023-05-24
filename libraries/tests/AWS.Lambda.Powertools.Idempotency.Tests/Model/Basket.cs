@@ -20,7 +20,7 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Model;
 
 public class Basket
 {
-    public List<Product> Products { get; set; } = new List<Product>();
+    public List<Product> Products { get; } = new();
     public Basket()
     {
         
@@ -36,7 +36,7 @@ public class Basket
         Products.Add(product);
     }
 
-    protected bool Equals(Basket other)
+    private bool Equals(Basket other)
     {
         return Products.All(other.Products.Contains);
     }
@@ -45,7 +45,7 @@ public class Basket
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
+        if (obj.GetType() != GetType()) return false;
         return Equals((Basket) obj);
     }
 

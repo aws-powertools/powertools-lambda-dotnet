@@ -21,7 +21,7 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 
 public class IdempotencyEnabledFunction
 {
-    public bool HandlerExecuted = false;
+    public bool HandlerExecuted;
 
     [Idempotent]
     public Task<Basket> Handle(Product input, ILambdaContext context)

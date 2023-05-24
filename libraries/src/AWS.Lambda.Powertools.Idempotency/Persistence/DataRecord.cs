@@ -96,7 +96,7 @@ public class DataRecord
     /// </summary>
     /// <param name="other">The DataRecord to compare with the current object.</param>
     /// <returns>true if the specified DataRecord is equal to the current DataRecord; otherwise, false.</returns>
-    protected bool Equals(DataRecord other)
+    private bool Equals(DataRecord other)
     {
         return _status == other._status 
                && IdempotencyKey == other.IdempotencyKey 
@@ -110,7 +110,7 @@ public class DataRecord
     {
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
+        if (obj.GetType() != GetType()) return false;
         return Equals((DataRecord) obj);
     }
 

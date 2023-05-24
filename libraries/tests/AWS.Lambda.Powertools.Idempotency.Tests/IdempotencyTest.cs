@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -31,7 +30,9 @@ public class IdempotencyTest
 {
     private const string TableName = "idempotency_table";
     
-    [Fact(Skip = "Skip if running in CI")]
+    //[Fact(Skip = "Integration Tests - Require setup")]
+    [Trait("Category", "Integration")]
+    [Fact]
     public async Task EndToEndTest() 
     {
         var client = new AmazonDynamoDBClient();

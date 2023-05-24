@@ -18,6 +18,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
 using AWS.Lambda.Powertools.Idempotency.Output;
@@ -29,7 +30,7 @@ namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 /// <summary>
 /// Persistence layer that will store the idempotency result.
 /// Base implementation. See <see cref="DynamoDBPersistenceStore"/> for an implementation (default one)
-/// Extends this class to use your own implementation (DocumentDB, Elasticache, ...)
+/// Extend this class to use your own implementation (DocumentDB, Elasticache, ...)
 /// </summary>
 public abstract class BasePersistenceStore : IPersistenceStore
 {
@@ -291,7 +292,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         return _functionName + "#" + hash;
     }
 
-    private bool IsMissingIdemPotencyKey(JsonElement data)
+    private static bool IsMissingIdemPotencyKey(JsonElement data)
     {
         return data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined
             || (data.ValueKind == JsonValueKind.String && data.ToString() == string.Empty);

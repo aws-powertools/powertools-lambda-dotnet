@@ -30,10 +30,10 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 
 public class BasePersistenceStoreTests
 {
-    class InMemoryPersistenceStore : BasePersistenceStore
+    private class InMemoryPersistenceStore : BasePersistenceStore
     {
-        private string _validationHash = null;
-        public DataRecord DataRecord = null;
+        private readonly string _validationHash = null;
+        public DataRecord DataRecord;
         public int Status = -1;
         public override Task<DataRecord> GetRecord(string idempotencyKey)
         {
@@ -199,7 +199,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
-        LRUCache<string, DataRecord> cache = new ((int) 2);
+        LRUCache<string, DataRecord> cache = new (2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true)
             .WithEventKeyJmesPath("powertools_json(Body).id")
@@ -231,7 +231,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
-        LRUCache<string, DataRecord> cache = new ((int) 2);
+        LRUCache<string, DataRecord> cache = new (2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithEventKeyJmesPath("powertools_json(Body).id")
             .WithUseLocalCache(true)
@@ -265,7 +265,7 @@ public class BasePersistenceStoreTests
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
-        LRUCache<string, DataRecord> cache = new ((int) 2);
+        LRUCache<string, DataRecord> cache = new (2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, cache);
 
         var product = new Product(34543, "product", 42);
@@ -292,7 +292,7 @@ public class BasePersistenceStoreTests
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
-        LRUCache<string, DataRecord> cache = new ((int) 2);
+        LRUCache<string, DataRecord> cache = new (2);
         
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), null, cache);
@@ -325,7 +325,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         
-        LRUCache<string, DataRecord> cache = new((int) 2);
+        LRUCache<string, DataRecord> cache = new(2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "myfunc", cache);
 
         var now = DateTimeOffset.UtcNow;
@@ -346,7 +346,7 @@ public class BasePersistenceStoreTests
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
-        LRUCache<string, DataRecord> cache = new((int) 2);
+        LRUCache<string, DataRecord> cache = new(2);
         
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), "myfunc", cache);
@@ -376,7 +376,7 @@ public class BasePersistenceStoreTests
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
-        LRUCache<string, DataRecord> cache = new((int) 2);
+        LRUCache<string, DataRecord> cache = new(2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), "myfunc", cache);
 
@@ -445,7 +445,7 @@ public class BasePersistenceStoreTests
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
-        LRUCache<string, DataRecord> cache = new ((int) 2);
+        LRUCache<string, DataRecord> cache = new (2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true).Build(), null, cache);
 

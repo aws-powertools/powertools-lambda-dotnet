@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System.Diagnostics;
 using DevLab.JmesPath.Functions;
 using Newtonsoft.Json.Linq;
 
@@ -32,8 +33,8 @@ public class JsonFunction : JmesPathFunction
     /// <inheritdoc />
     public override JToken Execute(params JmesPathFunctionArgument[] args)
     {
-        System.Diagnostics.Debug.Assert(args.Length == 1);
-        System.Diagnostics.Debug.Assert(args[0].IsToken);
+        Debug.Assert(args.Length == 1);
+        Debug.Assert(args[0].IsToken);
         var argument = args[0];
         var token = argument.Token;
         return JToken.Parse(token.ToString());
