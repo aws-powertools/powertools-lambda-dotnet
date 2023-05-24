@@ -15,31 +15,44 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
-using Xunit;
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Containers;
 
-namespace AWS.Lambda.Powertools.Idempotency.Tests;
+namespace AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 
-public class IntegrationTestBase : IAsyncLifetime
+// ReSharper disable once ClassNeverInstantiated.Global
+public class DynamoDbFixture : IDisposable
 {
-    protected const string TableName = "idempotency_table";
-    protected AmazonDynamoDBClient Client;
-    private protected DynamoDBPersistenceStore DynamoDbPersistenceStore;
+    private readonly IContainer _container;
+    public AmazonDynamoDBClient Client { get; set; }
+    public DynamoDBPersistenceStore DynamoDbPersistenceStore { get; set; }
+    public string TableName { get; set; } = "idempotency_table";
 
-    public async Task InitializeAsync()
+    public DynamoDbFixture()
     {
-        // initialize TestContainers or Ductus.FluentDocker or have DynamoDb local docker running
+        Environment.SetEnvironmentVariable("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE","/var/run/docker.sock");
+        
+        _container = new ContainerBuilder()
+            .WithName(Guid.NewGuid().ToString("D"))
+            .WithImage("amazon/dynamodb-local:latest")
+            .WithPortBinding(8000, true)
+            .WithDockerEndpoint(Environment.GetEnvironmentVariable("DOCKER_HOST") ?? "unix:///var/run/docker.sock")
+            .Build();
+        
+        
+        _container.StartAsync().Wait();
         
         var credentials = new BasicAWSCredentials("FAKE", "FAKE");
         var amazonDynamoDbConfig = new AmazonDynamoDBConfig
         {
-            ServiceURL = new UriBuilder("http", "localhost", 8000).Uri.ToString(),
+            ServiceURL = new UriBuilder("http", _container.Hostname, _container.GetMappedPublicPort(8000)).Uri.ToString(),
             AuthenticationRegion = "us-east-1"
         };
+        
         Client = new AmazonDynamoDBClient(credentials, amazonDynamoDbConfig);
 
         var createTableRequest = new CreateTableRequest
@@ -61,8 +74,8 @@ public class IntegrationTestBase : IAsyncLifetime
         };
         try
         {
-            await Client.CreateTableAsync(createTableRequest);
-            var response = await Client.DescribeTableAsync(TableName);
+            Client.CreateTableAsync(createTableRequest).GetAwaiter().GetResult();
+            var response = Client.DescribeTableAsync(TableName).GetAwaiter().GetResult();
             if (response == null)
             {
                 throw new NullReferenceException("Table was not created within the expected time");
@@ -79,12 +92,9 @@ public class IntegrationTestBase : IAsyncLifetime
             .Build();
         DynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null);
     }
-
-    public Task DisposeAsync()
+    
+    public void Dispose()
     {
-        // Make sure delete item after each test
-        DynamoDbPersistenceStore.DeleteRecord("key").ConfigureAwait(false);
-        //_dynamoContainer.DisposeAsync().ConfigureAwait(false);
-        return Task.CompletedTask;
+        _container.DisposeAsync().AsTask();
     }
 }

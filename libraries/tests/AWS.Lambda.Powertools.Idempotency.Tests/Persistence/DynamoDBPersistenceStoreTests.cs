@@ -28,10 +28,21 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 
 [Collection("Sequential")]
 [Trait("Category", "Integration")]
-public class DynamoDbPersistenceStoreTests : IntegrationTestBase
+public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
 {
+    private readonly DynamoDBPersistenceStore _dynamoDbPersistenceStore;
+    private readonly AmazonDynamoDBClient _client;
+    private readonly string _tableName;
+
+    public DynamoDbPersistenceStoreTests(DynamoDbFixture fixture)
+    {
+        _dynamoDbPersistenceStore = fixture.DynamoDbPersistenceStore;
+        _client = fixture.Client;
+        _tableName = fixture.TableName;
+    }
+    
     //putRecord
-    [Fact(Skip = "Integration Tests - Require setup")]
+    [Fact]
     public async Task PutRecord_WhenRecordDoesNotExist_ShouldCreateRecordInDynamoDB()
     {
         // Arrange
@@ -40,14 +51,14 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         var key = CreateKey("key");
         
         // Act
-        await DynamoDbPersistenceStore
+        await _dynamoDbPersistenceStore
             .PutRecord(new DataRecord("key", DataRecord.DataRecordStatus.COMPLETED, expiry, null, null), now);
 
         // Assert
         var getItemResponse =
-            await Client.GetItemAsync(new GetItemRequest
+            await _client.GetItemAsync(new GetItemRequest
             {
-                TableName = TableName,
+                TableName = _tableName,
                 Key = key
             });
 
@@ -57,7 +68,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         item["expiration"].N.Should().Be(expiry.ToString());
     }
 
-    [Fact(Skip = "Integration Tests - Require setup")]
+    [Fact]
     public async Task PutRecord_WhenRecordAlreadyExist_ShouldThrowIdempotencyItemAlreadyExistsException() 
     {
         // Arrange
@@ -70,15 +81,15 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         item.Add("expiration", new AttributeValue {N = expiry.ToString()});
         item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.COMPLETED.ToString()));
         item.Add("data", new AttributeValue("Fake Data"));
-        await Client.PutItemAsync(new PutItemRequest
+        await _client.PutItemAsync(new PutItemRequest
         {
-            TableName = TableName,
+            TableName = _tableName,
             Item = item
         });
         var expiry2 = now.AddSeconds(3600).ToUnixTimeSeconds();
 
         // Act
-        var act = () => DynamoDbPersistenceStore.PutRecord(
+        var act = () => _dynamoDbPersistenceStore.PutRecord(
             new DataRecord("key",
                 DataRecord.DataRecordStatus.INPROGRESS,
                 expiry2,
@@ -90,9 +101,9 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         await act.Should().ThrowAsync<IdempotencyItemAlreadyExistsException>();
         
         // item was not updated, retrieve the initial one
-        var itemInDb = (await Client.GetItemAsync(new GetItemRequest
+        var itemInDb = (await _client.GetItemAsync(new GetItemRequest
             {
-                TableName = TableName,
+                TableName = _tableName,
                 Key = key
             })).Item;
         itemInDb.Should().NotBeNull();
@@ -102,7 +113,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
     }
     
     //getRecord
-    [Fact(Skip = "Integration Tests - Require setup")]
+    [Fact]
     public async Task GetRecord_WhenRecordExistsInDynamoDb_ShouldReturnExistingRecord()
     {
         // Arrange
@@ -121,14 +132,14 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         });
         item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.COMPLETED.ToString()));
         item.Add("data", new AttributeValue("Fake Data"));
-        var _ = await Client.PutItemAsync(new PutItemRequest
+        var _ = await _client.PutItemAsync(new PutItemRequest
         {
-            TableName = TableName,
+            TableName = _tableName,
             Item = item
         });
 
         // Act
-        var record = await DynamoDbPersistenceStore.GetRecord("key");
+        var record = await _dynamoDbPersistenceStore.GetRecord("key");
 
         // Assert
         record.IdempotencyKey.Should().Be("key");
@@ -137,18 +148,21 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         record.ExpiryTimestamp.Should().Be(expiry);
     }
 
-    [Fact(Skip = "Integration Tests - Require setup")]
+    [Fact]
     public async Task GetRecord_WhenRecordIsAbsent_ShouldThrowException()
     {
+        //Arrange
+        await _dynamoDbPersistenceStore.DeleteRecord("key");
+        
         // Act
-        Func<Task> act = () => DynamoDbPersistenceStore.GetRecord("key");
+        Func<Task> act = () => _dynamoDbPersistenceStore.GetRecord("key");
         
         // Assert
         await act.Should().ThrowAsync<IdempotencyItemNotFoundException>();
     }
     //updateRecord
 
-    [Fact(Skip = "Integration Tests - Require setup")]
+    [Fact]
     public async Task UpdateRecord_WhenRecordExistsInDynamoDb_ShouldUpdateRecord()
     {
         // Arrange: Insert a fake item with same id
@@ -161,24 +175,24 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
             N = expiry.ToString()
         });
         item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.INPROGRESS.ToString()));
-        await Client.PutItemAsync(new PutItemRequest
+        await _client.PutItemAsync(new PutItemRequest
         {
-            TableName = TableName,
+            TableName = _tableName,
             Item = item
         });
         // enable payload validation
-        DynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().WithPayloadValidationJmesPath("path").Build(),
+        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().WithPayloadValidationJmesPath("path").Build(),
             null);
 
         // Act
         expiry = now.AddSeconds(3600).ToUnixTimeMilliseconds();
         var record = new DataRecord("key", DataRecord.DataRecordStatus.COMPLETED, expiry, "Fake result", "hash");
-        await DynamoDbPersistenceStore.UpdateRecord(record);
+        await _dynamoDbPersistenceStore.UpdateRecord(record);
 
         // Assert
-        var itemInDb = (await Client.GetItemAsync(new GetItemRequest
+        var itemInDb = (await _client.GetItemAsync(new GetItemRequest
         {
-            TableName = TableName,
+            TableName = _tableName,
             Key = key
         })).Item;
 
@@ -189,7 +203,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
     }
 
     //deleteRecord
-    [Fact(Skip = "Integration Tests - Require setup")]
+    [Fact]
     public async Task DeleteRecord_WhenRecordExistsInDynamoDb_ShouldDeleteRecord() 
     {
         // Arrange: Insert a fake item with same id
@@ -199,29 +213,29 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         var expiry = now.AddSeconds(360).ToUnixTimeMilliseconds();
         item.Add("expiration", new AttributeValue {N=expiry.ToString()});
         item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.INPROGRESS.ToString()));
-        await Client.PutItemAsync(new PutItemRequest
+        await _client.PutItemAsync(new PutItemRequest
         {
-            TableName = TableName,
+            TableName = _tableName,
             Item = item
         });
-        var scanResponse = await Client.ScanAsync(new ScanRequest
+        var scanResponse = await _client.ScanAsync(new ScanRequest
         {
-            TableName = TableName
+            TableName = _tableName
         });
         scanResponse.Items.Count.Should().Be(1);
 
         // Act
-        await DynamoDbPersistenceStore.DeleteRecord("key");
+        await _dynamoDbPersistenceStore.DeleteRecord("key");
 
         // Assert
-        scanResponse = await Client.ScanAsync(new ScanRequest
+        scanResponse = await _client.ScanAsync(new ScanRequest
         {
-            TableName = TableName
+            TableName = _tableName
         });
         scanResponse.Items.Count.Should().Be(0);
     }
 
-    [Fact(Skip = "Integration Tests - Require setup")]
+    [Fact]
     public async Task EndToEndWithCustomAttrNamesAndSortKey()
     {
         const string tableNameCustom = "idempotency_table_custom";
@@ -242,10 +256,10 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
                 },
                 BillingMode = BillingMode.PAY_PER_REQUEST
             };
-            await Client.CreateTableAsync(createTableRequest);
+            await _client.CreateTableAsync(createTableRequest);
             var persistenceStore = new DynamoDBPersistenceStoreBuilder()
                 .WithTableName(tableNameCustom)
-                .WithDynamoDBClient(Client)
+                .WithDynamoDBClient(_client)
                 .WithDataAttr("result")
                 .WithExpiryAttr("expiry")
                 .WithKeyAttr("key")
@@ -273,7 +287,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
                 { "sortkey", new AttributeValue("mykey") }
             };
 
-            var itemInDb = (await Client.GetItemAsync(new GetItemRequest
+            var itemInDb = (await _client.GetItemAsync(new GetItemRequest
             {
                 TableName = tableNameCustom,
                 Key = customKey
@@ -302,7 +316,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
 
             // DELETE
             await persistenceStore.DeleteRecord("mykey");
-            (await Client.ScanAsync(new ScanRequest
+            (await _client.ScanAsync(new ScanRequest
             {
                 TableName = tableNameCustom
             })).Count.Should().Be(0);
@@ -312,7 +326,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         {
             try
             {
-                await Client.DeleteTableAsync(new DeleteTableRequest
+                await _client.DeleteTableAsync(new DeleteTableRequest
                 {
                     TableName = tableNameCustom
                 });
@@ -324,7 +338,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         }
     }
 
-    [Fact(Skip = "Integration Tests - Require setup")]
+    [Fact]
     public async Task GetRecord_WhenIdempotencyDisabled_ShouldNotCreateClients() 
     {
         try
@@ -332,7 +346,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
             // Arrange
             Environment.SetEnvironmentVariable(Constants.IdempotencyDisabledEnv, "true");
             
-            var store = new DynamoDBPersistenceStoreBuilder().WithTableName(TableName).Build();
+            var store = new DynamoDBPersistenceStoreBuilder().WithTableName(_tableName).Build();
             
             // Act
             Func<Task> act = () => store.GetRecord("fake");
