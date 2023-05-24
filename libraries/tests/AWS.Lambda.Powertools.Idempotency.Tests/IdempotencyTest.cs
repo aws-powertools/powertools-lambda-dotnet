@@ -30,9 +30,8 @@ public class IdempotencyTest
 {
     private const string TableName = "idempotency_table";
     
-    //[Fact(Skip = "Integration Tests - Require setup")]
+    [Fact(Skip = "Integration Tests - Require setup")]
     [Trait("Category", "Integration")]
-    [Fact]
     public async Task EndToEndTest() 
     {
         var client = new AmazonDynamoDBClient();

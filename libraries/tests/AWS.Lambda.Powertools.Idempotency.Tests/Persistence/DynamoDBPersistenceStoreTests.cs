@@ -31,7 +31,7 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 public class DynamoDbPersistenceStoreTests : IntegrationTestBase
 {
     //putRecord
-    [Fact]
+    [Fact(Skip = "Integration Tests - Require setup")]
     public async Task PutRecord_WhenRecordDoesNotExist_ShouldCreateRecordInDynamoDB()
     {
         // Arrange
@@ -57,7 +57,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         item["expiration"].N.Should().Be(expiry.ToString());
     }
 
-    [Fact]
+    [Fact(Skip = "Integration Tests - Require setup")]
     public async Task PutRecord_WhenRecordAlreadyExist_ShouldThrowIdempotencyItemAlreadyExistsException() 
     {
         // Arrange
@@ -102,7 +102,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
     }
     
     //getRecord
-    [Fact]
+    [Fact(Skip = "Integration Tests - Require setup")]
     public async Task GetRecord_WhenRecordExistsInDynamoDb_ShouldReturnExistingRecord()
     {
         // Arrange
@@ -137,7 +137,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         record.ExpiryTimestamp.Should().Be(expiry);
     }
 
-    [Fact]
+    [Fact(Skip = "Integration Tests - Require setup")]
     public async Task GetRecord_WhenRecordIsAbsent_ShouldThrowException()
     {
         // Act
@@ -148,7 +148,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
     }
     //updateRecord
 
-    [Fact]
+    [Fact(Skip = "Integration Tests - Require setup")]
     public async Task UpdateRecord_WhenRecordExistsInDynamoDb_ShouldUpdateRecord()
     {
         // Arrange: Insert a fake item with same id
@@ -189,7 +189,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
     }
 
     //deleteRecord
-    [Fact]
+    [Fact(Skip = "Integration Tests - Require setup")]
     public async Task DeleteRecord_WhenRecordExistsInDynamoDb_ShouldDeleteRecord() 
     {
         // Arrange: Insert a fake item with same id
@@ -221,7 +221,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         scanResponse.Items.Count.Should().Be(0);
     }
 
-    [Fact]
+    [Fact(Skip = "Integration Tests - Require setup")]
     public async Task EndToEndWithCustomAttrNamesAndSortKey()
     {
         const string tableNameCustom = "idempotency_table_custom";
@@ -324,7 +324,7 @@ public class DynamoDbPersistenceStoreTests : IntegrationTestBase
         }
     }
 
-    [Fact]
+    [Fact(Skip = "Integration Tests - Require setup")]
     public async Task GetRecord_WhenIdempotencyDisabled_ShouldNotCreateClients() 
     {
         try

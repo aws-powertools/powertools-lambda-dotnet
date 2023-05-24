@@ -30,9 +30,9 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 
 public class BasePersistenceStoreTests
 {
-    private class InMemoryPersistenceStore : BasePersistenceStore
+    class InMemoryPersistenceStore : BasePersistenceStore
     {
-        private readonly string _validationHash = null;
+        private string _validationHash = null;
         public DataRecord DataRecord;
         public int Status = -1;
         public override Task<DataRecord> GetRecord(string idempotencyKey)
