@@ -29,7 +29,6 @@ public class DynamoDbFixture : IDisposable
 {
     private readonly IContainer _container;
     public AmazonDynamoDBClient Client { get; set; }
-    public DynamoDBPersistenceStore DynamoDbPersistenceStore { get; set; }
     public string TableName { get; set; } = "idempotency_table";
 
     public DynamoDbFixture()
@@ -85,12 +84,6 @@ public class DynamoDbFixture : IDisposable
         {
             Console.WriteLine(e.Message);
         }
-        
-        DynamoDbPersistenceStore = new DynamoDBPersistenceStoreBuilder()
-            .WithTableName(TableName)
-            .WithDynamoDBClient(Client)
-            .Build();
-        DynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null);
     }
     
     public void Dispose()

@@ -21,22 +21,28 @@ using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
+using AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 using FluentAssertions;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests;
 
-public class IdempotencyTest
+public class IdempotencyTest : IClassFixture<DynamoDbFixture>
 {
-    private const string TableName = "idempotency_table";
+    private readonly AmazonDynamoDBClient _client;
+    private readonly string _tableName;
+
+    public IdempotencyTest(DynamoDbFixture fixture)
+    {
+        _client = fixture.Client;
+        _tableName = fixture.TableName;
+    }
     
-    [Fact(Skip = "Integration Tests - Require setup")]
+    [Fact]
     [Trait("Category", "Integration")]
     public async Task EndToEndTest() 
     {
-        var client = new AmazonDynamoDBClient();
-        
-        var function = new IdempotencyFunction(client);
+        var function = new IdempotencyFunction(_client);
         
         var options = new JsonSerializerOptions
         {
@@ -58,9 +64,9 @@ public class IdempotencyTest
         JsonSerializer.Serialize(response).Should().Be(JsonSerializer.Serialize(response));
         response2.Body.Should().Contain("hello world");
 
-        var scanResponse = await client.ScanAsync(new ScanRequest
+        var scanResponse = await _client.ScanAsync(new ScanRequest
         {
-            TableName = TableName
+            TableName = _tableName
         });
         scanResponse.Count.Should().Be(1);
     }

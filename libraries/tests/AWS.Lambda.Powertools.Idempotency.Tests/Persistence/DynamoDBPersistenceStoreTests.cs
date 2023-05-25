@@ -33,12 +33,16 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
     private readonly DynamoDBPersistenceStore _dynamoDbPersistenceStore;
     private readonly AmazonDynamoDBClient _client;
     private readonly string _tableName;
-
+    
     public DynamoDbPersistenceStoreTests(DynamoDbFixture fixture)
     {
-        _dynamoDbPersistenceStore = fixture.DynamoDbPersistenceStore;
         _client = fixture.Client;
         _tableName = fixture.TableName;
+        _dynamoDbPersistenceStore = new DynamoDBPersistenceStoreBuilder()
+            .WithTableName(_tableName)
+            .WithDynamoDBClient(_client)
+            .Build();
+        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null);
     }
     
     //putRecord
