@@ -1,0 +1,419 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0/linux-arm64",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {},
+    ".NETCoreApp,Version=v6.0/linux-arm64": {
+      "LambdaPowertoolsAPI/1.0.0": {
+        "dependencies": {
+          "AWS.Lambda.Powertools.Logging": "1.1.0",
+          "AWS.Lambda.Powertools.Metrics": "1.2.0",
+          "AWS.Lambda.Powertools.Tracing": "1.1.0",
+          "Amazon.Lambda.AspNetCoreServer": "8.1.0"
+        },
+        "runtime": {
+          "LambdaPowertoolsAPI.dll": {}
+        }
+      },
+      "Amazon.Lambda.APIGatewayEvents/2.6.0": {
+        "runtime": {
+          "lib/netcoreapp3.1/Amazon.Lambda.APIGatewayEvents.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.2.0.0"
+          }
+        }
+      },
+      "Amazon.Lambda.ApplicationLoadBalancerEvents/2.1.0": {
+        "runtime": {
+          "lib/netcoreapp3.1/Amazon.Lambda.ApplicationLoadBalancerEvents.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Amazon.Lambda.AspNetCoreServer/8.1.0": {
+        "dependencies": {
+          "Amazon.Lambda.APIGatewayEvents": "2.6.0",
+          "Amazon.Lambda.ApplicationLoadBalancerEvents": "2.1.0",
+          "Amazon.Lambda.Core": "2.1.0",
+          "Amazon.Lambda.Logging.AspNetCore": "3.1.0",
+          "Amazon.Lambda.Serialization.SystemTextJson": "2.3.1"
+        },
+        "runtime": {
+          "lib/net6.0/Amazon.Lambda.AspNetCoreServer.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.4.0"
+          }
+        }
+      },
+      "Amazon.Lambda.Core/2.1.0": {
+        "runtime": {
+          "lib/net6.0/Amazon.Lambda.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Amazon.Lambda.Logging.AspNetCore/3.1.0": {
+        "dependencies": {
+          "Amazon.Lambda.Core": "2.1.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "2.1.0",
+          "Microsoft.Extensions.Logging": "7.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Amazon.Lambda.Logging.AspNetCore.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.0.0"
+          }
+        }
+      },
+      "Amazon.Lambda.Serialization.SystemTextJson/2.3.1": {
+        "dependencies": {
+          "Amazon.Lambda.Core": "2.1.0"
+        },
+        "runtime": {
+          "lib/net6.0/Amazon.Lambda.Serialization.SystemTextJson.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Amazon.Lambda.SQSEvents/2.1.0": {
+        "runtime": {
+          "lib/netcoreapp3.1/Amazon.Lambda.SQSEvents.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "AspectInjector/2.8.1": {
+        "runtime": {
+          "lib/netstandard2.0/AspectInjector.Broker.dll": {
+            "assemblyVersion": "2.8.1.0",
+            "fileVersion": "2.8.1.0"
+          }
+        }
+      },
+      "AWS.Lambda.Powertools.Common/1.1.0": {
+        "dependencies": {
+          "AspectInjector": "2.8.1"
+        },
+        "runtime": {
+          "lib/net6.0/AWS.Lambda.Powertools.Common.dll": {
+            "assemblyVersion": "1.1.0.0",
+            "fileVersion": "1.1.0.0"
+          }
+        }
+      },
+      "AWS.Lambda.Powertools.Logging/1.1.0": {
+        "dependencies": {
+          "AWS.Lambda.Powertools.Common": "1.1.0",
+          "Microsoft.Extensions.Logging": "7.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/AWS.Lambda.Powertools.Logging.dll": {
+            "assemblyVersion": "1.1.0.0",
+            "fileVersion": "1.1.0.0"
+          }
+        }
+      },
+      "AWS.Lambda.Powertools.Metrics/1.2.0": {
+        "dependencies": {
+          "AWS.Lambda.Powertools.Common": "1.1.0"
+        },
+        "runtime": {
+          "lib/net6.0/AWS.Lambda.Powertools.Metrics.dll": {
+            "assemblyVersion": "1.2.0.0",
+            "fileVersion": "1.2.0.0"
+          }
+        }
+      },
+      "AWS.Lambda.Powertools.Tracing/1.1.0": {
+        "dependencies": {
+          "AWS.Lambda.Powertools.Common": "1.1.0",
+          "AWSSDK.XRay": "3.7.102.25",
+          "AWSXRayRecorder.Core": "2.13.0"
+        },
+        "runtime": {
+          "lib/net6.0/AWS.Lambda.Powertools.Tracing.dll": {
+            "assemblyVersion": "1.1.0.0",
+            "fileVersion": "1.1.0.0"
+          }
+        }
+      },
+      "AWSSDK.Core/3.7.103.6": {
+        "runtime": {
+          "lib/netcoreapp3.1/AWSSDK.Core.dll": {
+            "assemblyVersion": "3.3.0.0",
+            "fileVersion": "3.7.103.6"
+          }
+        }
+      },
+      "AWSSDK.XRay/3.7.102.25": {
+        "dependencies": {
+          "AWSSDK.Core": "3.7.103.6"
+        },
+        "runtime": {
+          "lib/netcoreapp3.1/AWSSDK.XRay.dll": {
+            "assemblyVersion": "3.3.0.0",
+            "fileVersion": "3.7.102.25"
+          }
+        }
+      },
+      "AWSXRayRecorder.Core/2.13.0": {
+        "dependencies": {
+          "AWSSDK.Core": "3.7.103.6",
+          "Amazon.Lambda.SQSEvents": "2.1.0"
+        },
+        "runtime": {
+          "lib/net6.0/AWSXRayRecorder.Core.dll": {
+            "assemblyVersion": "2.13.0.0",
+            "fileVersion": "2.13.0.0"
+          }
+        }
+      },
+      "Microsoft.Extensions.Configuration.Abstractions/2.1.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "7.0.0"
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection/7.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "7.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/Microsoft.Extensions.DependencyInjection.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.22.51805"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/7.0.0": {
+        "runtime": {
+          "lib/net6.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.22.51805"
+          }
+        }
+      },
+      "Microsoft.Extensions.Logging/7.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection": "7.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "7.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.0",
+          "Microsoft.Extensions.Options": "7.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/Microsoft.Extensions.Logging.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.22.51805"
+          }
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions/7.0.0": {
+        "runtime": {
+          "lib/net6.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.22.51805"
+          }
+        }
+      },
+      "Microsoft.Extensions.Options/7.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "7.0.0",
+          "Microsoft.Extensions.Primitives": "7.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/Microsoft.Extensions.Options.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.22.51805"
+          }
+        }
+      },
+      "Microsoft.Extensions.Primitives/7.0.0": {
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/Microsoft.Extensions.Primitives.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.22.51805"
+          }
+        }
+      },
+      "System.Runtime.CompilerServices.Unsafe/6.0.0": {}
+    }
+  },
+  "libraries": {
+    "LambdaPowertoolsAPI/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Amazon.Lambda.APIGatewayEvents/2.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IpBKoaQD7cFb38XfoJlyv/+gnYzn+r8Y54sqyubbsPNEMujfedUNnrVgFKW5STVKzbPBw2orQsWqzdp3TvxWQA==",
+      "path": "amazon.lambda.apigatewayevents/2.6.0",
+      "hashPath": "amazon.lambda.apigatewayevents.2.6.0.nupkg.sha512"
+    },
+    "Amazon.Lambda.ApplicationLoadBalancerEvents/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-lxOKr4kuooqQV84YsNjgrJp7c4lcYDe+RPIMcdvpLEM6XlLzar38OoG4DeCdzsgnxy0aFQ25nzaDUnrqjIFC/A==",
+      "path": "amazon.lambda.applicationloadbalancerevents/2.1.0",
+      "hashPath": "amazon.lambda.applicationloadbalancerevents.2.1.0.nupkg.sha512"
+    },
+    "Amazon.Lambda.AspNetCoreServer/8.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-yPI0K7H3iNq3GhqsAdfKP0vfZmGkf+Qj8Fs+wfQ1vI6yLBF2sO4bbIcCdB1rdwQG/4Tdvv60c5RrW6MRP9XJQg==",
+      "path": "amazon.lambda.aspnetcoreserver/8.1.0",
+      "hashPath": "amazon.lambda.aspnetcoreserver.8.1.0.nupkg.sha512"
+    },
+    "Amazon.Lambda.Core/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ok06UhfBZw6j6+PhiJR9C0EOMuJvnq8rMCHVkaFmPFrlI/q447ukwGZQKaAKqodV+MNTfpb/iPxjgUPVbSlVVw==",
+      "path": "amazon.lambda.core/2.1.0",
+      "hashPath": "amazon.lambda.core.2.1.0.nupkg.sha512"
+    },
+    "Amazon.Lambda.Logging.AspNetCore/3.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-4SD+db3WUBMTl+0p/4C2/zalkG2gMFc9PYwLv4UGPkq6WUlek9hmom0igKkcGY5/1uprEdG/zQ5abKUfs6z0dQ==",
+      "path": "amazon.lambda.logging.aspnetcore/3.1.0",
+      "hashPath": "amazon.lambda.logging.aspnetcore.3.1.0.nupkg.sha512"
+    },
+    "Amazon.Lambda.Serialization.SystemTextJson/2.3.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7dGGgikMlEz72rGqeDwQEIxq+O8RDEdR4GH2S7hfZ8uzv5lyWVDuP2urV6MyD6APJ2WVHRwJlV74bB+XJncQpw==",
+      "path": "amazon.lambda.serialization.systemtextjson/2.3.1",
+      "hashPath": "amazon.lambda.serialization.systemtextjson.2.3.1.nupkg.sha512"
+    },
+    "Amazon.Lambda.SQSEvents/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-a1xaCIuXDleJ8iRE3vHWWhtPqUiURmoQUS68INMEQmtfHr4wTz837TQZONo4cyubv5sZj78DDrYessZEzgFRGQ==",
+      "path": "amazon.lambda.sqsevents/2.1.0",
+      "hashPath": "amazon.lambda.sqsevents.2.1.0.nupkg.sha512"
+    },
+    "AspectInjector/2.8.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8BScDeaLazJVFaa2Tt9hoWLhllnxXP3Sew+l/vktdZEcgoPOsqhlDqe6GXJvy7xVkdICAbKFsrcDJ0cfrDR6Mg==",
+      "path": "aspectinjector/2.8.1",
+      "hashPath": "aspectinjector.2.8.1.nupkg.sha512"
+    },
+    "AWS.Lambda.Powertools.Common/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-y9rQ7QYIrERlxbGSA1/x2EbKCG+BukY04kpu91MynO9Oo2DwHkoY3DqqL9lPEOSGhRfe00Rr+GDCIvTv9ggTfg==",
+      "path": "aws.lambda.powertools.common/1.1.0",
+      "hashPath": "aws.lambda.powertools.common.1.1.0.nupkg.sha512"
+    },
+    "AWS.Lambda.Powertools.Logging/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-mOF4wkVGGx/FMrX7HLAXOEVDhx4bvTq49KnhsHEP57bH8gh7/GPo3nWWnkLWp5AgixihoaakrXgqd2HyZtn+4A==",
+      "path": "aws.lambda.powertools.logging/1.1.0",
+      "hashPath": "aws.lambda.powertools.logging.1.1.0.nupkg.sha512"
+    },
+    "AWS.Lambda.Powertools.Metrics/1.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-a2o7dAeFu2BH6oc2dc1HUmq2OOFJ99kj8qNrei7aU4V4TGLzoV+yMrWfv734OLy55+j9MySsHgRJVLZQ1pYXEg==",
+      "path": "aws.lambda.powertools.metrics/1.2.0",
+      "hashPath": "aws.lambda.powertools.metrics.1.2.0.nupkg.sha512"
+    },
+    "AWS.Lambda.Powertools.Tracing/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-PZYSy+b4PtnPQQVJhI7ClAD2c9lifvGjM2gKRp5xAr/40/xMd/075udjM0NAs7Hs4tsOIoHRFpOtfYWmNK7T8g==",
+      "path": "aws.lambda.powertools.tracing/1.1.0",
+      "hashPath": "aws.lambda.powertools.tracing.1.1.0.nupkg.sha512"
+    },
+    "AWSSDK.Core/3.7.103.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-c9taEwfYXx7o94lDJrr9gJ94vGjwWiWjWKGIR0jOlIBZ6mtoW0sMXpqdbxvSa1eI9cU66wMfSmIEPrcvguwbHw==",
+      "path": "awssdk.core/3.7.103.6",
+      "hashPath": "awssdk.core.3.7.103.6.nupkg.sha512"
+    },
+    "AWSSDK.XRay/3.7.102.25": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-5x6KA5w/qVXIPzTsJBKCZfFEwxeeLZZoHF2CD6g/2I2Zc8uDizJgmjlxoLd/nTLx/i4TPEhWcBPcpCNfpxzNkA==",
+      "path": "awssdk.xray/3.7.102.25",
+      "hashPath": "awssdk.xray.3.7.102.25.nupkg.sha512"
+    },
+    "AWSXRayRecorder.Core/2.13.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-nwshtBicwFsB+TaSOzX3eG54JIfhKgRwIh5oQaO5WuQuqjehXCMdigLBgzeDhC/oRTawGwBQdNwU6My2mKX8Dg==",
+      "path": "awsxrayrecorder.core/2.13.0",
+      "hashPath": "awsxrayrecorder.core.2.13.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Configuration.Abstractions/2.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-lMmUjAKvY9r6QmxCS15iSb6ulhwnh0zp44NtnVJ+HIDLFmu4iej41U+dU58On8NRezmlgRXiQtLnBeZSzYNKQg==",
+      "path": "microsoft.extensions.configuration.abstractions/2.1.0",
+      "hashPath": "microsoft.extensions.configuration.abstractions.2.1.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-elNeOmkeX3eDVG6pYVeV82p29hr+UKDaBhrZyWvWLw/EVZSYEkZlQdkp0V39k/Xehs2Qa0mvoCvkVj3eQxNQ1Q==",
+      "path": "microsoft.extensions.dependencyinjection/7.0.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.7.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-h3j/QfmFN4S0w4C2A6X7arXij/M/OVw3uQHSOFxnND4DyAzO1F9eMX7Eti7lU/OkSthEE0WzRsfT/Dmx86jzCw==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/7.0.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.7.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Logging/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Nw2muoNrOG5U5qa2ZekXwudUn2BJcD41e65zwmDHb1fQegTX66UokLWZkJRpqSSHXDOWZ5V0iqhbxOEky91atA==",
+      "path": "microsoft.extensions.logging/7.0.0",
+      "hashPath": "microsoft.extensions.logging.7.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Logging.Abstractions/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-kmn78+LPVMOWeITUjIlfxUPDsI0R6G0RkeAMBmQxAJ7vBJn4q2dTva7pWi65ceN5vPGjJ9q/Uae2WKgvfktJAw==",
+      "path": "microsoft.extensions.logging.abstractions/7.0.0",
+      "hashPath": "microsoft.extensions.logging.abstractions.7.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Options/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-lP1yBnTTU42cKpMozuafbvNtQ7QcBjr/CcK3bYOGEMH55Fjt+iecXjT6chR7vbgCMqy3PG3aNQSZgo/EuY/9qQ==",
+      "path": "microsoft.extensions.options/7.0.0",
+      "hashPath": "microsoft.extensions.options.7.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Primitives/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-um1KU5kxcRp3CNuI8o/GrZtD4AIOXDk+RLsytjZ9QPok3ttLUelLKpilVPuaFT3TFjOhSibUAso0odbOaCDj3Q==",
+      "path": "microsoft.extensions.primitives/7.0.0",
+      "hashPath": "microsoft.extensions.primitives.7.0.0.nupkg.sha512"
+    },
+    "System.Runtime.CompilerServices.Unsafe/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/iUeP3tq1S0XdNNoMz5C9twLSrM/TH+qElHkXWaPvuNOt+99G75NrV0OS2EqHx5wMN7popYjpc8oTjC1y16DLg==",
+      "path": "system.runtime.compilerservices.unsafe/6.0.0",
+      "hashPath": "system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
+    }
+  }
+}
