@@ -65,9 +65,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         } 
         else
         {
-            var isIdempotencyDisabled = bool.TryParse(Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv), out var result) && result;
-            
-            if (isIdempotencyDisabled) 
+            if (PowertoolsConfigurations.Instance.IdempotencyDisabled) 
             {                
                 // we do not want to create a DynamoDbClient if idempotency is disabled
                 // null is ok as idempotency won't be called

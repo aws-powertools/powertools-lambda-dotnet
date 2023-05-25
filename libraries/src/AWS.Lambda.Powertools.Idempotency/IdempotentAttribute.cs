@@ -83,8 +83,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
     protected internal sealed override async Task<T> WrapAsync<T>(
         Func<object[], Task<T>> target, object[] args, AspectEventArgs eventArgs)
     {
-        var idempotencyDisabledEnv = Environment.GetEnvironmentVariable(Constants.IdempotencyDisabledEnv);
-        if (idempotencyDisabledEnv is "true")
+        if (PowertoolsConfigurations.Instance.IdempotencyDisabled)
         {
             return await base.WrapAsync(target, args, eventArgs);
         }
