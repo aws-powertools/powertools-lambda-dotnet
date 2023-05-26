@@ -26,20 +26,17 @@ internal class IdempotencyAspectHandler<T>
 {
     private const int MaxRetries = 2;
 
-    private readonly Func<object[], object> _target;
-    private readonly object[] _args;
+    private readonly Func<Task<T>> _target;
     private readonly JsonDocument _data;
     private readonly BasePersistenceStore _persistenceStore;
     private readonly ILog _log;
 
     public IdempotencyAspectHandler(
-        Func<object[], object> target, 
-        object[] args,
+        Func<Task<T>> target,
         string functionName,
         JsonDocument payload)
     {
         _target = target;
-        _args = args;
         _data = payload;
         _persistenceStore = Idempotency.Instance.PersistenceStore;
         _persistenceStore.Configure(Idempotency.Instance.IdempotencyOptions, functionName);
@@ -182,7 +179,7 @@ internal class IdempotencyAspectHandler<T>
         T response;
         try
         {
-            response = await (Task<T>)_target(_args);
+            response = await _target();
         }
         catch(Exception handlerException)
         {

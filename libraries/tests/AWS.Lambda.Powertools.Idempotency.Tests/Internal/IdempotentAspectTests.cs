@@ -33,8 +33,10 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Internal;
 [Collection("Sequential")]
 public class IdempotentAspectTests : IDisposable
 {
-    [Fact]
-    public async Task Handle_WhenFirstCall_ShouldPutInStore()
+    [Theory]
+    [InlineData(typeof(IdempotencyEnabledFunction))]
+    [InlineData(typeof(IdempotencyEnabledSyncFunction))]
+    public async Task Handle_WhenFirstCall_ShouldPutInStore(Type type)
     {
         //Arrange
         var store = new Mock<BasePersistenceStore>();
@@ -44,11 +46,11 @@ public class IdempotentAspectTests : IDisposable
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
             );
         
-        var function = new IdempotencyEnabledFunction();
+        var function = Activator.CreateInstance(type) as IIdempotencyEnabledFunction;
         var product = new Product(42, "fake product", 12);
         
         //Act
-        var basket = await function.Handle(product, new TestLambdaContext());
+        var basket = await function!.HandleTest(product, new TestLambdaContext());
         
         //Assert
         basket.Products.Count.Should().Be(1);
@@ -61,8 +63,10 @@ public class IdempotentAspectTests : IDisposable
             .Verify(x=>x.SaveSuccess(It.IsAny<JsonDocument>(), It.Is<Basket>(y => y.Equals(basket)), It.IsAny<DateTimeOffset>()));
     }
 
-    [Fact]
-    public async Task Handle_WhenSecondCall_AndNotExpired_ShouldGetFromStore()
+    [Theory]
+    [InlineData(typeof(IdempotencyEnabledFunction))]
+    [InlineData(typeof(IdempotencyEnabledSyncFunction))]
+    public async Task Handle_WhenSecondCall_AndNotExpired_ShouldGetFromStore(Type type)
     {
         //Arrange
         var store = new Mock<BasePersistenceStore>();
@@ -87,18 +91,20 @@ public class IdempotentAspectTests : IDisposable
         store.Setup(x=>x.GetRecord(It.IsAny<JsonDocument>(), It.IsAny<DateTimeOffset>()))
             .ReturnsAsync(record);
     
-        var function = new IdempotencyEnabledFunction();
+        var function = Activator.CreateInstance(type) as IIdempotencyEnabledFunction;
     
         // Act
-        var resultBasket = await function.Handle(product, new TestLambdaContext());
+        var resultBasket = await function!.HandleTest(product, new TestLambdaContext());
     
         // Assert
         resultBasket.Should().Be(basket);
         function.HandlerExecuted.Should().BeFalse();
     }
     
-    [Fact]
-    public async Task Handle_WhenSecondCall_AndStatusInProgress_ShouldThrowIdempotencyAlreadyInProgressException()
+    [Theory]
+    [InlineData(typeof(IdempotencyEnabledFunction))]
+    [InlineData(typeof(IdempotencyEnabledSyncFunction))]
+    public async Task Handle_WhenSecondCall_AndStatusInProgress_ShouldThrowIdempotencyAlreadyInProgressException(Type type)
     {
         // Arrange
         var store = new Mock<BasePersistenceStore>();
@@ -123,15 +129,17 @@ public class IdempotentAspectTests : IDisposable
             .ReturnsAsync(record);
     
         // Act
-        var function = new IdempotencyEnabledFunction();
-        Func<Task> act = async () => await function.Handle(product, new TestLambdaContext());
+        var function = Activator.CreateInstance(type) as IIdempotencyEnabledFunction;
+        Func<Task> act = async () => await function!.HandleTest(product, new TestLambdaContext());
     
         // Assert
         await act.Should().ThrowAsync<IdempotencyAlreadyInProgressException>();
     }
 
-    [Fact]
-    public async Task Handle_WhenThrowException_ShouldDeleteRecord_AndThrowFunctionException() 
+    [Theory]
+    [InlineData(typeof(IdempotencyWithErrorFunction))]
+    [InlineData(typeof(IdempotencyWithErrorSyncFunction))]
+    public async Task Handle_WhenThrowException_ShouldDeleteRecord_AndThrowFunctionException(Type type) 
     {
         // Arrange
         var store = new Mock<BasePersistenceStore>();
@@ -142,11 +150,11 @@ public class IdempotentAspectTests : IDisposable
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
             );
         
-        var function = new IdempotencyWithErrorFunction();
+        var function = Activator.CreateInstance(type) as IIdempotencyWithErrorFunction;
         var product = new Product(42, "fake product", 12);
     
         // Act
-        Func<Task> act = async () => await function.Handle(product, new TestLambdaContext());
+        Func<Task> act = async () => await function!.HandleTest(product, new TestLambdaContext());
     
         // Assert
         await act.Should().ThrowAsync<IndexOutOfRangeException>();
@@ -154,8 +162,10 @@ public class IdempotentAspectTests : IDisposable
             x => x.DeleteRecord(It.IsAny<JsonDocument>(), It.IsAny<IndexOutOfRangeException>()));
     }
     
-    [Fact]
-    public async Task Handle_WhenIdempotencyDisabled_ShouldJustRunTheFunction()
+    [Theory]
+    [InlineData(typeof(IdempotencyEnabledFunction))]
+    [InlineData(typeof(IdempotencyEnabledSyncFunction))]
+    public async Task Handle_WhenIdempotencyDisabled_ShouldJustRunTheFunction(Type type)
     {
         
         // Arrange
@@ -169,18 +179,18 @@ public class IdempotentAspectTests : IDisposable
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
             );
         
-        var function = new IdempotencyEnabledFunction();
+        var function = Activator.CreateInstance(type) as IIdempotencyEnabledFunction;
         var product = new Product(42, "fake product", 12);
         
         // Act
-        var basket = await function.Handle(product, new TestLambdaContext());
+        var basket = await function!.HandleTest(product, new TestLambdaContext());
 
         // Assert
         store.Invocations.Count.Should().Be(0);
         basket.Products.Count.Should().Be(1);
         function.HandlerExecuted.Should().BeTrue();
     }
-    
+
     [Fact]
     public void Idempotency_Set_Execution_Environment_Context()
     {

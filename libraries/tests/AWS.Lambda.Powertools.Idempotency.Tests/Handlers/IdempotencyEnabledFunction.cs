@@ -19,18 +19,50 @@ using AWS.Lambda.Powertools.Idempotency.Tests.Model;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 
-public class IdempotencyEnabledFunction
-{
-    public bool HandlerExecuted;
 
+public interface IIdempotencyEnabledFunction
+{
+    public bool HandlerExecuted { get; set; }
+    Task<Basket> HandleTest(Product input, ILambdaContext context);
+}
+
+public class IdempotencyEnabledFunction : IIdempotencyEnabledFunction
+{
     [Idempotent]
-    public Task<Basket> Handle(Product input, ILambdaContext context)
+    public async Task<Basket> Handle(Product input, ILambdaContext context)
     {
         HandlerExecuted = true;
         var basket = new Basket();
         basket.Add(input);
         var result = Task.FromResult(basket);
 
-        return result;
+        return await result;
+    }
+
+    public bool HandlerExecuted { get; set; }
+
+    public Task<Basket> HandleTest(Product input, ILambdaContext context)
+    {
+        return Handle(input, context);
+    }
+}
+
+public class IdempotencyEnabledSyncFunction : IIdempotencyEnabledFunction
+{
+    [Idempotent]
+    public Basket Handle(Product input, ILambdaContext context)
+    {
+        HandlerExecuted = true;
+        var basket = new Basket();
+        basket.Add(input);
+
+        return basket;
+    }
+
+    public bool HandlerExecuted { get; set; }
+
+    public Task<Basket> HandleTest(Product input, ILambdaContext context)
+    {
+        return Task.FromResult(Handle(input, context));
     }
 }

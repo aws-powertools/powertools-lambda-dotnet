@@ -69,9 +69,27 @@ public class IdempotentAttribute : UniversalWrapperAttribute
     /// <returns>T.</returns>
     protected internal sealed override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
     {
-        throw new IdempotencyConfigurationException("Idempotent attribute can be used on async methods only");
+        if (PowertoolsConfigurations.Instance.IdempotencyDisabled)
+        {
+            return base.WrapSync(target, args, eventArgs);
+        }
+        var payload = JsonDocument.Parse(JsonSerializer.Serialize(args[0]));
+        if (payload == null)
+        {
+            throw new IdempotencyConfigurationException("Unable to get payload from the method. Ensure there is at least one parameter or that you use @IdempotencyKey");
+        }
+
+        Task<T> ResultDelegate() => Task.FromResult(target(args));
+
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload);
+        if (idempotencyHandler == null)
+        {
+            throw new Exception("Failed to create an instance of IdempotencyAspectHandler");
+        }
+        var result = idempotencyHandler.Handle().GetAwaiter().GetResult();
+        return result;
     }
-    
+
     /// <summary>
     ///     Wrap as an asynchronous operation.
     /// </summary>
@@ -93,7 +111,9 @@ public class IdempotentAttribute : UniversalWrapperAttribute
             throw new IdempotencyConfigurationException("Unable to get payload from the method. Ensure there is at least one parameter or that you use @IdempotencyKey");
         }
         
-        var idempotencyHandler = new IdempotencyAspectHandler<T>(target, args, eventArgs.Method.Name, payload);
+        Task<T> ResultDelegate() => target(args);
+        
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload);
         if (idempotencyHandler == null)
         {
             throw new Exception("Failed to create an instance of IdempotencyAspectHandler");

@@ -20,9 +20,31 @@ using AWS.Lambda.Powertools.Idempotency.Tests.Model;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 
-public class IdempotencyWithErrorFunction
+public interface IIdempotencyWithErrorFunction
+{
+    Task<Basket> HandleTest(Product input, ILambdaContext context);
+}
+
+public class IdempotencyWithErrorFunction : IIdempotencyWithErrorFunction
 {
     [Idempotent]
     public Task<Basket> Handle(Product input, ILambdaContext context) 
         => throw new IndexOutOfRangeException("Fake exception");
+
+    public Task<Basket> HandleTest(Product input, ILambdaContext context)
+    {
+        return Handle(input, context);
+    }
+}
+
+public class IdempotencyWithErrorSyncFunction : IIdempotencyWithErrorFunction
+{
+    [Idempotent]
+    public Basket Handle(Product input, ILambdaContext context) 
+        => throw new IndexOutOfRangeException("Fake exception");
+
+    public Task<Basket> HandleTest(Product input, ILambdaContext context)
+    {
+        return Task.FromResult(Handle(input, context));
+    }
 }
