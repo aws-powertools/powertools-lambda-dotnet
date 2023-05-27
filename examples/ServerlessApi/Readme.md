@@ -150,6 +150,62 @@ Logging uses a context data available in an AWS Lambda Event. This is the reason
 
 Later on in the `Get` method of the [`ValuesController](src/LambdaPowertoolsAPI/Controllers/ValuesController.cs) logs it would normally log using a `Logger`.
 
+The log level and service names are defined through environment variables in the [SAM Template](src/LambdaPowertoolsAPI/serverless.template)
+
+```yaml
+POWERTOOLS_SERVICE_NAME: aws-lambda-powertools-web-api-sample
+POWERTOOLS_LOG_LEVEL: Debug
+```
+
+### Metrics
+
+Metrics does not use any context data in the background. The Metrics initilization can occur on any method. The good practice would be to define Namespace, service and some additional default dimensions which will be used for every Metric emit in the single place. The entry points sounds as the best choice.  The `_defaultDimensions` is a variable which will store the default dimensions. They are set as the defaults using `Metrics.SetDefaultDimensions(_defaultDimensions);`. 
+```c#
+    // We are defining some default dimensions.
+    private Dictionary<string, string> _defaultDimensions = new Dictionary<string, string>{
+        {"Environment", Environment.GetEnvironmentVariable("ENVIRONMENT") ??  "Unknown"},
+        {"Runtime",Environment.Version.ToString()}
+    };
+
+    [LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
+    [Logging(CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest, LogEvent = true)] // we are enabling logging, it needs to be added on method which have Lambda event
+    [Tracing] // Adding a tracing attribute here we will see additional function call which might be important in terms of debugging
+    [Metrics] // Metrics need to be initialized the best place is entry point in opposite on adding attribute on each controller.
+    public override Task<APIGatewayProxyResponse> FunctionHandlerAsync(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+    {
+        _defaultDimensions.Add("Version", lambdaContext.FunctionVersion);
+        // Setting the default dimensions. They will be added to every emitted metric.
+        Metrics.SetDefaultDimensions(_defaultDimensions);
+
+```
+
+In this example the Namespace and service are set in the [SAM template](src/LambdaPowertoolsAPI/serverless.template) and they will be added to each Metric automatically. Thus when a resource `GetById` will be executed and a `SuccessfulRetrieval` metric will be emitted is will have all default dimensions, namespace and service. It can be observed in the logs.
+
+```log
+2023/05/27/[$LATEST]7e90626ab88447328171eef7c4c3286f 2023-05-27T20:46:42.883000 2023-05-27T20:46:42.883Z        6408f2f1-ecdc-4f02-9480-1da3ed0a0936  info    {"_aws":{"Timestamp":1685220402624,"CloudWatchMetrics":[{"Namespace":"AWSLambdaPowertools","Metrics":[{"Name":"SuccessfulRetrieval","Unit":"Count"}],"Dimensions":[["Service"],["Environment"],["Runtime"],["Version"]]}]},"Service":"aws-lambda-powertools-web-api-sample","Environment":"Unknown","Runtime":"6.0.15","Version":"$LATEST","SuccessfulRetrieval":1}
+```
+
+### Tracing
+
+Tracing is enabled by setting `Tracing` property in the [SAM Template](src/LambdaPowertoolsAPI/serverless.template) to `true`. To see more insides in what are execution times of each endpoint `GET /api/values` and `GET /api/values/{id}` are annotated with the `[TracingAttribute]`. The segments has been named to so different names then `Get` by setting `SegmentName` above the method 
+
+```c#
+    [Tracing(SegmentName = "Values::GetById")]
+    public string Get(int id)
+```
+
+When analyzing the trace for execution of a resource `GetById` it can be observed `Values::GetById` which is equal to `SegmentName`. With the segment name definition API does not need to be verified to understand which `method` was executed 
+
+```log
+XRay Event at (2023-05-27T22:46:39.922000) with id (1-64726c2f-3244a3317c5e1f4f738e532c) and duration (3.160s)
+ - 3.103s - aws-lambda-powertools-web-api-s-AspNetCoreFunction-ottogomkubjL [HTTP: 200]
+ - 2.517s - aws-lambda-powertools-web-api-s-AspNetCoreFunction-ottogomkubjL
+   - 0.489s - Initialization
+   - 2.459s - Invocation
+     - 0.961s - ## FunctionHandlerAsync
+       - 0.038s - Values::GetById
+   - 0.057s - Overhead`
+```
 
 ## Add a resource to your application
 
