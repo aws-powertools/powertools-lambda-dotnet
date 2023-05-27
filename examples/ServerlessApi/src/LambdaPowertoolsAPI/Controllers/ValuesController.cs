@@ -11,7 +11,6 @@ public class ValuesController : ControllerBase
     // GET api/values
     [HttpGet]
     [Tracing(SegmentName = "Values::Get")]
-    [Metrics(RaiseOnEmptyMetrics = true)]
     public IEnumerable<string> Get()
     {
         Logger.LogInformation("Log entry information only about getting values? Or maybe something more ");

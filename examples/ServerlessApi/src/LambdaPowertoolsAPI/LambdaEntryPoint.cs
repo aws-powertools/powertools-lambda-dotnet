@@ -42,6 +42,8 @@ public class LambdaEntryPoint :
         Console.WriteLine("Startup done");
     }
 
+
+    // We are defining some default dimensions.
     private Dictionary<string, string> _defaultDimensions = new Dictionary<string, string>{
         {"Environment", Environment.GetEnvironmentVariable("ENVIRONMENT") ??  "Unknown"},
         {"Runtime",Environment.Version.ToString()}
@@ -49,11 +51,12 @@ public class LambdaEntryPoint :
 
     [LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
     [Logging(CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest, LogEvent = true)] // we are enabling logging, it needs to be added on method which have Lambda event
-    [Tracing]
-    [Metrics()]
+    [Tracing] // Adding a tracing attribute here we will see additional function call which might be important in terms of debugging
+    [Metrics] // Metrics need to be initialized the best place is entry point in opposite on adding attribute on each controller.
     public override Task<APIGatewayProxyResponse> FunctionHandlerAsync(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
     {
         _defaultDimensions.Add("Version", lambdaContext.FunctionVersion);
+        // Setting the default dimensions. They will be added to every emitted metric.
         Metrics.SetDefaultDimensions(_defaultDimensions);
         return base.FunctionHandlerAsync(request, lambdaContext);
     }

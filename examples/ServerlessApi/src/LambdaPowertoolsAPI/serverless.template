@@ -22,10 +22,9 @@ Resources:
       - AWSLambda_FullAccess
       Environment:
         Variables:
-          POWERTOOLS_SERVICE_NAME: ValuesRestApi
-          POWERTOOLS_LOGGER_LOG_EVENT: true
+          POWERTOOLS_SERVICE_NAME: aws-lambda-powertools-web-api-sample # This can also be set using the Metrics decorator on your handler [Metrics(Service = "aws-lambda-powertools-web-api-sample"]
           POWERTOOLS_LOG_LEVEL: Debug
-          POWERTOOLS_METRICS_NAMESPACE: LambdaApis
+          POWERTOOLS_METRICS_NAMESPACE: AWSLambdaPowertools # This can also be set using the Metrics decorator on your handler [Metrics(Namespace = "AWSLambdaPowertools"]
       Events:
         ProxyResource:
           Type: Api
