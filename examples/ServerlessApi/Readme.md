@@ -194,7 +194,7 @@ Tracing is enabled by setting `Tracing` property in the [SAM Template](src/Lambd
     public string Get(int id)
 ```
 
-When analyzing the trace for execution of a resource `GetById` it can be observed `Values::GetById` which is equal to `SegmentName`. With the segment name definition API does not need to be verified to understand which `method` was executed 
+When analyzing a trace for execution of a resource `GetById` it can be observed `Values::GetById` which is equal to `SegmentName`. With the segment name definition API does not need to be verified to understand which `method` was executed 
 
 ```log
 XRay Event at (2023-05-27T22:46:39.922000) with id (1-64726c2f-3244a3317c5e1f4f738e532c) and duration (3.160s)
