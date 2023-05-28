@@ -44,7 +44,7 @@ The first command will build a docker image from a Dockerfile and then copy the 
 * **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
 * **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
 
-You can find your API Gateway Endpoint URL in the output values displayed after deployment. Remember that an attribute on `ValuesController` makes the resources available under `/api/values` so you need to at it to end of the URL.
+You can find your API Gateway Endpoint URL in the output values displayed after deployment. Remember that an attribute on `ValuesController` makes the resources available under `/api/values` so you need to at the end of the URL.
 
 ## Use the AWS SAM CLI to build and test locally
 
@@ -139,10 +139,10 @@ x-amz-cf-id: X3PY9DHBUaduHJqjpOzk1KhrYVr6SoivVghabML4X_Rcq3AcX7uutA==
 
 If something when wrong you can use logs and tracing commands, described above, to debug. 
 
-The exposed API is a default one created by `Lambda ASP.NET Core Web API` [.NET Core project templates](https://github.com/aws/aws-lambda-dotnet/tree/master#amazonlambdaaspnetcoreserver). To enhance API with AWS Lambda Powertools, we didn't need to change the start up code nor the logic of an API. We added standard logging commands, metrics emission, and tracing instrumentation code. 
+The exposed API is a default one created by `Lambda ASP.NET Core Web API` [.NET Core project templates](https://github.com/aws/aws-lambda-dotnet/tree/master#amazonlambdaaspnetcoreserver). To enhance the API with AWS Lambda Powertools, we didn't need to change the start up code nor the logic of an API. We added standard logging commands, metrics emission, and tracing instrumentation code. 
 
 ### Logging
-Logging uses a context data available in an AWS Lambda Event. This is the reason why to have an information about function name, its memory size etc `[Logging]` attribute needs to be on a method with the proper input parameters. The handler function looks like a good choice. [`LambdaEntryPoint`](src/LambdaPowertoolsAPI/LambdaEntryPoint.cs) overrides the method handler method (`FunctionHandlerAsync`) from the abstract class `Amazon.Lambda.AspNetCoreServer.FunctionHandlerAsync`. The method is pointed as the handler in the function definition in the SAM template. In this example we point to the correlation ID and instruct PowerTools to log an incoming event.
+Logging uses the context data available in an AWS Lambda Event. This is the reason why to have information about function name, its memory size etc `[Logging]` attribute needs to be on a method with the proper input parameters. The handler function looks like a good choice. [`LambdaEntryPoint`](src/LambdaPowertoolsAPI/LambdaEntryPoint.cs) overrides the method handler method (`FunctionHandlerAsync`) from the abstract class `Amazon.Lambda.AspNetCoreServer.FunctionHandlerAsync`. The method is pointed as the handler in the function definition in the SAM template. In this example we point to the correlation ID and instruct PowerTools to log an incoming event.
 
 ```
 [Logging(CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest, LogEvent = true)] // we are enabling logging, it needs to be added on method which have Lambda event
@@ -170,7 +170,7 @@ Metrics does not use any context data in the background. The Metrics initilizati
     [LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
     [Logging(CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest, LogEvent = true)] // we are enabling logging, it needs to be added on method which have Lambda event
     [Tracing] // Adding a tracing attribute here we will see additional function call which might be important in terms of debugging
-    [Metrics] // Metrics need to be initialized the best place is entry point in opposite on adding attribute on each controller.
+    [Metrics] // Metrics need to be initialized. The best place is the entry point opposite on adding attributes on each controller.
     public override Task<APIGatewayProxyResponse> FunctionHandlerAsync(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
     {
         _defaultDimensions.Add("Version", lambdaContext.FunctionVersion);
@@ -187,7 +187,7 @@ In this example the Namespace and service are set in the [SAM template](src/Lamb
 
 ### Tracing
 
-Tracing is enabled by setting `Tracing` property in the [SAM Template](src/LambdaPowertoolsAPI/serverless.template) to `true`. To see more insides in what are execution times of each endpoint `GET /api/values` and `GET /api/values/{id}` are annotated with the `[TracingAttribute]`. The segments has been named to so different names then `Get` by setting `SegmentName` above the method 
+Tracing is enabled by setting the `Tracing` property in the [SAM Template](src/LambdaPowertoolsAPI/serverless.template) to `true`. To see more insides in what are execution times of each endpoint `GET /api/values` and `GET /api/values/{id}` are annotated with the `[TracingAttribute]`. The segments has been named to so different names then `Get` by setting `SegmentName` above the method 
 
 ```c#
     [Tracing(SegmentName = "Values::GetById")]
@@ -225,3 +225,4 @@ sam delete
 See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the AWS SAM CLI, and serverless application concepts.
 
 Next, you can use AWS Serverless Application Repository to deploy ready to use Apps that go beyond hello world samples and learn how authors developed their applications: [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/)
+
