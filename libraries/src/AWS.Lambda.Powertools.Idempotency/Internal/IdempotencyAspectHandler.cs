@@ -17,7 +17,6 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
-using AWS.Lambda.Powertools.Idempotency.Output;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal;
@@ -29,7 +28,6 @@ internal class IdempotencyAspectHandler<T>
     private readonly Func<Task<T>> _target;
     private readonly JsonDocument _data;
     private readonly BasePersistenceStore _persistenceStore;
-    private readonly ILog _log;
 
     public IdempotencyAspectHandler(
         Func<Task<T>> target,
@@ -40,7 +38,6 @@ internal class IdempotencyAspectHandler<T>
         _data = payload;
         _persistenceStore = Idempotency.Instance.PersistenceStore;
         _persistenceStore.Configure(Idempotency.Instance.IdempotencyOptions, functionName);
-        _log = Idempotency.Instance.IdempotencyOptions.Log;
     }
 
     /// <summary>
@@ -117,7 +114,7 @@ internal class IdempotencyAspectHandler<T>
         catch (IdempotencyItemNotFoundException e)
         {
             // This code path will only be triggered if the record is removed between saveInProgress and getRecord
-            _log.WriteDebug("An existing idempotency record was deleted before we could fetch it");
+            Console.WriteLine("An existing idempotency record was deleted before we could fetch it");
             throw new IdempotencyInconsistentStateException("saveInProgress and getRecord return inconsistent results",
                 e);
         }
@@ -159,7 +156,6 @@ internal class IdempotencyAspectHandler<T>
             default:
                 try
                 {
-                    _log.WriteDebug("Response for key '{0}' retrieved from idempotency store, skipping the function", record.IdempotencyKey);
                     var result = JsonSerializer.Deserialize<T>(record.ResponseData!);
                     if (result is null)
                     {

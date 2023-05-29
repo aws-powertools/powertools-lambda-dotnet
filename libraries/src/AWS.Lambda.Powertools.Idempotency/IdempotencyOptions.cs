@@ -13,8 +13,6 @@
  * permissions and limitations under the License.
  */
 
-using AWS.Lambda.Powertools.Idempotency.Output;
-
 namespace AWS.Lambda.Powertools.Idempotency;
 
 /// <summary>
@@ -59,11 +57,6 @@ public class IdempotencyOptions
     /// as supported by <see cref="System.Security.Cryptography.HashAlgorithm"/> (eg. SHA1, SHA-256, ...)
     /// </summary>
     public string HashFunction { get; }
-    
-    /// <summary>
-    /// Instance of ILog to record internal details of idempotency 
-    /// </summary>
-    public ILog Log { get; }
 
     internal IdempotencyOptions(
         string eventKeyJmesPath, 
@@ -72,8 +65,7 @@ public class IdempotencyOptions
         bool useLocalCache, 
         int localCacheMaxItems, 
         long expirationInSeconds, 
-        string hashFunction,
-        ILog log)
+        string hashFunction)
     {
         EventKeyJmesPath = eventKeyJmesPath;
         PayloadValidationJmesPath = payloadValidationJmesPath;
@@ -82,6 +74,5 @@ public class IdempotencyOptions
         LocalCacheMaxItems = localCacheMaxItems;
         ExpirationInSeconds = expirationInSeconds;
         HashFunction = hashFunction;
-        Log = log;
     }
 }

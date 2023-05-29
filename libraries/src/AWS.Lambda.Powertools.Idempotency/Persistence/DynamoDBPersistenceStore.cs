@@ -123,8 +123,6 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
 
         try
         {
-            Log.WriteDebug("Putting record for idempotency key: {0}", record.IdempotencyKey);
-
             var expressionAttributeNames = new Dictionary<string, string>
             {
                 {"#id", _keyAttr},
@@ -146,7 +144,6 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         }
         catch (ConditionalCheckFailedException e)
         {
-            Log.WriteDebug("Failed to put record for already existing idempotency key: {0}", record.IdempotencyKey);
             throw new IdempotencyItemAlreadyExistsException(
                 "Failed to put record for already existing idempotency key: " + record.IdempotencyKey, e);
         }
@@ -156,7 +153,6 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     /// <inheritdoc />
     public override async Task UpdateRecord(DataRecord record) 
     {
-        Log.WriteDebug("Updating record for idempotency key: {0}", record.IdempotencyKey);
         var updateExpression = "SET #response_data = :response_data, #expiry = :expiry, #status = :status";
 
         var expressionAttributeNames = new Dictionary<string, string>
@@ -194,7 +190,6 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     /// <inheritdoc />
     public override async Task DeleteRecord(string idempotencyKey) 
     {
-        Log.WriteDebug("Deleting record for idempotency key: {0}", idempotencyKey);
         var request = new DeleteItemRequest
         {
             TableName = _tableName,

@@ -21,7 +21,6 @@ using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
-using AWS.Lambda.Powertools.Idempotency.Output;
 using AWS.Lambda.Powertools.Idempotency.Serialization;
 using DevLab.JmesPath;
 
@@ -41,10 +40,6 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     protected bool PayloadValidationEnabled;
     private LRUCache<string, DataRecord> _cache = null!;
-    /// <summary>
-    /// Instance of ILog to log the internal details of idempotency
-    /// </summary>
-    protected ILog Log = null!;
 
     /// <summary>
     /// Initialize the base persistence layer from the configuration settings
@@ -60,7 +55,6 @@ public abstract class BasePersistenceStore : IPersistenceStore
             _functionName += "." + functionName;
         }
         _idempotencyOptions = idempotencyOptions;
-        Log = _idempotencyOptions.Log;
 
         //TODO: optimize to not reconfigure
         if (!string.IsNullOrWhiteSpace(_idempotencyOptions.PayloadValidationJmesPath))
@@ -100,7 +94,6 @@ public abstract class BasePersistenceStore : IPersistenceStore
             responseJson,
             GetHashedPayload(data)
         );
-        Log.WriteDebug("Function successfully executed. Saving record to persistence store with idempotency key: {0}", record.IdempotencyKey);
         await UpdateRecord(record);
         SaveToCache(record);
     }
@@ -127,7 +120,6 @@ public abstract class BasePersistenceStore : IPersistenceStore
             null,
             GetHashedPayload(data)
         );
-        Log.WriteDebug("saving in progress record for idempotency key: {0}", record.IdempotencyKey);
         await PutRecord(record, now);
     }
     
@@ -140,7 +132,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     {
         var idemPotencyKey = GetHashedIdempotencyKey(data);
 
-        Log.WriteDebug("Function raised an exception {0}. " +
+        Console.WriteLine("Function raised an exception {0}. " +
                   "Clearing in progress record in persistence store for idempotency key: {1}",
             throwable.GetType().Name,
             idemPotencyKey);
@@ -162,7 +154,6 @@ public abstract class BasePersistenceStore : IPersistenceStore
         var cachedRecord = RetrieveFromCache(idempotencyKey, now);
         if (cachedRecord != null)
         {
-            Log.WriteDebug("Idempotency record found in cache with idempotency key: {0}", idempotencyKey);
             ValidatePayload(data, cachedRecord);
             return cachedRecord;
         }
@@ -217,7 +208,6 @@ public abstract class BasePersistenceStore : IPersistenceStore
             {
                 return record;
             }
-            Log.WriteDebug("Removing expired local cache record for idempotency key: {0}", idempotencyKey);
             DeleteFromCache(idempotencyKey);
         }
         return null;
@@ -285,7 +275,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
             {
                 throw new IdempotencyKeyException("No data found to create a hashed idempotency key");
             }
-            Log.WriteWarning("No data found to create a hashed idempotency key. JMESPath: {0}", _idempotencyOptions.EventKeyJmesPath ?? string.Empty);
+            Console.WriteLine("No data found to create a hashed idempotency key. JMESPath: {0}", _idempotencyOptions.EventKeyJmesPath ?? string.Empty);
         }
 
         var hash = GenerateHash(node);

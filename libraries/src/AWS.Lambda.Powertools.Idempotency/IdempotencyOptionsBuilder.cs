@@ -1,5 +1,4 @@
 using System;
-using AWS.Lambda.Powertools.Idempotency.Output;
 
 namespace AWS.Lambda.Powertools.Idempotency;
 
@@ -15,7 +14,6 @@ public class IdempotencyOptionsBuilder
     private string _payloadValidationJmesPath;
     private bool _throwOnNoIdempotencyKey;
     private string _hashFunction = "MD5";
-    private ILog _log = new NullLog();
 
     /// <summary>
     /// Initialize and return an instance of IdempotencyConfig.
@@ -32,8 +30,7 @@ public class IdempotencyOptionsBuilder
             _useLocalCache,
             _localCacheMaxItems,
             _expirationInSeconds,
-            _hashFunction,
-            _log);
+            _hashFunction);
 
     /// <summary>
     /// A JMESPath expression to extract the idempotency key from the event record.
@@ -101,17 +98,6 @@ public class IdempotencyOptionsBuilder
     public IdempotencyOptionsBuilder WithHashFunction(string hashFunction)
     {
         _hashFunction = hashFunction;
-        return this;
-    }
-
-    /// <summary>
-    /// Logs to a custom logger.
-    /// </summary>
-    /// <param name="log">The logger.</param>
-    /// <returns>the instance of the builder (to chain operations)</returns>
-    public IdempotencyOptionsBuilder LogTo(ILog log)
-    {
-        _log = log;
         return this;
     }
 }
