@@ -43,8 +43,4 @@
         <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Output\" />
-    </ItemGroup>
-
 </Project>

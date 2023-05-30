@@ -38,16 +38,27 @@ public sealed class Idempotency
     /// </summary>
     public BasePersistenceStore PersistenceStore { get; private set; } = null!;
 
+    /// <summary>
+    /// Idempotency Constructor
+    /// </summary>
+    /// <param name="powertoolsConfigurations"></param>
     internal Idempotency(IPowertoolsConfigurations powertoolsConfigurations)
     {
         powertoolsConfigurations.SetExecutionEnvironment(this);
     }
-
+    /// <summary>
+    /// Set Idempotency options
+    /// </summary>
+    /// <param name="options"></param>
     private void SetConfig(IdempotencyOptions options)
     {
         IdempotencyOptions = options;
     }
 
+    /// <summary>
+    /// Set Persistence Store
+    /// </summary>
+    /// <param name="persistenceStore"></param>
     private void SetPersistenceStore(BasePersistenceStore persistenceStore)
     {
         PersistenceStore = persistenceStore;
@@ -79,10 +90,21 @@ public sealed class Idempotency
     /// </summary>
     public class IdempotencyBuilder
     {
+        /// <summary>
+        /// Holds Idempotency options
+        /// </summary>
         private IdempotencyOptions _options;
+        /// <summary>
+        /// Persistence Store
+        /// </summary>
         private BasePersistenceStore _store;
-
+        /// <summary>
+        /// Exposes Idempotency options
+        /// </summary>
         internal IdempotencyOptions Options => _options;
+        /// <summary>
+        /// Exposes Persistence Store
+        /// </summary>
         internal BasePersistenceStore Store => _store;
 
         /// <summary>

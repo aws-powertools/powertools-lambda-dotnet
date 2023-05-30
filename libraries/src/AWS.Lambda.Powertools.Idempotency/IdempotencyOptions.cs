@@ -58,6 +58,16 @@ public class IdempotencyOptions
     /// </summary>
     public string HashFunction { get; }
 
+    /// <summary>
+    /// Constructor of <see cref="IdempotencyOptions"/>.
+    /// </summary>
+    /// <param name="eventKeyJmesPath"></param>
+    /// <param name="payloadValidationJmesPath"></param>
+    /// <param name="throwOnNoIdempotencyKey"></param>
+    /// <param name="useLocalCache"></param>
+    /// <param name="localCacheMaxItems"></param>
+    /// <param name="expirationInSeconds"></param>
+    /// <param name="hashFunction"></param>
     internal IdempotencyOptions(
         string eventKeyJmesPath, 
         string payloadValidationJmesPath, 

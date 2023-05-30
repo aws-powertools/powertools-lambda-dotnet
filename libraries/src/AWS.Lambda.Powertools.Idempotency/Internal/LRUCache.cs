@@ -18,9 +18,24 @@ internal sealed class LRUCache<TKey, TValue>
     /// </summary>
     private const int DefaultCapacity = 255;
 
+    /// <summary>
+    /// Shared synchronization object
+    /// </summary>
     private readonly object _lockObj = new();
+    
+    /// <summary>
+    /// Maximum number of elements to cache.
+    /// </summary>
     private readonly int _capacity;
+    
+    /// <summary>
+    /// Dictionary to record the key and its data entry (O(1))
+    /// </summary>
     private readonly Dictionary<TKey, Entry> _cacheMap;
+    
+    /// <summary>
+    /// Linked list that tracks LRU items (O(1))
+    /// </summary>
     private readonly LinkedList<TKey> _cacheList;
 
     /// <summary>
@@ -109,6 +124,10 @@ internal sealed class LRUCache<TKey, TValue>
         }
     }
 
+    /// <summary>
+    /// Deletes the specified key and value to the cache.
+    /// </summary>
+    /// <param name="key">The key of the element to remove.</param>
     public void Delete(TKey key)
     {
         lock (_lockObj)
@@ -118,6 +137,9 @@ internal sealed class LRUCache<TKey, TValue>
         }
     }
 
+    /// <summary>
+    /// Count of items in Cache
+    /// </summary>
     public int Count
     {
         get
@@ -129,6 +151,10 @@ internal sealed class LRUCache<TKey, TValue>
         }
     }
 
+    /// <summary>
+    /// Move to most recent spot (head) in Linked List
+    /// </summary>
+    /// <param name="node"></param>
     private void Touch(LinkedListNode<TKey> node)
     {
         lock (_lockObj)
@@ -141,6 +167,9 @@ internal sealed class LRUCache<TKey, TValue>
         }
     }
 
+    /// <summary>
+    /// Linked List Element
+    /// </summary>
     private struct Entry
     {
         public readonly LinkedListNode<TKey> Node;

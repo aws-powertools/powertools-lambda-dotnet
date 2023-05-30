@@ -33,12 +33,23 @@ namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 /// </summary>
 public abstract class BasePersistenceStore : IPersistenceStore
 {
+    /// <summary>
+    /// Idempotency Options
+    /// </summary>
     private IdempotencyOptions _idempotencyOptions = null!;
+    
+    /// <summary>
+    /// Function name
+    /// </summary>
     private string _functionName;
     /// <summary>
     /// Boolean to indicate whether or not payload validation is enabled
     /// </summary>
     protected bool PayloadValidationEnabled;
+    
+    /// <summary>
+    /// LRUCache
+    /// </summary>
     private LRUCache<string, DataRecord> _cache = null!;
 
     /// <summary>
@@ -197,6 +208,12 @@ public abstract class BasePersistenceStore : IPersistenceStore
         }
     }
     
+    /// <summary>
+    /// Retrieve data record from cache
+    /// </summary>
+    /// <param name="idempotencyKey">Idempotency key</param>
+    /// <param name="now">DateTime Offset</param>
+    /// <returns>DataRecord instance</returns>
     private DataRecord RetrieveFromCache(string idempotencyKey, DateTimeOffset now)
     {
         if (!_idempotencyOptions.UseLocalCache)
@@ -212,6 +229,11 @@ public abstract class BasePersistenceStore : IPersistenceStore
         }
         return null;
     }
+    
+    /// <summary>
+    /// Deletes item from cache
+    /// </summary>
+    /// <param name="idempotencyKey"></param>
     private void DeleteFromCache(string idempotencyKey)
     {
         if (!_idempotencyOptions.UseLocalCache)
@@ -282,6 +304,11 @@ public abstract class BasePersistenceStore : IPersistenceStore
         return _functionName + "#" + hash;
     }
 
+    /// <summary>
+    /// Check if the provided data is missing an idempotency key.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns>True if the Idempotency key is missing</returns>
     private static bool IsMissingIdemPotencyKey(JsonElement data)
     {
         return data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined
@@ -307,6 +334,12 @@ public abstract class BasePersistenceStore : IPersistenceStore
         return hash;
     }
 
+    /// <summary>
+    /// Get a hash of the provided string using the specified hash algorithm
+    /// </summary>
+    /// <param name="hashAlgorithm"></param>
+    /// <param name="input"></param>
+    /// <returns>Hashed representation of the provided string</returns>
     private static string GetHash(HashAlgorithm hashAlgorithm, string input)
     {
         // Convert the input string to a byte array and compute the hash.

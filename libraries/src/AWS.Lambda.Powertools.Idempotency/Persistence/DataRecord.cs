@@ -22,6 +22,9 @@ namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 /// </summary>
 public class DataRecord
 {
+    /// <summary>
+    /// Status
+    /// </summary>
     private readonly string _status;
 
     /// <summary>

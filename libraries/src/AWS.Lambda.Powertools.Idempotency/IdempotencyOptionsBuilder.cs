@@ -7,12 +7,33 @@ namespace AWS.Lambda.Powertools.Idempotency;
 /// </summary>
 public class IdempotencyOptionsBuilder
 {
+    /// <summary>
+    /// Default maximum number of items in the local cache.
+    /// </summary>
     private readonly int _localCacheMaxItems = 256;
+    /// <summary>
+    /// Local cache enabled
+    /// </summary>
     private bool _useLocalCache;
+    /// <summary>
+    /// Default expiration in seconds.
+    /// </summary>
     private long _expirationInSeconds = 60 * 60; // 1 hour
+    /// <summary>
+    /// Event key JMESPath expression.
+    /// </summary>
     private string _eventKeyJmesPath;
+    /// <summary>
+    /// Payload validation JMESPath expression.
+    /// </summary>
     private string _payloadValidationJmesPath;
+    /// <summary>
+    /// Throw exception if no idempotency key is found.
+    /// </summary>
     private bool _throwOnNoIdempotencyKey;
+    /// <summary>
+    /// Default Hash function
+    /// </summary>
     private string _hashFunction = "MD5";
 
     /// <summary>

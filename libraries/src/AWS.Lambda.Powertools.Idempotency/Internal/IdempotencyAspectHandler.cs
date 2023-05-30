@@ -23,12 +23,29 @@ namespace AWS.Lambda.Powertools.Idempotency.Internal;
 
 internal class IdempotencyAspectHandler<T>
 {
+    /// <summary>
+    /// Max retries
+    /// </summary>
     private const int MaxRetries = 2;
-
+    /// <summary>
+    /// Delegate to execute the calling handler
+    /// </summary>
     private readonly Func<Task<T>> _target;
+    /// <summary>
+    /// Request payload
+    /// </summary>
     private readonly JsonDocument _data;
+    /// <summary>
+    /// Persistence store
+    /// </summary>
     private readonly BasePersistenceStore _persistenceStore;
 
+    /// <summary>
+    /// IdempotencyAspectHandler constructor
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="functionName"></param>
+    /// <param name="payload"></param>
     public IdempotencyAspectHandler(
         Func<Task<T>> target,
         string functionName,
@@ -170,6 +187,11 @@ internal class IdempotencyAspectHandler<T>
         }
     }
 
+    /// <summary>
+    /// Get the function's response and save it to the persistence layer
+    /// </summary>
+    /// <returns>Result from Handler delegate</returns>
+    /// <exception cref="IdempotencyPersistenceLayerException"></exception>
     private async Task<T> GetFunctionResponse()
     {
         T response;

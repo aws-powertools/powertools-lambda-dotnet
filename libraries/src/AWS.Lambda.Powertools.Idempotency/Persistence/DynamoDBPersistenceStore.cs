@@ -30,16 +30,55 @@ namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 // ReSharper disable once InconsistentNaming
 public class DynamoDBPersistenceStore : BasePersistenceStore
 {
+    /// <summary>
+    /// DynamoDB table name
+    /// </summary>
     private readonly string _tableName;
+    /// <summary>
+    /// Key attribute
+    /// </summary>
     private readonly string _keyAttr;
+    /// <summary>
+    /// Static partition key value
+    /// </summary>
     private readonly string _staticPkValue;
+    /// <summary>
+    /// Sort key attribute
+    /// </summary>
     private readonly string _sortKeyAttr;
+    /// <summary>
+    /// Expiry attribute
+    /// </summary>
     private readonly string _expiryAttr;
+    /// <summary>
+    /// Status attribute
+    /// </summary>
     private readonly string _statusAttr;
+    /// <summary>
+    /// Data / Payload attribute
+    /// </summary>
     private readonly string _dataAttr;
+    /// <summary>
+    /// Validation attribute
+    /// </summary>
     private readonly string _validationAttr;
+    /// <summary>
+    /// DynamoDB client
+    /// </summary>
     private readonly AmazonDynamoDBClient _dynamoDbClient;
 
+    /// <summary>
+    /// Creates a new instance of <see cref="DynamoDBPersistenceStore"/>.
+    /// </summary>
+    /// <param name="tableName"></param>
+    /// <param name="keyAttr"></param>
+    /// <param name="staticPkValue"></param>
+    /// <param name="sortKeyAttr"></param>
+    /// <param name="expiryAttr"></param>
+    /// <param name="statusAttr"></param>
+    /// <param name="dataAttr"></param>
+    /// <param name="validationAttr"></param>
+    /// <param name="client"></param>
     internal DynamoDBPersistenceStore(string tableName,
         string keyAttr,
         string staticPkValue,
@@ -248,16 +287,45 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
 // ReSharper disable once InconsistentNaming
 public class DynamoDBPersistenceStoreBuilder
 {
+    /// <summary>
+    /// Lambda Function Name
+    /// </summary>
     private static readonly string FuncEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
-
+    /// <summary>
+    /// DynamoDB table name
+    /// </summary>
     private string _tableName = null!;
+    /// <summary>
+    /// Key attribute
+    /// </summary>
     private string _keyAttr = "id";
+    /// <summary>
+    /// Static partition key value
+    /// </summary>
     private string _staticPkValue = $"idempotency#{FuncEnv}";
+    /// <summary>
+    /// Sort key attribute
+    /// </summary>
     private string _sortKeyAttr;
+    /// <summary>
+    /// Expiry attribute
+    /// </summary>
     private string _expiryAttr = "expiration";
+    /// <summary>
+    /// Status attribute
+    /// </summary>
     private string _statusAttr = "status";
+    /// <summary>
+    /// Data / Payload attribute
+    /// </summary>
     private string _dataAttr = "data";
+    /// <summary>
+    /// Validation attribute
+    /// </summary>
     private string _validationAttr = "validation";
+    /// <summary>
+    /// DynamoDB client
+    /// </summary>
     private AmazonDynamoDBClient _dynamoDbClient;
 
     /// <summary>
