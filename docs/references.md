@@ -1,6 +1,6 @@
 ---
-title: AWS Lambda Powertools for .NET references
-description: AWS Lambda Powertools for .NET references
+title: Powertools for AWS Lambda (.NET) references
+description: Powertools for AWS Lambda (.NET) references
 ---
 
 ## Environment variables
@@ -30,7 +30,7 @@ description: AWS Lambda Powertools for .NET references
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Example project for Powertools Logging utility
+  Example project for Powertools for AWS Lambda (.NET) Logging utility
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -54,7 +54,7 @@ Globals:
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Example project for Powertools Metrics utility
+  Example project for Powertools for AWS Lambda (.NET) Metrics utility
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -74,7 +74,7 @@ Globals:
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Example project for Powertools tracing utility
+  Example project for Powertools for AWS Lambda (.NET) tracing utility
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:

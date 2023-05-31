@@ -1,3 +1,3 @@
 # AWS.Lambda.Powertools.Common
 
-AWS Lambda Powertools for .NET Common library
+Powertools for AWS Lambda (.NET) Common library
