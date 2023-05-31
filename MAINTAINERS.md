@@ -75,7 +75,7 @@ These are the most common labels used by maintainers to triage issues, pull requ
 | breaking-change        | Changes that will cause customer impact and need careful triage  |                                                                 |
 | do-not-merge           | PRs that are blocked for varying reasons                         | Timeline is uncertain                                           |
 | tests                  | PRs that add or change tests                                     | PR automation                                                   |
-| `area/<utility>`       | PRs related to a Powertools utility, e.g. `logging`, `tracing`   | PR automation                                                   |
+| `area/<utility>`       | PRs related to a Powertools for AWS Lambda (.NET) utility, e.g. `logging`, `tracing`   | PR automation                                                   |
 | feature                | New features or minor changes                                    | PR/Release automation                                           |
 | dependencies           | Changes that touch dependencies, e.g. Dependabot, etc.           | PR/ automation                                                  |
 | github-actions         | Changes in GitHub workflows                                      | PR automation                                                   |

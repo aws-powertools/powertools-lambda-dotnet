@@ -7,8 +7,8 @@
         <Version>0.0.1</Version>
         <Authors>Amazon Web Services</Authors>
         <Company>Amazon.com, Inc</Company>
-        <Title>AWS Lambda Powertools for .NET</Title>
-        <Description>AWS Lambda Powertools for .NET - Tracing package.</Description>
+        <Title>Powertools for AWS Lambda (.NET)</Title>
+        <Description>Powertools for AWS Lambda (.NET) - Tracing package.</Description>
         <Copyright>Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
         <RepositoryUrl>https://github.com/aws-powertools/lambda-dotnet</RepositoryUrl>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

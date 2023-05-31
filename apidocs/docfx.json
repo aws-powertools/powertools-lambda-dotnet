@@ -33,13 +33,13 @@
     "dest": "_site",
     "globalMetadataFiles": [],
     "globalMetadata": {
-      "_appTitle": "AWS Lambda Powertools for .NET",
+      "_appTitle": "Powertools for AWS Lambda (.NET)",
       "_appFaviconPath": "images/favicon.ico",
       "_appLogoPath": "images/img.svg",
       "_enableNewTab": true,
       "_disableContribution": true,
       "_enableSearch": "true",
-      "_appFooter": "AWS Lambda Powertools for .NET API Documentation"
+      "_appFooter": "Powertools for AWS Lambda (.NET) API Documentation"
     },
     "fileMetadataFiles": [],
     "template": ["default", "templates/material"],
