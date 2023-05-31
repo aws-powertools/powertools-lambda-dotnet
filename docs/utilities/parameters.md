@@ -4,7 +4,7 @@ description: Utility
 ---
 
 ???+ warning
-	**This utility is currently in developer preview** and is intended strictly for feedback and testing purposes **and not for production workloads**. The version and all future versions tagged with the `-preview` suffix should be treated as not stable. Until this utility is [General Availability](https://github.com/awslabs/aws-lambda-powertools-dotnet/milestone/2) we may introduce significant breaking changes and improvements in response to customers feedback.
+	**This utility is currently in developer preview** and is intended strictly for feedback and testing purposes **and not for production workloads**. The version and all future versions tagged with the `-preview` suffix should be treated as not stable. Until this utility is [General Availability](https://github.com/aws-powertools/lambda-dotnet/milestone/2) we may introduce significant breaking changes and improvements in response to customers feedback.
 
 <!-- markdownlint-disable MD013 -->
 The Parameters utility provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.

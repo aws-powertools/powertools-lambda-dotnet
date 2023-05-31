@@ -11,4 +11,4 @@ To get started use the `API Documentaion` menu on the navigation bar, or search 
 
 ## Feedback
 
-If you have any feedback, create a new issue in the *AWS Lambda Powertools for .NET* repository on [GitHub](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues).
+If you have any feedback, create a new issue in the *AWS Lambda Powertools for .NET* repository on [GitHub](https://github.com/aws-powertools/lambda-dotnet/issues).

@@ -15,11 +15,11 @@ a provides functionality to reduce the overhead of performing common tracing tas
 
 For a full list of features go to [awslabs.github.io/aws-lambda-powertools-dotnet/core/tracing/](awslabs.github.io/aws-lambda-powertools-dotnet/core/tracing/)
 
-**GitHub:** https://github.com/awslabs/aws-lambda-powertools-dotnet/
+**GitHub:** https://github.com/aws-powertools/lambda-dotnet/
 
 ## Sample Function
 
-View the full example here: [https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/develop/examples/Tracing](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/develop/examples/Tracing)
+View the full example here: [https://github.com/aws-powertools/lambda-dotnet/tree/develop/examples/Tracing](https://github.com/aws-powertools/lambda-dotnet/tree/develop/examples/Tracing)
 
 ```csharp
 public class Function
