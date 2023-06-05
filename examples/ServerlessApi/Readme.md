@@ -168,7 +168,7 @@ The AWS SAM CLI builds a docker image from a Dockerfile and then installs depend
 
 Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
 
-Run functions locally and invoke them with the `sam local invoke` command.
+Run functions locally and invoke them with the `sam local invoke` command. You should be in the same folder as `serverless.template`
 
 ```bash
 sam local invoke -e ../../events/event.json 
