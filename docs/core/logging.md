@@ -12,6 +12,14 @@ The logging utility provides a Lambda optimized logger with output structured as
 * Log sampling enables DEBUG log level for a percentage of requests (disabled by default)
 * Append additional keys to structured log at any point in time
 
+## Installation
+
+Powertools for AWS Lambda (.NET) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+
+* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
+
+    `dotnet add package AWS.Lambda.Powertools.Logging`
+
 ## Getting started
 
 Logging requires two settings:
@@ -37,7 +45,7 @@ Here is an example using the AWS SAM [Globals section](https://docs.aws.amazon.c
     AWSTemplateFormatVersion: "2010-09-09"
     Transform: AWS::Serverless-2016-10-31
     Description: >
-    Example project for Powertools Logging utility
+    Example project for Powertools for AWS Lambda (.NET) Logging utility
 
     Globals:
         Function:
@@ -69,7 +77,7 @@ Key | Type | Example | Description
 ------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------
 **Timestamp** | string | "2020-05-24 18:17:33,774" | Timestamp of actual log statement
 **Level** | string | "Information" | Logging level
-**Name** | string | "Powertools Logger" | Logger name
+**Name** | string | "Powertools for AWS Lambda (.NET) Logger" | Logger name
 **ColdStart** | bool | true| ColdStart value.
 **Service** | string | "payment" | Service name defined. "service_undefined" will be used if unknown
 **SamplingRate** | int |  0.1 | Debug logging sampling rate in percentage e.g. 10% in this case
@@ -437,7 +445,7 @@ via `SamplingRate` parameter on attribute.
 
 ## Configure Log Output Casing
 
-By definition Powertools outputs logging keys using **snake case** (e.g. *"function_memory_size": 128*). This allows developers using different Powertools runtimes, to search logs across services written in languages such as Python or TypeScript.
+By definition Powertools for AWS Lambda (.NET) outputs logging keys using **snake case** (e.g. *"function_memory_size": 128*). This allows developers using different Powertools for AWS Lambda (.NET) runtimes, to search logs across services written in languages such as Python or TypeScript.
 
 If you want to override the default behavior you can either set the desired casing through attributes, as described in the example below, or by setting the `POWERTOOLS_LOGGER_CASE` environment variable on your AWS Lambda function. Allowed values are: `CamelCase`, `PascalCase` and `SnakeCase`.
 

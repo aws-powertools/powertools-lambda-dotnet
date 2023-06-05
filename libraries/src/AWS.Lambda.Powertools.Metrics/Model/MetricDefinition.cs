@@ -28,7 +28,7 @@ public class MetricDefinition
     /// </summary>
     /// <param name="name">Metric name</param>
     /// <param name="value">Metric value</param>
-    public MetricDefinition(string name, double value) : this(name, MetricUnit.None, new List<double> {value})
+    public MetricDefinition(string name, double value) : this(name, MetricUnit.None, new List<double> {value}, MetricResolution.Default)
     {
     }
 
@@ -38,7 +38,8 @@ public class MetricDefinition
     /// <param name="name">Metric name</param>
     /// <param name="unit">Metric unit</param>
     /// <param name="value">Metric value</param>
-    public MetricDefinition(string name, MetricUnit unit, double value) : this(name, unit, new List<double> {value})
+    /// <param name="metricResolution">Metric resolution</param>
+    public MetricDefinition(string name, MetricUnit unit, double value, MetricResolution metricResolution) : this(name, unit, new List<double> {value}, metricResolution)
     {
     }
 
@@ -48,11 +49,13 @@ public class MetricDefinition
     /// <param name="name">Metric name</param>
     /// <param name="unit">Metric unit</param>
     /// <param name="values">List of metric values</param>
-    public MetricDefinition(string name, MetricUnit unit, List<double> values)
+    /// <param name="metricResolution">Metric resolution</param>
+    public MetricDefinition(string name, MetricUnit unit, List<double> values, MetricResolution metricResolution)
     {
         Name = name;
         Unit = unit;
         Values = values;
+        StorageResolution = metricResolution;
     }
 
     /// <summary>
@@ -75,6 +78,14 @@ public class MetricDefinition
     /// <value>The unit.</value>
     [JsonPropertyName(nameof(Unit))]
     public MetricUnit Unit { get; set; }
+    
+    /// <summary>
+    ///     Gets or sets the StorageResolution.
+    /// </summary>
+    /// <value>The unit.</value>
+    [JsonPropertyName(nameof(StorageResolution))]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public MetricResolution StorageResolution { get; set; }
 
     /// <summary>
     ///     Adds value to existing metric with same key

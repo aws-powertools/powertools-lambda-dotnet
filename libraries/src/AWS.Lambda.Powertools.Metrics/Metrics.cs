@@ -37,12 +37,12 @@ public class Metrics : IMetrics
     private readonly MetricsContext _context;
 
     /// <summary>
-    ///     The Powertools configurations
+    ///     The Powertools for AWS Lambda (.NET) configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
     /// <summary>
-    ///     If true, Powertools will throw an exception on empty metrics when trying to flush
+    ///     If true, Powertools for AWS Lambda (.NET) will throw an exception on empty metrics when trying to flush
     /// </summary>
     private readonly bool _raiseOnEmptyMetrics;
     
@@ -56,7 +56,7 @@ public class Metrics : IMetrics
     ///     format (EMF). See
     ///     https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html
     /// </summary>
-    /// <param name="powertoolsConfigurations">Lambda Powertools Configuration</param>
+    /// <param name="powertoolsConfigurations">Powertools for AWS Lambda (.NET) Configuration</param>
     /// <param name="nameSpace">Metrics Namespace Identifier</param>
     /// <param name="service">Metrics Service Name</param>
     /// <param name="raiseOnEmptyMetrics">Instructs metrics validation to throw exception if no metrics are provided</param>
@@ -71,6 +71,8 @@ public class Metrics : IMetrics
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
         _captureColdStartEnabled = captureColdStartEnabled;
         _context = InitializeContext(nameSpace, service, null);
+        
+        _powertoolsConfigurations.SetExecutionEnvironment(this);
     }
 
     /// <summary>
@@ -79,11 +81,12 @@ public class Metrics : IMetrics
     /// <param name="key">Metric Key</param>
     /// <param name="value">Metric Value</param>
     /// <param name="unit">Metric Unit</param>
+    /// <param name="metricResolution">Metric resolution</param>
     /// <exception cref="System.ArgumentNullException">
     ///     'AddMetric' method requires a valid metrics key. 'Null' or empty values
     ///     are not allowed.
     /// </exception>
-    void IMetrics.AddMetric(string key, double value, MetricUnit unit)
+    void IMetrics.AddMetric(string key, double value, MetricUnit unit, MetricResolution metricResolution)
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(
@@ -96,7 +99,7 @@ public class Metrics : IMetrics
 
         if (_context.GetMetrics().Count == 100) _instance.Flush(true);
 
-        _context.AddMetric(key, value, unit);
+        _context.AddMetric(key, value, unit, metricResolution);
     }
 
     /// <summary>
@@ -229,19 +232,20 @@ public class Metrics : IMetrics
     /// <param name="nameSpace">Metric Namespace</param>
     /// <param name="service">Service Name</param>
     /// <param name="defaultDimensions">Default dimensions list</param>
+    /// <param name="metricResolution">Metrics resolution</param>
     /// <exception cref="System.ArgumentNullException">
     ///     'PushSingleMetric' method requires a valid metrics key. 'Null' or empty
     ///     values are not allowed.
     /// </exception>
     void IMetrics.PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace, string service,
-        Dictionary<string, string> defaultDimensions)
+        Dictionary<string, string> defaultDimensions, MetricResolution metricResolution)
     {
         if (string.IsNullOrWhiteSpace(metricName))
             throw new ArgumentNullException(
                 $"'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
 
         using var context = InitializeContext(nameSpace, service, defaultDimensions);
-        context.AddMetric(metricName, value, unit);
+        context.AddMetric(metricName, value, unit, metricResolution);
 
         Flush(context);
     }
@@ -260,9 +264,11 @@ public class Metrics : IMetrics
     /// <param name="key">Metric Key. Must not be null, empty or whitespace</param>
     /// <param name="value">Metric Value</param>
     /// <param name="unit">Metric Unit</param>
-    public static void AddMetric(string key, double value, MetricUnit unit = MetricUnit.None)
+    /// <param name="metricResolution"></param>
+    public static void AddMetric(string key, double value, MetricUnit unit = MetricUnit.None,
+        MetricResolution metricResolution = MetricResolution.Default)
     {
-        _instance.AddMetric(key, value, unit);
+        _instance.AddMetric(key, value, unit, metricResolution);
     }
 
     /// <summary>
@@ -334,10 +340,11 @@ public class Metrics : IMetrics
     /// <param name="nameSpace">Metric Namespace</param>
     /// <param name="service">Service Name</param>
     /// <param name="defaultDimensions">Default dimensions list</param>
+    /// <param name="metricResolution">Metrics resolution</param>
     public static void PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace = null,
-        string service = null, Dictionary<string, string> defaultDimensions = null)
+        string service = null, Dictionary<string, string> defaultDimensions = null, MetricResolution metricResolution = MetricResolution.Default)
     {
-        _instance.PushSingleMetric(metricName, value, unit, nameSpace, service, defaultDimensions);
+        _instance.PushSingleMetric(metricName, value, unit, nameSpace, service, defaultDimensions, metricResolution);
     }
 
     /// <summary>
