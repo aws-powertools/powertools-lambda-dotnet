@@ -10,6 +10,7 @@ deploy/**
 .idea
 .vscode
 .vs/
+.aws-sam
 
 examples/SimpleLambda/.aws-sam
 examples/SimpleLambda/samconfig.toml
