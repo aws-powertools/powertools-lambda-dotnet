@@ -67,6 +67,7 @@ We have provided a few examples that should you how to use the each of the core 
 * [Tracing](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/Tracing){target="_blank"} example
 * [Logging](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/Logging/){target="_blank"} example
 * [Metrics](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/Metrics/){target="_blank"} example
+* [Serverless API example](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/main/examples/ServerlessApi/){target="_blank"} example
 
 ## Connect
 

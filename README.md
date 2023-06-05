@@ -49,6 +49,8 @@ We have provided examples focused specifically on each of the utilities. Each so
 * **[Logging example](examples/Logging/)**
 * **[Metrics example](examples/Metrics/)**
 * **[Tracing example](examples/Tracing/)**
+* **[Serverless API example](examples/ServerlessApi/)**
+
 
 ## Other members of the Powertools for AWS Lambda family
 
