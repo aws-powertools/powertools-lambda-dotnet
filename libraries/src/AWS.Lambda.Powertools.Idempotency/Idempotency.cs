@@ -91,21 +91,14 @@ public sealed class Idempotency
     public class IdempotencyBuilder
     {
         /// <summary>
-        /// Holds Idempotency options
-        /// </summary>
-        private IdempotencyOptions _options;
-        /// <summary>
-        /// Persistence Store
-        /// </summary>
-        private BasePersistenceStore _store;
-        /// <summary>
         /// Exposes Idempotency options
         /// </summary>
-        internal IdempotencyOptions Options => _options;
+        internal IdempotencyOptions Options { get; private set; }
+
         /// <summary>
         /// Exposes Persistence Store
         /// </summary>
-        internal BasePersistenceStore Store => _store;
+        internal BasePersistenceStore Store { get; private set; }
 
         /// <summary>
         /// Set the persistence layer to use for storing the request and response
@@ -114,7 +107,7 @@ public sealed class Idempotency
         /// <returns>IdempotencyBuilder</returns>
         public IdempotencyBuilder WithPersistenceStore(BasePersistenceStore persistenceStore)
         {
-            _store = persistenceStore;
+            Store = persistenceStore;
             return this;
         }
 
@@ -128,7 +121,7 @@ public sealed class Idempotency
             var builder =
                 new DynamoDBPersistenceStoreBuilder();
             builderAction(builder);
-            _store = builder.Build();
+            Store = builder.Build();
             return this;
         }
 
@@ -141,7 +134,7 @@ public sealed class Idempotency
         {
             var builder =
                 new DynamoDBPersistenceStoreBuilder();
-            _store = builder.WithTableName(tableName).Build();
+            Store = builder.WithTableName(tableName).Build();
             return this;
         }
 
@@ -154,7 +147,7 @@ public sealed class Idempotency
         {
             var builder = new IdempotencyOptionsBuilder();
             builderAction(builder);
-            _options = builder.Build();
+            Options = builder.Build();
             return this;
         }
 
@@ -165,7 +158,7 @@ public sealed class Idempotency
         /// <returns>IdempotencyBuilder</returns>
         public IdempotencyBuilder WithOptions(IdempotencyOptions options)
         {
-            _options = options;
+            Options = options;
             return this;
         }
     }

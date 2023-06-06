@@ -29,7 +29,7 @@ namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 /// <summary>
 /// Persistence layer that will store the idempotency result.
 /// Base implementation. See <see cref="DynamoDBPersistenceStore"/> for an implementation (default one)
-/// Extend this class to use your own implementation (DocumentDB, Elasticache, ...)
+/// Extend this class to use your own implementation (DocumentDB, ElastiCache, ...)
 /// </summary>
 public abstract class BasePersistenceStore : IPersistenceStore
 {

@@ -75,24 +75,12 @@ public class DataRecord
     {
         return ExpiryTimestamp != 0 && now.ToUnixTimeSeconds() > ExpiryTimestamp;
     }
-
     
     /// <summary>
     /// Represents the <see cref="DataRecordStatus"/> Status
     /// </summary>
-    public DataRecordStatus Status
-    {
-        get
-        {
-            var now = DateTimeOffset.UtcNow;
-            if (IsExpired(now))
-            {
-                return DataRecordStatus.EXPIRED;
-            }
-
-            return Enum.Parse<DataRecordStatus>(_status);
-        }
-    }
+    public DataRecordStatus Status => 
+        IsExpired(DateTimeOffset.UtcNow) ? DataRecordStatus.EXPIRED : Enum.Parse<DataRecordStatus>(_status);
 
     /// <summary>
     /// Determines whether the specified DataRecord is equal to the current DataRecord 

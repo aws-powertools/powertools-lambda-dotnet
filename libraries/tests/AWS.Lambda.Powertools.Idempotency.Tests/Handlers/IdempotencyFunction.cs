@@ -35,7 +35,6 @@ public class IdempotencyFunction
             builder
                 .WithOptions(optionsBuilder =>
                     optionsBuilder
-                        //.WithUseLocalCache(true)
                         .WithEventKeyJmesPath("powertools_json(Body).address")
                         .WithExpiration(TimeSpan.FromSeconds(20)))
                 .UseDynamoDb(storeBuilder =>

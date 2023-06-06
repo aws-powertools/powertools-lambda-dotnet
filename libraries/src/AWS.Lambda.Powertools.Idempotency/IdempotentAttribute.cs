@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
@@ -73,7 +74,8 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         {
             return base.WrapSync(target, args, eventArgs);
         }
-        var payload = JsonDocument.Parse(JsonSerializer.Serialize(args[0]));
+        
+        var payload = args is not null && args.Any() ? JsonDocument.Parse(JsonSerializer.Serialize(args[0])) : null;
         if (payload == null)
         {
             throw new IdempotencyConfigurationException("Unable to get payload from the method. Ensure there is at least one parameter or that you use @IdempotencyKey");
@@ -105,7 +107,8 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         {
             return await base.WrapAsync(target, args, eventArgs);
         }
-        var payload = JsonDocument.Parse(JsonSerializer.Serialize(args[0]));
+        
+        var payload = args is not null && args.Any() ? JsonDocument.Parse(JsonSerializer.Serialize(args[0])) : null;
         if (payload == null)
         {
             throw new IdempotencyConfigurationException("Unable to get payload from the method. Ensure there is at least one parameter or that you use @IdempotencyKey");
