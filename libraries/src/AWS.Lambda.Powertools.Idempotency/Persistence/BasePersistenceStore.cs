@@ -66,8 +66,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
             _functionName += "." + functionName;
         }
         _idempotencyOptions = idempotencyOptions;
-
-        //TODO: optimize to not reconfigure
+        
         if (!string.IsNullOrWhiteSpace(_idempotencyOptions.PayloadValidationJmesPath))
         {
             PayloadValidationEnabled = true;
