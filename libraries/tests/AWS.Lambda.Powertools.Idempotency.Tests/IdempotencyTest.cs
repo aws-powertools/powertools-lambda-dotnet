@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 using AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 using FluentAssertions;
@@ -49,16 +48,14 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
             PropertyNameCaseInsensitive = true
         };
         
-        //var persistenceStore = new InMemoryPersistenceStore();
-        var context = new TestLambdaContext();
         var request = JsonSerializer.Deserialize<APIGatewayProxyRequest>(await File.ReadAllTextAsync("./resources/apigw_event2.json"),options);
         
-        var response = await function.Handle(request, context);
+        var response = await function.Handle(request);
         function.HandlerExecuted.Should().BeTrue();
 
         function.HandlerExecuted = false;
 
-        var response2 = await function.Handle(request, context);
+        var response2 = await function.Handle(request);
         function.HandlerExecuted.Should().BeFalse();
 
         JsonSerializer.Serialize(response).Should().Be(JsonSerializer.Serialize(response));

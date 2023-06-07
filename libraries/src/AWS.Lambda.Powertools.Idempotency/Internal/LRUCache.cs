@@ -11,6 +11,7 @@ namespace AWS.Lambda.Powertools.Idempotency.Internal;
 /// </summary>
 /// <typeparam name="TKey">The type of the key to the cached item.</typeparam>
 /// <typeparam name="TValue">The type of the cached item.</typeparam>
+// ReSharper disable once InconsistentNaming
 internal sealed class LRUCache<TKey, TValue>
 {
     /// <summary>

@@ -21,7 +21,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.Core;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 
@@ -45,15 +44,15 @@ public class IdempotencyFunction
     }
 
     [Idempotent]
-    public async Task<APIGatewayProxyResponse> Handle(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+    public async Task<APIGatewayProxyResponse> Handle(APIGatewayProxyRequest apigProxyEvent)
     {
         HandlerExecuted = true;
 
-        var result= await InternalFunctionHandler(apigProxyEvent,context);
+        var result= await InternalFunctionHandler(apigProxyEvent);
 
         return result;
     }
-    private async Task<APIGatewayProxyResponse> InternalFunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+    private async Task<APIGatewayProxyResponse> InternalFunctionHandler(APIGatewayProxyRequest apigProxyEvent)
     {
         Dictionary<string, string> headers = new()
         {

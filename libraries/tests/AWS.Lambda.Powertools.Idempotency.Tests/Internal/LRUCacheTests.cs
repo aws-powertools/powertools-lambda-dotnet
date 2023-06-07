@@ -21,6 +21,7 @@ using Xunit;
 //Source: https://github.dev/microsoft/botbuilder-dotnet/blob/main/tests/AdaptiveExpressions.Tests/LRUCacheTest.cs
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Internal;
 
+// ReSharper disable once InconsistentNaming
 public class LRUCacheTests
 {
     [Fact]
@@ -58,7 +59,7 @@ public class LRUCacheTests
     /*
      * The average time of this test is about 2ms. 
      */
-    public void TestDPMemorySmall()
+    public void TestDpMemorySmall()
     {
         var cache = new LRUCache<int, int>(2);
         cache.Set(0, 1);
@@ -87,7 +88,7 @@ public class LRUCacheTests
      * The average time of this test is about 3ms. 
      */
     [Fact]
-    public void TestDPMemoryLarge()
+    public void TestDpMemoryLarge()
     {
         var cache = new LRUCache<int, int>(500);
         cache.Set(0, 1);
@@ -123,7 +124,6 @@ public class LRUCacheTests
         const int numOfOps = 1000;
         for (var i = 0; i < numOfThreads; i++)
         {
-            var idx = i;
             tasks.Add(Task.Run(() => StoreElement(cache, numOfOps)));
         }
 
