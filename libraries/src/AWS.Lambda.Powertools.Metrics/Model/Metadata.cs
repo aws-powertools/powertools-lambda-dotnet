@@ -179,8 +179,8 @@ public class Metadata
     /// <summary>
     ///     Clears both default dimensions and dimensions lists
     /// </summary>
-    internal void ClearAllDimensions()
+    internal void ClearDefaultDimensions()
     {
-        _metricDirective.ClearAllDimensions();
+        _metricDirective.ClearDefaultDimensions();
     }
 }

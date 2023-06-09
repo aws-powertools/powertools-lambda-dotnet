@@ -216,9 +216,9 @@ public class Metrics : IMetrics
     /// <summary>
     ///     Clears both default dimensions and dimensions lists
     /// </summary>
-    void IMetrics.ClearAllDimensions()
+    void IMetrics.ClearDefaultDimensions()
     {
-        _context.ClearAllDimensions();
+        _context.ClearDefaultDimensions();
     }
 
     /// <summary>
@@ -329,9 +329,9 @@ public class Metrics : IMetrics
     /// <summary>
     ///     Clears both default dimensions and dimensions lists
     /// </summary>
-    public static void ClearAllDimensions()
+    public static void ClearDefaultDimensions()
     {
-        _instance.ClearAllDimensions();
+        _instance.ClearDefaultDimensions();
     }
 
     /// <summary>

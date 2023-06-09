@@ -35,7 +35,7 @@ public class ClearDimensionsTests
         // Act
         handler.OnEntry(eventArgs);
 
-        Metrics.ClearAllDimensions();
+        Metrics.ClearDefaultDimensions();
         Metrics.AddMetric($"Metric Name", 1, MetricUnit.Count);
 
         handler.OnExit(eventArgs);

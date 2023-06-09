@@ -100,5 +100,5 @@ public interface IMetrics : IDisposable
     /// <summary>
     ///     Clears both default dimensions and dimensions lists
     /// </summary>
-    void ClearAllDimensions();
+    void ClearDefaultDimensions();
 }

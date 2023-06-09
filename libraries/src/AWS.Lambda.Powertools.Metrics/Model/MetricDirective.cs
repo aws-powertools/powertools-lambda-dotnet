@@ -229,9 +229,8 @@ public class MetricDirective
     /// <summary>
     ///     Clears both default dimensions and dimensions lists
     /// </summary>
-    internal void ClearAllDimensions()
+    internal void ClearDefaultDimensions()
     {
-        Dimensions.Clear();
         DefaultDimensions.Clear();
     }
 }
