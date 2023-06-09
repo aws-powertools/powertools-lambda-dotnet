@@ -199,10 +199,12 @@ public class MetricDirective
     /// <param name="defaultDimensions">Default dimensions list</param>
     internal void SetDefaultDimensions(List<DimensionSet> defaultDimensions)
     {
-        if (!defaultDimensions.Any())
-            return;
-
-        DefaultDimensions = defaultDimensions;
+        if (!DefaultDimensions.Any())
+            DefaultDimensions = defaultDimensions;
+        else
+            foreach (var item in defaultDimensions)
+                if (!DefaultDimensions.Any(d => d.DimensionKeys.Contains(item.DimensionKeys[0])))
+                    DefaultDimensions.Add(item);
     }
 
     /// <summary>
@@ -222,5 +224,14 @@ public class MetricDirective
             dimensions.TryAdd(key, value);
 
         return dimensions;
+    }
+
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    internal void ClearAllDimensions()
+    {
+        Dimensions.Clear();
+        DefaultDimensions.Clear();
     }
 }
