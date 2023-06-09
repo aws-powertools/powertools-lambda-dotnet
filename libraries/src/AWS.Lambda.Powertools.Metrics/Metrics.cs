@@ -214,7 +214,7 @@ public class Metrics : IMetrics
     }
     
     /// <summary>
-    ///     Clears all Dimensions in both DefaultDimensions and Dimensions
+    ///     Clears both default dimensions and dimensions lists
     /// </summary>
     void IMetrics.ClearAllDimensions()
     {
