@@ -15,68 +15,55 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Runtime;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Containers;
+using Testcontainers.DynamoDb;
+using Xunit;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public class DynamoDbFixture : IDisposable
+public sealed class DynamoDbFixture : IAsyncLifetime, IDisposable
 {
-    private readonly IContainer _container;
+    private readonly DynamoDbContainer _dynamoDbContainer = new DynamoDbBuilder().Build();
+
+    public string TableName => "idempotency_table";
+
     public AmazonDynamoDBClient Client { get; set; }
-    public string TableName { get; set; } = "idempotency_table";
 
-    public DynamoDbFixture()
+    public async Task InitializeAsync()
     {
-        Environment.SetEnvironmentVariable("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE","/var/run/docker.sock");
-        
-        _container = new ContainerBuilder()
-            .WithName(Guid.NewGuid().ToString("D"))
-            .WithImage("amazon/dynamodb-local:latest")
-            .WithPortBinding(8000, true)
-            .WithDockerEndpoint(Environment.GetEnvironmentVariable("DOCKER_HOST") ?? "unix:///var/run/docker.sock")
-            .Build();
-        
-        
-        _container.StartAsync().Wait();
-        
-        var credentials = new BasicAWSCredentials("FAKE", "FAKE");
-        var amazonDynamoDbConfig = new AmazonDynamoDBConfig
-        {
-            ServiceURL = new UriBuilder("http", _container.Hostname, _container.GetMappedPublicPort(8000)).Uri.ToString(),
-            AuthenticationRegion = "us-east-1"
-        };
-        
-        Client = new AmazonDynamoDBClient(credentials, amazonDynamoDbConfig);
+        await _dynamoDbContainer.StartAsync()
+            .ConfigureAwait(false);
 
-        var createTableRequest = new CreateTableRequest
-        {
-            TableName = TableName,
-            KeySchema = new List<KeySchemaElement>
-            {
-                new("id", KeyType.HASH)
-            },
-            AttributeDefinitions = new List<AttributeDefinition>
-            {
-                new()
-                {
-                    AttributeName = "id",
-                    AttributeType = ScalarAttributeType.S
-                }
-            },
-            BillingMode = BillingMode.PAY_PER_REQUEST
-        };
+        var credentials = new BasicAWSCredentials("AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
+
+        var config = new AmazonDynamoDBConfig();
+        config.ServiceURL = _dynamoDbContainer.GetConnectionString();
+        config.AuthenticationRegion = "us-east-1";
+
+        var tableRequest = new CreateTableRequest();
+        tableRequest.TableName = TableName;
+        tableRequest.AttributeDefinitions = new List<AttributeDefinition> { new AttributeDefinition("id", ScalarAttributeType.S) };
+        tableRequest.KeySchema = new List<KeySchemaElement> { new KeySchemaElement("id", KeyType.HASH) };
+        tableRequest.BillingMode = BillingMode.PAY_PER_REQUEST;
+
+        Client = new AmazonDynamoDBClient(credentials, config);
+
         try
         {
-            Client.CreateTableAsync(createTableRequest).GetAwaiter().GetResult();
-            var response = Client.DescribeTableAsync(TableName).GetAwaiter().GetResult();
-            if (response == null)
+            await Client.CreateTableAsync(tableRequest)
+                .ConfigureAwait(false);
+
+            var tableResponse = await Client.DescribeTableAsync(TableName)
+                .ConfigureAwait(false);
+
+            if (tableResponse == null || !HttpStatusCode.OK.Equals(tableResponse.HttpStatusCode))
             {
-                throw new NullReferenceException("Table was not created within the expected time");
+                throw new TableNotFoundException($"{TableName} not found.");
             }
         }
         catch (ResourceInUseException e)
@@ -84,9 +71,15 @@ public class DynamoDbFixture : IDisposable
             Console.WriteLine(e.Message);
         }
     }
-    
+
+    public async Task DisposeAsync()
+    {
+        await _dynamoDbContainer.DisposeAsync().AsTask()
+            .ConfigureAwait(false);
+    }
+
     public void Dispose()
     {
-        _container.DisposeAsync().AsTask();
+        Client.Dispose();
     }
 }
