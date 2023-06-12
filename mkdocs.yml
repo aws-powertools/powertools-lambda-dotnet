@@ -1,5 +1,5 @@
-site_name: Lambda Powertools .NET
-site_description: AWS Lambda Powertools for .NET
+site_name: Powertools for AWS Lambda (.NET)
+site_description: Powertools for AWS Lambda (.NET)
 site_author: Amazon Web Services
 repo_url: https://github.com/aws-powertools/lambda-dotnet
 edit_uri: edit/develop/docs

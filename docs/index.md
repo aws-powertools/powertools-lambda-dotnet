@@ -1,13 +1,13 @@
 ---
-title: AWS Lambda Powertools for .NET
-description: AWS Lambda Powertools for .NET
+title: Powertools for AWS Lambda (.NET)
+description: Powertools for AWS Lambda (.NET)
 ---
 
 <!-- markdownlint-disable MD043 MD013 -->
 
-# AWS Lambda Powertools for .NET
+# Powertools for AWS Lambda (.NET)
 
-AWS Lambda Powertools for .NET (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, **Powertools is optimized for .NET 6+**.
+Powertools for AWS Lambda (.NET) (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, **Powertools for AWS Lambda (.NET) is optimized for .NET 6+**.
 
 ???+ tip
     Powertools is also available for [Python](https://awslabs.github.io/aws-lambda-powertools-python/){target="_blank"}, [Java](https://awslabs.github.io/aws-lambda-powertools-java/){target="_blank"}, and [TypeScript](https://awslabs.github.io/aws-lambda-powertools-typescript/latest/){target="_blank"}.
@@ -22,7 +22,7 @@ AWS Lambda Powertools for .NET (which from here will be referred as Powertools) 
 
 ## Features
 
-Core utilities such as Tracing, Logging, and Metrics will be available across all Lambda Powertools languages. Additional utilities are subjective to each language ecosystem and customer demand.
+Core utilities such as Tracing, Logging, and Metrics will be available across all Powertools for AWS Lambda languages. Additional utilities are subjective to each language ecosystem and customer demand.
 
 | Utility | Description
 | ------------------------------------------------- | ---------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ Core utilities such as Tracing, Logging, and Metrics will be available across al
 
 ## Install
 
-Powertools are available as NuGet packages. You can install the packages from NuGet gallery or from Visual Studio editor. Search `AWS.Lambda.Powertools*` to see various utilities available.
+Powertools for AWS Lambda (.NET) is available as NuGet packages. You can install the packages from NuGet gallery or from Visual Studio editor. Search `AWS.Lambda.Powertools*` to see various utilities available.
 
 * [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
 
@@ -48,7 +48,7 @@ Powertools are available as NuGet packages. You can install the packages from Nu
 
 ### SAM CLI custom template
 
-We have provided you with a custom template for the Serverless Application Model (AWS SAM) command-line interface (CLI). This generates a starter project that allows you to interactively choose the Powertools features that enables you to include in your project.
+We have provided you with a custom template for the Serverless Application Model (AWS SAM) command-line interface (CLI). This generates a starter project that allows you to interactively choose the Powertools for AWS Lambda (.NET) features that enables you to include in your project.
 
 ```bash
 sam init --location https://github.com/aws-samples/cookiecutter-aws-sam-dotnet
@@ -62,7 +62,7 @@ To use the SAM CLI, you need the following tools.
 
 ## Examples
 
-We have provided a few examples that should you how to use the each of the core Powertools features.
+We have provided a few examples that should you how to use the each of the core Powertools for AWS Lambda (.NET) features.
 
 * [Tracing](https://github.com/aws-powertools/lambda-dotnet/tree/main/examples/Tracing){target="_blank"} example
 * [Logging](https://github.com/aws-powertools/lambda-dotnet/tree/main/examples/Logging/){target="_blank"} example
@@ -70,7 +70,7 @@ We have provided a few examples that should you how to use the each of the core 
 
 ## Connect
 
-* **AWS Lambda Powertools on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET){target="_blank"}**
+* **Powertools for AWS Lambda (.NET) on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET){target="_blank"}**
 * **Email**: aws-lambda-powertools-feedback@amazon.com
 
 ## Tenets

@@ -90,7 +90,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
     /// <param name="getAsyncHandler">The parameter provider GetAsync callback handler.</param>
     /// <param name="getMultipleAsyncHandler">The parameter provider GetMultipleAsync callback handler.</param>
     /// <param name="cacheMode">The CacheMode.</param>
-    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
+    /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
     internal ParameterProviderBaseHandler(GetAsyncDelegate getAsyncHandler,
         GetMultipleAsyncDelegate getMultipleAsyncHandler,
         ParameterProviderCacheMode cacheMode,

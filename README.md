@@ -1,4 +1,4 @@
-# AWS Lambda Powertools for .NET
+# Powertools for AWS Lambda (.NET)
 
 ![aws provider](https://img.shields.io/badge/provider-AWS-orange?logo=amazon-aws&color=ff9900)
 [![Build](https://github.com/aws-powertools/lambda-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/aws-powertools/lambda-dotnet/actions/workflows/build.yml)
@@ -12,7 +12,7 @@ Powertools is a developer toolkit to implement Serverless [best practices and in
 
 ## Features
 
-Lambda Powertools provides three core utilities:
+Powertools for AWS Lambda (.NET) provides three core utilities:
 
 * **[Logging](https://docs.powertools.aws.dev/lambda-dotnet/core/logging/)** - provides a custom logger class that outputs structured JSON. It allows you to pass in strings or more complex objects, and will take care of serializing the log output. Common use cases—such as logging the Lambda event payload and capturing cold start information—are handled for you, including appending custom keys to the logger at anytime.
 
@@ -24,7 +24,7 @@ Lambda Powertools provides three core utilities:
 
 ### Installation
 
-The AWS Lambda Powertools for .NET utilities (.NET 6) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+The Powertools for AWS Lambda (.NET) utilities (.NET 6) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
 
 * [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
 
@@ -50,18 +50,18 @@ We have provided examples focused specifically on each of the utilities. Each so
 * **[Metrics example](examples/Metrics/)**
 * **[Tracing example](examples/Tracing/)**
 
-## Other members of the AWS Lambda Powertools family
+## Other members of the Powertools for AWS Lambda family
 
-Not using .NET? No problem, we have you covered. Here are the other members of the AWS Lambda Powertools family:
+Not using .NET? No problem, we have you covered. Here are the other members of the Powertools for AWS Lambda family:
 
-* [AWS Lambda Powertools for Python](https://github.com/awslabs/aws-lambda-powertools-python)
-* [AWS Lambda Powertools for Java](https://github.com/awslabs/aws-lambda-powertools-java)
-* [AWS Lambda Powertools for TypeScript](https://github.com/awslabs/aws-lambda-powertools-typescript)
+* [Powertools for AWS Lambda (Python)](https://github.com/awslabs/aws-lambda-powertools-python)
+* [Powertools for AWS Lambda (Java)](https://github.com/awslabs/aws-lambda-powertools-java)
+* [Powertools for AWS Lambda (TypeScript)](https://github.com/awslabs/aws-lambda-powertools-typescript)
 
 ## Credits
 
 * Structured logging initial implementation from [aws-lambda-logging](https://gitlab.com/hadrien/aws_lambda_logging)
-* Powertools idea [DAZN Powertools](https://github.com/getndazn/dazn-lambda-powertools/)
+* Powertools for AWS Lambda (.NET) idea [DAZN Powertools](https://github.com/getndazn/dazn-lambda-powertools/)
 
 ## 👋 Contributing
 
@@ -71,7 +71,7 @@ We welcome contributions from developers of all levels to our open-source projec
 
 ## Connect
 
-* **AWS Lambda Powertools on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET)**
+* **Powertools for AWS Lambda on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET)**
 * **Email**: <aws-lambda-powertools-feedback@amazon.com>
 
 ## License

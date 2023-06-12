@@ -42,7 +42,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [1.1.0] - 2023-05-05
 ## Maintenance
 
-* add Lambda Powertools for Python in issue templates
+* add Lambda Powertools for AWS Lambda (Python) in issue templates
 * add workflow to dispatch analytics fetching
 * **ci:** add workflow to dispatch analytics fetching
 
@@ -76,7 +76,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## Documentation
 
-* **home:** update powertools definition
+* **home:** update Powertools for AWS Lambda (.NET) definition
 
 ## Maintenance
 
