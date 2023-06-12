@@ -2,4 +2,4 @@
   href: api/
   homepage: api/index.md
 - name: AWS Lambda Powertools for .NET Documentation
-  href: "https://awslabs.github.io/aws-lambda-powertools-dotnet/"
+  href: "https://docs.powertools.aws.dev/lambda-dotnet/"

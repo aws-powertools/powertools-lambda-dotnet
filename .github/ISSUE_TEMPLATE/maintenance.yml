@@ -60,7 +60,7 @@ body:
     attributes:
       label: Acknowledgment
       options:
-        - label: This request meets [Lambda Powertools Tenets](https://awslabs.github.io/aws-lambda-powertools-dotnet/latest/#tenets)
+        - label: This request meets [Lambda Powertools Tenets](https://docs.powertools.aws.dev/lambda-dotnet/latest/#tenets)
           required: true
   - type: markdown
     attributes:

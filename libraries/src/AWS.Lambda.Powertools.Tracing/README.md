@@ -13,7 +13,7 @@ a provides functionality to reduce the overhead of performing common tracing tas
 
 ## Read the docs
 
-For a full list of features go to [awslabs.github.io/aws-lambda-powertools-dotnet/core/tracing/](awslabs.github.io/aws-lambda-powertools-dotnet/core/tracing/)
+For a full list of features go to [docs.powertools.aws.dev/lambda-dotnet/core/tracing/](docs.powertools.aws.dev/lambda-dotnet/core/tracing/)
 
 **GitHub:** https://github.com/aws-powertools/lambda-dotnet/
 
@@ -129,4 +129,4 @@ public class Function
 
 ## Sample output
 
-![Tracing showcase](http://awslabs.github.io/aws-lambda-powertools-dotnet/media/tracer_utility_showcase.png)
+![Tracing showcase](http://docs.powertools.aws.dev/lambda-dotnet/media/tracer_utility_showcase.png)

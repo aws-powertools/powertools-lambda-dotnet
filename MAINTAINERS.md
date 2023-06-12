@@ -120,7 +120,7 @@ Manage [labels](#labels), review issues regularly, and create new labels as need
 
 > TODO: This is an area we want to automate using the new GitHub GraphQL API.
 
-Make sure issues are assigned to our [board of activities](https://github.com/orgs/awslabs/projects/51/) and have the right [status](https://awslabs.github.io/aws-lambda-powertools-dotnet/latest/roadmap/#roadmap-status-definition).
+Make sure issues are assigned to our [board of activities](https://github.com/orgs/awslabs/projects/51/) and have the right [status](https://docs.powertools.aws.dev/lambda-dotnet/latest/roadmap/#roadmap-status-definition).
 
 Use our [labels](#labels) to signal good first issues to new community members, and to set expectation that this might need additional feedback from the author, other customers, experienced community members and/or maintainers.
 
@@ -152,7 +152,7 @@ Keep the `develop` branch at production quality at all times. Backport features 
 
 ### Manage Roadmap
 
-See [Roadmap section](https://awslabs.github.io/aws-lambda-powertools-dotnet/roadmap/)
+See [Roadmap section](https://docs.powertools.aws.dev/lambda-dotnet/roadmap/)
 
 Ensure the repo highlights features that should be elevated to the project roadmap. Be clear about the feature’s status, priority, target version, and whether or not it should be elevated to the roadmap.
 

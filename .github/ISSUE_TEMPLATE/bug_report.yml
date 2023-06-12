@@ -65,7 +65,7 @@ body:
     id: logs
     attributes:
       label: Debugging logs
-      description: If available, please share [debugging logs](https://awslabs.github.io/aws-lambda-powertools-dotnet/#debug-mode)
+      description: If available, please share [debugging logs](https://docs.powertools.aws.dev/lambda-dotnet/#debug-mode)
       render: csharp
     validations:
       required: false
