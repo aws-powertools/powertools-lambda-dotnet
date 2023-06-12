@@ -19,14 +19,14 @@ public class ClearDimensionsTests
 
         var configurations = new Mock<IPowertoolsConfigurations>();
 
-        var logger = new Metrics(
+        var metrics = new Metrics(
             configurations.Object,
             nameSpace: "dotnet-powertools-test",
             service: "testService"
         );
 
         var handler = new MetricsAspectHandler(
-            logger,
+            metrics,
             false
         );
 

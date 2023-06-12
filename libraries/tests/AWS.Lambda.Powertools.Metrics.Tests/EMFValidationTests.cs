@@ -39,7 +39,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService",
@@ -47,7 +47,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 captureColdStartEnabled
             );
 
@@ -120,14 +120,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -162,14 +162,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var methodName = Guid.NewGuid().ToString();
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -203,12 +203,12 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var methodName = Guid.NewGuid().ToString();
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -241,14 +241,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -279,10 +279,10 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var configurations = new Mock<IPowertoolsConfigurations>();
-            var logger = new Metrics(configurations.Object);
+            var metrics = new Metrics(configurations.Object);
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -311,14 +311,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             Console.SetOut(consoleOut);
 
             var configurations = new Mock<IPowertoolsConfigurations>();
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -350,14 +350,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var defaultDimensions = new Dictionary<string, string> { { "CustomDefaultDimension", "CustomDefaultDimensionValue" } };
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -387,14 +387,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var methodName = Guid.NewGuid().ToString();
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -428,14 +428,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var configurations = new Mock<IPowertoolsConfigurations>();
             var defaultDimensions = new Dictionary<string, string> { { "CustomDefaultDimension", "CustomDefaultDimensionValue" } };
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -467,14 +467,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             Console.SetOut(consoleOut);
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -508,14 +508,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -551,14 +551,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
@@ -593,14 +593,14 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             var configurations = new Mock<IPowertoolsConfigurations>();
 
-            var logger = new Metrics(
+            var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
                 service: "testService"
             );
 
             var handler = new MetricsAspectHandler(
-                logger,
+                metrics,
                 false
             );
 
