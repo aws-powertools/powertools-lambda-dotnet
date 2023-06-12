@@ -36,7 +36,7 @@ body:
     attributes:
       label: Acknowledgment
       options:
-        - label: This feature request meets [Powertools for AWS Lambda (.NET) Tenets](https://awslabs.github.io/aws-lambda-powertools-dotnet/tenets)
+        - label: This feature request meets [Powertools for AWS Lambda (.NET) Tenets](https://docs.powertools.aws.dev/lambda-dotnet/tenets)
           required: true
         - label: Should this be considered in other Powertools for AWS Lambda languages? i.e. [Python](https://github.com/awslabs/aws-lambda-powertools-python), [Java](https://github.com/awslabs/aws-lambda-powertools-java/), and [TypeScript](https://github.com/awslabs/aws-lambda-powertools-typescript/)
           required: false
