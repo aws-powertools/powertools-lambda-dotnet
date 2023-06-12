@@ -96,4 +96,9 @@ public interface IMetrics : IDisposable
     /// </summary>
     /// <param name="metricsOverflow">if set to <c>true</c> [metrics overflow].</param>
     void Flush(bool metricsOverflow = false);
+    
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    void ClearDefaultDimensions();
 }
