@@ -19,6 +19,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
+using Amazon.Lambda.Serialization.SystemTextJson;
+
+// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
+[assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
 
 namespace HelloWorld;
 
@@ -61,7 +65,7 @@ public class Function
                     {
                         await _lookupHelper.GetSingleParameterWithSsmProvider(),
                         await _lookupHelper.GetMultipleParametersWithSsmProvider(),
-                        await _lookupHelper.GetSingleSecretWithSecretsProvider(),
+                        //await _lookupHelper.GetSingleSecretWithSecretsProvider(),
                         await _lookupHelper.GetSingleParameterWithDynamoDBProvider(),
                         await _lookupHelper.GetMultipleParametersWithDynamoDBProvider()
                     }
@@ -77,6 +81,7 @@ public class Function
         }
         catch (Exception e)
         {
+            Console.Write(JsonSerializer.Serialize(GetExceptionInfo(e)));
             return new APIGatewayProxyResponse
             {
                 Body = e.Message,
@@ -84,5 +89,27 @@ public class Function
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
+    }
+
+    private static Dictionary<string, object?> GetExceptionInfo(Exception exception)
+    {
+        var exceptionInfo = new Dictionary<string, object?>()
+        {
+            { "Message", exception.Message },
+            { "Type", exception.GetType().FullName },
+            { "StackTrace", exception.StackTrace }
+        };
+
+        if (exception.InnerException is null) 
+            return exceptionInfo;
+        
+        var innerException = new Dictionary<string, object?>()
+        {
+            { "Message", exception.InnerException.Message },
+            { "Type", exception.InnerException.GetType().FullName }
+        };
+        
+        exceptionInfo.Add("InnerException", innerException);
+        return exceptionInfo;
     }
 }

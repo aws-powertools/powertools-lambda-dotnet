@@ -122,7 +122,7 @@ public class ParameterLookupHelper : IParameterLookupHelper
         IParameterProvider ssmProvider = GetParameterProvider(parameterProviderType);
 
         // Get SSM parameter name
-        string parameterName = Environment.GetEnvironmentVariable(EnvironmentVariableNames.SsmParameterNameVariableName) ?? "";
+        string parameterName = Environment.GetEnvironmentVariable(EnvironmentVariableNames.SsmSingleParameterNameVariableName) ?? "";
 
         // Retrieve a single parameter
         string? value = await ssmProvider
@@ -147,7 +147,7 @@ public class ParameterLookupHelper : IParameterLookupHelper
         IParameterProvider ssmProvider = GetParameterProvider(parameterProviderType);
 
         // Get SSM parameter path prefix
-        string parameterPathPrefix = Environment.GetEnvironmentVariable(EnvironmentVariableNames.SsmParameterPathPrefixVariableName) ?? "";
+        string parameterPathPrefix = Environment.GetEnvironmentVariable(EnvironmentVariableNames.SsmMultipleParametersPathPrefixVariableName) ?? "";
 
         // Retrieve multiple parameters from a path prefix
         // This returns a Dictionary with the parameter name as key

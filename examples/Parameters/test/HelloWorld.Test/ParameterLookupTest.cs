@@ -67,7 +67,7 @@ namespace HelloWorld.Tests
             var parameterName = Guid.NewGuid().ToString("D");
             var parameterValue = Guid.NewGuid().ToString("D");
 
-            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SsmParameterNameVariableName, parameterName);
+            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SsmSingleParameterNameVariableName, parameterName);
 
             var provider = new Mock<ISsmProvider>();
             provider.Setup(c =>
@@ -100,7 +100,7 @@ namespace HelloWorld.Tests
                 { Guid.NewGuid().ToString("D"), Guid.NewGuid().ToString("D") }
             };
 
-            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SsmParameterPathPrefixVariableName, parameterPathPrefix);
+            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SsmMultipleParametersPathPrefixVariableName, parameterPathPrefix);
 
             var provider = new Mock<ISsmProvider>();
             provider.Setup(c =>

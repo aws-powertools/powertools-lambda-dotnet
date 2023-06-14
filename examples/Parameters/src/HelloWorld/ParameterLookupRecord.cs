@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Text.Json.Serialization;
 
 namespace HelloWorld;
 
@@ -22,13 +23,13 @@ namespace HelloWorld;
 /// </summary>
 public static class EnvironmentVariableNames
 {
-    public const string SsmParameterNameVariableName = "SSM_PARAM_NAME";
-    public const string SsmParameterPathPrefixVariableName = "SSM_PARAM_PATH_PREFIX";
+    public const string SsmSingleParameterNameVariableName = "SSM_SINGLE_PARAM_NAME";
+    public const string SsmMultipleParametersPathPrefixVariableName = "SSM_MULTI_PARAM_PREFIX";
     public const string SecretName = "SECRET_NAME";
-    public const string DynamoDBSingleParameterTableName = "DYNAMODB_SINGLE_PARAM_TABLE_NAME";
-    public const string DynamoDBMultipleParametersTableName = "DYNAMODB_MULTI_PARAM_TABLE_NAME";
-    public const string DynamoDBSingleParameterId = "DYNAMODB_SINGLE_PARAM_ID";
-    public const string DynamoDBMultipleParametersParameterId = "DYNAMODB_MULTI_PARAM_ID";
+    public const string DynamoDBSingleParameterTableName = "DYNAMO_SINGLE_PARAM_TABLE_NAME";
+    public const string DynamoDBMultipleParametersTableName = "DYNAMO_MULTI_PARAM_TABLE_NAME";
+    public const string DynamoDBSingleParameterId = "DYNAMO_SINGLE_PARAM_ID";
+    public const string DynamoDBMultipleParametersParameterId = "DYNAMO_MULTI_PARAM_ID";
 }
 
 /// <summary>
@@ -61,11 +62,13 @@ public class ParameterLookupRecord
     /// <summary>
     /// Provider type
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public ParameterProviderType Provider { get; set; }
     
     /// <summary>
     /// Lookup method Get/GetMultiple
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public ParameterLookupMethod Method { get; set; }
     
     /// <summary>

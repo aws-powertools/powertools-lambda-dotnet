@@ -3,7 +3,21 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Example project for Powertools for AWS Lambda (.NET) Logging utility
+  Example project for Powertools for AWS Lambda (.NET) Parameters utility
+
+
+Mappings:
+  Constants:
+    DynamoDB:
+      SingleParamTableName: PowertoolsParametersSingle
+      SingleParamId: my-parameter
+      MultiParamTableName: PowertoolsParametersMultiple
+      MultiParamId: my-hash-key
+    SSM:
+      SingleParamName: /powertools/path/prefix/parameter
+      OtherParamName: /powertools/path/prefix/other-parameter
+      MultiParamPrefix: /powertools/path/prefix
+
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -11,9 +25,27 @@ Globals:
     Timeout: 10
     Environment:
       Variables:
-        POWERTOOLS_SERVICE_NAME: powertools-dotnet-logging-sample
-        POWERTOOLS_LOG_LEVEL: Debug
-        POWERTOOLS_LOGGER_CASE: PascalCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+        POWERTOOLS_SERVICE_NAME: powertools-dotnet-parameters-sample
+        DYNAMO_SINGLE_PARAM_TABLE_NAME:
+          Fn::FindInMap:
+            - Constants
+            - DynamoDB
+            - SingleParamTableName
+        DYNAMO_SINGLE_PARAM_ID:
+          Fn::FindInMap:
+            - Constants
+            - DynamoDB
+            - SingleParamId
+        DYNAMO_MULTI_PARAM_TABLE_NAME:
+          Fn::FindInMap:
+            - Constants
+            - DynamoDB
+            - MultiParamTableName
+        DYNAMO_MULTI_PARAM_ID:
+          Fn::FindInMap:
+            - Constants
+            - DynamoDB
+            - MultiParamId
 
 Resources:
   HelloWorldFunction:
@@ -26,7 +58,16 @@ Resources:
       Role: !Sub ${HelloWorldFunctionRole.Arn}
       Environment:
         Variables:
-          TABLE_NAME: !Ref PowertoolsLoggingTable
+          SSM_SINGLE_PARAM_NAME:
+            Fn::FindInMap:
+              - Constants
+              - SSM
+              - SingleParamName
+          SSM_MULTI_PARAM_PREFIX:
+            Fn::FindInMap:
+              - Constants
+              - SSM
+              - MultiParamPrefix
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -34,15 +75,139 @@ Resources:
             Path: /hello
             Method: get
 
-  PowertoolsLoggingTable:
-    Type: AWS::Serverless::SimpleTable
-    Properties:
-      TableName: PowertoolsLogging
-      PrimaryKey:
-        Name: LookupId
-        Type: String
-
   HelloWorldFunctionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "AllowLambdaServiceToAssumeRole"
+            Effect: "Allow"
+            Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        -   PolicyName: "AllowReadOperationsOnDynamoDB"
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                -
+                  Effect: "Allow"
+                  Action:
+                    - 'dynamodb:GetItem'
+                    - 'dynamodb:DescribeTable'
+                    - 'dynamodb:Scan'
+                    - 'dynamodb:Query'
+                    - 'dynamodb:BatchGetItem'
+                  Resource:
+                    - !Sub ${PowertoolsSingleParamTable.Arn}
+                    - !Sub ${PowertoolsMultiParamTable.Arn}
+        -   PolicyName: "AllowReadOperationsOnSSMParameters"
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                -
+                  Effect: "Allow"
+                  Action:
+                    - 'ssm:GetParameter'
+                    - 'ssm:GetParametersByPath'
+                  Resource:
+                    - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SingleParameter}'
+                    - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${OtherParameter}'
+                    - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/powertools/path/prefix'
+
+  SingleParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::FindInMap:
+          - Constants
+          - SSM
+          - SingleParamName
+      Type: String
+      Value: my-parameter-value
+
+  OtherParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name:
+        Fn::FindInMap:
+          - Constants
+          - SSM
+          - OtherParamName
+      Type: String
+      Value: my-other-parameter-value
+
+  PowertoolsSingleParamTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName:
+        Fn::FindInMap:
+          - Constants
+          - DynamoDB
+          - SingleParamTableName
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        -
+          AttributeName: id
+          KeyType: HASH
+      AttributeDefinitions:
+        -
+          AttributeName: id
+          AttributeType: S
+  
+  PowertoolsMultiParamTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName:
+        Fn::FindInMap:
+          - Constants
+          - DynamoDB
+          - MultiParamTableName
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        -
+          AttributeName: id
+          KeyType: HASH
+        -
+          AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        -
+          AttributeName: id
+          AttributeType: S
+        -
+          AttributeName: sk
+          AttributeType: S
+
+  InitCustomResource:
+    Type: Custom::InitCustomResource
+    DependsOn:
+    - PowertoolsSingleParamTable
+    - PowertoolsMultiParamTable
+    Properties:
+      ServiceToken: !GetAtt InitCustomResourcFunction.Arn
+      Region: !Ref 'AWS::Region'
+      Version: "1.0"
+    Version: "1.0"
+    
+  InitCustomResourcFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: dotnet6
+      CodeUri: ./cfn/HelloWorld.Cfn/
+      Handler: HelloWorld.Cfn::HelloWorld.Cfn.Function::FunctionHandler
+      MemorySize: 256
+      Role: !Sub ${InitCustomResourcFunctionRole.Arn}
+
+  InitCustomResourcFunctionRole:
     Type: "AWS::IAM::Role"
     Properties:
       Path: !Join ["", ["/", !Ref "AWS::StackName", "/"]]
@@ -78,7 +243,9 @@ Resources:
                     - 'dynamodb:BatchWriteItem'
                     - 'dynamodb:BatchGetItem'
                   Resource:
-                    - !Sub ${PowertoolsLoggingTable.Arn}
+                    - !Sub ${PowertoolsSingleParamTable.Arn}
+                    - !Sub ${PowertoolsMultiParamTable.Arn}
+
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
