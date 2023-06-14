@@ -55,9 +55,10 @@ public class LambdaEntryPoint :
     [Metrics] // Metrics need to be initialized the best place is entry point in opposite on adding attribute on each controller.
     public override Task<APIGatewayProxyResponse> FunctionHandlerAsync(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
     {
+
         if (!_defaultDimensions.ContainsKey("Version"))
             _defaultDimensions.Add("Version", lambdaContext.FunctionVersion ?? "Unknown");
-            
+
         // Setting the default dimensions. They will be added to every emitted metric.
         Metrics.SetDefaultDimensions(_defaultDimensions);
         return base.FunctionHandlerAsync(request, lambdaContext);

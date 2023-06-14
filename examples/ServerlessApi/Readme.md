@@ -121,7 +121,9 @@ Metrics does not use any context data in the background. The Metrics initializat
     [Metrics] // Metrics need to be initialized. The best place is the entry point opposite on adding attributes on each controller.
     public override Task<APIGatewayProxyResponse> FunctionHandlerAsync(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
     {
-        _defaultDimensions.Add("Version", lambdaContext.FunctionVersion);
+        if (!_defaultDimensions.ContainsKey("Version"))
+            _defaultDimensions.Add("Version", lambdaContext.FunctionVersion ?? "Unknown");
+            
         // Setting the default dimensions. They will be added to every emitted metric.
         Metrics.SetDefaultDimensions(_defaultDimensions);
 
