@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Tracing;
 using AWS.Lambda.Powertools.Metrics;
@@ -24,7 +25,14 @@ public class ValuesController : ControllerBase
     public string Get(int id)
     {
 
-        Metrics.AddMetric("SuccessfulRetrieval", 1, MetricUnit.Count);
+        try
+        {
+            Metrics.AddMetric("SuccessfulRetrieval", 1, MetricUnit.Count);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError("Failed to add metric",e);
+        }
         return "value";
     }
 
