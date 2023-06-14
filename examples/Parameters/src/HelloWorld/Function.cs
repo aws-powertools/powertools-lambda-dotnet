@@ -65,7 +65,7 @@ public class Function
                     {
                         await _lookupHelper.GetSingleParameterWithSsmProvider(),
                         await _lookupHelper.GetMultipleParametersWithSsmProvider(),
-                        //await _lookupHelper.GetSingleSecretWithSecretsProvider(),
+                        await _lookupHelper.GetSingleSecretWithSecretsProvider(),
                         await _lookupHelper.GetSingleParameterWithDynamoDBProvider(),
                         await _lookupHelper.GetMultipleParametersWithDynamoDBProvider()
                     }

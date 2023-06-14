@@ -17,6 +17,8 @@ Mappings:
       SingleParamName: /powertools/path/prefix/parameter
       OtherParamName: /powertools/path/prefix/other-parameter
       MultiParamPrefix: /powertools/path/prefix
+    SecretsManager:
+      SecretName: PowertoolsParametersSecret
 
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
@@ -68,6 +70,11 @@ Resources:
               - Constants
               - SSM
               - MultiParamPrefix
+          SECRET_NAME:
+            Fn::FindInMap:
+              - Constants
+              - SecretsManager
+              - SecretName
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -122,6 +129,16 @@ Resources:
                     - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SingleParameter}'
                     - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${OtherParameter}'
                     - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/powertools/path/prefix'
+        -   PolicyName: "AllowReadOperationsOnSecrets"
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                -
+                  Effect: "Allow"
+                  Action:
+                    - 'secretsmanager:GetSecretValue'
+                  Resource:
+                    - !Ref SingleSecret
 
   SingleParameter:
     Type: AWS::SSM::Parameter
@@ -144,6 +161,21 @@ Resources:
           - OtherParamName
       Type: String
       Value: my-other-parameter-value
+
+  SingleSecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name:
+        Fn::FindInMap:
+          - Constants
+          - SecretsManager
+          - SecretName
+      Description: "This secret has a dynamically generated secret password."
+      GenerateSecretString:
+        SecretStringTemplate: '{"Username": "test-user"}'
+        GenerateStringKey: "Password"
+        PasswordLength: 30
+        ExcludeCharacters: '"@/\'
 
   PowertoolsSingleParamTable:
     Type: 'AWS::DynamoDB::Table'

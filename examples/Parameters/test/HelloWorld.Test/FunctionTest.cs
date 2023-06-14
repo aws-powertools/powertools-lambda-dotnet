@@ -26,8 +26,7 @@ namespace HelloWorld.Tests
 {
     public class FunctionTest
     {
-        //ToDo: undo the comment
-        //[Fact]
+        [Fact]
         public async Task TestHelloWorldFunctionHandler()
         {
             // Arrange
