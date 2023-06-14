@@ -22,7 +22,11 @@ public class ValuesControllerTests
         {
             PropertyNameCaseInsensitive = true
         });
-        var context = new TestLambdaContext();
+        var context = new TestLambdaContext
+        {
+            FunctionVersion = Guid.NewGuid().ToString()
+        };
+
         var response = await lambdaFunction.FunctionHandlerAsync(request, context);
 
         Assert.Equal(200, response.StatusCode);

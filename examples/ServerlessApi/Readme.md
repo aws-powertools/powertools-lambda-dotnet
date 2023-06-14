@@ -51,10 +51,10 @@ You can find your API Gateway Endpoint URL in the output values displayed after 
 Once we have deployed the application on an AWS account we can execute below command to check if everything works. 
 
 ```bash
-curl -i <url>/api/values
+curl -i <url>api/values
 ```
 
-where `<url>` is an output form the `sam deploy` command. The result should be something like
+where `<url>` is an output value from the `sam deploy` command. The result should be something like
 
 ```
 HTTP/2 200 
