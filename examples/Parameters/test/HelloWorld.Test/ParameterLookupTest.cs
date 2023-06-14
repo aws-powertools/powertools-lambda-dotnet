@@ -140,7 +140,7 @@ namespace HelloWorld.Tests
                 Password = Guid.NewGuid().ToString("D")
             };
 
-            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SecretName, secretName);
+            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SecretsManagerSecretName, secretName);
 
             var provider = new Mock<ISecretsProvider>();
             provider.Setup(c =>

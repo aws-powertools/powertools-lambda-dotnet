@@ -25,7 +25,7 @@ public static class EnvironmentVariableNames
 {
     public const string SsmSingleParameterNameVariableName = "SSM_SINGLE_PARAM_NAME";
     public const string SsmMultipleParametersPathPrefixVariableName = "SSM_MULTI_PARAM_PREFIX";
-    public const string SecretName = "SECRET_NAME";
+    public const string SecretsManagerSecretName = "SECRET_NAME";
     public const string DynamoDBSingleParameterTableName = "DYNAMO_SINGLE_PARAM_TABLE_NAME";
     public const string DynamoDBMultipleParametersTableName = "DYNAMO_MULTI_PARAM_TABLE_NAME";
     public const string DynamoDBSingleParameterId = "DYNAMO_SINGLE_PARAM_ID";

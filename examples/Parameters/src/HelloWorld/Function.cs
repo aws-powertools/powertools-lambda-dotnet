@@ -38,7 +38,7 @@ public class Function
     {
         _lookupHelper = new ParameterLookupHelper();
     }
-    
+
     /// <summary>
     /// Test constructor
     /// </summary>
@@ -46,20 +46,22 @@ public class Function
     {
         _lookupHelper = lookupHelper;
     }
-    
+
     /// <summary>
     /// Event handler function
     /// </summary>
     /// <param name="apigwProxyEvent">The API Gateway event payload</param>
     /// <param name="context">The Lambda context</param>
     /// <returns>An API Gateway response</returns>
-    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent, ILambdaContext context)
+    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
+        ILambdaContext context)
     {
         try
         {
             var lookupInfo = new Dictionary<string, object>()
             {
                 { "RequestId", apigwProxyEvent.RequestContext.RequestId },
+                { "Greeting", "Hello Powertools for AWS Lambda (.NET)" },
                 {
                     "Parameters", new List<ParameterLookupRecord>
                     {
@@ -100,15 +102,15 @@ public class Function
             { "StackTrace", exception.StackTrace }
         };
 
-        if (exception.InnerException is null) 
+        if (exception.InnerException is null)
             return exceptionInfo;
-        
+
         var innerException = new Dictionary<string, object?>()
         {
             { "Message", exception.InnerException.Message },
             { "Type", exception.InnerException.GetType().FullName }
         };
-        
+
         exceptionInfo.Add("InnerException", innerException);
         return exceptionInfo;
     }

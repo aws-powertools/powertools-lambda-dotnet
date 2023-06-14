@@ -41,7 +41,7 @@ public class Function
             StackId = request!.StackId,
             RequestId = request.RequestId,
             LogicalResourceId = request.LogicalResourceId,
-            PhysicalResourceId = "parameters_custom_physical_resource_id",
+            PhysicalResourceId = "powertools_parameters_custom_physical_resource_id",
             Status = "SUCCESS",
             Reason = string.Empty,
             NoEcho = false

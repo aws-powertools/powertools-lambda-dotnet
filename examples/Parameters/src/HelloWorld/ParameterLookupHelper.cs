@@ -68,12 +68,12 @@ public class ParameterLookupHelper : IParameterLookupHelper
     /// Current parameter provider instance
     /// </summary>
     private IParameterProvider? _currentProvider;
-    
+
     /// <summary>
     /// Current parameter provider instance type
     /// </summary>
     private ParameterProviderType _currentProviderType = ParameterProviderType.None;
-    
+
     /// <summary>
     /// Get or create an instance of provider for the specified provider type
     /// </summary>
@@ -112,17 +112,18 @@ public class ParameterLookupHelper : IParameterLookupHelper
         _currentProvider = currentProvider;
         _currentProviderType = currentProviderType;
     }
-    
+
     /// <inheritdoc />
     public async Task<ParameterLookupRecord> GetSingleParameterWithSsmProvider()
     {
         var parameterProviderType = ParameterProviderType.SsmProvider;
-        
+
         // Get SSM Provider instance
         IParameterProvider ssmProvider = GetParameterProvider(parameterProviderType);
 
         // Get SSM parameter name
-        string parameterName = Environment.GetEnvironmentVariable(EnvironmentVariableNames.SsmSingleParameterNameVariableName) ?? "";
+        string parameterName =
+            Environment.GetEnvironmentVariable(EnvironmentVariableNames.SsmSingleParameterNameVariableName) ?? "";
 
         // Retrieve a single parameter
         string? value = await ssmProvider
@@ -142,12 +143,14 @@ public class ParameterLookupHelper : IParameterLookupHelper
     public async Task<ParameterLookupRecord> GetMultipleParametersWithSsmProvider()
     {
         var parameterProviderType = ParameterProviderType.SsmProvider;
-        
+
         // Get SSM Provider instance
         IParameterProvider ssmProvider = GetParameterProvider(parameterProviderType);
 
         // Get SSM parameter path prefix
-        string parameterPathPrefix = Environment.GetEnvironmentVariable(EnvironmentVariableNames.SsmMultipleParametersPathPrefixVariableName) ?? "";
+        string parameterPathPrefix =
+            Environment.GetEnvironmentVariable(EnvironmentVariableNames.SsmMultipleParametersPathPrefixVariableName) ??
+            "";
 
         // Retrieve multiple parameters from a path prefix
         // This returns a Dictionary with the parameter name as key
@@ -168,12 +171,12 @@ public class ParameterLookupHelper : IParameterLookupHelper
     public async Task<ParameterLookupRecord> GetSingleSecretWithSecretsProvider()
     {
         var parameterProviderType = ParameterProviderType.SecretsProvider;
-        
+
         // Get SSM Provider instance
         IParameterProvider secretsProvider = GetParameterProvider(parameterProviderType);
 
         // Get SSM parameter name
-        string secretName = Environment.GetEnvironmentVariable(EnvironmentVariableNames.SecretName) ?? "";
+        string secretName = Environment.GetEnvironmentVariable(EnvironmentVariableNames.SecretsManagerSecretName) ?? "";
 
         // Retrieve a single parameter
         var value = await secretsProvider
@@ -196,7 +199,8 @@ public class ParameterLookupHelper : IParameterLookupHelper
         var parameterProviderType = ParameterProviderType.DynamoDBProvider;
 
         // Get DynamoDB partition key  
-        string tableName = Environment.GetEnvironmentVariable(EnvironmentVariableNames.DynamoDBSingleParameterTableName) ?? "";
+        string tableName =
+            Environment.GetEnvironmentVariable(EnvironmentVariableNames.DynamoDBSingleParameterTableName) ?? "";
 
         // Get DynamoDB Provider instance
         IParameterProvider dynamoDbProvider = ((IDynamoDBProvider)GetParameterProvider(parameterProviderType))
@@ -225,14 +229,16 @@ public class ParameterLookupHelper : IParameterLookupHelper
         var parameterProviderType = ParameterProviderType.DynamoDBProvider;
 
         // Get DynamoDB partition key  
-        string tableName = Environment.GetEnvironmentVariable(EnvironmentVariableNames.DynamoDBMultipleParametersTableName) ?? "";
+        string tableName =
+            Environment.GetEnvironmentVariable(EnvironmentVariableNames.DynamoDBMultipleParametersTableName) ?? "";
 
         // Get DynamoDB Provider instance
         IParameterProvider dynamoDbProvider = ((IDynamoDBProvider)GetParameterProvider(parameterProviderType))
             .UseTable(tableName);
 
         // Get DynamoDB partition key  
-        string hashKey = Environment.GetEnvironmentVariable(EnvironmentVariableNames.DynamoDBMultipleParametersParameterId) ?? "";
+        string hashKey =
+            Environment.GetEnvironmentVariable(EnvironmentVariableNames.DynamoDBMultipleParametersParameterId) ?? "";
 
         // Retrieve multiple parameters
         IDictionary<string, string?> values = await dynamoDbProvider

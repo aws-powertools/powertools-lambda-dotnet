@@ -122,6 +122,7 @@ namespace HelloWorld.Tests
             var body = new Dictionary<string, object>
             {
                 { "RequestId", requestId },
+                { "Greeting", "Hello Powertools for AWS Lambda (.NET)" },
                 {
                     "Parameters", new List<ParameterLookupRecord>
                     {

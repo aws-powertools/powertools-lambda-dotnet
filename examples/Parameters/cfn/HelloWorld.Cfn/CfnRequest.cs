@@ -17,6 +17,9 @@ using System;
 
 namespace HelloWorld.Cfn;
 
+/// <summary>
+/// CloudFormation Custom Resource Request
+/// </summary>
 [Serializable]
 public class CfnRequest 
 {
