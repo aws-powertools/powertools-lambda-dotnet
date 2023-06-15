@@ -64,18 +64,18 @@ public class Function
         ArgumentNullException.ThrowIfNull(httpClient);
         var tableName = Environment.GetEnvironmentVariable("TABLE_NAME");
         ArgumentNullException.ThrowIfNull(tableName);
-        Idempotency.Config()
-            .WithConfig(IdempotencyConfig.Builder()
-                .WithEventKeyJmesPath(
-                    "powertools_json(Body).address") // will retrieve the address field in the body which is a string transformed to json with `powertools_json`
-                .WithExpiration(TimeSpan.FromSeconds(10))
-                .Build())
-            .WithPersistenceStore(
-                DynamoDBPersistenceStore.Builder()
-                    .WithTableName(tableName)
-                    .WithDynamoDBClient(amazonDynamoDb)
-                    .Build())
-            .Configure();
+
+        Idempotency.Configure(builder =>
+            builder
+                .WithOptions(optionsBuilder =>
+                    optionsBuilder
+                        .WithEventKeyJmesPath("powertools_json(Body).address") // will retrieve the address field in the body which is a string transformed to json with `powertools_json`
+                        .WithExpiration(TimeSpan.FromSeconds(10)))
+                .UseDynamoDb(storeBuilder =>
+                    storeBuilder
+                        .WithTableName(tableName)
+                        .WithDynamoDBClient(amazonDynamoDb)
+                ));
     }
 
     /// <summary>
