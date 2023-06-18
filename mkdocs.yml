@@ -17,6 +17,7 @@ nav:
       - core/tracing.md
   - Utilities:
       - utilities/parameters.md
+      - utilities/idempotency.md
 
 theme:
   name: material
@@ -62,8 +63,7 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.snippets:
       base_path: "."
-      check_paths: true
-      restrict_base_path: false
+      check_paths: True
   - meta
   - toc:
       permalink: true
