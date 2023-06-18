@@ -12,7 +12,7 @@
         <Title>Powertools for AWS Lambda (.NET)</Title>
         <Description>Powertools for AWS Lambda (.NET) - Parameters package.</Description>
         <Copyright>Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
-        <RepositoryUrl>https://github.com/awslabs/aws-lambda-powertools-dotnet</RepositoryUrl>
+        <RepositoryUrl>https://github.com/aws-powertools/lambda-dotnet</RepositoryUrl>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>

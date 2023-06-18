@@ -11,9 +11,9 @@ The logging utility provides a [AWS Lambda](https://aws.amazon.com/lambda/) opti
 
 ## Read the docs
 
-For a full list of features go to [awslabs.github.io/aws-lambda-powertools-dotnet/core/logging/](awslabs.github.io/aws-lambda-powertools-dotnet/core/logging/)
+For a full list of features go to [docs.powertools.aws.dev/lambda-dotnet/core/logging/](docs.powertools.aws.dev/lambda-dotnet/core/logging/)
 
-GitHub: https://github.com/awslabs/aws-lambda-powertools-dotnet/
+GitHub: https://github.com/aws-powertools/lambda-dotnet/
 
 ## Sample Function
 
