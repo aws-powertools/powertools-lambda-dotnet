@@ -20,9 +20,9 @@ Powertools for AWS Lambda (.NET) provides three core utilities:
 
 * **[Tracing](https://docs.powertools.aws.dev/lambda-dotnet/core/tracing/)** - provides a simple way to send traces from functions to AWS X-Ray to provide visibility into function calls, interactions with other AWS services, or external HTTP requests. Annotations can easily be added to traces to allow filtering traces based on key information. For example, when using Tracer, a ColdStart annotation is created for you so you can easily group and analyze traces where there was an initialization overhead.
 
-* **[Parameters (developer preview)](https://docs.powertools.aws.dev/lambda-dotnet/core/parameters/)** - provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
+* **[Parameters (developer preview)](https://docs.powertools.aws.dev/lambda-dotnet/utilities/parameters/)** - provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
 
-* **[Idempotency (developer preview)](https://awslabs.github.io/aws-lambda-powertools-dotnet/utilities/idempotency/)** - The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
+* **[Idempotency (developer preview)](https://docs.powertools.aws.dev/lambda-dotnet/utilities/idempotency/)** - The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
 
 ### Installation
 
@@ -62,9 +62,9 @@ We have provided examples focused specifically on each of the utilities. Each so
 
 Not using .NET? No problem, we have you covered. Here are the other members of the Powertools for AWS Lambda family:
 
-* [Powertools for AWS Lambda (Python)](https://github.com/awslabs/aws-lambda-powertools-python)
-* [Powertools for AWS Lambda (Java)](https://github.com/awslabs/aws-lambda-powertools-java)
-* [Powertools for AWS Lambda (TypeScript)](https://github.com/awslabs/aws-lambda-powertools-typescript)
+* [Powertools for AWS Lambda (Python)](https://github.com/aws-powertools/aws-lambda-powertools-python)
+* [Powertools for AWS Lambda (Java)](https://github.com/aws-powertools/aws-lambda-powertools-java)
+* [Powertools for AWS Lambda (TypeScript)](https://github.com/aws-powertools/aws-lambda-powertools-typescript)
 
 ## Credits
 
