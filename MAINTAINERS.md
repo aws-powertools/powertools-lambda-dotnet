@@ -43,6 +43,7 @@ This is document explains who the maintainers are (see below), what they do in t
 | ----------------- | --------------------------------------------- | ----------- |
 | Stephen Liedig    | [sliedig](https://github.com/sliedig)         | Amazon      |
 | Amir Khairalomoum | [amirkaws](https://github.com/amirkaws)       | Amazon      |
+| Henrique Graca    | [hjgraca](https://github.com/hjgraca)         | Amazon      |
 
 ## Emeritus
 
