@@ -10,15 +10,15 @@ description: Powertools for AWS Lambda (.NET)
 Powertools for AWS Lambda (.NET) (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, **Powertools for AWS Lambda (.NET) is optimized for .NET 6+**.
 
 ???+ tip
-    Powertools is also available for [Python](https://awslabs.github.io/aws-lambda-powertools-python/){target="_blank"}, [Java](https://awslabs.github.io/aws-lambda-powertools-java/){target="_blank"}, and [TypeScript](https://awslabs.github.io/aws-lambda-powertools-typescript/latest/){target="_blank"}.
+    Powertools is also available for [Python](https://docs.powertools.aws.dev/lambda-python/){target="_blank"}, [Java](https://docs.powertools.aws.dev/lambda-java/){target="_blank"}, and [TypeScript](https://docs.powertools.aws.dev/lambda-typescript/latest/){target="_blank"}.
 
 ??? hint "Support this project by becoming a reference customer or sharing your work :heart:"
 
     You can choose to support us in three ways:
 
-    1) [**Become a reference customers**](https://github.com/aws-powertools/lambda-dotnet/issues/new?assignees=&labels=customer-reference&template=support_powertools.yml&title=%5BSupport+Lambda+Powertools%5D%3A+%3Cyour+organization+name%3E). This gives us permission to list your company in our documentation.
+    1) [**Become a reference customers**](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=customer-reference&template=support_powertools.yml&title=%5BSupport+Lambda+Powertools%5D%3A+%3Cyour+organization+name%3E). This gives us permission to list your company in our documentation.
 
-    2) [**Share your work**](https://github.com/aws-powertools/lambda-dotnet/issues/new?assignees=&labels=community-content&template=share_your_work.yml&title=%5BI+Made+This%5D%3A+%3CTITLE%3E). Blog posts, video, sample projects you used Powertools!
+    2) [**Share your work**](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=community-content&template=share_your_work.yml&title=%5BI+Made+This%5D%3A+%3CTITLE%3E). Blog posts, video, sample projects you used Powertools!
 
 ## Features
 

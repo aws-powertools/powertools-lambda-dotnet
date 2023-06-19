@@ -81,7 +81,7 @@ body:
       options:
         - label: This feature request meets [Powertools for AWS Lambda (.NET) Tenets](https://docs.powertools.aws.dev/lambda-dotnet/tenets/)
           required: true
-        - label: Should this be considered in other Powertools for AWS Lambda (.NET) languages? i.e. [Python](https://github.com/aws-powertools/aws-lambda-powertools-python), [Java](https://github.com/aws-powertools/aws-lambda-powertools-java/), and [TypeScript](https://github.com/aws-powertools/aws-lambda-powertools-typescript/)
+        - label: Should this be considered in other Powertools for AWS Lambda (.NET) languages? i.e. [Python](https://github.com/aws-powertools/powertools-lambda-python), [Java](https://github.com/aws-powertools/powertools-lambda-java/), and [TypeScript](https://github.com/aws-powertools/powertools-lambda-typescript/)
           required: false
   - type: markdown
     attributes:

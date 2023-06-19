@@ -8,11 +8,11 @@ This is our public roadmap that outlines the high level direction we are working
 
 !!! info "Operational Excellence is priority number 1."
 
-Themes are key activities maintainers are focusing on, besides bug reports. These are updated periodically and you can get an idea of the overall progress in the [Milestones section](https://github.com/awslabs/aws-lambda-powertools-dotnet/milestones){target="_blank"}.
+Themes are key activities maintainers are focusing on, besides bug reports. These are updated periodically and you can get an idea of the overall progress in the [Milestones section](https://github.com/aws-powertools/powertools-lambda-dotnet/milestones){target="_blank"}.
 
 ### New utilities
 
-After going GA, we want to start working on new utilities, specifically but not limited to the most commonly asked: **(1)** [Idempotency](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/164), **(2)** [Parameters](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/160) and **(3)** [Batch](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/168).
+After going GA, we want to start working on new utilities, specifically but not limited to the most commonly asked: **(1)** [Idempotency](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/164), **(2)** [Parameters](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/160) and **(3)** [Batch](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/168).
 
 ### Improve operational excellence
 
@@ -60,14 +60,14 @@ graph LR
 
 Our end-to-end mechanism follows four major steps:
 
-* **Feature Request**. Ideas start with a [feature request](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new?assignees=&labels=feature-request%2Ctriage&projects=&template=feature_request.yml&title=Feature+request%3A+TITLE){target="_blank"} to outline their use case at a high level. For complex use cases, maintainers might ask for/write a RFC.
+* **Feature Request**. Ideas start with a [feature request](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=feature-request%2Ctriage&projects=&template=feature_request.yml&title=Feature+request%3A+TITLE){target="_blank"} to outline their use case at a high level. For complex use cases, maintainers might ask for/write a RFC.
     * Maintainers review requests based on [project tenets](index.md#tenets){target="_blank"}, customers reaction (👍), and use cases.
-* **Request-for-comments (RFC)**. Design proposals use our [RFC issue template](https://github.com/awslabs/aws-lambda-powertools-dotnet/issues/new?assignees=&labels=RFC%2Ctriage&projects=&template=rfc.yml&title=RFC%3A+TITLE){target="_blank"} to describe its implementation, challenges, developer experience, dependencies, and alternative solutions.
+* **Request-for-comments (RFC)**. Design proposals use our [RFC issue template](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=RFC%2Ctriage&projects=&template=rfc.yml&title=RFC%3A+TITLE){target="_blank"} to describe its implementation, challenges, developer experience, dependencies, and alternative solutions.
     * This helps refine the initial idea with community feedback before a decision is made.
 * **Decision**. After carefully reviewing and discussing them, maintainers make a final decision on whether to start implementation, defer or reject it, and update everyone with the next steps.
 * **Implementation**. For approved features, maintainers give priority to the original authors for implementation unless it is a sensitive task that is best handled by maintainers.
 
-??? info "See [Maintainers](https://github.com/awslabs/aws-lambda-powertools-dotnet/blob/develop/MAINTAINERS.md) document to understand how we triage issues and pull requests, labels and governance."
+??? info "See [Maintainers](https://github.com/aws-powertools/powertools-lambda-dotnet/blob/develop/MAINTAINERS.md) document to understand how we triage issues and pull requests, labels and governance."
 
 ## Disclaimer
 

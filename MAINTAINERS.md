@@ -107,7 +107,7 @@ Review pull requests regularly, comment, suggest, reject, merge and close. Accep
 
 PRs are [labeled](#labels) based on file changes and semantic title. Pay attention to whether labels reflect the current state of the PR and correct accordingly.
 
-Use and enforce [semantic versioning](https://semver.org/) pull request titles, as these will be used for [CHANGELOG](CHANGELOG.md) and [Release notes](https://github.com/aws-powertools/lambda-dotnet/releases) - make sure they communicate their intent at the human level.
+Use and enforce [semantic versioning](https://semver.org/) pull request titles, as these will be used for [CHANGELOG](CHANGELOG.md) and [Release notes](https://github.com/aws-powertools/powertools-lambda-dotnet/releases) - make sure they communicate their intent at the human level.
 
 > TODO: This is an area we want to automate using the new GitHub GraphQL API.
 
@@ -183,7 +183,7 @@ When in doubt, use `need-more-information` or `need-customer-feedback` labels to
 
 ### Crediting contributions
 
-We credit all contributions as part of each [release note](https://github.com/aws-powertools/lambda-dotnet/releases) as an automated process. If you find contributors are missing from the release note you're producing, please add them manually.
+We credit all contributions as part of each [release note](https://github.com/aws-powertools/powertools-lambda-dotnet/releases) as an automated process. If you find contributors are missing from the release note you're producing, please add them manually.
 
 ### Is that a bug?
 
