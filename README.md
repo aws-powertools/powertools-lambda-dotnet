@@ -1,12 +1,12 @@
 # Powertools for AWS Lambda (.NET)
 
 ![aws provider](https://img.shields.io/badge/provider-AWS-orange?logo=amazon-aws&color=ff9900)
-[![Build](https://github.com/aws-powertools/lambda-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/aws-powertools/lambda-dotnet/actions/workflows/build.yml)
+[![Build](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml)
 [![Join our Discord](https://dcbadge.vercel.app/api/server/B8zZKbbyET)](https://discord.gg/B8zZKbbyET)
 
 Powertools is a developer toolkit to implement Serverless [best practices and increase developer velocity](https://docs.powertools.aws.dev/lambda-dotnet/#features).
 
-**[📜 Documentation](https://docs.powertools.aws.dev/lambda-dotnet/)** | **[NuGet](https://www.nuget.org/)** | **[Roadmap](https://github.com/awslabs/aws-lambda-powertools-roadmap/projects/1)** | **[Examples](#examples)**
+**[📜 Documentation](https://docs.powertools.aws.dev/lambda-dotnet/)** | **[NuGet](https://www.nuget.org/)** | **[Roadmap](https://github.com/aws-powertools/powertools-lambda-roadmap/projects/1)** | **[Examples](#examples)**
 
 > **Join us on the AWS Developers Slack at `#lambda-powertools`** - **[Invite, if you don't have an account](https://join.slack.com/t/awsdevelopers/shared_invite/zt-gu30gquv-EhwIYq3kHhhysaZ2aIX7ew)**
 
@@ -54,9 +54,9 @@ We have provided examples focused specifically on each of the utilities. Each so
 
 Not using .NET? No problem, we have you covered. Here are the other members of the Powertools for AWS Lambda family:
 
-* [Powertools for AWS Lambda (Python)](https://github.com/awslabs/aws-lambda-powertools-python)
-* [Powertools for AWS Lambda (Java)](https://github.com/awslabs/aws-lambda-powertools-java)
-* [Powertools for AWS Lambda (TypeScript)](https://github.com/awslabs/aws-lambda-powertools-typescript)
+* [Powertools for AWS Lambda (Python)](https://github.com/aws-powertools/powertools-lambda-python)
+* [Powertools for AWS Lambda (Java)](https://github.com/aws-powertools/powertools-lambda-java)
+* [Powertools for AWS Lambda (TypeScript)](https://github.com/aws-powertools/powertools-lambda-typescript)
 
 ## Credits
 
@@ -67,7 +67,7 @@ Not using .NET? No problem, we have you covered. Here are the other members of t
 
 We welcome contributions from developers of all levels to our open-source project on GitHub. If you'd like to contribute, please check our contributing guidelines and help make this project more accessible.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=aws-powertools/lambda-dotnet&type=Date)](https://star-history.com/#aws-powertools/lambda-dotnet&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=aws-powertools/powertools-lambda-dotnet&type=Date)](https://star-history.com/#aws-powertools/powertools-lambda-dotnet&Date)
 
 ## Connect
 

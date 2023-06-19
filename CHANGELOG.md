@@ -23,19 +23,19 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## Pull Requests
 
-* Merge pull request [#268](https://github.com/aws-powertools/lambda-dotnet/issues/268) from amirkaws/amirkaws-release-version-1.3.0
-* Merge pull request [#167](https://github.com/aws-powertools/lambda-dotnet/issues/167) from amirkaws/amirkaws-feature-parameters
-* Merge pull request [#1](https://github.com/aws-powertools/lambda-dotnet/issues/1) from sliedig/amirkaws-feature-parameters
-* Merge pull request [#264](https://github.com/aws-powertools/lambda-dotnet/issues/264) from awslabs/chore(ci)-skip-analytics-on-forks
-* Merge pull request [#262](https://github.com/aws-powertools/lambda-dotnet/issues/262) from awslabs/chorebump-version-1.2.0-release
+* Merge pull request [#268](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/268) from amirkaws/amirkaws-release-version-1.3.0
+* Merge pull request [#167](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/167) from amirkaws/amirkaws-feature-parameters
+* Merge pull request [#1](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1) from sliedig/amirkaws-feature-parameters
+* Merge pull request [#264](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/264) from awslabs/chore(ci)-skip-analytics-on-forks
+* Merge pull request [#262](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/262) from awslabs/chorebump-version-1.2.0-release
 
 
 <a name="1.2.0"></a>
 ## [1.2.0] - 2023-05-05
 ## Pull Requests
 
-* Merge pull request [#258](https://github.com/aws-powertools/lambda-dotnet/issues/258) from amirkaws/amirkaws-release-version-1.2.0
-* Merge pull request [#226](https://github.com/aws-powertools/lambda-dotnet/issues/226) from hjgraca/feat_support_high_resolution_metrics
+* Merge pull request [#258](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/258) from amirkaws/amirkaws-release-version-1.2.0
+* Merge pull request [#226](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/226) from hjgraca/feat_support_high_resolution_metrics
 
 
 <a name="1.1.0"></a>
@@ -48,24 +48,24 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## Pull Requests
 
-* Merge pull request [#255](https://github.com/aws-powertools/lambda-dotnet/issues/255) from awslabs/fix-remove-real-env-tests
-* Merge pull request [#253](https://github.com/aws-powertools/lambda-dotnet/issues/253) from amirkaws/amirkaws-release-v1.1.0
-* Merge pull request [#246](https://github.com/aws-powertools/lambda-dotnet/issues/246) from hjgraca/feat_set-execution-context
-* Merge pull request [#251](https://github.com/aws-powertools/lambda-dotnet/issues/251) from leandrodamascena/issues-templates/python
-* Merge pull request [#241](https://github.com/aws-powertools/lambda-dotnet/issues/241) from awslabs/update-changelog-4691350388
-* Merge pull request [#237](https://github.com/aws-powertools/lambda-dotnet/issues/237) from hjgraca/changelog-update-pipeline
-* Merge pull request [#235](https://github.com/aws-powertools/lambda-dotnet/issues/235) from amirkaws/amirkaws-update-examples-nuget-references-release-v1.0.1
+* Merge pull request [#255](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/255) from awslabs/fix-remove-real-env-tests
+* Merge pull request [#253](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/253) from amirkaws/amirkaws-release-v1.1.0
+* Merge pull request [#246](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/246) from hjgraca/feat_set-execution-context
+* Merge pull request [#251](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/251) from leandrodamascena/issues-templates/python
+* Merge pull request [#241](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/241) from awslabs/update-changelog-4691350388
+* Merge pull request [#237](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/237) from hjgraca/changelog-update-pipeline
+* Merge pull request [#235](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/235) from amirkaws/amirkaws-update-examples-nuget-references-release-v1.0.1
 
 
 <a name="v1.0.1"></a>
 ## [v1.0.1] - 2023-04-06
 ## Pull Requests
 
-* Merge pull request [#232](https://github.com/aws-powertools/lambda-dotnet/issues/232) from amirkaws/amirkaws-release-v1.0.1
-* Merge pull request [#227](https://github.com/aws-powertools/lambda-dotnet/issues/227) from hjgraca/chore_fix_changelog_build
-* Merge pull request [#225](https://github.com/aws-powertools/lambda-dotnet/issues/225) from srcsakthivel/develop
-* Merge pull request [#223](https://github.com/aws-powertools/lambda-dotnet/issues/223) from hjgraca/fix_tracing_on_exception_thrown
-* Merge pull request [#218](https://github.com/aws-powertools/lambda-dotnet/issues/218) from amirkaws/amirkaws-update-examples-nuget-references-release
+* Merge pull request [#232](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/232) from amirkaws/amirkaws-release-v1.0.1
+* Merge pull request [#227](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/227) from hjgraca/chore_fix_changelog_build
+* Merge pull request [#225](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/225) from srcsakthivel/develop
+* Merge pull request [#223](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/223) from hjgraca/fix_tracing_on_exception_thrown
+* Merge pull request [#218](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/218) from amirkaws/amirkaws-update-examples-nuget-references-release
 
 
 <a name="v1.0.0"></a>
@@ -80,7 +80,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## Maintenance
 
-* **ci:** api docs build update ([#188](https://github.com/aws-powertools/lambda-dotnet/issues/188))
+* **ci:** api docs build update ([#188](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/188))
 * **ci:** changing trigger to run manually
 * **ci:** updated api docs implementation
 * **ci:** updated bug report template
@@ -89,21 +89,21 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## Pull Requests
 
-* Merge pull request [#215](https://github.com/aws-powertools/lambda-dotnet/issues/215) from amirkaws/amirkaws-release-v1.0.0
-* Merge pull request [#208](https://github.com/aws-powertools/lambda-dotnet/issues/208) from amirkaws/amirkaws-cold-start-capture-warning-bug-fix
-* Merge pull request [#210](https://github.com/aws-powertools/lambda-dotnet/issues/210) from awslabs/powertools-definition-update
-* Merge pull request [#209](https://github.com/aws-powertools/lambda-dotnet/issues/209) from amirkaws/amirkaws-metrics-timestamp-fix
-* Merge pull request [#199](https://github.com/aws-powertools/lambda-dotnet/issues/199) from awslabs/sliedig-ci-reviewers
-* Merge pull request [#193](https://github.com/aws-powertools/lambda-dotnet/issues/193) from hjgraca/maintenance-new-issue-template
-* Merge pull request [#202](https://github.com/aws-powertools/lambda-dotnet/issues/202) from hjgraca/fix-test-json-escaping
-* Merge pull request [#195](https://github.com/aws-powertools/lambda-dotnet/issues/195) from hjgraca/update-dotnet-sdk-6.0.405
-* Merge pull request [#194](https://github.com/aws-powertools/lambda-dotnet/issues/194) from hjgraca/patch-1
-* Merge pull request [#192](https://github.com/aws-powertools/lambda-dotnet/issues/192) from hjgraca/fix-incorrect-crefs
-* Merge pull request [#189](https://github.com/aws-powertools/lambda-dotnet/issues/189) from sliedig/develop
-* Merge pull request [#185](https://github.com/aws-powertools/lambda-dotnet/issues/185) from amirkaws/amirkaws-update-examples-nuget-references
-* Merge pull request [#183](https://github.com/aws-powertools/lambda-dotnet/issues/183) from awslabs/develop
-* Merge pull request [#150](https://github.com/aws-powertools/lambda-dotnet/issues/150) from awslabs/develop
-* Merge pull request [#140](https://github.com/aws-powertools/lambda-dotnet/issues/140) from awslabs/develop
+* Merge pull request [#215](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/215) from amirkaws/amirkaws-release-v1.0.0
+* Merge pull request [#208](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/208) from amirkaws/amirkaws-cold-start-capture-warning-bug-fix
+* Merge pull request [#210](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/210) from awslabs/powertools-definition-update
+* Merge pull request [#209](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/209) from amirkaws/amirkaws-metrics-timestamp-fix
+* Merge pull request [#199](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/199) from awslabs/sliedig-ci-reviewers
+* Merge pull request [#193](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/193) from hjgraca/maintenance-new-issue-template
+* Merge pull request [#202](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/202) from hjgraca/fix-test-json-escaping
+* Merge pull request [#195](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/195) from hjgraca/update-dotnet-sdk-6.0.405
+* Merge pull request [#194](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/194) from hjgraca/patch-1
+* Merge pull request [#192](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/192) from hjgraca/fix-incorrect-crefs
+* Merge pull request [#189](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/189) from sliedig/develop
+* Merge pull request [#185](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/185) from amirkaws/amirkaws-update-examples-nuget-references
+* Merge pull request [#183](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/183) from awslabs/develop
+* Merge pull request [#150](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/150) from awslabs/develop
+* Merge pull request [#140](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/140) from awslabs/develop
 
 
 <a name="v0.0.2-preview"></a>
@@ -119,30 +119,30 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## Features
 
-* **ci:** codeql static code analysis ([#148](https://github.com/aws-powertools/lambda-dotnet/issues/148))
+* **ci:** codeql static code analysis ([#148](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/148))
 
 ## Maintenance
 
 * updated setup-dotnet[@v1](https://github.com/v1) to [@v3](https://github.com/v3)
-* updated packages ([#172](https://github.com/aws-powertools/lambda-dotnet/issues/172))
+* updated packages ([#172](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/172))
 * **ci:** bumped version
 * **ci:** minor updates, licensing
 * **deps:** bump gitpython from 3.1.29 to 3.1.30
-* **docs:** updated documentation ([#175](https://github.com/aws-powertools/lambda-dotnet/issues/175))
+* **docs:** updated documentation ([#175](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/175))
 * **docs:** add discord invitation link
 
 ## Pull Requests
 
-* Merge pull request [#182](https://github.com/aws-powertools/lambda-dotnet/issues/182) from sliedig/develop
-* Merge pull request [#181](https://github.com/aws-powertools/lambda-dotnet/issues/181) from awslabs/dependabot/pip/gitpython-3.1.30
-* Merge pull request [#179](https://github.com/aws-powertools/lambda-dotnet/issues/179) from sliedig/sliedig-ci
-* Merge pull request [#174](https://github.com/aws-powertools/lambda-dotnet/issues/174) from sliedig/sliedig-ci
-* Merge pull request [#173](https://github.com/aws-powertools/lambda-dotnet/issues/173) from sliedig/sliedig-samples
-* Merge pull request [#157](https://github.com/aws-powertools/lambda-dotnet/issues/157) from kenfdev/fix-readme-title-typo
-* Merge pull request [#170](https://github.com/aws-powertools/lambda-dotnet/issues/170) from nCubed/develop
-* Merge pull request [#152](https://github.com/aws-powertools/lambda-dotnet/issues/152) from amirkaws/amirkaws-custom-exception-json-converter
-* Merge pull request [#155](https://github.com/aws-powertools/lambda-dotnet/issues/155) from sthuber90/add-discord-link-154
-* Merge pull request [#147](https://github.com/aws-powertools/lambda-dotnet/issues/147) from amirkaws/amirkaws-fix-doc-links
+* Merge pull request [#182](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/182) from sliedig/develop
+* Merge pull request [#181](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/181) from awslabs/dependabot/pip/gitpython-3.1.30
+* Merge pull request [#179](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/179) from sliedig/sliedig-ci
+* Merge pull request [#174](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/174) from sliedig/sliedig-ci
+* Merge pull request [#173](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/173) from sliedig/sliedig-samples
+* Merge pull request [#157](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/157) from kenfdev/fix-readme-title-typo
+* Merge pull request [#170](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/170) from nCubed/develop
+* Merge pull request [#152](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/152) from amirkaws/amirkaws-custom-exception-json-converter
+* Merge pull request [#155](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/155) from sthuber90/add-discord-link-154
+* Merge pull request [#147](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/147) from amirkaws/amirkaws-fix-doc-links
 
 
 <a name="v0.0.1-preview.1"></a>
@@ -156,7 +156,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * skip duplicate nuget packages publish
 * added missing runtimes
 * updated Logging template description
-* updated documentation and doc generation ([#96](https://github.com/aws-powertools/lambda-dotnet/issues/96))
+* updated documentation and doc generation ([#96](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/96))
 * removed optional doc file paths
 * explicitly adding doc files for build configurations
 * resolving dependecy alert CVE-2020-8116
@@ -178,27 +178,27 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * fixed nav for roadmap
 * updated link to feature request; added roadmap
-* library readme updates and minor updates  ([#117](https://github.com/aws-powertools/lambda-dotnet/issues/117))
-* spell check with US-English dictionary ([#115](https://github.com/aws-powertools/lambda-dotnet/issues/115))
-* docs review ([#112](https://github.com/aws-powertools/lambda-dotnet/issues/112))
-* Reviewing documentation ([#68](https://github.com/aws-powertools/lambda-dotnet/issues/68))
-* adding auto-generated API Reference to docs ([#87](https://github.com/aws-powertools/lambda-dotnet/issues/87))
-* alternative brew installation ([#86](https://github.com/aws-powertools/lambda-dotnet/issues/86))
-* homebrew installation ([#85](https://github.com/aws-powertools/lambda-dotnet/issues/85))
-* merging api generation tasks ([#84](https://github.com/aws-powertools/lambda-dotnet/issues/84))
-* fixing docfx path ([#83](https://github.com/aws-powertools/lambda-dotnet/issues/83))
-* fix docfx path ([#82](https://github.com/aws-powertools/lambda-dotnet/issues/82))
-* fix api docs generator installation ([#81](https://github.com/aws-powertools/lambda-dotnet/issues/81))
-* update github actions to publish api docs ([#80](https://github.com/aws-powertools/lambda-dotnet/issues/80))
-* API docs generation ([#79](https://github.com/aws-powertools/lambda-dotnet/issues/79))
+* library readme updates and minor updates  ([#117](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/117))
+* spell check with US-English dictionary ([#115](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/115))
+* docs review ([#112](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/112))
+* Reviewing documentation ([#68](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/68))
+* adding auto-generated API Reference to docs ([#87](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/87))
+* alternative brew installation ([#86](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/86))
+* homebrew installation ([#85](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/85))
+* merging api generation tasks ([#84](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/84))
+* fixing docfx path ([#83](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/83))
+* fix docfx path ([#82](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/82))
+* fix api docs generator installation ([#81](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/81))
+* update github actions to publish api docs ([#80](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/80))
+* API docs generation ([#79](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/79))
 
 ## Features
 
 * added security.md
 * updated record_pr action
-* PR Labeler GitHub actions ([#119](https://github.com/aws-powertools/lambda-dotnet/issues/119))
-* Logger output case attributes docs and unit testing ([#100](https://github.com/aws-powertools/lambda-dotnet/issues/100))
-* add extra fields to the logger methods ([#98](https://github.com/aws-powertools/lambda-dotnet/issues/98))
+* PR Labeler GitHub actions ([#119](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/119))
+* Logger output case attributes docs and unit testing ([#100](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/100))
+* add extra fields to the logger methods ([#98](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/98))
 * updated examples to include managed runtime configuration as well as docker. Made updates to Tracing implementation
 * added Tracing example
 * added init Metrics sample
@@ -226,7 +226,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * added customer 404 page
 * removing unecessary buildtools
 * update pr template
-* updating type documentation and file headers ([#56](https://github.com/aws-powertools/lambda-dotnet/issues/56))
+* updating type documentation and file headers ([#56](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/56))
 * moved solution file into libraries. Need a separate solution for examples
 * added docs
 * added gitignore and updated licence
@@ -238,8 +238,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * removed unnecessary pr labeling
 * updated PR labeling path
 * updated list of assignees
-* updated docker builds to use Amazon.Lambda.Tools ([#118](https://github.com/aws-powertools/lambda-dotnet/issues/118))
-* bumped .net version in global to 6.0.301 ([#120](https://github.com/aws-powertools/lambda-dotnet/issues/120))
+* updated docker builds to use Amazon.Lambda.Tools ([#118](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/118))
+* bumped .net version in global to 6.0.301 ([#120](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/120))
 * bumped .net version in global to 6.0.301
 * adding missed copyright info
 * added copyright to examples
@@ -248,7 +248,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **ci:** add on_merge_pr workflow to notify releases
 * **ci:** lockdown untrusted workflows to sha
 * **ci:** add missing scripts
-* **ci:** updated bug report template ([#144](https://github.com/aws-powertools/lambda-dotnet/issues/144))
+* **ci:** updated bug report template ([#144](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/144))
 * **ci:** add workflow to detect missing related issue
 * **ci:** enable concurrency group for docs workflow
 * **ci:** upudated wording in PR template checklist
@@ -269,70 +269,70 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **deps:** bump underscore from 1.12.0 to 1.13.1 in /docs
 * **deps:** bump url-parse from 1.4.7 to 1.5.1 in /docs
 * **deps:** bump prismjs from 1.20.0 to 1.21.0 in /docs
-* **deps:** updates sample deps ([#142](https://github.com/aws-powertools/lambda-dotnet/issues/142))
-* **deps:** bump mkdocs from 1.2.2 to 1.2.3 ([#29](https://github.com/aws-powertools/lambda-dotnet/issues/29))
+* **deps:** updates sample deps ([#142](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/142))
+* **deps:** bump mkdocs from 1.2.2 to 1.2.3 ([#29](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/29))
 * **governance:** render debug logs with csharp syntax
 * **governance:** typo in pending release label name
 
 ## Pull Requests
 
-* Merge pull request [#139](https://github.com/aws-powertools/lambda-dotnet/issues/139) from awslabs/amirkaws-resolve-conflicts-2
-* Merge pull request [#135](https://github.com/aws-powertools/lambda-dotnet/issues/135) from awslabs/amirkaws-update-versions
-* Merge pull request [#134](https://github.com/aws-powertools/lambda-dotnet/issues/134) from heitorlessa/chore/lockdown-gh-pages-workflow
-* Merge pull request [#132](https://github.com/aws-powertools/lambda-dotnet/issues/132) from heitorlessa/chore/github-concurrency-docs
-* Merge pull request [#130](https://github.com/aws-powertools/lambda-dotnet/issues/130) from heitorlessa/chore/enforce-github-actions-sha
-* Merge pull request [#128](https://github.com/aws-powertools/lambda-dotnet/issues/128) from sliedig/sliedig-ci
-* Merge pull request [#127](https://github.com/aws-powertools/lambda-dotnet/issues/127) from sliedig/sliedig-ci
-* Merge pull request [#126](https://github.com/aws-powertools/lambda-dotnet/issues/126) from sliedig/develop
-* Merge pull request [#123](https://github.com/aws-powertools/lambda-dotnet/issues/123) from sliedig/develop
-* Merge pull request [#1](https://github.com/aws-powertools/lambda-dotnet/issues/1) from sliedig/sliedig/develop
-* Merge pull request [#121](https://github.com/aws-powertools/lambda-dotnet/issues/121) from awslabs/amirkaws-update-versions
-* Merge pull request [#116](https://github.com/aws-powertools/lambda-dotnet/issues/116) from awslabs/amirkaws/add-di-support-for-logging
-* Merge pull request [#113](https://github.com/aws-powertools/lambda-dotnet/issues/113) from awslabs/amirkaws/update-doc-1
-* Merge pull request [#111](https://github.com/aws-powertools/lambda-dotnet/issues/111) from awslabs/amirkaws/add-env-vars-docs
-* Merge pull request [#102](https://github.com/aws-powertools/lambda-dotnet/issues/102) from sliedig/sliedig/examples
-* Merge pull request [#103](https://github.com/aws-powertools/lambda-dotnet/issues/103) from awslabs/amirkaws/fix-example-issues
-* Merge pull request [#97](https://github.com/aws-powertools/lambda-dotnet/issues/97) from sliedig/sliedig/examples
-* Merge pull request [#95](https://github.com/aws-powertools/lambda-dotnet/issues/95) from awslabs/pr/91
-* Merge pull request [#90](https://github.com/aws-powertools/lambda-dotnet/issues/90) from sliedig/develop
-* Merge pull request [#89](https://github.com/aws-powertools/lambda-dotnet/issues/89) from awslabs/api-docs-template
-* Merge pull request [#74](https://github.com/aws-powertools/lambda-dotnet/issues/74) from awslabs/amirkaws/disable-tracing-outside-lambda-env
-* Merge pull request [#66](https://github.com/aws-powertools/lambda-dotnet/issues/66) from sliedig/develop
-* Merge pull request [#59](https://github.com/aws-powertools/lambda-dotnet/issues/59) from sliedig/develop
-* Merge pull request [#58](https://github.com/aws-powertools/lambda-dotnet/issues/58) from sliedig/sliedig/nuget
-* Merge pull request [#32](https://github.com/aws-powertools/lambda-dotnet/issues/32) from awslabs/amirkaws/metrics-1
-* Merge pull request [#31](https://github.com/aws-powertools/lambda-dotnet/issues/31) from t1agob/develop
-* Merge pull request [#2](https://github.com/aws-powertools/lambda-dotnet/issues/2) from awslabs/develop
-* Merge pull request [#25](https://github.com/aws-powertools/lambda-dotnet/issues/25) from t1agob/develop
-* Merge pull request [#1](https://github.com/aws-powertools/lambda-dotnet/issues/1) from t1agob/sourcegenerators
-* Merge pull request [#24](https://github.com/aws-powertools/lambda-dotnet/issues/24) from sliedig/develop
-* Merge pull request [#23](https://github.com/aws-powertools/lambda-dotnet/issues/23) from sliedig/develop
-* Merge pull request [#22](https://github.com/aws-powertools/lambda-dotnet/issues/22) from sliedig/develop
-* Merge pull request [#21](https://github.com/aws-powertools/lambda-dotnet/issues/21) from t1agob/develop
-* Merge pull request [#19](https://github.com/aws-powertools/lambda-dotnet/issues/19) from awslabs/dependabot/npm_and_yarn/docs/url-parse-1.5.1
-* Merge pull request [#18](https://github.com/aws-powertools/lambda-dotnet/issues/18) from awslabs/dependabot/npm_and_yarn/docs/hosted-git-info-2.8.9
-* Merge pull request [#17](https://github.com/aws-powertools/lambda-dotnet/issues/17) from awslabs/dependabot/npm_and_yarn/docs/ua-parser-js-0.7.28
-* Merge pull request [#16](https://github.com/aws-powertools/lambda-dotnet/issues/16) from awslabs/dependabot/npm_and_yarn/docs/underscore-1.13.1
-* Merge pull request [#15](https://github.com/aws-powertools/lambda-dotnet/issues/15) from awslabs/dependabot/npm_and_yarn/docs/ssri-6.0.2
-* Merge pull request [#14](https://github.com/aws-powertools/lambda-dotnet/issues/14) from awslabs/dependabot/npm_and_yarn/docs/elliptic-6.5.4
-* Merge pull request [#13](https://github.com/aws-powertools/lambda-dotnet/issues/13) from sliedig/develop
-* Merge pull request [#12](https://github.com/aws-powertools/lambda-dotnet/issues/12) from sliedig/develop
-* Merge pull request [#11](https://github.com/aws-powertools/lambda-dotnet/issues/11) from awslabs/dependabot/npm_and_yarn/docs/socket.io-2.4.1
-* Merge pull request [#10](https://github.com/aws-powertools/lambda-dotnet/issues/10) from awslabs/dependabot/npm_and_yarn/docs/ini-1.3.8
-* Merge pull request [#9](https://github.com/aws-powertools/lambda-dotnet/issues/9) from awslabs/dependabot/npm_and_yarn/docs/object-path-0.11.5
-* Merge pull request [#7](https://github.com/aws-powertools/lambda-dotnet/issues/7) from t1agob/develop
-* Merge pull request [#8](https://github.com/aws-powertools/lambda-dotnet/issues/8) from sliedig/develop
-* Merge pull request [#5](https://github.com/aws-powertools/lambda-dotnet/issues/5) from sliedig/develop
-* Merge pull request [#4](https://github.com/aws-powertools/lambda-dotnet/issues/4) from sliedig/develop
-* Merge pull request [#3](https://github.com/aws-powertools/lambda-dotnet/issues/3) from sliedig/develop
-* Merge pull request [#2](https://github.com/aws-powertools/lambda-dotnet/issues/2) from awslabs/dependabot/npm_and_yarn/docs/prismjs-1.21.0
-* Merge pull request [#1](https://github.com/aws-powertools/lambda-dotnet/issues/1) from sliedig/develop
+* Merge pull request [#139](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/139) from awslabs/amirkaws-resolve-conflicts-2
+* Merge pull request [#135](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/135) from awslabs/amirkaws-update-versions
+* Merge pull request [#134](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/134) from heitorlessa/chore/lockdown-gh-pages-workflow
+* Merge pull request [#132](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/132) from heitorlessa/chore/github-concurrency-docs
+* Merge pull request [#130](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/130) from heitorlessa/chore/enforce-github-actions-sha
+* Merge pull request [#128](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/128) from sliedig/sliedig-ci
+* Merge pull request [#127](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/127) from sliedig/sliedig-ci
+* Merge pull request [#126](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/126) from sliedig/develop
+* Merge pull request [#123](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/123) from sliedig/develop
+* Merge pull request [#1](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1) from sliedig/sliedig/develop
+* Merge pull request [#121](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/121) from awslabs/amirkaws-update-versions
+* Merge pull request [#116](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/116) from awslabs/amirkaws/add-di-support-for-logging
+* Merge pull request [#113](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/113) from awslabs/amirkaws/update-doc-1
+* Merge pull request [#111](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/111) from awslabs/amirkaws/add-env-vars-docs
+* Merge pull request [#102](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/102) from sliedig/sliedig/examples
+* Merge pull request [#103](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/103) from awslabs/amirkaws/fix-example-issues
+* Merge pull request [#97](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/97) from sliedig/sliedig/examples
+* Merge pull request [#95](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/95) from awslabs/pr/91
+* Merge pull request [#90](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/90) from sliedig/develop
+* Merge pull request [#89](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/89) from awslabs/api-docs-template
+* Merge pull request [#74](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/74) from awslabs/amirkaws/disable-tracing-outside-lambda-env
+* Merge pull request [#66](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/66) from sliedig/develop
+* Merge pull request [#59](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/59) from sliedig/develop
+* Merge pull request [#58](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/58) from sliedig/sliedig/nuget
+* Merge pull request [#32](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/32) from awslabs/amirkaws/metrics-1
+* Merge pull request [#31](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/31) from t1agob/develop
+* Merge pull request [#2](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/2) from awslabs/develop
+* Merge pull request [#25](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/25) from t1agob/develop
+* Merge pull request [#1](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1) from t1agob/sourcegenerators
+* Merge pull request [#24](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/24) from sliedig/develop
+* Merge pull request [#23](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/23) from sliedig/develop
+* Merge pull request [#22](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/22) from sliedig/develop
+* Merge pull request [#21](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/21) from t1agob/develop
+* Merge pull request [#19](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/19) from awslabs/dependabot/npm_and_yarn/docs/url-parse-1.5.1
+* Merge pull request [#18](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/18) from awslabs/dependabot/npm_and_yarn/docs/hosted-git-info-2.8.9
+* Merge pull request [#17](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/17) from awslabs/dependabot/npm_and_yarn/docs/ua-parser-js-0.7.28
+* Merge pull request [#16](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/16) from awslabs/dependabot/npm_and_yarn/docs/underscore-1.13.1
+* Merge pull request [#15](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/15) from awslabs/dependabot/npm_and_yarn/docs/ssri-6.0.2
+* Merge pull request [#14](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/14) from awslabs/dependabot/npm_and_yarn/docs/elliptic-6.5.4
+* Merge pull request [#13](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/13) from sliedig/develop
+* Merge pull request [#12](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/12) from sliedig/develop
+* Merge pull request [#11](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/11) from awslabs/dependabot/npm_and_yarn/docs/socket.io-2.4.1
+* Merge pull request [#10](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/10) from awslabs/dependabot/npm_and_yarn/docs/ini-1.3.8
+* Merge pull request [#9](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/9) from awslabs/dependabot/npm_and_yarn/docs/object-path-0.11.5
+* Merge pull request [#7](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/7) from t1agob/develop
+* Merge pull request [#8](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/8) from sliedig/develop
+* Merge pull request [#5](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/5) from sliedig/develop
+* Merge pull request [#4](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/4) from sliedig/develop
+* Merge pull request [#3](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/3) from sliedig/develop
+* Merge pull request [#2](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/2) from awslabs/dependabot/npm_and_yarn/docs/prismjs-1.21.0
+* Merge pull request [#1](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1) from sliedig/develop
 
 
-[Unreleased]: https://github.com/aws-powertools/lambda-dotnet/compare/1.3.0...HEAD
-[1.3.0]: https://github.com/aws-powertools/lambda-dotnet/compare/1.2.0...1.3.0
-[1.2.0]: https://github.com/aws-powertools/lambda-dotnet/compare/1.1.0...1.2.0
-[1.1.0]: https://github.com/aws-powertools/lambda-dotnet/compare/v1.0.1...1.1.0
-[v1.0.1]: https://github.com/aws-powertools/lambda-dotnet/compare/v1.0.0...v1.0.1
-[v1.0.0]: https://github.com/aws-powertools/lambda-dotnet/compare/v0.0.2-preview...v1.0.0
-[v0.0.2-preview]: https://github.com/aws-powertools/lambda-dotnet/compare/v0.0.1-preview.1...v0.0.2-preview
+[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.2.0...1.3.0
+[1.2.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.1.0...1.2.0
+[1.1.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/v1.0.1...1.1.0
+[v1.0.1]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/v1.0.0...v1.0.1
+[v1.0.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/v0.0.2-preview...v1.0.0
+[v0.0.2-preview]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/v0.0.1-preview.1...v0.0.2-preview

@@ -2,7 +2,7 @@ style: github
 template: CHANGELOG.tpl.md
 info:
   title: CHANGELOG
-  repository_url: https://github.com/aws-powertools/lambda-dotnet
+  repository_url: https://github.com/aws-powertools/powertools-lambda-dotnet
 options:
   commits:
     filters:
