@@ -9,16 +9,16 @@ Description: >
 Mappings:
   Constants:
     DynamoDB:
-      SingleParamTableName: PowertoolsParametersSingle
+      SingleParamTableName: PowertoolsParametersExampleSingle
       SingleParamId: my-parameter
-      MultiParamTableName: PowertoolsParametersMultiple
+      MultiParamTableName: PowertoolsParametersExampleMultiple
       MultiParamId: my-hash-key
     SSM:
-      SingleParamName: /powertools/path/prefix/parameter
-      OtherParamName: /powertools/path/prefix/other-parameter
-      MultiParamPrefix: /powertools/path/prefix
+      SingleParamName: /powertools-parameters-example/path/prefix/parameter
+      OtherParamName: /powertools-parameters-example/path/prefix/other-parameter
+      MultiParamPrefix: /powertools-parameters-example/path/prefix
     SecretsManager:
-      SecretName: PowertoolsParametersSecret
+      SecretName: PowertoolsParametersExampleSecret
 
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
@@ -128,7 +128,7 @@ Resources:
                   Resource:
                     - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SingleParameter}'
                     - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${OtherParameter}'
-                    - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/powertools/path/prefix'
+                    - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/powertools-parameters-example/path/prefix'
         -   PolicyName: "AllowReadOperationsOnSecrets"
             PolicyDocument:
               Version: '2012-10-17'
