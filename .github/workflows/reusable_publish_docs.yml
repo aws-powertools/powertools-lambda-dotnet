@@ -66,24 +66,6 @@ jobs:
           make release-docs VERSION="$VERSION" ALIAS="$ALIAS"
           poetry run mike set-default --push latest
 
-      - name: Release API docs
-        uses: peaceiris/actions-gh-pages@de7ea6f8efb354206b205ef54722213d99067935 # v3.9.0
-        env:
-          VERSION: ${{ inputs.version }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./api
-          keep_files: true
-          destination_dir: ${{ env.VERSION }}/api
-      - name: Release API docs to latest
-        if: ${{ inputs.alias == 'latest' }}
-        uses: peaceiris/actions-gh-pages@de7ea6f8efb354206b205ef54722213d99067935 # v3.9.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./api
-          keep_files: true
-          destination_dir: latest/api
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
         with:
@@ -111,13 +93,6 @@ jobs:
         run: |
           brew install -f docfx --skip-cask-deps --ignore-dependencies
           docfx apidocs/docfx.json
-      - name: Release API docs to latest
-        uses: peaceiris/actions-gh-pages@068dc23d9710f1ba62e86896f84735d869951305 # v3.8.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./apidocs/_site
-          keep_files: true
-          destination_dir: api
       - name: Configure AWS credentials 
         uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
         with:
