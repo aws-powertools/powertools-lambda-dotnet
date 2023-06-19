@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   dispatch_token:
-    if: github.repository == 'aws-powertools/lambda-dotnet'
+    if: github.repository == 'aws-powertools/powertools-lambda-dotnet'
     concurrency:
       group: analytics
     runs-on: ubuntu-latest
