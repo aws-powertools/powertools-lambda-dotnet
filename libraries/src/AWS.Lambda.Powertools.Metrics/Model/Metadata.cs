@@ -175,4 +175,12 @@ public class Metadata
 
         return dimensionSets;
     }
+
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    internal void ClearDefaultDimensions()
+    {
+        _metricDirective.ClearDefaultDimensions();
+    }
 }

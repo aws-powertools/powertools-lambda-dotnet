@@ -11,9 +11,9 @@ The Parameters utility provides high-level functionality to retrieve one or mult
 
 ## Read the docs
 
-For a full list of features go to [awslabs.github.io/aws-lambda-powertools-dotnet/utilities/parameters/](awslabs.github.io/aws-lambda-powertools-dotnet/utilities/parameters/)
+For a full list of features go to [docs.powertools.aws.dev/lambda-dotnet/utilities/parameters/](docs.powertools.aws.dev/lambda-dotnet/utilities/parameters/)
 
-GitHub: <https://github.com/awslabs/aws-lambda-powertools-dotnet/>
+GitHub: <https://github.com/aws-powertools/powertools-lambda-dotnet/>
 
 ## Sample Function using AWS Systems Manager Parameter Store
 

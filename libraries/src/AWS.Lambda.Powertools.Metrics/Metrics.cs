@@ -212,6 +212,14 @@ public class Metrics : IMetrics
                     "##WARNING## Metrics and Metadata have not been specified. No data will be sent to Cloudwatch Metrics.");
         }
     }
+    
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    void IMetrics.ClearDefaultDimensions()
+    {
+        _context.ClearDefaultDimensions();
+    }
 
     /// <summary>
     ///     Serialize global context object
@@ -316,6 +324,14 @@ public class Metrics : IMetrics
     public static void SetDefaultDimensions(Dictionary<string, string> defaultDimensions)
     {
         _instance.SetDefaultDimensions(defaultDimensions);
+    }
+    
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    public static void ClearDefaultDimensions()
+    {
+        _instance.ClearDefaultDimensions();
     }
 
     /// <summary>
