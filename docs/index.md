@@ -29,6 +29,8 @@ Core utilities such as Tracing, Logging, and Metrics will be available across al
 [Tracing](./core/tracing.md) | Decorators and utilities to trace Lambda function handlers, and both synchronous and asynchronous functions
 [Logger](./core/logging.md) | Structured logging made easier, and decorator to enrich structured logging with key Lambda context details
 [Metrics](./core/metrics.md) | Custom AWS metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
+[Parameters (developer preview)](./utilities/parameters/) | provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
+[Idempotency (developer preview)](./utilities/idempotency/) | The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
 
 ## Install
 
@@ -36,23 +38,27 @@ Powertools for AWS Lambda (.NET) is available as NuGet packages. You can install
 
 * [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
 
-    `dotnet nuget add AWS.Lambda.Powertools.Tracing`
+    `dotnet add package AWS.Lambda.Powertools.Tracing`
 
 * [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
 
-    `dotnet nuget add AWS.Lambda.Powertools.Logging`
+    `dotnet add package AWS.Lambda.Powertools.Logging`
 
 * [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Metrics):
 
-    `dotnet nuget add AWS.Lambda.Powertools.Metrics`
+    `dotnet add package AWS.Lambda.Powertools.Metrics`
 
-### SAM CLI custom template
+* [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Parameters):
+
+    `dotnet add package AWS.Lambda.Powertools.Parameters`
+
+* [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Idempotency):
+
+    `dotnet add package AWS.Lambda.Powertools.Idempotency`
+
+### Using SAM CLI template
 
 We have provided you with a custom template for the Serverless Application Model (AWS SAM) command-line interface (CLI). This generates a starter project that allows you to interactively choose the Powertools for AWS Lambda (.NET) features that enables you to include in your project.
-
-```bash
-sam init --location https://github.com/aws-samples/cookiecutter-aws-sam-dotnet
-```
 
 To use the SAM CLI, you need the following tools.
 
@@ -60,13 +66,46 @@ To use the SAM CLI, you need the following tools.
 * .NET 6.0 (LTS)  - [Install .NET 6.0](https://www.microsoft.com/net/download)
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 
+Once you have SAM CLI installed, follow the these steps to initialize a .NET 6 project using Powertools for AWS (.NET)
+
+1. Run the following command in your command line
+    ```bash
+    sam init -r dotnet6
+    ```
+2. Select option 1 as your template source
+
+    ```bash
+    Which template source would you like to use?
+        1 - AWS Quick Start Templates
+        2 - Custom Template Location
+    ```
+3. Select the `Hello World Example with Powertools for AWS Lambda` template
+
+    ```
+    Choose an AWS Quick Start application template
+        1 - Hello World Example
+        2 - Data processing
+        3 - Hello World Example with Powertools for AWS Lambda
+        4 - Multi-step workflow
+        5 - Scheduled task
+        6 - Standalone function
+        7 - Serverless API
+    Template: 3
+    ```
+
+4. Follow the rest of the prompts and give your project a name
+
+Viola! You now have a SAM application pre-configured with Powertools!
+
 ## Examples
 
 We have provided a few examples that should you how to use the each of the core Powertools for AWS Lambda (.NET) features.
 
-* [Tracing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Tracing){target="_blank"} example
-* [Logging](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Logging/){target="_blank"} example
-* [Metrics](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Metrics/){target="_blank"} example
+* [Tracing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Tracing){target="_blank"}
+* [Logging](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Logging/){target="_blank"}
+* [Metrics](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Metrics/){target="_blank"}
+* [Parameters](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Parameters/){target="_blank"}
+* [Idempotency](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Idempotency/){target="_blank"}
 
 ## Connect
 

@@ -31,20 +31,12 @@ body:
       options:
         - Automation
         - Governance
-        - .NET sdk
+        - .NET SDK
         - Tests
-        - Tracer
-        - Logger
+        - Tracing
+        - Logging
         - Metrics
-        - Event Handler - REST API
-        - Event Handler - GraphQL API
-        - Middleware factory
         - Parameters
-        - Batch processing
-        - Typing
-        - Validation
-        - Event Source Data Classes
-        - Parser
         - Idempotency
         - Feature flags
         - Other
