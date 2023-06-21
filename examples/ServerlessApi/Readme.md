@@ -163,7 +163,7 @@ XRay Event at (2023-05-27T22:46:39.922000) with id (1-64726c2f-3244a3317c5e1f4f7
 Build your application with the `sam build` command.
 
 ```bash
-sam build -t ./serverless.template
+sam build
 ```
 
 The AWS SAM CLI builds a docker image from a Dockerfile and then installs dependencies defined in `src/LambdaPowertoolsAPI.csproj` inside the docker image. The processed template file is saved in the `.aws-sam/build` folder.
