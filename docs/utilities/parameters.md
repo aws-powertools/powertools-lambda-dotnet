@@ -4,7 +4,7 @@ description: Utility
 ---
 
 ???+ warning
-	**This utility is currently in developer preview** and is intended strictly for feedback and testing purposes **and not for production workloads**. The version and all future versions tagged with the `-preview` suffix should be treated as not stable. Until this utility is [General Availability](https://github.com/awslabs/aws-lambda-powertools-dotnet/milestone/2) we may introduce significant breaking changes and improvements in response to customers feedback.
+	**This utility is currently in developer preview** and is intended strictly for feedback and testing purposes **and not for production workloads**. The version and all future versions tagged with the `-preview` suffix should be treated as not stable. Until this utility is [General Availability](https://github.com/aws-powertools/powertools-lambda-dotnet/milestone/2) we may introduce significant breaking changes and improvements in response to customers feedback.
 
 <!-- markdownlint-disable MD013 -->
 The Parameters utility provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
@@ -18,7 +18,7 @@ The Parameters utility provides high-level functionality to retrieve one or mult
 
 ## Installation
 
-Powertools are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+Powertools for AWS Lambda (.NET) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
 
 * [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Parameters):
 
@@ -28,13 +28,14 @@ Powertools are available as NuGet packages. You can install the packages from [N
 
 This utility requires additional permissions to work as expected. See the table below:
 
-Provider | Function/Method | IAM Permission
-------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------
-SSM Parameter Store | `SsmProvider.Get(string)` `SsmProvider.Get<T>(string)` | `ssm:GetParameter`
-SSM Parameter Store | `SsmProvider.GetMultiple(string)` `SsmProvider.GetMultiple<T>(string)` | `ssm:GetParametersByPath`
-Secrets Manager | `SecretsProvider.Get(string)` `SecretsProvider.Get<T>(string)` | `secretsmanager:GetSecretValue`
-DynamoDB | `DynamoDBProvider.Get(string)` `DynamoDBProvider.Get<T>(string)` | `dynamodb:GetItem`
-DynamoDB | `DynamoDBProvider.GetMultiple(string)` `DynamoDBProvider.GetMultiple<T>(string)` | `dynamodb:Query`
+| Provider            | Function/Method                                                                  | IAM Permission                                          |
+| ------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| SSM Parameter Store | `SsmProvider.Get(string)` `SsmProvider.Get<T>(string)`                           | `ssm:GetParameter`                                      |
+| SSM Parameter Store | `SsmProvider.GetMultiple(string)` `SsmProvider.GetMultiple<T>(string)`           | `ssm:GetParametersByPath`                               |
+| SSM Parameter Store | If using **`WithDecryption()`** option                                           | You must add an additional permission `kms:Decrypt`     |
+| Secrets Manager     | `SecretsProvider.Get(string)` `SecretsProvider.Get<T>(string)`                   | `secretsmanager:GetSecretValue`                         |
+| DynamoDB            | `DynamoDBProvider.Get(string)` `DynamoDBProvider.Get<T>(string)`                 | `dynamodb:GetItem`                                      |
+| DynamoDB            | `DynamoDBProvider.GetMultiple(string)` `DynamoDBProvider.GetMultiple<T>(string)` | `dynamodb:Query`                                        |
 
 ## SSM Parameter Store
 
@@ -138,10 +139,12 @@ in order to get data from other regions or use specific credentials.
 
 The AWS Systems Manager Parameter Store provider supports two additional arguments for the `Get()` and `GetMultiple()` methods:
 
-| Option     | Default | Description |
-|---------------|---------|-------------|
-| **WithDecryption()**   | `False` | Will automatically decrypt the parameter. |
-| **Recursive()** | `False`  | For `GetMultiple()` only, will fetch all parameter values recursively based on a path prefix. |
+| Option               | Default | Description                                                                                   |
+| -------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| **WithDecryption()** | `False` | Will automatically decrypt the parameter.                                                     |
+| **Recursive()**      | `False` | For `GetMultiple()` only, will fetch all parameter values recursively based on a path prefix. |
+
+You can create `SecureString` parameters, which are parameters that have a plaintext parameter name and an encrypted parameter value. If you don't use the `WithDecryption()` option, you will get an encrypted value. Read [here](https://docs.aws.amazon.com/kms/latest/developerguide/services-parameter-store.html) about best practices using KMS to secure your parameters.
 
 **Example:**
 
@@ -350,8 +353,8 @@ DynamoDB provider can be customized at initialization to match your table struct
 | -------------- | --------- | ------- | ---------------------------------------------------------------------------------------------------------- |
 | **table_name** | **Yes**   | *(N/A)* | Name of the DynamoDB table containing the parameter values.                                                |
 | **key_attr**   | No        | `id`    | Hash key for the DynamoDB table.                                                                           |
-| **sort_attr**  | No        | `sk`    | Range key for the DynamoDB table. You don't need to set this if you don't use the `GetMultiple()` method. |
-| **value_attr** | No        | `value` | Name of the attribute containing the parameter value.                
+| **sort_attr**  | No        | `sk`    | Range key for the DynamoDB table. You don't need to set this if you don't use the `GetMultiple()` method.  |
+| **value_attr** | No        | `value` | Name of the attribute containing the parameter value.                                                      |
 
 === "DynamoDBProvider"
 

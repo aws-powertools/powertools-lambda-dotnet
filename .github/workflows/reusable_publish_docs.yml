@@ -2,7 +2,7 @@ name: Reusable publish documentation
 
 env:
   BRANCH: develop
-  ORIGIN: awslabs/aws-lambda-powertools-dotnet
+  ORIGIN: aws-powertools/powertools-lambda-dotnet
 
 on:
   workflow_call:
@@ -22,6 +22,7 @@ on:
         type: boolean
 
 permissions:
+  id-token: write
   contents: write
   pages: write
 
@@ -32,6 +33,7 @@ jobs:
     concurrency:
       group: on-docs-rebuild
     runs-on: ubuntu-latest
+    environment: Docs
     steps:
       - uses: actions/checkout@v3
         with:
@@ -82,6 +84,17 @@ jobs:
           keep_files: true
           destination_dir: latest/api
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}
+      - name: Deploy Docs
+        run: |
+          aws s3 sync \
+            dist \
+            s3://${{ secrets.AWS_DOCS_BUCKET }}/lambda-dotnet/
+
 
   apidocs:
     # Force Github action to run only a single job at a time (based on the group name)
@@ -89,6 +102,7 @@ jobs:
     concurrency:
       group: on-docs-build
     runs-on: macos-latest
+    environment: Docs
     steps:
       - uses: actions/checkout@v3
         with:
@@ -104,3 +118,13 @@ jobs:
           publish_dir: ./apidocs/_site
           keep_files: true
           destination_dir: api
+      - name: Configure AWS credentials 
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}
+      - name: Deploy Docs
+        run: |
+          aws s3 sync \
+            apidocs/_site \
+            s3://${{ secrets.AWS_DOCS_BUCKET }}/lambda-dotnet/api/

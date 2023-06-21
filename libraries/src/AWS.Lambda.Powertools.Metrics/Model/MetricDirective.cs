@@ -225,4 +225,12 @@ public class MetricDirective
 
         return dimensions;
     }
+
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    internal void ClearDefaultDimensions()
+    {
+        DefaultDimensions.Clear();
+    }
 }

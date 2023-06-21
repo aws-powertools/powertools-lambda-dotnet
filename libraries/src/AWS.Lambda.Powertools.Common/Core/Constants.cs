@@ -87,7 +87,22 @@ internal static class Constants
     internal const string AwsExecutionEnvironmentVariableName = "AWS_EXECUTION_ENV";
     
     /// <summary>
-    ///     Constant for Powertools feature identifier fo AWS_EXECUTION_ENV environment variable
+    ///     Constant for Powertools for AWS Lambda (.NET) feature identifier fo AWS_EXECUTION_ENV environment variable
     /// </summary>
     internal const string FeatureContextIdentifier = "PT";
+
+    /// <summary>
+    ///     Constant for IDEMPOTENCY_DISABLED_ENV environment variable
+    /// </summary>
+    internal const string IdempotencyDisabledEnv = "POWERTOOLS_IDEMPOTENCY_DISABLED";
+    
+    /// <summary>
+    /// Constant for AWS_REGION_ENV environment variable
+    /// </summary>
+    internal const string AwsRegionEnv = "AWS_REGION";
+    
+    /// <summary>
+    /// Constant for LAMBDA_FUNCTION_NAME_ENV environment variable
+    /// </summary>
+    internal const string LambdaFunctionNameEnv = "AWS_LAMBDA_FUNCTION_NAME";
 }

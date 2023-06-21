@@ -13,13 +13,13 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://aws.
 
 ## Read the docs
 
-For a full list of features go to [awslabs.github.io/aws-lambda-powertools-dotnet/core/metrics/](awslabs.github.io/aws-lambda-powertools-dotnet/core/metrics/)
+For a full list of features go to [docs.powertools.aws.dev/lambda-dotnet/core/metrics/](docs.powertools.aws.dev/lambda-dotnet/core/metrics/)
 
-GitHub: https://github.com/awslabs/aws-lambda-powertools-dotnet/
+GitHub: https://github.com/aws-powertools/powertools-lambda-dotnet/
 
 ## Sample Function
 
-View the full example here: [https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/develop/examples/Metrics](https://github.com/awslabs/aws-lambda-powertools-dotnet/tree/develop/examples/Metrics)
+View the full example here: [https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/Metrics](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/Metrics)
 
 ```csharp
 public class Function
@@ -58,7 +58,7 @@ public class Function
         Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.Count);
         
         var lookupRecord = new LookupRecord(lookupId: requestContextRequestId,
-            greeting: "Hello AWS Lambda Powertools for .NET", ipAddress: location);
+            greeting: "Hello Powertools for AWS Lambda (.NET)", ipAddress: location);
 
         try
         {

@@ -37,12 +37,12 @@ public class Metrics : IMetrics
     private readonly MetricsContext _context;
 
     /// <summary>
-    ///     The Powertools configurations
+    ///     The Powertools for AWS Lambda (.NET) configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
     /// <summary>
-    ///     If true, Powertools will throw an exception on empty metrics when trying to flush
+    ///     If true, Powertools for AWS Lambda (.NET) will throw an exception on empty metrics when trying to flush
     /// </summary>
     private readonly bool _raiseOnEmptyMetrics;
     
@@ -56,7 +56,7 @@ public class Metrics : IMetrics
     ///     format (EMF). See
     ///     https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html
     /// </summary>
-    /// <param name="powertoolsConfigurations">Lambda Powertools Configuration</param>
+    /// <param name="powertoolsConfigurations">Powertools for AWS Lambda (.NET) Configuration</param>
     /// <param name="nameSpace">Metrics Namespace Identifier</param>
     /// <param name="service">Metrics Service Name</param>
     /// <param name="raiseOnEmptyMetrics">Instructs metrics validation to throw exception if no metrics are provided</param>
@@ -212,6 +212,14 @@ public class Metrics : IMetrics
                     "##WARNING## Metrics and Metadata have not been specified. No data will be sent to Cloudwatch Metrics.");
         }
     }
+    
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    void IMetrics.ClearDefaultDimensions()
+    {
+        _context.ClearDefaultDimensions();
+    }
 
     /// <summary>
     ///     Serialize global context object
@@ -316,6 +324,14 @@ public class Metrics : IMetrics
     public static void SetDefaultDimensions(Dictionary<string, string> defaultDimensions)
     {
         _instance.SetDefaultDimensions(defaultDimensions);
+    }
+    
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    public static void ClearDefaultDimensions()
+    {
+        _instance.ClearDefaultDimensions();
     }
 
     /// <summary>

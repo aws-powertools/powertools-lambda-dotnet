@@ -85,7 +85,7 @@ public class Function
         var location = await GetCallingIp().ConfigureAwait(false);
 
         var lookupRecord = new LookupRecord(lookupId: requestContextRequestId,
-            greeting: "Hello AWS Lambda Powertools for .NET", ipAddress: location);
+            greeting: "Hello Powertools for AWS Lambda (.NET)", ipAddress: location);
 
         // Trace Fluent API
         Tracing.WithSubsegment("LoggingResponse",

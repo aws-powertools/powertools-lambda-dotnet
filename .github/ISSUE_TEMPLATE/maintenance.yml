@@ -31,20 +31,12 @@ body:
       options:
         - Automation
         - Governance
-        - .NET sdk
+        - .NET SDK
         - Tests
-        - Tracer
-        - Logger
+        - Tracing
+        - Logging
         - Metrics
-        - Event Handler - REST API
-        - Event Handler - GraphQL API
-        - Middleware factory
         - Parameters
-        - Batch processing
-        - Typing
-        - Validation
-        - Event Source Data Classes
-        - Parser
         - Idempotency
         - Feature flags
         - Other
@@ -60,7 +52,7 @@ body:
     attributes:
       label: Acknowledgment
       options:
-        - label: This request meets [Lambda Powertools Tenets](https://awslabs.github.io/aws-lambda-powertools-dotnet/latest/#tenets)
+        - label: This request meets [Powertools for AWS Lambda (.NET) Tenets](https://docs.powertools.aws.dev/lambda-dotnet/latest/#tenets)
           required: true
   - type: markdown
     attributes:

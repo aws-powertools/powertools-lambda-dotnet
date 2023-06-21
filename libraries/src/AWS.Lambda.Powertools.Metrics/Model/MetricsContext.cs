@@ -162,4 +162,12 @@ public class MetricsContext : IDisposable
     {
         return _rootNode.Serialize();
     }
+    
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    public void ClearDefaultDimensions()
+    {
+        _rootNode.AWS.ClearDefaultDimensions();
+    }
 }

@@ -67,7 +67,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     private readonly LoggerOutputCase? _loggerOutputCase;
 
     /// <summary>
-    ///     The Powertools configurations
+    ///     The Powertools for AWS Lambda (.NET) configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 

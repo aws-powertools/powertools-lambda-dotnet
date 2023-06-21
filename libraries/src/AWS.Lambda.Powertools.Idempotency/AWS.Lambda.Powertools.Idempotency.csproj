@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>default</LangVersion>
+        <PackageId>AWS.Lambda.Powertools.Idempotency</PackageId>
+        <Version>0.0.1</Version>
+        <Authors>Amazon Web Services</Authors>
+        <Company>Amazon.com, Inc</Company>
+        <Title>AWS Lambda Powertools for .NET</Title>
+        <Description>AWS Lambda Powertools for .NET - Idempotency package.</Description>
+        <Copyright>Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
+        <RepositoryUrl>https://github.com/aws-powertools/powertools-lambda-dotnet</RepositoryUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
+        <PackageIcon>AWSLogo128x128.png</PackageIcon>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <AssemblyName>AWS.Lambda.Powertools.Idempotency</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Idempotency</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
+      <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.103.7" />
+      <PackageReference Include="JmesPath.Net" Version="1.0.308" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
+    </ItemGroup>
+
+</Project>
