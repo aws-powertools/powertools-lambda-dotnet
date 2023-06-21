@@ -7,6 +7,53 @@ All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 
+<a name="1.4.0"></a>
+## [1.4.0] - 2023-06-21
+## Bug Fixes
+
+* update team name
+* update references
+* updated codeowners
+* reapplying some lins that got screwed up in the merge
+
+## Documentation
+
+* adding permission
+
+## Features
+
+* **docs:** Start S3 Docs
+
+## Maintenance
+
+* updated code owners
+* Change repo URL to the new location
+* rename project to Powertools for AWS Lambda (.NET)
+* **ci:** updated links to new repo
+* **ci:** removed unnecessary areas
+* **docs:** fix we made this link
+* **docs:** update docs homepage with additional features, fixed dot cli commands, new SAM cli instructions
+* **docs:** updated readme with idempotency package and examples for parameters and idempotency
+* **docs:** move idempotency
+
+## Pull Requests
+
+* Merge pull request [#305](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/305) from aws-powertools/version-bump-1.4
+* Merge pull request [#301](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/301) from sliedig/sliedig-docs
+* Merge pull request [#302](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/302) from aws-powertools/rename-part2
+* Merge pull request [#291](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/291) from aws-powertools/doc-updates-roadmap
+* Merge pull request [#285](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/285) from aws-powertools/url-rename
+* Merge pull request [#293](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/293) from glynn1211/develop
+* Merge pull request [#163](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/163) from hossambarakat/feature/idempotency
+* Merge pull request [#282](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/282) from awslabs/rename
+* Merge pull request [#277](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/277) from awslabs/update-changelog-4981653012
+* Merge pull request [#274](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/274) from awslabs/dependabot/pip/pymdown-extensions-10.0
+* Merge pull request [#276](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/276) from awslabs/pymdown-extension-fix
+* Merge pull request [#278](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/278) from awslabs/s3-docs
+* Merge pull request [#273](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/273) from leandrodamascena/parameters/docs
+* Merge pull request [#271](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/271) from amirkaws/amirkaws-fix-parameters-nuget-icon
+
+
 <a name="1.3.0"></a>
 ## [1.3.0] - 2023-05-12
 ## Documentation
@@ -42,7 +89,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [1.1.0] - 2023-05-05
 ## Maintenance
 
-* add Lambda Powertools for AWS Lambda (Python) in issue templates
+* add Lambda Powertools for Python in issue templates
 * add workflow to dispatch analytics fetching
 * **ci:** add workflow to dispatch analytics fetching
 
@@ -76,7 +123,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## Documentation
 
-* **home:** update Powertools for AWS Lambda (.NET) definition
+* **home:** update powertools definition
 
 ## Maintenance
 
@@ -329,7 +376,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Merge pull request [#1](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1) from sliedig/develop
 
 
-[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.3.0...HEAD
+[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.4.0...HEAD
+[1.4.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/v1.0.1...1.1.0
