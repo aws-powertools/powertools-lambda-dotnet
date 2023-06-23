@@ -2,7 +2,7 @@
 
 This is our public roadmap that outlines the high level direction we are working towards, namely [Themes](#themes). We update this document when our priorities change: security and stability is our top priority.
 
-[See our latest list of activities »](https://github.com/orgs/awslabs/projects/105/views/4?query=is%3Aopen+sort%3Aupdated-desc){target="_blank"}
+[See our latest list of activities »](https://github.com/orgs/aws-powertools/projects/6/views/4?query=is%3Aopen+sort%3Aupdated-desc){target="_blank"}
 
 ## Themes
 
@@ -30,7 +30,7 @@ graph LR
 <i>Visual representation</i>
 </center>
 
-Within our [public board](https://github.com/orgs/awslabs/projects/105/views/3?query=is%3Aopen+sort%3Aupdated-desc){target="_blank"}, you'll see the following values in the `Status` column:
+Within our [public board](https://github.com/orgs/aws-powertools/projects/6/views/4?query=is%3Aopen+sort%3Aupdated-desc){target="_blank"}, you'll see the following values in the `Status` column:
 
 * **Ideas**. Incoming and existing feature requests that are not being actively considered yet. These will be reviewed when bandwidth permits and based on demand.
 * **Backlog**. Accepted feature requests or enhancements that we want to work on.

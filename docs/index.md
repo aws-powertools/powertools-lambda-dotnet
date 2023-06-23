@@ -10,7 +10,7 @@ description: Powertools for AWS Lambda (.NET)
 Powertools for AWS Lambda (.NET) (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, **Powertools for AWS Lambda (.NET) is optimized for .NET 6+**.
 
 ???+ tip
-    Powertools is also available for [Python](https://docs.powertools.aws.dev/lambda-python/){target="_blank"}, [Java](https://docs.powertools.aws.dev/lambda-java/){target="_blank"}, and [TypeScript](https://docs.powertools.aws.dev/lambda-typescript/latest/){target="_blank"}.
+    Powertools is also available for [Python](https://docs.powertools.aws.dev/lambda/python/){target="_blank"}, [Java](https://docs.powertools.aws.dev/lambda/java/){target="_blank"}, and [TypeScript](https://docs.powertools.aws.dev/lambda/typescript/latest/){target="_blank"}.
 
 ??? hint "Support this project by becoming a reference customer or sharing your work :heart:"
 
