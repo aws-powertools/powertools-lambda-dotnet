@@ -104,6 +104,7 @@ We have provided a few examples that should you how to use the each of the core 
 * [Tracing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Tracing){target="_blank"}
 * [Logging](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Logging/){target="_blank"}
 * [Metrics](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Metrics/){target="_blank"}
+* [Serverless API example](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/ServerlessApi/){target="_blank"}
 * [Parameters](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Parameters/){target="_blank"}
 * [Idempotency](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Idempotency/){target="_blank"}
 
