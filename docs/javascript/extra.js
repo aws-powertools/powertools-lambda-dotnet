@@ -10,12 +10,12 @@ const awsconfig = {
 };
 
 const RUNTIME = "dotnet"
-const BASE_ORIGIN = "awslabs.github.io"
+const BASE_ORIGIN = "docs.powertools.aws.dev"
 
 function copyToClipboard(e) {
 	e.preventDefault()
 	navigator.clipboard.writeText(e.target.textContent)
-  	alert$.next("Copied to clipboard")
+	alert$.next("Copied to clipboard")
 }
 
 function enableSearchOnBlurElement() {
@@ -74,7 +74,7 @@ const init = () => {
 	attachListeners()
 }
 
-const recordPageView = ({prevLocation, searchPattern}) => {
+const recordPageView = ({ prevLocation, searchPattern }) => {
 	Analytics.record({
 		data: {
 			// Do not count page view for search
