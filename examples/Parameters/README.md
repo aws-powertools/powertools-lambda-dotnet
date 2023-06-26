@@ -44,6 +44,17 @@ The first command will build a docker image from a Dockerfile and then copy the 
 
 You can find your API Gateway Endpoint URL in the output values displayed after deployment.
 
+This application creates some additional AWS resources. You can find them by navigating to their relevant AWS services in [AWS Management Console](console.aws.amazon.com) after deployment.
+
+| Resource Type    | AWS Service | Resource Name |
+| -------- | ------- | ------- |
+| Parameter | AWS Systems Manager Parameter Store | `/powertools-parameters-example/path/prefix/parameter`    |
+| Parameter | AWS Systems Manager Parameter Store | `/powertools-parameters-example/path/prefix/other-parameter`     |
+| Secret  | AWS Secrets Manager  | `PowertoolsParametersExampleSecret`   |
+| Table | Amazon DynamoDB  | `PowertoolsParametersExampleSingle`    |
+| Table | Amazon DynamoDB  | `PowertoolsParametersExampleMultiple`    |
+
+
 ## Use the AWS SAM CLI to build and test locally
 
 Build your application with the `sam build` command.
@@ -66,7 +77,7 @@ The AWS SAM CLI can also emulate your application's API. Use the `sam local star
 
 ```bash
 Parameters$ sam local start-api
-Parameters$ curl http://localhost:3000/
+Parameters$ curl http://localhost:3000/hello
 ```
 
 The AWS SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
