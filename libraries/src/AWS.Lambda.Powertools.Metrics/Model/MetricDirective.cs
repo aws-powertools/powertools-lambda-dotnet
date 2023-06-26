@@ -126,6 +126,11 @@ public class MetricDirective
             return defaultKeys;
         }
     }
+    
+    /// <summary>
+    /// Shared synchronization object
+    /// </summary>
+    private readonly object _lockObj = new();
 
     /// <summary>
     ///     Adds metric to memory
@@ -139,11 +144,14 @@ public class MetricDirective
     {
         if (Metrics.Count < PowertoolsConfigurations.MaxMetrics)
         {
-            var metric = Metrics.FirstOrDefault(m => m.Name == name);
-            if (metric != null)
-                metric.AddValue(value);
-            else
-                Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
+            lock (_lockObj)
+            {
+                var metric = Metrics.FirstOrDefault(m => m.Name == name);
+                if (metric != null)
+                    metric.AddValue(value);
+                else
+                    Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
+            }
         }
         else
         {
