@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
 using Moq;
 using Xunit;
@@ -697,5 +698,51 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
         }
 
         #endregion
+        
+        [Fact]
+        public async Task WhenMetricsAsyncRaceConditionItemSameKeyExists_ValidateLock()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+
+            var metrics = new Metrics(configurations.Object,
+                nameSpace: "dotnet-powertools-test",
+                service: "testService");
+
+            var handler = new MetricsAspectHandler(metrics,
+                false);
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act
+            handler.OnEntry(eventArgs);
+
+            var tasks = new List<Task>();
+            for (var i = 0; i < 100; i++)
+            {
+                tasks.Add(Task.Run(() =>
+                {
+                    Metrics.AddMetric($"Metric Name", 0, MetricUnit.Count);
+                }));
+            }
+
+            await Task.WhenAll(tasks);
+
+
+            handler.OnExit(eventArgs);
+
+            var metricsOutput = consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]]",
+                metricsOutput);
+
+            // Reset
+            handler.ResetForTest();
+        }
     }
 }

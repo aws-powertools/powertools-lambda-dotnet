@@ -1,0 +1,45 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Serverless Application that uses the ASP.NET Core framework running
+  in Amazon Lambda.
+Parameters: {}
+Conditions: {}
+Resources:
+  AspNetCoreFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: LambdaPowertoolsAPI::LambdaPowertoolsAPI.LambdaEntryPoint::FunctionHandlerAsync
+      Runtime: dotnet6
+      CodeUri: '.'
+      MemorySize: 256
+      Timeout: 30
+      Role:
+      Tracing: Active
+      Architectures:
+        - arm64 
+      Policies:
+      - AWSLambda_FullAccess
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: aws-lambda-powertools-web-api-sample # This can also be set using the Metrics decorator on your handler [Metrics(Service = "aws-lambda-powertools-web-api-sample"]
+          POWERTOOLS_LOG_LEVEL: Debug
+          POWERTOOLS_METRICS_NAMESPACE: AWSLambdaPowertools # This can also be set using the Metrics decorator on your handler [Metrics(Namespace = "AWSLambdaPowertools"]
+      Events:
+        ProxyResource:
+          Type: Api
+          Properties:
+            Path: "/{proxy+}"
+            Method: ANY
+        RootResource:
+          Type: Api
+          Properties:
+            Path: "/"
+            Method: ANY
+Outputs:
+  ApiURL:
+    Description: API endpoint URL for Prod environment
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
