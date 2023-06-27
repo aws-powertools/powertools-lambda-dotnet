@@ -148,7 +148,13 @@ public class MetricDirective
             {
                 var metric = Metrics.FirstOrDefault(m => m.Name == name);
                 if (metric != null)
-                    metric.AddValue(value);
+                {
+                    if (metric.Values.Count < PowertoolsConfigurations.MaxMetrics)
+                        metric.AddValue(value);
+                    else
+                        throw new ArgumentOutOfRangeException(nameof(metric),
+                            $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metric data points at the same time.");
+                }
                 else
                     Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
             }
@@ -156,7 +162,7 @@ public class MetricDirective
         else
         {
             throw new ArgumentOutOfRangeException(nameof(Metrics),
-                "Cannot add more than 100 metrics at the same time.");
+                $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metrics at the same time.");
         }
     }
 

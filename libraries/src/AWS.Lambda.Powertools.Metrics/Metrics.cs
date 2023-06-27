@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics;
@@ -97,7 +98,15 @@ public class Metrics : IMetrics
                 "'AddMetric' method requires a valid metrics value. Value must be >= 0.");
         }
 
-        if (_context.GetMetrics().Count == 100) _instance.Flush(true);
+        var metrics = _context.GetMetrics();
+        
+        if (metrics.Count > 0 && 
+            (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
+             metrics.FirstOrDefault(x => x.Name == key)
+                 ?.Values.Count == PowertoolsConfigurations.MaxMetrics))
+        {
+            _instance.Flush(true);
+        }
 
         _context.AddMetric(key, value, unit, metricResolution);
     }
