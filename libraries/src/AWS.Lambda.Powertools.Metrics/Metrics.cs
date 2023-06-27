@@ -97,11 +97,13 @@ public class Metrics : IMetrics
             throw new ArgumentException(
                 "'AddMetric' method requires a valid metrics value. Value must be >= 0.");
         }
+
+        var metricDefinitions = _context.GetMetrics();
         
-        if (_context.GetMetrics().Count > 0 && 
-            (_context.GetMetrics().Count == PowertoolsConfigurations.MaxMetrics ||
-           _context.GetMetrics().FirstOrDefault(x => x.Name == key)
-               ?.Values.Count == PowertoolsConfigurations.MaxMetrics))
+        if (metricDefinitions.Count > 0 && 
+            (metricDefinitions.Count == PowertoolsConfigurations.MaxMetrics ||
+             metricDefinitions.FirstOrDefault(x => x.Name == key)
+                 ?.Values.Count == PowertoolsConfigurations.MaxMetrics))
         {
             _instance.Flush(true);
         }
