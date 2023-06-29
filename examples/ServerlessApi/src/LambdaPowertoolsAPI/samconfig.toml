@@ -1,0 +1,10 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "aws-lambda-powertools-web-api-sample"
+resolve_s3 = true
+s3_prefix = "aws-lambda-powertools-web-api-sample"
+region = "eu-central-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []

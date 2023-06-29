@@ -7,7 +7,7 @@ To get started use the `API Documentaion` menu on the navigation bar, or search 
 > [!NOTE]
 > Are you looking for documentation on how to use Powertools for AWS Lambda (.NET) utilities and code samples?
 >  
-> 👉 [Here](https://docs.powertools.aws.dev/lambda-dotnet/) is the perfect place to start.
+> 👉 [Here](https://docs.powertools.aws.dev/lambda/dotnet/) is the perfect place to start.
 
 ## Feedback
 

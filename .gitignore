@@ -10,6 +10,7 @@ deploy/**
 .idea
 .vscode
 .vs/
+.aws-sam
 
 examples/SimpleLambda/.aws-sam
 examples/SimpleLambda/samconfig.toml
@@ -21,3 +22,4 @@ AWS.Lambda.Powertools.sln.DotSettings.user
 
 dist/
 site/
+samconfig.toml

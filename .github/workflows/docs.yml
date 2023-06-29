@@ -34,11 +34,6 @@ jobs:
           echo "SOURCE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
       - name: Build docs website
         run: make build-docs-website
-      - name: Deploy all docs
-        uses: peaceiris/actions-gh-pages@bd8c6b06eba6b3d25d72b7a1767993c0aeee42e7 # v3.9.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
         with:
@@ -66,12 +61,6 @@ jobs:
         name: Build Documentation
         with:
           args: apidocs/docfx.json
-      - name: Release API docs to latest
-        uses: peaceiris/actions-gh-pages@bd8c6b06eba6b3d25d72b7a1767993c0aeee42e7 # v3.9.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./apidocs/_site
-          destination_dir: api
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
         with:

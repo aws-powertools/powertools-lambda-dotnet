@@ -126,6 +126,11 @@ public class MetricDirective
             return defaultKeys;
         }
     }
+    
+    /// <summary>
+    /// Shared synchronization object
+    /// </summary>
+    private readonly object _lockObj = new();
 
     /// <summary>
     ///     Adds metric to memory
@@ -139,16 +144,25 @@ public class MetricDirective
     {
         if (Metrics.Count < PowertoolsConfigurations.MaxMetrics)
         {
-            var metric = Metrics.FirstOrDefault(m => m.Name == name);
-            if (metric != null)
-                metric.AddValue(value);
-            else
-                Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
+            lock (_lockObj)
+            {
+                var metric = Metrics.FirstOrDefault(m => m.Name == name);
+                if (metric != null)
+                {
+                    if (metric.Values.Count < PowertoolsConfigurations.MaxMetrics)
+                        metric.AddValue(value);
+                    else
+                        throw new ArgumentOutOfRangeException(nameof(metric),
+                            $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metric data points at the same time.");
+                }
+                else
+                    Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
+            }
         }
         else
         {
             throw new ArgumentOutOfRangeException(nameof(Metrics),
-                "Cannot add more than 100 metrics at the same time.");
+                $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metrics at the same time.");
         }
     }
 

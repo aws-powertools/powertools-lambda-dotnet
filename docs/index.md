@@ -10,7 +10,7 @@ description: Powertools for AWS Lambda (.NET)
 Powertools for AWS Lambda (.NET) (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, **Powertools for AWS Lambda (.NET) is optimized for .NET 6+**.
 
 ???+ tip
-    Powertools is also available for [Python](https://docs.powertools.aws.dev/lambda-python/){target="_blank"}, [Java](https://docs.powertools.aws.dev/lambda-java/){target="_blank"}, and [TypeScript](https://docs.powertools.aws.dev/lambda-typescript/latest/){target="_blank"}.
+    Powertools is also available for [Python](https://docs.powertools.aws.dev/lambda/python/){target="_blank"}, [Java](https://docs.powertools.aws.dev/lambda/java/){target="_blank"}, and [TypeScript](https://docs.powertools.aws.dev/lambda/typescript/latest/){target="_blank"}.
 
 ??? hint "Support this project by becoming a reference customer or sharing your work :heart:"
 
@@ -104,6 +104,7 @@ We have provided a few examples that should you how to use the each of the core 
 * [Tracing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Tracing){target="_blank"}
 * [Logging](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Logging/){target="_blank"}
 * [Metrics](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Metrics/){target="_blank"}
+* [Serverless API example](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/ServerlessApi/){target="_blank"}
 * [Parameters](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Parameters/){target="_blank"}
 * [Idempotency](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Idempotency/){target="_blank"}
 
