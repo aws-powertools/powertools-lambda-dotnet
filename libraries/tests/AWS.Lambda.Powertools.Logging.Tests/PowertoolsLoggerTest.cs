@@ -1220,5 +1220,42 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     )
                 ), Times.Once);
         }
+        
+        [Fact]
+        public void Log_Set_Execution_Environment_Context()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var assemblyName = "AWS.Lambda.Powertools.Logger";
+            var assemblyVersion = "1.0.0";
+            
+            var env = new Mock<IPowertoolsEnvironment>();
+            env.Setup(x => x.GetAssemblyName(It.IsAny<PowertoolsLogger>())).Returns(assemblyName);
+            env.Setup(x => x.GetAssemblyVersion(It.IsAny<PowertoolsLogger>())).Returns(assemblyVersion);
+
+            // Act
+            
+            var wrapper = new SystemWrapper(env.Object);
+            var conf = new PowertoolsConfigurations(wrapper);
+            
+            var logger = new PowertoolsLogger(loggerName,conf, wrapper, () => 
+                new LoggerConfiguration
+                {
+                    Service = null,
+                    MinimumLevel = null
+                });
+            logger.LogInformation("Test");
+
+            // Assert
+            env.Verify(v =>
+                v.SetEnvironmentVariable(
+                    "AWS_EXECUTION_ENV", $"{Constants.FeatureContextIdentifier}/Logger/{assemblyVersion}"
+                ), Times.Once);
+            
+            env.Verify(v =>
+                v.GetEnvironmentVariable(
+                    "AWS_EXECUTION_ENV"
+                ), Times.Once);
+        }
     }
 }

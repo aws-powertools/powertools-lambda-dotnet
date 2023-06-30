@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -7,10 +7,10 @@
         <Version>0.0.1</Version>
         <Authors>Amazon Web Services</Authors>
         <Company>Amazon.com, Inc</Company>
-        <Title>AWS Lambda Powertools for .NET</Title>
-        <Description>AWS Lambda Powertools for .NET - Tracing package.</Description>
-        <Copyright>Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
-        <RepositoryUrl>https://github.com/awslabs/aws-lambda-powertools-dotnet</RepositoryUrl>
+        <Title>Powertools for AWS Lambda (.NET)</Title>
+        <Description>Powertools for AWS Lambda (.NET) - Tracing package.</Description>
+        <Copyright>Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
+        <RepositoryUrl>https://github.com/aws-powertools/powertools-lambda-dotnet</RepositoryUrl>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
         <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
@@ -31,7 +31,7 @@
 
     <ItemGroup>
         <PackageReference Include="AWSSDK.XRay" Version="3.7.102.25" />
-        <PackageReference Include="AWSXRayRecorder.Core" Version="2.13.0" />
+        <PackageReference Include="AWSXRayRecorder.Core" Version="2.14.0" />
     </ItemGroup>
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\" />

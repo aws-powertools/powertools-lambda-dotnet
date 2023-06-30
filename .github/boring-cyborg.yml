@@ -3,26 +3,42 @@ labelPRBasedOnFilePath:
   area/common:
     - libraries/src/AWS.Lambda.Powertools.Common/*
     - libraries/src/AWS.Lambda.Powertools.Common/**/*
-  area/logger:
+  area/logging:
     - libraries/src/AWS.Lambda.Powertools.Logging/*
     - libraries/src/AWS.Lambda.Powertools.Logging/**/*
-  area/tracer:
+  area/tracing:
     - libraries/src/AWS.Lambda.Powertools.Tracing/*
     - libraries/src/AWS.Lambda.Powertools.Tracing/**/*
   area/metrics:
     - libraries/src/AWS.Lambda.Powertools.Metrics/*
     - libraries/src/AWS.Lambda.Powertools.Metrics/**/*
-  area/tracer:
-    - libraries/src/AWS.Lambda.Powertools.Tracing/*
-    - libraries/src/AWS.Lambda.Powertools.Tracing/**/*
-  area/metrics:
-    - libraries/src/AWS.Lambda.Powertools.Metrics/*
-    - libraries/src/AWS.Lambda.Powertools.Metrics/**/*
+  area/parameters:
+    - libraries/src/AWS.Lambda.Powertools.Parameters/*
+    - libraries/src/AWS.Lambda.Powertools.Parameters/**/*
+  area/Idempotency:
+    - libraries/src/AWS.Lambda.Powertools.Idempotency/*
+    - libraries/src/AWS.Lambda.Powertools.Idempotency/**/*
 
   documentation:
     - docs/*
     - docs/**/*
     - mkdocs.yml
+
+  github-actions:
+    - .github/workflows/*
+    - .github/workflows/**/*
+    - .github/dependabot.yml
+    - .github/boring-cyborg.yml
+    - .github/release-drafter.yml
+    - .github/semantic.yml
+    - .github/stale.yml
+    - .github/mergify.yml
+
+  github-templates:
+    - .github/ISSUE_TEMPLATE/*
+    - .github/PULL_REQUEST_TEMPLATE.md
+    - .github/.chglog/*
+    - .github/.chglog/**/*
 
   internal:
     - .github/*
@@ -35,6 +51,7 @@ labelPRBasedOnFilePath:
     - CONTRIBUTING.md
     - CODE_OF_CONDUCT.md
     - LICENSE
+    - MAINTAINERS.md
 
   tests:
     - libraries/tests/*
@@ -45,6 +62,8 @@ labelPRBasedOnFilePath:
 firstPRWelcomeComment: >
   Thanks a lot for your first contribution! Please check out our contributing guidelines and don't hesitate to ask whatever you need.
 
+  In the meantime, check out the #python channel on our Powertools for AWS Lambda Discord: [Invite link](https://discord.gg/B8zZKbbyET)
+
 # Comment to be posted to congratulate user on their first merged PR
 firstPRMergeComment: >
   Awesome work, congrats on your first merged pull request and thank you for helping improve everyone's experience!
@@ -52,3 +71,5 @@ firstPRMergeComment: >
 # Comment to be posted to on first time issues
 firstIssueWelcomeComment: >
   Thanks for opening your first issue here! We'll come back to you as soon as we can.
+
+  In the meantime, check out the #python channel on our Powertools for AWS Lambda Discord: [Invite link](https://discord.gg/B8zZKbbyET)

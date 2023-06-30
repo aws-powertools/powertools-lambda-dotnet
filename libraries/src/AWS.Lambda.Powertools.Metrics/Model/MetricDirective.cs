@@ -126,6 +126,11 @@ public class MetricDirective
             return defaultKeys;
         }
     }
+    
+    /// <summary>
+    /// Shared synchronization object
+    /// </summary>
+    private readonly object _lockObj = new();
 
     /// <summary>
     ///     Adds metric to memory
@@ -133,21 +138,31 @@ public class MetricDirective
     /// <param name="name">Metric name. Cannot be null, empty or whitespace</param>
     /// <param name="value">Metric value</param>
     /// <param name="unit">Metric unit</param>
+    /// <param name="metricResolution">Metric Resolution, Standard (default), High</param>
     /// <exception cref="System.ArgumentOutOfRangeException">Metrics - Cannot add more than 100 metrics at the same time.</exception>
-    public void AddMetric(string name, double value, MetricUnit unit)
+    public void AddMetric(string name, double value, MetricUnit unit, MetricResolution metricResolution)
     {
         if (Metrics.Count < PowertoolsConfigurations.MaxMetrics)
         {
-            var metric = Metrics.FirstOrDefault(m => m.Name == name);
-            if (metric != null)
-                metric.AddValue(value);
-            else
-                Metrics.Add(new MetricDefinition(name, unit, value));
+            lock (_lockObj)
+            {
+                var metric = Metrics.FirstOrDefault(m => m.Name == name);
+                if (metric != null)
+                {
+                    if (metric.Values.Count < PowertoolsConfigurations.MaxMetrics)
+                        metric.AddValue(value);
+                    else
+                        throw new ArgumentOutOfRangeException(nameof(metric),
+                            $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metric data points at the same time.");
+                }
+                else
+                    Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
+            }
         }
         else
         {
             throw new ArgumentOutOfRangeException(nameof(Metrics),
-                "Cannot add more than 100 metrics at the same time.");
+                $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metrics at the same time.");
         }
     }
 
@@ -223,5 +238,13 @@ public class MetricDirective
             dimensions.TryAdd(key, value);
 
         return dimensions;
+    }
+
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    internal void ClearDefaultDimensions()
+    {
+        DefaultDimensions.Clear();
     }
 }

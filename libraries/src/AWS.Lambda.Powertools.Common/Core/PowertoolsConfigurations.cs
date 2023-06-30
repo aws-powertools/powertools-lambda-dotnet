@@ -184,4 +184,14 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <value><c>true</c> if [tracing is disabled]; otherwise, <c>false</c>.</value>
     public bool TracingDisabled =>
         GetEnvironmentVariableOrDefault(Constants.TracingDisabledEnv, false);
+
+    /// <inheritdoc />
+    public void SetExecutionEnvironment<T>(T type)
+    {
+        _systemWrapper.SetExecutionEnvironment(type);
+    }
+
+    /// <inheritdoc />
+    public bool IdempotencyDisabled =>
+        GetEnvironmentVariableOrDefault(Constants.IdempotencyDisabledEnv, false);
 }
