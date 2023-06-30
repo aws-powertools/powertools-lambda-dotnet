@@ -1,7 +1,7 @@
-site_name: Lambda Powertools .NET
-site_description: AWS Lambda Powertools for .NET
+site_name: Powertools for AWS Lambda (.NET)
+site_description: Powertools for AWS Lambda (.NET)
 site_author: Amazon Web Services
-repo_url: https://github.com/awslabs/aws-lambda-powertools-dotnet
+repo_url: https://github.com/aws-powertools/powertools-lambda-dotnet
 edit_uri: edit/develop/docs
 
 nav:
@@ -15,6 +15,9 @@ nav:
       - core/logging.md
       - core/metrics.md
       - core/tracing.md
+  - Utilities:
+      - utilities/parameters.md
+      - utilities/idempotency.md
 
 theme:
   name: material
@@ -42,6 +45,9 @@ theme:
     - navigation.indexes
     - navigation.tracking
     - content.code.annotate
+    - toc.follow
+    - toc.integrate
+    - announce.dismiss
   icon:
     repo: fontawesome/brands/github
   logo: media/aws-logo-light.svg
@@ -57,7 +63,7 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.snippets:
       base_path: "."
-      check_paths: true
+      check_paths: True
   - meta
   - toc:
       permalink: true
@@ -67,7 +73,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.superfences
 
-copyright: Copyright &copy; 2022 Amazon Web Services
+copyright: Copyright &copy; 2023 Amazon Web Services
 
 plugins:
   - git-revision-date

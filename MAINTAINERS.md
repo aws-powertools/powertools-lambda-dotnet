@@ -43,6 +43,7 @@ This is document explains who the maintainers are (see below), what they do in t
 | ----------------- | --------------------------------------------- | ----------- |
 | Stephen Liedig    | [sliedig](https://github.com/sliedig)         | Amazon      |
 | Amir Khairalomoum | [amirkaws](https://github.com/amirkaws)       | Amazon      |
+| Henrique Graca    | [hjgraca](https://github.com/hjgraca)         | Amazon      |
 
 ## Emeritus
 
@@ -75,7 +76,7 @@ These are the most common labels used by maintainers to triage issues, pull requ
 | breaking-change        | Changes that will cause customer impact and need careful triage  |                                                                 |
 | do-not-merge           | PRs that are blocked for varying reasons                         | Timeline is uncertain                                           |
 | tests                  | PRs that add or change tests                                     | PR automation                                                   |
-| `area/<utility>`       | PRs related to a Powertools utility, e.g. `logging`, `tracing`   | PR automation                                                   |
+| `area/<utility>`       | PRs related to a Powertools for AWS Lambda (.NET) utility, e.g. `logging`, `tracing`   | PR automation                                                   |
 | feature                | New features or minor changes                                    | PR/Release automation                                           |
 | dependencies           | Changes that touch dependencies, e.g. Dependabot, etc.           | PR/ automation                                                  |
 | github-actions         | Changes in GitHub workflows                                      | PR automation                                                   |
@@ -106,7 +107,7 @@ Review pull requests regularly, comment, suggest, reject, merge and close. Accep
 
 PRs are [labeled](#labels) based on file changes and semantic title. Pay attention to whether labels reflect the current state of the PR and correct accordingly.
 
-Use and enforce [semantic versioning](https://semver.org/) pull request titles, as these will be used for [CHANGELOG](CHANGELOG.md) and [Release notes](https://github.com/awslabs/aws-lambda-powertools-dotnet/releases) - make sure they communicate their intent at the human level.
+Use and enforce [semantic versioning](https://semver.org/) pull request titles, as these will be used for [CHANGELOG](CHANGELOG.md) and [Release notes](https://github.com/aws-powertools/powertools-lambda-dotnet/releases) - make sure they communicate their intent at the human level.
 
 > TODO: This is an area we want to automate using the new GitHub GraphQL API.
 
@@ -120,7 +121,7 @@ Manage [labels](#labels), review issues regularly, and create new labels as need
 
 > TODO: This is an area we want to automate using the new GitHub GraphQL API.
 
-Make sure issues are assigned to our [board of activities](https://github.com/orgs/awslabs/projects/51/) and have the right [status](https://awslabs.github.io/aws-lambda-powertools-dotnet/latest/roadmap/#roadmap-status-definition).
+Make sure issues are assigned to our [board of activities](https://github.com/orgs/aws-powertools/projects/6/views/4?query=is%3Aopen+sort%3Aupdated-desc) and have the right [status](https://docs.powertools.aws.dev/lambda/dotnet/roadmap/#roadmap-status-definition).
 
 Use our [labels](#labels) to signal good first issues to new community members, and to set expectation that this might need additional feedback from the author, other customers, experienced community members and/or maintainers.
 
@@ -152,7 +153,7 @@ Keep the `develop` branch at production quality at all times. Backport features 
 
 ### Manage Roadmap
 
-See [Roadmap section](https://awslabs.github.io/aws-lambda-powertools-dotnet/roadmap/)
+See [Roadmap section](https://docs.powertools.aws.dev/lambda/dotnet/roadmap/)
 
 Ensure the repo highlights features that should be elevated to the project roadmap. Be clear about the feature’s status, priority, target version, and whether or not it should be elevated to the roadmap.
 
@@ -182,7 +183,7 @@ When in doubt, use `need-more-information` or `need-customer-feedback` labels to
 
 ### Crediting contributions
 
-We credit all contributions as part of each [release note](https://github.com/awslabs/aws-lambda-powertools-dotnet/releases) as an automated process. If you find contributors are missing from the release note you're producing, please add them manually.
+We credit all contributions as part of each [release note](https://github.com/aws-powertools/powertools-lambda-dotnet/releases) as an automated process. If you find contributors are missing from the release note you're producing, please add them manually.
 
 ### Is that a bug?
 

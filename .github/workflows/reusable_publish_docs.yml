@@ -2,7 +2,7 @@ name: Reusable publish documentation
 
 env:
   BRANCH: develop
-  ORIGIN: awslabs/aws-lambda-powertools-dotnet
+  ORIGIN: aws-powertools/powertools-lambda-dotnet
 
 on:
   workflow_call:
@@ -22,6 +22,7 @@ on:
         type: boolean
 
 permissions:
+  id-token: write
   contents: write
   pages: write
 
@@ -32,6 +33,7 @@ jobs:
     concurrency:
       group: on-docs-rebuild
     runs-on: ubuntu-latest
+    environment: Docs
     steps:
       - uses: actions/checkout@v3
         with:
@@ -64,23 +66,16 @@ jobs:
           make release-docs VERSION="$VERSION" ALIAS="$ALIAS"
           poetry run mike set-default --push latest
 
-      - name: Release API docs
-        uses: peaceiris/actions-gh-pages@de7ea6f8efb354206b205ef54722213d99067935 # v3.9.0
-        env:
-          VERSION: ${{ inputs.version }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./api
-          keep_files: true
-          destination_dir: ${{ env.VERSION }}/api
-      - name: Release API docs to latest
-        if: ${{ inputs.alias == 'latest' }}
-        uses: peaceiris/actions-gh-pages@de7ea6f8efb354206b205ef54722213d99067935 # v3.9.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./api
-          keep_files: true
-          destination_dir: latest/api
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}
+      - name: Deploy Docs
+        run: |
+          aws s3 sync \
+            dist \
+            s3://${{ secrets.AWS_DOCS_BUCKET }}/lambda-dotnet/
 
 
   apidocs:
@@ -89,6 +84,7 @@ jobs:
     concurrency:
       group: on-docs-build
     runs-on: macos-latest
+    environment: Docs
     steps:
       - uses: actions/checkout@v3
         with:
@@ -97,10 +93,13 @@ jobs:
         run: |
           brew install -f docfx --skip-cask-deps --ignore-dependencies
           docfx apidocs/docfx.json
-      - name: Release API docs to latest
-        uses: peaceiris/actions-gh-pages@068dc23d9710f1ba62e86896f84735d869951305 # v3.8.0
+      - name: Configure AWS credentials 
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./apidocs/_site
-          keep_files: true
-          destination_dir: api
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}
+      - name: Deploy Docs
+        run: |
+          aws s3 sync \
+            apidocs/_site \
+            s3://${{ secrets.AWS_DOCS_BUCKET }}/lambda-dotnet/api/

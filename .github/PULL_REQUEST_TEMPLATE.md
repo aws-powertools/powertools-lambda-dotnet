@@ -16,11 +16,11 @@ Issue number:
 
 Please leave checklist items unchecked if they do not apply to your change.
 
-* [ ] [Meets tenets criteria](https://awslabs.github.io/aws-lambda-powertools-dotnet/tenets)
+* [ ] [Meets tenets criteria](https://docs.powertools.aws.dev/lambda/dotnet/tenets)
 * [ ] I have performed a self-review of this change
 * [ ] Changes have been tested
 * [ ] Changes are documented
-* [ ] PR title follows [conventional commit semantics](https://github.com/awslabs/aws-lambda-powertools-dotnet/blob/develop/.github/semantic.yml)
+* [ ] PR title follows [conventional commit semantics](https://github.com/aws-powertools/powertools-lambda-dotnet/blob/develop/.github/semantic.yml)
 
 
 <details>

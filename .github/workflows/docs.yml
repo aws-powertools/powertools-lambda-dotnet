@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: write
+  pages: write
 
 jobs:
   docs:
@@ -12,6 +18,7 @@ jobs:
     concurrency:
       group: on-docs-build
     runs-on: ubuntu-latest
+    environment: Docs
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
         with:
@@ -27,34 +34,40 @@ jobs:
           echo "SOURCE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
       - name: Build docs website
         run: make build-docs-website
-      - name: Deploy all docs
-        uses: peaceiris/actions-gh-pages@bd8c6b06eba6b3d25d72b7a1767993c0aeee42e7 # v3.9.2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}
+      - name: Deploy Docs
+        run: |
+          aws s3 sync \
+            dist \
+            s3://${{ secrets.AWS_DOCS_BUCKET }}/lambda-dotnet/
   apidocs:
     # Force Github action to run only a single job at a time (based on the group name)
     # This is to prevent "race-condition" in publishing a new version of doc to `gh-pages`
     concurrency:
       group: on-docs-build
     runs-on: ubuntu-latest
+    environment: Docs
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET 6.0
         uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
         with:
           dotnet-version: 6.0.405
-      - name: Install solution dependencies
-        run: |
-          dotnet new tool-manifest
-          dotnet tool install docfx
-      - name: Create API docs
-        run: |
-          dotnet docfx apidocs/docfx.json
-      - name: Release API docs to latest
-        uses: peaceiris/actions-gh-pages@bd8c6b06eba6b3d25d72b7a1767993c0aeee42e7 # v3.9.2
+      - uses: nikeee/docfx-action@b9c2cf92e3b4aa06878a1410833a8828b4bdcd26 #1.0.0
+        name: Build Documentation
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./apidocs/_site
-          keep_files: true
-          destination_dir: api
+          args: apidocs/docfx.json
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}
+      - name: Deploy Docs
+        run: |
+          aws s3 sync \
+            apidocs/_site \
+            s3://${{ secrets.AWS_DOCS_BUCKET }}/lambda-dotnet/api/

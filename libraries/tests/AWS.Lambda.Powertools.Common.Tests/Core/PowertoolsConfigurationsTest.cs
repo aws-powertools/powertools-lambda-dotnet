@@ -639,6 +639,30 @@ namespace AWS.Lambda.Powertools.Common.Tests
             Assert.True(result);
         }
         
+        [Fact]
+        public void Set_Lambda_Execution_Context()
+        {
+            // Arrange
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            // systemWrapper.Setup(c =>
+            //     c.SetExecutionEnvironment(GetType())
+            // );
+            
+            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            
+            // Act
+            configurations.SetExecutionEnvironment(typeof(PowertoolsConfigurations));
+
+            // Assert
+            // method with correct type was called
+            systemWrapper.Verify(v =>
+                v.SetExecutionEnvironment(
+                    It.Is<Type>(i => i == typeof(PowertoolsConfigurations))
+                ), Times.Once);
+            
+        }
+        
         #endregion
     }
 }

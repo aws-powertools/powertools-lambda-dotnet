@@ -99,7 +99,7 @@ public class Function
         Metrics.AddMetric("SuccessfulLocations", 1, MetricUnit.Count);
         
         var lookupRecord = new LookupRecord(lookupId: requestContextRequestId,
-            greeting: "Hello AWS Lambda Powertools for .NET", ipAddress: location);
+            greeting: "Hello Powertools for AWS Lambda (.NET)", ipAddress: location);
 
         try
         {

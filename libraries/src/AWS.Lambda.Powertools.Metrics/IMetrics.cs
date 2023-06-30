@@ -31,7 +31,8 @@ public interface IMetrics : IDisposable
     /// <param name="key">Metric key</param>
     /// <param name="value">Metric value</param>
     /// <param name="unit">Metric unit</param>
-    void AddMetric(string key, double value, MetricUnit unit);
+    /// <param name="metricResolution"></param>
+    void AddMetric(string key, double value, MetricUnit unit, MetricResolution metricResolution);
 
     /// <summary>
     ///     Adds a dimension
@@ -62,8 +63,9 @@ public interface IMetrics : IDisposable
     /// <param name="nameSpace">Metric namespace</param>
     /// <param name="service">Metric service</param>
     /// <param name="defaultDimensions">Metric default dimensions</param>
+    /// <param name="metricResolution">Metrics resolution</param>
     void PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace = null,
-        string service = null, Dictionary<string, string> defaultDimensions = null);
+        string service = null, Dictionary<string, string> defaultDimensions = null, MetricResolution metricResolution = MetricResolution.Default);
 
     /// <summary>
     ///     Sets the namespace
@@ -94,4 +96,9 @@ public interface IMetrics : IDisposable
     /// </summary>
     /// <param name="metricsOverflow">if set to <c>true</c> [metrics overflow].</param>
     void Flush(bool metricsOverflow = false);
+    
+    /// <summary>
+    ///     Clears both default dimensions and dimensions lists
+    /// </summary>
+    void ClearDefaultDimensions();
 }
