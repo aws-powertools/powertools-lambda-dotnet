@@ -10,7 +10,7 @@
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.1.0" />
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.5.0" />
-        <PackageReference Include="coverlet.collector" Version="3.2.0">
+        <PackageReference Include="coverlet.collector" Version="6.0.0">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
