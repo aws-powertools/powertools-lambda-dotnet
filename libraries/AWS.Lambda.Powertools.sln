@@ -5,27 +5,27 @@ VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.Common", "src\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj", "{ACED222F-BDEB-48B6-BA6E-A28659080766}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Common", "src\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj", "{ACED222F-BDEB-48B6-BA6E-A28659080766}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.Logging", "src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj", "{7A6A2996-1F41-4C94-A0A2-3AE963247243}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Logging", "src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj", "{7A6A2996-1F41-4C94-A0A2-3AE963247243}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.Metrics", "src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj", "{3BA6251D-DE4E-4547-AAA9-25F4BA04C636}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Metrics", "src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj", "{3BA6251D-DE4E-4547-AAA9-25F4BA04C636}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.Tracing", "src\AWS.Lambda.Powertools.Tracing\AWS.Lambda.Powertools.Tracing.csproj", "{1A3AC28C-3AEE-40FE-B229-9E38BB609547}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Tracing", "src\AWS.Lambda.Powertools.Tracing\AWS.Lambda.Powertools.Tracing.csproj", "{1A3AC28C-3AEE-40FE-B229-9E38BB609547}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1CFF5568-8486-475F-81F6-06105C437528}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.Logging.Tests", "tests\AWS.Lambda.Powertools.Logging.Tests\AWS.Lambda.Powertools.Logging.Tests.csproj", "{B68A0D0A-4785-48CB-864F-29E3A8ACA526}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Logging.Tests", "tests\AWS.Lambda.Powertools.Logging.Tests\AWS.Lambda.Powertools.Logging.Tests.csproj", "{B68A0D0A-4785-48CB-864F-29E3A8ACA526}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.Metrics.Tests", "tests\AWS.Lambda.Powertools.Metrics.Tests\AWS.Lambda.Powertools.Metrics.Tests.csproj", "{A422C742-2CF9-409D-BDAE-15825AB62113}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Metrics.Tests", "tests\AWS.Lambda.Powertools.Metrics.Tests\AWS.Lambda.Powertools.Metrics.Tests.csproj", "{A422C742-2CF9-409D-BDAE-15825AB62113}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.Tracing.Tests", "tests\AWS.Lambda.Powertools.Tracing.Tests\AWS.Lambda.Powertools.Tracing.Tests.csproj", "{A040AED5-BBB8-4BFA-B2A5-BBD82817B8A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Tracing.Tests", "tests\AWS.Lambda.Powertools.Tracing.Tests\AWS.Lambda.Powertools.Tracing.Tests.csproj", "{A040AED5-BBB8-4BFA-B2A5-BBD82817B8A5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.Common.Tests", "tests\AWS.Lambda.Powertools.Common.Tests\AWS.Lambda.Powertools.Common.Tests.csproj", "{4EC48E6A-45B5-4E25-ABBD-C23FE2BD6E1E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Common.Tests", "tests\AWS.Lambda.Powertools.Common.Tests\AWS.Lambda.Powertools.Common.Tests.csproj", "{4EC48E6A-45B5-4E25-ABBD-C23FE2BD6E1E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.BatchProcessing", "src\AWS.Lambda.Powertools.BatchProcessing\AWS.Lambda.Powertools.BatchProcessing.csproj", "{F8B4100F-4014-4A1E-8130-D281453B79ED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.BatchProcessing", "src\AWS.Lambda.Powertools.BatchProcessing\AWS.Lambda.Powertools.BatchProcessing.csproj", "{F8B4100F-4014-4A1E-8130-D281453B79ED}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWS.Lambda.Powertools.BatchProcessing.Tests", "tests\AWS.Lambda.Powertools.BatchProcessing.Tests\AWS.Lambda.Powertools.BatchProcessing.Tests.csproj", "{12B940EF-A5D3-459D-BD36-A603834D1F7D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.BatchProcessing.Tests", "tests\AWS.Lambda.Powertools.BatchProcessing.Tests\AWS.Lambda.Powertools.BatchProcessing.Tests.csproj", "{12B940EF-A5D3-459D-BD36-A603834D1F7D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Idempotency", "src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj", "{B7AC87DF-9705-47D9-AC00-C230E577CA5D}"
 EndProject
@@ -43,6 +43,9 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{ACED222F-BDEB-48B6-BA6E-A28659080766}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -165,9 +168,6 @@ Global
 		{12B940EF-A5D3-459D-BD36-A603834D1F7D}.Release|x64.Build.0 = Release|Any CPU
 		{12B940EF-A5D3-459D-BD36-A603834D1F7D}.Release|x86.ActiveCfg = Release|Any CPU
 		{12B940EF-A5D3-459D-BD36-A603834D1F7D}.Release|x86.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 		{B7AC87DF-9705-47D9-AC00-C230E577CA5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B7AC87DF-9705-47D9-AC00-C230E577CA5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7AC87DF-9705-47D9-AC00-C230E577CA5D}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -217,6 +217,7 @@ Global
 		{386A9769-59BF-4BE3-99D4-A9603E300729}.Release|x86.ActiveCfg = Release|Any CPU
 		{386A9769-59BF-4BE3-99D4-A9603E300729}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
+
 	GlobalSection(NestedProjects) = preSolution
 		{ACED222F-BDEB-48B6-BA6E-A28659080766} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
 		{7A6A2996-1F41-4C94-A0A2-3AE963247243} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
@@ -224,16 +225,13 @@ Global
 		{1A3AC28C-3AEE-40FE-B229-9E38BB609547} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
 		{B68A0D0A-4785-48CB-864F-29E3A8ACA526} = {1CFF5568-8486-475F-81F6-06105C437528}
 		{A422C742-2CF9-409D-BDAE-15825AB62113} = {1CFF5568-8486-475F-81F6-06105C437528}
-		{A040AED5-BBB8-4BFA-B2A5-BBD82817B8A5} = {1CFF5568-8486-475F-81F6-06105C437528}
 		{4EC48E6A-45B5-4E25-ABBD-C23FE2BD6E1E} = {1CFF5568-8486-475F-81F6-06105C437528}
-		{F8B4100F-4014-4A1E-8130-D281453B79ED} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
-		{12B940EF-A5D3-459D-BD36-A603834D1F7D} = {1CFF5568-8486-475F-81F6-06105C437528}
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {679D274B-A336-468A-ADA1-935E3CF32F87}
+		{A040AED5-BBB8-4BFA-B2A5-BBD82817B8A5} = {1CFF5568-8486-475F-81F6-06105C437528}
 		{1ECB31E8-2EF0-41E2-8C71-CB9876D207F0} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
 		{386A9769-59BF-4BE3-99D4-A9603E300729} = {1CFF5568-8486-475F-81F6-06105C437528}
 		{B7AC87DF-9705-47D9-AC00-C230E577CA5D} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
+		{F8B4100F-4014-4A1E-8130-D281453B79ED} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
+		{12B940EF-A5D3-459D-BD36-A603834D1F7D} = {1CFF5568-8486-475F-81F6-06105C437528}
 		{3E1D77BD-70AF-4767-B00A-4A321D5AB2C3} = {1CFF5568-8486-475F-81F6-06105C437528}
 	EndGlobalSection
 EndGlobal
