@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.KinesisEvents;
 using Amazon.Lambda.SQSEvents;
+using AspectInjector.Broker;
 using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
 using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
@@ -27,7 +29,8 @@ using AWS.Lambda.Powertools.Common;
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
 [AttributeUsage(AttributeTargets.Method)]
-public class BatchProcesserAttribute : MethodAspectAttribute
+[Injection(typeof(UniversalWrapperAspect), Inherited = true)]
+public class BatchProcesserAttribute : UniversalWrapperAttribute
 {
     /// <summary>
     /// Type of batch processor.
@@ -80,7 +83,23 @@ public class BatchProcesserAttribute : MethodAspectAttribute
     };
 
     /// <inheritdoc />
-    protected override IMethodAspectHandler CreateHandler()
+    protected internal override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
+    {
+        return WrapAsync(x => Task.FromResult(target(x)), args, eventArgs).GetAwaiter().GetResult();
+    }
+
+    /// <inheritdoc />
+    protected internal override async Task<T> WrapAsync<T>(Func<object[], Task<T>> target, object[] args, AspectEventArgs eventArgs)
+    {
+        // Run batch processing
+        var handler = CreateAspectHandler();
+        await handler.HandleAsync(eventArgs);
+
+        // Run the Lambda function logic
+        return await target(args);
+    }
+
+    private IBatchProcessingAspectHandler CreateAspectHandler()
     {
         // Check type of batch processor (optional)
         if (BatchProcessor != null && !BatchProcessor.IsAssignableTo(BatchProcessorTypes[EventType]))
@@ -109,14 +128,14 @@ public class BatchProcesserAttribute : MethodAspectAttribute
         // Create aspect handler
         return EventType switch
         {
-            EventType.DynamoDbStream => CreateHandlerInternal(() => DynamoDbStreamBatchProcessor.Instance),
-            EventType.KinesisDataStream => CreateHandlerInternal(() => KinesisDataStreamBatchProcessor.Instance),
-            EventType.Sqs => CreateHandlerInternal(() => SqsBatchProcessor.Instance),
+            EventType.DynamoDbStream => CreateBatchProcessingAspectHandler(() => DynamoDbStreamBatchProcessor.Instance),
+            EventType.KinesisDataStream => CreateBatchProcessingAspectHandler(() => KinesisDataStreamBatchProcessor.Instance),
+            EventType.Sqs => CreateBatchProcessingAspectHandler(() => SqsBatchProcessor.Instance),
             _ => throw new ArgumentOutOfRangeException(nameof(EventType), EventType, "Unsupported event type.")
         };
     }
 
-    private IMethodAspectHandler CreateHandlerInternal<TEvent, TRecord>(Func<IBatchProcessor<TEvent, TRecord>> defaultBatchProcessorProvider)
+    private BatchProcessingAspectHandler<TEvent, TRecord> CreateBatchProcessingAspectHandler<TEvent, TRecord>(Func<IBatchProcessor<TEvent, TRecord>> defaultBatchProcessorProvider)
     {
         // Create batch processor
         IBatchProcessor<TEvent, TRecord> batchProcessor;

@@ -15,16 +15,12 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Internal;
 
-/// <summary>
-///     Class BatchProcessingAspectHandler.
-///     Implements the <see cref="IMethodAspectHandler" />
-/// </summary>
-/// <seealso cref="IMethodAspectHandler" />
-internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHandler
+internal class BatchProcessingAspectHandler<TEvent, TRecord> : IBatchProcessingAspectHandler
 {
     private readonly IBatchProcessor<TEvent, TRecord> _batchProcessor;
     private readonly IRecordHandler<TRecord> _recordHandler;
@@ -35,8 +31,7 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHand
         _recordHandler = recordHandler;
     }
 
-    /// <inheritdoc />
-    public void OnEntry(AspectEventArgs eventArgs)
+    public async Task HandleAsync(AspectEventArgs eventArgs)
     {
         // Try get event from args
         var @event = eventArgs.Args.OfType<TEvent>().SingleOrDefault();
@@ -46,30 +41,6 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IMethodAspectHand
         }
 
         // Run batch processor
-        // TODO: Consider framework support for async aspect events?
-        _batchProcessor.ProcessAsync(@event, _recordHandler).GetAwaiter().GetResult();
-    }
-
-    /// <inheritdoc />
-    public void OnSuccess(AspectEventArgs eventArgs, object result)
-    {
-    }
-
-    /// <inheritdoc />
-    public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
-    {
-        throw exception;
-    }
-
-    /// <inheritdoc />
-    public void OnExit(AspectEventArgs eventArgs)
-    {
-    }
-
-    /// <summary>
-    ///     Resets for test.
-    /// </summary>
-    internal static void ResetForTest()
-    {
+        await _batchProcessor.ProcessAsync(@event, _recordHandler);
     }
 }
