@@ -132,4 +132,10 @@ public interface IPowertoolsConfigurations
     /// </summary>
     /// <value><c>true</c> if [Idempotency is disabled]; otherwise, <c>false</c>.</value>
     bool IdempotencyDisabled { get; }
+
+    /// <summary>
+    ///     Gets the max degree of parallelism to apply during batch processing.
+    /// </summary>
+    /// <value>A positive integer greater than or equal to 1. Defaults to 1 (no parallelism).</value>
+    int BatchProcessingMaxDegreeOfParallelism { get; }
 }

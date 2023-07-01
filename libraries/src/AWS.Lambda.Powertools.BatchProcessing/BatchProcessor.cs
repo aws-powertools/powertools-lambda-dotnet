@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
+using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
@@ -17,7 +19,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
 
         // Prepare records. We assume all records fail by default to avoid loss of data.
         var batchRecords = GetRecordsFromEvent(@event).ToDictionary(GetRecordId, x => x);
-        var failedRecords = batchRecords.ToDictionary(x => x.Key, _ => (Exception) null);
+        var failedRecords = new ConcurrentDictionary<string, Exception>(batchRecords.ToDictionary(x => x.Key, x => (Exception) new PendingRecordException($"Record: '{x.Key}' has not been processed.")));
 
         // Get error handling policy
         var errorHandlingPolicy = GetErrorHandlingPolicyForEvent(@event);
@@ -25,15 +27,22 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
         // Invoke hook
         await BeforeBatchProcessingAsync(@event, batchRecords);
 
-        foreach (var (recordId, record) in batchRecords)
+        // Invoke processing
+        var parallelOptions = new ParallelOptions
         {
+            MaxDegreeOfParallelism = PowertoolsConfigurations.Instance.BatchProcessingMaxDegreeOfParallelism
+        };
+        await Parallel.ForEachAsync(batchRecords, parallelOptions, async (pair, cancellationToken) =>
+        {
+            var (recordId, record) = pair;
+
             try
             {
                 // Process the record
                 await HandleRecordAsync(record, recordHandler);
 
                 // Register success
-                failedRecords.Remove(recordId);
+                failedRecords.TryRemove(recordId, out _);
 
                 try
                 {
@@ -68,10 +77,9 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
                     {
                         failedRecords[failedRecordId] ??= cbException;
                     }
-                    break;
                 }
             }
-        }
+        });
 
         // Invoke hook
         await AfterBatchProcessingAsync(@event, batchRecords, failedRecords);

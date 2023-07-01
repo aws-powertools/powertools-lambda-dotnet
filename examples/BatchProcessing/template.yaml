@@ -32,7 +32,7 @@ Resources:
             QueueName: !GetAtt SampleSqsQueue.QueueName
       Environment:
         Variables:
-          POWERTOOLS_BATCH_PROCESSING_EVENT_TYPE: SQS
+          POWERTOOLS_BATCH_PROCESSING_MAX_PARALLELISM: 1
       Events:
         SqsBatch:
           Type: SQS # More info about SQS Event Source: https://github.com/aws/serverless-application-model/blob/master/versions/2016-10-31.md#sqs
@@ -76,7 +76,7 @@ Resources:
             StreamName: !Select [3, !Split ["/", !GetAtt SampleDynamoDBTable.StreamArn]]
       Environment:
         Variables:
-          POWERTOOLS_BATCH_PROCESSING_EVENT_TYPE: DYNAMODB_STREAM
+          POWERTOOLS_BATCH_PROCESSING_MAX_PARALLELISM: 1
       Events:
         DynamoDbStream:
           Type: DynamoDB
@@ -117,7 +117,7 @@ Resources:
             StreamName: !Ref SampleKinesisDataStream
       Environment:
         Variables:
-          POWERTOOLS_BATCH_PROCESSING_EVENT_TYPE: KINESIS_DATA_STREAM
+          POWERTOOLS_BATCH_PROCESSING_MAX_PARALLELISM: 1
       Events:
         KinesisDataStream:
           Type: Kinesis

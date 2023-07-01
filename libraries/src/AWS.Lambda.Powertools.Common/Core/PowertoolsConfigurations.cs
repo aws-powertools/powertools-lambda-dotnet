@@ -84,6 +84,18 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     ///     Gets the environment variable or default.
     /// </summary>
     /// <param name="variable">The variable.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>System.Int32.</returns>
+    public int GetEnvironmentVariableOrDefault(string variable, int defaultValue)
+    {
+        var result = _systemWrapper.GetEnvironmentVariable(variable);
+        return int.TryParse(result, out var parsedValue) ? parsedValue : defaultValue;
+    }
+
+    /// <summary>
+    ///     Gets the environment variable or default.
+    /// </summary>
+    /// <param name="variable">The variable.</param>
     /// <param name="defaultValue">if set to <c>true</c> [default value].</param>
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     public bool GetEnvironmentVariableOrDefault(string variable, bool defaultValue)
@@ -194,4 +206,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <inheritdoc />
     public bool IdempotencyDisabled =>
         GetEnvironmentVariableOrDefault(Constants.IdempotencyDisabledEnv, false);
+
+    /// <inheritdoc />
+    public int BatchProcessingMaxDegreeOfParallelism => GetEnvironmentVariableOrDefault(Constants.BatchProcessingMaxDegreeOfParallelism, 1);
 }
