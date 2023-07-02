@@ -42,21 +42,21 @@ public class Function
         Services.Init();
     }
 
-    [BatchProcesser(EventType = EventType.DynamoDbStream, RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
+    [BatchProcesser(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
     [Logging(LogEvent = true)]
     public BatchResponse DynamoDbStreamHandlerUsingAttribute(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Instance.BatchResponse;
     }
 
-    [BatchProcesser(EventType = EventType.KinesisDataStream, RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
+    [BatchProcesser(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
     [Logging(LogEvent = true)]
     public BatchResponse KinesisDataStreamHandlerUsingAttribute(KinesisEvent _)
     {
         return KinesisDataStreamBatchProcessor.Instance.BatchResponse;
     }
 
-    [BatchProcesser(EventType = EventType.Sqs, RecordHandler = typeof(CustomSqsRecordHandler))]
+    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler))]
     [Logging(LogEvent = true)]
     public BatchResponse SqsHandlerUsingAttribute(SQSEvent _)
     {
@@ -65,21 +65,21 @@ public class Function
 
     #region More example handlers...
 
-    [BatchProcesser(EventType = EventType.Sqs, RecordHandlerProvider = typeof(CustomSqsRecordHandlerProvider), BatchProcessor = typeof(CustomSqsBatchProcessor))]
+    [BatchProcesser(RecordHandlerProvider = typeof(CustomSqsRecordHandlerProvider), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
     public BatchResponse HandlerUsingAttributeAndCustomRecordHandlerProvider(SQSEvent _)
     {
         return SqsBatchProcessor.Instance.BatchResponse;
     }
 
-    [BatchProcesser(EventType = EventType.Sqs, RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
+    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
     public BatchResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
     {
         return SqsBatchProcessor.Instance.BatchResponse;
     }
 
-    [BatchProcesser(EventType = EventType.Sqs, RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
+    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
     [Logging(LogEvent = true)]
     public BatchResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
     {

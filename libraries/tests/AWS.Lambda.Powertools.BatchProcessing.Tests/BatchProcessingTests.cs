@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
@@ -56,7 +57,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             };
             var batchProcessor = new SqsBatchProcessor();
             var recordHandler = new Mock<IRecordHandler<SQSEvent.SQSMessage>>();
-            recordHandler.Setup(x => x.HandleAsync(It.IsAny<SQSEvent.SQSMessage>())).Callback((SQSEvent.SQSMessage x) =>
+            recordHandler.Setup(x => x.HandleAsync(It.IsAny<SQSEvent.SQSMessage>(), It.IsAny<CancellationToken>())).Callback((SQSEvent.SQSMessage x, CancellationToken _) =>
             {
                 if (x.MessageId == "1")
                 {
@@ -68,7 +69,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             var batchResponse = await batchProcessor.ProcessAsync(@event, recordHandler.Object);
 
             // Assert
-            recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable())), Times.Exactly(@event.Records.Count));
+            recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable()), It.IsAny<CancellationToken>()), Times.Exactly(@event.Records.Count));
             Assert.Single(batchResponse.BatchItemFailures);
         }
 
@@ -100,7 +101,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             };
             var batchProcessor = new SqsBatchProcessor();
             var recordHandler = new Mock<IRecordHandler<SQSEvent.SQSMessage>>();
-            recordHandler.Setup(x => x.HandleAsync(It.IsAny<SQSEvent.SQSMessage>())).Callback((SQSEvent.SQSMessage x) =>
+            recordHandler.Setup(x => x.HandleAsync(It.IsAny<SQSEvent.SQSMessage>(), It.IsAny<CancellationToken>())).Callback((SQSEvent.SQSMessage x, CancellationToken _) =>
             {
                 if (x.MessageId == "1")
                 {
@@ -114,9 +115,9 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             // Assert
             var batchProcessingException = await Assert.ThrowsAsync<BatchProcessingException>(ProcessBatchAsync);
             Assert.Equal(3, batchProcessingException.InnerExceptions.Count);
-            Assert.Equal(2, batchProcessingException.InnerExceptions.OfType<CircuitBreakerException>().Count());
-            Assert.Single(batchProcessingException.InnerExceptions.OfType<HandleRecordException>());
-            recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable())), Times.Once);
+            Assert.Equal(2, batchProcessingException.InnerExceptions.OfType<UnprocessedRecordException>().Count());
+            Assert.Single(batchProcessingException.InnerExceptions.OfType<RecordProcessingException>());
+            recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable()), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -147,7 +148,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             };
             var batchProcessor = new SqsBatchProcessor();
             var recordHandler = new Mock<IRecordHandler<SQSEvent.SQSMessage>>();
-            recordHandler.Setup(x => x.HandleAsync(It.IsAny<SQSEvent.SQSMessage>())).Callback((SQSEvent.SQSMessage x) =>
+            recordHandler.Setup(x => x.HandleAsync(It.IsAny<SQSEvent.SQSMessage>(), It.IsAny<CancellationToken>())).Callback((SQSEvent.SQSMessage x, CancellationToken _) =>
             {
                 if (x.MessageId == "2")
                 {
@@ -162,7 +163,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             Assert.Equal(2, batchResponse.BatchItemFailures.Count);
             Assert.Contains(batchResponse.BatchItemFailures, x => x.ItemIdentifier == "2");
             Assert.Contains(batchResponse.BatchItemFailures, x => x.ItemIdentifier == "3");
-            recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable())), Times.Exactly(2));
+            recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable()), It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
     }
 }

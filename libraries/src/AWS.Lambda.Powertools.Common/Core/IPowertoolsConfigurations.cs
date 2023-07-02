@@ -134,8 +134,14 @@ public interface IPowertoolsConfigurations
     bool IdempotencyDisabled { get; }
 
     /// <summary>
-    ///     Gets the max degree of parallelism to apply during batch processing.
+    /// Gets the error handling policy to apply during batch processing.
     /// </summary>
-    /// <value>A positive integer greater than or equal to 1. Defaults to 1 (no parallelism).</value>
+    /// <value>Defaults to 'DeriveFromEvent'.</value>
+    string BatchProcessingErrorHandlingPolicy { get; }
+
+    /// <summary>
+    /// Gets the maximum degree of parallelism to apply during batch processing.
+    /// </summary>
+    /// <value>Defaults to 1 (no parallelism). Specify -1 to automatically use the value of <see cref="System.Environment.ProcessorCount">ProcessorCount</see>.</value>
     int BatchProcessingMaxDegreeOfParallelism { get; }
 }

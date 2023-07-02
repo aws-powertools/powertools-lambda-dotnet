@@ -1,8 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
 public interface IRecordHandler<in TRecord>
 {
-    Task HandleAsync(TRecord record);
+    Task HandleAsync(TRecord record, CancellationToken cancellationToken);
 }

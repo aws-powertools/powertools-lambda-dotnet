@@ -2,6 +2,7 @@
 
 public enum BatchProcessorErrorHandlingPolicy
 {
+    DeriveFromEvent,
     ContinueOnBatchItemFailure,
     StopOnFirstBatchItemFailure
 }

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Amazon.Lambda.DynamoDBEvents;
 using AWS.Lambda.Powertools.BatchProcessing;
 using AWS.Lambda.Powertools.Logging;
@@ -6,7 +7,7 @@ using AWS.Lambda.Powertools.Logging;
 namespace HelloWorld.DynamoDb;
 internal class CustomDynamoDbStreamRecordHandler : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
 {
-    public async Task HandleAsync(DynamoDBEvent.DynamodbStreamRecord record)
+    public async Task HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
     {
         Logger.LogInformation($"Handling DynamoDB record with sequence number: '{record.Dynamodb.SequenceNumber}'.");
         await Task.CompletedTask;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AWS.Lambda.Powertools.BatchProcessing;
@@ -11,7 +12,7 @@ public class RecordHandler<TRecord> : IRecordHandler<TRecord>
         _handlerFunc = handlerFunc;
     }
 
-    public async Task HandleAsync(TRecord record)
+    public async Task HandleAsync(TRecord record, CancellationToken cancellationToken)
     {
         await _handlerFunc.Invoke(record);
     }

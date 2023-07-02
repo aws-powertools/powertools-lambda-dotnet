@@ -16,7 +16,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Internal;
 
@@ -24,23 +23,24 @@ internal class BatchProcessingAspectHandler<TEvent, TRecord> : IBatchProcessingA
 {
     private readonly IBatchProcessor<TEvent, TRecord> _batchProcessor;
     private readonly IRecordHandler<TRecord> _recordHandler;
+    private readonly ProcessingOptions _processingOptions;
 
-    public BatchProcessingAspectHandler(IBatchProcessor<TEvent, TRecord> batchProcessor, IRecordHandler<TRecord> recordHandler)
+    public BatchProcessingAspectHandler(IBatchProcessor<TEvent, TRecord> batchProcessor, IRecordHandler<TRecord> recordHandler, ProcessingOptions processingOptions)
     {
         _batchProcessor = batchProcessor;
         _recordHandler = recordHandler;
+        _processingOptions = processingOptions;
     }
 
-    public async Task HandleAsync(AspectEventArgs eventArgs)
+    public async Task HandleAsync(object[] args)
     {
         // Try get event from args
-        var @event = eventArgs.Args.OfType<TEvent>().SingleOrDefault();
-        if (@event == null)
+        if (args?.FirstOrDefault() is not TEvent @event)
         {
-            throw new InvalidOperationException($"Function handler must accept an argument of type: '{typeof(TEvent).Name}'.");
+            throw new InvalidOperationException($"The first function handler parameter must be of type: '{typeof(TEvent).Namespace}'.");
         }
 
         // Run batch processor
-        await _batchProcessor.ProcessAsync(@event, _recordHandler);
+        await _batchProcessor.ProcessAsync(@event, _recordHandler, _processingOptions);
     }
 }

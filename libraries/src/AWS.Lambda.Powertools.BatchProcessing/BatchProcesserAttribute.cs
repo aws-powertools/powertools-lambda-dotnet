@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.KinesisEvents;
@@ -53,10 +55,25 @@ public class BatchProcesserAttribute : UniversalWrapperAttribute
     public Type RecordHandlerProvider;
 
     /// <summary>
-    /// Event source (i.e. SQS Queue, DynamoDB Stream or Kinesis Data Stream).
+    /// Error handling policy.
     /// </summary>
-    public EventType EventType;
+    public BatchProcessorErrorHandlingPolicy ErrorHandlingPolicy =
+        Enum.TryParse(PowertoolsConfigurations.Instance.BatchProcessingErrorHandlingPolicy, true, out BatchProcessorErrorHandlingPolicy errorHandlingPolicy)
+            ? errorHandlingPolicy
+            : BatchProcessorErrorHandlingPolicy.DeriveFromEvent;
 
+    /// <summary>
+    /// The maximum degree of parallelism to apply during batch processing.
+    /// </summary>
+    public int MaxDegreeOfParallelism =
+        PowertoolsConfigurations.Instance.BatchProcessingMaxDegreeOfParallelism;
+
+    private static readonly Dictionary<Type, EventType> EventTypes = new()
+    {
+        {typeof(DynamoDBEvent), EventType.DynamoDbStream},
+        {typeof(KinesisEvent),  EventType.KinesisDataStream},
+        {typeof(SQSEvent),      EventType.Sqs}
+    };
     private static readonly Dictionary<EventType, Type> BatchProcessorTypes = new()
     {
         {EventType.DynamoDbStream,    typeof(IBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
@@ -91,47 +108,55 @@ public class BatchProcesserAttribute : UniversalWrapperAttribute
     /// <inheritdoc />
     protected internal override async Task<T> WrapAsync<T>(Func<object[], Task<T>> target, object[] args, AspectEventArgs eventArgs)
     {
-        // Run batch processing
-        var handler = CreateAspectHandler();
-        await handler.HandleAsync(eventArgs);
+        // Create aspect handler
+        var handler = CreateAspectHandler(args);
 
-        // Run the Lambda function logic
+        // Run batch processing logic
+        await handler.HandleAsync(args);
+
+        // Run Lambda function logic
         return await target(args);
     }
 
-    private IBatchProcessingAspectHandler CreateAspectHandler()
+    private IBatchProcessingAspectHandler CreateAspectHandler(IReadOnlyList<object> args)
     {
-        // Check type of batch processor (optional)
-        if (BatchProcessor != null && !BatchProcessor.IsAssignableTo(BatchProcessorTypes[EventType]))
+        // Try get event type
+        if (args == null || args.Count == 0 || !EventTypes.TryGetValue(args[0].GetType(), out var eventType))
         {
-            throw new ArgumentException($"The provided batch processor must implement: '{BatchProcessorTypes[EventType]}'.", nameof(BatchProcessor));
+            throw new ArgumentException($"The first function handler parameter must be of one of the following types: {string.Join(',', EventTypes.Keys.Select(x => $"'{x.Namespace}'"))}.");
+        }
+
+        // Check type of batch processor (optional)
+        if (BatchProcessor != null && !BatchProcessor.IsAssignableTo(BatchProcessorTypes[eventType]))
+        {
+            throw new ArgumentException($"The provided batch processor must implement: '{BatchProcessorTypes[eventType]}'.", nameof(BatchProcessor));
         }
 
         // Check type of batch processor provider (optional)
-        if (BatchProcessorProvider != null && !BatchProcessorProvider.IsAssignableTo(BatchProcessorProviderTypes[EventType]))
+        if (BatchProcessorProvider != null && !BatchProcessorProvider.IsAssignableTo(BatchProcessorProviderTypes[eventType]))
         {
-            throw new ArgumentException($"The provided batch processor provider must implement: '{BatchProcessorProviderTypes[EventType]}'.", nameof(BatchProcessorProvider));
+            throw new ArgumentException($"The provided batch processor provider must implement: '{BatchProcessorProviderTypes[eventType]}'.", nameof(BatchProcessorProvider));
         }
 
         // Check type of record handler (conditionally required)
-        if (RecordHandler != null && !RecordHandler.IsAssignableTo(RecordHandlerTypes[EventType]))
+        if (RecordHandler != null && !RecordHandler.IsAssignableTo(RecordHandlerTypes[eventType]))
         {
-            throw new ArgumentException($"The provided record handler must implement: '{RecordHandlerTypes[EventType]}'.", nameof(RecordHandler));
+            throw new ArgumentException($"The provided record handler must implement: '{RecordHandlerTypes[eventType]}'.", nameof(RecordHandler));
         }
 
         // Check type of record handler provider (conditionally required)
-        if (RecordHandlerProvider != null && !RecordHandlerProvider.IsAssignableTo(RecordHandlerProviderTypes[EventType]))
+        if (RecordHandlerProvider != null && !RecordHandlerProvider.IsAssignableTo(RecordHandlerProviderTypes[eventType]))
         {
-            throw new ArgumentException($"The provided record handler provider must implement: '{RecordHandlerProviderTypes[EventType]}'.", nameof(RecordHandlerProvider));
+            throw new ArgumentException($"The provided record handler provider must implement: '{RecordHandlerProviderTypes[eventType]}'.", nameof(RecordHandlerProvider));
         }
 
         // Create aspect handler
-        return EventType switch
+        return eventType switch
         {
             EventType.DynamoDbStream => CreateBatchProcessingAspectHandler(() => DynamoDbStreamBatchProcessor.Instance),
             EventType.KinesisDataStream => CreateBatchProcessingAspectHandler(() => KinesisDataStreamBatchProcessor.Instance),
             EventType.Sqs => CreateBatchProcessingAspectHandler(() => SqsBatchProcessor.Instance),
-            _ => throw new ArgumentOutOfRangeException(nameof(EventType), EventType, "Unsupported event type.")
+            _ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, "Unsupported event type.")
         };
     }
 
@@ -197,6 +222,11 @@ public class BatchProcesserAttribute : UniversalWrapperAttribute
             throw new InvalidOperationException("A record handler or record handler provider is required.");
         }
 
-        return new BatchProcessingAspectHandler<TEvent, TRecord>(batchProcessor, recordHandler);
+        return new BatchProcessingAspectHandler<TEvent, TRecord>(batchProcessor, recordHandler, new ProcessingOptions
+        {
+            CancellationToken = CancellationToken.None,
+            ErrorHandlingPolicy = ErrorHandlingPolicy,
+            MaxDegreeOfParallelism = MaxDegreeOfParallelism
+        });
     }
 }

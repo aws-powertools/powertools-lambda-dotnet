@@ -208,5 +208,8 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
         GetEnvironmentVariableOrDefault(Constants.IdempotencyDisabledEnv, false);
 
     /// <inheritdoc />
-    public int BatchProcessingMaxDegreeOfParallelism => GetEnvironmentVariableOrDefault(Constants.BatchProcessingMaxDegreeOfParallelism, 1);
+    public string BatchProcessingErrorHandlingPolicy => GetEnvironmentVariableOrDefault(Constants.BatchProcessingErrorHandlingPolicyEnv, "DeriveFromEvent");
+
+    /// <inheritdoc />
+    public int BatchProcessingMaxDegreeOfParallelism => GetEnvironmentVariableOrDefault(Constants.BatchProcessingMaxDegreeOfParallelismEnv, 1);
 }
