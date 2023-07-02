@@ -1,2 +1,2 @@
-# AWS Lambda Powertools for .NET - Batch Processing Example
+# Powertools for AWS Lambda (.NET) - Batch Processing Example
 ...
