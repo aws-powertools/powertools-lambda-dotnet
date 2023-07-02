@@ -18,13 +18,22 @@ using Amazon.Lambda.KinesisEvents;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 
+/// <summary>
+/// The default batch processor for Kinesis Data Stream events.
+/// </summary>
 public class KinesisDataStreamBatchProcessor : BatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>
 {
+    /// <summary>
+    /// The singleton instance of the batch processor.
+    /// </summary>
     public static readonly KinesisDataStreamBatchProcessor Instance = new();
 
+    /// <inheritdoc />
     protected override BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(KinesisEvent _) => BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure;
 
+    /// <inheritdoc />
     protected override ICollection<KinesisEvent.KinesisEventRecord> GetRecordsFromEvent(KinesisEvent @event) => @event.Records;
 
+    /// <inheritdoc />
     protected override string GetRecordId(KinesisEvent.KinesisEventRecord record) => record.Kinesis.SequenceNumber;
 }

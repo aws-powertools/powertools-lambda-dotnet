@@ -44,64 +44,66 @@ public class Function
 
     [BatchProcesser(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
     [Logging(LogEvent = true)]
-    public BatchResponse DynamoDbStreamHandlerUsingAttribute(DynamoDBEvent _)
+    public BatchItemFailuresResponse DynamoDbStreamHandlerUsingAttribute(DynamoDBEvent _)
     {
-        return DynamoDbStreamBatchProcessor.Instance.BatchResponse;
+        return DynamoDbStreamBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
     }
 
     [BatchProcesser(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
     [Logging(LogEvent = true)]
-    public BatchResponse KinesisDataStreamHandlerUsingAttribute(KinesisEvent _)
+    public BatchItemFailuresResponse KinesisDataStreamHandlerUsingAttribute(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Instance.BatchResponse;
+        return KinesisDataStreamBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
     }
 
     [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler))]
     [Logging(LogEvent = true)]
-    public BatchResponse SqsHandlerUsingAttribute(SQSEvent _)
+    public BatchItemFailuresResponse SqsHandlerUsingAttribute(SQSEvent _)
     {
-        return SqsBatchProcessor.Instance.BatchResponse;
+        return SqsBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
     }
 
     #region More example handlers...
 
     [BatchProcesser(RecordHandlerProvider = typeof(CustomSqsRecordHandlerProvider), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
-    public BatchResponse HandlerUsingAttributeAndCustomRecordHandlerProvider(SQSEvent _)
+    public BatchItemFailuresResponse HandlerUsingAttributeAndCustomRecordHandlerProvider(SQSEvent _)
     {
-        return SqsBatchProcessor.Instance.BatchResponse;
+        return SqsBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
     }
 
     [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
-    public BatchResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
+    public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
     {
-        return SqsBatchProcessor.Instance.BatchResponse;
+        return SqsBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
     }
 
     [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
     [Logging(LogEvent = true)]
-    public BatchResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
+    public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
     {
         var batchProcessor = Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
-        return batchProcessor.BatchResponse;
+        return batchProcessor.ProcessingResult.BatchItemFailuresResponse;
     }
 
     [Logging(LogEvent = true)]
-    public async Task<BatchResponse> HandlerUsingUtility(SQSEvent sqsEvent)
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtility(SQSEvent sqsEvent)
     {
-        return await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent, RecordHandler<SQSEvent.SQSMessage>.From(x =>
+        var result = await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent, RecordHandler<SQSEvent.SQSMessage>.From(x =>
         {
             Logger.LogInformation($"Inline handling of SQS message with body: '{x.Body}'.");
         }));
+        return result.BatchItemFailuresResponse;
     }
 
     [Logging(LogEvent = true)]
-    public async Task<BatchResponse> HandlerUsingUtilityFromIoc(SQSEvent sqsEvent)
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(SQSEvent sqsEvent)
     {
         var batchProcessor = Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
         var recordHandler = Services.Provider.GetRequiredService<CustomSqsRecordHandler>();
-        return await batchProcessor.ProcessAsync(sqsEvent, recordHandler);
+        var result = await batchProcessor.ProcessAsync(sqsEvent, recordHandler);
+        return result.BatchItemFailuresResponse;
     }
 
     #endregion

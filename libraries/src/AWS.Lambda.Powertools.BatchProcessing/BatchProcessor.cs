@@ -23,16 +23,24 @@ using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
+/// <summary>
+/// An abstract class that implements common batch processing logic.
+/// </summary>
+/// <typeparam name="TEvent">Type of batch event.</typeparam>
+/// <typeparam name="TRecord">Type of batch record.</typeparam>
 public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, TRecord>
 {
-    public BatchResponse BatchResponse { get; } = new();
+    /// <inheritdoc />
+    public ProcessingResult<TRecord> ProcessingResult { get; } = new();
 
-    public async Task<BatchResponse> ProcessAsync(TEvent @event, IRecordHandler<TRecord> recordHandler)
+    /// <inheritdoc />
+    public async Task<ProcessingResult<TRecord>> ProcessAsync(TEvent @event, IRecordHandler<TRecord> recordHandler)
     {
         return await ProcessAsync(@event, recordHandler, CancellationToken.None);
     }
 
-    public async Task<BatchResponse> ProcessAsync(TEvent @event, IRecordHandler<TRecord> recordHandler, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<ProcessingResult<TRecord>> ProcessAsync(TEvent @event, IRecordHandler<TRecord> recordHandler, CancellationToken cancellationToken)
     {
         return await ProcessAsync(@event, recordHandler, new ProcessingOptions
         {
@@ -40,14 +48,23 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
         });
     }
 
-    public virtual async Task<BatchResponse> ProcessAsync(TEvent @event, IRecordHandler<TRecord> recordHandler, ProcessingOptions processingOptions)
+    /// <inheritdoc />
+    public virtual async Task<ProcessingResult<TRecord>> ProcessAsync(TEvent @event, IRecordHandler<TRecord> recordHandler, ProcessingOptions processingOptions)
     {
-        // Clear item failures from any previous run
-        BatchResponse.BatchItemFailures.Clear();
+        // Clear result from any previous run
+        ProcessingResult.Clear();
 
-        // Prepare records. We assume all records fail by default to avoid loss of data.
-        var batchRecords = GetRecordsFromEvent(@event).ToDictionary(GetRecordId, x => x);
-        var failedRecords = new ConcurrentDictionary<string, Exception>(batchRecords.ToDictionary(x => x.Key, x => (Exception) new UnprocessedRecordException($"Record: '{x.Key}' has not been processed.")));
+        // Prepare batch records (order is preserved)
+        var batchRecords = GetRecordsFromEvent(@event).Select(x => new KeyValuePair<string, TRecord>(GetRecordId(x), x)).ToArray();
+
+        // We assume all records fail by default to avoid loss of data
+        var successRecords = new ConcurrentDictionary<string, RecordSuccess<TRecord>>();
+        var failureRecords = new ConcurrentDictionary<string, RecordFailure<TRecord>>(
+            batchRecords.Select(x => new KeyValuePair<string, RecordFailure<TRecord>>(x.Key, new RecordFailure<TRecord>
+            {
+                Exception = new UnprocessedRecordException($"Record: '{x.Key}' has not been processed."),
+                Record = x.Value
+            })));
 
         // Get error handling policy
         var errorHandlingPolicy = processingOptions?.ErrorHandlingPolicy is null or BatchProcessorErrorHandlingPolicy.DeriveFromEvent
@@ -55,7 +72,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
             : processingOptions.ErrorHandlingPolicy;
 
         // Invoke hook
-        await BeforeBatchProcessingAsync(@event, batchRecords);
+        await BeforeBatchProcessingAsync(@event);
 
         try
         {
@@ -75,10 +92,16 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
                     cancellationToken.ThrowIfCancellationRequested();
 
                     // Process the record
-                    await HandleRecordAsync(record, recordHandler, cancellationToken);
+                    var result = await HandleRecordAsync(record, recordHandler, cancellationToken);
 
                     // Register success
-                    failedRecords.TryRemove(recordId, out _);
+                    failureRecords.TryRemove(recordId, out _);
+                    successRecords.TryAdd(recordId, new RecordSuccess<TRecord>
+                    {
+                        Record = record,
+                        RecordId = recordId,
+                        HandlerResult = result
+                    });
 
                     try
                     {
@@ -93,7 +116,12 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
                 catch (Exception ex)
                 {
                     // Capture exception
-                    failedRecords[recordId] = new RecordProcessingException($"Failed processing record: '{recordId}'. See inner exception for details.", ex);
+                    failureRecords[recordId] = new RecordFailure<TRecord>
+                    {
+                        Exception = new RecordProcessingException($"Failed processing record: '{recordId}'. See inner exception for details.", ex),
+                        Record = record,
+                        RecordId = recordId
+                    };
 
                     try
                     {
@@ -119,61 +147,102 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
             // NOOP
         }
 
-        // Invoke hook
-        await AfterBatchProcessingAsync(@event, batchRecords, failedRecords);
-
-        // Collect results
-        BatchResponse.BatchItemFailures.AddRange(failedRecords.Select(x => new BatchResponse.BatchItemFailure
+        // Populate result
+        ProcessingResult.BatchItemFailuresResponse.BatchItemFailures.AddRange(failureRecords.Select(x => new BatchItemFailuresResponse.BatchItemFailure
         {
             ItemIdentifier = x.Key
         }));
+        ProcessingResult.BatchRecords.AddRange(batchRecords.Select(x => x.Value));
+        ProcessingResult.SuccessRecords.AddRange(successRecords.Values);
+        ProcessingResult.FailureRecords.AddRange(failureRecords.Values);
 
-        return BatchResponse;
+        // Invoke hook
+        await AfterBatchProcessingAsync(@event, ProcessingResult);
+
+        // Return result
+        return ProcessingResult;
     }
 
-    protected virtual async Task BeforeBatchProcessingAsync(
-        TEvent @event,
-        IReadOnlyDictionary<string, TRecord> batchRecords)
+    /// <summary>
+    /// Hook invoked before the batch event is processed.
+    /// </summary>
+    /// <param name="event">The event to be processed.</param>
+    /// <returns>An awaitable <see cref="Task"/>.</returns>
+    protected virtual async Task BeforeBatchProcessingAsync(TEvent @event)
     {
         await Task.CompletedTask;
     }
 
-    protected virtual async Task HandleRecordAsync(
+    /// <summary>
+    /// Hook for the actual per-record business logic. This is invoked per batch record.
+    /// </summary>
+    /// <param name="record">The record to be handled.</param>
+    /// <param name="recordHandler">The record handler.</param>
+    /// <param name="cancellationToken">The cancellation token to monitor.</param>
+    /// <returns>An awaitable <see cref="Task"/>.</returns>
+    protected virtual async Task<RecordHandlerResult> HandleRecordAsync(
         TRecord record,
         IRecordHandler<TRecord> recordHandler,
         CancellationToken cancellationToken)
     {
-        await recordHandler.HandleAsync(record, cancellationToken);
+        return await recordHandler.HandleAsync(record, cancellationToken);
     }
 
-    protected virtual async Task HandleRecordSuccesssAsync(
-        TRecord record)
+    /// <summary>
+    /// Hook invoked after a batch record has been successfully processed.
+    /// </summary>
+    /// <param name="record">The record that has been successfully processed.</param>
+    /// <returns>An awaitable <see cref="Task"/>.</returns>
+    protected virtual async Task HandleRecordSuccesssAsync(TRecord record)
     {
         await Task.CompletedTask;
     }
 
-    protected virtual async Task HandleRecordFailureAsync(
-        TRecord record,
-        Exception exception)
+    /// <summary>
+    /// Hook invoked after a batch record has failed processing.
+    /// </summary>
+    /// <param name="record">The record that has failed to be processed.</param>
+    /// <param name="exception">The exception that was raised during processing of the record.</param>
+    /// <returns>An awaitable <see cref="Task"/>.</returns>
+    protected virtual async Task HandleRecordFailureAsync(TRecord record, Exception exception)
     {
         await Task.CompletedTask;
     }
 
-    protected virtual async Task AfterBatchProcessingAsync(
-        TEvent @event,
-        IReadOnlyDictionary<string, TRecord> batchRecords,
-        IReadOnlyDictionary<string, Exception> failedRecords)
+    /// <summary>
+    /// Hook invoked after the batch event has been processed.
+    /// </summary>
+    /// <param name="event">The event that was processed.</param>
+    /// <param name="processingResult"></param>
+    /// <returns>An awaitable <see cref="Task"/>.</returns>
+    /// <exception cref="BatchProcessingException"/>
+    protected virtual async Task AfterBatchProcessingAsync(TEvent @event, ProcessingResult<TRecord> processingResult)
     {
-        if (batchRecords.Count == failedRecords.Count)
+        if (processingResult.BatchRecords.Count == processingResult.FailureRecords.Count)
         {
-            throw new BatchProcessingException($"Entire batch of '{batchRecords.Count}' record(s) failed processing. See inner exceptions for details.", failedRecords.Values);
+            throw new BatchProcessingException($"Entire batch of '{processingResult.BatchRecords.Count}' record(s) failed processing. See inner exceptions for details.", processingResult.FailureRecords.Select(x => x.Exception));
         }
         await Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Gets the error handling policy for the batch event.
+    /// </summary>
+    /// <param name="event">The batch event.</param>
+    /// <returns>The <see cref="BatchProcessorErrorHandlingPolicy"/> for the batch event.</returns>
     protected abstract BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(TEvent @event);
 
+    /// <summary>
+    /// Gets the ordered set of batch records from the batch event.
+    /// </summary>
+    /// <param name="event">The batch event.</param>
+    /// <returns>An ordered set of batch records.</returns>
     protected abstract ICollection<TRecord> GetRecordsFromEvent(TEvent @event);
 
+    /// <summary>
+    /// Gets the record id from the batch record.
+    /// </summary>
+    /// <param name="record">The batch record.</param>
+    /// <returns>The record id of the batch record.</returns>
     protected abstract string GetRecordId(TRecord record);
 }

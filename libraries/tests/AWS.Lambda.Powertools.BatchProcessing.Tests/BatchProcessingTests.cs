@@ -66,11 +66,11 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             });
 
             // Act
-            var batchResponse = await batchProcessor.ProcessAsync(@event, recordHandler.Object);
+            var result = await batchProcessor.ProcessAsync(@event, recordHandler.Object);
 
             // Assert
             recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable()), It.IsAny<CancellationToken>()), Times.Exactly(@event.Records.Count));
-            Assert.Single(batchResponse.BatchItemFailures);
+            Assert.Single(result.BatchItemFailuresResponse.BatchItemFailures);
         }
 
         [Fact]
@@ -110,7 +110,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             });
 
             // Act
-            async Task<BatchResponse> ProcessBatchAsync() => await batchProcessor.ProcessAsync(@event, recordHandler.Object);
+            async Task<ProcessingResult<SQSEvent.SQSMessage>> ProcessBatchAsync() => await batchProcessor.ProcessAsync(@event, recordHandler.Object);
 
             // Assert
             var batchProcessingException = await Assert.ThrowsAsync<BatchProcessingException>(ProcessBatchAsync);
@@ -157,12 +157,12 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             });
 
             // Act
-            var batchResponse = await batchProcessor.ProcessAsync(@event, recordHandler.Object);
+            var result = await batchProcessor.ProcessAsync(@event, recordHandler.Object);
 
             // Assert
-            Assert.Equal(2, batchResponse.BatchItemFailures.Count);
-            Assert.Contains(batchResponse.BatchItemFailures, x => x.ItemIdentifier == "2");
-            Assert.Contains(batchResponse.BatchItemFailures, x => x.ItemIdentifier == "3");
+            Assert.Equal(2, result.BatchItemFailuresResponse.BatchItemFailures.Count);
+            Assert.Contains(result.BatchItemFailuresResponse.BatchItemFailures, x => x.ItemIdentifier == "2");
+            Assert.Contains(result.BatchItemFailuresResponse.BatchItemFailures, x => x.ItemIdentifier == "3");
             recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable()), It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
     }

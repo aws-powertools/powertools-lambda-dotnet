@@ -22,9 +22,9 @@ using AWS.Lambda.Powertools.Logging;
 namespace HelloWorld.Kinesis;
 internal class CustomKinesisDataStreamRecordHandler : IRecordHandler<KinesisEvent.KinesisEventRecord>
 {
-    public async Task HandleAsync(KinesisEvent.KinesisEventRecord record, CancellationToken cancellationToken)
+    public async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record, CancellationToken cancellationToken)
     {
         Logger.LogInformation($"Handling Kinesis record with sequence number: '{record.Kinesis.SequenceNumber}'.");
-        await Task.CompletedTask;
+        return await Task.FromResult(RecordHandlerResult.None);
     }
 }

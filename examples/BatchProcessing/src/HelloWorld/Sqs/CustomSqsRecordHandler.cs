@@ -23,12 +23,16 @@ using AWS.Lambda.Powertools.Logging;
 namespace HelloWorld.Sqs;
 public class CustomSqsRecordHandler : IRecordHandler<SQSEvent.SQSMessage>
 {
-    public async Task HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+    public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
     {
+        /*
+         * Your business logic.
+         * If an exception is thrown, the item will be marked as a partial batch item failure.
+         */
         Logger.LogInformation($"Handling SQS record with message id: '{record.MessageId}'.");
         Logger.LogInformation("Doing async operation...");
         await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
         Logger.LogInformation("Async operation complete.");
-        await Task.CompletedTask;
+        return await Task.FromResult(RecordHandlerResult.None);
     }
 }

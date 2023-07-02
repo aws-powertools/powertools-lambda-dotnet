@@ -18,13 +18,22 @@ using Amazon.Lambda.DynamoDBEvents;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
+/// <summary>
+/// The default batch processor for DynamoDB Stream events.
+/// </summary>
 public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>
 {
+    /// <summary>
+    /// The singleton instance of the batch processor.
+    /// </summary>
     public static readonly DynamoDbStreamBatchProcessor Instance = new();
 
+    /// <inheritdoc />
     protected override BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(DynamoDBEvent _) => BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure;
 
+    /// <inheritdoc />
     protected override ICollection<DynamoDBEvent.DynamodbStreamRecord> GetRecordsFromEvent(DynamoDBEvent @event) => @event.Records;
 
+    /// <inheritdoc />
     protected override string GetRecordId(DynamoDBEvent.DynamodbStreamRecord record) => record.Dynamodb.SequenceNumber;
 }

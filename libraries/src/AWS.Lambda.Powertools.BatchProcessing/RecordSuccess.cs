@@ -16,14 +16,23 @@
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
 /// <summary>
-/// The <see cref="IRecordHandlerProvider{TRecord}"/> interface.
+/// Represents a batch record that was successfully processed.
 /// </summary>
 /// <typeparam name="TRecord">Type of batch record.</typeparam>
-public interface IRecordHandlerProvider<in TRecord>
+public class RecordSuccess<TRecord>
 {
     /// <summary>
-    /// Creates a record handler.
+    /// The result returned by the record handler processing the batch record.
     /// </summary>
-    /// <returns>The created record handler.</returns>
-    IRecordHandler<TRecord> Create();
+    public RecordHandlerResult HandlerResult { get; init; }
+
+    /// <summary>
+    /// The batch record.
+    /// </summary>
+    public TRecord Record { get; init; }
+
+    /// <summary>
+    /// The batch record identifier.
+    /// </summary>
+    public string RecordId { get; init; }
 }

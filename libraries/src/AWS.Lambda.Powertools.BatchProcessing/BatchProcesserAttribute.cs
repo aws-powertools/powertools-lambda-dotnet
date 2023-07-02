@@ -30,6 +30,101 @@ using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
+/// <summary>
+///     Enables batch processing with support for reporting partial batch item failures.              <br/>
+///                                                                                                   <br/>
+///     Key features                                                                                  <br/>
+///     ---------------------                                                                         <br/>
+///     <list type="bullet">
+///         <item>
+///             <description>Automatically reports partial failures when processing batch items from Amazon SQS Queues, Amazon Kinesis Data Streams and Amazon DynamoDB Streams.</description>
+///         </item>
+///         <item>
+///             <description>Batch items are processed in isolation. One item failing processing will not cause the Lambda function to immediately fail.</description>
+///         </item>
+///         <item>
+///             <description>Ease of use (simple to setup and configure).</description>
+///         </item>
+///         <item>
+///             <description>Extensible by design. Use batch processing hooks to add customized functionality (i.e. publish custom metrics).</description>
+///         </item>
+///         <item>
+///             <description>Support for enabling and configuring parallel processing of batch items.</description>
+///         </item>
+///     </list>
+///
+///     Example                                                                                       <br/>
+///     ---------------------                                                                         <br/>
+///     <code>
+///         [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler))]
+///         public BatchItemFailuresResponse SqsHandlerUsingAttribute(SQSEvent _)
+///         {
+///             return SqsBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
+///         }
+///
+///         public class CustomSqsRecordHandler : IRecordHandler&lt;SQSEvent.SQSMessage&gt;
+///         {
+///             public async Task&lt;RecordHandlerResult&gt; HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+///             {
+///                 /*
+///                  * Your business logic.
+///                  * If an exception is thrown, the item will be marked as a partial batch item failure.
+///                  */
+///                 return await Task.FromResult(RecordHandlerResult.None);
+///             }
+///         }
+///     </code>
+///                                                                                                   <br/>
+///     Environment variables                                                                         <br/>
+///     ---------------------                                                                         <br/>
+///     <list type="table">
+///         <listheader>
+///           <term>Variable name</term>
+///           <description>Description</description>
+///         </listheader>
+///         <item>
+///             <term>POWERTOOLS_BATCH_PROCESSING_ERROR_HANDLING_POLICY</term>
+///             <description>string, the error handling policy to apply (i.e. continue or stop on first batch item failure).</description>
+///         </item>
+///         <item>
+///             <term>POWERTOOLS_BATCH_PROCESSING_MAX_DEGREE_OF_PARALLELISM</term>
+///             <description>int, defaults to 1 (no parallelism). Specify -1 to automatically use the value of <see cref="System.Environment.ProcessorCount">ProcessorCount</see>.</description>
+///         </item>
+///     </list>
+///                                                                                                   <br/>
+///     Parameters                                                                                    <br/>
+///     -----------                                                                                   <br/>
+///     <list type="table">
+///         <listheader>
+///           <term>Parameter name</term>
+///           <description>Description</description>
+///         </listheader>
+///         <item>
+///             <term>BatchProcessor</term>
+///             <description>Type, (optional) set the BatchProcessor to use.</description>
+///         </item>
+///         <item>
+///             <term>BatchProcessorProvider</term>
+///             <description>Type, (optional) set the BatchProcessor provider / factory to use (useful with dependency injection).</description>
+///         </item>
+///         <item>
+///             <term>RecordHandler</term>
+///             <description>Type, (required, conditional) set the record handler to use for batch item processing.</description>
+///         </item>
+///         <item>
+///             <term>RecordHandlerProvider</term>
+///             <description>Type, (required, conditional) set the record handler provider / factory to use (useful with dependency injection).</description>
+///         </item>
+///         <item>
+///             <term>ErrorHandlingPolicy</term>
+///             <description>string, the error handling policy to apply (i.e. continue or stop on first batch item failure).</description>
+///         </item>
+///         <item>
+///             <term>MaxDegreeOfParallelism</term>
+///             <description>int, defaults to 1 (no parallelism). Specify -1 to automatically use the value of <see cref="System.Environment.ProcessorCount">ProcessorCount</see>.</description>
+///         </item>
+///     </list>
+/// </summary>
 [AttributeUsage(AttributeTargets.Method)]
 [Injection(typeof(UniversalWrapperAspect), Inherited = true)]
 public class BatchProcesserAttribute : UniversalWrapperAttribute
@@ -68,35 +163,35 @@ public class BatchProcesserAttribute : UniversalWrapperAttribute
     public int MaxDegreeOfParallelism =
         PowertoolsConfigurations.Instance.BatchProcessingMaxDegreeOfParallelism;
 
-    private static readonly Dictionary<Type, EventType> EventTypes = new()
+    private static readonly Dictionary<Type, BatchEventType> EventTypes = new()
     {
-        {typeof(DynamoDBEvent), EventType.DynamoDbStream},
-        {typeof(KinesisEvent),  EventType.KinesisDataStream},
-        {typeof(SQSEvent),      EventType.Sqs}
+        {typeof(DynamoDBEvent), BatchEventType.DynamoDbStream},
+        {typeof(KinesisEvent),  BatchEventType.KinesisDataStream},
+        {typeof(SQSEvent),      BatchEventType.Sqs}
     };
-    private static readonly Dictionary<EventType, Type> BatchProcessorTypes = new()
+    private static readonly Dictionary<BatchEventType, Type> BatchProcessorTypes = new()
     {
-        {EventType.DynamoDbStream,    typeof(IBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
-        {EventType.KinesisDataStream, typeof(IBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>)},
-        {EventType.Sqs,               typeof(IBatchProcessor<SQSEvent, SQSEvent.SQSMessage>)}
+        {BatchEventType.DynamoDbStream,    typeof(IBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
+        {BatchEventType.KinesisDataStream, typeof(IBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>)},
+        {BatchEventType.Sqs,               typeof(IBatchProcessor<SQSEvent, SQSEvent.SQSMessage>)}
     };
-    private static readonly Dictionary<EventType, Type> BatchProcessorProviderTypes = new()
+    private static readonly Dictionary<BatchEventType, Type> BatchProcessorProviderTypes = new()
     {
-        {EventType.DynamoDbStream,    typeof(IBatchProcessorProvider<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
-        {EventType.KinesisDataStream, typeof(IBatchProcessorProvider<KinesisEvent, KinesisEvent.KinesisEventRecord>)},
-        {EventType.Sqs,               typeof(IBatchProcessorProvider<SQSEvent, SQSEvent.SQSMessage>)}
+        {BatchEventType.DynamoDbStream,    typeof(IBatchProcessorProvider<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
+        {BatchEventType.KinesisDataStream, typeof(IBatchProcessorProvider<KinesisEvent, KinesisEvent.KinesisEventRecord>)},
+        {BatchEventType.Sqs,               typeof(IBatchProcessorProvider<SQSEvent, SQSEvent.SQSMessage>)}
     };
-    private static readonly Dictionary<EventType, Type> RecordHandlerTypes = new()
+    private static readonly Dictionary<BatchEventType, Type> RecordHandlerTypes = new()
     {
-        {EventType.DynamoDbStream,    typeof(IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>)},
-        {EventType.KinesisDataStream, typeof(IRecordHandler<KinesisEvent.KinesisEventRecord>)},
-        {EventType.Sqs,               typeof(IRecordHandler<SQSEvent.SQSMessage>)}
+        {BatchEventType.DynamoDbStream,    typeof(IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>)},
+        {BatchEventType.KinesisDataStream, typeof(IRecordHandler<KinesisEvent.KinesisEventRecord>)},
+        {BatchEventType.Sqs,               typeof(IRecordHandler<SQSEvent.SQSMessage>)}
     };
-    private static readonly Dictionary<EventType, Type> RecordHandlerProviderTypes = new()
+    private static readonly Dictionary<BatchEventType, Type> RecordHandlerProviderTypes = new()
     {
-        {EventType.DynamoDbStream,    typeof(IRecordHandlerProvider<DynamoDBEvent.DynamodbStreamRecord>)},
-        {EventType.KinesisDataStream, typeof(IRecordHandlerProvider<KinesisEvent.KinesisEventRecord>)},
-        {EventType.Sqs,               typeof(IRecordHandlerProvider<SQSEvent.SQSMessage>)}
+        {BatchEventType.DynamoDbStream,    typeof(IRecordHandlerProvider<DynamoDBEvent.DynamodbStreamRecord>)},
+        {BatchEventType.KinesisDataStream, typeof(IRecordHandlerProvider<KinesisEvent.KinesisEventRecord>)},
+        {BatchEventType.Sqs,               typeof(IRecordHandlerProvider<SQSEvent.SQSMessage>)}
     };
 
     /// <inheritdoc />
@@ -153,9 +248,9 @@ public class BatchProcesserAttribute : UniversalWrapperAttribute
         // Create aspect handler
         return eventType switch
         {
-            EventType.DynamoDbStream => CreateBatchProcessingAspectHandler(() => DynamoDbStreamBatchProcessor.Instance),
-            EventType.KinesisDataStream => CreateBatchProcessingAspectHandler(() => KinesisDataStreamBatchProcessor.Instance),
-            EventType.Sqs => CreateBatchProcessingAspectHandler(() => SqsBatchProcessor.Instance),
+            BatchEventType.DynamoDbStream => CreateBatchProcessingAspectHandler(() => DynamoDbStreamBatchProcessor.Instance),
+            BatchEventType.KinesisDataStream => CreateBatchProcessingAspectHandler(() => KinesisDataStreamBatchProcessor.Instance),
+            BatchEventType.Sqs => CreateBatchProcessingAspectHandler(() => SqsBatchProcessor.Instance),
             _ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, "Unsupported event type.")
         };
     }

@@ -13,17 +13,25 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.Powertools.BatchProcessing;
+namespace AWS.Lambda.Powertools.BatchProcessing.Internal;
 
 /// <summary>
-/// The <see cref="IRecordHandlerProvider{TRecord}"/> interface.
+/// Enum representing the different batch event types.
 /// </summary>
-/// <typeparam name="TRecord">Type of batch record.</typeparam>
-public interface IRecordHandlerProvider<in TRecord>
+internal enum BatchEventType
 {
     /// <summary>
-    /// Creates a record handler.
+    /// SQS event.
     /// </summary>
-    /// <returns>The created record handler.</returns>
-    IRecordHandler<TRecord> Create();
+    Sqs,
+
+    /// <summary>
+    /// DynamoDB Stream event.
+    /// </summary>
+    DynamoDbStream,
+
+    /// <summary>
+    /// Kinesis Data Stream event.
+    /// </summary>
+    KinesisDataStream
 }

@@ -20,10 +20,17 @@ using Amazon.Lambda.SQSEvents;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Sqs;
 
+/// <summary>
+/// The default batch processor for SQS events.
+/// </summary>
 public class SqsBatchProcessor : BatchProcessor<SQSEvent, SQSEvent.SQSMessage>
 {
+    /// <summary>
+    /// The singleton instance of the batch processor.
+    /// </summary>
     public static readonly SqsBatchProcessor Instance = new();
 
+    /// <inheritdoc />
     protected override BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(SQSEvent @event)
     {
         var isSqsFifoSource = @event.Records.FirstOrDefault()?.EventSourceArn?.EndsWith(".fifo", StringComparison.OrdinalIgnoreCase);
@@ -32,7 +39,9 @@ public class SqsBatchProcessor : BatchProcessor<SQSEvent, SQSEvent.SQSMessage>
             : BatchProcessorErrorHandlingPolicy.ContinueOnBatchItemFailure;
     }
 
+    /// <inheritdoc />
     protected override ICollection<SQSEvent.SQSMessage> GetRecordsFromEvent(SQSEvent @event) => @event.Records;
 
+    /// <inheritdoc />
     protected override string GetRecordId(SQSEvent.SQSMessage record) => record.MessageId;
 }

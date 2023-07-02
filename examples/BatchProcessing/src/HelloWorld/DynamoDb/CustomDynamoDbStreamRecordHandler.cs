@@ -22,9 +22,9 @@ using AWS.Lambda.Powertools.Logging;
 namespace HelloWorld.DynamoDb;
 internal class CustomDynamoDbStreamRecordHandler : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
 {
-    public async Task HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
+    public async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
     {
         Logger.LogInformation($"Handling DynamoDB record with sequence number: '{record.Dynamodb.SequenceNumber}'.");
-        await Task.CompletedTask;
+        return await Task.FromResult(RecordHandlerResult.None);
     }
 }

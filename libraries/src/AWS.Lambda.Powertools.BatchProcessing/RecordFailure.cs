@@ -13,10 +13,28 @@
  * permissions and limitations under the License.
  */
 
+using System;
+
 namespace AWS.Lambda.Powertools.BatchProcessing;
-public enum EventType
+
+/// <summary>
+/// Represents a batch record that failed processing.
+/// </summary>
+/// <typeparam name="TRecord">Type of batch record.</typeparam>
+public class RecordFailure<TRecord>
 {
-    Sqs,
-    DynamoDbStream,
-    KinesisDataStream
+    /// <summary>
+    /// The exception causing the failure.
+    /// </summary>
+    public Exception Exception { get; init; }
+
+    /// <summary>
+    /// The batch record.
+    /// </summary>
+    public TRecord Record { get; init; }
+
+    /// <summary>
+    /// The batch record identifier.
+    /// </summary>
+    public string RecordId { get; init; }
 }

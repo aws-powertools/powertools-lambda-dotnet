@@ -13,27 +13,33 @@
  * permissions and limitations under the License.
  */
 
-using System.Threading;
-
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
 /// <summary>
-/// Batch processing options to control settings such as cancellation, error handling policy and parallelism.
+/// The result of the record handler processing the batch record.
 /// </summary>
-public class ProcessingOptions
+public class RecordHandlerResult
 {
     /// <summary>
-    /// The cancellation token to monitor.
+    /// Returns an empty <see cref="RecordHandlerResult"/> value.
     /// </summary>
-    public CancellationToken? CancellationToken { get; init; }
+    public static readonly RecordHandlerResult None = new();
 
     /// <summary>
-    /// The maximum degree of parallelism to apply during batch processing.
+    /// Convenience method for the creation of a <see cref="RecordHandlerResult"/>.
     /// </summary>
-    public int? MaxDegreeOfParallelism { get; init; }
+    /// <param name="data">The result of the record handler.</param>
+    /// <returns>A <see cref="RecordHandlerResult"/> with the provided data.</returns>
+    public static RecordHandlerResult FromData(object data)
+    {
+        return new RecordHandlerResult
+        {
+            Data = data
+        };
+    }
 
     /// <summary>
-    /// The error handling policy to apply during batch processing.
+    /// The data returned from processing the batch record.
     /// </summary>
-    public BatchProcessorErrorHandlingPolicy? ErrorHandlingPolicy { get; init; }
+    public object Data { get; init; }
 }
