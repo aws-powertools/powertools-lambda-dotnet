@@ -31,6 +31,11 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
     [Collection("Sequential")]
     public class EmfValidationTests
     {
+        public EmfValidationTests()
+        {
+            MetricsContext.SetJsonSerializationContext(new SystemTextJsonSerializer());
+        }
+        
         [Trait("Category", value: "SchemaValidation")]
         [Fact]
         public void WhenCaptureColdStart_CreateSeparateBlob()

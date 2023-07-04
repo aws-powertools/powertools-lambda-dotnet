@@ -34,7 +34,7 @@ public class MetricsContext : IDisposable
     /// </summary>
     private RootNode _rootNode;
 
-    private static IPowerToolsSerializer _serializationContext = new SystemTextJsonSerializer();
+    private static IPowerToolsSerializer _serializationContext = new SourceGeneratedSerializer<MetricsSerializationContext>();
 
     /// <summary>
     ///     Creates empty MetricsContext object
