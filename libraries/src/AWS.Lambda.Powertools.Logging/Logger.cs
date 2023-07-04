@@ -21,6 +21,8 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
 
+using AWS.Lambda.Powertools.Common;
+
 /// <summary>
 ///     Class Logger.
 /// </summary>
@@ -30,6 +32,11 @@ public class Logger
     ///     The logger instance
     /// </summary>
     private static ILogger _loggerInstance;
+
+    /// <summary>
+    ///     The logger instance
+    /// </summary>
+    internal static IPowerToolsSerializer PowerToolsSerializer = new SystemTextJsonSerializer();
 
     /// <summary>
     ///     Gets the logger instance.
@@ -63,6 +70,16 @@ public class Logger
         LoggerProvider ??= new LoggerProvider(null);
 
         return LoggerProvider.CreateLogger(categoryName);
+    }
+
+    /// <summary>
+    /// Set a custom serializer to use.
+    /// </summary>
+    /// <param name="powerToolsSerializer">An implementation of <see cref="IPowerToolsSerializer"/>.</param>
+    public static void SetSerializer(IPowerToolsSerializer powerToolsSerializer)
+    {
+        PowerToolsSerializer = powerToolsSerializer;
+
     }
 
     /// <summary>

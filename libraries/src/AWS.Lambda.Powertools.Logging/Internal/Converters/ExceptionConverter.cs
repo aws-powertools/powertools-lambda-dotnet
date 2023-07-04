@@ -20,6 +20,8 @@ using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.Logging.Internal.Converters;
 
+using Microsoft.Extensions.Logging;
+
 /// <summary>
 ///     Converts an exception to JSON.
 /// </summary>
@@ -84,9 +86,16 @@ internal class ExceptionConverter : JsonConverter<Exception>
                 case Type propType:
                     writer.WriteString(ApplyPropertyNamingPolicy(prop.Name, options), propType.FullName);
                     break;
+                case String stringType:
+                    writer.WritePropertyName(ApplyPropertyNamingPolicy(prop.Name, options));
+                    
+                    Logger.PowerToolsSerializer.InternalSerialize<string>(writer, stringType, options);
+                    break;
                 default:
                     writer.WritePropertyName(ApplyPropertyNamingPolicy(prop.Name, options));
-                    JsonSerializer.Serialize(writer, prop.Value, options);
+
+                    Logger.PowerToolsSerializer.InternalSerialize(writer, prop.Value, options);
+
                     break;
             }
         }

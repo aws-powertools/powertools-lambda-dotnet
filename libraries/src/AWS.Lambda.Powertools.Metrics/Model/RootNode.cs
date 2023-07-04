@@ -19,6 +19,11 @@ using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
+using System.IO;
+using System.Text;
+
+using AWS.Lambda.Powertools.Common;
+
 /// <summary>
 ///     Class RootNode.
 /// </summary>
@@ -61,10 +66,10 @@ public class RootNode
     /// </summary>
     /// <returns>JSON EMF payload in string format</returns>
     /// <exception cref="SchemaValidationException">namespace</exception>
-    public string Serialize()
+    public string Serialize(IPowerToolsSerializer serializer = null)
     {
         if (string.IsNullOrWhiteSpace(AWS.GetNamespace())) throw new SchemaValidationException("namespace");
 
-        return JsonSerializer.Serialize(this);
+        return serializer.InternalSerializeAsString(this);
     }
 }

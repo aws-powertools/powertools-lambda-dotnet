@@ -24,13 +24,15 @@ using AWS.Lambda.Powertools.Metrics;
 using Moq;
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
-
 namespace AWS.Lambda.Powertools.Metrics.Tests
 {
     [Collection("Sequential")]
-    public class EmfValidationTests
+    public class EMFValidationWithSourceGenerationTests
     {
+        public EMFValidationWithSourceGenerationTests()
+        {
+            MetricsContext.SetJsonSerializationContext(new SourceGeneratedSerializer<TestJsonSerializerContext>());
+        }
         [Trait("Category", value: "SchemaValidation")]
         [Fact]
         public void WhenCaptureColdStart_CreateSeparateBlob()
@@ -42,7 +44,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             Console.SetOut(consoleOut);
 
             var configurations = new Mock<IPowertoolsConfigurations>();
-            
+
             var metrics = new Metrics(
                 configurations.Object,
                 nameSpace: "dotnet-powertools-test",
@@ -748,4 +750,24 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             handler.ResetForTest();
         }
     }
+}
+
+/// <summary>
+/// This class is used to register the input event and return type for the FunctionHandler method with the System.Text.Json source generator.
+/// There must be a JsonSerializable attribute for each type used as the input and return type or a runtime error will occur 
+/// from the JSON serializer unable to find the serialization information for unknown types.
+/// </summary>
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(double))]
+[JsonSerializable(typeof(List<double>))]
+[JsonSerializable(typeof(MetricUnit))]
+[JsonSerializable(typeof(MetricDefinition))]
+[JsonSerializable(typeof(DimensionSet))]
+[JsonSerializable(typeof(Metadata))]
+[JsonSerializable(typeof(MetricDirective))]
+[JsonSerializable(typeof(MetricResolution))]
+[JsonSerializable(typeof(MetricsContext))]
+[JsonSerializable(typeof(RootNode))]
+public partial class TestJsonSerializerContext : JsonSerializerContext
+{
 }

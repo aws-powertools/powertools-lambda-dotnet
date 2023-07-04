@@ -24,6 +24,8 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
+using System.Text;
+
 /// <summary>
 ///     Class LoggingAspectHandler.
 ///     Implements the <see cref="IMethodAspectHandler" />
@@ -316,7 +318,8 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         try
         {
             var correlationId = string.Empty;
-            var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, JsonSerializerOptions));
+
+            var jsonDoc = JsonDocument.Parse(Logger.PowerToolsSerializer.InternalSerializeAsString(eventArg, JsonSerializerOptions));
             var element = jsonDoc.RootElement;
 
             for (var i = 0; i < correlationIdPaths.Length; i++)

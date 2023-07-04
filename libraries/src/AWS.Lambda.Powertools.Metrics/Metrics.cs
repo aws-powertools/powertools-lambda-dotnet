@@ -20,6 +20,8 @@ using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
+using System.Text.Json.Serialization;
+
 /// <summary>
 ///     Class Metrics.
 ///     Implements the <see cref="IMetrics" />
@@ -62,6 +64,7 @@ public class Metrics : IMetrics
     /// <param name="service">Metrics Service Name</param>
     /// <param name="raiseOnEmptyMetrics">Instructs metrics validation to throw exception if no metrics are provided</param>
     /// <param name="captureColdStartEnabled">Instructs metrics capturing the ColdStart is enabled</param>
+    /// <param name="serializationContextName">Custom serialization context name.</param>
     internal Metrics(IPowertoolsConfigurations powertoolsConfigurations, string nameSpace = null, string service = null,
         bool raiseOnEmptyMetrics = false, bool captureColdStartEnabled = false)
     {

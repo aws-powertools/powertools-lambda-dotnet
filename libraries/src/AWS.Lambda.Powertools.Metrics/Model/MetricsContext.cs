@@ -18,6 +18,10 @@ using System.Collections.Generic;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
+using System.Text.Json.Serialization;
+
+using AWS.Lambda.Powertools.Common;
+
 /// <summary>
 ///     Class MetricsContext.
 ///     Implements the <see cref="System.IDisposable" />
@@ -29,6 +33,8 @@ public class MetricsContext : IDisposable
     ///     The root node
     /// </summary>
     private RootNode _rootNode;
+
+    private static IPowerToolsSerializer _serializationContext = new SystemTextJsonSerializer();
 
     /// <summary>
     ///     Creates empty MetricsContext object
@@ -160,7 +166,7 @@ public class MetricsContext : IDisposable
     /// <returns>String object representing all metrics in memory</returns>
     public string Serialize()
     {
-        return _rootNode.Serialize();
+        return _rootNode.Serialize(_serializationContext);
     }
     
     /// <summary>
@@ -169,5 +175,10 @@ public class MetricsContext : IDisposable
     public void ClearDefaultDimensions()
     {
         _rootNode.AWS.ClearDefaultDimensions();
+    }
+
+    public static void SetJsonSerializationContext(IPowerToolsSerializer serializer)
+    {
+        _serializationContext = serializer;
     }
 }

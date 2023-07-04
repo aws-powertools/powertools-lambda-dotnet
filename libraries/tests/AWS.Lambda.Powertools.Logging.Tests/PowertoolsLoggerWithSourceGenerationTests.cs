@@ -19,7 +19,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
+
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -28,11 +31,11 @@ using Xunit;
 namespace AWS.Lambda.Powertools.Logging.Tests
 {
     [Collection("Sequential")]
-    public class PowertoolsLoggerTest
+    public class PowertoolsLoggerWithSourceGenerationTests
     {
-        public PowertoolsLoggerTest()
+        public PowertoolsLoggerWithSourceGenerationTests()
         {
-            Logger.SetSerializer(new SystemTextJsonSerializer());
+            Logger.SetSerializer(new SourceGeneratedSerializer<TestSerializationContext>());
         }
         
         private static void Log_WhenMinimumLevelIsBelowLogLevel_Logs(LogLevel logLevel, LogLevel minimumLevel)
@@ -389,10 +392,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                      MinimumLevel = null
                  });
             
-            var message = new {
-                PropOne = "Value 1",
-                PropTwo = "Value 2"
-            };
+            var message = new CustomMessage(
+                "Value 1",
+                "Value 2");
 
             logger.LogInformation(message);
 
@@ -430,11 +432,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                      LoggerOutputCase = LoggerOutputCase.CamelCase
                  });
 
-            var message = new
-            {
-                PropOne = "Value 1",
-                PropTwo = "Value 2"
-            };
+            var message = new CustomMessage(
+                "Value 1",
+                "Value 2");
 
             logger.LogInformation(message);
 
@@ -472,11 +472,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                      MinimumLevel = null
                  });
 
-            var message = new
-            {
-                PropOne = "Value 1",
-                PropTwo = "Value 2"
-            };
+            var message = new CustomMessage(
+                "Value 1",
+                "Value 2");
 
             logger.LogInformation(message);
 
@@ -514,11 +512,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                      LoggerOutputCase = LoggerOutputCase.PascalCase
                  });
 
-            var message = new
-            {
-                PropOne = "Value 1",
-                PropTwo = "Value 2"
-            };
+            var message = new CustomMessage(
+                "Value 1",
+                "Value 2");
 
             logger.LogInformation(message);
 
@@ -556,11 +552,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                      MinimumLevel = null
                  });
 
-            var message = new
-            {
-                PropOne = "Value 1",
-                PropTwo = "Value 2"
-            };
+            var message = new CustomMessage(
+                "Value 1",
+                "Value 2");
 
             logger.LogInformation(message);
 
@@ -598,11 +592,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                      LoggerOutputCase = LoggerOutputCase.SnakeCase
                  });
 
-            var message = new
-            {
-                PropOne = "Value 1",
-                PropTwo = "Value 2"
-            };
+            var message = new CustomMessage(
+                "Value 1",
+                "Value 2");
 
             logger.LogInformation(message);
 
@@ -639,11 +631,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                      MinimumLevel = null
                  });
 
-            var message = new
-            {
-                PropOne = "Value 1",
-                PropTwo = "Value 2"
-            };
+            var message = new CustomMessage(
+                "Value 1",
+                "Value 2");
 
             logger.LogInformation(message);
 
@@ -677,11 +667,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     MinimumLevel = logLevel               
                 });
             
-            var scopeKeys = new
-            {
-                PropOne = "Value 1",
-                PropTwo = "Value 2"
-            };
+            var scopeKeys = new CustomMessage(
+                "Value 1",
+                "Value 2");
             
             using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
             {
@@ -969,11 +957,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     MinimumLevel = LogLevel.Trace,
                 });
 
-            var scopeKeys = new
-            {
-                PropOne = "Value 1",
-                PropTwo = "Value 2"
-            };
+            var scopeKeys = new CustomMessage(
+                "Value 1",
+                "Value 2");
 
             if(logMethod)
                 logger.Log(logLevel, scopeKeys, message);
@@ -1090,7 +1076,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             }
             catch (Exception ex)
             {
-                logger.LogInformation(new { Name = "Test Object", Error = ex });
+                logger.LogInformation( new CustomError("Test Object", ex));
             }
             
             // Assert
@@ -1098,7 +1084,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 v.LogLine(
                     It.Is<string>
                     (s =>
-                        s.Contains("\"error\":{\"type\":\"" + error.GetType().FullName + "\",\"message\":\"" + error.Message + "\"")
+                        s.Contains("\"message\":\"" + error.Message + "\"")
                     )
                 ), Times.Once);
         }
@@ -1264,4 +1250,20 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 ), Times.Once);
         }
     }
+}
+
+public record CustomMessage(string PropOne, string PropTwo);
+
+public record CustomError(string message, Exception ex);
+
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(Dictionary<string, object>))]
+[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(double))]
+[JsonSerializable(typeof(Exception))]
+[JsonSerializable(typeof(InvalidOperationException))]
+[JsonSerializable(typeof(CustomMessage))]
+[JsonSerializable(typeof(CustomError))]
+public partial class TestSerializationContext : JsonSerializerContext
+{
 }

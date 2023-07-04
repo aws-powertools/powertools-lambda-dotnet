@@ -18,6 +18,8 @@ using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
+using System.Text.Json.Serialization;
+
 /// <summary>
 ///      Creates custom metrics asynchronously by logging metrics to
 ///      standard output following Amazon CloudWatch Embedded Metric Format (EMF).                    <br/>

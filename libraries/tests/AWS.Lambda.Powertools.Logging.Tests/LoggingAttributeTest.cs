@@ -31,6 +31,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests
     [Collection("Sequential")]
     public class LoggingAttributeTestWithoutLambdaContext
     {
+        public LoggingAttributeTestWithoutLambdaContext()
+        {
+            Logger.SetSerializer(new SystemTextJsonSerializer());
+        }
+        
         [Fact]
         public void OnEntry_WhenLambdaContextDoesNotExist_IgnoresLambdaContext()
         {

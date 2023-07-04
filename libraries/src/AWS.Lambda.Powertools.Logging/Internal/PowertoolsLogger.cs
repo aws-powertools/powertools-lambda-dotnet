@@ -24,6 +24,9 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
+using System.IO;
+using System.Text;
+
 /// <summary>
 ///     Class PowertoolsLogger. This class cannot be inherited.
 ///     Implements the <see cref="Microsoft.Extensions.Logging.ILogger" />
@@ -68,11 +71,13 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
     /// <param name="getCurrentConfig">The get current configuration.</param>
+    /// <param name="serializer">A serializer to use when using source generated serialization.</param>
     public PowertoolsLogger(
         string name,
         IPowertoolsConfigurations powertoolsConfigurations,
         ISystemWrapper systemWrapper,
-        Func<LoggerConfiguration> getCurrentConfig)
+        Func<LoggerConfiguration> getCurrentConfig,
+        IPowerToolsSerializer serializer = null)
     {
         (_name, _powertoolsConfigurations, _systemWrapper, _getCurrentConfig) = (name,
             powertoolsConfigurations, systemWrapper, getCurrentConfig);
@@ -245,7 +250,9 @@ internal sealed class PowertoolsLogger : ILogger
         if (exception != null)
             message.TryAdd(LoggingConstants.KeyException, exception);
 
-        _systemWrapper.LogLine(JsonSerializer.Serialize(message, JsonSerializerOptions));
+        _systemWrapper.LogLine(Logger.PowerToolsSerializer.InternalSerializeAsString(
+            message,
+            JsonSerializerOptions));
     }
 
     /// <summary>

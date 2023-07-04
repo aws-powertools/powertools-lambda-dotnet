@@ -18,6 +18,8 @@ using Microsoft.Extensions.Options;
 
 namespace AWS.Lambda.Powertools.Logging;
 
+using AWS.Lambda.Powertools.Common;
+
 /// <summary>
 ///     Class LoggerConfiguration.
 ///     Implements the
