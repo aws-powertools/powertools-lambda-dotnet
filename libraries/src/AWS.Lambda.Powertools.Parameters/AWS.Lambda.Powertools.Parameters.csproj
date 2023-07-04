@@ -26,9 +26,12 @@
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
-      
+
     <ItemGroup>
-      <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
+        <Compile Include="..\AWS.Lambda.Powertools.Common\**\*.cs">
+            <Link>Common\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        </Compile>
+        <Compile Remove="..\AWS.Lambda.Powertools.Common\obj\**" />
     </ItemGroup>
     
     <ItemGroup>
@@ -40,6 +43,7 @@
         <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.102.38" />
         <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.104.29" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+        <PackageReference Include="AspectInjector" Version="2.8.1" />
     </ItemGroup>
 
     <ItemGroup>
