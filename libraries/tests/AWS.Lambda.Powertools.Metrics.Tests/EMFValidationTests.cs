@@ -112,7 +112,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
         [Trait("Category", "EMFLimits")]
         [Fact]
-        public void When100MetricsAreAdded_FlushAutomatically()
+        public void WhenMaxMetricsAreAdded_FlushAutomatically()
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
@@ -137,9 +137,65 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             // Act
             handler.OnEntry(eventArgs);
 
-            for (var i = 0; i <= 100; i++)
+            for (var i = 0; i <= PowertoolsConfigurations.MaxMetrics; i++)
             {
                 Metrics.AddMetric($"Metric Name {i + 1}", i, MetricUnit.Count);
+
+                if (i == PowertoolsConfigurations.MaxMetrics)
+                {
+                    // flush when it reaches MaxMetrics
+                    Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 1\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 2\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 3\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 4\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 5\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 6\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 7\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 8\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 9\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 10\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 11\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 12\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 13\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 14\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 15\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 16\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 17\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 18\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 19\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 20\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 21\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 22\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 23\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 24\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 25\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 26\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 27\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 28\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 29\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 30\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 31\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 32\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 33\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 34\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 35\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 36\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 37\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 38\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 39\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 40\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 41\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 42\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 43\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 44\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 45\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 46\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 47\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 48\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 49\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 50\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 51\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 52\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 53\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 54\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 55\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 56\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 57\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 58\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 59\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 60\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 61\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 62\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 63\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 64\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 65\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 66\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 67\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 68\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 69\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 70\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 71\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 72\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 73\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 74\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 75\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 76\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 77\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 78\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 79\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 80\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 81\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 82\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 83\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 84\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 85\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 86\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 87\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 88\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 89\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 90\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 91\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 92\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 93\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 94\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 95\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 96\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 97\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 98\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 99\",\"Unit\":\"Count\"},{\"Name\":\"Metric Name 100\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]]", consoleOut.ToString());
+                }
+            }
+            handler.OnExit(eventArgs);
+
+            var metricsOutput = consoleOut.ToString();
+
+            // Assert
+            // flush the (MaxMetrics + 1) item only
+            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]", metricsOutput);
+
+            // Reset
+            handler.ResetForTest();
+        }
+
+        [Trait("Category", "EMFLimits")]
+        [Fact]
+        public void WhenMaxDataPointsAreAddedToTheSameMetric_FlushAutomatically()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+
+            var metrics = new Metrics(
+                configurations.Object,
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
+            );
+
+            var handler = new MetricsAspectHandler(
+                metrics,
+                false
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act
+            handler.OnEntry(eventArgs);
+
+            for (var i = 0; i <= PowertoolsConfigurations.MaxMetrics; i++)
+            {
+                Metrics.AddMetric($"Metric Name", i, MetricUnit.Count);
+                if(i == PowertoolsConfigurations.MaxMetrics)
+                {
+                    // flush when it reaches MaxMetrics
+                    Assert.Contains(
+                        "\"Service\":\"testService\",\"Metric Name\":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99]}",
+                        consoleOut.ToString());
+                }
             }
 
             handler.OnExit(eventArgs);
@@ -147,13 +203,12 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var metricsOutput = consoleOut.ToString();
 
             // Assert
-            Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name 101\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]", metricsOutput);
+            // flush the (MaxMetrics + 1) item only
+            Assert.Contains("[[\"Service\"]]}]},\"Service\":\"testService\",\"Metric Name\":100}", metricsOutput);
 
             // Reset
             handler.ResetForTest();
         }
-
-
 
         [Trait("Category", "EMFLimits")]
         [Fact]

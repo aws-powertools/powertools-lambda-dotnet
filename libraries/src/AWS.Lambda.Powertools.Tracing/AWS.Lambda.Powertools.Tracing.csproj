@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -34,8 +34,8 @@
 
     <ItemGroup>
         <PackageReference Include="AWSSDK.XRay" Version="3.7.102.25" />
-        <PackageReference Include="AWSXRayRecorder.Core" Version="2.13.0" />
         <PackageReference Include="AspectInjector" Version="2.8.1" />
+        <PackageReference Include="AWSXRayRecorder.Core" Version="2.14.0" />
     </ItemGroup>
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\" />
