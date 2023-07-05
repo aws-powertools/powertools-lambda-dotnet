@@ -1,0 +1,60 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Example project for Powertools for AWS Lambda (.NET) Logging utility
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 10
+    Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: powertools-dotnet-logging-sample
+        POWERTOOLS_LOG_LEVEL: Debug
+        POWERTOOLS_LOGGER_CASE: PascalCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      MemorySize: 1024
+      PackageType: Image
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PowertoolsLoggingTable
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /hello
+            Method: get
+      Policies:
+      - DynamoDBCrudPolicy:        # Policy template with placeholder value
+          TableName: !Ref PowertoolsLoggingTable
+    Metadata:
+      DockerTag: dotnet7aot-v1
+      DockerContext: ./src/HelloWorld
+      Dockerfile: Dockerfile
+      DockerBuildArgs:
+        SAM_BUILD_MODE: run # debug or run
+
+  PowertoolsLoggingTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: PowertoolsLogging
+      PrimaryKey:
+        Name: LookupId
+        Type: String
+
+Outputs:
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
+  HelloWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HelloWorldFunctionRole.Arn

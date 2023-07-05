@@ -14,8 +14,6 @@ deploy/**
 
 *.dll
 
-**/Assemblies/*
-
 examples/SimpleLambda/.aws-sam
 examples/SimpleLambda/samconfig.toml
 
