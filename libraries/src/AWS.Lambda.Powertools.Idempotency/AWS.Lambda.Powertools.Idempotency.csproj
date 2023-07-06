@@ -4,7 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <LangVersion>default</LangVersion>
         <PackageId>AWS.Lambda.Powertools.Idempotency</PackageId>
-        <Version>0.0.4</Version>
+        <Version>0.0.1</Version>
         <Authors>Amazon Web Services</Authors>
         <Company>Amazon.com, Inc</Company>
         <Title>AWS Lambda Powertools for .NET</Title>
