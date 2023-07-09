@@ -122,6 +122,38 @@ You can quickly start by configuring `Idempotency` and using it with the `Idempo
     }
     ```
 
+#### Idempotent attribute on another method
+
+You can use the `Idempotent` attribute for any .NET function, not only the Lambda handlers.
+
+When using `Idempotent` attribute on another method, you must tell which parameter in the method signature has the data we should use:
+
+ - If the method only has one parameter, it will be used by default. 
+ - If there are 2 or more parameters, you must set the `IdempotencyKey` attribute on the parameter to use.
+
+!!! info "The parameter must be serializable in JSON. We use `System.Text.Json` internally to (de)serialize objects"
+
+    ```csharp
+    public class Function
+    {
+        public Function()
+        {
+            Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
+        }
+        
+        public Task<string> FunctionHandler(string input, ILambdaContext context)
+        {
+            dummpy("hello", "world")
+            return Task.FromResult(input.ToUpper());
+        }
+
+        [Idempotent]
+        private string dummy(string argOne, [IdempotencyKey] string argTwo) {
+            return "something";
+        }
+    }
+    ```
+
 ### Choosing a payload subset for idempotency
 
 !!! tip "Tip: Dealing with always changing payloads"
