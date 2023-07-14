@@ -1,47 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>default</LangVersion>
+        <!--  Remaining properties are defined in Directory.Build.props  -->
         <PackageId>AWS.Lambda.Powertools.Logging</PackageId>
-        <Version>0.0.1</Version>
-        <Authors>Amazon Web Services</Authors>
-        <Company>Amazon.com, Inc</Company>
-        <Title>Powertools for AWS Lambda (.NET)</Title>
         <Description>Powertools for AWS Lambda (.NET) - Logging package.</Description>
-        <Copyright>Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
-        <RepositoryUrl>https://github.com/aws-powertools/powertools-lambda-dotnet</RepositoryUrl>
-        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-        <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
-        <PackageIcon>AWSLogo128x128.png</PackageIcon>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <AssemblyName>AWS.Lambda.Powertools.Logging</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Logging</RootNamespace>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
-
     <ItemGroup>
-        <Compile Include="..\AWS.Lambda.Powertools.Common\**\*.cs">
-            <Link>Common\%(RecursiveDir)%(Filename)%(Extension)</Link>
-        </Compile>
-        <Compile Remove="..\AWS.Lambda.Powertools.Common\obj\**" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath="\" />
+        <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
+        <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
+        <PackageReference Include="Microsoft.Extensions.Logging" />
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-        <PackageReference Include="AspectInjector" Version="2.8.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
-    </ItemGroup>
 </Project>

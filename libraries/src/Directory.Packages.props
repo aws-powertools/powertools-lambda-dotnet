@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="AspectInjector" Version="2.8.1" />
+    <PackageVersion Include="Amazon.Lambda.Core" Version="2.1.0" />
+    <PackageVersion Include="AWSSDK.DynamoDBv2" Version="3.7.104.1" />
+    <PackageVersion Include="JmesPath.Net" Version="1.0.308" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+    <PackageVersion Include="AWSSDK.SecretsManager" Version="3.7.102.38" />
+    <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="3.7.104.29" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageVersion Include="AWSSDK.XRay" Version="3.7.102.25" />
+    <PackageVersion Include="AWSXRayRecorder.Core" Version="2.14.0" />
+  </ItemGroup>
+</Project>
