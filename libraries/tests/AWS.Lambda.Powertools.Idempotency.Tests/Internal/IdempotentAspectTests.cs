@@ -220,6 +220,117 @@ public class IdempotentAspectTests : IDisposable
         
         Assert.NotNull(xRayRecorder);
     }
+    
+    [Fact]
+    public void Handle_WhenIdempotencyOnSubMethodAnnotated_AndFirstCall_ShouldPutInStore() 
+    {
+        // Arrange
+        var store = new Mock<BasePersistenceStore>();
+        Idempotency.Configure(builder => builder.WithPersistenceStore(store.Object));
+
+        // Act
+        IdempotencyInternalFunction function = new IdempotencyInternalFunction();
+        Product product = new Product(42, "fake product", 12);
+        Basket resultBasket = function.HandleRequest(product, new TestLambdaContext());
+    
+        // Assert
+        resultBasket.Products.Count.Should().Be(2);
+        function.IsSubMethodCalled.Should().BeTrue();
+        
+        store
+            .Verify(x=>x.SaveInProgress(It.Is<JsonDocument>(t=> t.ToString() == JsonSerializer.SerializeToDocument("fake", It.IsAny<JsonSerializerOptions>()).ToString()), It.IsAny<DateTimeOffset>()));
+
+        store
+            .Verify(x=>x.SaveSuccess(It.IsAny<JsonDocument>(), It.Is<Basket>(y => y.Equals(resultBasket)), It.IsAny<DateTimeOffset>()));
+    }
+
+    [Fact]
+    public void Handle_WhenIdempotencyOnSubMethodAnnotated_AndSecondCall_AndNotExpired_ShouldGetFromStore()
+    {
+        // Arrange
+        var store = new Mock<BasePersistenceStore>();
+        store.Setup(x => x.SaveInProgress(It.IsAny<JsonDocument>(), It.IsAny<DateTimeOffset>()))
+            .Throws<IdempotencyItemAlreadyExistsException>();
+
+        Idempotency.Configure(builder => builder.WithPersistenceStore(store.Object));
+
+        Product product = new Product(42, "fake product", 12);
+        Basket basket = new Basket(product);
+        DataRecord record = new DataRecord(
+            "fake",
+            DataRecord.DataRecordStatus.COMPLETED,
+            DateTimeOffset.UtcNow.AddSeconds(356).ToUnixTimeSeconds(),
+            JsonSerializer.SerializeToNode(basket)!.ToString(),
+            null);
+        store.Setup(x => x.GetRecord(It.IsAny<JsonDocument>(), It.IsAny<DateTimeOffset>()))
+            .ReturnsAsync(record);
+
+        // Act
+        var function = new IdempotencyInternalFunction();
+        Basket resultBasket = function.HandleRequest(product, new TestLambdaContext());
+
+        // assert
+        resultBasket.Should().Be(basket);
+        function.IsSubMethodCalled.Should().BeFalse();
+    }
+    
+    [Fact]
+    public void Handle_WhenIdempotencyOnSubMethodAnnotated_AndKeyJMESPath_ShouldPutInStoreWithKey() 
+    {
+        // Arrange
+        var store = new InMemoryPersistenceStore();
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store)
+                .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
+        );
+        
+        // Act
+        IdempotencyInternalFunctionInternalKey function = new IdempotencyInternalFunctionInternalKey();
+        Product product = new Product(42, "fake product", 12);
+        function.HandleRequest(product, new TestLambdaContext());
+
+        // Assert
+        // a1d0c6e83f027327d8461063f4ac58a6 = MD5(42)
+        store.GetRecord("testFunction.createBasket#a1d0c6e83f027327d8461063f4ac58a6").Should().NotBeNull();
+    }
+    [Fact]
+    public void Handle_WhenIdempotencyOnSubMethodNotAnnotated_ShouldThrowException() 
+    {
+        // Arrange
+        var store = new Mock<BasePersistenceStore>();
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store.Object)
+        );
+
+        // Act
+        IdempotencyInternalFunctionInvalid function = new IdempotencyInternalFunctionInvalid();
+        Product product = new Product(42, "fake product", 12);
+        Action act = () => function!.HandleRequest(product, new TestLambdaContext());
+    
+        // Assert
+        act.Should().Throw<IdempotencyConfigurationException>();
+    }
+    
+    [Fact]
+    public void Handle_WhenIdempotencyOnSubMethodVoid_ShouldThrowException() 
+    {
+        // Arrange
+        var store = new Mock<BasePersistenceStore>();
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store.Object)
+        );
+
+        // Act
+        IdempotencyInternalFunctionVoid function = new IdempotencyInternalFunctionVoid();
+        Product product = new Product(42, "fake product", 12);
+        Action act = () => function.HandleRequest(product, new TestLambdaContext());
+
+        // Assert
+        act.Should().Throw<IdempotencyConfigurationException>();
+    }
 
     public void Dispose()
     {
