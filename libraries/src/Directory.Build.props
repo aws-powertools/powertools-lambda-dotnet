@@ -27,4 +27,5 @@
         <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
     </ItemGroup>
     
+    
 </Project>
