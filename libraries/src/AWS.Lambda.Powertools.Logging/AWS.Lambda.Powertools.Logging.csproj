@@ -12,7 +12,7 @@
         <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
         <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
         <PackageReference Include="Microsoft.Extensions.Logging" />
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="All" />
     </ItemGroup>
 
 </Project>
