@@ -50,6 +50,7 @@ Resources:
     Properties:
       QueueName: powertools-dotnet-sample-sqs-queue
       VisibilityTimeout: 10
+      SqsManagedSseEnabled: true
       RedrivePolicy:
         maxReceiveCount: 2
         deadLetterTargetArn: !GetAtt SampleSqsDLQ.Arn
