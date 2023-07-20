@@ -25,7 +25,6 @@
 </ItemGroup>
 
 <ItemGroup>
-    <ProjectReference Condition="'$(Configuration)'!='Release'" Include="..\..\src\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
     <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Parameters\AWS.Lambda.Powertools.Parameters.csproj" />
 </ItemGroup>
 
