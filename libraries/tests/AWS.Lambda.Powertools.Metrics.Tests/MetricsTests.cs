@@ -11,6 +11,7 @@ public class MetricsTests
     public void Metrics_Set_Execution_Environment_Context()
     {
         // Arrange
+        Metrics.ResetForTest();
         var assemblyName = "AWS.Lambda.Powertools.Metrics";
         var assemblyVersion = "1.0.0";
             
@@ -32,5 +33,7 @@ public class MetricsTests
             v.GetEnvironmentVariable(
                 "AWS_EXECUTION_ENV"
             ), Times.Once);
+        
+        
     }
 }
