@@ -319,7 +319,7 @@ It accepts any dictionary, and all keyword arguments will be added as part of th
 
 === "Function.cs"
 
-    ```c# hl_lines="16"
+    ```c# hl_lines="14 17 21 29"
     /**
      * Handler for requests to Lambda function.
      */
@@ -331,16 +331,105 @@ It accepts any dictionary, and all keyword arguments will be added as part of th
         {
             var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
             
-            var lookupId = new Dictionary<string, object>()
-            {
-                { "LookupId", requestContextRequestId }
-            };
+            // Pass an object for logging additional data
+            var lookupInfo1 = new { LookupId = requestContextRequestId };
+            Logger.LogInformation(lookupInfo1, "This is a log with anonymous type object additional data");
 
-            // Appended keys are added to all subsequent log entries in the current execution.
-            // Call this method as early as possible in the Lambda handler.
-            // Typically this is value would be passed into the function via the event.
-            // Set the ClearState = true to force the removal of keys across invocations,
-            Logger.AppendKeys(lookupId);
+            // Specify the key name for extra additional data
+            Logger.LogInformation(("LookupInfo", lookupInfo1), "This is a log specifying the key name for additional data");
+
+            // Pass a typed object for logging additional data
+            var lookupInfo2 = new LookupInfo { LookupId = requestContextRequestId };
+            Logger.LogInformation(lookupInfo2, "This is a log with typed object additional data");
+
+            // Pass multiple extra key/value pairs
+            var extraKeys = new Dictionary<string, object>()
+            {
+                { "LookupInfo", new { LookupId = requestContextRequestId } },
+                { "CorrelationIds", new { MyCorrelationId = "correlation_id_value" } }
+            };
+            Logger.LogInformation(extraKeys, "This is a log with multiple extra key/value pairs");
+            ...
+    }
+    public class LookupInfo
+    {
+        public string? LookupId { get; set; }
+    }
+    ```
+
+=== "Example CloudWatch Logs excerpt"
+
+    ```json hl_lines="4-6 21-23 38-40 55-60"
+    {
+        "cold_start": true,
+        "xray_trace_id": "1-61b7add4-66532bb81441e1b060389429",
+        "extra": {
+            "lookup_id": "4c50eace-8b1e-43d3-92ba-0efacf5d1625"
+        },
+        "function_name": "test",
+        "function_version": "$LATEST",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "level": "Information",
+        "service": "lambda-example",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "This is a log with anonymous type object additional data",
+    }
+    {
+        "cold_start": true,
+        "xray_trace_id": "1-61b7add4-66532bb81441e1b060389429",
+        "lookup_info": {
+            "lookup_id": "4c50eace-8b1e-43d3-92ba-0efacf5d1625"
+        },
+        "function_name": "test",
+        "function_version": "$LATEST",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "level": "Information",
+        "service": "lambda-example",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "This is a log specifying the key name for additional data",
+    }
+    {
+        "cold_start": true,
+        "xray_trace_id": "1-61b7add4-66532bb81441e1b060389429",
+        "lookup_info": {
+            "lookup_id": "4c50eace-8b1e-43d3-92ba-0efacf5d1625"
+        },
+        "function_name": "test",
+        "function_version": "$LATEST",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "level": "Information",
+        "service": "lambda-example",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "This is a log with typed object additional data",
+    }
+    {
+        "cold_start": true,
+        "xray_trace_id": "1-61b7add4-66532bb81441e1b060389429",
+        "lookup_info": {
+            "lookup_id": "4c50eace-8b1e-43d3-92ba-0efacf5d1625"
+        },
+        "correlation_ids": {
+            "my_correlation_id": "correlation_id_value"
+        },
+        "function_name": "test",
+        "function_version": "$LATEST",
+        "function_memory_size": 128,
+        "function_arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+        "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+        "timestamp": "2021-12-13T20:32:22.5774262Z",
+        "level": "Information",
+        "service": "lambda-example",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "message": "This is a log with multiple extra key/value pairs",
     }
     ```
 

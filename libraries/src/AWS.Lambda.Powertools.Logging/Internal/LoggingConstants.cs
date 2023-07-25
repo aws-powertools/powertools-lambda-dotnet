@@ -111,4 +111,9 @@ internal static class LoggingConstants
     ///     Constant for key exception
     /// </summary>
     internal const string KeyException = "Exception";
+    
+    /// <summary>
+    ///     Constant for key extra
+    /// </summary>
+    internal const string KeyExtra = "Extra";
 }

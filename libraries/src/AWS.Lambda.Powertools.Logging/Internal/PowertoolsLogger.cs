@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using AWS.Lambda.Powertools.Common;
@@ -141,10 +142,10 @@ internal sealed class PowertoolsLogger : ILogger
     private static Dictionary<string, object> GetScopeKeys<TState>(TState state)
     {
         var keys = new Dictionary<string, object>();
-        
-        if (state is null) 
+
+        if (state is null)
             return keys;
-        
+
         switch (state)
         {
             case IEnumerable<KeyValuePair<string, string>> pairs:
@@ -154,6 +155,7 @@ internal sealed class PowertoolsLogger : ILogger
                     if (!string.IsNullOrWhiteSpace(key))
                         keys.TryAdd(key, value);
                 }
+
                 break;
             }
             case IEnumerable<KeyValuePair<string, object>> pairs:
@@ -163,19 +165,68 @@ internal sealed class PowertoolsLogger : ILogger
                     if (!string.IsNullOrWhiteSpace(key))
                         keys.TryAdd(key, value);
                 }
+
+                break;
+            }
+            case KeyValuePair<string, string>(var key, var value):
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                    keys.TryAdd(key, value);
+                break;
+            }
+            case KeyValuePair<string, object>(var key, var value):
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                    keys.TryAdd(key, value);
+                break;
+            }
+            case ITuple pair:
+            {
+                if (pair.Length == 2 && pair[0] is string key && !string.IsNullOrWhiteSpace(key))
+                    keys.TryAdd(key, pair[1]);
+                else
+                    keys.TryAdd(LoggingConstants.KeyExtra, state);
                 break;
             }
             default:
             {
-                foreach (var property in state.GetType().GetProperties())
-                {
-                    keys.TryAdd(property.Name, property.GetValue(state));
-                }
+                keys.TryAdd(GetScopeKey(state), state);
                 break;
             }
         }
-        
+
         return keys;
+    }
+
+    /// <summary>
+    ///     Extract provided scope key
+    /// </summary>
+    /// <typeparam name="TState">The type of the t state.</typeparam>
+    /// <param name="state">The state.</param>
+    /// <returns>Key for the provided scope key</returns>
+    private static string GetScopeKey<TState>(TState state)
+    {
+        if (state is null or string)
+            return LoggingConstants.KeyExtra;
+
+        var type = state.GetType();
+        if (type.IsEnum ||
+            type.IsArray ||
+            type.IsPrimitive ||
+            string.IsNullOrWhiteSpace(type.Namespace))
+            return LoggingConstants.KeyExtra;
+
+        var typeName = type.Name;
+        if (type.IsGenericType)
+            typeName = type.Name.Split('`').First();
+
+        if (typeName.Contains('[') ||
+            typeName.Contains(']') ||
+            typeName.Contains('<') ||
+            typeName.Contains('>'))
+            return LoggingConstants.KeyExtra;
+
+        return typeName;
     }
 
     /// <summary>

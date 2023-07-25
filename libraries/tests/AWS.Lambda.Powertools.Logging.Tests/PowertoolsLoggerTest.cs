@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
@@ -652,7 +653,75 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         }
         
         [Fact]
-        public void BeginScope_WhenScopeIsObject_ExtractScopeKeys()
+        public void BeginScope_WhenScopeIsPrimitive_AddExtraKey()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var keyName = LoggingConstants.KeyExtra;
+            var scopeKeys = 20;
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True((int)loggerScope.ExtraKeys[keyName] == scopeKeys);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsString_AddExtraKey()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var keyName = LoggingConstants.KeyExtra;
+            var scopeKeys = Guid.NewGuid().ToString();
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True((string)loggerScope.ExtraKeys[keyName] == scopeKeys);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+         [Fact]
+        public void BeginScope_WhenScopeIsAnonymousClass_AddExtraKey()
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -671,6 +740,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     MinimumLevel = logLevel               
                 });
             
+            var keyName = LoggingConstants.KeyExtra;
             var scopeKeys = new
             {
                 PropOne = "Value 1",
@@ -681,15 +751,290 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             {
                 Assert.NotNull(loggerScope);
                 Assert.NotNull(loggerScope.ExtraKeys);
-                Assert.True(loggerScope.ExtraKeys.Count == 2);
-                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropOne"));
-                Assert.True((string)loggerScope.ExtraKeys["PropOne"] == scopeKeys.PropOne);
-                Assert.True(loggerScope.ExtraKeys.ContainsKey("PropTwo"));
-                Assert.True((string)loggerScope.ExtraKeys["PropTwo"] == scopeKeys.PropTwo);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True(loggerScope.ExtraKeys[keyName] == scopeKeys);
             }
             Assert.Null(logger.CurrentScope?.ExtraKeys);
         }
         
+        [Fact]
+        public void BeginScope_WhenScopeIsNonKeyValuePairTuple_AddExtraKey()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+            
+            var keyName = LoggingConstants.KeyExtra;
+            var scopeKeys = ("Value 1", "Value 2", "Value 2");
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True(((ITuple)loggerScope.ExtraKeys[keyName]).Length == ((ITuple)scopeKeys).Length);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsArray_AddExtraKey()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var keyName = LoggingConstants.KeyExtra;
+            var scopeKeys = new[] { Guid.NewGuid().ToString() };
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True((string[])loggerScope.ExtraKeys[keyName] == scopeKeys);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsDynamic_AddExtraKey()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var keyName = LoggingConstants.KeyExtra;
+            dynamic scopeKeys = 1;
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True((int)loggerScope.ExtraKeys[keyName] == scopeKeys);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsEnum_AddExtraKey()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var keyName = LoggingConstants.KeyExtra;
+            var scopeKeys = LoggerOutputCase.PascalCase;
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True((LoggerOutputCase)loggerScope.ExtraKeys[keyName] == scopeKeys);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsStruct_ExtractExtraKeyName()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var keyName = "Point";
+            var scopeKeys = new System.Drawing.Point { X = 100, Y = 150 };
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True((System.Drawing.Point)loggerScope.ExtraKeys[keyName] == scopeKeys);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+
+        [Fact]
+        public void BeginScope_WhenScopeIsTypedClass_ExtractExtraKeyName()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var keyName = "LoggerConfiguration";
+            var scopeKeys = new LoggerConfiguration();
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True((LoggerConfiguration)loggerScope.ExtraKeys[keyName] == scopeKeys);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+        
+        [Fact]
+        public void BeginScope_WhenScopeIsGenericTypedClass_ExtractExtraKeyName()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+
+            var keyName = "List";
+            var scopeKeys = new List<string> { Guid.NewGuid().ToString() };
+
+            using (var loggerScope = logger.BeginScope(scopeKeys) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True((List<string>)loggerScope.ExtraKeys[keyName] == scopeKeys);
+            }
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+
+        [Fact]
+        public void BeginScope_WhenScopeIsTuple_ExtractScopeKeys()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = new Mock<IPowertoolsConfigurations>();
+            configurations.Setup(c => c.Service).Returns(service);
+            configurations.Setup(c => c.LogLevel).Returns(logLevel.ToString);
+            var systemWrapper = new Mock<ISystemWrapper>();
+
+            var logger = new PowertoolsLogger(loggerName,configurations.Object, systemWrapper.Object, () => 
+                new LoggerConfiguration
+                {
+                    Service = service,
+                    MinimumLevel = logLevel               
+                });
+            
+            var keyName = Guid.NewGuid().ToString();
+            var scopeKeys = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2"
+            };
+
+            using (var loggerScope = logger.BeginScope((keyName, scopeKeys)) as PowertoolsLoggerScope)
+            {
+                Assert.NotNull(loggerScope);
+                Assert.NotNull(loggerScope.ExtraKeys);
+                Assert.True(loggerScope.ExtraKeys.Count == 1);
+                Assert.True(loggerScope.ExtraKeys.ContainsKey(keyName));
+                Assert.True(loggerScope.ExtraKeys[keyName] == scopeKeys);
+            }
+
+            Assert.Null(logger.CurrentScope?.ExtraKeys);
+        }
+
         [Fact]
         public void BeginScope_WhenScopeIsObjectDictionary_ExtractScopeKeys()
         {
