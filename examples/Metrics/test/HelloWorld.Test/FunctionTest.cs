@@ -24,8 +24,7 @@ using Amazon.DynamoDBv2.DataModel;
 using Xunit;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
-using Moq;
-using Moq.Protected;
+using NSubstitute;
 using Xunit.Abstractions;
 
 namespace HelloWorld.Tests
@@ -39,6 +38,20 @@ namespace HelloWorld.Tests
             _testOutputHelper = testOutputHelper;
         }
 
+        private class MockHttpMessageHandler : HttpMessageHandler
+        {
+            private readonly HttpResponseMessage _responseMessage;
+            public MockHttpMessageHandler(HttpResponseMessage responseMessage)
+            {
+                _responseMessage = responseMessage;
+            }
+
+            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                return await Task.FromResult(_responseMessage);
+            }
+        }
+        
         [Fact]
         public async Task TestHelloWorldFunctionHandler()
         {
@@ -47,21 +60,13 @@ namespace HelloWorld.Tests
             var location = "192.158. 1.38";
             Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE","AWSLambdaPowertools");
             
-            var dynamoDbContext = new Mock<IDynamoDBContext>();
-            var handlerMock = new Mock<HttpMessageHandler>();
-            handlerMock
-                .Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.IsAny<HttpRequestMessage>(),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync(new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent(location)
-                })
-                .Verifiable();
+            var dynamoDbContext = Substitute.For<IDynamoDBContext>();
+
+            var handlerMock = new MockHttpMessageHandler(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(location)
+            });
             
             var request = new APIGatewayProxyRequest
             {
@@ -94,7 +99,7 @@ namespace HelloWorld.Tests
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
 
-            var function = new Function(dynamoDbContext.Object, new HttpClient(handlerMock.Object));
+            var function = new Function(dynamoDbContext, new HttpClient(handlerMock));
             var response = await function.FunctionHandler(request, context);
 
             _testOutputHelper.WriteLine("Lambda Response: \n" + response.Body);
