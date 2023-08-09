@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using AWS.Lambda.Powertools.Common;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests;
@@ -16,11 +16,11 @@ public class ClearDimensionsTests
         var methodName = Guid.NewGuid().ToString();
         var consoleOut = new StringWriter();
         Console.SetOut(consoleOut);
-
-        var configurations = new Mock<IPowertoolsConfigurations>();
+        
+        var configurations = Substitute.For<IPowertoolsConfigurations>();
 
         var metrics = new Metrics(
-            configurations.Object,
+            configurations,
             nameSpace: "dotnet-powertools-test",
             service: "testService"
         );
