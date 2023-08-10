@@ -20,7 +20,8 @@ using AWS.Lambda.Powertools.Parameters.Internal.Cache;
 using AWS.Lambda.Powertools.Parameters.Internal.Provider;
 using AWS.Lambda.Powertools.Parameters.Provider;
 using AWS.Lambda.Powertools.Parameters.Transform;
-using Moq;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Parameters.Tests.Provider;
@@ -45,30 +46,30 @@ public class ParameterProviderTest
         var value = Guid.NewGuid().ToString();
         var valueFromCache = Guid.NewGuid().ToString();
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration>())!
+            .Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
-        
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(valueFromCache);
+
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync, 
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All, 
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, null, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Never);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.DidNotReceive().GetAsync(key, Arg.Any<ParameterProviderConfiguration>());
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
@@ -85,30 +86,30 @@ public class ParameterProviderTest
             ForceFetch = true
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration>())!
+            .Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(valueFromCache);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, config, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Never);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.DidNotReceive().Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Is<ParameterProviderConfiguration?>(x => x!.ForceFetch));
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -121,31 +122,31 @@ public class ParameterProviderTest
         var value = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge;
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!
+            .Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
-        
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, null, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Any<ParameterProviderConfiguration?>());
+        cacheManager.Received(1).Set(key, value, duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -162,32 +163,31 @@ public class ParameterProviderTest
             MaxAge = duration
         };
 
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!
+            .Returns(Task.FromResult(value));
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
-
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
         
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
 
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync, 
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All, 
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, config, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Any<ParameterProviderConfiguration?>());
+        cacheManager.Received(1).Set(key, value, duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -205,35 +205,35 @@ public class ParameterProviderTest
             MaxAge = duration
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!
+            .Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync, 
+            providerProxy.GetMultipleAsync,
+            cacheMode, 
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, config, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Any<ParameterProviderConfiguration?>());
+        cacheManager.Received(1).Set(key, value, duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenCacheModeIsGetMultipleResultOnly_DoesNotStoreCachedObject()
     {
@@ -247,35 +247,35 @@ public class ParameterProviderTest
             MaxAge = duration
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!
+            .Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
-        
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            cacheMode,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, config, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Any<ParameterProviderConfiguration?>());
+        cacheManager.Received(0).Set(key, value, duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenCacheModeIsDisabled_DoesNotStoreCachedObject()
     {
@@ -289,31 +289,31 @@ public class ParameterProviderTest
             MaxAge = duration
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!
+            .Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            cacheMode,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, config, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Any<ParameterProviderConfiguration?>());
+        cacheManager.Received(0).Set(key, value, duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -327,42 +327,40 @@ public class ParameterProviderTest
         var transformedValue = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge;
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value)
-        ).Returns(transformedValue);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value).Returns(transformedValue);
 
         var config = new ParameterProviderConfiguration
         {
-            Transformer = transformer.Object
+            Transformer = transformer
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!
+            .Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, config, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value), Times.Once);
-        cacheManager.Verify(v => v.Set(key, transformedValue, duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Any<ParameterProviderConfiguration?>());
+        transformer.Received(1).Transform<string>(value);
+        cacheManager.Received(1).Set(key, transformedValue, duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(transformedValue, result);
     }
@@ -377,43 +375,39 @@ public class ParameterProviderTest
         var transformerName = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge;
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value)
-        ).Returns(transformedValue);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value).Returns(transformedValue);
 
-        var transformerManager = new Mock<ITransformerManager>();
-        transformerManager.Setup(c =>
-            c.GetTransformer(transformerName)
-        ).Returns(transformer.Object);
+        var transformerManager = Substitute.For<ITransformerManager>();
+        transformerManager.GetTransformer(transformerName).Returns(transformer);
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!
+            .Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
-        providerHandler.SetTransformerManager(transformerManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
+        providerHandler.SetTransformerManager(transformerManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, null, null, transformerName);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value), Times.Once);
-        cacheManager.Verify(v => v.Set(key, transformedValue, duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Any<ParameterProviderConfiguration?>());
+        transformer.Received(1).Transform<string>(value);
+        cacheManager.Received(1).Set(key, transformedValue, duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(transformedValue, result);
     }
@@ -428,47 +422,43 @@ public class ParameterProviderTest
         var transformation = Transformation.Json;
         var duration = CacheManager.DefaultMaxAge;
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value)
-        ).Returns(transformedValue);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value).Returns(transformedValue);
 
-        var transformerManager = new Mock<ITransformerManager>();
-        transformerManager.Setup(c =>
-            c.TryGetTransformer(transformation, key)
-        ).Returns(transformer.Object);
+        var transformerManager = Substitute.For<ITransformerManager>();
+        transformerManager.TryGetTransformer(transformation, key).Returns(transformer);
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!
+            .Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
-        providerHandler.SetTransformerManager(transformerManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
+        providerHandler.SetTransformerManager(transformerManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, null, transformation, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value), Times.Once);
-        cacheManager.Verify(v => v.Set(key, transformedValue, duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Any<ParameterProviderConfiguration?>());
+        transformer.Received(1).Transform<string>(value);
+        cacheManager.Received(1).Set(key, transformedValue, duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(transformedValue, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenRaiseTransformationErrorNotSet_ReturnsNullOnError()
     {
@@ -478,46 +468,41 @@ public class ParameterProviderTest
         var transformationError = new Exception("Test Error");
         var transformation = Transformation.Json;
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value)
-        ).Throws(transformationError);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value).Throws(transformationError);
 
-        var transformerManager = new Mock<ITransformerManager>();
-        transformerManager.Setup(c =>
-            c.TryGetTransformer(transformation, key)
-        ).Returns(transformer.Object);
+        var transformerManager = Substitute.For<ITransformerManager>();
+        transformerManager.TryGetTransformer(transformation, key).Returns(transformer);
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!.Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
-        providerHandler.SetTransformerManager(transformerManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
+        providerHandler.SetTransformerManager(transformerManager);
 
         // Act
         var result = await providerHandler.GetAsync<string>(key, null, transformation, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value), Times.Once);
-        cacheManager.Verify(v => v.Set(key, It.IsAny<object?>(), It.IsAny<TimeSpan>()), Times.Never);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetAsync(key, Arg.Any<ParameterProviderConfiguration?>());
+        transformer.Received(1).Transform<string>(value);
+        cacheManager.DidNotReceive().Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<TimeSpan>());
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.Null(result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenRaiseTransformationErrorSet_ThrowsException()
     {
@@ -528,41 +513,36 @@ public class ParameterProviderTest
         var transformation = Transformation.Json;
         var raiseTransformationError = true;
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value)
-        ).Throws(transformationError);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value).Throws(transformationError);
 
-        var transformerManager = new Mock<ITransformerManager>();
-        transformerManager.Setup(c =>
-            c.TryGetTransformer(transformation, key)
-        ).Returns(transformer.Object);
+        var transformerManager = Substitute.For<ITransformerManager>();
+        transformerManager.TryGetTransformer(transformation, key).Returns(transformer);
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetAsync(key, Arg.Any<ParameterProviderConfiguration?>())!.Returns(Task.FromResult(value));
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
-        providerHandler.SetTransformerManager(transformerManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
+        providerHandler.SetTransformerManager(transformerManager);
         providerHandler.SetRaiseTransformationError(raiseTransformationError);
 
         // Act
         Task<string?> Act() => providerHandler.GetAsync<string>(key, null, transformation, null);
 
         // Assert
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
         await Assert.ThrowsAsync<TransformationException>(Act);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
     }
 
     #endregion
@@ -585,30 +565,26 @@ public class ParameterProviderTest
             { value.Last().Key, Guid.NewGuid().ToString() }
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(valueFromCache);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+            new ParameterProviderBaseHandler(providerProxy.GetAsync, providerProxy.GetMultipleAsync,
+                ParameterProviderCacheMode.All, powertoolsConfigurations);
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(key, null, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Never);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(0).GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration>());
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
@@ -632,31 +608,28 @@ public class ParameterProviderTest
         {
             ForceFetch = true
         };
-
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
-
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
-
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
         
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
+
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(valueFromCache);
+
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+            new ParameterProviderBaseHandler(providerProxy.GetAsync, providerProxy.GetMultipleAsync,
+                ParameterProviderCacheMode.All, powertoolsConfigurations);
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Never);
-        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        // Assert
+        cacheManager.Received(0).Get(key);
+        await providerProxy.Received(1).GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration>());
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -673,31 +646,32 @@ public class ParameterProviderTest
         };
         var duration = CacheManager.DefaultMaxAge;
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
         
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+            new ParameterProviderBaseHandler(providerProxy.GetAsync, providerProxy.GetMultipleAsync,
+                ParameterProviderCacheMode.All, powertoolsConfigurations);
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(key, null, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration>());
+        cacheManager.Received(1).Set(key, Arg.Is<Dictionary<string, string?>>(x=> 
+            x.First().Key == value.First().Key && 
+            x.First().Value == value.First().Value &&
+            x.Last().Key == value.Last().Key &&
+            x.Last().Value == value.Last().Value &&
+            x.Count == value.Count), duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -718,31 +692,32 @@ public class ParameterProviderTest
             MaxAge = duration
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+            new ParameterProviderBaseHandler(providerProxy.GetAsync, providerProxy.GetMultipleAsync,
+                ParameterProviderCacheMode.All, powertoolsConfigurations);
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await providerProxy.Received(1).GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration>());
+        cacheManager.Received(1).Set(key, Arg.Is<Dictionary<string, string?>>(x=> 
+            x.First().Key == value.First().Key && 
+            x.First().Value == value.First().Value &&
+            x.Last().Key == value.Last().Key &&
+            x.Last().Value == value.Last().Value &&
+            x.Count == value.Count), duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -764,30 +739,31 @@ public class ParameterProviderTest
             MaxAge = duration
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(key, config).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+            new ParameterProviderBaseHandler(providerProxy.GetAsync, providerProxy.GetMultipleAsync,
+                cacheMode, powertoolsConfigurations);
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
-        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        await providerProxy.Received(1).GetMultipleAsync(key, config);
+        cacheManager.Received(1).Set(key, Arg.Is<Dictionary<string, string?>>(x=> 
+                x.First().Key == value.First().Key && 
+                x.First().Value == value.First().Value &&
+                x.Last().Key == value.Last().Key &&
+                x.Last().Value == value.Last().Value &&
+                x.Count == value.Count), duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -809,30 +785,26 @@ public class ParameterProviderTest
             MaxAge = duration
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+            new ParameterProviderBaseHandler(providerProxy.GetAsync, providerProxy.GetMultipleAsync,
+                cacheMode, powertoolsConfigurations);
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
-        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        await providerProxy.Received(1).GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration>());
+        cacheManager.DidNotReceiveWithAnyArgs().Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<TimeSpan>());
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -854,30 +826,26 @@ public class ParameterProviderTest
             MaxAge = duration
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(key).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                cacheMode, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+            new ParameterProviderBaseHandler(providerProxy.GetAsync, providerProxy.GetMultipleAsync,
+                cacheMode, powertoolsConfigurations);
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(key, config, null, null);
 
         // Assert
-        providerProxy.Verify(v => v.GetMultipleAsync(key, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Never);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        await providerProxy.Received(1).GetMultipleAsync(key, Arg.Any<ParameterProviderConfiguration>());
+        cacheManager.DidNotReceiveWithAnyArgs().Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<TimeSpan>());
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -899,51 +867,46 @@ public class ParameterProviderTest
         };
         var duration = CacheManager.DefaultMaxAge;
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value.First().Value ?? "")
-        ).Returns(transformedValue.First().Value);
-        transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value ?? "")
-        ).Returns(transformedValue.Last().Value);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value.First().Value ?? "").Returns(transformedValue.First().Value);
+        transformer.Transform<string>(value.Last().Value ?? "").Returns(transformedValue.Last().Value);
 
         var config = new ParameterProviderConfiguration
         {
-            Transformer = transformer.Object
+            Transformer = transformer
         };
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(path)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(path).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
+            new ParameterProviderBaseHandler(providerProxy.GetAsync, providerProxy.GetMultipleAsync,
+                ParameterProviderCacheMode.All, powertoolsConfigurations);
+        providerHandler.SetCacheManager(cacheManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(path, config, null, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(path), Times.Once);
-        providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
-        cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
-            o.First().Key == transformedValue.First().Key &&
-            o.First().Value == transformedValue.First().Value &&
-            o.Last().Key == transformedValue.Last().Key &&
-            o.Last().Value == transformedValue.Last().Value
-        ), duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(path);
+        await providerProxy.Received(1).GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration>());
+        transformer.Received(1).Transform<string>(value.First().Value ?? "");
+        transformer.Received(1).Transform<string>(value.Last().Value ?? "");
+        cacheManager.Received(1).Set(
+            path,
+            Arg.Is<Dictionary<string, string>>(o =>
+                o.First().Key == transformedValue.First().Key &&
+                o.First().Value == transformedValue.First().Value &&
+                o.Last().Key == transformedValue.Last().Key &&
+                o.Last().Value == transformedValue.Last().Value
+            ),
+            duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
     }
 
@@ -965,52 +928,46 @@ public class ParameterProviderTest
         var duration = CacheManager.DefaultMaxAge;
         var transformerName = Guid.NewGuid().ToString();
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value.First().Value ?? "")
-        ).Returns(transformedValue.First().Value);
-        transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value ?? "")
-        ).Returns(transformedValue.Last().Value);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value.First().Value ?? "").Returns(transformedValue.First().Value);
+        transformer.Transform<string>(value.Last().Value ?? "").Returns(transformedValue.Last().Value);
 
-        var transformerManager = new Mock<ITransformerManager>();
-        transformerManager.Setup(c =>
-            c.GetTransformer(transformerName)
-        ).Returns(transformer.Object);
+        var transformerManager = Substitute.For<ITransformerManager>();
+        transformerManager.GetTransformer(transformerName).Returns(transformer);
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(path)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(path).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
         var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
-        providerHandler.SetTransformerManager(transformerManager.Object);
+            new ParameterProviderBaseHandler(providerProxy.GetAsync, providerProxy.GetMultipleAsync,
+                ParameterProviderCacheMode.All, powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
+        providerHandler.SetTransformerManager(transformerManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(path, null, null, transformerName);
 
         // Assert
-        cacheManager.Verify(v => v.Get(path), Times.Once);
-        providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
-        cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
-            o.First().Key == transformedValue.First().Key &&
-            o.First().Value == transformedValue.First().Value &&
-            o.Last().Key == transformedValue.Last().Key &&
-            o.Last().Value == transformedValue.Last().Value
-        ), duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(path);
+        await providerProxy.Received(1).GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration>());
+        transformer.Received(1).Transform<string>(value.First().Value ?? "");
+        transformer.Received(1).Transform<string>(value.Last().Value ?? "");
+        cacheManager.Received(1).Set(
+            path,
+            Arg.Is<Dictionary<string, string>>(o =>
+                o.First().Key == transformedValue.First().Key &&
+                o.First().Value == transformedValue.First().Value &&
+                o.Last().Key == transformedValue.Last().Key &&
+                o.Last().Value == transformedValue.Last().Value
+            ),
+            duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
     }
 
@@ -1031,53 +988,49 @@ public class ParameterProviderTest
         };
         var duration = CacheManager.DefaultMaxAge;
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value.First().Value ?? "")
-        ).Returns(transformedValue.First().Value);
-        transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value ?? "")
-        ).Returns(transformedValue.Last().Value);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value.First().Value ?? "").Returns(transformedValue.First().Value);
+        transformer.Transform<string>(value.Last().Value ?? "").Returns(transformedValue.Last().Value);
 
         var transformation = Transformation.Json;
-        var transformerManager = new Mock<ITransformerManager>();
-        transformerManager.Setup(c =>
-            c.GetTransformer(transformation)
-        ).Returns(transformer.Object);
+        var transformerManager = Substitute.For<ITransformerManager>();
+        transformerManager.GetTransformer(transformation).Returns(transformer);
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(path)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(path).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
-        providerHandler.SetTransformerManager(transformerManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
+        providerHandler.SetTransformerManager(transformerManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(path), Times.Once);
-        providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
-        cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string>>(o =>
-            o.First().Key == transformedValue.First().Key &&
-            o.First().Value == transformedValue.First().Value &&
-            o.Last().Key == transformedValue.Last().Key &&
-            o.Last().Value == transformedValue.Last().Value
-        ), duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(path);
+        await providerProxy.Received(1).GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration>());
+        transformer.Received(1).Transform<string>(value.First().Value ?? "");
+        transformer.Received(1).Transform<string>(value.Last().Value ?? "");
+        cacheManager.Received(1).Set(
+            path,
+            Arg.Is<Dictionary<string, string>>(o =>
+                o.First().Key == transformedValue.First().Key &&
+                o.First().Value == transformedValue.First().Value &&
+                o.Last().Key == transformedValue.Last().Key &&
+                o.Last().Value == transformedValue.Last().Value
+            ),
+            duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
     }
 
@@ -1103,59 +1056,53 @@ public class ParameterProviderTest
             { value.Last().Key, Guid.NewGuid().ToString() }
         };
         var duration = CacheManager.DefaultMaxAge;
-        
-        var jsonTransformer = new Mock<ITransformer>();
-        jsonTransformer.Setup(c =>
-            c.Transform<object>(value.First().Value ?? "")
-        ).Returns(transformedValue.First().Value);
 
-        var base64Transformer = new Mock<ITransformer>();
-        base64Transformer.Setup(c =>
-            c.Transform<object>(value.Last().Value ?? "")
-        ).Returns(transformedValue.Last().Value);
+        var jsonTransformer = Substitute.For<ITransformer>();
+        jsonTransformer.Transform<object>(value.First().Value ?? "").Returns(transformedValue.First().Value);
+
+        var base64Transformer = Substitute.For<ITransformer>();
+        base64Transformer.Transform<object>(value.Last().Value ?? "").Returns(transformedValue.Last().Value);
 
         var transformation = Transformation.Auto;
-        var transformerManager = new Mock<ITransformerManager>();
-        transformerManager.Setup(c =>
-            c.TryGetTransformer(transformation, value.First().Key)
-        ).Returns(jsonTransformer.Object);
-        transformerManager.Setup(c =>
-            c.TryGetTransformer(transformation, value.Last().Key)
-        ).Returns(base64Transformer.Object);
+        var transformerManager = Substitute.For<ITransformerManager>();
+        transformerManager.TryGetTransformer(transformation, value.First().Key).Returns(jsonTransformer);
+        transformerManager.TryGetTransformer(transformation, value.Last().Key).Returns(base64Transformer);
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(path)
-        ).Returns(null);
-        
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(path).Returns(null);
 
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
-        providerHandler.SetTransformerManager(transformerManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
+        providerHandler.SetTransformerManager(transformerManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<object>(path, null, transformation, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(path), Times.Once);
-        providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        jsonTransformer.Verify(v => v.Transform<object>(value.First().Value ?? ""), Times.Once);
-        base64Transformer.Verify(v => v.Transform<object>(value.Last().Value ?? ""), Times.Once);
-        cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, object?>>(o =>
-            o.First().Key == transformedValue.First().Key &&
-            o.First().Value == transformedValue.First().Value &&
-            o.Last().Key == transformedValue.Last().Key &&
-            o.Last().Value == transformedValue.Last().Value
-        ), duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(path);
+        await providerProxy.Received(1).GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration>());
+        jsonTransformer.Received(1).Transform<object>(value.First().Value ?? "");
+        base64Transformer.Received(1).Transform<object>(value.Last().Value ?? "");
+        cacheManager.Received(1).Set(
+            path,
+            Arg.Is<Dictionary<string, object?>>(o =>
+                o.First().Key == transformedValue.First().Key &&
+                o.First().Value == transformedValue.First().Value &&
+                o.Last().Key == transformedValue.Last().Key &&
+                o.Last().Value == transformedValue.Last().Value
+            ),
+            duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
     }
 
@@ -1174,57 +1121,52 @@ public class ParameterProviderTest
         var transformationError = new Exception("Test Error");
         var duration = CacheManager.DefaultMaxAge;
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value.First().Value ?? "")
-        ).Throws(transformationError);
-
-        transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value ?? "")
-        ).Returns(transformedValue);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value.First().Value ?? "").Returns(_ => throw transformationError);
+        transformer.Transform<string>(value.Last().Value ?? "").Returns(transformedValue);
 
         var transformation = Transformation.Json;
-        var transformerManager = new Mock<ITransformerManager>();
-        transformerManager.Setup(c =>
-            c.GetTransformer(transformation)
-        ).Returns(transformer.Object);
+        var transformerManager = Substitute.For<ITransformerManager>();
+        transformerManager.GetTransformer(transformation).Returns(transformer);
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(path)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(path).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
-        providerHandler.SetTransformerManager(transformerManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
+        providerHandler.SetTransformerManager(transformerManager);
 
         // Act
         var result = await providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
 
         // Assert
-        cacheManager.Verify(v => v.Get(path), Times.Once);
-        providerProxy.Verify(v => v.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>()), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.First().Value ?? ""), Times.Once);
-        transformer.Verify(v => v.Transform<string>(value.Last().Value ?? ""), Times.Once);
-        cacheManager.Verify(v => v.Set(path, It.Is<Dictionary<string, string?>>(o =>
-            o.First().Key == value.First().Key &&
-            o.First().Value == null &&
-            o.Last().Key == value.Last().Key &&
-            o.Last().Value == transformedValue
-        ), duration), Times.Once);
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        cacheManager.Received(1).Get(path);
+        await providerProxy.Received(1).GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration>());
+        transformer.Received(1).Transform<string>(value.First().Value ?? "");
+        transformer.Received(1).Transform<string>(value.Last().Value ?? "");
+        cacheManager.Received(1).Set(
+            path,
+            Arg.Is<Dictionary<string, string?>>(o =>
+                o.First().Key == value.First().Key &&
+                o.First().Value == null &&
+                o.Last().Key == value.Last().Key &&
+                o.Last().Value == transformedValue
+            ),
+            duration);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         Assert.NotNull(result);
     }
-    
+
     [Fact]
     public async Task GetMultipleAsync_WhenRaiseTransformationErrorSet_ThrowsException()
     {
@@ -1240,45 +1182,38 @@ public class ParameterProviderTest
         var transformationError = new Exception("Test Error");
         var raiseTransformationError = true;
 
-        var transformer = new Mock<ITransformer>();
-        transformer.Setup(c =>
-            c.Transform<string>(value.First().Value ?? "")
-        ).Throws(transformationError);
-
-        transformer.Setup(c =>
-            c.Transform<string>(value.Last().Value ?? "")
-        ).Returns(transformedValue);
+        var transformer = Substitute.For<ITransformer>();
+        transformer.Transform<string>(value.First().Value ?? "").Throws(transformationError);
+        transformer.Transform<string>(value.Last().Value ?? "").Returns(transformedValue);
 
         var transformation = Transformation.Json;
-        var transformerManager = new Mock<ITransformerManager>();
-        transformerManager.Setup(c =>
-            c.GetTransformer(transformation)
-        ).Returns(transformer.Object);
+        var transformerManager = Substitute.For<ITransformerManager>();
+        transformerManager.GetTransformer(transformation).Returns(transformer);
 
-        var providerProxy = new Mock<IParameterProviderProxy>();
-        providerProxy.Setup(c =>
-            c.GetMultipleAsync(path, It.IsAny<ParameterProviderConfiguration?>())
-        ).ReturnsAsync(value);
+        var providerProxy = Substitute.For<IParameterProviderProxy>();
+        providerProxy.GetMultipleAsync(path, Arg.Any<ParameterProviderConfiguration?>()).Returns(value);
 
-        var cacheManager = new Mock<ICacheManager>();
-        cacheManager.Setup(c =>
-            c.Get(path)
-        ).Returns(null);
+        var cacheManager = Substitute.For<ICacheManager>();
+        cacheManager.Get(path).Returns(null);
 
-        var powertoolsConfigurations = new Mock<IPowertoolsConfigurations>();
-        
-        var providerHandler =
-            new ParameterProviderBaseHandler(providerProxy.Object.GetAsync, providerProxy.Object.GetMultipleAsync,
-                ParameterProviderCacheMode.All, powertoolsConfigurations.Object);
-        providerHandler.SetCacheManager(cacheManager.Object);
-        providerHandler.SetTransformerManager(transformerManager.Object);
+        var powertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        var providerHandler = new ParameterProviderBaseHandler(
+            providerProxy.GetAsync,
+            providerProxy.GetMultipleAsync,
+            ParameterProviderCacheMode.All,
+            powertoolsConfigurations);
+
+        providerHandler.SetCacheManager(cacheManager);
+        providerHandler.SetTransformerManager(transformerManager);
         providerHandler.SetRaiseTransformationError(raiseTransformationError);
-        
+
         // Act
-        Task<IDictionary<string, string?>> Act() => providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
+        async Task<IDictionary<string, string?>> Act() =>
+            await providerHandler.GetMultipleAsync<string>(path, null, transformation, null);
 
         // Assert
-        powertoolsConfigurations.Verify(v => v.SetExecutionEnvironment(providerHandler), Times.Once);
+        powertoolsConfigurations.Received(1).SetExecutionEnvironment(providerHandler);
         await Assert.ThrowsAsync<TransformationException>(Act);
     }
 

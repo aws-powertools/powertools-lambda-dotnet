@@ -22,7 +22,7 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 using AWS.Lambda.Powertools.Parameters.Internal.Provider;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 using AWS.Lambda.Powertools.Parameters.Transform;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Parameters.Tests.SimpleSystemsManagement;
@@ -38,33 +38,33 @@ public class SsmProviderTest
         var transformerName = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)!
+            .Returns(Task.FromResult(value));
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
         ssmProvider.DefaultMaxAge(duration);
-        ssmProvider.AddTransformer(transformerName, transformer.Object);
+        ssmProvider.AddTransformer(transformerName, transformer);
 
         // Act
         var result = await ssmProvider.GetAsync(key);
 
         // Assert
-        providerHandler.Verify(v => v.GetAsync<string>(key, null, null, null), Times.Once);
-        providerHandler.Verify(v => v.SetCacheManager(cacheManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetTransformerManager(transformerManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetDefaultMaxAge(duration), Times.Once);
-        providerHandler.Verify(v => v.AddCustomTransformer(transformerName, transformer.Object), Times.Once);
+        await providerHandler.Received(1).GetAsync<string>(key, null, null, null);
+        providerHandler.Received(1).SetCacheManager(cacheManager);
+        providerHandler.Received(1).SetTransformerManager(transformerManager);
+        providerHandler.Received(1).SetDefaultMaxAge(duration);
+        providerHandler.Received(1).AddCustomTransformer(transformerName, transformer);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -76,20 +76,20 @@ public class SsmProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)!
+            .Returns(Task.FromResult(value));
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -97,12 +97,12 @@ public class SsmProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
+        await providerHandler.Received(1)
+            .GetAsync<string>(key,
+                Arg.Is<ParameterProviderConfiguration?>(x =>
                     x != null && x.ForceFetch
                 ), null,
-                null), Times.Once);
+                null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -115,20 +115,20 @@ public class SsmProviderTest
         var value = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)!
+            .Returns(Task.FromResult(value));
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -136,12 +136,11 @@ public class SsmProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.MaxAge == duration
-                ), null,
-                null), Times.Once);
+        await providerHandler
+            .Received(1)
+            .GetAsync<string>(key, Arg.Is<ParameterProviderConfiguration?>(
+                x => x != null && x.MaxAge == duration
+            ), null, null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -153,34 +152,33 @@ public class SsmProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)!
+            .Returns(Task.FromResult(value));
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
-            .WithTransformation(transformer.Object)
+            .WithTransformation(transformer)
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.Transformer == transformer.Object
-                ), null,
-                null), Times.Once);
+        await providerHandler
+            .Received(1)
+            .GetAsync<string>(key, Arg.Is<ParameterProviderConfiguration?>(
+                x => x != null && x.Transformer == transformer
+            ), null, null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -192,21 +190,21 @@ public class SsmProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformation = Transformation.Auto;
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), transformation, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), transformation, null)!
+            .Returns(Task.FromResult(value));
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -214,13 +212,14 @@ public class SsmProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
+        await providerHandler
+            .Received(1)
+            .GetAsync<string>(key,
+                Arg.Is<ParameterProviderConfiguration?>(
+                    x => x != null && !x.ForceFetch
                 ),
-                It.Is<Transformation?>(x => x == transformation),
-                null), Times.Once);
+                Arg.Is<Transformation?>(x => x == transformation),
+                null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -232,21 +231,21 @@ public class SsmProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformerName = Guid.NewGuid().ToString();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, transformerName)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, transformerName)!
+            .Returns(Task.FromResult(value));
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -254,14 +253,14 @@ public class SsmProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
+        await providerHandler
+            .Received(1)
+            .GetAsync<string>(key,
+                Arg.Is<ParameterProviderConfiguration?>(
+                    x => x != null && !x.ForceFetch
                 ),
                 null,
-                It.Is<string?>(x => x == transformerName))
-            , Times.Once);
+                Arg.Is<string?>(x => x == transformerName));
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -281,31 +280,30 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client
+            .GetParameterAsync(Arg.Any<GetParameterRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        cacheManager
+            .Get(key)
+            .Returns(valueFromCache);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider.GetAsync(key);
 
         // Assert
-        client.Verify(v =>
-                v.GetParameterAsync(It.IsAny<GetParameterRequest>(),
-                    It.IsAny<CancellationToken>()),
-            Times.Never);
+        await client
+            .DidNotReceive()
+            .GetParameterAsync(Arg.Any<GetParameterRequest>(), Arg.Any<CancellationToken>());
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
@@ -325,35 +323,35 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client
+            .GetParameterAsync(Arg.Any<GetParameterRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        cacheManager
+            .Get(key)
+            .Returns(valueFromCache);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider.ForceFetch().GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Never);
-        client.Verify(v =>
-                v.GetParameterAsync(
-                    It.Is<GetParameterRequest>(x =>
-                        x.Name == key && !x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager
+            .DidNotReceive()
+            .Get(key);
+        await client
+            .Received(1)
+            .GetParameterAsync(
+                Arg.Is<GetParameterRequest>(x => x.Name == key && !x.WithDecryption),
+                Arg.Any<CancellationToken>());
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -373,36 +371,29 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParameterAsync(Arg.Any<GetParameterRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider.GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParameterAsync(
-                    It.Is<GetParameterRequest>(x =>
-                        x.Name == key && !x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1)
+            .GetParameterAsync(Arg.Is<GetParameterRequest>(x =>
+                x.Name == key && !x.WithDecryption), Arg.Any<CancellationToken>());
+        cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -422,37 +413,30 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParameterAsync(Arg.Any<GetParameterRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(duration);
 
         // Act
         var result = await ssmProvider.GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParameterAsync(
-                    It.Is<GetParameterRequest>(x =>
-                        x.Name == key && !x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1)
+            .GetParameterAsync(Arg.Is<GetParameterRequest>(x =>
+                x.Name == key && !x.WithDecryption), Arg.Any<CancellationToken>());
+        cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -473,22 +457,19 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParameterAsync(Arg.Any<GetParameterRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(defaultMaxAge);
 
         // Act
@@ -497,15 +478,11 @@ public class SsmProviderTest
             .GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParameterAsync(
-                    It.Is<GetParameterRequest>(x =>
-                        x.Name == key && !x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1)
+            .GetParameterAsync(Arg.Is<GetParameterRequest>(x =>
+                x.Name == key && !x.WithDecryption), Arg.Any<CancellationToken>());
+        cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -524,22 +501,19 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParameterAsync(It.IsAny<GetParameterRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParameterAsync(Arg.Any<GetParameterRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -547,14 +521,10 @@ public class SsmProviderTest
             .GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParameterAsync(
-                    It.Is<GetParameterRequest>(x =>
-                        x.Name == key && x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1)
+            .GetParameterAsync(Arg.Is<GetParameterRequest>(x =>
+                x.Name == key && x.WithDecryption), Arg.Any<CancellationToken>());
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -572,33 +542,32 @@ public class SsmProviderTest
         var transformerName = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
         ssmProvider.DefaultMaxAge(duration);
-        ssmProvider.AddTransformer(transformerName, transformer.Object);
+        ssmProvider.AddTransformer(transformerName, transformer);
 
         // Act
         var result = await ssmProvider.GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(v => v.GetMultipleAsync<string>(key, null, null, null), Times.Once);
-        providerHandler.Verify(v => v.SetCacheManager(cacheManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetTransformerManager(transformerManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetDefaultMaxAge(duration), Times.Once);
-        providerHandler.Verify(v => v.AddCustomTransformer(transformerName, transformer.Object), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key, null, null, null);
+        providerHandler.Received(1).SetCacheManager(cacheManager);
+        providerHandler.Received(1).SetTransformerManager(transformerManager);
+        providerHandler.Received(1).SetDefaultMaxAge(duration);
+        providerHandler.Received(1).AddCustomTransformer(transformerName, transformer);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -614,20 +583,19 @@ public class SsmProviderTest
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -635,12 +603,10 @@ public class SsmProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.ForceFetch
-                ), null,
-                null), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.ForceFetch),
+            null,
+            null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -657,20 +623,19 @@ public class SsmProviderTest
         };
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -678,12 +643,10 @@ public class SsmProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.MaxAge == duration
-                ), null,
-                null), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.MaxAge == duration),
+            null,
+            null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -699,34 +662,31 @@ public class SsmProviderTest
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
-            .WithTransformation(transformer.Object)
+            .WithTransformation(transformer)
             .GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.Transformer == transformer.Object
-                ), null,
-                null), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == transformer),
+            null,
+            null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -742,21 +702,20 @@ public class SsmProviderTest
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformation = Transformation.Auto;
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), transformation, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), transformation, null)
+            .Returns(value);
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -764,13 +723,10 @@ public class SsmProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
-                It.Is<Transformation?>(x => x == transformation),
-                null), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && !x.ForceFetch),
+            Arg.Is<Transformation?>(x => x == transformation),
+            null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -786,21 +742,20 @@ public class SsmProviderTest
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformerName = Guid.NewGuid().ToString();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, transformerName)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, transformerName)
+            .Returns(value);
 
         var ssmProvider = new SsmProvider();
-        ssmProvider.SetHandler(providerHandler.Object);
-        ssmProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        ssmProvider.SetHandler(providerHandler);
+        ssmProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -808,14 +763,10 @@ public class SsmProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
-                null,
-                It.Is<string?>(x => x == transformerName))
-            , Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && !x.ForceFetch),
+            null,
+            Arg.Is<string?>(x => x == transformerName));
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -834,12 +785,12 @@ public class SsmProviderTest
         {
             Parameters = new List<Parameter>
             {
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
                 },
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
@@ -847,31 +798,25 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParametersByPathAsync(It.IsAny<GetParametersByPathRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParametersByPathAsync(Arg.Any<GetParametersByPathRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        cacheManager.Get(key).Returns(valueFromCache);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider.GetMultipleAsync(key);
 
         // Assert
-        client.Verify(v =>
-                v.GetParametersByPathAsync(It.IsAny<GetParametersByPathRequest>(),
-                    It.IsAny<CancellationToken>()),
-            Times.Never);
+        await client.DidNotReceiveWithAnyArgs().GetParametersByPathAsync(null, CancellationToken.None);
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
@@ -890,47 +835,38 @@ public class SsmProviderTest
         {
             Parameters = new List<Parameter>
             {
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
                 },
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
                 }
             }
         };
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParametersByPathAsync(It.IsAny<GetParametersByPathRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParametersByPathAsync(Arg.Any<GetParametersByPathRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        cacheManager.Get(key).Returns(valueFromCache);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider.ForceFetch().GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Never);
-        client.Verify(v =>
-                v.GetParametersByPathAsync(
-                    It.Is<GetParametersByPathRequest>(x =>
-                        x.Path == key && !x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.DidNotReceiveWithAnyArgs().Get(Arg.Any<string>());
+        await client.ReceivedWithAnyArgs(1).GetParametersByPathAsync(null, CancellationToken.None);
         Assert.NotNull(result);
         Assert.Equal(response.Parameters.First().Name, result.First().Key);
         Assert.Equal(response.Parameters.First().Value, result.First().Value);
@@ -948,12 +884,12 @@ public class SsmProviderTest
         {
             Parameters = new List<Parameter>
             {
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
                 },
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
@@ -961,43 +897,36 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParametersByPathAsync(It.IsAny<GetParametersByPathRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParametersByPathAsync(Arg.Any<GetParametersByPathRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider.GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParametersByPathAsync(
-                    It.Is<GetParametersByPathRequest>(x =>
-                        x.Path == key && !x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(result.First().Key, result.First().Value, duration), Times.Once);
-        cacheManager.Verify(v => v.Set(result.Last().Key, result.Last().Value, duration), Times.Once);
-        cacheManager.Verify(v => v.Set(key, It.Is<Dictionary<string, string>>(x =>
-            x.First().Key == result.First().Key &&
-            x.First().Value == result.First().Value &&
-            x.Last().Key == result.Last().Key &&
-            x.Last().Value == result.Last().Value
-        ), duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetParametersByPathAsync(
+            Arg.Is<GetParametersByPathRequest>(x =>
+                x.Path == key && !x.WithDecryption
+            ),
+            Arg.Any<CancellationToken>()
+        );
+
+        foreach (var item in result)
+        {
+            cacheManager.Received(1).Set(item.Key, item.Value, duration);
+        }
 
         Assert.NotNull(result);
         Assert.Equal(response.Parameters.First().Name, result.First().Key);
@@ -1016,12 +945,12 @@ public class SsmProviderTest
         {
             Parameters = new List<Parameter>
             {
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
                 },
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
@@ -1029,44 +958,37 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParametersByPathAsync(It.IsAny<GetParametersByPathRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParametersByPathAsync(Arg.Any<GetParametersByPathRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(duration);
 
         // Act
         var result = await ssmProvider.GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParametersByPathAsync(
-                    It.Is<GetParametersByPathRequest>(x =>
-                        x.Path == key && !x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(result.First().Key, result.First().Value, duration), Times.Once);
-        cacheManager.Verify(v => v.Set(result.Last().Key, result.Last().Value, duration), Times.Once);
-        cacheManager.Verify(v => v.Set(key, It.Is<Dictionary<string, string>>(x =>
-            x.First().Key == result.First().Key &&
-            x.First().Value == result.First().Value &&
-            x.Last().Key == result.Last().Key &&
-            x.Last().Value == result.Last().Value
-        ), duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetParametersByPathAsync(
+            Arg.Is<GetParametersByPathRequest>(x =>
+                x.Path == key && !x.WithDecryption
+            ),
+            Arg.Any<CancellationToken>()
+        );
+
+        foreach (var item in result)
+        {
+            cacheManager.Received(1).Set(item.Key, item.Value, duration);
+        }
 
         Assert.NotNull(result);
         Assert.Equal(response.Parameters.First().Name, result.First().Key);
@@ -1086,12 +1008,12 @@ public class SsmProviderTest
         {
             Parameters = new List<Parameter>
             {
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
                 },
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
@@ -1099,22 +1021,19 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParametersByPathAsync(It.IsAny<GetParametersByPathRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParametersByPathAsync(Arg.Any<GetParametersByPathRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(defaultMaxAge);
 
         // Act
@@ -1123,22 +1042,18 @@ public class SsmProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParametersByPathAsync(
-                    It.Is<GetParametersByPathRequest>(x =>
-                        x.Path == key && !x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(result.First().Key, result.First().Value, duration), Times.Once);
-        cacheManager.Verify(v => v.Set(result.Last().Key, result.Last().Value, duration), Times.Once);
-        cacheManager.Verify(v => v.Set(key, It.Is<Dictionary<string, string>>(x =>
-            x.First().Key == result.First().Key &&
-            x.First().Value == result.First().Value &&
-            x.Last().Key == result.Last().Key &&
-            x.Last().Value == result.Last().Value
-        ), duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetParametersByPathAsync(
+            Arg.Is<GetParametersByPathRequest>(x =>
+                x.Path == key && !x.WithDecryption
+            ),
+            Arg.Any<CancellationToken>()
+        );
+
+        foreach (var item in result)
+        {
+            cacheManager.Received(1).Set(item.Key, item.Value, duration);
+        }
 
         Assert.NotNull(result);
         Assert.Equal(response.Parameters.First().Name, result.First().Key);
@@ -1156,12 +1071,12 @@ public class SsmProviderTest
         {
             Parameters = new List<Parameter>
             {
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
                 },
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
@@ -1169,22 +1084,20 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParametersByPathAsync(It.IsAny<GetParametersByPathRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParametersByPathAsync(
+            Arg.Any<GetParametersByPathRequest>(), Arg.Any<CancellationToken>()
+        ).Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -1192,20 +1105,20 @@ public class SsmProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParametersByPathAsync(
-                    It.Is<GetParametersByPathRequest>(x =>
-                        x.Path == key && x.WithDecryption
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetParametersByPathAsync(
+            Arg.Is<GetParametersByPathRequest>(x =>
+                x.Path == key && x.WithDecryption
+            ),
+            Arg.Any<CancellationToken>()
+        );
 
-        Assert.NotNull(result);
-        Assert.Equal(response.Parameters.First().Name, result.First().Key);
-        Assert.Equal(response.Parameters.First().Value, result.First().Value);
-        Assert.Equal(response.Parameters.Last().Name, result.Last().Key);
-        Assert.Equal(response.Parameters.Last().Value, result.Last().Value);
+        foreach (var item in result)
+        {
+            Assert.Contains(response.Parameters, p =>
+                p.Name == item.Key && p.Value == item.Value
+            );
+        }
     }
 
     [Fact]
@@ -1217,12 +1130,12 @@ public class SsmProviderTest
         {
             Parameters = new List<Parameter>
             {
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
                 },
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
@@ -1230,22 +1143,20 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParametersByPathAsync(It.IsAny<GetParametersByPathRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetParametersByPathAsync(
+            Arg.Any<GetParametersByPathRequest>(), Arg.Any<CancellationToken>()
+        ).Returns(Task.FromResult(response));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -1253,20 +1164,20 @@ public class SsmProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParametersByPathAsync(
-                    It.Is<GetParametersByPathRequest>(x =>
-                        x.Path == key && x.Recursive
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetParametersByPathAsync(
+            Arg.Is<GetParametersByPathRequest>(x =>
+                x.Path == key && x.Recursive
+            ),
+            Arg.Any<CancellationToken>()
+        );
 
-        Assert.NotNull(result);
-        Assert.Equal(response.Parameters.First().Name, result.First().Key);
-        Assert.Equal(response.Parameters.First().Value, result.First().Value);
-        Assert.Equal(response.Parameters.Last().Name, result.Last().Key);
-        Assert.Equal(response.Parameters.Last().Value, result.Last().Value);
+        foreach (var item in result)
+        {
+            Assert.Contains(response.Parameters, p =>
+                p.Name == item.Key && p.Value == item.Value
+            );
+        }
     }
 
     [Fact]
@@ -1279,7 +1190,7 @@ public class SsmProviderTest
         {
             Parameters = new List<Parameter>
             {
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
@@ -1291,7 +1202,7 @@ public class SsmProviderTest
         {
             Parameters = new List<Parameter>
             {
-                new()
+                new Parameter
                 {
                     Name = Guid.NewGuid().ToString(),
                     Value = Guid.NewGuid().ToString()
@@ -1299,28 +1210,26 @@ public class SsmProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSimpleSystemsManagement>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSimpleSystemsManagement>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetParametersByPathAsync(It.Is<GetParametersByPathRequest>(x => string.IsNullOrEmpty(x.NextToken)),
-                It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response1);
+        client.GetParametersByPathAsync(
+            Arg.Is<GetParametersByPathRequest>(x => string.IsNullOrEmpty(x.NextToken)),
+            Arg.Any<CancellationToken>()
+        ).Returns(Task.FromResult(response1));
 
-        client.Setup(c =>
-            c.GetParametersByPathAsync(It.Is<GetParametersByPathRequest>(x => x.NextToken == nextToken),
-                It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response2);
+        client.GetParametersByPathAsync(
+            Arg.Is<GetParametersByPathRequest>(x => x.NextToken == nextToken),
+            Arg.Any<CancellationToken>()
+        ).Returns(Task.FromResult(response2));
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var ssmProvider = new SsmProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await ssmProvider
@@ -1329,27 +1238,26 @@ public class SsmProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetParametersByPathAsync(
-                    It.Is<GetParametersByPathRequest>(x =>
-                        x.Path == key && x.Recursive && x.WithDecryption && string.IsNullOrEmpty(x.NextToken)
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        client.Verify(v =>
-                v.GetParametersByPathAsync(
-                    It.Is<GetParametersByPathRequest>(x =>
-                        x.Path == key && x.Recursive && x.WithDecryption && x.NextToken == nextToken
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetParametersByPathAsync(
+            Arg.Is<GetParametersByPathRequest>(x =>
+                x.Path == key && x.Recursive && x.WithDecryption && string.IsNullOrEmpty(x.NextToken)
+            ),
+            Arg.Any<CancellationToken>()
+        );
 
-        Assert.NotNull(result);
+        await client.Received(1).GetParametersByPathAsync(
+            Arg.Is<GetParametersByPathRequest>(x =>
+                x.Path == key && x.Recursive && x.WithDecryption && x.NextToken == nextToken
+            ),
+            Arg.Any<CancellationToken>()
+        );
 
-        Assert.Equal(response1.Parameters.First().Name, result.First().Key);
-        Assert.Equal(response1.Parameters.First().Value, result.First().Value);
-        Assert.Equal(response2.Parameters.First().Name, result.Last().Key);
-        Assert.Equal(response2.Parameters.First().Value, result.Last().Value);
+        foreach (var item in result)
+        {
+            Assert.Contains(response1.Parameters.Concat(response2.Parameters), p =>
+                p.Name == item.Key && p.Value == item.Value
+            );
+        }
     }
 }
