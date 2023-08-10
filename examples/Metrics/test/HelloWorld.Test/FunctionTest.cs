@@ -61,7 +61,6 @@ namespace HelloWorld.Tests
             Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE","AWSLambdaPowertools");
             
             var dynamoDbContext = Substitute.For<IDynamoDBContext>();
-
             var handlerMock = new MockHttpMessageHandler(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
