@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
-//using Moq;
 using NSubstitute;
 using Xunit;
 
