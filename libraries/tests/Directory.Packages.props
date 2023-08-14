@@ -4,8 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="coverlet.collector" Version="6.0.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
-    <PackageVersion Include="Moq" Version="4.18.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.7.0" />
+    <PackageVersion Include="NSubstitute" Version="5.0.0" />
     <PackageVersion Include="xunit" Version="2.5.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.0"/>
     <PackageVersion Include="Testcontainers" Version="3.3.0" />
