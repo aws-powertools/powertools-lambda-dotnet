@@ -23,7 +23,7 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 using AWS.Lambda.Powertools.Parameters.Internal.Provider;
 using AWS.Lambda.Powertools.Parameters.SecretsManager;
 using AWS.Lambda.Powertools.Parameters.Transform;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Parameters.Tests.SecretsManager;
@@ -41,33 +41,32 @@ public class SecretsProviderTest
         var transformerName = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var secretsProvider = new SecretsProvider();
-        secretsProvider.SetHandler(providerHandler.Object);
-        secretsProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        secretsProvider.SetHandler(providerHandler);
+        secretsProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
         secretsProvider.DefaultMaxAge(duration);
-        secretsProvider.AddTransformer(transformerName, transformer.Object);
+        secretsProvider.AddTransformer(transformerName, transformer);
 
         // Act
         var result = await secretsProvider.GetAsync(key);
 
         // Assert
-        providerHandler.Verify(v => v.GetAsync<string>(key, null, null, null), Times.Once);
-        providerHandler.Verify(v => v.SetCacheManager(cacheManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetTransformerManager(transformerManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetDefaultMaxAge(duration), Times.Once);
-        providerHandler.Verify(v => v.AddCustomTransformer(transformerName, transformer.Object), Times.Once);
+        await providerHandler.Received(1).GetAsync<string>(key, null, null, null);
+        providerHandler.Received(1).SetCacheManager(cacheManager);
+        providerHandler.Received(1).SetTransformerManager(transformerManager);
+        providerHandler.Received(1).SetDefaultMaxAge(duration);
+        providerHandler.Received(1).AddCustomTransformer(transformerName, transformer);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -79,20 +78,19 @@ public class SecretsProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var secretsProvider = new SecretsProvider();
-        secretsProvider.SetHandler(providerHandler.Object);
-        secretsProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        secretsProvider.SetHandler(providerHandler);
+        secretsProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await secretsProvider
@@ -100,12 +98,10 @@ public class SecretsProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.ForceFetch
-                ), null,
-                null), Times.Once);
+        await providerHandler.Received(1).GetAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.ForceFetch),
+            null,
+            null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -118,20 +114,19 @@ public class SecretsProviderTest
         var value = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var secretsProvider = new SecretsProvider();
-        secretsProvider.SetHandler(providerHandler.Object);
-        secretsProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        secretsProvider.SetHandler(providerHandler);
+        secretsProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await secretsProvider
@@ -139,12 +134,10 @@ public class SecretsProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.MaxAge == duration
-                ), null,
-                null), Times.Once);
+        await providerHandler.Received(1).GetAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.MaxAge == duration),
+            null,
+            null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -156,34 +149,31 @@ public class SecretsProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var secretsProvider = new SecretsProvider();
-        secretsProvider.SetHandler(providerHandler.Object);
-        secretsProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        secretsProvider.SetHandler(providerHandler);
+        secretsProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await secretsProvider
-            .WithTransformation(transformer.Object)
+            .WithTransformation(transformer)
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.Transformer == transformer.Object
-                ), null,
-                null), Times.Once);
+        await providerHandler.Received(1).GetAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == transformer),
+            null,
+            null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -195,21 +185,24 @@ public class SecretsProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformation = Transformation.Auto;
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), transformation, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && !x.ForceFetch),
+            transformation,
+            null
+        )!.Returns(Task.FromResult(value));
 
         var secretsProvider = new SecretsProvider();
-        secretsProvider.SetHandler(providerHandler.Object);
-        secretsProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        secretsProvider.SetHandler(providerHandler);
+        secretsProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await secretsProvider
@@ -217,13 +210,12 @@ public class SecretsProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
-                It.Is<Transformation?>(x => x == transformation),
-                null), Times.Once);
+        await providerHandler.Received(1).GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && !x.ForceFetch),
+            transformation,
+            null
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -235,21 +227,24 @@ public class SecretsProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformerName = Guid.NewGuid().ToString();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, transformerName)
-        ).ReturnsAsync(value);
+        providerHandler.GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && !x.ForceFetch),
+            null,
+            transformerName
+        )!.Returns(Task.FromResult(value));
 
         var secretsProvider = new SecretsProvider();
-        secretsProvider.SetHandler(providerHandler.Object);
-        secretsProvider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        secretsProvider.SetHandler(providerHandler);
+        secretsProvider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await secretsProvider
@@ -257,14 +252,12 @@ public class SecretsProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
-                null,
-                It.Is<string?>(x => x == transformerName))
-            , Times.Once);
+        await providerHandler.Received(1).GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && !x.ForceFetch),
+            null,
+            transformerName
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -281,31 +274,26 @@ public class SecretsProviderTest
             SecretString = value
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        cacheManager.Get(key).Returns(valueFromCache);
 
         var secretsProvider = new SecretsProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await secretsProvider.GetAsync(key);
 
         // Assert
-        client.Verify(v =>
-                v.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(),
-                    It.IsAny<CancellationToken>()),
-            Times.Never);
+        await client.DidNotReceive()
+            .GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>());
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
@@ -322,36 +310,28 @@ public class SecretsProviderTest
             SecretString = value
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        cacheManager.Get(key).Returns(valueFromCache);
 
         var secretsProvider = new SecretsProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await secretsProvider.ForceFetch().GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Never);
-        client.Verify(v =>
-                v.GetSecretValueAsync(
-                    It.Is<GetSecretValueRequest>(x =>
-                        x.SecretId == key &&
-                        x.VersionStage == CurrentVersionStage
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.DidNotReceive().Get(key);
+        await client.Received(1).GetSecretValueAsync(
+            Arg.Is<GetSecretValueRequest>(x => x.SecretId == key && x.VersionStage == CurrentVersionStage),
+            Arg.Any<CancellationToken>());
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -368,37 +348,29 @@ public class SecretsProviderTest
             SecretString = value
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var secretsProvider = new SecretsProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await secretsProvider.GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetSecretValueAsync(
-                    It.Is<GetSecretValueRequest>(x =>
-                        x.SecretId == key &&
-                        x.VersionStage == CurrentVersionStage
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetSecretValueAsync(
+            Arg.Is<GetSecretValueRequest>(x => x.SecretId == key && x.VersionStage == CurrentVersionStage),
+            Arg.Any<CancellationToken>());
+        cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -415,38 +387,30 @@ public class SecretsProviderTest
             SecretString = value
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var secretsProvider = new SecretsProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(duration);
 
         // Act
         var result = await secretsProvider.GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetSecretValueAsync(
-                    It.Is<GetSecretValueRequest>(x =>
-                        x.SecretId == key &&
-                        x.VersionStage == CurrentVersionStage
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetSecretValueAsync(
+            Arg.Is<GetSecretValueRequest>(x => x.SecretId == key && x.VersionStage == CurrentVersionStage),
+            Arg.Any<CancellationToken>());
+        cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -464,22 +428,19 @@ public class SecretsProviderTest
             SecretString = value
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var secretsProvider = new SecretsProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(defaultMaxAge);
 
         // Act
@@ -488,16 +449,11 @@ public class SecretsProviderTest
             .GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetSecretValueAsync(
-                    It.Is<GetSecretValueRequest>(x =>
-                        x.SecretId == key &&
-                        x.VersionStage == CurrentVersionStage
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetSecretValueAsync(
+            Arg.Is<GetSecretValueRequest>(x => x.SecretId == key && x.VersionStage == CurrentVersionStage),
+            Arg.Any<CancellationToken>());
+        cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -517,36 +473,28 @@ public class SecretsProviderTest
             SecretBinary = new MemoryStream(convertedByteArray)
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetSecretValueAsync(Arg.Any<GetSecretValueRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var secretsProvider = new SecretsProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await secretsProvider.GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetSecretValueAsync(
-                    It.Is<GetSecretValueRequest>(x =>
-                        x.SecretId == key &&
-                        x.VersionStage == CurrentVersionStage
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetSecretValueAsync(
+            Arg.Is<GetSecretValueRequest>(x => x.SecretId == key && x.VersionStage == CurrentVersionStage),
+            Arg.Any<CancellationToken>());
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -557,23 +505,21 @@ public class SecretsProviderTest
         // Arrange
         var key = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonSecretsManager>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonSecretsManager>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var secretsProvider = new SecretsProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
-        Task<IDictionary<string, string?>> Act() => secretsProvider.GetMultipleAsync(key);
+        async Task<IDictionary<string, string?>> Act() => await secretsProvider.GetMultipleAsync(key);
 
+        // Assert
         await Assert.ThrowsAsync<NotSupportedException>(Act);
-
     }
 }

@@ -24,8 +24,7 @@ using Amazon.DynamoDBv2.DataModel;
 using Xunit;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
-using Moq;
-using Moq.Protected;
+using NSubstitute;
 using Xunit.Abstractions;
 
 namespace HelloWorld.Tests
@@ -33,10 +32,24 @@ namespace HelloWorld.Tests
     public class FunctionTest
     {
         private readonly ITestOutputHelper _testOutputHelper;
-       
+
         public FunctionTest(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
+        }
+
+        private class MockHttpMessageHandler : HttpMessageHandler
+        {
+            private readonly HttpResponseMessage _responseMessage;
+            public MockHttpMessageHandler(HttpResponseMessage responseMessage)
+            {
+                _responseMessage = responseMessage;
+            }
+            
+            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                return await Task.FromResult(_responseMessage);
+            }
         }
 
         [Fact]
@@ -45,23 +58,14 @@ namespace HelloWorld.Tests
             var requestId = Guid.NewGuid().ToString("D");
             var accountId = Guid.NewGuid().ToString("D");
             var location = "192.158. 1.38";
-            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME","powertools-dotnet-sample");
-            
-            var dynamoDbContext = new Mock<IDynamoDBContext>();
-            var handlerMock = new Mock<HttpMessageHandler>();
-            handlerMock
-                .Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.IsAny<HttpRequestMessage>(),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync(new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent(location)
-                })
-                .Verifiable();
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "powertools-dotnet-sample");
+
+            var dynamoDbContext = Substitute.For<IDynamoDBContext>();
+            var handlerMock = new MockHttpMessageHandler(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(location)
+            });
             
             var request = new APIGatewayProxyRequest
             {
@@ -71,7 +75,7 @@ namespace HelloWorld.Tests
                     AccountId = accountId
                 }
             };
-            
+
             var context = new TestLambdaContext()
             {
                 FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1",
@@ -79,7 +83,7 @@ namespace HelloWorld.Tests
                 MemoryLimitInMB = 215,
                 AwsRequestId = Guid.NewGuid().ToString("D")
             };
-            
+
             var body = new Dictionary<string, string>
             {
                 { "LookupId", requestId },
@@ -94,7 +98,7 @@ namespace HelloWorld.Tests
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
 
-            var function = new Function(dynamoDbContext.Object, new HttpClient(handlerMock.Object));
+            var function = new Function(dynamoDbContext, new HttpClient(handlerMock));
             var response = await function.FunctionHandler(request, context);
 
             _testOutputHelper.WriteLine("Lambda Response: \n" + response.Body);

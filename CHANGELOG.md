@@ -7,6 +7,30 @@ All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 
+<a name="1.4.1"></a>
+## [1.4.1] - 2023-06-29
+## Maintenance
+
+* remove GH pages
+
+## Pull Requests
+
+* Merge pull request [#318](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/318) from aws-powertools/hjgraca-dependabot-location
+* Merge pull request [#324](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/324) from amirkaws/release-version-1.4.1
+* Merge pull request [#320](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/320) from aws-powertools/hjgraca-idempotency-example-fix
+* Merge pull request [#319](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/319) from aws-powertools/hjgraca-idempotency-example-DynamoDBv2-version
+* Merge pull request [#312](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/312) from hjgraca/metrics-prevent-exceed-100-datapoint
+* Merge pull request [#317](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/317) from aws-powertools/hjgraca-add-dependabot
+* Merge pull request [#300](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/300) from hossambarakat/feature/idempotency-example
+* Merge pull request [#298](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/298) from amirkaws/parameters-example
+* Merge pull request [#315](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/315) from aws-powertools/url-updates
+* Merge pull request [#314](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/314) from aws-powertools/readme-updates
+* Merge pull request [#313](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/313) from hjgraca/metrics-addmetric-raceconditiom
+* Merge pull request [#287](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/287) from swimming-potato/develop
+* Merge pull request [#303](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/303) from aws-powertools/remove-gh-pages
+* Merge pull request [#308](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/308) from aws-powertools/update-changelog-5332675096
+
+
 <a name="1.4.0"></a>
 ## [1.4.0] - 2023-06-21
 ## Bug Fixes
@@ -376,7 +400,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Merge pull request [#1](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1) from sliedig/develop
 
 
-[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.4.0...HEAD
+[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.4.1...HEAD
+[1.4.1]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.4.0...1.4.1
 [1.4.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.1.0...1.2.0
