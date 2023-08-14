@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using Moq;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Common.Tests;

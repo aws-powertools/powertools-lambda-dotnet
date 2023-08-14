@@ -22,7 +22,7 @@ using AWS.Lambda.Powertools.Parameters.Internal.Cache;
 using AWS.Lambda.Powertools.Parameters.Provider;
 using AWS.Lambda.Powertools.Parameters.Internal.Provider;
 using AWS.Lambda.Powertools.Parameters.Transform;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Parameters.Tests.DynamoDB;
@@ -38,33 +38,41 @@ public class DynamoDBProviderTest
         var transformerName = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetAsync<string>(
+            key,
+            Arg.Any<ParameterProviderConfiguration>(),
+            null,
+            null
+        ).Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
         provider.DefaultMaxAge(duration);
-        provider.AddTransformer(transformerName, transformer.Object);
+        provider.AddTransformer(transformerName, transformer);
 
         // Act
         var result = await provider.GetAsync(key);
 
         // Assert
-        providerHandler.Verify(v => v.GetAsync<string>(key, null, null, null), Times.Once);
-        providerHandler.Verify(v => v.SetCacheManager(cacheManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetTransformerManager(transformerManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetDefaultMaxAge(duration), Times.Once);
-        providerHandler.Verify(v => v.AddCustomTransformer(transformerName, transformer.Object), Times.Once);
+        providerHandler.Received(1).SetCacheManager(cacheManager);
+        providerHandler.Received(1).SetTransformerManager(transformerManager);
+        providerHandler.Received(1).SetDefaultMaxAge(duration);
+        providerHandler.Received(1).AddCustomTransformer(transformerName, transformer);
+        await providerHandler.Received(1).GetAsync<string>(
+            key,
+            Arg.Any<ParameterProviderConfiguration>(),
+            null,
+            null
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -76,20 +84,20 @@ public class DynamoDBProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Is<ParameterProviderConfiguration>(x => x != null && x.ForceFetch), null, null)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
@@ -97,12 +105,9 @@ public class DynamoDBProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.ForceFetch
-                ), null,
-                null), Times.Once);
+        await providerHandler
+            .Received(1)
+            .GetAsync<string>(key, Arg.Is<ParameterProviderConfiguration>(x => x != null && x.ForceFetch), null, null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -115,20 +120,21 @@ public class DynamoDBProviderTest
         var value = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Is<ParameterProviderConfiguration>(x => x != null && x.MaxAge == duration), null,
+                null)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
@@ -136,12 +142,10 @@ public class DynamoDBProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.MaxAge == duration
-                ), null,
-                null), Times.Once);
+        await providerHandler
+            .Received(1)
+            .GetAsync<string>(key, Arg.Is<ParameterProviderConfiguration>(x => x != null && x.MaxAge == duration), null,
+                null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -153,34 +157,33 @@ public class DynamoDBProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key,
+                Arg.Is<ParameterProviderConfiguration>(x => x != null && x.Transformer == transformer), null, null)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
-            .WithTransformation(transformer.Object)
+            .WithTransformation(transformer)
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.Transformer == transformer.Object
-                ), null,
-                null), Times.Once);
+        await providerHandler
+            .Received(1)
+            .GetAsync<string>(key,
+                Arg.Is<ParameterProviderConfiguration>(x => x != null && x.Transformer == transformer), null, null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -192,21 +195,22 @@ public class DynamoDBProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformation = Transformation.Auto;
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), transformation, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Is<ParameterProviderConfiguration>(x => x != null && !x.ForceFetch),
+                transformation, null)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
@@ -214,13 +218,12 @@ public class DynamoDBProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
-                It.Is<Transformation?>(x => x == transformation),
-                null), Times.Once);
+        await providerHandler
+            .Received(1)
+            .GetAsync<string>(key,
+                Arg.Is<ParameterProviderConfiguration>(x => x != null && !x.ForceFetch),
+                Arg.Is<Transformation>(x=> x == transformation),
+                null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -232,21 +235,22 @@ public class DynamoDBProviderTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformerName = Guid.NewGuid().ToString();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, transformerName)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetAsync<string>(key, Arg.Is<ParameterProviderConfiguration>(x => x != null && !x.ForceFetch), null,
+                transformerName)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
@@ -254,14 +258,12 @@ public class DynamoDBProviderTest
             .GetAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
+        await providerHandler
+            .Received(1)
+            .GetAsync<string>(key,
+                Arg.Is<ParameterProviderConfiguration>(x => x != null && !x.ForceFetch),
                 null,
-                It.Is<string?>(x => x == transformerName))
-            , Times.Once);
+                Arg.Is<string>(x => x == transformerName));
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -271,52 +273,36 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = Guid.NewGuid().ToString();
         var valueFromCache = Guid.NewGuid().ToString();
-        var response = new GetItemResponse
-        {
-            Item = new Dictionary<string, AttributeValue>()
-            {
-                { "value", new AttributeValue { S = value } }
-            }
-        };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetItemAsync(It.IsAny<GetItemRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
-
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        cacheManager.Get(key).Returns(valueFromCache);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider.GetAsync(key);
 
         // Assert
-        client.Verify(v =>
-                v.GetItemAsync(It.IsAny<GetItemRequest>(),
-                    It.IsAny<CancellationToken>()),
-            Times.Never);
+        await client
+            .DidNotReceive()
+            .GetItemAsync(Arg.Any<GetItemRequest>(), Arg.Any<CancellationToken>());
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
-
+    
     [Fact]
     public async Task GetAsync_WhenForceFetch_IgnoresCachedObject()
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
-        var valueFromCache = Guid.NewGuid().ToString();
         var response = new GetItemResponse
         {
             Item = new Dictionary<string, AttributeValue>()
@@ -325,35 +311,29 @@ public class DynamoDBProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetItemAsync(It.IsAny<GetItemRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
-
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        client.GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key["id"].S == key),
+            Arg.Any<CancellationToken>()
+        ).Returns(response);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider.ForceFetch().GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Never);
-        client.Verify(v =>
-                v.GetItemAsync(
-                    It.Is<GetItemRequest>(x =>
-                        x.Key["id"].S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.DidNotReceive().Get(key);
+        await client.Received(1).GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key["id"].S == key),
+            Arg.Any<CancellationToken>()
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -373,35 +353,31 @@ public class DynamoDBProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetItemAsync(It.IsAny<GetItemRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        client.GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key["id"].S == key),
+            Arg.Any<CancellationToken>()
+        ).Returns(response);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider.GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetItemAsync(
-                    It.Is<GetItemRequest>(x =>
-                        x.Key["id"].S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key["id"].S == key),
+            Arg.Any<CancellationToken>()
+        );
+        cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -421,37 +397,32 @@ public class DynamoDBProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetItemAsync(It.IsAny<GetItemRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
-
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        client.GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key["id"].S == key),
+            Arg.Any<CancellationToken>()
+        ).Returns(response);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(duration);
 
         // Act
         var result = await provider.GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetItemAsync(
-                    It.Is<GetItemRequest>(x =>
-                        x.Key["id"].S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key["id"].S == key),
+            Arg.Any<CancellationToken>()
+        );
+        cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -472,22 +443,20 @@ public class DynamoDBProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetItemAsync(It.IsAny<GetItemRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
-
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        client.GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key["id"].S == key),
+            Arg.Any<CancellationToken>()
+        ).Returns(response);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(defaultMaxAge);
 
         // Act
@@ -496,15 +465,12 @@ public class DynamoDBProviderTest
             .GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetItemAsync(
-                    It.Is<GetItemRequest>(x =>
-                        x.Key["id"].S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, value, duration), Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key["id"].S == key),
+            Arg.Any<CancellationToken>()
+        );
+        cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -526,22 +492,21 @@ public class DynamoDBProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetItemAsync(It.IsAny<GetItemRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key[primaryKeyAttr].S == key && x.TableName == tableName),
+            Arg.Any<CancellationToken>()
+        ).Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .UseTable(tableName);
 
         // Act
@@ -549,18 +514,15 @@ public class DynamoDBProviderTest
             .GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetItemAsync(
-                    It.Is<GetItemRequest>(x =>
-                        x.Key[primaryKeyAttr].S == key && x.TableName == tableName
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key[primaryKeyAttr].S == key && x.TableName == tableName),
+            Arg.Any<CancellationToken>()
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-    
+
     [Fact]
     public async Task GetAsync_WhenTableInfoSet_CallsClientWithTableInfo()
     {
@@ -578,22 +540,21 @@ public class DynamoDBProviderTest
             }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.GetItemAsync(It.IsAny<GetItemRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key[primaryKeyAttr].S == key && x.TableName == tableName),
+            Arg.Any<CancellationToken>()
+        ).Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .UseTable(tableName, primaryKeyAttr, valueAttr);
 
         // Act
@@ -601,14 +562,11 @@ public class DynamoDBProviderTest
             .GetAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.GetItemAsync(
-                    It.Is<GetItemRequest>(x =>
-                        x.Key[primaryKeyAttr].S == key && x.TableName == tableName
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).GetItemAsync(
+            Arg.Is<GetItemRequest>(x => x.Key[primaryKeyAttr].S == key && x.TableName == tableName),
+            Arg.Any<CancellationToken>()
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -626,37 +584,36 @@ public class DynamoDBProviderTest
         var transformerName = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
         provider.DefaultMaxAge(duration);
-        provider.AddTransformer(transformerName, transformer.Object);
+        provider.AddTransformer(transformerName, transformer);
 
         // Act
         var result = await provider.GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(v => v.GetMultipleAsync<string>(key, null, null, null), Times.Once);
-        providerHandler.Verify(v => v.SetCacheManager(cacheManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetTransformerManager(transformerManager.Object), Times.Once);
-        providerHandler.Verify(v => v.SetDefaultMaxAge(duration), Times.Once);
-        providerHandler.Verify(v => v.AddCustomTransformer(transformerName, transformer.Object), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key, null, null, null);
+        providerHandler.Received(1).SetCacheManager(cacheManager);
+        providerHandler.Received(1).SetTransformerManager(transformerManager);
+        providerHandler.Received(1).SetDefaultMaxAge(duration);
+        providerHandler.Received(1).AddCustomTransformer(transformerName, transformer);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-
+    
     [Fact]
     public async Task GetMultipleAsync_WhenForceFetch_CallsHandlerWithConfiguredParameters()
     {
@@ -668,20 +625,19 @@ public class DynamoDBProviderTest
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
@@ -689,12 +645,9 @@ public class DynamoDBProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.ForceFetch
-                ), null,
-                null), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.ForceFetch),
+            null, null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -711,37 +664,34 @@ public class DynamoDBProviderTest
         };
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler
+            .GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
             .WithMaxAge(duration)
             .GetMultipleAsync(key);
-
+        
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.MaxAge == duration
-                ), null,
-                null), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.MaxAge == duration),
+            null, null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-
+    
     [Fact]
     public async Task GetMultipleAsync_WithTransformer_CallsHandlerWithConfiguredParameters()
     {
@@ -753,34 +703,30 @@ public class DynamoDBProviderTest
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
-        var transformer = new Mock<ITransformer>();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var transformer = Substitute.For<ITransformer>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, null)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
-            .WithTransformation(transformer.Object)
+            .WithTransformation(transformer)
             .GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && x.Transformer == transformer.Object
-                ), null,
-                null), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == transformer),
+            null, null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -790,27 +736,26 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string?>()
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformation = Transformation.Auto;
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), transformation, null)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), transformation, null)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
@@ -818,13 +763,11 @@ public class DynamoDBProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
-                It.Is<Transformation?>(x => x == transformation),
-                null), Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x =>
+                x != null && !x.ForceFetch),
+            Arg.Is<Transformation?>(x => x == transformation),
+            null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -834,27 +777,26 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var value = new Dictionary<string, string?>()
+        var value = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
         var transformerName = Guid.NewGuid().ToString();
-        var providerHandler = new Mock<IParameterProviderBaseHandler>();
+        var providerHandler = Substitute.For<IParameterProviderBaseHandler>();
 
-        providerHandler.Setup(c =>
-            c.GetMultipleAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), null, transformerName)
-        ).ReturnsAsync(value);
+        providerHandler.GetMultipleAsync<string>(key, Arg.Any<ParameterProviderConfiguration?>(), null, transformerName)
+            .Returns(value);
 
         var provider = new DynamoDBProvider();
-        provider.SetHandler(providerHandler.Object);
-        provider.UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+        provider.SetHandler(providerHandler);
+        provider.UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider
@@ -862,68 +804,42 @@ public class DynamoDBProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        providerHandler.Verify(
-            v => v.GetMultipleAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x =>
-                    x != null && !x.ForceFetch
-                ),
-                null,
-                It.Is<string?>(x => x == transformerName))
-            , Times.Once);
+        await providerHandler.Received(1).GetMultipleAsync<string>(key,
+            Arg.Is<ParameterProviderConfiguration?>(x =>
+                x != null && !x.ForceFetch),
+            null,
+            Arg.Is<string?>(x => x == transformerName));
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
-
+    
     [Fact]
     public async Task GetMultipleAsync_WhenCachedObjectExists_ReturnsCachedObject()
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var valueFromCache = new Dictionary<string, string?>()
+        var valueFromCache = new Dictionary<string, string?>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        var value = new Dictionary<string, string?>()
-        {
-            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
-            { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
-        };
-        var response = new QueryResponse
-        {
-            Items = value.Select(kv =>
-                new Dictionary<string, AttributeValue>()
-                {
-                    { "sk", new AttributeValue { S = kv.Key } },
-                    { "value", new AttributeValue { S = kv.Value } }
-                }).ToList()
-        };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
-
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        cacheManager.Get(key).Returns(valueFromCache);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider.GetMultipleAsync(key);
 
         // Assert
-        client.Verify(v =>
-                v.QueryAsync(It.IsAny<QueryRequest>(),
-                    It.IsAny<CancellationToken>()),
-            Times.Never);
+        await client.DidNotReceiveWithAnyArgs().QueryAsync(default);
         Assert.NotNull(result);
         Assert.Equal(valueFromCache, result);
     }
@@ -933,12 +849,12 @@ public class DynamoDBProviderTest
     {
         // Arrange
         var key = Guid.NewGuid().ToString();
-        var valueFromCache = new Dictionary<string, string>()
+        var valueFromCache = new Dictionary<string, string>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
         };
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -946,44 +862,40 @@ public class DynamoDBProviderTest
         var response = new QueryResponse
         {
             Items = value.Select(kv =>
-                new Dictionary<string, AttributeValue>()
+                new Dictionary<string, AttributeValue>
                 {
                     { "sk", new AttributeValue { S = kv.Key } },
                     { "value", new AttributeValue { S = kv.Value } }
                 }).ToList()
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(valueFromCache);
+        cacheManager.Get(key).Returns(valueFromCache);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider.ForceFetch().GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Never);
-        client.Verify(v =>
-                v.QueryAsync(
-                    It.Is<QueryRequest>(x =>
-                        x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
-                            .Split('=', StringSplitOptions.TrimEntries).Last() &&
-                        x.ExpressionAttributeValues.First().Value.S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.DidNotReceive().Get(key);
+        await client.Received(1).QueryAsync(
+            Arg.Is<QueryRequest>(x =>
+                x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
+                    .Split('=', StringSplitOptions.TrimEntries).Last() &&
+                x.ExpressionAttributeValues.First().Value.S == key
+            ),
+            Arg.Any<CancellationToken>()
+        );
         Assert.NotNull(result);
         Assert.Equal(value.First().Key, result.First().Key);
         Assert.Equal(value.First().Value, result.First().Value);
@@ -997,7 +909,7 @@ public class DynamoDBProviderTest
         // Arrange
         var key = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge;
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -1005,50 +917,46 @@ public class DynamoDBProviderTest
         var response = new QueryResponse
         {
             Items = value.Select(kv =>
-                new Dictionary<string, AttributeValue>()
+                new Dictionary<string, AttributeValue>
                 {
                     { "sk", new AttributeValue { S = kv.Key } },
                     { "value", new AttributeValue { S = kv.Value } }
                 }).ToList()
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object);
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager);
 
         // Act
         var result = await provider.GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.QueryAsync(
-                    It.Is<QueryRequest>(x =>
-                        x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
-                            .Split('=', StringSplitOptions.TrimEntries).Last() &&
-                        x.ExpressionAttributeValues.First().Value.S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, It.Is<Dictionary<string, string>>(x =>
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).QueryAsync(
+            Arg.Is<QueryRequest>(x =>
+                x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
+                    .Split('=', StringSplitOptions.TrimEntries).Last() &&
+                x.ExpressionAttributeValues.First().Value.S == key
+            ),
+            Arg.Any<CancellationToken>()
+        );
+        cacheManager.Received(1).Set(key, Arg.Is<Dictionary<string, string>>(x =>
             x.First().Key == result.First().Key &&
             x.First().Value == result.First().Value &&
             x.Last().Key == result.Last().Key &&
             x.Last().Value == result.Last().Value
-        ), duration), Times.Once);
+        ), duration);
 
         Assert.NotNull(result);
         Assert.Equal(value.First().Key, result.First().Key);
@@ -1063,7 +971,7 @@ public class DynamoDBProviderTest
         // Arrange
         var key = Guid.NewGuid().ToString();
         var duration = CacheManager.DefaultMaxAge.Add(TimeSpan.FromHours(10));
-        var value = new Dictionary<string, string>()
+        var value = new Dictionary<string, string>
         {
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
             { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() }
@@ -1071,51 +979,47 @@ public class DynamoDBProviderTest
         var response = new QueryResponse
         {
             Items = value.Select(kv =>
-                new Dictionary<string, AttributeValue>()
+                new Dictionary<string, AttributeValue>
                 {
                     { "sk", new AttributeValue { S = kv.Key } },
                     { "value", new AttributeValue { S = kv.Value } }
                 }).ToList()
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(duration);
 
         // Act
         var result = await provider.GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.QueryAsync(
-                    It.Is<QueryRequest>(x =>
-                        x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
-                            .Split('=', StringSplitOptions.TrimEntries).Last() &&
-                        x.ExpressionAttributeValues.First().Value.S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, It.Is<Dictionary<string, string>>(x =>
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).QueryAsync(
+            Arg.Is<QueryRequest>(x =>
+                x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
+                    .Split('=', StringSplitOptions.TrimEntries).Last() &&
+                x.ExpressionAttributeValues.First().Value.S == key
+            ),
+            Arg.Any<CancellationToken>()
+        );
+        cacheManager.Received(1).Set(key, Arg.Is<Dictionary<string, string>>(x =>
             x.First().Key == result.First().Key &&
             x.First().Value == result.First().Value &&
             x.Last().Key == result.Last().Key &&
             x.Last().Value == result.Last().Value
-        ), duration), Times.Once);
+        ), duration);
 
         Assert.NotNull(result);
         Assert.Equal(value.First().Key, result.First().Key);
@@ -1146,22 +1050,19 @@ public class DynamoDBProviderTest
                 }).ToList()
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .DefaultMaxAge(defaultMaxAge);
 
         // Act
@@ -1170,22 +1071,21 @@ public class DynamoDBProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.QueryAsync(
-                    It.Is<QueryRequest>(x =>
-                        x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
-                            .Split('=', StringSplitOptions.TrimEntries).Last() &&
-                        x.ExpressionAttributeValues.First().Value.S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
-        cacheManager.Verify(v => v.Set(key, It.Is<Dictionary<string, string>>(x =>
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).QueryAsync(
+            Arg.Is<QueryRequest>(x =>
+                x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
+                    .Split('=', StringSplitOptions.TrimEntries).Last() &&
+                x.ExpressionAttributeValues.First().Value.S == key
+            ),
+            Arg.Any<CancellationToken>()
+        );
+        cacheManager.Received(1).Set(key, Arg.Is<Dictionary<string, string>>(x =>
             x.First().Key == result.First().Key &&
             x.First().Value == result.First().Value &&
             x.Last().Key == result.Last().Key &&
             x.Last().Value == result.Last().Value
-        ), duration), Times.Once);
+        ), duration);
 
         Assert.NotNull(result);
         Assert.Equal(value.First().Key, result.First().Key);
@@ -1218,22 +1118,19 @@ public class DynamoDBProviderTest
                 }).ToList()
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .UseTable(tableName);
 
         // Act
@@ -1241,19 +1138,19 @@ public class DynamoDBProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.QueryAsync(
-                    It.Is<QueryRequest>(x =>
-                        x.TableName == tableName &&
-                        x.KeyConditionExpression.Split('=', StringSplitOptions.TrimEntries).First() ==
-                        primaryKeyAttribute &&
-                        x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
-                            .Split('=', StringSplitOptions.TrimEntries).Last() &&
-                        x.ExpressionAttributeValues.First().Value.S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).QueryAsync(
+            Arg.Is<QueryRequest>(x =>
+                x.TableName == tableName &&
+                x.KeyConditionExpression.Split('=', StringSplitOptions.TrimEntries).First() ==
+                primaryKeyAttribute &&
+                x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
+                    .Split('=', StringSplitOptions.TrimEntries).Last() &&
+                x.ExpressionAttributeValues.First().Value.S == key
+            ),
+            Arg.Any<CancellationToken>()
+        );
+
 
         Assert.NotNull(result);
         Assert.Equal(value.First().Key, result.First().Key);
@@ -1286,22 +1183,19 @@ public class DynamoDBProviderTest
                 }).ToList()
         };
 
-        var cacheManager = new Mock<ICacheManager>();
-        var client = new Mock<IAmazonDynamoDB>();
-        var transformerManager = new Mock<ITransformerManager>();
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonDynamoDB>();
+        var transformerManager = Substitute.For<ITransformerManager>();
 
-        client.Setup(c =>
-            c.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>())
-        ).ReturnsAsync(response);
+        client.QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>())
+            .Returns(response);
 
-        cacheManager.Setup(c =>
-            c.Get(key)
-        ).Returns(null);
+        cacheManager.Get(key).Returns(null);
 
         var provider = new DynamoDBProvider()
-            .UseClient(client.Object)
-            .UseCacheManager(cacheManager.Object)
-            .UseTransformerManager(transformerManager.Object)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
             .UseTable(tableName, primaryKeyAttribute, sortKeyAttribute, valueAttribute);
 
         // Act
@@ -1309,19 +1203,18 @@ public class DynamoDBProviderTest
             .GetMultipleAsync(key);
 
         // Assert
-        cacheManager.Verify(v => v.Get(key), Times.Once);
-        client.Verify(v =>
-                v.QueryAsync(
-                    It.Is<QueryRequest>(x =>
-                        x.TableName == tableName &&
-                        x.KeyConditionExpression.Split('=', StringSplitOptions.TrimEntries).First() ==
-                        primaryKeyAttribute &&
-                        x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
-                            .Split('=', StringSplitOptions.TrimEntries).Last() &&
-                        x.ExpressionAttributeValues.First().Value.S == key
-                    ),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        cacheManager.Received(1).Get(key);
+        await client.Received(1).QueryAsync(
+            Arg.Is<QueryRequest>(x =>
+                x.TableName == tableName &&
+                x.KeyConditionExpression.Split('=', StringSplitOptions.TrimEntries).First() ==
+                primaryKeyAttribute &&
+                x.ExpressionAttributeValues.First().Key == x.KeyConditionExpression
+                    .Split('=', StringSplitOptions.TrimEntries).Last() &&
+                x.ExpressionAttributeValues.First().Value.S == key
+            ),
+            Arg.Any<CancellationToken>()
+        );
 
         Assert.NotNull(result);
         Assert.Equal(value.First().Key, result.First().Key);

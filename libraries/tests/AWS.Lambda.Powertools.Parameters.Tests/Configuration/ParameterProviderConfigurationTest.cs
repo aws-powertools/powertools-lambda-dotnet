@@ -16,7 +16,7 @@
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Internal.Provider;
 using AWS.Lambda.Powertools.Parameters.Transform;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Parameters.Tests.Configuration;
@@ -31,24 +31,27 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var duration = TimeSpan.FromSeconds(5);
 
-        var provider = new Mock<IParameterProviderBaseHandler>();
-        provider.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
-                It.IsAny<string?>())
-        ).ReturnsAsync(value);
+        var provider = Substitute.For<IParameterProviderBaseHandler>();
+        provider.GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.MaxAge == duration),
+            Arg.Is<Transformation?>(x => x == null),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        ).Returns(value);
 
-        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider.Object);
+        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider);
         providerConfigurationBuilder.WithMaxAge(duration);
 
         // Act
         var result = await providerConfigurationBuilder.GetAsync(key);
 
         // Assert
-        provider.Verify(v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x => x != null && x.MaxAge == duration),
-                It.Is<Transformation?>(x => x == null),
-                It.Is<string?>(x => string.IsNullOrEmpty(x))),
-            Times.Once);
+        await provider.Received(1).GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.MaxAge == duration),
+            Arg.Is<Transformation?>(x => x == null),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -60,24 +63,27 @@ public class ParameterProviderConfigurationTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var provider = new Mock<IParameterProviderBaseHandler>();
-        provider.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
-                It.IsAny<string?>())
-        ).ReturnsAsync(value);
+        var provider = Substitute.For<IParameterProviderBaseHandler>();
+        provider.GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.ForceFetch),
+            Arg.Is<Transformation?>(x => x == null),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        ).Returns(value);
 
-        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider.Object);
+        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider);
         providerConfigurationBuilder.ForceFetch();
 
         // Act
         var result = await providerConfigurationBuilder.GetAsync(key);
 
         // Assert
-        provider.Verify(v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x => x != null && x.ForceFetch),
-                It.Is<Transformation?>(x => x == null),
-                It.Is<string?>(x => string.IsNullOrEmpty(x))),
-            Times.Once);
+        await provider.Received(1).GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.ForceFetch),
+            Arg.Is<Transformation?>(x => x == null),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -89,25 +95,28 @@ public class ParameterProviderConfigurationTest
         var key = Guid.NewGuid().ToString();
         var value = Guid.NewGuid().ToString();
 
-        var transformer = new Mock<ITransformer>();
-        var provider = new Mock<IParameterProviderBaseHandler>();
-        provider.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
-                It.IsAny<string?>())
-        ).ReturnsAsync(value);
+        var transformer = Substitute.For<ITransformer>();
+        var provider = Substitute.For<IParameterProviderBaseHandler>();
+        provider.GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == transformer),
+            Arg.Is<Transformation?>(x => x == null),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        ).Returns(value);
 
-        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider.Object);
-        providerConfigurationBuilder.WithTransformation(transformer.Object);
+        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider);
+        providerConfigurationBuilder.WithTransformation(transformer);
 
         // Act
         var result = await providerConfigurationBuilder.GetAsync(key);
 
         // Assert
-        provider.Verify(v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == transformer.Object),
-                It.Is<Transformation?>(x => x == null),
-                It.Is<string?>(x => string.IsNullOrEmpty(x))),
-            Times.Once);
+        await provider.Received(1).GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == transformer),
+            Arg.Is<Transformation?>(x => x == null),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -120,24 +129,27 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var transformation = Transformation.Json;
 
-        var provider = new Mock<IParameterProviderBaseHandler>();
-        provider.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
-                It.IsAny<string?>())
-        ).ReturnsAsync(value);
+        var provider = Substitute.For<IParameterProviderBaseHandler>();
+        provider.GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
+            Arg.Is<Transformation?>(x => x == transformation),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        ).Returns(value);
 
-        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider.Object);
+        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider);
         providerConfigurationBuilder.WithTransformation(transformation);
 
         // Act
         var result = await providerConfigurationBuilder.GetAsync(key);
 
         // Assert
-        provider.Verify(v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
-                It.Is<Transformation?>(x => x == transformation),
-                It.Is<string?>(x => string.IsNullOrEmpty(x))),
-            Times.Once);
+        await provider.Received(1).GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
+            Arg.Is<Transformation?>(x => x == transformation),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -150,24 +162,27 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var transformation = Transformation.Base64;
 
-        var provider = new Mock<IParameterProviderBaseHandler>();
-        provider.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
-                It.IsAny<string?>())
-        ).ReturnsAsync(value);
+        var provider = Substitute.For<IParameterProviderBaseHandler>();
+        provider.GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
+            Arg.Is<Transformation?>(x => x == transformation),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        ).Returns(value);
 
-        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider.Object);
+        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider);
         providerConfigurationBuilder.WithTransformation(transformation);
 
         // Act
         var result = await providerConfigurationBuilder.GetAsync(key);
 
         // Assert
-        provider.Verify(v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
-                It.Is<Transformation?>(x => x == transformation),
-                It.Is<string?>(x => string.IsNullOrEmpty(x))),
-            Times.Once);
+        await provider.Received(1).GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
+            Arg.Is<Transformation?>(x => x == transformation),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -180,24 +195,27 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var transformation = Transformation.Auto;
 
-        var provider = new Mock<IParameterProviderBaseHandler>();
-        provider.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
-                It.IsAny<string?>())
-        ).ReturnsAsync(value);
+        var provider = Substitute.For<IParameterProviderBaseHandler>();
+        provider.GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
+            Arg.Is<Transformation?>(x => x == transformation),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        ).Returns(value);
 
-        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider.Object);
+        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider);
         providerConfigurationBuilder.WithTransformation(transformation);
 
         // Act
         var result = await providerConfigurationBuilder.GetAsync(key);
 
         // Assert
-        provider.Verify(v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
-                It.Is<Transformation?>(x => x == transformation),
-                It.Is<string?>(x => string.IsNullOrEmpty(x))),
-            Times.Once);
+        await provider.Received(1).GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
+            Arg.Is<Transformation?>(x => x == transformation),
+            Arg.Is<string?>(x => string.IsNullOrEmpty(x))
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -210,24 +228,27 @@ public class ParameterProviderConfigurationTest
         var value = Guid.NewGuid().ToString();
         var transformationName = Guid.NewGuid().ToString();
 
-        var provider = new Mock<IParameterProviderBaseHandler>();
-        provider.Setup(c =>
-            c.GetAsync<string>(key, It.IsAny<ParameterProviderConfiguration?>(), It.IsAny<Transformation?>(),
-                It.IsAny<string?>())
-        ).ReturnsAsync(value);
+        var provider = Substitute.For<IParameterProviderBaseHandler>();
+        provider.GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
+            Arg.Is<Transformation?>(x => x == null),
+            Arg.Is<string?>(x => x == transformationName)
+        ).Returns(value);
 
-        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider.Object);
+        var providerConfigurationBuilder = new ParameterProviderConfigurationBuilder(provider);
         providerConfigurationBuilder.WithTransformation(transformationName);
 
         // Act
         var result = await providerConfigurationBuilder.GetAsync(key);
 
         // Assert
-        provider.Verify(v => v.GetAsync<string>(key,
-                It.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
-                It.Is<Transformation?>(x => x == null),
-                It.Is<string?>(x => x == transformationName)),
-            Times.Once);
+        await provider.Received(1).GetAsync<string>(
+            key,
+            Arg.Is<ParameterProviderConfiguration?>(x => x != null && x.Transformer == null),
+            Arg.Is<Transformation?>(x => x == null),
+            Arg.Is<string?>(x => x == transformationName)
+        );
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }

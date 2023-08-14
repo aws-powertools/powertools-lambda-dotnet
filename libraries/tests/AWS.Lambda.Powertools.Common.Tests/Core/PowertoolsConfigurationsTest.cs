@@ -14,7 +14,7 @@
  */
 
 using System;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Common.Tests
@@ -29,22 +29,17 @@ namespace AWS.Lambda.Powertools.Common.Tests
             // Arrange
             var key = Guid.NewGuid().ToString();
             var defaultValue = Guid.NewGuid().ToString();
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(key)
-            ).Returns(string.Empty);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(key).Returns(string.Empty);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, defaultValue);
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == key)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(key);
             
             Assert.Equal(result, defaultValue);
         }
@@ -54,51 +49,41 @@ namespace AWS.Lambda.Powertools.Common.Tests
         {
             // Arrange
             var key = Guid.NewGuid().ToString();
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(key)
-            ).Returns(string.Empty);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(key).Returns(string.Empty);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, false);
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == key)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(key);
             
             Assert.False(result);
         }
-        
+
         [Fact]
         public void GetEnvironmentVariableOrDefault_WhenEnvironmentVariableIsNull_ReturnsDefaultValueTrue()
         {
             // Arrange
             var key = Guid.NewGuid().ToString();
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(key)
-            ).Returns(string.Empty);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
-            
+            systemWrapper.GetEnvironmentVariable(key).Returns(string.Empty);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
+
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, true);
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == key)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(Arg.Is<string>(i => i == key));
             
             Assert.True(result);
         }
-        
+
         [Fact]
         public void GetEnvironmentVariableOrDefault_WhenEnvironmentVariableHasValue_ReturnsValueString()
         {
@@ -106,22 +91,17 @@ namespace AWS.Lambda.Powertools.Common.Tests
             var key = Guid.NewGuid().ToString();
             var defaultValue = Guid.NewGuid().ToString();
             var value = Guid.NewGuid().ToString();
-            var systemWrapper = new Mock<ISystemWrapper>();
-
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(key)
-            ).Returns(value);
+            var systemWrapper = Substitute.For<ISystemWrapper>();
             
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(key).Returns(value);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, defaultValue);
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == key)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(Arg.Is<string>(i => i == key));
             
             Assert.Equal(result, value);
         }
@@ -131,22 +111,17 @@ namespace AWS.Lambda.Powertools.Common.Tests
         {
             // Arrange
             var key = Guid.NewGuid().ToString();
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(key)
-            ).Returns("true");
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(key).Returns("true");
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, false);
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == key)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(Arg.Is<string>(i => i == key));
             
             Assert.True(result);
         }
@@ -156,22 +131,17 @@ namespace AWS.Lambda.Powertools.Common.Tests
         {
             // Arrange
             var key = Guid.NewGuid().ToString();
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(key)
-            ).Returns("false");
+            systemWrapper.GetEnvironmentVariable(key).Returns("false");
             
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.GetEnvironmentVariableOrDefault(key, true);
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == key)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(Arg.Is<string>(i => i == key));
             
             Assert.False(result);
         }
@@ -185,47 +155,37 @@ namespace AWS.Lambda.Powertools.Common.Tests
         {
             // Arrange
             var defaultService = "service_undefined";
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.ServiceNameEnv)
-            ).Returns(string.Empty);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
-            
+            systemWrapper.GetEnvironmentVariable(Constants.ServiceNameEnv).Returns(string.Empty);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
+
             // Act
             var result = configurations.Service;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.ServiceNameEnv)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.ServiceNameEnv));
             
             Assert.Equal(result, defaultService);
         }
-        
+
         [Fact]
         public void Service_WhenEnvironmentHasValue_ReturnsValue()
         {
             // Arrange
             var service = Guid.NewGuid().ToString();
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.ServiceNameEnv)
-            ).Returns(service);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.ServiceNameEnv).Returns(service);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.Service;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.ServiceNameEnv)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.ServiceNameEnv));
             
             Assert.Equal(result, service);
         }
@@ -239,22 +199,17 @@ namespace AWS.Lambda.Powertools.Common.Tests
         {
             // Arrange
             var service = Guid.NewGuid().ToString();
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.ServiceNameEnv)
-            ).Returns(service);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.ServiceNameEnv).Returns(service);
+           
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.IsServiceDefined;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.ServiceNameEnv)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.ServiceNameEnv));
             
             Assert.True(result);
         }
@@ -263,22 +218,17 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void IsServiceDefined_WhenEnvironmentDoesNotHaveValue_ReturnsFalse()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.ServiceNameEnv)
-            ).Returns(string.Empty);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.ServiceNameEnv).Returns(string.Empty);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.IsServiceDefined;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.ServiceNameEnv)
-                ), Times.Once);
+            systemWrapper.Received(1).GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.ServiceNameEnv));
             
             Assert.False(result);
         }
@@ -291,70 +241,58 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void TracerCaptureResponse_WhenEnvironmentIsNull_ReturnsDefaultValue()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.TracerCaptureResponseEnv)
-            ).Returns(string.Empty);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
-            
+            systemWrapper.GetEnvironmentVariable(Constants.TracerCaptureResponseEnv).Returns(string.Empty);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
+
             // Act
             var result = configurations.TracerCaptureResponse;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.TracerCaptureResponseEnv)
-                ), Times.Once);
-            
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.TracerCaptureResponseEnv));
+
             Assert.True(result);
         }
-        
+
         [Fact]
         public void TracerCaptureResponse_WhenEnvironmentHasValue_ReturnsValueFalse()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.TracerCaptureResponseEnv)
-            ).Returns("false");
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
-            
+            systemWrapper.GetEnvironmentVariable(Constants.TracerCaptureResponseEnv).Returns("false");
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
+
             // Act
             var result = configurations.TracerCaptureResponse;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.TracerCaptureResponseEnv)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.TracerCaptureResponseEnv));
             
             Assert.False(result);
         }
-        
+
         [Fact]
         public void TracerCaptureResponse_WhenEnvironmentHasValue_ReturnsValueTrue()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.TracerCaptureResponseEnv)
-            ).Returns("true");
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.TracerCaptureResponseEnv).Returns("true");
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.TracerCaptureResponse;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.TracerCaptureResponseEnv)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.TracerCaptureResponseEnv));
             
             Assert.True(result);
         }
@@ -367,22 +305,18 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void TracerCaptureError_WhenEnvironmentIsNull_ReturnsDefaultValue()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.TracerCaptureErrorEnv)
-            ).Returns(string.Empty);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.TracerCaptureErrorEnv).Returns(string.Empty);
+          
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.TracerCaptureError;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.TracerCaptureErrorEnv)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.TracerCaptureErrorEnv));
             
             Assert.True(result);
         }
@@ -391,22 +325,18 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void TracerCaptureError_WhenEnvironmentHasValue_ReturnsValueFalse()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.TracerCaptureErrorEnv)
-            ).Returns("false");
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.TracerCaptureErrorEnv).Returns("false");
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.TracerCaptureError;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.TracerCaptureErrorEnv)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.TracerCaptureErrorEnv));
             
             Assert.False(result);
         }
@@ -415,22 +345,18 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void TracerCaptureError_WhenEnvironmentHasValue_ReturnsValueTrue()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
-
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.TracerCaptureErrorEnv)
-            ).Returns("true");
+            var systemWrapper = Substitute.For<ISystemWrapper>();
             
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.TracerCaptureErrorEnv).Returns("true");
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.TracerCaptureError;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.TracerCaptureErrorEnv)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.TracerCaptureErrorEnv));
             
             Assert.True(result);
         }
@@ -443,22 +369,18 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void IsSamLocal_WhenEnvironmentIsNull_ReturnsDefaultValue()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.SamLocalEnv)
-            ).Returns(string.Empty);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.SamLocalEnv).Returns(string.Empty);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.IsSamLocal;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.SamLocalEnv)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.SamLocalEnv));
             
             Assert.False(result);
         }
@@ -467,22 +389,18 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void IsSamLocal_WhenEnvironmentHasValue_ReturnsValueFalse()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.SamLocalEnv)
-            ).Returns("false");
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.SamLocalEnv).Returns("false");
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.IsSamLocal;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.SamLocalEnv)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.SamLocalEnv));
             
             Assert.False(result);
         }
@@ -491,22 +409,18 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void IsSamLocal_WhenEnvironmentHasValue_ReturnsValueTrue()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.SamLocalEnv)
-            ).Returns("true");
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.SamLocalEnv).Returns("true");
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.IsSamLocal;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.SamLocalEnv)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.SamLocalEnv));
             
             Assert.True(result);
         }
@@ -519,22 +433,18 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void TracingDisabled_WhenEnvironmentIsNull_ReturnsDefaultValue()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.TracingDisabledEnv)
-            ).Returns(string.Empty);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.TracingDisabledEnv).Returns(string.Empty);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.TracingDisabled;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.TracingDisabledEnv)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.TracingDisabledEnv));
             
             Assert.False(result);
         }
@@ -543,23 +453,19 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void TracingDisabled_WhenEnvironmentHasValue_ReturnsValueFalse()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
-
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.TracingDisabledEnv)
-            ).Returns("false");
+            var systemWrapper = Substitute.For<ISystemWrapper>();
             
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.TracingDisabledEnv).Returns("false");
+            
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.TracingDisabled;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.TracingDisabledEnv)
-                ), Times.Once);
-            
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.TracingDisabledEnv));
+
             Assert.False(result);
         }
         
@@ -567,23 +473,19 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void TracingDisabled_WhenEnvironmentHasValue_ReturnsValueTrue()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
-
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.TracingDisabledEnv)
-            ).Returns("true");
+            var systemWrapper = Substitute.For<ISystemWrapper>();
             
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.TracingDisabledEnv).Returns("true");
+            
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.TracingDisabled;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.TracingDisabledEnv)
-                ), Times.Once);
-            
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.TracingDisabledEnv));
+
             Assert.True(result);
         }
         
@@ -595,23 +497,19 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void IsLambdaEnvironment_WhenEnvironmentIsNull_ReturnsFalse()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.LambdaTaskRoot)
-            ).Returns((string)null);
-            
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            systemWrapper.GetEnvironmentVariable(Constants.LambdaTaskRoot).Returns((string)null);
+
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.IsLambdaEnvironment;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.LambdaTaskRoot)
-                ), Times.Once);
-            
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.LambdaTaskRoot));
+           
             Assert.False(result);
         }
         
@@ -619,22 +517,18 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void IsLambdaEnvironment_WhenEnvironmentHasValue_ReturnsTrue()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            systemWrapper.Setup(c =>
-                c.GetEnvironmentVariable(Constants.LambdaTaskRoot)
-            ).Returns(Guid.NewGuid().ToString);
+            systemWrapper.GetEnvironmentVariable(Constants.TracingDisabledEnv).Returns(Guid.NewGuid().ToString());
             
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             var result = configurations.IsLambdaEnvironment;
 
             // Assert
-            systemWrapper.Verify(v =>
-                v.GetEnvironmentVariable(
-                    It.Is<string>(i => i == Constants.LambdaTaskRoot)
-                ), Times.Once);
+            systemWrapper.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.LambdaTaskRoot));
             
             Assert.True(result);
         }
@@ -643,24 +537,21 @@ namespace AWS.Lambda.Powertools.Common.Tests
         public void Set_Lambda_Execution_Context()
         {
             // Arrange
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
             // systemWrapper.Setup(c =>
             //     c.SetExecutionEnvironment(GetType())
             // );
             
-            var configurations = new PowertoolsConfigurations(systemWrapper.Object);
+            var configurations = new PowertoolsConfigurations(systemWrapper);
             
             // Act
             configurations.SetExecutionEnvironment(typeof(PowertoolsConfigurations));
 
             // Assert
             // method with correct type was called
-            systemWrapper.Verify(v =>
-                v.SetExecutionEnvironment(
-                    It.Is<Type>(i => i == typeof(PowertoolsConfigurations))
-                ), Times.Once);
-            
+            systemWrapper.Received(1)
+                .SetExecutionEnvironment(Arg.Is<Type>(i => i == typeof(PowertoolsConfigurations)));
         }
         
         #endregion
