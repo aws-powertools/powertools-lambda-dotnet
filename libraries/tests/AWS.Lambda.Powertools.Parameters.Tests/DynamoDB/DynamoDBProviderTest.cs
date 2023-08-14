@@ -222,7 +222,7 @@ public class DynamoDBProviderTest
             .Received(1)
             .GetAsync<string>(key,
                 Arg.Is<ParameterProviderConfiguration>(x => x != null && !x.ForceFetch),
-                transformation,
+                Arg.Is<Transformation>(x=> x == transformation),
                 null);
         Assert.NotNull(result);
         Assert.Equal(value, result);
@@ -263,7 +263,7 @@ public class DynamoDBProviderTest
             .GetAsync<string>(key,
                 Arg.Is<ParameterProviderConfiguration>(x => x != null && !x.ForceFetch),
                 null,
-                transformerName);
+                Arg.Is<string>(x => x == transformerName));
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
