@@ -16,6 +16,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AWS.Lambda.Powertools.Common;
@@ -203,16 +204,16 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Called when [exception].
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="eventArgs">
     ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     /// <param name="exception">The exception.</param>
-    /// <returns>T.</returns>
-    public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
+    public void OnException(AspectEventArgs eventArgs, Exception exception)
     {
-        throw exception;
+        // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
+        // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
+        ExceptionDispatchInfo.Capture(exception).Throw();
     }
 
     /// <summary>
