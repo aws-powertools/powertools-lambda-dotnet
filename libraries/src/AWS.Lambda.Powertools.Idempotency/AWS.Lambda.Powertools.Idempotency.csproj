@@ -3,7 +3,7 @@
     <PropertyGroup>
         <!--  Remaining properties are defined in Directory.Build.props  -->
         <PackageId>AWS.Lambda.Powertools.Idempotency</PackageId>
-        <Description>AWS Lambda Powertools for .NET - Idempotency package.</Description>
+        <Description>Powertools for AWS Lambda (.NET) - Idempotency package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Idempotency</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Idempotency</RootNamespace>
     </PropertyGroup>
