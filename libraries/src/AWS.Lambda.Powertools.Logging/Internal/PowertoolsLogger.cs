@@ -345,25 +345,14 @@ internal sealed class PowertoolsLogger : ILogger
         try
         {
             var logObject = logFormatter.FormatLogEntry(logEntry);
-            if (logObject is not null)
-                return logObject;
-
-            return new
-            {
-                logEntry.Timestamp,
-                Level = LogLevel.Error.ToString(),
-                Message = $"{logFormatter.GetType().FullName} returned null value"
-            };
+            if (logObject is null)
+                throw new LogFormatException($"{logFormatter.GetType().FullName} returned Null value.");
+            return logObject;
         }
         catch (Exception e)
         {
-            return new
-            {
-                logEntry.Timestamp,
-                Level = LogLevel.Error.ToString(),
-                Message = $"{logFormatter.GetType().FullName} raised error: {e.Message}.",
-                Exception = e
-            };
+            throw new LogFormatException(
+                $"{logFormatter.GetType().FullName} raised an exception: {e.Message}.", e);
         }
     }
 

@@ -169,7 +169,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
     public class LogFormatterNullTest
     {
         [Fact]
-        public void Log_WhenCustomFormatterReturnNull_LogsError()
+        public void Log_WhenCustomFormatterReturnNull_ThrowsLogFormatException()
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -193,12 +193,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 });
 
             // Act
-            logger.LogInformation(message);
+            void Act() => logger.LogInformation(message);
 
             // Assert
+            Assert.Throws<LogFormatException>(Act);
             logFormatter.Received(1).FormatLogEntry(Arg.Any<LogEntry>());
-            systemWrapper.Received(1).LogLine(Arg.Is<string>(x => x.Contains("Error") && x.Contains("null")));
-            
+            systemWrapper.DidNotReceiveWithAnyArgs().LogLine(Arg.Any<string>());
+
             //Clean up
             Logger.UseDefaultFormatter();
         }
@@ -208,7 +209,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
     public class LogFormatterExceptionTest
     {
         [Fact]
-        public void Log_WhenCustomFormatterRaisesException_LogsError()
+        public void Log_WhenCustomFormatterRaisesException_ThrowsLogFormatException()
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
@@ -233,12 +234,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 });
 
             // Act
-            logger.LogInformation(message);
+            void Act() => logger.LogInformation(message);
 
             // Assert
+            Assert.Throws<LogFormatException>(Act);
             logFormatter.Received(1).FormatLogEntry(Arg.Any<LogEntry>());
-            systemWrapper.Received(1).LogLine(Arg.Is<string>(x => x.Contains("Error") && x.Contains(errorMessage)));
-            
+            systemWrapper.DidNotReceiveWithAnyArgs().LogLine(Arg.Any<string>());
+
             //Clean up
             Logger.UseDefaultFormatter();
         }
