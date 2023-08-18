@@ -23,7 +23,7 @@ namespace AWS.Lambda.Powertools.Logging;
 public class LogFormatException : Exception
 {
     /// <summary>
-    /// Creates a new IdempotencyConfigurationException
+    /// Creates a new LogFormatException
     /// </summary>
     public LogFormatException()
     {
