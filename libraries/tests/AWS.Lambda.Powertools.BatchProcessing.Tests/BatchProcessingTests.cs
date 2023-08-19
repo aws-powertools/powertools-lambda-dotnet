@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests
@@ -56,20 +56,22 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                 }
             };
             var batchProcessor = new SqsBatchProcessor();
-            var recordHandler = new Mock<IRecordHandler<SQSEvent.SQSMessage>>();
-            recordHandler.Setup(x => x.HandleAsync(It.IsAny<SQSEvent.SQSMessage>(), It.IsAny<CancellationToken>())).Callback((SQSEvent.SQSMessage x, CancellationToken _) =>
-            {
-                if (x.MessageId == "1")
+            var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
+            
+            recordHandler.WhenForAnyArgs(x => x.HandleAsync(Arg.Any<SQSEvent.SQSMessage>(), Arg.Any<CancellationToken>()))
+                .Do( callInfo =>
                 {
-                    throw new InvalidOperationException("Business logic failure.");
-                }
-            });
+                    if (callInfo.Arg<SQSEvent.SQSMessage>().MessageId == "1")
+                    {
+                        throw new InvalidOperationException("Business logic failure.");
+                    }
+                });
 
             // Act
-            var result = await batchProcessor.ProcessAsync(@event, recordHandler.Object);
+            var result = await batchProcessor.ProcessAsync(@event, recordHandler);
 
             // Assert
-            recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable()), It.IsAny<CancellationToken>()), Times.Exactly(@event.Records.Count));
+            await recordHandler.Received(@event.Records.Count).HandleAsync(Arg.Is<SQSEvent.SQSMessage>(s =>  @event.Records.AsEnumerable().Contains(s) ), Arg.Any<CancellationToken>());
             Assert.Single(result.BatchItemFailuresResponse.BatchItemFailures);
         }
 
@@ -100,24 +102,27 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                 }
             };
             var batchProcessor = new SqsBatchProcessor();
-            var recordHandler = new Mock<IRecordHandler<SQSEvent.SQSMessage>>();
-            recordHandler.Setup(x => x.HandleAsync(It.IsAny<SQSEvent.SQSMessage>(), It.IsAny<CancellationToken>())).Callback((SQSEvent.SQSMessage x, CancellationToken _) =>
-            {
-                if (x.MessageId == "1")
+            var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
+            
+            
+            recordHandler.WhenForAnyArgs(x => x.HandleAsync(Arg.Any<SQSEvent.SQSMessage>(), Arg.Any<CancellationToken>()))
+                .Do( callInfo =>
                 {
-                    throw new InvalidOperationException("Business logic failure.");
-                }
-            });
+                    if (callInfo.Arg<SQSEvent.SQSMessage>().MessageId == "1")
+                    {
+                        throw new InvalidOperationException("Business logic failure.");
+                    }
+                });
 
             // Act
-            async Task<ProcessingResult<SQSEvent.SQSMessage>> ProcessBatchAsync() => await batchProcessor.ProcessAsync(@event, recordHandler.Object);
+            async Task<ProcessingResult<SQSEvent.SQSMessage>> ProcessBatchAsync() => await batchProcessor.ProcessAsync(@event, recordHandler);
 
             // Assert
             var batchProcessingException = await Assert.ThrowsAsync<BatchProcessingException>(ProcessBatchAsync);
             Assert.Equal(3, batchProcessingException.InnerExceptions.Count);
             Assert.Equal(2, batchProcessingException.InnerExceptions.OfType<UnprocessedRecordException>().Count());
             Assert.Single(batchProcessingException.InnerExceptions.OfType<RecordProcessingException>());
-            recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable()), It.IsAny<CancellationToken>()), Times.Once);
+            await recordHandler.Received(1).HandleAsync(Arg.Is<SQSEvent.SQSMessage>(s =>  @event.Records.AsEnumerable().Contains(s) ), Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -147,23 +152,25 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                 }
             };
             var batchProcessor = new SqsBatchProcessor();
-            var recordHandler = new Mock<IRecordHandler<SQSEvent.SQSMessage>>();
-            recordHandler.Setup(x => x.HandleAsync(It.IsAny<SQSEvent.SQSMessage>(), It.IsAny<CancellationToken>())).Callback((SQSEvent.SQSMessage x, CancellationToken _) =>
+            var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
+
+            recordHandler.WhenForAnyArgs(x => x.HandleAsync(Arg.Any<SQSEvent.SQSMessage>(), Arg.Any<CancellationToken>()))
+                .Do( callInfo =>
             {
-                if (x.MessageId == "2")
+                if (callInfo.Arg<SQSEvent.SQSMessage>().MessageId == "2")
                 {
                     throw new InvalidOperationException("Business logic failure.");
                 }
             });
-
+            
             // Act
-            var result = await batchProcessor.ProcessAsync(@event, recordHandler.Object);
+            var result = await batchProcessor.ProcessAsync(@event, recordHandler);
 
             // Assert
             Assert.Equal(2, result.BatchItemFailuresResponse.BatchItemFailures.Count);
             Assert.Contains(result.BatchItemFailuresResponse.BatchItemFailures, x => x.ItemIdentifier == "2");
             Assert.Contains(result.BatchItemFailuresResponse.BatchItemFailures, x => x.ItemIdentifier == "3");
-            recordHandler.Verify(x => x.HandleAsync(It.IsIn(@event.Records.AsEnumerable()), It.IsAny<CancellationToken>()), Times.Exactly(2));
+            await recordHandler.Received(2).HandleAsync(Arg.Is<SQSEvent.SQSMessage>(s =>  @event.Records.AsEnumerable().Contains(s) ), Arg.Any<CancellationToken>());
         }
     }
 }
