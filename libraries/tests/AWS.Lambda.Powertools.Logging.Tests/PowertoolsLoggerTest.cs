@@ -27,8 +27,14 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests
 {
+    [Collection("Sequential")]
     public class PowertoolsLoggerTest
     {
+        public PowertoolsLoggerTest()
+        {
+            Logger.UseDefaultFormatter();
+        }
+        
         private static void Log_WhenMinimumLevelIsBelowLogLevel_Logs(LogLevel logLevel, LogLevel minimumLevel)
         {
             // Arrange
