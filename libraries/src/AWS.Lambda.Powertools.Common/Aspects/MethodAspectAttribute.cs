@@ -64,7 +64,8 @@ public abstract class MethodAspectAttribute : UniversalWrapperAttribute
         }
         catch (Exception exception)
         {
-            return AspectHandler.OnException<T>(eventArgs, exception);
+            AspectHandler.OnException(eventArgs, exception);
+            throw;
         }
         finally
         {
@@ -92,7 +93,8 @@ public abstract class MethodAspectAttribute : UniversalWrapperAttribute
         }
         catch (Exception exception)
         {
-            return AspectHandler.OnException<T>(eventArgs, exception);
+            AspectHandler.OnException(eventArgs, exception);
+            throw;
         }
         finally
         {

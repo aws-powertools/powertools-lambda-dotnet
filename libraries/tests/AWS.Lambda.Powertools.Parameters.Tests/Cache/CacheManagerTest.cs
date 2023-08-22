@@ -15,7 +15,7 @@
 
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Internal.Cache;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Parameters.Tests.Cache;
@@ -31,17 +31,17 @@ public class CacheManagerTest
         var currentTime = DateTime.Now.AddHours(1);
         var duration = TimeSpan.FromSeconds(5);
 
-        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
-        dateTimeWrapper.Setup(c => c.UtcNow).Returns(currentTime);
-
-        var cacheManager = new CacheManager(dateTimeWrapper.Object);
+        var dateTimeWrapper = Substitute.For<IDateTimeWrapper>();
+        dateTimeWrapper.UtcNow.Returns(currentTime);
+        
+        var cacheManager = new CacheManager(dateTimeWrapper);
         cacheManager.Set(key, value, duration);
 
         // Act
         var result = cacheManager.Get(key);
 
         // Assert
-        dateTimeWrapper.Verify(v => v.UtcNow, Times.Exactly(2));
+        var utcNow = dateTimeWrapper.Received(2).UtcNow;
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -53,10 +53,10 @@ public class CacheManagerTest
         var key = Guid.NewGuid().ToString();
         var currentTime = DateTime.Now.AddHours(1);
 
-        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
-        dateTimeWrapper.Setup(c => c.UtcNow).Returns(currentTime);
+        var dateTimeWrapper = Substitute.For<IDateTimeWrapper>();
+        dateTimeWrapper.UtcNow.Returns(currentTime);
 
-        var cacheManager = new CacheManager(dateTimeWrapper.Object);
+        var cacheManager = new CacheManager(dateTimeWrapper);
 
         // Act
         var result = cacheManager.Get(key);
@@ -74,14 +74,14 @@ public class CacheManagerTest
         var currentTime = DateTime.Now.AddHours(1);
         var duration = TimeSpan.FromSeconds(5);
 
-        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
-        dateTimeWrapper.Setup(c => c.UtcNow).Returns(currentTime);
+        var dateTimeWrapper = Substitute.For<IDateTimeWrapper>();
+        dateTimeWrapper.UtcNow.Returns(currentTime);
 
-        var cacheManager = new CacheManager(dateTimeWrapper.Object);
+        var cacheManager = new CacheManager(dateTimeWrapper);
         cacheManager.Set(key, value, duration);
 
         currentTime = currentTime.Add(duration).AddSeconds(-1);
-        dateTimeWrapper.Setup(c => c.UtcNow).Returns(currentTime);
+        dateTimeWrapper.UtcNow.Returns(currentTime);
 
         // Act
         var result = cacheManager.Get(key);
@@ -100,14 +100,14 @@ public class CacheManagerTest
         var currentTime = DateTime.Now.AddHours(1);
         var duration = TimeSpan.FromSeconds(5);
 
-        var dateTimeWrapper = new Mock<IDateTimeWrapper>();
-        dateTimeWrapper.Setup(c => c.UtcNow).Returns(currentTime);
+        var dateTimeWrapper = Substitute.For<IDateTimeWrapper>();
+        dateTimeWrapper.UtcNow.Returns(currentTime);
 
-        var cacheManager = new CacheManager(dateTimeWrapper.Object);
+        var cacheManager = new CacheManager(dateTimeWrapper);
         cacheManager.Set(key, value, duration);
 
         currentTime = currentTime.Add(duration).AddSeconds(1);
-        dateTimeWrapper.Setup(c => c.UtcNow).Returns(currentTime);
+        dateTimeWrapper.UtcNow.Returns(currentTime);
 
         // Act
         var result = cacheManager.Get(key);

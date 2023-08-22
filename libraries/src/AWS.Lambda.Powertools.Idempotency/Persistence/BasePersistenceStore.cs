@@ -290,7 +290,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
             node = JsonDocument.Parse(result).RootElement;
         }
 
-        if (IsMissingIdemPotencyKey(node))
+        if (IsMissingIdempotencyKey(node))
         {
             if (_idempotencyOptions.ThrowOnNoIdempotencyKey)
             {
@@ -308,7 +308,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     /// <param name="data"></param>
     /// <returns>True if the Idempotency key is missing</returns>
-    private static bool IsMissingIdemPotencyKey(JsonElement data)
+    private static bool IsMissingIdempotencyKey(JsonElement data)
     {
         return data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined
             || (data.ValueKind == JsonValueKind.String && data.ToString() == string.Empty);

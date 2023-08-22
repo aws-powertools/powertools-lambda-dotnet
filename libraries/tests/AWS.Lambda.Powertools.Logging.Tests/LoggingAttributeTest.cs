@@ -21,7 +21,7 @@ using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -38,42 +38,41 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var methodName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
-            
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            var systemWrapper = new Mock<ISystemWrapper>();
-            
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+
             var eventArgs = new AspectEventArgs
             {
                 Name = methodName,
-                Args = new object [] { }
+                Args = Array.Empty<object>()
             };
-            
+
             LoggingAspectHandler.ResetForTest();
-            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations.Object,
-                systemWrapper.Object);
+            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations,
+                systemWrapper);
 
             // Act
             handler.OnEntry(eventArgs);
 
             var allKeys = Logger.GetAllKeys()
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
-            
+
             Assert.NotNull(Logger.LoggerProvider);
             Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
-            Assert.True((bool) allKeys[LoggingConstants.KeyColdStart]);
+            Assert.True((bool)allKeys[LoggingConstants.KeyColdStart]);
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
-            
-            systemWrapper.Verify(v =>
-                v.LogLine(
-                    It.IsAny<string>()
-                ), Times.Never);
+
+            systemWrapper.DidNotReceive().LogLine(
+                Arg.Any<string>()
+            );
         }
     }
-    
+
     [Collection("Sequential")]
     public class LoggingAttributeTestWithoutLambdaContextDebug
     {
@@ -84,42 +83,42 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var methodName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
-            
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            var systemWrapper = new Mock<ISystemWrapper>();
-            
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+
             var eventArgs = new AspectEventArgs
             {
                 Name = methodName,
-                Args = new object [] { }
+                Args = Array.Empty<object>()
             };
-            
+
             LoggingAspectHandler.ResetForTest();
-            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations.Object,
-                systemWrapper.Object);
+            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations,
+                systemWrapper);
 
             // Act
             handler.OnEntry(eventArgs);
 
             var allKeys = Logger.GetAllKeys()
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
-            
+
             Assert.NotNull(Logger.LoggerProvider);
             Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
-            Assert.True((bool) allKeys[LoggingConstants.KeyColdStart]);
+            Assert.True((bool)allKeys[LoggingConstants.KeyColdStart]);
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
-            
-            systemWrapper.Verify(v =>
-                v.LogLine(
-                    It.Is<string>(i => i == $"Skipping Lambda Context injection because ILambdaContext context parameter not found.")
-                ), Times.Once);
+
+            systemWrapper.Received(1).LogLine(
+                Arg.Is<string>(i =>
+                    i == $"Skipping Lambda Context injection because ILambdaContext context parameter not found.")
+            );
         }
     }
-    
+
     [Collection("Sequential")]
     public class LoggingAttributeTestWithoutEventArg
     {
@@ -130,30 +129,29 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var methodName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
-            
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            var systemWrapper = new Mock<ISystemWrapper>();
-            
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+
             var eventArgs = new AspectEventArgs
             {
                 Name = methodName,
-                Args = new object [] { }
+                Args = Array.Empty<object>()
             };
-            
+
             LoggingAspectHandler.ResetForTest();
-            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations.Object,
-                systemWrapper.Object);
+            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations,
+                systemWrapper);
 
             // Act
             handler.OnEntry(eventArgs);
-            
-            systemWrapper.Verify(v =>
-                v.LogLine(
-                    It.IsAny<string>()
-                ), Times.Never);
+
+            systemWrapper.DidNotReceive().LogLine(
+                Arg.Any<string>()
+            );
         }
     }
-    
+
     [Collection("Sequential")]
     public class LoggingAttributeTestWithoutEventArgDebug
     {
@@ -164,30 +162,29 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var methodName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
-            
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            var systemWrapper = new Mock<ISystemWrapper>();
-            
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+
             var eventArgs = new AspectEventArgs
             {
                 Name = methodName,
-                Args = new object [] { }
+                Args = Array.Empty<object>()
             };
-            
+
             LoggingAspectHandler.ResetForTest();
-            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations.Object,
-                systemWrapper.Object);
+            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations,
+                systemWrapper);
 
             // Act
             handler.OnEntry(eventArgs);
 
-            systemWrapper.Verify(v =>
-                v.LogLine(
-                    It.Is<string>(i => i ==  $"Skipping Event Log because event parameter not found.")
-                ), Times.Once);
+            systemWrapper.Received(1).LogLine(
+                Arg.Is<string>(i => i == "Skipping Event Log because event parameter not found.")
+            );
         }
     }
-    
+
     [Collection("Sequential")]
     public class LoggingAttributeTestForClearContext
     {
@@ -198,32 +195,32 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var methodName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
-            
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            var systemWrapper = new Mock<ISystemWrapper>();
-            
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+
             var eventArgs = new AspectEventArgs
             {
                 Name = methodName,
-                Args = new object [] { }
+                Args = Array.Empty<object>()
             };
 
             LoggingAspectHandler.ResetForTest();
-            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations.Object,
-                systemWrapper.Object);
+            var handler = new LoggingAspectHandler(service, logLevel, null, null, true, null, true, configurations,
+                systemWrapper);
 
             // Act
             handler.OnEntry(eventArgs);
-            
+
             var allKeys = Logger.GetAllKeys()
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
-            
+
             Assert.NotNull(Logger.LoggerProvider);
             Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
-            Assert.True((bool) allKeys[LoggingConstants.KeyColdStart]);
-            
+            Assert.True((bool)allKeys[LoggingConstants.KeyColdStart]);
+
             handler.OnExit(eventArgs);
-            
+
             Assert.NotNull(Logger.LoggerProvider);
             Assert.False(Logger.GetAllKeys().Any());
         }
@@ -231,15 +228,16 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
     public abstract class LoggingAttributeTestWithEventArgCorrelationId
     {
-        protected void OnEntry_WhenEventArgExists_CapturesCorrelationIdBase(string correlationId, string correlationIdPath, object eventArg)
+        protected void OnEntry_WhenEventArgExists_CapturesCorrelationIdBase(string correlationId,
+            string correlationIdPath, object eventArg)
         {
             // Arrange
             var methodName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
 
-            var configurations = new Mock<IPowertoolsConfigurations>();
-            var systemWrapper = new Mock<ISystemWrapper>();
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
             var eventArgs = new AspectEventArgs
             {
@@ -249,8 +247,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             LoggingAspectHandler.ResetForTest();
             var handler = new LoggingAspectHandler(service, logLevel, null, null, false, correlationIdPath,
-                true, configurations.Object,
-                systemWrapper.Object);
+                true, configurations, systemWrapper);
 
             // Act
             handler.OnEntry(eventArgs);
@@ -260,12 +257,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             // Assert
             Assert.True(allKeys.ContainsKey(LoggingConstants.KeyCorrelationId));
-            Assert.Equal((string) allKeys[LoggingConstants.KeyCorrelationId], correlationId);
+            Assert.Equal((string)allKeys[LoggingConstants.KeyCorrelationId], correlationId);
         }
     }
 
     [Collection("Sequential")]
-    public class LoggingAttributeTestWithEventArgCorrelationIdAPIGateway : LoggingAttributeTestWithEventArgCorrelationId
+    public class LoggingAttributeTestWithEventArgCorrelationIdApiGateway : LoggingAttributeTestWithEventArgCorrelationId
     {
         [Fact]
         public void OnEntry_WhenEventArgExists_CapturesCorrelationId()
@@ -285,7 +282,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             );
         }
     }
-    
+
     [Collection("Sequential")]
     public class LoggingAttributeTestWithEventArgCorrelationIdApplicationLoadBalancer : LoggingAttributeTestWithEventArgCorrelationId
     {
@@ -301,7 +298,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 {
                     Headers = new Dictionary<string, string>
                     {
-                        {"x-amzn-trace-id", correlationId}
+                        { "x-amzn-trace-id", correlationId }
                     }
                 }
             );
