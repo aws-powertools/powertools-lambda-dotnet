@@ -1,12 +1,12 @@
 {
 	"Core": {
-		"Common": "1.1.1",
-		"Logging": "1.1.1",
-		"Metrics": "1.3.2",
-		"Tracing": "1.1.1"
+		"Common": "1.1.2",
+		"Logging": "1.2.0",
+		"Metrics": "1.3.3",
+		"Tracing": "1.1.2"
 	},
 	"Utilities": {
-		"Parameters": "0.0.2-preview",
-		"Idempotency": "0.0.1-preview"
+		"Parameters": "0.0.3-preview",
+		"Idempotency": "0.0.2-preview"
 	}
 }
