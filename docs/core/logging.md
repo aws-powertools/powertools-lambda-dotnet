@@ -515,3 +515,95 @@ Below are some output examples for different casing.
         "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72"
     }
     ```
+
+## Custom Log formatter (Bring Your Own Formatter)
+
+You can customize the structure (keys and values) of your log entries by implementing a custom log formatter and override default log formatter using ``Logger.UseFormatter`` method. You can implement a custom log formatter by inheriting the ``ILogFormatter`` class and implementing the ``object FormatLogEntry(LogEntry logEntry)`` method.
+
+=== "Function.cs"
+
+    ```c# hl_lines="11"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        /// <summary>
+        /// Function constructor
+        /// </summary>
+        public Function()
+        {
+            Logger.UseFormatter(new CustomLogFormatter());
+        }
+
+        [Logging(CorrelationIdPath = "/headers/my_request_id_header", SamplingRate = 0.7)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            ...
+        }
+    }
+    ```
+=== "CustomLogFormatter.cs"
+
+    ```c#
+    public class CustomLogFormatter : ILogFormatter
+    {
+        public object FormatLogEntry(LogEntry logEntry)
+        {
+            return new
+            {
+                Message = logEntry.Message,
+                Service = logEntry.Service,
+                CorrelationIds = new 
+                {
+                    AwsRequestId = logEntry.LambdaContext?.AwsRequestId,
+                    XRayTraceId = logEntry.XRayTraceId,
+                    CorrelationId = logEntry.CorrelationId
+                },
+                LambdaFunction = new
+                {
+                    Name = logEntry.LambdaContext?.FunctionName,
+                    Arn = logEntry.LambdaContext?.InvokedFunctionArn,
+                    MemoryLimitInMB = logEntry.LambdaContext?.MemoryLimitInMB,
+                    Version = logEntry.LambdaContext?.FunctionVersion,
+                    ColdStart = logEntry.ColdStart,
+                },
+                Level = logEntry.Level.ToString(),
+                Timestamp = logEntry.Timestamp.ToString("o"),
+                Logger = new
+                {
+                    Name = logEntry.Name,
+                    SampleRate = logEntry.SamplingRate
+                },
+            };
+        }
+    }
+    ```
+
+=== "Example CloudWatch Logs excerpt"
+
+    ```json
+    {
+        "Message": "Test Message",
+        "Service": "lambda-example",
+        "CorrelationIds": {
+            "AwsRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+            "XRayTraceId": "1-61b7add4-66532bb81441e1b060389429",
+            "CorrelationId": "correlation_id_value"
+        },
+        "LambdaFunction": {
+            "Name": "test",
+            "Arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+            "MemorySize": 128,
+            "Version": "$LATEST",
+            "ColdStart": true
+        },
+        "Level": "Information",
+        "Timestamp": "2021-12-13T20:32:22.5774262Z",
+        "Logger": {
+            "Name": "AWS.Lambda.Powertools.Logging.Logger",
+            "SampleRate": 0.7
+        }
+    }
+    ```
