@@ -21,7 +21,7 @@ updates:
     commit-message:
       prefix: chore
       include: scope
-   - package-ecosystem: "nuget" # See documentation for possible values
+  - package-ecosystem: "nuget" # See documentation for possible values
     directory: "/examples/Logging/" # Location of package manifests
     schedule:
       interval: "weekly"
@@ -29,7 +29,7 @@ updates:
     commit-message:
       prefix: chore
       include: scope
-   - package-ecosystem: "nuget" # See documentation for possible values
+  - package-ecosystem: "nuget" # See documentation for possible values
     directory: "/examples/Metrics/" # Location of package manifests
     schedule:
       interval: "weekly"
@@ -37,7 +37,7 @@ updates:
     commit-message:
       prefix: chore
       include: scope
-   - package-ecosystem: "nuget" # See documentation for possible values
+  - package-ecosystem: "nuget" # See documentation for possible values
     directory: "/examples/Parameters/" # Location of package manifests
     schedule:
       interval: "weekly"
@@ -45,7 +45,7 @@ updates:
     commit-message:
       prefix: chore
       include: scope
-   - package-ecosystem: "nuget" # See documentation for possible values
+  - package-ecosystem: "nuget" # See documentation for possible values
     directory: "/examples/ServerlessApi/" # Location of package manifests
     schedule:
       interval: "weekly"
@@ -53,7 +53,7 @@ updates:
     commit-message:
       prefix: chore
       include: scope
-     - package-ecosystem: "nuget" # See documentation for possible values
+  - package-ecosystem: "nuget" # See documentation for possible values
     directory: "/examples/Tracing/" # Location of package manifests
     schedule:
       interval: "weekly"
