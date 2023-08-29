@@ -7,6 +7,6 @@
 	},
 	"Utilities": {
 		"Parameters": "0.0.3-preview",
-		"Idempotency": "0.0.2-preview"
+		"Idempotency": "0.1.0-preview"
 	}
 }

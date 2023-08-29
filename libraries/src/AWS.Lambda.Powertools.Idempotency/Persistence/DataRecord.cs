@@ -35,17 +35,20 @@ public class DataRecord
     /// <param name="expiryTimestamp">Unix timestamp of when record expires</param>
     /// <param name="responseData">JSON serialized invocation results</param>
     /// <param name="payloadHash">A hash representation of the entire event</param>
+    /// <param name="inProgressExpiryTimestamp">Unix timestamp of in-progress field for the remaining lambda execution time</param>
     public DataRecord(string idempotencyKey, 
             DataRecordStatus status,
             long expiryTimestamp,
             string responseData,
-            string payloadHash)
+            string payloadHash, 
+            long? inProgressExpiryTimestamp = null)
     {
         IdempotencyKey = idempotencyKey;
         _status = status.ToString();
         ExpiryTimestamp = expiryTimestamp;
         ResponseData = responseData;
         PayloadHash = payloadHash;
+        InProgressExpiryTimestamp = inProgressExpiryTimestamp;
     }
 
     /// <summary>
@@ -53,9 +56,27 @@ public class DataRecord
     /// </summary>
     public string IdempotencyKey { get; }
     /// <summary>
-    /// Unix timestamp of when record expires
+    /// Unix timestamp of when record expires.
+    /// This field is controlling how long the result of the idempotent
+    /// event is cached. It is stored in _seconds since epoch_.
+    /// DynamoDB's TTL mechanism is used to remove the record once the
+    /// expiry has been reached, and subsequent execution of the request
+    /// will be permitted. The user must configure this on their table.
     /// </summary>
     public long ExpiryTimestamp { get; }
+
+    /// <summary>
+    /// The in-progress field is set to the remaining lambda execution time
+    /// when the record is created.
+    /// This field is stored in _milliseconds since epoch_.
+    /// 
+    /// This ensures that:
+    ///     1/ other concurrently executing requests are blocked from starting
+    ///     2/ if a lambda times out, subsequent requests will be allowed again, despite
+    ///        the fact that the idempotency record is already in the table
+    /// </summary>
+    public long? InProgressExpiryTimestamp { get; }
+
     /// <summary>
     /// JSON serialized invocation results
     /// </summary>

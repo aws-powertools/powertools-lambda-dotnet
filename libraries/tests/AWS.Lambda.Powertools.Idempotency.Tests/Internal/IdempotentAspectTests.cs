@@ -27,6 +27,7 @@ using FluentAssertions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
@@ -48,11 +49,16 @@ public class IdempotentAspectTests : IDisposable
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
             );
         
+        var context = new TestLambdaContext
+        {
+            RemainingTime = TimeSpan.FromSeconds(30)
+        };
+        
         var function = Activator.CreateInstance(type) as IIdempotencyEnabledFunction;
         var product = new Product(42, "fake product", 12);
         
         //Act
-        var basket = await function!.HandleTest(product, new TestLambdaContext());
+        var basket = await function!.HandleTest(product, context);
         
         //Assert
         basket.Products.Count.Should().Be(1);
@@ -61,7 +67,7 @@ public class IdempotentAspectTests : IDisposable
         await store.Received().SaveInProgress(
             Arg.Is<JsonDocument>(t =>
                 t.ToString() == JsonSerializer.SerializeToDocument(product, new JsonSerializerOptions()).ToString()),
-            Arg.Any<DateTimeOffset>()
+            Arg.Any<DateTimeOffset>(), Arg.Is<double>(d => d == 30000)
         );
 
         await store.Received().SaveSuccess(
@@ -78,7 +84,7 @@ public class IdempotentAspectTests : IDisposable
     {
         //Arrange
         var store = Substitute.For<BasePersistenceStore>();
-        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>())
+        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>(), Arg.Any<double>())
             .Returns(_ => throw new IdempotencyItemAlreadyExistsException());
     
         // GIVEN
@@ -122,7 +128,7 @@ public class IdempotentAspectTests : IDisposable
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
             );
         
-        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>())
+        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>(), Arg.Any<double>())
             .Returns(_ => throw new IdempotencyItemAlreadyExistsException());
     
         var product = new Product(42, "fake product", 12);
@@ -142,6 +148,46 @@ public class IdempotentAspectTests : IDisposable
     
         // Assert
         await act.Should().ThrowAsync<IdempotencyAlreadyInProgressException>();
+    }
+    
+    [Theory]
+    [InlineData(typeof(IdempotencyEnabledFunction))]
+    [InlineData(typeof(IdempotencyEnabledSyncFunction))]
+    public async Task Handle_WhenSecondCall_InProgress_LambdaTimeout_Expired_ShouldThrowIdempotencyInconsistentStateException(Type type)
+    {
+        // Arrange
+        var store = Substitute.For<BasePersistenceStore>();
+        
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store)
+                .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
+        );
+        
+        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>(), Arg.Any<double>())
+            .Returns(_ => throw new IdempotencyItemAlreadyExistsException());
+
+        var timestampInThePast = DateTimeOffset.Now.AddSeconds(-30).ToUnixTimeMilliseconds();
+        
+        var product = new Product(42, "fake product", 12);
+        var basket = new Basket(product);
+        var record = new DataRecord(
+            "42",
+            DataRecord.DataRecordStatus.INPROGRESS,
+            DateTimeOffset.UtcNow.AddSeconds(356).ToUnixTimeSeconds(),
+            JsonSerializer.SerializeToNode(basket)!.ToString(),
+            null,
+            timestampInThePast);
+        
+        store.GetRecord(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>())
+            .Returns(record);
+    
+        // Act
+        var function = Activator.CreateInstance(type) as IIdempotencyEnabledFunction;
+        Func<Task> act = async () => await function!.HandleTest(product, new TestLambdaContext());
+    
+        // Assert
+        await act.Should().ThrowAsync<IdempotencyInconsistentStateException>();
     }
 
     [Theory]
@@ -231,22 +277,27 @@ public class IdempotentAspectTests : IDisposable
         var store = Substitute.For<BasePersistenceStore>();
         Idempotency.Configure(builder => builder.WithPersistenceStore(store));
 
+        var context = new TestLambdaContext
+        {
+            RemainingTime = TimeSpan.FromSeconds(30)
+        };
+        
         // Act
-        IdempotencyInternalFunction function = new IdempotencyInternalFunction();
+        IdempotencyInternalFunction function = new IdempotencyInternalFunction(true);
         Product product = new Product(42, "fake product", 12);
-        Basket resultBasket = function.HandleRequest(product, new TestLambdaContext());
-
+        Basket resultBasket = function.HandleRequest(product, context);
+        
         // Assert
         resultBasket.Products.Count.Should().Be(2);
         function.IsSubMethodCalled.Should().BeTrue();
-
+        
         await store
             .Received(1)
             .SaveInProgress(
                 Arg.Is<JsonDocument>(t =>
                     t.ToString() == JsonSerializer.SerializeToDocument("fake", new JsonSerializerOptions())
                         .ToString()),
-                Arg.Any<DateTimeOffset>());
+                Arg.Any<DateTimeOffset>(), Arg.Is<double>(d => d == 30000));
 
         await store
             .Received(1)
@@ -259,7 +310,7 @@ public class IdempotentAspectTests : IDisposable
     {
         // Arrange
         var store = Substitute.For<BasePersistenceStore>();
-        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>())
+        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>(), Arg.Any<double>())
             .Throws(new IdempotencyItemAlreadyExistsException());
 
         Idempotency.Configure(builder => builder.WithPersistenceStore(store));
@@ -276,7 +327,7 @@ public class IdempotentAspectTests : IDisposable
             .Returns(record);
 
         // Act
-        var function = new IdempotencyInternalFunction();
+        var function = new IdempotencyInternalFunction(false);
         Basket resultBasket = function.HandleRequest(product, new TestLambdaContext());
 
         // assert
