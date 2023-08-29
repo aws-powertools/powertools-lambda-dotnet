@@ -140,7 +140,7 @@ You can quickly start by configuring `Idempotency` and using it with the `Idempo
 !!! warning "Important"
     Initialization and configuration of the `Idempotency` must be performed outside the handler, preferably in the constructor.
 
-    ```csharp hl_lines="4 7"
+    ```csharp hl_lines="5 8"
     public class Function
     {
         public Function()
@@ -167,7 +167,7 @@ When using `Idempotent` attribute on another method, you must tell which paramet
 
 !!! info "The parameter must be serializable in JSON. We use `System.Text.Json` internally to (de)serialize objects"
 
-    ```csharp hl_lines="4 13-14"
+    ```csharp hl_lines="5 14-15"
     public class Function
     {
         public Function()
@@ -211,7 +211,7 @@ If we were to treat the entire request as our idempotency key, a simple HTTP hea
 
 === "Payment function"
 
-    ```csharp hl_lines="3"
+    ```csharp hl_lines="4"
     Idempotency.Configure(builder =>
             builder
                 .WithOptions(optionsBuilder =>
@@ -221,7 +221,7 @@ If we were to treat the entire request as our idempotency key, a simple HTTP hea
 
 === "Sample event"
 
-    ```json hl_lines="27"
+    ```json hl_lines="28"
     {
     "version": "2.0",
     "routeKey": "ANY /createpayment",
@@ -257,25 +257,25 @@ If we were to treat the entire request as our idempotency key, a simple HTTP hea
 ### Lambda timeouts
 
 ???+ note
-This is automatically done when you decorate your Lambda handler with [Idempotent attribute](#idempotent-attribute).
-
-To prevent against extended failed retries when a [Lambda function times out](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-verify-invocation-timeouts/){target="_blank"},
-Powertools for AWS Lambda (.NET) calculates and includes the remaining invocation available time as part of the idempotency record.
+    This is automatically done when you decorate your Lambda handler with [Idempotent attribute](#idempotent-attribute).
+    
+    To prevent against extended failed retries when a [Lambda function times out](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-verify-invocation-timeouts/){target="_blank"},
+    Powertools for AWS Lambda (.NET) calculates and includes the remaining invocation available time as part of the idempotency record.
 
 ???+ example
-If a second invocation happens **after** this timestamp, and the record is marked as `INPROGRESS`, we will execute the invocation again as if it was in the `EXPIRED` state (e.g, `Expired` field elapsed).
+    If a second invocation happens **after** this timestamp, and the record is marked as `INPROGRESS`, we will execute the invocation again as if it was in the `EXPIRED` state (e.g, `Expired` field elapsed).
 
     This means that if an invocation expired during execution, it will be quickly executed again on the next retry.
 
 ???+ important
-If you are only using the [Idempotent attribute](#Idempotent-attribute-on-another-method) to guard isolated parts of your code,
-you must use `RegisterLambdaContext` available in the `Idempotency` static class to benefit from this protection.
+    If you are only using the [Idempotent attribute](#Idempotent-attribute-on-another-method) to guard isolated parts of your code,
+    you must use `RegisterLambdaContext` available in the `Idempotency` static class to benefit from this protection.
 
 Here is an example on how you register the Lambda context in your handler:
 
 === "Registering the Lambda context"
 
-    ```csharp hl_lines="9" title="Registering the Lambda context"
+    ```csharp hl_lines="10" title="Registering the Lambda context"
     public class Function
     {
         public Function()
@@ -331,7 +331,7 @@ If an Exception is raised _outside_ the scope of the decorated method and after 
 
 === "Handling exceptions"
 
-    ```csharp hl_lines="2-4 8-10" title="Exception not affecting idempotency record sample"
+    ```csharp hl_lines="10-12 16-18 21" title="Exception not affecting idempotency record sample"
     public class Function
     {
         public Function()
@@ -675,7 +675,7 @@ With **`PayloadValidationJMESPath`**, you can provide an additional JMESPath exp
 
 === "Function.cs"
 
-    ```csharp
+    ```csharp hl_lines="6"
     Idempotency.Configure(builder =>
             builder
                 .WithOptions(optionsBuilder =>
@@ -730,7 +730,7 @@ This means that we will throw **`IdempotencyKeyException`** if the evaluation of
 
 === "Function.cs"
 
-    ```csharp
+    ```csharp hl_lines="9"
     public App() 
     {
       Idempotency.Configure(builder =>
@@ -752,7 +752,7 @@ This means that we will throw **`IdempotencyKeyException`** if the evaluation of
 
 === "Success Event"
 
-    ```json
+    ```json hl_lines="6"
     {
         "user": {
             "uid": "BB0D045C-8878-40C8-889E-38B3CB0A61B1",
@@ -782,7 +782,7 @@ When creating the `DynamoDBPersistenceStore`, you can set a custom [`AmazonDynam
 
 === "Custom AmazonDynamoDBClient"
 
-    ```csharp
+    ```csharp hl_lines="3 9"
     public Function()
     {
         AmazonDynamoDBClient customClient = new AmazonDynamoDBClient(RegionEndpoint.APSouth1);
@@ -804,14 +804,16 @@ With this setting, we will save the idempotency key in the sort key instead of t
 
 You can optionally set a static value for the partition key using the `StaticPkValue` parameter.
 
-```csharp title="Reusing a DynamoDB table that uses a composite primary key"
-Idempotency.Configure(builder => 
-    builder.UseDynamoDb(storeBuilder => 
-        storeBuilder.
-            WithTableName("TABLE_NAME")
-            .WithSortKeyAttr("sort_key")
-    ));
-```
+=== "Reusing a DynamoDB table that uses a composite primary key"
+
+    ```csharp hl_lines="5"
+    Idempotency.Configure(builder => 
+        builder.UseDynamoDb(storeBuilder => 
+            storeBuilder.
+                WithTableName("TABLE_NAME")
+                .WithSortKeyAttr("sort_key")
+        ));
+    ```
 
 Data would then be stored in DynamoDB like this:
 
