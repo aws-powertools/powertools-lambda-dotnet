@@ -14,6 +14,7 @@
  */
 
 using System;
+using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 
@@ -83,6 +84,21 @@ public sealed class Idempotency
 
         Instance.SetConfig(builder.Options ?? new IdempotencyOptionsBuilder().Build());
         Instance.SetPersistenceStore(builder.Store);
+    }
+
+    /// <summary>
+    /// Holds ILambdaContext
+    /// </summary>
+    public ILambdaContext LambdaContext { get; private set; }
+    
+    /// <summary>
+    /// Can be used in a method which is not the handler to capture the Lambda context,
+    /// to calculate the remaining time before the invocation times out.
+    /// </summary>
+    /// <param name="context"></param>
+    public static void RegisterLambdaContext(ILambdaContext context)
+    {
+        Instance.LambdaContext = context;
     }
 
     /// <summary>

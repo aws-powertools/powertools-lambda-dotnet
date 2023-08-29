@@ -9,6 +9,14 @@ description: Utility
 
 The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
 
+## Key features
+
+* Prevent Lambda handler function from executing more than once on the same event payload during a time window
+* Ensure Lambda handler returns the same result when called with the same payload
+* Select a subset of the event as the idempotency key using [JMESPath](https://jmespath.org/) expressions
+* Set a time window in which records with the same payload should be considered duplicates
+* Expires in-progress executions if the Lambda function times out halfway through
+
 ## Terminology
 
 The property of idempotency means that an operation does not cause additional side effects if it is called more than once with the same input parameters.
@@ -17,12 +25,31 @@ The property of idempotency means that an operation does not cause additional si
 
 **Idempotency key** is a hash representation of either the entire event or a specific configured subset of the event, and invocation results are **JSON serialized** and stored in your persistence storage layer.
 
-## Key features
+**Idempotency record** is the data representation of an idempotent request saved in your preferred  storage layer. We use it to coordinate whether a request is idempotent, whether it's still valid or expired based on timestamps, etc.
 
-* Prevent Lambda handler function from executing more than once on the same event payload during a time window
-* Ensure Lambda handler returns the same result when called with the same payload
-* Select a subset of the event as the idempotency key using [JMESPath](https://jmespath.org/) expressions
-* Set a time window in which records with the same payload should be considered duplicates
+<div style="text-align: center;">
+```mermaid
+classDiagram
+    direction LR
+    class DataRecord {
+        string IdempotencyKey
+        DataRecordStatus Status
+        long ExpiryTimestamp
+        long InProgressExpiryTimestamp
+        string ResponseData
+        string PayloadHash
+    }
+    class Status {
+        <<Enum>>
+        INPROGRESS
+        COMPLETED
+        EXPIRED
+    }
+    DataRecord -- Status
+```
+<i>Idempotency record representation</i>
+</div>
+
 
 ## Getting started
 
@@ -39,6 +66,13 @@ Or via the .NET Core command line interface:
 ```bash
 dotnet add package AWS.Lambda.Powertools.Idempotency
 ```
+
+### IAM Permissions
+
+Your Lambda function IAM Role must have `dynamodb:GetItem`, `dynamodb:PutItem`, `dynamodb:UpdateItem` and `dynamodb:DeleteItem` IAM permissions before using this feature.
+
+???+ note
+If you're using our example [AWS Serverless Application Model (SAM)](#required-resources), [AWS Cloud Development Kit (CDK)](#required-resources), or [Terraform](#required-resources) it already adds the required permissions.
 
 ### Required resources
 
@@ -106,7 +140,7 @@ You can quickly start by configuring `Idempotency` and using it with the `Idempo
 !!! warning "Important"
     Initialization and configuration of the `Idempotency` must be performed outside the handler, preferably in the constructor.
 
-    ```csharp
+    ```csharp hl_lines="4 7"
     public class Function
     {
         public Function()
@@ -133,7 +167,7 @@ When using `Idempotent` attribute on another method, you must tell which paramet
 
 !!! info "The parameter must be serializable in JSON. We use `System.Text.Json` internally to (de)serialize objects"
 
-    ```csharp
+    ```csharp hl_lines="4 13-14"
     public class Function
     {
         public Function()
@@ -143,12 +177,12 @@ When using `Idempotent` attribute on another method, you must tell which paramet
         
         public Task<string> FunctionHandler(string input, ILambdaContext context)
         {
-            dummpy("hello", "world")
+            MyInternalMethod("hello", "world")
             return Task.FromResult(input.ToUpper());
         }
 
         [Idempotent]
-        private string dummy(string argOne, [IdempotencyKey] string argTwo) {
+        private string MyInternalMethod(string argOne, [IdempotencyKey] string argTwo) {
             return "something";
         }
     }
@@ -167,17 +201,100 @@ In this example, we have a Lambda handler that creates a payment for a user subs
 
 Imagine the function executes successfully, but the client never receives the response due to a connection issue. It is safe to retry in this instance, as the idempotent decorator will return a previously saved response.
 
-!!! warning "Warning: Idempotency for JSON payloads"
+**What we want here** is to instruct Idempotency to use `user_id` and `product_id` fields from our incoming payload as our idempotency key.
+If we were to treat the entire request as our idempotency key, a simple HTTP header change would cause our customer to be charged twice.
+
+???+ tip "Deserializing JSON strings in payloads for increased accuracy."
     The payload extracted by the `EventKeyJmesPath` is treated as a string by default, so will be sensitive to differences in whitespace even when the JSON payload itself is identical.
 
     To alter this behaviour, you can use the JMESPath built-in function `powertools_json()` to treat the payload as a JSON object rather than a string.
 
-    ```csharp
+=== "Payment function"
+
+    ```csharp hl_lines="3"
     Idempotency.Configure(builder =>
             builder
                 .WithOptions(optionsBuilder =>
-                    optionsBuilder.WithEventKeyJmesPath("powertools_json(Body).address"))
+                    optionsBuilder.WithEventKeyJmesPath("powertools_json(Body).[\"user_id\", \"product_id\"]"))
                 .UseDynamoDb("idempotency_table"));
+    ```
+
+=== "Sample event"
+
+    ```json hl_lines="27"
+    {
+    "version": "2.0",
+    "routeKey": "ANY /createpayment",
+    "rawPath": "/createpayment",
+    "rawQueryString": "",
+    "headers": {
+    "Header1": "value1",
+    "Header2": "value2"
+    },
+    "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "api-id",
+    "domainName": "id.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "id",
+    "http": {
+    "method": "POST",
+    "path": "/createpayment",
+    "protocol": "HTTP/1.1",
+    "sourceIp": "ip",
+    "userAgent": "agent"
+    },
+    "requestId": "id",
+    "routeKey": "ANY /createpayment",
+    "stage": "$default",
+    "time": "10/Feb/2021:13:40:43 +0000",
+    "timeEpoch": 1612964443723
+    },
+    "body": "{\"user_id\":\"xyz\",\"product_id\":\"123456789\"}",
+    "isBase64Encoded": false
+    }
+    ```
+
+### Lambda timeouts
+
+???+ note
+This is automatically done when you decorate your Lambda handler with [Idempotent attribute](#idempotent-attribute).
+
+To prevent against extended failed retries when a [Lambda function times out](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-verify-invocation-timeouts/){target="_blank"},
+Powertools for AWS Lambda (.NET) calculates and includes the remaining invocation available time as part of the idempotency record.
+
+???+ example
+If a second invocation happens **after** this timestamp, and the record is marked as `INPROGRESS`, we will execute the invocation again as if it was in the `EXPIRED` state (e.g, `Expired` field elapsed).
+
+    This means that if an invocation expired during execution, it will be quickly executed again on the next retry.
+
+???+ important
+If you are only using the [Idempotent attribute](#Idempotent-attribute-on-another-method) to guard isolated parts of your code,
+you must use `RegisterLambdaContext` available in the `Idempotency` static class to benefit from this protection.
+
+Here is an example on how you register the Lambda context in your handler:
+
+=== "Registering the Lambda context"
+
+    ```csharp hl_lines="9" title="Registering the Lambda context"
+    public class Function
+    {
+        public Function()
+        {
+            Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
+        }
+        
+        public Task<string> FunctionHandler(string input, ILambdaContext context)
+        {
+            Idempotency.RegisterLambdaContext(context);
+            MyInternalMethod("hello", "world")
+            return Task.FromResult(input.ToUpper());
+        }
+
+        [Idempotent]
+        private string MyInternalMethod(string argOne, [IdempotencyKey] string argTwo) {
+            return "something";
+        }
+    }
     ```
 
 ### Handling exceptions
@@ -189,6 +306,254 @@ This means that new invocations will execute your code again despite having the 
     **We will throw an `IdempotencyPersistenceLayerException`** if any of the calls to the persistence layer fail unexpectedly.
 
     As this happens outside the scope of your decorated function, you are not able to catch it.
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Lambda
+    participant Persistence Layer
+    Client->>Lambda: Invoke (event)
+    Lambda->>Persistence Layer: Get or set (id=event.search(payload))
+    activate Persistence Layer
+    Note right of Persistence Layer: Locked during this time. Prevents multiple<br/>Lambda invocations with the same<br/>payload running concurrently.
+    Lambda--xLambda: Call handler (event).<br/>Raises exception
+    Lambda->>Persistence Layer: Delete record (id=event.search(payload))
+    deactivate Persistence Layer
+    Lambda-->>Client: Return error response
+```
+<i>Idempotent sequence exception</i>
+</center>
+
+If you are using `Idempotent` attribute on another method, any unhandled exceptions that are raised _inside_ the decorated function will cause the record in the persistence layer to be deleted, and allow the function to be executed again if retried.
+
+If an Exception is raised _outside_ the scope of the decorated method and after your method has been called, the persistent record will not be affected. In this case, idempotency will be maintained for your decorated function. Example:
+
+=== "Handling exceptions"
+
+    ```csharp hl_lines="2-4 8-10" title="Exception not affecting idempotency record sample"
+    public class Function
+    {
+        public Function()
+        {
+            Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
+        }
+        
+        public Task<string> FunctionHandler(string input, ILambdaContext context)
+        {
+            Idempotency.RegisterLambdaContext(context);
+            // If an exception is thrown here, no idempotent record will ever get created as the
+            // idempotent method does not get called
+
+            MyInternalMethod("hello", "world")
+
+            // This exception will not cause the idempotent record to be deleted, since it
+            // happens after the decorated method has been successfully called    
+            throw new Exception();
+        }
+
+        [Idempotent]
+        private string MyInternalMethod(string argOne, [IdempotencyKey] string argTwo) {
+            return "something";
+        }
+    }
+    ```
+
+### Idempotency request flow
+
+The following sequence diagrams explain how the Idempotency feature behaves under different scenarios.
+
+#### Successful request
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Lambda
+    participant Persistence Layer
+    alt initial request
+        Client->>Lambda: Invoke (event)
+        Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+        activate Persistence Layer
+        Note over Lambda,Persistence Layer: Set record status to INPROGRESS. <br> Prevents concurrent invocations <br> with the same payload
+        Lambda-->>Lambda: Call your function
+        Lambda->>Persistence Layer: Update record with result
+        deactivate Persistence Layer
+        Persistence Layer-->>Persistence Layer: Update record
+        Note over Lambda,Persistence Layer: Set record status to COMPLETE. <br> New invocations with the same payload <br> now return the same result
+        Lambda-->>Client: Response sent to client
+    else retried request
+        Client->>Lambda: Invoke (event)
+        Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+        activate Persistence Layer
+        Persistence Layer-->>Lambda: Already exists in persistence layer.
+        deactivate Persistence Layer
+        Note over Lambda,Persistence Layer: Record status is COMPLETE and not expired
+        Lambda-->>Client: Same response sent to client
+    end
+```
+<i>Idempotent successful request</i>
+</center>
+
+#### Successful request with cache enabled
+
+!!! note "[In-memory cache is disabled by default](#using-in-memory-cache)."
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Lambda
+    participant Persistence Layer
+    alt initial request
+      Client->>Lambda: Invoke (event)
+      Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+      activate Persistence Layer
+      Note over Lambda,Persistence Layer: Set record status to INPROGRESS. <br> Prevents concurrent invocations <br> with the same payload
+      Lambda-->>Lambda: Call your function
+      Lambda->>Persistence Layer: Update record with result
+      deactivate Persistence Layer
+      Persistence Layer-->>Persistence Layer: Update record
+      Note over Lambda,Persistence Layer: Set record status to COMPLETE. <br> New invocations with the same payload <br> now return the same result
+      Lambda-->>Lambda: Save record and result in memory
+      Lambda-->>Client: Response sent to client
+    else retried request
+      Client->>Lambda: Invoke (event)
+      Lambda-->>Lambda: Get idempotency_key=hash(payload)
+      Note over Lambda,Persistence Layer: Record status is COMPLETE and not expired
+      Lambda-->>Client: Same response sent to client
+    end
+```
+<i>Idempotent successful request cached</i>
+</center>
+
+#### Expired idempotency records
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Lambda
+    participant Persistence Layer
+    alt initial request
+        Client->>Lambda: Invoke (event)
+        Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+        activate Persistence Layer
+        Note over Lambda,Persistence Layer: Set record status to INPROGRESS. <br> Prevents concurrent invocations <br> with the same payload
+        Lambda-->>Lambda: Call your function
+        Lambda->>Persistence Layer: Update record with result
+        deactivate Persistence Layer
+        Persistence Layer-->>Persistence Layer: Update record
+        Note over Lambda,Persistence Layer: Set record status to COMPLETE. <br> New invocations with the same payload <br> now return the same result
+        Lambda-->>Client: Response sent to client
+    else retried request
+        Client->>Lambda: Invoke (event)
+        Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+        activate Persistence Layer
+        Persistence Layer-->>Lambda: Already exists in persistence layer.
+        deactivate Persistence Layer
+        Note over Lambda,Persistence Layer: Record status is COMPLETE but expired hours ago
+        loop Repeat initial request process
+            Note over Lambda,Persistence Layer: 1. Set record to INPROGRESS, <br> 2. Call your function, <br> 3. Set record to COMPLETE
+        end
+        Lambda-->>Client: Same response sent to client
+    end
+```
+<i>Previous Idempotent request expired</i>
+</center>
+
+#### Concurrent identical in-flight requests
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Lambda
+    participant Persistence Layer
+    Client->>Lambda: Invoke (event)
+    Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+    activate Persistence Layer
+    Note over Lambda,Persistence Layer: Set record status to INPROGRESS. <br> Prevents concurrent invocations <br> with the same payload
+      par Second request
+          Client->>Lambda: Invoke (event)
+          Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+          Lambda--xLambda: IdempotencyAlreadyInProgressError
+          Lambda->>Client: Error sent to client if unhandled
+      end
+    Lambda-->>Lambda: Call your function
+    Lambda->>Persistence Layer: Update record with result
+    deactivate Persistence Layer
+    Persistence Layer-->>Persistence Layer: Update record
+    Note over Lambda,Persistence Layer: Set record status to COMPLETE. <br> New invocations with the same payload <br> now return the same result
+    Lambda-->>Client: Response sent to client
+```
+<i>Concurrent identical in-flight requests</i>
+</center>
+
+#### Lambda request timeout
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Lambda
+    participant Persistence Layer
+    alt initial request
+        Client->>Lambda: Invoke (event)
+        Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+        activate Persistence Layer
+        Note over Lambda,Persistence Layer: Set record status to INPROGRESS. <br> Prevents concurrent invocations <br> with the same payload
+        Lambda-->>Lambda: Call your function
+        Note right of Lambda: Time out
+        Lambda--xLambda: Time out error
+        Lambda-->>Client: Return error response
+        deactivate Persistence Layer
+    else retry after Lambda timeout elapses
+        Client->>Lambda: Invoke (event)
+        Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+        activate Persistence Layer
+        Note over Lambda,Persistence Layer: Set record status to INPROGRESS. <br> Reset in_progress_expiry attribute
+        Lambda-->>Lambda: Call your function
+        Lambda->>Persistence Layer: Update record with result
+        deactivate Persistence Layer
+        Persistence Layer-->>Persistence Layer: Update record
+        Lambda-->>Client: Response sent to client
+    end
+```
+<i>Idempotent request during and after Lambda timeouts</i>
+</center>
+
+#### Optional idempotency key
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Lambda
+    participant Persistence Layer
+    alt request with idempotency key
+        Client->>Lambda: Invoke (event)
+        Lambda->>Persistence Layer: Get or set idempotency_key=hash(payload)
+        activate Persistence Layer
+        Note over Lambda,Persistence Layer: Set record status to INPROGRESS. <br> Prevents concurrent invocations <br> with the same payload
+        Lambda-->>Lambda: Call your function
+        Lambda->>Persistence Layer: Update record with result
+        deactivate Persistence Layer
+        Persistence Layer-->>Persistence Layer: Update record
+        Note over Lambda,Persistence Layer: Set record status to COMPLETE. <br> New invocations with the same payload <br> now return the same result
+        Lambda-->>Client: Response sent to client
+    else request(s) without idempotency key
+        Client->>Lambda: Invoke (event)
+        Note over Lambda: Idempotency key is missing
+        Note over Persistence Layer: Skips any operation to fetch, update, and delete
+        Lambda-->>Lambda: Call your function
+        Lambda-->>Client: Response sent to client
+    end
+```
+<i>Optional idempotency key</i>
+</center>
+
+## Advanced
 
 ### Persistence stores
 
@@ -205,23 +570,24 @@ new DynamoDBPersistenceStoreBuilder()
     .WithStatusAttr("current_status")
     .WithDataAttr("result_data")
     .WithValidationAttr("validation_key")
+    .WithInProgressExpiryAttr("in_progress_expires_at")
     .Build()
 ```
 
 When using DynamoDB as a persistence layer, you can alter the attribute names by passing these parameters when initializing the persistence layer:
 
-| Parameter          | Required | Default                              | Description                                                                                            |
-|--------------------|----------|--------------------------------------|--------------------------------------------------------------------------------------------------------|
-| **TableName**      | Y        |                                      | Table name to store state                                                                              |
-| **KeyAttr**        |          | `id`                                 | Partition key of the table. Hashed representation of the payload (unless **SortKeyAttr** is specified) |
-| **ExpiryAttr**     |          | `expiration`                         | Unix timestamp of when record expires                                                                  |
-| **StatusAttr**     |          | `status`                             | Stores status of the Lambda execution during and after invocation                                      |
-| **DataAttr**       |          | `data`                               | Stores results of successfully idempotent methods                                                      |
-| **ValidationAttr** |          | `validation`                         | Hashed representation of the parts of the event used for validation                                    |
-| **SortKeyAttr**    |          |                                      | Sort key of the table (if table is configured with a sort key).                                        |
-| **StaticPkValue**  |          | `idempotency#{LAMBDA_FUNCTION_NAME}` | Static value to use as the partition key. Only used when **SortKeyAttr** is set.                       |
+| Parameter                  | Required | Default                              | Description                                                                                            |
+|----------------------------|----------|--------------------------------------|--------------------------------------------------------------------------------------------------------|
+| **TableName**              | Y        |                                      | Table name to store state                                                                              |
+| **KeyAttr**                |          | `id`                                 | Partition key of the table. Hashed representation of the payload (unless **SortKeyAttr** is specified) |
+| **ExpiryAttr**             |          | `expiration`                         | Unix timestamp of when record expires                                                                  |
+| **InProgressExpiryAttr**   |          | `in_progress_expiration`             | Unix timestamp of when record expires while in progress (in case of the invocation times out)          |
+| **StatusAttr**             |          | `status`                             | Stores status of the Lambda execution during and after invocation                                      |
+| **DataAttr**               |          | `data`                               | Stores results of successfully idempotent methods                                                      |
+| **ValidationAttr**         |          | `validation`                         | Hashed representation of the parts of the event used for validation                                    |
+| **SortKeyAttr**            |          |                                      | Sort key of the table (if table is configured with a sort key).                                        |
+| **StaticPkValue**          |          | `idempotency#{LAMBDA_FUNCTION_NAME}` | Static value to use as the partition key. Only used when **SortKeyAttr** is set.                       |
 
-## Advanced
 
 ### Customizing the default behavior
 
