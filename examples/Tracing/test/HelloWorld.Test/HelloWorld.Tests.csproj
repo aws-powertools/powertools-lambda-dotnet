@@ -6,7 +6,7 @@
 		<PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
 		<PackageReference Include="Amazon.Lambda.TestUtilities" Version="2.0.0" />
 		<PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.1" />
-		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.200.23" />
+		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.200.28" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.1" />
 		<PackageReference Include="NSubstitute" Version="5.0.0" />
 		<PackageReference Include="xunit" Version="2.5.0" />
