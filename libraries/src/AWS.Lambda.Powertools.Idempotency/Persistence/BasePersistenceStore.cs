@@ -113,8 +113,9 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     /// <param name="data">Payload</param>
     /// <param name="now">The current date time</param>
+    /// <param name="remainingTimeInMs">The remaining time from lambda execution</param>
     /// <exception cref="IdempotencyItemAlreadyExistsException"></exception>
-    public virtual async Task SaveInProgress(JsonDocument data, DateTimeOffset now)
+    public virtual async Task SaveInProgress(JsonDocument data, DateTimeOffset now, double? remainingTimeInMs)
     {
         var idempotencyKey = GetHashedIdempotencyKey(data);
         
@@ -122,13 +123,21 @@ public abstract class BasePersistenceStore : IPersistenceStore
         {
             throw new IdempotencyItemAlreadyExistsException();
         }
+        
+        long? inProgressExpirationMsTimestamp = null;
+        if (remainingTimeInMs.HasValue)
+        {
+            inProgressExpirationMsTimestamp = now.AddMilliseconds(remainingTimeInMs.Value).ToUnixTimeMilliseconds();
+        }
 
         var record = new DataRecord(
             idempotencyKey,
             DataRecord.DataRecordStatus.INPROGRESS,
             GetExpiryEpochSecond(now),
             null,
-            GetHashedPayload(data)
+            GetHashedPayload(data),
+            inProgressExpirationMsTimestamp
+            
         );
         await PutRecord(record, now);
     }

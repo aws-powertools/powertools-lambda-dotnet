@@ -81,7 +81,7 @@ public class BasePersistenceStoreTests
         var now = DateTimeOffset.UtcNow;
         
         // Act
-        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
 
         // Assert
         var dr = persistenceStore.DataRecord;
@@ -90,6 +90,32 @@ public class BasePersistenceStoreTests
         dr.ResponseData.Should().BeNull();
         dr.IdempotencyKey.Should().Be("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6");
         dr.PayloadHash.Should().BeEmpty();
+        persistenceStore.Status.Should().Be(1);
+    }
+    
+    [Fact]
+    public async Task SaveInProgress_WhenRemainingTime_ShouldSaveRecordInStore()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+        
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
+        
+        var now = DateTimeOffset.UtcNow;
+        var lambdaTimeoutMs = 30000; 
+        
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, lambdaTimeoutMs);
+
+        // Assert
+        var dr = persistenceStore.DataRecord;
+        dr.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
+        dr.ExpiryTimestamp.Should().Be(now.AddSeconds(3600).ToUnixTimeSeconds());
+        dr.ResponseData.Should().BeNull();
+        dr.IdempotencyKey.Should().Be("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6");
+        dr.PayloadHash.Should().BeEmpty();
+        dr.InProgressExpiryTimestamp.Should().Be(now.AddMilliseconds(lambdaTimeoutMs).ToUnixTimeMilliseconds());
         persistenceStore.Status.Should().Be(1);
     }
 
@@ -107,7 +133,7 @@ public class BasePersistenceStoreTests
         var now = DateTimeOffset.UtcNow;
         
         // Act
-        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
         
         // Assert
         var dr = persistenceStore.DataRecord;
@@ -133,7 +159,7 @@ public class BasePersistenceStoreTests
         var now = DateTimeOffset.UtcNow;
         
         // Act
-        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
         
         // Assert
         var dr = persistenceStore.DataRecord;
@@ -160,7 +186,7 @@ public class BasePersistenceStoreTests
         var now = DateTimeOffset.UtcNow;
         
         // Act
-        var act = async () => await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        var act = async () => await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
         
         // Assert
         await act.Should()
@@ -184,7 +210,7 @@ public class BasePersistenceStoreTests
         var now = DateTimeOffset.UtcNow;
         
         // Act
-        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
 
         // Assert
         var dr = persistenceStore.DataRecord;
@@ -215,7 +241,7 @@ public class BasePersistenceStoreTests
         );
         
         // Act
-        var act = () => persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        var act = () => persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
 
         // Assert
         await act.Should()
@@ -248,7 +274,7 @@ public class BasePersistenceStoreTests
         );
         
         // Act
-        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now);
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
 
         // Assert
         var dr = persistenceStore.DataRecord;

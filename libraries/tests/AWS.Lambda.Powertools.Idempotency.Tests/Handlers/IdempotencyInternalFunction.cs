@@ -23,8 +23,20 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 /// </summary>
 public class IdempotencyInternalFunction
 {
+    private readonly bool _registerContext;
+    public bool IsSubMethodCalled { get; private set; } = false;
+
+    public IdempotencyInternalFunction(bool registerContext)
+    {
+        _registerContext = registerContext;
+    }
+    
     public Basket HandleRequest(Product input, ILambdaContext context) 
     {
+        if (_registerContext) {
+            Idempotency.RegisterLambdaContext(context);
+        }
+     
         return CreateBasket("fake", input);
     }
 
@@ -36,6 +48,4 @@ public class IdempotencyInternalFunction
         b.Add(new Product(0, magicProduct, 0));
         return b;
     }
-
-    public bool IsSubMethodCalled { get; private set; } = false;
 }
