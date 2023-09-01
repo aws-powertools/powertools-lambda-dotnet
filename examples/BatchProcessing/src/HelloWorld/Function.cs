@@ -46,9 +46,9 @@ public class Function
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse DynamoDbStreamHandlerUsingAttribute(DynamoDBEvent _)
     {
-        return DynamoDbStreamBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
+        return DynamoDbStreamBatchProcessor.BatchItemFailuresResponse;
     }
-
+    
     [BatchProcesser(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse KinesisDataStreamHandlerUsingAttribute(KinesisEvent _)
@@ -60,25 +60,26 @@ public class Function
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse SqsHandlerUsingAttribute(SQSEvent _)
     {
-        return SqsBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
+        return SqsBatchProcessor.BatchItemFailuresResponse;
+        // return SqsBatchProcessor. .Instance.ProcessingResult.BatchItemFailuresResponse;
     }
 
     #region More example handlers...
-
+    
     [BatchProcesser(RecordHandlerProvider = typeof(CustomSqsRecordHandlerProvider), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomRecordHandlerProvider(SQSEvent _)
     {
-        return SqsBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
+        return SqsBatchProcessor.BatchItemFailuresResponse;
     }
-
+    
     [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
     {
-        return SqsBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
+        return SqsBatchProcessor.BatchItemFailuresResponse;
     }
-
+    
     [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
@@ -86,7 +87,7 @@ public class Function
         var batchProcessor = Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
         return batchProcessor.ProcessingResult.BatchItemFailuresResponse;
     }
-
+    
     [Logging(LogEvent = true)]
     public async Task<BatchItemFailuresResponse> HandlerUsingUtility(SQSEvent sqsEvent)
     {
@@ -96,7 +97,7 @@ public class Function
         }));
         return result.BatchItemFailuresResponse;
     }
-
+    
     [Logging(LogEvent = true)]
     public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(SQSEvent sqsEvent)
     {
@@ -105,6 +106,6 @@ public class Function
         var result = await batchProcessor.ProcessAsync(sqsEvent, recordHandler);
         return result.BatchItemFailuresResponse;
     }
-
+    
     #endregion
 }

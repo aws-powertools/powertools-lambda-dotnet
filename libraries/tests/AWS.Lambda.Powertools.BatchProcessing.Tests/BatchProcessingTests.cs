@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
+using AWS.Lambda.Powertools.Common;
 using NSubstitute;
 using Xunit;
 
@@ -55,7 +56,8 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                     }
                 }
             };
-            var batchProcessor = new SqsBatchProcessor();
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var batchProcessor = new SqsBatchProcessor(configurations);
             var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
             
             recordHandler.WhenForAnyArgs(x => x.HandleAsync(Arg.Any<SQSEvent.SQSMessage>(), Arg.Any<CancellationToken>()))
@@ -101,7 +103,8 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                     }
                 }
             };
-            var batchProcessor = new SqsBatchProcessor();
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var batchProcessor = new SqsBatchProcessor(configurations);
             var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
             
             
@@ -151,7 +154,8 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                     }
                 }
             };
-            var batchProcessor = new SqsBatchProcessor();
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var batchProcessor = new SqsBatchProcessor(configurations);
             var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
 
             recordHandler.WhenForAnyArgs(x => x.HandleAsync(Arg.Any<SQSEvent.SQSMessage>(), Arg.Any<CancellationToken>()))

@@ -14,25 +14,40 @@
  */
 
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing;
+using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.Logging;
+using HelloWorld.Data;
 
 namespace HelloWorld.Sqs;
-public class CustomSqsRecordHandler : IRecordHandler<SQSEvent.SQSMessage>
+public class CustomSqsRecordHandler : SQSCustomRecordHandler
 {
-    public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+    public override async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
     {
         /*
          * Your business logic.
          * If an exception is thrown, the item will be marked as a partial batch item failure.
          */
         Logger.LogInformation($"Handling SQS record with message id: '{record.MessageId}'.");
-        Logger.LogInformation("Doing async operation...");
-        await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
-        Logger.LogInformation("Async operation complete.");
+
+        Logger.LogInformation($"Handling record with body: {record.Body}");
+        
+        var product = JsonSerializer.Deserialize<Product>(record.Body);
+        
+        Logger.LogInformation($"Handling product with id: {product!.Id}");
+
+        if (product.Id == 4)
+        {
+            throw new ArgumentException("Error on id 4");
+        }
+        
+        // Logger.LogInformation("Doing async operation...");
+        // await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+        // Logger.LogInformation("Async operation complete.");
         return await Task.FromResult(RecordHandlerResult.None);
     }
 }

@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using Amazon.Lambda.DynamoDBEvents;
+using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
@@ -27,9 +28,29 @@ public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, Dynamo
     /// The singleton instance of the batch processor.
     /// </summary>
     public static readonly DynamoDbStreamBatchProcessor Instance = new();
+    
+    /// <summary>
+    /// This is the default constructor
+    /// </summary>
+    /// <param name="instance"></param>
+    public DynamoDbStreamBatchProcessor(IPowertoolsConfigurations instance)
+    {
+    }
+
+    /// <summary>
+    /// Need default constructor for when consumers create a custom batch processor
+    /// </summary>
+    protected DynamoDbStreamBatchProcessor() : this(PowertoolsConfigurations.Instance)
+    {
+    }
+
+    /// <summary>
+    /// Return the instance ProcessingResult.BatchItemFailuresResponse
+    /// </summary>
+    public static BatchItemFailuresResponse BatchItemFailuresResponse => Instance.ProcessingResult.BatchItemFailuresResponse;
 
     /// <inheritdoc />
-    protected override BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(DynamoDBEvent _) => BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure;
+    protected override BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(DynamoDBEvent _) => BatchProcessorErrorHandlingPolicy.ContinueOnBatchItemFailure;
 
     /// <inheritdoc />
     protected override ICollection<DynamoDBEvent.DynamodbStreamRecord> GetRecordsFromEvent(DynamoDBEvent @event) => @event.Records;

@@ -107,12 +107,17 @@ internal static class Constants
     internal const string LambdaFunctionNameEnv = "AWS_LAMBDA_FUNCTION_NAME";
 
     /// <summary>
-    /// Constant for POWERTOOLS_BATCH_PROCESSING_ERROR_HANDLING_POLICY environment variable
+    /// Constant for POWERTOOLS_BATCH_ERROR_HANDLING_POLICY environment variable
     /// </summary>
-    internal const string BatchProcessingErrorHandlingPolicyEnv = "POWERTOOLS_BATCH_PROCESSING_ERROR_HANDLING_POLICY";
+    internal const string BatchErrorHandlingPolicyEnv = "POWERTOOLS_BATCH_ERROR_HANDLING_POLICY";
 
     /// <summary>
-    /// Constant for POWERTOOLS_BATCH_PROCESSING_MAX_DEGREE_OF_PARALLELISM environment variable
+    /// Constant for POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM environment variable
     /// </summary>
-    internal const string BatchProcessingMaxDegreeOfParallelismEnv = "POWERTOOLS_BATCH_PROCESSING_MAX_DEGREE_OF_PARALLELISM";
+    internal const string BatchMaxDegreeOfParallelismEnv = "POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM";
+
+    /// <summary>
+    /// Constant for POWERTOOLS_BATCH_PARALLEL_ENABLED environment variable
+    /// </summary>
+    public const string BatchParallelProcessingEnabled = "POWERTOOLS_BATCH_PARALLEL_ENABLED";
 }

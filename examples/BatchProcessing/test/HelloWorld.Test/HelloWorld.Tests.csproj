@@ -7,6 +7,7 @@
 		<PackageReference Include="Amazon.Lambda.TestUtilities" Version="2.0.0" />
 		<PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.1" />
 		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.105" />
+		<PackageReference Include="AWSSDK.SQS" Version="3.7.200.25" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
 		<PackageReference Include="Moq" Version="4.18.4" />
 		<PackageReference Include="xunit" Version="2.4.2" />
@@ -16,6 +17,6 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\HelloWorld\HelloWorld.csproj" />
+	  <ProjectReference Include="..\..\src\HelloWorld\HelloWorld.csproj" />
 	</ItemGroup>
 </Project>

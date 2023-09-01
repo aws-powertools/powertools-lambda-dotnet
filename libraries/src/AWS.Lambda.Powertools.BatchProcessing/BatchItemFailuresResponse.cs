@@ -57,7 +57,7 @@ public class BatchItemFailuresResponse
     /// <summary>
     /// <see cref="BatchItemFailuresResponse"/> constructor.
     /// </summary>
-    public BatchItemFailuresResponse() : this(new List<BatchItemFailure>())
+    internal BatchItemFailuresResponse() : this(new List<BatchItemFailure>())
     {
     }
 
@@ -65,7 +65,7 @@ public class BatchItemFailuresResponse
     /// <see cref="BatchItemFailuresResponse"/> constructor.
     /// </summary>
     /// <param name="batchItemFailures">A list of batch item failures.</param>
-    public BatchItemFailuresResponse(List<BatchItemFailure> batchItemFailures)
+    internal BatchItemFailuresResponse(List<BatchItemFailure> batchItemFailures)
     {
         BatchItemFailures = batchItemFailures;
     }

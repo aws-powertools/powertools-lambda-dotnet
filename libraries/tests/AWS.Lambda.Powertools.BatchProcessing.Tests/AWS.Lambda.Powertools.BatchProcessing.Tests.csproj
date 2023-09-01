@@ -8,6 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="2.1.1" />
+        <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="2.0.0" />
         <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.1.0" />
         <PackageReference Include="coverlet.collector" Version="6.0.0">
           <PrivateAssets>all</PrivateAssets>
@@ -25,6 +27,12 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
         <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.BatchProcessing\AWS.Lambda.Powertools.BatchProcessing.csproj" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <Folder Include="Handlers\DynamoDB\" />
+      <Folder Include="Handlers\Kinesis\" />
     </ItemGroup>
 
 </Project>

@@ -15,6 +15,7 @@
 
 using System.Collections.Generic;
 using Amazon.Lambda.KinesisEvents;
+using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 
@@ -27,9 +28,29 @@ public class KinesisDataStreamBatchProcessor : BatchProcessor<KinesisEvent, Kine
     /// The singleton instance of the batch processor.
     /// </summary>
     public static readonly KinesisDataStreamBatchProcessor Instance = new();
+    
+    /// <summary>
+    /// This is the default constructor
+    /// </summary>
+    /// <param name="instance"></param>
+    public KinesisDataStreamBatchProcessor(IPowertoolsConfigurations instance)
+    {
+    }
+
+    /// <summary>
+    /// Need default constructor for when consumers create a custom batch processor
+    /// </summary>
+    protected KinesisDataStreamBatchProcessor() : this(PowertoolsConfigurations.Instance)
+    {
+    }
+    
+    public static BatchItemFailuresResponse BatchItemFailuresResponse()
+    {
+        return Instance.ProcessingResult.BatchItemFailuresResponse;
+    }
 
     /// <inheritdoc />
-    protected override BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(KinesisEvent _) => BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure;
+    protected override BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(KinesisEvent _) => BatchProcessorErrorHandlingPolicy.ContinueOnBatchItemFailure;
 
     /// <inheritdoc />
     protected override ICollection<KinesisEvent.KinesisEventRecord> GetRecordsFromEvent(KinesisEvent @event) => @event.Records;

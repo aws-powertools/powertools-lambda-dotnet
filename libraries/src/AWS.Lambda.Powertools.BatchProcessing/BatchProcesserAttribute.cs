@@ -158,7 +158,14 @@ public class BatchProcesserAttribute : UniversalWrapperAttribute
             : BatchProcessorErrorHandlingPolicy.DeriveFromEvent;
 
     /// <summary>
+    /// Batch processing enabled (default false)
+    /// </summary>
+    public bool BatchParallelProcessingEnabled =
+        PowertoolsConfigurations.Instance.BatchParallelProcessingEnabled;
+    
+    /// <summary>
     /// The maximum degree of parallelism to apply during batch processing.
+    /// Must enable BatchParallelProcessingEnabled
     /// </summary>
     public int MaxDegreeOfParallelism =
         PowertoolsConfigurations.Instance.BatchProcessingMaxDegreeOfParallelism;
