@@ -46,6 +46,9 @@ public class SqsBatchProcessor : BatchProcessor<SQSEvent, SQSEvent.SQSMessage>
     {
     }
 
+    /// <summary>
+    /// Return the instance ProcessingResult.BatchItemFailuresResponse
+    /// </summary>
     public static BatchItemFailuresResponse BatchItemFailuresResponse =>
         Instance.ProcessingResult.BatchItemFailuresResponse;
     

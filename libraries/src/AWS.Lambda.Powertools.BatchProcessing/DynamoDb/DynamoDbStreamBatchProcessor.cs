@@ -40,6 +40,7 @@ public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, Dynamo
     /// <summary>
     /// Need default constructor for when consumers create a custom batch processor
     /// </summary>
+    // ReSharper disable once MemberCanBePrivate.Global
     protected DynamoDbStreamBatchProcessor() : this(PowertoolsConfigurations.Instance)
     {
     }

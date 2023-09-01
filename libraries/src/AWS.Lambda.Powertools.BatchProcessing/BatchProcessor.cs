@@ -49,7 +49,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
     }
 
     /// <inheritdoc />
-    public ProcessingResult<TRecord> ProcessingResult { get; } = new();
+    public ProcessingResult<TRecord> ProcessingResult { get; private set; }
 
     /// <inheritdoc />
     public async Task<ProcessingResult<TRecord>> ProcessAsync(TEvent @event, IRecordHandler<TRecord> recordHandler)
@@ -72,7 +72,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
         IRecordHandler<TRecord> recordHandler, ProcessingOptions processingOptions)
     {
         // Clear result from any previous run
-        ProcessingResult.Clear();
+        ProcessingResult = new ProcessingResult<TRecord>();
 
         // Prepare batch records (order is preserved)
         var batchRecords = GetRecordsFromEvent(@event).Select(x => new KeyValuePair<string, TRecord>(GetRecordId(x), x))
@@ -108,7 +108,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
                 var parallelOptions = new ParallelOptions
                 {
                     CancellationToken = processingOptions?.CancellationToken ?? CancellationToken.None,
-                    MaxDegreeOfParallelism = processingOptions?.MaxDegreeOfParallelism ?? 1
+                    MaxDegreeOfParallelism = processingOptions?.MaxDegreeOfParallelism ?? -1
                 };
 
                 await Parallel.ForEachAsync(batchRecords, parallelOptions, async (pair, cancellationToken) =>

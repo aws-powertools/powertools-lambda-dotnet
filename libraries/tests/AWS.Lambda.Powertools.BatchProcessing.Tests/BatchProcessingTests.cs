@@ -176,5 +176,53 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             Assert.Contains(result.BatchItemFailuresResponse.BatchItemFailures, x => x.ItemIdentifier == "3");
             await recordHandler.Received(2).HandleAsync(Arg.Is<SQSEvent.SQSMessage>(s =>  @event.Records.AsEnumerable().Contains(s) ), Arg.Any<CancellationToken>());
         }
+        
+        [Fact]
+        public async Task SqsBatchProcessor_Parallel_StandardQueue_ContinueOnBatchItemFailure()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_PARALLEL_ENABLED","true");
+            const string eventSourceArn = "arn:aws:sqs:eu-west-1:123456789012:test-queue";
+            var @event = new SQSEvent
+            {
+                Records = new List<SQSEvent.SQSMessage>
+                {
+                    new()
+                    {
+                        EventSourceArn = eventSourceArn,
+                        MessageId = "1",
+                    },
+                    new()
+                    {
+                        EventSourceArn = eventSourceArn,
+                        MessageId = "2"
+                    },
+                    new()
+                    {
+                        EventSourceArn = eventSourceArn,
+                        MessageId = "3"
+                    }
+                }
+            };
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var batchProcessor = new SqsBatchProcessor(configurations);
+            var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
+            
+            recordHandler.WhenForAnyArgs(x => x.HandleAsync(Arg.Any<SQSEvent.SQSMessage>(), Arg.Any<CancellationToken>()))
+                .Do( callInfo =>
+                {
+                    if (callInfo.Arg<SQSEvent.SQSMessage>().MessageId == "1")
+                    {
+                        throw new InvalidOperationException("Business logic failure.");
+                    }
+                });
+
+            // Act
+            var result = await batchProcessor.ProcessAsync(@event, recordHandler);
+
+            // Assert
+            await recordHandler.Received(@event.Records.Count).HandleAsync(Arg.Is<SQSEvent.SQSMessage>(s =>  @event.Records.AsEnumerable().Contains(s) ), Arg.Any<CancellationToken>());
+            Assert.Single(result.BatchItemFailuresResponse.BatchItemFailures);
+        }
     }
 }

@@ -19,7 +19,9 @@ using Amazon.Lambda.KinesisEvents;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 
+/// <inheritdoc />
 public abstract class KinesisCustomRecordHandler : IRecordHandler<KinesisEvent.KinesisEventRecord>
 {
+    /// <inheritdoc />
     public abstract Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record, CancellationToken cancellationToken);
 }

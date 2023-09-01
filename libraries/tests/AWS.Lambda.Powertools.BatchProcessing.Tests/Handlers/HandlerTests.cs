@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
@@ -21,10 +22,10 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers;
 
-public class HandlerTests
+public class HandlerTests : IDisposable
 {
     [Fact]
-    public async Task SqsHandlerUsingAttribute()
+    public Task Sqs_Handler_Using_Attribute()
     {
         var request = new SQSEvent
         {
@@ -71,5 +72,113 @@ public class HandlerTests
         Assert.Equal(2, response.BatchItemFailures.Count);
         Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
         Assert.Equal("4", response.BatchItemFailures[1].ItemIdentifier);
+        
+        return Task.CompletedTask;
+    }
+    
+    [Fact]
+    public async Task Sqs_Handler_Using_Attribute_Async()
+    {
+        var request = new SQSEvent
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    MessageId = "1",
+                    Body = "{\"Id\":1,\"Name\":\"product-4\",\"Price\":14}",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+                new()
+                {
+                    MessageId = "2",
+                    Body = "fail",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+                new()
+                {
+                    MessageId = "3",
+                    Body = "{\"Id\":3,\"Name\":\"product-4\",\"Price\":14}",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+                new()
+                {
+                    MessageId = "4",
+                    Body = "{\"Id\":4,\"Name\":\"product-4\",\"Price\":14}",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+                new()
+                {
+                    MessageId = "5",
+                    Body = "{\"Id\":5,\"Name\":\"product-4\",\"Price\":14}",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+            }
+        };
+
+
+        var function = new SQSHandlerFunction();
+
+        var response = await function.SqsHandlerUsingAttributeAsync(request);
+        
+        Assert.Equal(2, response.BatchItemFailures.Count);
+        Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("4", response.BatchItemFailures[1].ItemIdentifier);
+    }
+    
+    [Fact]
+    public async Task Sqs_Handler_Using_Attribute_Async_Parallel()
+    {
+        Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_PARALLEL_ENABLED","true");
+        var request = new SQSEvent
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    MessageId = "1",
+                    Body = "{\"Id\":1,\"Name\":\"product-4\",\"Price\":14}",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+                new()
+                {
+                    MessageId = "2",
+                    Body = "fail",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+                new()
+                {
+                    MessageId = "3",
+                    Body = "{\"Id\":3,\"Name\":\"product-4\",\"Price\":14}",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+                new()
+                {
+                    MessageId = "4",
+                    Body = "{\"Id\":4,\"Name\":\"product-4\",\"Price\":14}",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+                new()
+                {
+                    MessageId = "5",
+                    Body = "{\"Id\":5,\"Name\":\"product-4\",\"Price\":14}",
+                    EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
+                },
+            }
+        };
+
+
+        var function = new SQSHandlerFunction();
+
+        var response = await function.SqsHandlerUsingAttributeAsync(request);
+        
+        Assert.Equal(2, response.BatchItemFailures.Count);
+        Assert.Contains(response.BatchItemFailures, x => x.ItemIdentifier == "2");
+        Assert.Contains(response.BatchItemFailures, x => x.ItemIdentifier == "4");
+    }
+
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_PARALLEL_ENABLED","false");
     }
 }

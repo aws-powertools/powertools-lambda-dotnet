@@ -40,10 +40,14 @@ public class KinesisDataStreamBatchProcessor : BatchProcessor<KinesisEvent, Kine
     /// <summary>
     /// Need default constructor for when consumers create a custom batch processor
     /// </summary>
+    // ReSharper disable once MemberCanBePrivate.Global
     protected KinesisDataStreamBatchProcessor() : this(PowertoolsConfigurations.Instance)
     {
     }
     
+    /// <summary>
+    /// Return the instance ProcessingResult.BatchItemFailuresResponse
+    /// </summary>
     public static BatchItemFailuresResponse BatchItemFailuresResponse()
     {
         return Instance.ProcessingResult.BatchItemFailuresResponse;
