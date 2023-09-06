@@ -25,6 +25,11 @@ using AWS.Lambda.Powertools.Common;
 using NSubstitute;
 using Xunit;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+[assembly: TestCollectionOrderer(
+    ordererTypeName: "AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers.DisplayNameOrderer",
+    ordererAssemblyName: "AWS.Lambda.Powertools.BatchProcessing.Tests")]
+
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests
 {
     [Collection("Sequential")]

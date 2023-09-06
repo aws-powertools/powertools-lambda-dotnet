@@ -328,7 +328,8 @@ public class BatchProcesserAttribute : UniversalWrapperAttribute
         {
             CancellationToken = CancellationToken.None,
             ErrorHandlingPolicy = ErrorHandlingPolicy,
-            MaxDegreeOfParallelism = MaxDegreeOfParallelism
+            MaxDegreeOfParallelism = MaxDegreeOfParallelism,
+            BatchParallelProcessingEnabled = BatchParallelProcessingEnabled
         });
     }
 }

@@ -1,12 +1,12 @@
 ﻿/*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -29,14 +29,21 @@ public class SqsBatchProcessor : BatchProcessor<SQSEvent, SQSEvent.SQSMessage>
     /// <summary>
     /// The singleton instance of the batch processor.
     /// </summary>
-    public static readonly SqsBatchProcessor Instance = new (PowertoolsConfigurations.Instance);
+    private static SqsBatchProcessor _instance;
+
+    /// <summary>
+    /// Gets the instance.
+    /// </summary>
+    /// <value>The instance.</value>
+    public static SqsBatchProcessor Instance => _instance ??= new SqsBatchProcessor(PowertoolsConfigurations.Instance);
 
     /// <summary>
     /// This is the default constructor
     /// </summary>
-    /// <param name="instance"></param>
-    public SqsBatchProcessor(IPowertoolsConfigurations instance)
+    /// <param name="powertoolsConfigurations"></param>
+    public SqsBatchProcessor(IPowertoolsConfigurations powertoolsConfigurations) : base(powertoolsConfigurations)
     {
+        _instance = this;
     }
 
     /// <summary>
@@ -46,16 +53,22 @@ public class SqsBatchProcessor : BatchProcessor<SQSEvent, SQSEvent.SQSMessage>
     {
     }
 
+    // /// <summary>
+    // /// Return the instance ProcessingResult.BatchItemFailuresResponse
+    // /// </summary>
+    // public static BatchItemFailuresResponse BatchItemFailuresResponse =>
+    //     _instance.ProcessingResult.BatchItemFailuresResponse;
+
     /// <summary>
-    /// Return the instance ProcessingResult.BatchItemFailuresResponse
+    /// Return the instance ProcessingResult
     /// </summary>
-    public static BatchItemFailuresResponse BatchItemFailuresResponse =>
-        Instance.ProcessingResult.BatchItemFailuresResponse;
-    
+    public static ProcessingResult<SQSEvent.SQSMessage> Result => _instance.ProcessingResult;
+
     /// <inheritdoc />
     protected override BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(SQSEvent @event)
     {
-        var isSqsFifoSource = @event.Records.FirstOrDefault()?.EventSourceArn?.EndsWith(".fifo", StringComparison.OrdinalIgnoreCase);
+        var isSqsFifoSource = @event.Records.FirstOrDefault()?.EventSourceArn
+            ?.EndsWith(".fifo", StringComparison.OrdinalIgnoreCase);
         return isSqsFifoSource == true
             ? BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure
             : BatchProcessorErrorHandlingPolicy.ContinueOnBatchItemFailure;

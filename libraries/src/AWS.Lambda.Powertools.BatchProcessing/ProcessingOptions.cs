@@ -36,4 +36,9 @@ public class ProcessingOptions
     /// The error handling policy to apply during batch processing.
     /// </summary>
     public BatchProcessorErrorHandlingPolicy? ErrorHandlingPolicy { get; init; }
+
+    /// <summary>
+    /// Batch processing enabled (default false)
+    /// </summary>
+    public bool BatchParallelProcessingEnabled { get; init; }
 }

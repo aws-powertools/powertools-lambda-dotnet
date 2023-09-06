@@ -32,8 +32,8 @@ public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, Dynamo
     /// <summary>
     /// This is the default constructor
     /// </summary>
-    /// <param name="instance"></param>
-    public DynamoDbStreamBatchProcessor(IPowertoolsConfigurations instance)
+    /// <param name="powertoolsConfigurations"></param>
+    public DynamoDbStreamBatchProcessor(IPowertoolsConfigurations powertoolsConfigurations) : base(powertoolsConfigurations)
     {
     }
 

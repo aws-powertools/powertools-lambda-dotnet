@@ -60,7 +60,7 @@ public class Function
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse SqsHandlerUsingAttribute(SQSEvent _)
     {
-        return SqsBatchProcessor.BatchItemFailuresResponse;
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
         // return SqsBatchProcessor. .Instance.ProcessingResult.BatchItemFailuresResponse;
     }
 
@@ -70,14 +70,14 @@ public class Function
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomRecordHandlerProvider(SQSEvent _)
     {
-        return SqsBatchProcessor.BatchItemFailuresResponse;
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
     [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
     {
-        return SqsBatchProcessor.BatchItemFailuresResponse;
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
     [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]

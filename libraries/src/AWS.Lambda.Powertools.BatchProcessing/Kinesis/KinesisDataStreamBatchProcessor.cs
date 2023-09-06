@@ -32,8 +32,8 @@ public class KinesisDataStreamBatchProcessor : BatchProcessor<KinesisEvent, Kine
     /// <summary>
     /// This is the default constructor
     /// </summary>
-    /// <param name="instance"></param>
-    public KinesisDataStreamBatchProcessor(IPowertoolsConfigurations instance)
+    /// <param name="powertoolsConfigurations"></param>
+    public KinesisDataStreamBatchProcessor(IPowertoolsConfigurations powertoolsConfigurations) : base(powertoolsConfigurations)
     {
     }
 

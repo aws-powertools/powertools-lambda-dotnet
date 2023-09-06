@@ -31,25 +31,16 @@ namespace AWS.Lambda.Powertools.BatchProcessing;
 /// <typeparam name="TRecord">Type of batch record.</typeparam>
 public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, TRecord>
 {
-
     /// <summary>
     /// Default constructor
     /// </summary>
-    private BatchProcessor(IPowertoolsConfigurations powertoolsConfigurations)
+    protected BatchProcessor(IPowertoolsConfigurations powertoolsConfigurations)
     {
         powertoolsConfigurations.SetExecutionEnvironment(this);
     }
 
-    
-    /// <summary>
-    /// Required for inherited classes
-    /// </summary>
-    protected BatchProcessor() : this(PowertoolsConfigurations.Instance)
-    {
-    }
-
     /// <inheritdoc />
-    public ProcessingResult<TRecord> ProcessingResult { get; private set; }
+    public ProcessingResult<TRecord> ProcessingResult { get; protected set; }
 
     /// <inheritdoc />
     public async Task<ProcessingResult<TRecord>> ProcessAsync(TEvent @event, IRecordHandler<TRecord> recordHandler)
@@ -100,7 +91,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
 
         try
         {
-            if (PowertoolsConfigurations.Instance.BatchParallelProcessingEnabled)
+            if (processingOptions?.BatchParallelProcessingEnabled ?? false)
             {
                 successRecords = new ConcurrentDictionary<string, RecordSuccess<TRecord>>();
                 failureRecords = new ConcurrentDictionary<string, RecordFailure<TRecord>>(failureBatchRecords);
@@ -114,7 +105,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
                 await Parallel.ForEachAsync(batchRecords, parallelOptions, async (pair, cancellationToken) =>
                 {
                     await ProcessRecord(recordHandler, pair, cancellationToken, failureRecords, successRecords,
-                        errorHandlingPolicy);
+                        errorHandlingPolicy, processingOptions);
                 });
             }
             else
@@ -127,7 +118,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
                 foreach (var pair in batchRecords)
                 {
                     await ProcessRecord(recordHandler, pair, cancellationToken, failureRecords, successRecords,
-                        errorHandlingPolicy);
+                        errorHandlingPolicy, processingOptions);
                 }
             }
         }
@@ -160,7 +151,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
         CancellationToken cancellationToken,
         IDictionary<string, RecordFailure<TRecord>> failureRecords,
         IDictionary<string, RecordSuccess<TRecord>> successRecords,
-        BatchProcessorErrorHandlingPolicy? errorHandlingPolicy)
+        BatchProcessorErrorHandlingPolicy? errorHandlingPolicy, ProcessingOptions processingOptions)
     {
         var (recordId, record) = pair;
 
@@ -173,7 +164,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
             var result = await HandleRecordAsync(record, recordHandler, cancellationToken);
 
             // Register success
-            if (PowertoolsConfigurations.Instance.BatchParallelProcessingEnabled)
+            if (processingOptions?.BatchParallelProcessingEnabled ?? false)
             {
                 ((ConcurrentDictionary<string, RecordFailure<TRecord>>)failureRecords).TryRemove(recordId, out _);
             }
