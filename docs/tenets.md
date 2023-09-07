@@ -1,6 +1,6 @@
 ---
-title: Powertools for AWS Lambda (.NET) (developer preview)
-description: Powertools for AWS Lambda (.NET) (developer preview)
+title: Powertools for AWS Lambda (.NET)
+description: Powertools for AWS Lambda (.NET)
 ---
 
 Core utilities such as Tracing, Logging, Metrics, and Event Handler will be available across all Powertools for AWS Lambda runtimes. Additional utilities are subjective to each language ecosystem and customer demand.
