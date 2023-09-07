@@ -50,6 +50,12 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     /// Expiry attribute
     /// </summary>
     private readonly string _expiryAttr;
+
+    /// <summary>
+    /// In progress expiry attribute
+    /// </summary>
+    private readonly string _inProgressExpiryAttr;
+
     /// <summary>
     /// Status attribute
     /// </summary>
@@ -75,6 +81,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
     /// <param name="staticPkValue"></param>
     /// <param name="sortKeyAttr"></param>
     /// <param name="expiryAttr"></param>
+    /// <param name="inProgressExpiryAttr"></param>
     /// <param name="statusAttr"></param>
     /// <param name="dataAttr"></param>
     /// <param name="validationAttr"></param>
@@ -84,6 +91,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         string staticPkValue,
         string sortKeyAttr,
         string expiryAttr,
+        string inProgressExpiryAttr,
         string statusAttr,
         string dataAttr,
         string validationAttr,
@@ -94,6 +102,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         _staticPkValue = staticPkValue;
         _sortKeyAttr = sortKeyAttr;
         _expiryAttr = expiryAttr;
+        _inProgressExpiryAttr = inProgressExpiryAttr;
         _statusAttr = statusAttr;
         _dataAttr = dataAttr;
         _validationAttr = validationAttr;
@@ -139,8 +148,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
 
         return ItemToRecord(response.Item);
     }
-
-
+    
     /// <inheritdoc />
     public override async Task PutRecord(DataRecord record, DateTimeOffset now)
     {
@@ -155,6 +163,13 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
             { _statusAttr, new AttributeValue(record.Status.ToString()) }
         };
 
+        if (record.InProgressExpiryTimestamp.HasValue) {
+            item.Add(_inProgressExpiryAttr, new AttributeValue
+            {
+                N = record.InProgressExpiryTimestamp.Value.ToString()
+            });
+        }
+        
         if (PayloadValidationEnabled)
         {
             item.Add(_validationAttr, new AttributeValue(record.PayloadHash));
@@ -165,18 +180,22 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
             var expressionAttributeNames = new Dictionary<string, string>
             {
                 {"#id", _keyAttr},
-                {"#expiry", _expiryAttr}
+                {"#expiry", _expiryAttr},
+                {"#in_progress_expiry", _inProgressExpiryAttr},
+                {"#status", _statusAttr}
             };
 
             var request = new PutItemRequest
             {
                 TableName = _tableName,
                 Item = item,
-                ConditionExpression = "attribute_not_exists(#id) OR #expiry < :now",
+                ConditionExpression = "attribute_not_exists(#id) OR #expiry < :now OR (attribute_exists(#in_progress_expiry) AND #in_progress_expiry < :now_milliseconds AND #status = :inprogress)",
                 ExpressionAttributeNames = expressionAttributeNames,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    {":now", new AttributeValue {N = now.ToUnixTimeSeconds().ToString()}}
+                    {":now", new AttributeValue {N = now.ToUnixTimeSeconds().ToString()}},
+                    {":now_milliseconds", new AttributeValue {N = now.ToUnixTimeMilliseconds().ToString()}},
+                    {":inprogress", new AttributeValue {S = Enum.GetName(DataRecord.DataRecordStatus.INPROGRESS) }}
                 }
             };
             await _dynamoDbClient!.PutItemAsync(request);
@@ -247,12 +266,15 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         // data and validation payload may be null
         var hasDataAttribute = item.TryGetValue(_dataAttr, out var data);
         var hasValidationAttribute = item.TryGetValue(_validationAttr, out var validation);
+        var hasInProgressExpiryAttr = item.TryGetValue(_inProgressExpiryAttr, out var inProgExp);
+        
 
         return new DataRecord(item[_sortKeyAttr ?? _keyAttr].S,
             Enum.Parse<DataRecord.DataRecordStatus>(item[_statusAttr].S),
             long.Parse(item[_expiryAttr].N),
             hasDataAttribute ? data?.S : null,
-            hasValidationAttribute ? validation?.S : null);
+            hasValidationAttribute ? validation?.S : null,
+            hasInProgressExpiryAttr ? long.Parse(inProgExp.N) : null);
     }
 
     /// <summary>
@@ -311,6 +333,12 @@ public class DynamoDBPersistenceStoreBuilder
     /// Expiry attribute
     /// </summary>
     private string _expiryAttr = "expiration";
+    
+    /// <summary>
+    /// In progress expiry attribute
+    /// </summary>
+    private string _inProgressExpiryAttr = "in_progress_expiration";
+    
     /// <summary>
     /// Status attribute
     /// </summary>
@@ -346,7 +374,8 @@ public class DynamoDBPersistenceStoreBuilder
             _keyAttr,
             _staticPkValue,
             _sortKeyAttr,
-            _expiryAttr,
+            _expiryAttr, 
+            _inProgressExpiryAttr,
             _statusAttr,
             _dataAttr,
             _validationAttr,
@@ -406,6 +435,16 @@ public class DynamoDBPersistenceStoreBuilder
     public DynamoDBPersistenceStoreBuilder WithExpiryAttr(string expiryAttr)
     {
         _expiryAttr = expiryAttr;
+        return this;
+    }
+    
+    /// <summary>
+    /// DynamoDB attribute name for in progress expiry timestamp (optional), by default "in_progress_expiration"
+    /// </summary>
+    /// <param name="inProgressExpiryAttr">name of the attribute in the table</param>
+    /// <returns>the builder instance (to chain operations)</returns>
+    public DynamoDBPersistenceStoreBuilder WithInProgressExpiryAttr(string inProgressExpiryAttr) {
+        _inProgressExpiryAttr = inProgressExpiryAttr;
         return this;
     }
 

@@ -153,13 +153,13 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             // Cold Start Execution
             handler1.OnEntry(eventArgs);
             handler1.OnSuccess(eventArgs, results);
-            object Act1() => handler1.OnException<object>(eventArgs, exception);
+            void Act1() => handler1.OnException(eventArgs, exception);
             handler1.OnExit(eventArgs);
 
             // Warm Start Execution
             handler2.OnEntry(eventArgs);
             handler2.OnSuccess(eventArgs, results);
-            object Act2() => handler2.OnException<object>(eventArgs, exception);
+            void Act2() => handler2.OnException(eventArgs, exception);
             handler2.OnExit(eventArgs);
 
             // Assert
@@ -226,13 +226,13 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             // Cold Start Execution
             handler1.OnEntry(eventArgs);
             handler1.OnSuccess(eventArgs, results);
-            object Act1() => handler1.OnException<object>(eventArgs, exception);
+            void Act1() => handler1.OnException(eventArgs, exception);
             handler1.OnExit(eventArgs);
 
             // Warm Start Execution
             handler2.OnEntry(eventArgs);
             handler2.OnSuccess(eventArgs, results);
-            object Act2() => handler2.OnException<object>(eventArgs, exception);
+            void Act2() => handler2.OnException(eventArgs, exception);
             handler2.OnExit(eventArgs);
 
             // Assert
@@ -572,7 +572,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            void Act() => handler.OnException<object>(eventArgs, exception);
+            void Act() => handler.OnException(eventArgs, exception);
 
             // Assert
             Assert.Throws<Exception>((Action)Act);
@@ -601,7 +601,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            void Act() => handler.OnException<object>(eventArgs, exception);
+            void Act() => handler.OnException(eventArgs, exception);
 
             // Assert
             Assert.Throws<Exception>((Action)Act);
@@ -630,7 +630,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            void Act() => handler.OnException<object>(eventArgs, exception);
+            void Act() => handler.OnException(eventArgs, exception);
 
             // Assert
             Assert.Throws<Exception>((Action)Act);
@@ -659,7 +659,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            void Act() => handler.OnException<object>(eventArgs, exception);
+            void Act() => handler.OnException(eventArgs, exception);
 
             // Assert
             Assert.Throws<Exception>((Action)Act);
@@ -689,7 +689,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            void Act() => handler.OnException<object>(eventArgs, exception);
+            void Act() => handler.OnException(eventArgs, exception);
 
             // Assert
             Assert.Throws<Exception>((Action)Act);
@@ -718,7 +718,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var eventArgs = new AspectEventArgs { Name = methodName };
 
             // Act
-            void Act() => handler.OnException<object>(eventArgs, exception);
+            void Act() => handler.OnException(eventArgs, exception);
 
             // Assert
             Assert.Throws<Exception>((Action)Act);

@@ -89,7 +89,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
 
         Task<T> ResultDelegate() => Task.FromResult(target(args));
 
-        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload);
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload,GetContext(eventArgs));
         if (idempotencyHandler == null)
         {
             throw new Exception("Failed to create an instance of IdempotencyAspectHandler");
@@ -127,7 +127,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         
         Task<T> ResultDelegate() => target(args);
         
-        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload);
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload, GetContext(eventArgs));
         if (idempotencyHandler == null)
         {
             throw new Exception("Failed to create an instance of IdempotencyAspectHandler");
@@ -171,5 +171,15 @@ public class IdempotentAttribute : UniversalWrapperAttribute
     {
         //Check if method has two arguments and the second one is of type ILambdaContext
         return method.GetParameters().Length == 2 && method.GetParameters()[1].ParameterType == typeof(ILambdaContext);
+    }
+    
+    private static ILambdaContext GetContext(AspectEventArgs args)
+    {
+        if (IsPlacedOnRequestHandler(args.Method))
+        {
+            return (ILambdaContext)args.Args[1];
+        }
+        
+        return Idempotency.Instance.LambdaContext;
     }
 }

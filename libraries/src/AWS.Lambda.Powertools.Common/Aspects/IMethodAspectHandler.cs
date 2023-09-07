@@ -38,11 +38,10 @@ public interface IMethodAspectHandler
     /// <summary>
     ///     Called when [exception].
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
     /// <param name="exception">The exception.</param>
     /// <returns>T.</returns>
-    T OnException<T>(AspectEventArgs eventArgs, Exception exception);
+    void OnException(AspectEventArgs eventArgs, Exception exception);
 
     /// <summary>
     ///     Handles the <see cref="E:Exit" /> event.
