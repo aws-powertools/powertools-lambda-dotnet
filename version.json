@@ -3,10 +3,10 @@
 		"Common": "1.1.2",
 		"Logging": "1.2.0",
 		"Metrics": "1.3.3",
-		"Tracing": "1.1.2"
+		"Tracing": "1.2.0"
 	},
 	"Utilities": {
-		"Parameters": "0.0.3-preview",
+		"Parameters": "1.0.0",
 		"Idempotency": "0.1.0-preview"
 	}
 }

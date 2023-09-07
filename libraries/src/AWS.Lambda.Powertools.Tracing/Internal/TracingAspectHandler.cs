@@ -117,14 +117,15 @@ internal class TracingAspectHandler : IMethodAspectHandler
         if (_captureAnnotations)
         {
             _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
-
-            _isColdStart = false;
+            
             _captureAnnotations = false;
             _isAnnotationsCaptured = true;
 
             if (_powertoolsConfigurations.IsServiceDefined)
                 _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
         }
+        
+        _isColdStart = false;
     }
 
     /// <summary>
