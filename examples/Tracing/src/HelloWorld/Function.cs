@@ -43,7 +43,7 @@ public class Function
     /// </summary>
     public Function()
     {
-        AWSSDKHandler.RegisterXRayForAllServices();
+        Tracing.RegisterForAllServices();
         _httpClient = new HttpClient();
 
         var tableName = Environment.GetEnvironmentVariable("TABLE_NAME");
