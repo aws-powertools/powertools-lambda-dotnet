@@ -268,6 +268,7 @@ You should make sure to instrument the SDK clients explicitly based on the funct
         }
     }
     ```
+
 To instrument clients for some services and not others, call Register instead of RegisterForAllServices. Replace the highlighted text with the name of the service's client interface.
 
 ```c#
