@@ -7,6 +7,58 @@ All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 
+<a name="1.6.0"></a>
+## [1.6.0] - 2023-09-07
+## Pull Requests
+
+* Merge pull request [#433](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/433) from amirkaws/release-version-1.6.0-in-preview-fix
+* Merge pull request [#432](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/432) from amirkaws/release-version-1.6.0-document-fix
+* Merge pull request [#430](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/430) from amirkaws/release-version-1.6.0
+* Merge pull request [#428](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/428) from amirkaws/automatic-xray-register
+* Merge pull request [#400](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/400) from aws-powertools/hjgraca-fix-idempotency-docs
+* Merge pull request [#391](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/391) from aws-powertools/hjgraca-patch-dependabot
+
+
+<a name="1.5.0"></a>
+## [1.5.0] - 2023-08-29
+## Pull Requests
+
+* Merge pull request [#397](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/397) from aws-powertools/hjgraca-version-1.5.0
+* Merge pull request [#363](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/363) from hjgraca/idempotency-inprogressexpiration
+
+
+<a name="1.4.2"></a>
+## [1.4.2] - 2023-08-22
+## Maintenance
+
+* **deps:** bump AWSSDK.SecretsManager in /libraries
+* **deps:** bump xunit from 2.4.1 to 2.4.2 in /libraries
+* **deps:** bump Moq from 4.18.1 to 4.18.4 in /libraries
+* **deps:** bump AWSSDK.DynamoDBv2 in /libraries
+* **deps:** bump Testcontainers from 3.2.0 to 3.3.0 in /libraries
+* **deps:** bump AWSXRayRecorder.Core in /libraries
+
+## Pull Requests
+
+* Merge pull request [#388](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/388) from amirkaws/update-samples-nuget-versions
+* Merge pull request [#383](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/383) from aws-powertools/hjgraca-patch-version-1.4.2
+* Merge pull request [#381](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/381) from aws-powertools/hjgraca-patch-dependabot
+* Merge pull request [#375](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/375) from amirkaws/custom-log-formatter
+* Merge pull request [#357](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/357) from hjgraca/fix-capture-stacktrace
+* Merge pull request [#343](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/343) from aws-powertools/update-changelog-5462167625
+* Merge pull request [#370](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/370) from amirkaws/replace-moq-with-nsubstitute
+* Merge pull request [#359](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/359) from aws-powertools/dependabot/nuget/libraries/develop/AWSSDK.SecretsManager-3.7.200.3
+* Merge pull request [#342](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/342) from hjgraca/idempotency-simpler-example
+* Merge pull request [#347](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/347) from hjgraca/docs-clarify-xray-over-adot
+* Merge pull request [#338](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/338) from aws-powertools/hjgraca-patch-boring-cyborg
+* Merge pull request [#349](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/349) from hossambarakat/feature/idempotent-function
+* Merge pull request [#328](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/328) from aws-powertools/dependabot/nuget/libraries/develop/xunit-2.4.2
+* Merge pull request [#327](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/327) from aws-powertools/dependabot/nuget/libraries/develop/AWSSDK.DynamoDBv2-3.7.104.1
+* Merge pull request [#325](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/325) from aws-powertools/dependabot/nuget/libraries/develop/AWSXRayRecorder.Core-2.14.0
+* Merge pull request [#326](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/326) from aws-powertools/dependabot/nuget/libraries/develop/Testcontainers-3.3.0
+* Merge pull request [#329](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/329) from aws-powertools/dependabot/nuget/libraries/develop/Moq-4.18.4
+
+
 <a name="1.4.1"></a>
 ## [1.4.1] - 2023-06-29
 ## Maintenance
@@ -400,7 +452,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Merge pull request [#1](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1) from sliedig/develop
 
 
-[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.4.1...HEAD
+[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.6.0...HEAD
+[1.6.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.5.0...1.6.0
+[1.5.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.4.2...1.5.0
+[1.4.2]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.4.1...1.4.2
 [1.4.1]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.4.0...1.4.1
 [1.4.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.2.0...1.3.0
