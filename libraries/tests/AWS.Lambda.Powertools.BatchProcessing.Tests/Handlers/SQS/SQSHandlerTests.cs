@@ -80,6 +80,23 @@ public class SqsHandlerTests : IDisposable
         Assert.Contains(response.BatchItemFailures, x => x.ItemIdentifier == "4");
     }
     
+    [Fact]
+    public async Task Sqs_Handler_Using_Utility()
+    {
+        var request = new SQSEvent
+        {
+            Records = TestHelper.SqsMessages
+        };
+        
+        var function = new SQSHandlerFunction();
+    
+        var response = await function.HandlerUsingUtility(request);
+    
+        Assert.Equal(2, response.BatchItemFailures.Count);
+        Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("4", response.BatchItemFailures[1].ItemIdentifier);
+    }
+    
     public void Dispose()
     {
         Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_PARALLEL_ENABLED", "false");

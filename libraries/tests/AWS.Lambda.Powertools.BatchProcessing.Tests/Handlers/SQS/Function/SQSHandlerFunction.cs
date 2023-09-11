@@ -13,10 +13,15 @@
  * permissions and limitations under the License.
  */
 
+using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
+using AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers;
+using AWS.Lambda.Powertools.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Function;
 
@@ -80,7 +85,31 @@ public class SQSHandlerFunction
     public BatchItemFailuresResponse SqsHandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
-        // var batchProcessor = Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
-        // return batchProcessor.ProcessingResult.BatchItemFailuresResponse;
+    }
+    
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtility(SQSEvent sqsEvent)
+    {
+        var result = await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent, RecordHandler<SQSEvent.SQSMessage>.From(sqsMessage =>
+        {
+            Logger.LogInformation($"Inline handling of SQS message with body: '{sqsMessage.Body}'.");
+            var product = JsonSerializer.Deserialize<JsonElement>(sqsMessage.Body);
+        
+            Logger.LogInformation($"Retried product {product}");
+        
+            if (product.GetProperty("Id").GetInt16() == 4)
+            {
+                Logger.LogInformation($"Error on product 4");
+                throw new ArgumentException("Error on 4");
+            }
+        }));
+        return result.BatchItemFailuresResponse;
+    }
+    
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(SQSEvent sqsEvent)
+    {
+        var batchProcessor = Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
+        var recordHandler = Services.Provider.GetRequiredService<CustomSqsRecordHandler>();
+        var result = await batchProcessor.ProcessAsync(sqsEvent, recordHandler);
+        return result.BatchItemFailuresResponse;
     }
 }

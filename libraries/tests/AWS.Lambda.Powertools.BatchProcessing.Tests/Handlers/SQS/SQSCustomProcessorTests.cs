@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Function;
 using Xunit;
+using TestHelper = AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers.Helpers;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS;
 
@@ -29,7 +30,7 @@ public class SqsHandlerCustomProcessorTests
     {
         var request = new SQSEvent
         {
-            Records = Helpers.Helpers.SqsMessages
+            Records = TestHelper.SqsMessages
         };
 
 
@@ -50,7 +51,7 @@ public class SqsHandlerCustomProcessorTests
     {
         var request = new SQSEvent
         {
-            Records = Helpers.Helpers.SqsMessages
+            Records = TestHelper.SqsMessages
         };
         
         var function = new SQSHandlerFunction();
@@ -63,5 +64,23 @@ public class SqsHandlerCustomProcessorTests
         Assert.Equal("4", response.BatchItemFailures[2].ItemIdentifier);
         
         return Task.CompletedTask;
+    }
+    
+    [Fact]
+    public async Task Sqs_Handler_Using_Utility_IoC_Custom_Providers()
+    {
+        var request = new SQSEvent
+        {
+            Records = TestHelper.SqsMessages
+        };
+        
+        var function = new SQSHandlerFunction();
+    
+        var response = await function.HandlerUsingUtilityFromIoc(request);
+    
+        Assert.Equal(4, response.BatchItemFailures.Count);
+        Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("3", response.BatchItemFailures[1].ItemIdentifier);
+        Assert.Equal("4", response.BatchItemFailures[2].ItemIdentifier);
     }
 }
