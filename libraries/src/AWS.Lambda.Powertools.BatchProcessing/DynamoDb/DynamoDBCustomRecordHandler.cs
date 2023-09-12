@@ -20,7 +20,7 @@ using Amazon.Lambda.DynamoDBEvents;
 namespace AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
 /// <inheritdoc />
-public abstract class DynamoDBCustomRecordHandler : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
+public abstract class DynamoDbCustomRecordHandler : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
 {
     /// <inheritdoc />
     public abstract Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken);

@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
-using AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers;
 using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -92,9 +92,9 @@ public class HandlerFunction
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    public async Task<BatchItemFailuresResponse> HandlerUsingUtility(DynamoDBEvent DynamoDBEvent)
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtility(DynamoDBEvent dynamoDbEvent)
     {
-        var result = await DynamoDbStreamBatchProcessor.Instance.ProcessAsync(DynamoDBEvent, RecordHandler<DynamoDBEvent.DynamodbStreamRecord>.From(record =>
+        var result = await DynamoDbStreamBatchProcessor.Instance.ProcessAsync(dynamoDbEvent, RecordHandler<DynamoDBEvent.DynamodbStreamRecord>.From(record =>
         {
             var product = JsonSerializer.Deserialize<JsonElement>(record.Dynamodb.NewImage["Product"].S);
         
@@ -109,11 +109,11 @@ public class HandlerFunction
         return result.BatchItemFailuresResponse;
     }
     
-    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDBEvent DynamoDBEvent)
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDBEvent dynamoDbEvent)
     {
         var batchProcessor = Services.Provider.GetRequiredService<CustomDynamoDbBatchProcessor>();
         var recordHandler = Services.Provider.GetRequiredService<CustomDynamoDbRecordHandler>();
-        var result = await batchProcessor.ProcessAsync(DynamoDBEvent, recordHandler);
+        var result = await batchProcessor.ProcessAsync(dynamoDbEvent, recordHandler);
         return result.BatchItemFailuresResponse;
     }
 }

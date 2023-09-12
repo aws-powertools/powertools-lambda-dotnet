@@ -92,9 +92,9 @@ public class HandlerFunction
         return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    public async Task<BatchItemFailuresResponse> HandlerUsingUtility(KinesisEvent KinesisEvent)
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtility(KinesisEvent kinesisEvent)
     {
-        var result = await KinesisDataStreamBatchProcessor.Instance.ProcessAsync(KinesisEvent, RecordHandler<KinesisEvent.KinesisEventRecord>.From(kinesisRecord =>
+        var result = await KinesisDataStreamBatchProcessor.Instance.ProcessAsync(kinesisEvent, RecordHandler<KinesisEvent.KinesisEventRecord>.From(kinesisRecord =>
         {
             Logger.LogInformation($"Inline handling of Kinesis message with body: '{kinesisRecord.Kinesis.Data}'.");
             var product = JsonSerializer.Deserialize<JsonElement>(kinesisRecord.Kinesis.Data);
@@ -110,11 +110,11 @@ public class HandlerFunction
         return result.BatchItemFailuresResponse;
     }
     
-    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(KinesisEvent KinesisEvent)
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(KinesisEvent kinesisEvent)
     {
         var batchProcessor = Services.Provider.GetRequiredService<CustomKinesisDataStreamBatchProcessor>();
         var recordHandler = Services.Provider.GetRequiredService<CustomKinesisDataStreamRecordHandler>();
-        var result = await batchProcessor.ProcessAsync(KinesisEvent, recordHandler);
+        var result = await batchProcessor.ProcessAsync(kinesisEvent, recordHandler);
         return result.BatchItemFailuresResponse;
     }
 }

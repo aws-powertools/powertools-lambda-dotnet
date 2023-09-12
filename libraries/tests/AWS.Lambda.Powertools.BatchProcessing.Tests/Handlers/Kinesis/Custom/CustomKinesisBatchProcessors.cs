@@ -21,8 +21,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.KinesisEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
-using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS;
-using AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers;
 using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -94,6 +92,7 @@ internal class CustomKinesisDataStreamBatchProcessor : KinesisDataStreamBatchPro
                     }
 
                     // Check if we should stop record processing on first error
+                    // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                     if (errorHandlingPolicy == BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)
                     {
                         // This causes the loop's (inner) cancellation token to be cancelled for all operations already scheduled internally

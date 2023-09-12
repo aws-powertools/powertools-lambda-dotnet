@@ -98,8 +98,8 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
 
                 var parallelOptions = new ParallelOptions
                 {
-                    CancellationToken = processingOptions?.CancellationToken ?? CancellationToken.None,
-                    MaxDegreeOfParallelism = processingOptions?.MaxDegreeOfParallelism ?? -1
+                    CancellationToken = processingOptions.CancellationToken ?? CancellationToken.None,
+                    MaxDegreeOfParallelism = processingOptions.MaxDegreeOfParallelism ?? -1
                 };
 
                 await Parallel.ForEachAsync(batchRecords, parallelOptions, async (pair, cancellationToken) =>
@@ -183,7 +183,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
             try
             {
                 // Invoke hook
-                await HandleRecordSuccesssAsync(record);
+                await HandleRecordSuccessAsync(record);
             }
             catch
             {
@@ -252,7 +252,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
     /// </summary>
     /// <param name="record">The record that has been successfully processed.</param>
     /// <returns>An awaitable <see cref="Task"/>.</returns>
-    protected virtual async Task HandleRecordSuccesssAsync(TRecord record)
+    protected virtual async Task HandleRecordSuccessAsync(TRecord record)
     {
         await Task.CompletedTask;
     }

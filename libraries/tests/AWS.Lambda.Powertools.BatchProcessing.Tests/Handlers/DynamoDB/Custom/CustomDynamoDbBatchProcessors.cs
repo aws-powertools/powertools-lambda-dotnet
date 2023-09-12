@@ -92,6 +92,7 @@ internal class CustomDynamoDbBatchProcessor : DynamoDbStreamBatchProcessor
                     }
 
                     // Check if we should stop record processing on first error
+                    // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                     if (errorHandlingPolicy == BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)
                     {
                         // This causes the loop's (inner) cancellation token to be cancelled for all operations already scheduled internally

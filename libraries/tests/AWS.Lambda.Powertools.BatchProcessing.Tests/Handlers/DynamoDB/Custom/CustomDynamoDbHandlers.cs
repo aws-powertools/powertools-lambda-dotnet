@@ -23,7 +23,7 @@ using AWS.Lambda.Powertools.Logging;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Custom;
 
-internal class CustomDynamoDbRecordHandler : DynamoDBCustomRecordHandler
+internal class CustomDynamoDbRecordHandler : DynamoDbCustomRecordHandler
 {
     public override async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
         CancellationToken cancellationToken)
