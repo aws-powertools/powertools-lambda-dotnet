@@ -24,7 +24,7 @@ using AWS.Lambda.Powertools.Logging;
 using HelloWorld.Data;
 
 namespace HelloWorld.DynamoDb;
-internal class CustomDynamoDbStreamRecordHandler : DynamoDBCustomRecordHandler
+internal class CustomDynamoDbStreamRecordHandler : DynamoDbCustomRecordHandler
 {
     public override async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
     {
