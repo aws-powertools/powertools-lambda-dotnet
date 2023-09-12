@@ -23,66 +23,72 @@ using AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers;
 using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Function;
+namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Handler;
 
-public class SQSHandlerFunction
+public class HandlerFunction
 {
-    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler))]
-    public BatchItemFailuresResponse SqsHandlerUsingAttribute(SQSEvent _)
+    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
+    public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler))]
-    public async Task<BatchItemFailuresResponse> SqsHandlerUsingAttributeAsync(SQSEvent _)
+    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
+    public BatchItemFailuresResponse HandlerUsingAttributeErrorPolicy(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser]
-    public BatchItemFailuresResponse SqsHandlerUsingAttributeWithoutHandler(SQSEvent _)
+    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
+    public async Task<BatchItemFailuresResponse> HandlerUsingAttributeAsync(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser]
-    public BatchItemFailuresResponse SqsHandlerUsingAttributeWithoutEvent(string _)
+    [BatchProcessor]
+    public BatchItemFailuresResponse HandlerUsingAttributeWithoutHandler(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(RecordHandler = typeof(BadCustomSqsRecordHandler))]
-    public BatchItemFailuresResponse SqsHandlerUsingAttributeBadHandler(SQSEvent _)
+    [BatchProcessor]
+    public BatchItemFailuresResponse HandlerUsingAttributeWithoutEvent(string _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(BatchProcessor = typeof(BadCustomSqsRecordProcessor))]
-    public BatchItemFailuresResponse SqsHandlerUsingAttributeBadProcessor(SQSEvent _)
+    [BatchProcessor(RecordHandler = typeof(BadCustomSqsRecordHandler))]
+    public BatchItemFailuresResponse HandlerUsingAttributeBadHandler(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(BatchProcessorProvider = typeof(BadCustomSqsRecordProcessor))]
-    public BatchItemFailuresResponse SqsHandlerUsingAttributeBadProcessorProvider(SQSEvent _)
+    [BatchProcessor(BatchProcessor = typeof(BadCustomSqsRecordProcessor))]
+    public BatchItemFailuresResponse HandlerUsingAttributeBadProcessor(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(RecordHandlerProvider = typeof(BadCustomSqsRecordHandler))]
-    public BatchItemFailuresResponse SqsHandlerUsingAttributeBadHandlerProvider(SQSEvent _)
+    [BatchProcessor(BatchProcessorProvider = typeof(BadCustomSqsRecordProcessor))]
+    public BatchItemFailuresResponse HandlerUsingAttributeBadProcessorProvider(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
-    public BatchItemFailuresResponse SqsHandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
+    [BatchProcessor(RecordHandlerProvider = typeof(BadCustomSqsRecordHandler))]
+    public BatchItemFailuresResponse HandlerUsingAttributeBadHandlerProvider(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
-    public BatchItemFailuresResponse SqsHandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
+    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
+    public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
+    {
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
+    }
+    
+    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
+    public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }

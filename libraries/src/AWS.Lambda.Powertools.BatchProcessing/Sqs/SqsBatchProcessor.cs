@@ -52,13 +52,7 @@ public class SqsBatchProcessor : BatchProcessor<SQSEvent, SQSEvent.SQSMessage>
     protected SqsBatchProcessor() : this(PowertoolsConfigurations.Instance)
     {
     }
-
-    // /// <summary>
-    // /// Return the instance ProcessingResult.BatchItemFailuresResponse
-    // /// </summary>
-    // public static BatchItemFailuresResponse BatchItemFailuresResponse =>
-    //     _instance.ProcessingResult.BatchItemFailuresResponse;
-
+    
     /// <summary>
     /// Return the instance ProcessingResult
     /// </summary>

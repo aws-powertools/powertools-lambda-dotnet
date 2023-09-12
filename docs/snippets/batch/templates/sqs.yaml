@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: partial batch response sample
+
+Globals:
+  Function:
+    Timeout: 5
+    MemorySize: 256
+    Runtime: nodejs18.x
+    Tracing: Active
+    Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: powertools-dotnet-sample-batch-processing
+        POWERTOOLS_LOG_LEVEL: Debug
+        POWERTOOLS_LOGGER_CASE: PascalCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+        POWERTOOLS_BATCH_ERROR_HANDLING_POLICY: DeriveFromEvent
+        POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM: 1
+        POWERTOOLS_BATCH_PARALLEL_ENABLED: false
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::SqsHandlerUsingAttribute
+      Policies:
+        - SQSPollerPolicy:
+            QueueName: !GetAtt SampleQueue.QueueName
+      Events:
+        Batch:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SampleQueue.Arn
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+
+  SampleDLQ:
+    Type: AWS::SQS::Queue
+
+  SampleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 30 # Fn timeout * 6
+      SqsManagedSseEnabled: true
+      RedrivePolicy:
+        maxReceiveCount: 2
+        deadLetterTargetArn: !GetAtt SampleDLQ.Arn

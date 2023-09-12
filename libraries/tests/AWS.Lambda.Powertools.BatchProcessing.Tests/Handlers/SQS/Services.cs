@@ -17,7 +17,7 @@ using System;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers;
+namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS;
 
 internal class Services
 {
@@ -33,7 +33,6 @@ internal class Services
 
     private static IServiceProvider Build()
     {
-        
         _services = new ServiceCollection();
         _services.AddScoped<CustomSqsBatchProcessor>();
         _services.AddScoped<CustomSqsRecordHandler>();

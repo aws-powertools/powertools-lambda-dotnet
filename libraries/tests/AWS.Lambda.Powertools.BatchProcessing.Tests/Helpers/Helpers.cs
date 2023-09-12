@@ -14,7 +14,10 @@
  */
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using Amazon.Lambda.KinesisEvents;
 using Amazon.Lambda.SQSEvents;
 using Xunit;
 using Xunit.Abstractions;
@@ -56,7 +59,94 @@ internal static class Helpers
             EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
         },
     };
-}
+    
+    internal static List<SQSEvent.SQSMessage> SqsFifoMessages => new()
+    {
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "1",
+            Body = "{\"Id\":1,\"Name\":\"product-4\",\"Price\":14}",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "2",
+            Body = "fail",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "3",
+            Body = "{\"Id\":3,\"Name\":\"product-4\",\"Price\":14}",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "4",
+            Body = "{\"Id\":4,\"Name\":\"product-4\",\"Price\":14}",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "5",
+            Body = "{\"Id\":5,\"Name\":\"product-4\",\"Price\":14}",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+    };
+
+    internal static List<KinesisEvent.KinesisEventRecord> KinesisMessages => new()
+    {
+        new KinesisEvent.KinesisEventRecord
+        {
+            Kinesis = new KinesisEvent.Record()
+            {
+                PartitionKey = "1",
+                Data = new MemoryStream(
+                    Encoding.UTF8.GetBytes("{\"Id\":1,\"Name\":\"product-name\",\"Price\":14}")),
+                SequenceNumber = "1"
+            }
+        },
+        new KinesisEvent.KinesisEventRecord
+        {
+            Kinesis = new KinesisEvent.Record()
+            {
+                PartitionKey = "1",
+                Data = new MemoryStream(Encoding.UTF8.GetBytes("fail")),
+                SequenceNumber = "2"
+            }
+        },
+        new KinesisEvent.KinesisEventRecord
+        {
+            Kinesis = new KinesisEvent.Record()
+            {
+                PartitionKey = "1",
+                Data = new MemoryStream(
+                    Encoding.UTF8.GetBytes("{\"Id\":3,\"Name\":\"product-name\",\"Price\":14}")),
+                SequenceNumber = "3"
+            }
+        },
+        new KinesisEvent.KinesisEventRecord
+        {
+            Kinesis = new KinesisEvent.Record()
+            {
+                PartitionKey = "1",
+                Data = new MemoryStream(
+                    Encoding.UTF8.GetBytes("{\"Id\":4,\"Name\":\"product-name\",\"Price\":14}")),
+                SequenceNumber = "4"
+            }
+        },
+        new KinesisEvent.KinesisEventRecord
+        {
+            Kinesis = new KinesisEvent.Record()
+            {
+                PartitionKey = "1",
+                Data = new MemoryStream(
+                    Encoding.UTF8.GetBytes("{\"Id\":5,\"Name\":\"product-name\",\"Price\":14}")),
+                SequenceNumber = "5"
+            }
+        },
+    };
+};
 
 public class DisplayNameOrderer : ITestCollectionOrderer
 {

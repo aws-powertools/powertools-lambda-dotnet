@@ -42,45 +42,51 @@ public class Function
         Services.Init();
     }
 
-    [BatchProcesser(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse DynamoDbStreamHandlerUsingAttribute(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse KinesisDataStreamHandlerUsingAttribute(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Instance.ProcessingResult.BatchItemFailuresResponse;
+        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
 
-    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse SqsHandlerUsingAttribute(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
-        // return SqsBatchProcessor. .Instance.ProcessingResult.BatchItemFailuresResponse;
+    }
+    
+    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
+    [Logging(LogEvent = true)]
+    public BatchItemFailuresResponse SqsHandlerUsingAttributeWithErrorPolicy(SQSEvent _)
+    {
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
 
     #region More example handlers...
     
-    [BatchProcesser(RecordHandlerProvider = typeof(CustomSqsRecordHandlerProvider), BatchProcessor = typeof(CustomSqsBatchProcessor))]
+    [BatchProcessor(RecordHandlerProvider = typeof(CustomSqsRecordHandlerProvider), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomRecordHandlerProvider(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
+    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcesser(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
+    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
     {

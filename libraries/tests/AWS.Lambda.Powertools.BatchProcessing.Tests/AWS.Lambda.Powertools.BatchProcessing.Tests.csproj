@@ -34,7 +34,6 @@
 
     <ItemGroup>
       <Folder Include="Handlers\DynamoDB\" />
-      <Folder Include="Handlers\Kinesis\" />
     </ItemGroup>
 
 </Project>

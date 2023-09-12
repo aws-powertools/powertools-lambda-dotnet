@@ -14,29 +14,29 @@
  */
 
 using System.Threading.Tasks;
-using Amazon.Lambda.SQSEvents;
-using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Function;
+using Amazon.Lambda.KinesisEvents;
+using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Handler;
 using Xunit;
 using TestHelper = AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers.Helpers;
 
-namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS;
+namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis;
 
 // These tests must run last. Injecting the custom processor will change the other tests expectations 
 [Collection("X Sequential")]
-public class SqsHandlerCustomProcessorTests
+public class HandlerCustomProcessorTests
 {
     [Fact]
-    public Task Sqs_Handler_Using_Attribute_Custom_Processor()
+    public Task Kinesis_Handler_Using_Attribute_Custom_Processor()
     {
-        var request = new SQSEvent
+        var request = new KinesisEvent
         {
-            Records = TestHelper.SqsMessages
+            Records = TestHelper.KinesisMessages
         };
 
 
-        var function = new SQSHandlerFunction();
+        var function = new HandlerFunction();
 
-        var response = function.SqsHandlerUsingAttributeAndCustomBatchProcessor(request);
+        var response = function.HandlerUsingAttributeAndCustomBatchProcessor(request);
 
         Assert.Equal(4, response.BatchItemFailures.Count);
         Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
@@ -47,16 +47,16 @@ public class SqsHandlerCustomProcessorTests
     }
     
     [Fact]
-    public Task Sqs_Handler_Using_Attribute_Custom_Processor_Provider()
+    public Task Kinesis_Handler_Using_Attribute_Custom_Processor_Provider()
     {
-        var request = new SQSEvent
+        var request = new KinesisEvent
         {
-            Records = TestHelper.SqsMessages
+            Records = TestHelper.KinesisMessages
         };
         
-        var function = new SQSHandlerFunction();
+        var function = new HandlerFunction();
 
-        var response = function.SqsHandlerUsingAttributeAndCustomBatchProcessorProvider(request);
+        var response = function.HandlerUsingAttributeAndCustomBatchProcessorProvider(request);
         
         Assert.Equal(4, response.BatchItemFailures.Count);
         Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
@@ -67,14 +67,14 @@ public class SqsHandlerCustomProcessorTests
     }
     
     [Fact]
-    public async Task Sqs_Handler_Using_Utility_IoC_Custom_Providers()
+    public async Task Kinesis_Handler_Using_Utility_IoC_Custom_Providers()
     {
-        var request = new SQSEvent
+        var request = new KinesisEvent
         {
-            Records = TestHelper.SqsMessages
+            Records = TestHelper.KinesisMessages
         };
         
-        var function = new SQSHandlerFunction();
+        var function = new HandlerFunction();
     
         var response = await function.HandlerUsingUtilityFromIoc(request);
     

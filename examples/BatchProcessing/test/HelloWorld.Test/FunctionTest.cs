@@ -36,7 +36,7 @@ namespace HelloWorld.Tests
         }
 
         [Fact]
-        public async Task TestSQS()
+        public Task TestSqs()
         {
             // Arrange
             var request = new SQSEvent
@@ -90,10 +90,11 @@ namespace HelloWorld.Tests
             Assert.Equal(2, response.BatchItemFailures.Count);
             Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
             Assert.Equal("4", response.BatchItemFailures[1].ItemIdentifier);
+            return Task.CompletedTask;
         }
         
         [Fact]
-        public async Task TestSQSFiFo()
+        public async Task TestSqsFiFo()
         {
             // Arrange
             var request = new SQSEvent
@@ -151,7 +152,7 @@ namespace HelloWorld.Tests
         }
         
         [Fact]
-        public async Task TestKinesis()
+        public Task TestKinesis()
         {
             // Arrange
             var request = new KinesisEvent()
@@ -223,10 +224,11 @@ namespace HelloWorld.Tests
             Assert.Equal(2, response.BatchItemFailures.Count);
             Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
             Assert.Equal("4", response.BatchItemFailures[1].ItemIdentifier);
+            return Task.CompletedTask;
         }
 
         [Fact]
-        public async Task TestDynamo()
+        public Task TestDynamoDb()
         {
             // Arrange
             var request = new DynamoDBEvent
@@ -296,6 +298,7 @@ namespace HelloWorld.Tests
             // Assert
             Assert.Single(response.BatchItemFailures);
             Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
+            return Task.CompletedTask;
         }
     }
 }
