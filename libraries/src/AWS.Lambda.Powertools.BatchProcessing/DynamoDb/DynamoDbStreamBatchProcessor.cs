@@ -27,7 +27,13 @@ public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, Dynamo
     /// <summary>
     /// The singleton instance of the batch processor.
     /// </summary>
-    public static readonly DynamoDbStreamBatchProcessor Instance = new();
+    private static DynamoDbStreamBatchProcessor _instance;
+ 
+    /// <summary>
+    /// The singleton instance of the batch processor.
+    /// </summary>
+    public static DynamoDbStreamBatchProcessor Instance =>
+        _instance ??= new DynamoDbStreamBatchProcessor(PowertoolsConfigurations.Instance);
     
     /// <summary>
     /// This is the default constructor
@@ -35,6 +41,7 @@ public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, Dynamo
     /// <param name="powertoolsConfigurations"></param>
     public DynamoDbStreamBatchProcessor(IPowertoolsConfigurations powertoolsConfigurations) : base(powertoolsConfigurations)
     {
+        _instance = this;
     }
 
     /// <summary>
@@ -46,9 +53,9 @@ public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, Dynamo
     }
 
     /// <summary>
-    /// Return the instance ProcessingResult.BatchItemFailuresResponse
+    /// Return the instance ProcessingResult
     /// </summary>
-    public static BatchItemFailuresResponse BatchItemFailuresResponse => Instance.ProcessingResult.BatchItemFailuresResponse;
+    public static ProcessingResult<DynamoDBEvent.DynamodbStreamRecord> Result => _instance.ProcessingResult;
 
     /// <inheritdoc />
     protected override BatchProcessorErrorHandlingPolicy GetErrorHandlingPolicyForEvent(DynamoDBEvent _) => BatchProcessorErrorHandlingPolicy.ContinueOnBatchItemFailure;

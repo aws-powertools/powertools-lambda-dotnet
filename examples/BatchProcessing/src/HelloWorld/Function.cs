@@ -46,7 +46,7 @@ public class Function
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse DynamoDbStreamHandlerUsingAttribute(DynamoDBEvent _)
     {
-        return DynamoDbStreamBatchProcessor.BatchItemFailuresResponse;
+        return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
     [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]

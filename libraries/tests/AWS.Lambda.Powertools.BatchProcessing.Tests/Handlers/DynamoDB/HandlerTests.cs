@@ -15,22 +15,23 @@
 
 using System;
 using System.Threading.Tasks;
-using Amazon.Lambda.KinesisEvents;
-using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Handler;
+using Amazon.Lambda.DynamoDBEvents;
+using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Handler;
 using Xunit;
 using TestHelper = AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers.Helpers;
 
-namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis;
+namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB;
 
 [Collection("A Sequential")]
 public class HandlerTests : IDisposable
 {
+    
     [Fact]
-    public Task Kinesis_Handler_Using_Attribute()
+    public Task DynamoDb_Handler_Using_Attribute()
     {
-        var request = new KinesisEvent
+        var request = new DynamoDBEvent()
         {
-            Records = TestHelper.KinesisMessages
+            Records = TestHelper.DynamoDbMessages
         };
 
         var function = new HandlerFunction();
@@ -45,11 +46,11 @@ public class HandlerTests : IDisposable
     }
     
     [Fact]
-    public async Task kinesis_Handler_Using_Attribute_Async()
+    public async Task DynamoDb_Handler_Using_Attribute_Async()
     {
-        var request = new KinesisEvent
+        var request = new DynamoDBEvent
         {
-            Records = TestHelper.KinesisMessages
+            Records = TestHelper.DynamoDbMessages
         };
 
         var function = new HandlerFunction();
@@ -60,12 +61,12 @@ public class HandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Kinesis_Handler_Using_Attribute_Async_Parallel()
+    public async Task DynamoDb_Handler_Using_Attribute_Async_Parallel()
     {
         Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_PARALLEL_ENABLED", "true");
-        var request = new KinesisEvent
+        var request = new DynamoDBEvent
         {
-            Records = TestHelper.KinesisMessages
+            Records = TestHelper.DynamoDbMessages
         };
         
         var function = new HandlerFunction();
@@ -78,11 +79,11 @@ public class HandlerTests : IDisposable
     }
     
     [Fact]
-    public async Task Kinesis_Handler_Using_Utility()
+    public async Task DynamoDb_Handler_Using_Utility()
     {
-        var request = new KinesisEvent
+        var request = new DynamoDBEvent
         {
-            Records = TestHelper.KinesisMessages
+            Records = TestHelper.DynamoDbMessages
         };
         
         var function = new HandlerFunction();
@@ -95,12 +96,12 @@ public class HandlerTests : IDisposable
     }
     
     [Fact]
-    public Task Kinesis_Handler_Using_Attribute_Error_Policy_Env_StopOnFirstBatchItemFailure()
+    public Task DynamoDb_Handler_Using_Attribute_Error_Policy_Env_StopOnFirstBatchItemFailure()
     {
         Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_ERROR_HANDLING_POLICY", "StopOnFirstBatchItemFailure");
-        var request = new KinesisEvent
+        var request = new DynamoDBEvent
         {
-            Records = TestHelper.KinesisMessages
+            Records = TestHelper.DynamoDbMessages
         };
         
         var function = new HandlerFunction();
@@ -117,11 +118,11 @@ public class HandlerTests : IDisposable
     }
     
     [Fact]
-    public Task Kinesis_Handler_Using_Attribute_Error_Policy_Attribute_StopOnFirstBatchItemFailure()
+    public Task DynamoDb_Handler_Using_Attribute_Error_Policy_Attribute_StopOnFirstBatchItemFailure()
     {
-        var request = new KinesisEvent
+        var request = new DynamoDBEvent
         {
-            Records = TestHelper.KinesisMessages
+            Records = TestHelper.DynamoDbMessages
         };
         
         var function = new HandlerFunction();

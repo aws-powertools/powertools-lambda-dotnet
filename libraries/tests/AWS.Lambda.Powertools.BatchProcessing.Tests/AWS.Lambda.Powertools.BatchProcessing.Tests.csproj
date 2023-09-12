@@ -32,8 +32,5 @@
     </ItemGroup>
 
 
-    <ItemGroup>
-      <Folder Include="Handlers\DynamoDB\" />
-    </ItemGroup>
 
 </Project>

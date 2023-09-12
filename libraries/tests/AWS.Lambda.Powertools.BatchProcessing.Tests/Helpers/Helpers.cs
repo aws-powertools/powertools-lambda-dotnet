@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Amazon.DynamoDBv2.Model;
+using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.KinesisEvents;
 using Amazon.Lambda.SQSEvents;
 using Xunit;
@@ -59,7 +61,7 @@ internal static class Helpers
             EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
         },
     };
-    
+
     internal static List<SQSEvent.SQSMessage> SqsFifoMessages => new()
     {
         new SQSEvent.SQSMessage
@@ -91,6 +93,90 @@ internal static class Helpers
             MessageId = "5",
             Body = "{\"Id\":5,\"Name\":\"product-4\",\"Price\":14}",
             EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+    };
+
+    internal static List<DynamoDBEvent.DynamodbStreamRecord> DynamoDbMessages => new()
+    {
+        new DynamoDBEvent.DynamodbStreamRecord
+        {
+            EventID = "1",
+            Dynamodb = new StreamRecord
+            {
+                Keys = new Dictionary<string, AttributeValue>
+                {
+                    { "Id", new AttributeValue { N = "1" } }
+                },
+                NewImage = new Dictionary<string, AttributeValue>
+                {
+                    { "Product", new AttributeValue { S = "{\"Id\":1,\"Name\":\"product-name\",\"Price\":14}" } }
+                },
+                SequenceNumber = "1"
+            }
+        },
+        new DynamoDBEvent.DynamodbStreamRecord
+        {
+            EventID = "1",
+            Dynamodb = new StreamRecord
+            {
+                Keys = new Dictionary<string, AttributeValue>
+                {
+                    { "Id", new AttributeValue { N = "2" } }
+                },
+                NewImage = new Dictionary<string, AttributeValue>
+                {
+                    { "Product", new AttributeValue { S = "failure" } }
+                },
+                SequenceNumber = "2"
+            }
+        },
+        new DynamoDBEvent.DynamodbStreamRecord
+        {
+            EventID = "1",
+            Dynamodb = new StreamRecord
+            {
+                Keys = new Dictionary<string, AttributeValue>
+                {
+                    { "Id", new AttributeValue { N = "3" } }
+                },
+                NewImage = new Dictionary<string, AttributeValue>
+                {
+                    { "Product", new AttributeValue { S = "{\"Id\":3,\"Name\":\"product-name\",\"Price\":14}" } }
+                },
+                SequenceNumber = "3"
+            }
+        },
+        new DynamoDBEvent.DynamodbStreamRecord
+        {
+            EventID = "1",
+            Dynamodb = new StreamRecord
+            {
+                Keys = new Dictionary<string, AttributeValue>
+                {
+                    { "Id", new AttributeValue { N = "4" } }
+                },
+                NewImage = new Dictionary<string, AttributeValue>
+                {
+                    { "Product", new AttributeValue { S = "{\"Id\":4,\"Name\":\"product-name\",\"Price\":14}" } }
+                },
+                SequenceNumber = "4"
+            }
+        },
+        new DynamoDBEvent.DynamodbStreamRecord
+        {
+            EventID = "1",
+            Dynamodb = new StreamRecord
+            {
+                Keys = new Dictionary<string, AttributeValue>
+                {
+                    { "Id", new AttributeValue { N = "5" } }
+                },
+                NewImage = new Dictionary<string, AttributeValue>
+                {
+                    { "Product", new AttributeValue { S = "{\"Id\":5,\"Name\":\"product-name\",\"Price\":14}" } }
+                },
+                SequenceNumber = "5"
+            }
         },
     };
 
