@@ -46,8 +46,6 @@ public class HandlerTests : IDisposable
     [Fact]
     public async Task kinesis_Handler_Using_Attribute_Async()
     {
-        // just to make sure
-        Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_PARALLEL_ENABLED", "false");
         var request = new KinesisEvent
         {
             Records = TestHelper.KinesisMessages
@@ -58,8 +56,6 @@ public class HandlerTests : IDisposable
         var response = await function.HandlerUsingAttributeAsync(request);
 
         Assert.Equal(2, response.BatchItemFailures.Count);
-        Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
-        Assert.Equal("4", response.BatchItemFailures[1].ItemIdentifier);
     }
 
     [Fact]

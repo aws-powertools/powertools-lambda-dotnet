@@ -26,6 +26,8 @@ Resources:
       Policies:
         - SQSPollerPolicy:
             QueueName: !GetAtt SampleQueue.QueueName
+        - KMSDecryptPolicy:
+            KeyId: !Ref CustomerKey
       Events:
         Batch:
           Type: SQS
@@ -36,6 +38,8 @@ Resources:
 
   SampleDLQ:
     Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref CustomerKey
 
   SampleQueue:
     Type: AWS::SQS::Queue
@@ -45,3 +49,34 @@ Resources:
       RedrivePolicy:
         maxReceiveCount: 2
         deadLetterTargetArn: !GetAtt SampleDLQ.Arn
+  
+  # --------------
+  # KMS key for encrypted queues
+  CustomerKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS key for encrypted queues
+      Enabled: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow use of the key
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey
+            Resource: '*'
+
+  CustomerKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/powertools-batch-sqs-demo
+      TargetKeyId: !Ref CustomerKey
