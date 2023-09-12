@@ -78,19 +78,19 @@ The remaining sections of the documentation will rely on these samples. For comp
 
 === "SQS"
 
-    ```yaml title="template.yaml" hl_lines="34-35"
+    ```yaml title="template.yaml" hl_lines="36-37"
     --8<-- "docs/snippets/batch/templates/sqs.yaml"
     ```
 
 === "Kinesis Data Streams"
 
-    ```yaml title="template.yaml" hl_lines="48-49"
+    ```yaml title="template.yaml" hl_lines="50-51"
     --8<-- "docs/snippets/batch/templates/kinesis.yaml"
     ```
 
 === "DynamoDB Streams"
 
-    ```yaml title="template.yaml" hl_lines="47-48"
+    ```yaml title="template.yaml" hl_lines="49-50"
     --8<-- "docs/snippets/batch/templates/dynamodb.yaml"
     ```
 

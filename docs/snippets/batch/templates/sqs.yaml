@@ -49,6 +49,7 @@ Resources:
       RedrivePolicy:
         maxReceiveCount: 2
         deadLetterTargetArn: !GetAtt SampleDLQ.Arn
+      KmsMasterKeyId: !Ref CustomerKey
   
   # --------------
   # KMS key for encrypted queues

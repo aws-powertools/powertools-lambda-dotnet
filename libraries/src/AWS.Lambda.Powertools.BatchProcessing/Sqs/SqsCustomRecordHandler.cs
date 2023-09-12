@@ -20,7 +20,7 @@ using Amazon.Lambda.SQSEvents;
 namespace AWS.Lambda.Powertools.BatchProcessing.Sqs;
 
 /// <inheritdoc />
-public abstract class SQSCustomRecordHandler : IRecordHandler<SQSEvent.SQSMessage>
+public abstract class SqsCustomRecordHandler : IRecordHandler<SQSEvent.SQSMessage>
 {
     /// <inheritdoc />
     public abstract Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken);

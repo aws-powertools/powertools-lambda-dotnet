@@ -23,7 +23,7 @@ using AWS.Lambda.Powertools.Logging;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
 
-public class CustomSqsRecordHandler : SQSCustomRecordHandler
+public class CustomSqsRecordHandler : SqsCustomRecordHandler
 {
     public override async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
     {
