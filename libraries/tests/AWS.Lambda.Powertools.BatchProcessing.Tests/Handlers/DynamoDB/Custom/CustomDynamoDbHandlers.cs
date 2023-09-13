@@ -19,7 +19,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.DynamoDBEvents;
 using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
-using AWS.Lambda.Powertools.Logging;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Custom;
 
@@ -28,12 +27,8 @@ internal class CustomDynamoDbRecordHandler : DynamoDbCustomRecordHandler
     public override async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
         CancellationToken cancellationToken)
     {
-        Logger.LogInformation($"Handling DynamoDb record with sequence number: '{record.Dynamodb.SequenceNumber}'.");
-
         var product = JsonSerializer.Deserialize<JsonElement>(record.Dynamodb.NewImage["Product"].S);
-
-        Logger.LogInformation($"Retried product {product}");
-
+        
         if (product.GetProperty("Id").GetInt16() == 4)
         {
             throw new ArgumentException("Error on id 4");

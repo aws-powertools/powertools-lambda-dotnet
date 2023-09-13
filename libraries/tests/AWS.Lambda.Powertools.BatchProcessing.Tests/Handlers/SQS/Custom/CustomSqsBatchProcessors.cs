@@ -21,7 +21,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
-using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
@@ -31,8 +30,6 @@ internal class CustomSqsBatchProcessor : SqsBatchProcessor
     public override async Task<ProcessingResult<SQSEvent.SQSMessage>> ProcessAsync(SQSEvent @event,
         IRecordHandler<SQSEvent.SQSMessage> recordHandler, ProcessingOptions processingOptions)
     {
-        Logger.LogInformation($"Processing {@event.Records.Count} record(s) using: '{GetType().Name}'.");
-
         ProcessingResult = new ProcessingResult<SQSEvent.SQSMessage>();
 
         // Prepare batch records (order is preserved)
@@ -121,9 +118,9 @@ internal class CustomSqsBatchProcessor : SqsBatchProcessor
         return ProcessingResult;
     }
 
+    // ReSharper disable once RedundantOverriddenMember
     protected override async Task HandleRecordFailureAsync(SQSEvent.SQSMessage record, Exception exception)
     {
-        Logger.LogWarning(exception, $"Failed to process record: '{record.MessageId}'.");
         await base.HandleRecordFailureAsync(record, exception);
     }
 }
@@ -132,7 +129,6 @@ internal class CustomSqsBatchProcessorProvider : IBatchProcessorProvider<SQSEven
 {
     public IBatchProcessor<SQSEvent, SQSEvent.SQSMessage> Create()
     {
-        Logger.LogInformation($"Creating SQS batch processor using: '{GetType().Name}'.");
         return Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
     }
 }

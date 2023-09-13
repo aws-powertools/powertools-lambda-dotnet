@@ -21,7 +21,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.KinesisEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
-using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Custom;
@@ -31,8 +30,6 @@ internal class CustomKinesisDataStreamBatchProcessor : KinesisDataStreamBatchPro
     public override async Task<ProcessingResult<KinesisEvent.KinesisEventRecord>> ProcessAsync(KinesisEvent @event,
         IRecordHandler<KinesisEvent.KinesisEventRecord> recordHandler, ProcessingOptions processingOptions)
     {
-        Logger.LogInformation($"Processing {@event.Records.Count} record(s) using: '{GetType().Name}'.");
-
         ProcessingResult = new ProcessingResult<KinesisEvent.KinesisEventRecord>();
 
         // Prepare batch records (order is preserved)
@@ -121,9 +118,9 @@ internal class CustomKinesisDataStreamBatchProcessor : KinesisDataStreamBatchPro
         return ProcessingResult;
     }
 
+    // ReSharper disable once RedundantOverriddenMember
     protected override async Task HandleRecordFailureAsync(KinesisEvent.KinesisEventRecord record, Exception exception)
     {
-        Logger.LogWarning(exception, $"Failed to process record: '{record.Kinesis.SequenceNumber}'.");
         await base.HandleRecordFailureAsync(record, exception);
     }
 }
@@ -132,7 +129,6 @@ internal class CustomKinesisDataStreamBatchProcessorProvider : IBatchProcessorPr
 {
     public IBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord> Create()
     {
-        Logger.LogInformation($"Creating SQS batch processor using: '{GetType().Name}'.");
         return Services.Provider.GetRequiredService<CustomKinesisDataStreamBatchProcessor>();
     }
 }

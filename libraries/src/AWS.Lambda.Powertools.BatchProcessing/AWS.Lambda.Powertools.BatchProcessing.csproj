@@ -1,39 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>default</LangVersion>
+        <!--  Remaining properties are defined in Directory.Build.props  -->
         <PackageId>AWS.Lambda.Powertools.BatchProcessing</PackageId>
-        <Version>0.0.1</Version>
-        <Authors>Amazon Web Services</Authors>
-        <Company>Amazon.com, Inc</Company>
-        <Title>Powertools for AWS Lambda (.NET)</Title>
         <Description>Powertools for AWS Lambda (.NET) - BatchProcessing package.</Description>
-        <Copyright>Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
-        <RepositoryUrl>https://github.com/aws-powertools/powertools-lambda-dotnet</RepositoryUrl>
-        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-        <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
-        <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageIcon>AWSLogo128x128.png</PackageIcon>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <AssemblyName>AWS.Lambda.Powertools.BatchProcessing</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.BatchProcessing</RootNamespace>
     </PropertyGroup>
-    <PropertyGroup>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
+        <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
+        <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
+        <PackageReference Include="Amazon.Lambda.DynamoDBEvents" />
+        <PackageReference Include="Amazon.Lambda.KinesisEvents" />
+        <PackageReference Include="Amazon.Lambda.SQSEvents" />
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="all" />
     </ItemGroup>
-    <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath="\" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="2.1.1" />
-        <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="2.0.0" />
-        <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.1.0" />
-    </ItemGroup>
-    <ItemGroup>
-      <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
-  </ItemGroup>
 </Project>

@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.KinesisEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Custom;
-using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Handler;
@@ -96,14 +95,10 @@ public class HandlerFunction
     {
         var result = await KinesisDataStreamBatchProcessor.Instance.ProcessAsync(kinesisEvent, RecordHandler<KinesisEvent.KinesisEventRecord>.From(kinesisRecord =>
         {
-            Logger.LogInformation($"Inline handling of Kinesis message with body: '{kinesisRecord.Kinesis.Data}'.");
             var product = JsonSerializer.Deserialize<JsonElement>(kinesisRecord.Kinesis.Data);
-        
-            Logger.LogInformation($"Retried product {product}");
         
             if (product.GetProperty("Id").GetInt16() == 4)
             {
-                Logger.LogInformation($"Error on product 4");
                 throw new ArgumentException("Error on 4");
             }
         }));

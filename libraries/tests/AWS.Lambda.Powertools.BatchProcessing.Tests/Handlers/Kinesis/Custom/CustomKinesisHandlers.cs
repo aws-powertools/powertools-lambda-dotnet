@@ -19,7 +19,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.KinesisEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
-using AWS.Lambda.Powertools.Logging;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Custom;
 
@@ -28,11 +27,7 @@ internal class CustomKinesisDataStreamRecordHandler : KinesisCustomRecordHandler
     public override async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record,
         CancellationToken cancellationToken)
     {
-        Logger.LogInformation($"Handling Kinesis record with sequence number: '{record.Kinesis.SequenceNumber}'.");
-
         var product = JsonSerializer.Deserialize<JsonElement>(record.Kinesis.Data);
-
-        Logger.LogInformation($"Retried product {product}");
 
         if (product.GetProperty("Id").GetInt16() == 4)
         {

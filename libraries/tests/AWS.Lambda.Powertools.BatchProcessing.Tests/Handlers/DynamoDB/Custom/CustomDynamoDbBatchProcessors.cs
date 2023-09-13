@@ -21,7 +21,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.DynamoDBEvents;
 using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
-using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Custom;
@@ -31,8 +30,6 @@ internal class CustomDynamoDbBatchProcessor : DynamoDbStreamBatchProcessor
     public override async Task<ProcessingResult<DynamoDBEvent.DynamodbStreamRecord>> ProcessAsync(DynamoDBEvent @event,
         IRecordHandler<DynamoDBEvent.DynamodbStreamRecord> recordHandler, ProcessingOptions processingOptions)
     {
-        Logger.LogInformation($"Processing {@event.Records.Count} record(s) using: '{GetType().Name}'.");
-
         ProcessingResult = new ProcessingResult<DynamoDBEvent.DynamodbStreamRecord>();
 
         // Prepare batch records (order is preserved)
@@ -121,9 +118,9 @@ internal class CustomDynamoDbBatchProcessor : DynamoDbStreamBatchProcessor
         return ProcessingResult;
     }
 
+    // ReSharper disable once RedundantOverriddenMember
     protected override async Task HandleRecordFailureAsync(DynamoDBEvent.DynamodbStreamRecord record, Exception exception)
     {
-        Logger.LogWarning(exception, $"Failed to process record: '{record.Dynamodb.SequenceNumber}'.");
         await base.HandleRecordFailureAsync(record, exception);
     }
 }
@@ -132,7 +129,6 @@ internal class CustomDynamoDbBatchProcessorProvider : IBatchProcessorProvider<Dy
 {
     public IBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord> Create()
     {
-        Logger.LogInformation($"Creating SQS batch processor using: '{GetType().Name}'.");
         return Services.Provider.GetRequiredService<CustomDynamoDbBatchProcessor>();
     }
 }

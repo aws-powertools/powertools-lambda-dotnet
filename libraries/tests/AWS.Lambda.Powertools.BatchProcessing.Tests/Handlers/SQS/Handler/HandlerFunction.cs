@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
-using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Handler;
@@ -96,14 +95,10 @@ public class HandlerFunction
     {
         var result = await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent, RecordHandler<SQSEvent.SQSMessage>.From(sqsMessage =>
         {
-            Logger.LogInformation($"Inline handling of SQS message with body: '{sqsMessage.Body}'.");
             var product = JsonSerializer.Deserialize<JsonElement>(sqsMessage.Body);
-        
-            Logger.LogInformation($"Retried product {product}");
         
             if (product.GetProperty("Id").GetInt16() == 4)
             {
-                Logger.LogInformation($"Error on product 4");
                 throw new ArgumentException("Error on 4");
             }
         }));

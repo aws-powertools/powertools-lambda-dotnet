@@ -19,7 +19,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
-using AWS.Lambda.Powertools.Logging;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
 
@@ -29,11 +28,8 @@ public class CustomSqsRecordHandler : SqsCustomRecordHandler
     {
         var product = JsonSerializer.Deserialize<JsonElement>(record.Body);
         
-        Logger.LogInformation($"Retried product {product}");
-        
         if (product.GetProperty("Id").GetInt16() == 4)
         {
-            Logger.LogInformation($"Error on product 4");
             throw new ArgumentException("Error on 4");
         }
         

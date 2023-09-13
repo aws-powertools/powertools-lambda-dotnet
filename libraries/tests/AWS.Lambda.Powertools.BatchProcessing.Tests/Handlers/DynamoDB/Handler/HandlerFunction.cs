@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.DynamoDBEvents;
 using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Custom;
-using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Handler;
@@ -98,11 +97,8 @@ public class HandlerFunction
         {
             var product = JsonSerializer.Deserialize<JsonElement>(record.Dynamodb.NewImage["Product"].S);
         
-            Logger.LogInformation($"Retried product {product}");
-        
             if (product.GetProperty("Id").GetInt16() == 4)
             {
-                Logger.LogInformation($"Error on product 4");
                 throw new ArgumentException("Error on 4");
             }
         }));
