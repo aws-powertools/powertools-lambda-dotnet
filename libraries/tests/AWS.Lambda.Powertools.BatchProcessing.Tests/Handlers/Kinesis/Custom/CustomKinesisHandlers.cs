@@ -38,6 +38,15 @@ internal class CustomKinesisDataStreamRecordHandler : KinesisCustomRecordHandler
     }
 }
 
+internal class CustomFailKinesisDataStreamRecordHandler : KinesisCustomRecordHandler
+{
+    public override async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record,
+        CancellationToken cancellationToken)
+    {
+        throw new ArgumentException("Raise exception on all!");
+    }
+}
+
 public class BadCustomKinesisRecordHandler
 {
 }

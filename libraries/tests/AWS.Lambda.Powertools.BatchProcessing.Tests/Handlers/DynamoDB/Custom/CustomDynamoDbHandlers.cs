@@ -22,7 +22,7 @@ using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Custom;
 
-internal class CustomDynamoDbRecordHandler : DynamoDbCustomRecordHandler
+public class CustomDynamoDbRecordHandler : DynamoDbCustomRecordHandler
 {
     public override async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
         CancellationToken cancellationToken)
@@ -36,6 +36,15 @@ internal class CustomDynamoDbRecordHandler : DynamoDbCustomRecordHandler
 
         // Return some data (not needed but useful for test coverage)
         return await Task.FromResult(RecordHandlerResult.FromData(product));
+    }
+}
+
+internal class CustomFailDynamoDbRecordHandler : DynamoDbCustomRecordHandler
+{
+    public override async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
+        CancellationToken cancellationToken)
+    {
+        throw new ArgumentException("Raise exception on all!");
     }
 }
 

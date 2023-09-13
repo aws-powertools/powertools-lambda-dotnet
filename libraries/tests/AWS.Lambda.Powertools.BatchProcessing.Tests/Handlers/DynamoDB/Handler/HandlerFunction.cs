@@ -112,4 +112,10 @@ public class HandlerFunction
         var result = await batchProcessor.ProcessAsync(dynamoDbEvent, recordHandler);
         return result.BatchItemFailuresResponse;
     }
+
+    [BatchProcessor(RecordHandler = typeof(CustomFailDynamoDbRecordHandler))]
+    public BatchItemFailuresResponse HandlerUsingAttributeAllFail(DynamoDBEvent _)
+    {
+        return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
+    }
 }

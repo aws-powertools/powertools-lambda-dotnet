@@ -16,6 +16,7 @@
 using System;
 using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
+using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Handler;
 using Xunit;
 using TestHelper = AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers.Helpers;
@@ -41,6 +42,29 @@ public class HandlerTests : IDisposable
         Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
         Assert.Equal("4", response.BatchItemFailures[1].ItemIdentifier);
     
+        return Task.CompletedTask;
+    }
+    
+    [Fact]
+    public Task Sqs_Handler_All_Fail_Using_Attribute_Should_Throw_BatchProcessingException()
+    {
+        var request = new SQSEvent
+        {
+            Records = TestHelper.SqsMessages
+        };
+        
+        var function = new HandlerFunction();
+        
+        // Assert
+        var exception = Assert.Throws<BatchProcessingException>(() => function.HandlerUsingAttributeAllFail(request));
+        
+        Assert.Equal(5, exception.InnerExceptions.Count);
+        Assert.Equal("Failed processing record: '1'. See inner exception for details.", exception.InnerExceptions[0].Message);
+        Assert.Equal("Failed processing record: '2'. See inner exception for details.", exception.InnerExceptions[1].Message);
+        Assert.Equal("Failed processing record: '3'. See inner exception for details.", exception.InnerExceptions[2].Message);
+        Assert.Equal("Failed processing record: '4'. See inner exception for details.", exception.InnerExceptions[3].Message);
+        Assert.Equal("Failed processing record: '5'. See inner exception for details.", exception.InnerExceptions[4].Message);
+        
         return Task.CompletedTask;
     }
     

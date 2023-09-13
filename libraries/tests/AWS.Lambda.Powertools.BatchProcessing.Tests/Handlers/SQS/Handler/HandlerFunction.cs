@@ -31,6 +31,12 @@ public class HandlerFunction
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
+    [BatchProcessor(RecordHandler = typeof(CustomFailSqsRecordHandler))]
+    public BatchItemFailuresResponse HandlerUsingAttributeAllFail(SQSEvent _)
+    {
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
+    }
+    
     [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
     public BatchItemFailuresResponse HandlerUsingAttributeErrorPolicy(SQSEvent _)
     {

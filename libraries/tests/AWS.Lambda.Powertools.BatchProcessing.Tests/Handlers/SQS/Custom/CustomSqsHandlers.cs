@@ -37,6 +37,14 @@ public class CustomSqsRecordHandler : SqsCustomRecordHandler
     }
 }
 
+public class CustomFailSqsRecordHandler : SqsCustomRecordHandler
+{
+    public override async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+    {
+        throw new ArgumentException("Raise exception on all!");
+    }
+}
+
 public class BadCustomSqsRecordHandler
 {
 }

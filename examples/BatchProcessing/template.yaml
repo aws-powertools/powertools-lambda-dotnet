@@ -15,8 +15,9 @@ Globals:
         POWERTOOLS_SERVICE_NAME: powertools-dotnet-sample-batch-processing
         POWERTOOLS_LOG_LEVEL: Debug
         POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase
-        POWERTOOLS_BATCH_PROCESSING_ERROR_HANDLING_POLICY: DeriveFromEvent
-        POWERTOOLS_BATCH_PROCESSING_MAX_DEGREE_OF_PARALLELISM: 1
+        POWERTOOLS_BATCH_ERROR_HANDLING_POLICY: DeriveFromEvent
+        POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM: 1
+        POWERTOOLS_BATCH_PARALLEL_ENABLED : false
 
 Resources:
   

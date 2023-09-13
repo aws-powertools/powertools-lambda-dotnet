@@ -31,6 +31,12 @@ public class HandlerFunction
         return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
+    [BatchProcessor(RecordHandler = typeof(CustomFailKinesisDataStreamRecordHandler))]
+    public BatchItemFailuresResponse HandlerUsingAttributeAllFail(KinesisEvent _)
+    {
+        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+    }
+    
     [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler), ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
     public BatchItemFailuresResponse HandlerUsingAttributeErrorPolicy(KinesisEvent _)
     {
