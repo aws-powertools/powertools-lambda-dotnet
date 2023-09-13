@@ -10,6 +10,6 @@
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.1" />
         <PackageReference Include="AWS.Lambda.Powertools.Idempotency" Version="0.0.2-preview" />
         <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.2.0" />
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.200.23" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.201.8" />
     </ItemGroup>
 </Project>
