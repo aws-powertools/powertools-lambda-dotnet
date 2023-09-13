@@ -566,7 +566,12 @@ This allows us to **(1)** continue processing the batch, **(2)** collect each ba
 
 You can specify the error handling policy applied during batch processing.
 
-By default it will auto-derive (**DeriveFromEvent**) the policy based on the event.
+`ErrorHandlingPolicy` is used to control the error handling policy of the batch item processing.
+With a value of `DeriveFromEvent` (default), the specific BatchProcessor, determines the policy based on the incoming event.
+
+For example, the `SqsBatchProcessor` looks at the EventSourceArn to determine if the ErrorHandlingPolicy should be `StopOnFirstBatchItemFailure` (for FIFO queues) or `ContinueOnBatchItemFailure` (for standard queues).
+For `StopOnFirstBatchItemFailure` the batch processor stops processing and marks any remaining records as batch item failures.
+For `ContinueOnBatchItemFailure` the batch processor continues processing batch items regardless of item failures.
 
 | Policy                          | Description                                                                                                                                  |
 |---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
@@ -800,7 +805,19 @@ To make the handler testable you can use Dependency Injection to resolve the Bat
 
 #### Processing messages in parallel
 
-You can set the `POWERTOOLS_BATCH_PARALLEL_ENABLED` to `true` or set the property `BatchParallelProcessingEnabled` on the Lambda decorator to process messages concurrently.
+You can set the `POWERTOOLS_BATCH_PARALLEL_ENABLED` Environment Variable to `true` or set the property `BatchParallelProcessingEnabled` on the Lambda decorator to process messages concurrently.
+
+You can also set `POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM` Environment Variable to the number of parallelism you which.
+
+!!! note
+
+	MaxDegreeOfParallelism is used to control the parallelism of the batch item processing. 
+	
+	With a value of 1, the processing is done sequentially (default). Sequential processing is recommended when preserving order is important - i.e. with SQS FIFIO queues. 
+
+	With a value > 1, the processing is done in parallel. Doing parallel processing can enable processing to complete faster, i.e., when processing does downstream service calls. 
+
+	With a value of -1, the parallelism is automatically configured to be the vCPU count of the Lambda function. Internally, the Batch Processing Utility utilizes Parallel.ForEachAsync Method and the ParallelOptions.MaxDegreeOfParallelism Property to enable this functionality.
 
 ???+ question "When is this useful?"
 	Your use case might be able to process multiple records at the same time without conflicting with one another.
