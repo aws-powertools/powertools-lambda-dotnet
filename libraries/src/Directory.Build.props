@@ -1,0 +1,29 @@
+<Project>
+    <PropertyGroup>
+        
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>default</LangVersion>
+        <!-- Version is generated when packaging the individual csproj -->
+        <Version>0.0.1</Version>
+        <Authors>Amazon Web Services</Authors>
+        <Company>Amazon.com, Inc</Company>
+        <Title>Powertools for AWS Lambda (.NET)</Title>
+        <Copyright>Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
+        <RepositoryUrl>https://github.com/aws-powertools/powertools-lambda-dotnet</RepositoryUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
+        <PackageIcon>AWSLogo128x128.png</PackageIcon>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+        <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
+    </ItemGroup>
+    
+    
+</Project>
