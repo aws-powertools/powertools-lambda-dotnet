@@ -9,7 +9,7 @@
     <PackageVersion Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.12.0" />
     <PackageVersion Include="JmesPath.Net" Version="1.0.308" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-    <PackageVersion Include="AWSSDK.SecretsManager" Version="3.7.201.21" />
+    <PackageVersion Include="AWSSDK.SecretsManager" Version="3.7.201.23" />
     <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="3.7.200.36" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageVersion Include="AWSSDK.XRay" Version="3.7.200.36" />
