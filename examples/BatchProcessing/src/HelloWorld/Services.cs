@@ -14,6 +14,7 @@
  */
 
 using System;
+using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using HelloWorld.Sqs;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,8 +34,8 @@ internal class Services
     private static IServiceProvider Build()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<CustomSqsBatchProcessor>();
-        services.AddSingleton<CustomSqsRecordHandler>();
+        services.AddSingleton<ISqsBatchProcessor, CustomSqsBatchProcessor>();
+        services.AddSingleton<ISqsRecordHandler, CustomSqsRecordHandler>();
         return services.BuildServiceProvider();
     }
 }

@@ -90,7 +90,7 @@ public class Function
     [Logging(LogEvent = true)]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
     {
-        var batchProcessor = Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
+        var batchProcessor = Services.Provider.GetRequiredService<ISqsBatchProcessor>();
         return batchProcessor.ProcessingResult.BatchItemFailuresResponse;
     }
     
@@ -107,8 +107,8 @@ public class Function
     [Logging(LogEvent = true)]
     public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(SQSEvent sqsEvent)
     {
-        var batchProcessor = Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
-        var recordHandler = Services.Provider.GetRequiredService<CustomSqsRecordHandler>();
+        var batchProcessor = Services.Provider.GetRequiredService<ISqsBatchProcessor>();
+        var recordHandler = Services.Provider.GetRequiredService<ISqsRecordHandler>();
         var result = await batchProcessor.ProcessAsync(sqsEvent, recordHandler);
         return result.BatchItemFailuresResponse;
     }

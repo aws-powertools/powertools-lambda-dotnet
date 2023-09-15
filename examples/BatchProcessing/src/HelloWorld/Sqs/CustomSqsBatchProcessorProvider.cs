@@ -15,6 +15,7 @@
 
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing;
+using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,6 +25,6 @@ internal class CustomSqsBatchProcessorProvider : IBatchProcessorProvider<SQSEven
     public IBatchProcessor<SQSEvent, SQSEvent.SQSMessage> Create()
     {
         Logger.LogInformation($"Creating SQS batch processor using: '{GetType().Name}'.");
-        return Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
+        return Services.Provider.GetRequiredService<ISqsBatchProcessor>();
     }
 }

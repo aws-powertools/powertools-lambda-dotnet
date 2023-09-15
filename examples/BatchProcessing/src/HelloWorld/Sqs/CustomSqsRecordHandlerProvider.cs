@@ -15,6 +15,7 @@
 
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing;
+using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HelloWorld.Sqs;
@@ -22,6 +23,6 @@ internal class CustomSqsRecordHandlerProvider : IRecordHandlerProvider<SQSEvent.
 {
     public IRecordHandler<SQSEvent.SQSMessage> Create()
     {
-        return Services.Provider.GetRequiredService<CustomSqsRecordHandler>();
+        return Services.Provider.GetRequiredService<ISqsRecordHandler>();
     }
 }
