@@ -25,6 +25,21 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Handler;
 
 public class HandlerFunction
 {
+    private readonly ISqsBatchProcessor _batchProcessor;
+    private readonly ISqsRecordHandler _recordHandler;
+
+    public HandlerFunction()
+    {
+      
+    }
+
+    public HandlerFunction(ISqsBatchProcessor batchProcessor, ISqsRecordHandler recordHandler)
+    {
+        _batchProcessor = batchProcessor;
+        _recordHandler = recordHandler;
+    }
+    
+    
     [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
     {
@@ -113,9 +128,15 @@ public class HandlerFunction
     
     public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(SQSEvent sqsEvent)
     {
-        var batchProcessor = Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
-        var recordHandler = Services.Provider.GetRequiredService<CustomSqsRecordHandler>();
+        var batchProcessor = Services.Provider.GetRequiredService<ISqsBatchProcessor>();
+        var recordHandler = Services.Provider.GetRequiredService<ISqsRecordHandler>();
         var result = await batchProcessor.ProcessAsync(sqsEvent, recordHandler);
+        return result.BatchItemFailuresResponse;
+    }
+    
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIocConstructor(SQSEvent sqsEvent)
+    {
+        var result = await _batchProcessor.ProcessAsync(sqsEvent, _recordHandler);
         return result.BatchItemFailuresResponse;
     }
 }

@@ -129,7 +129,7 @@ internal class CustomSqsBatchProcessorProvider : IBatchProcessorProvider<SQSEven
 {
     public IBatchProcessor<SQSEvent, SQSEvent.SQSMessage> Create()
     {
-        return Services.Provider.GetRequiredService<CustomSqsBatchProcessor>();
+        return Services.Provider.GetRequiredService<ISqsBatchProcessor>();
     }
 }
 

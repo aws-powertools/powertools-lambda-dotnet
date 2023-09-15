@@ -129,7 +129,7 @@ internal class CustomKinesisEventBatchProcessorProvider : IBatchProcessorProvide
 {
     public IBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord> Create()
     {
-        return Services.Provider.GetRequiredService<CustomKinesisEventBatchProcessor>();
+        return Services.Provider.GetRequiredService<IKinesisEventBatchProcessor>();
     }
 }
 

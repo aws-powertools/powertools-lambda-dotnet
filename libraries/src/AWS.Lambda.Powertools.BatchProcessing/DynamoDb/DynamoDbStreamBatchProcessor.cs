@@ -22,17 +22,17 @@ namespace AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 /// <summary>
 /// The default batch processor for DynamoDB Stream events.
 /// </summary>
-public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>
+public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>, IDynamoDbStreamBatchProcessor
 {
     /// <summary>
     /// The singleton instance of the batch processor.
     /// </summary>
-    private static DynamoDbStreamBatchProcessor _instance;
+    private static IDynamoDbStreamBatchProcessor _instance;
  
     /// <summary>
     /// The singleton instance of the batch processor.
     /// </summary>
-    public static DynamoDbStreamBatchProcessor Instance =>
+    public static IDynamoDbStreamBatchProcessor Instance =>
         _instance ??= new DynamoDbStreamBatchProcessor(PowertoolsConfigurations.Instance);
     
     /// <summary>

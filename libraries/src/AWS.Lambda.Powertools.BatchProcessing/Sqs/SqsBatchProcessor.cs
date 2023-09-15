@@ -24,18 +24,18 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Sqs;
 /// <summary>
 /// The default batch processor for SQS events.
 /// </summary>
-public class SqsBatchProcessor : BatchProcessor<SQSEvent, SQSEvent.SQSMessage>
+public class SqsBatchProcessor : BatchProcessor<SQSEvent, SQSEvent.SQSMessage>, ISqsBatchProcessor
 {
     /// <summary>
     /// The singleton instance of the batch processor.
     /// </summary>
-    private static SqsBatchProcessor _instance;
+    private static ISqsBatchProcessor _instance;
 
     /// <summary>
     /// Gets the instance.
     /// </summary>
     /// <value>The instance.</value>
-    public static SqsBatchProcessor Instance => _instance ??= new SqsBatchProcessor(PowertoolsConfigurations.Instance);
+    public static ISqsBatchProcessor Instance => _instance ??= new SqsBatchProcessor(PowertoolsConfigurations.Instance);
 
     /// <summary>
     /// This is the default constructor

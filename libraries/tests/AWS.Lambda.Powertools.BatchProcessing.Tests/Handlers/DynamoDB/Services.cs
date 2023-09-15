@@ -14,6 +14,7 @@
  */
 
 using System;
+using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Custom;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,8 +35,8 @@ internal class Services
     private static IServiceProvider Build()
     {
         _services = new ServiceCollection();
-        _services.AddScoped<CustomDynamoDbBatchProcessor>();
-        _services.AddScoped<CustomDynamoDbRecordHandler>();
+        _services.AddScoped<IDynamoDbStreamBatchProcessor, CustomDynamoDbStreamBatchProcessor>();
+        _services.AddScoped<IDynamoDbStreamRecordHandler, CustomDynamoDbStreamRecordHandler>();
         return _services.BuildServiceProvider();
     }
 }

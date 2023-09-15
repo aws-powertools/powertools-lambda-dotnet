@@ -25,19 +25,34 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Handler;
 
 public class HandlerFunction
 {
-    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbRecordHandler))]
+    private readonly IDynamoDbStreamBatchProcessor _batchProcessor;
+    private readonly IDynamoDbStreamRecordHandler _recordHandler;
+
+    public HandlerFunction()
+    {
+      
+    }
+
+    public HandlerFunction(IDynamoDbStreamBatchProcessor batchProcessor, IDynamoDbStreamRecordHandler recordHandler)
+    {
+        _batchProcessor = batchProcessor;
+        _recordHandler = recordHandler;
+    }
+
+    
+    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbRecordHandler), ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
+    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler), ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
     public BatchItemFailuresResponse HandlerUsingAttributeErrorPolicy(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
     public Task<BatchItemFailuresResponse> HandlerUsingAttributeAsync(DynamoDBEvent _)
     {
         return Task.FromResult(DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse);
@@ -55,37 +70,37 @@ public class HandlerFunction
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(BadCustomDynamoDbRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(BadCustomDynamoDbStreamRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadHandler(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(BatchProcessor = typeof(BadCustomDynamoDbRecordProcessor))]
+    [BatchProcessor(BatchProcessor = typeof(BadCustomDynamoDbStreamRecordProcessor))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadProcessor(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(BatchProcessorProvider = typeof(BadCustomDynamoDbRecordProcessor))]
+    [BatchProcessor(BatchProcessorProvider = typeof(BadCustomDynamoDbStreamRecordProcessor))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadProcessorProvider(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandlerProvider = typeof(BadCustomDynamoDbRecordHandler))]
+    [BatchProcessor(RecordHandlerProvider = typeof(BadCustomDynamoDbStreamRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadHandlerProvider(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbRecordHandler), BatchProcessor = typeof(CustomDynamoDbBatchProcessor))]
+    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler), BatchProcessor = typeof(CustomDynamoDbStreamBatchProcessor))]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessor(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbRecordHandler), BatchProcessorProvider = typeof(CustomDynamoDbBatchProcessorProvider))]
+    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler), BatchProcessorProvider = typeof(CustomDynamoDbStreamBatchProcessorProvider))]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
@@ -107,13 +122,19 @@ public class HandlerFunction
     
     public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDBEvent dynamoDbEvent)
     {
-        var batchProcessor = Services.Provider.GetRequiredService<CustomDynamoDbBatchProcessor>();
-        var recordHandler = Services.Provider.GetRequiredService<CustomDynamoDbRecordHandler>();
+        var batchProcessor = Services.Provider.GetRequiredService<IDynamoDbStreamBatchProcessor>();
+        var recordHandler = Services.Provider.GetRequiredService<IDynamoDbStreamRecordHandler>();
         var result = await batchProcessor.ProcessAsync(dynamoDbEvent, recordHandler);
         return result.BatchItemFailuresResponse;
     }
+    
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIocConstructor(DynamoDBEvent dynamoDbEvent)
+    {
+        var result = await _batchProcessor.ProcessAsync(dynamoDbEvent, _recordHandler);
+        return result.BatchItemFailuresResponse;
+    }
 
-    [BatchProcessor(RecordHandler = typeof(CustomFailDynamoDbRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(CustomFailDynamoDbStreamRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttributeAllFail(DynamoDBEvent _)
     {
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;

@@ -25,7 +25,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Custom;
 
-public class CustomDynamoDbBatchProcessor : DynamoDbStreamBatchProcessor
+public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
 {
     public override async Task<ProcessingResult<DynamoDBEvent.DynamodbStreamRecord>> ProcessAsync(DynamoDBEvent @event,
         IRecordHandler<DynamoDBEvent.DynamodbStreamRecord> recordHandler, ProcessingOptions processingOptions)
@@ -125,14 +125,14 @@ public class CustomDynamoDbBatchProcessor : DynamoDbStreamBatchProcessor
     }
 }
 
-internal class CustomDynamoDbBatchProcessorProvider : IBatchProcessorProvider<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>
+internal class CustomDynamoDbStreamBatchProcessorProvider : IBatchProcessorProvider<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>
 {
     public IBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord> Create()
     {
-        return Services.Provider.GetRequiredService<CustomDynamoDbBatchProcessor>();
+        return Services.Provider.GetRequiredService<IDynamoDbStreamBatchProcessor>();
     }
 }
 
-public class BadCustomDynamoDbRecordProcessor
+public class BadCustomDynamoDbStreamRecordProcessor
 {
 }

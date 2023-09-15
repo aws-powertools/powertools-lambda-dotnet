@@ -22,7 +22,7 @@ using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Custom;
 
-public class CustomDynamoDbRecordHandler : IDynamoDbStreamRecordHandler
+public class CustomDynamoDbStreamRecordHandler : IDynamoDbStreamRecordHandler
 {
     public async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
         CancellationToken cancellationToken)
@@ -39,7 +39,7 @@ public class CustomDynamoDbRecordHandler : IDynamoDbStreamRecordHandler
     }
 }
 
-internal class CustomFailDynamoDbRecordHandler : IDynamoDbStreamRecordHandler
+internal class CustomFailDynamoDbStreamRecordHandler : IDynamoDbStreamRecordHandler
 {
     public Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
         CancellationToken cancellationToken)
@@ -48,6 +48,6 @@ internal class CustomFailDynamoDbRecordHandler : IDynamoDbStreamRecordHandler
     }
 }
 
-public class BadCustomDynamoDbRecordHandler
+public class BadCustomDynamoDbStreamRecordHandler
 {
 }

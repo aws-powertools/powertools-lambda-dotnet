@@ -592,7 +592,7 @@ Another approach is to decorate the handler and use one of the policies in the *
 === "Function.cs"
 
     ```csharp hl_lines="2"
-	[BatchProcessor(RecordHandler = typeof(CustomDynamoDbRecordHandler), 
+	[BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler), 
 		ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
 	public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
 	{
@@ -757,8 +757,8 @@ To make the handler testable you can use Dependency Injection to resolve the Bat
     ```csharp hl_lines="3 4 5"
 	public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDBEvent dynamoDbEvent)
     {
-        var batchProcessor = Services.Provider.GetRequiredService<CustomDynamoDbBatchProcessor>();
-        var recordHandler = Services.Provider.GetRequiredService<CustomDynamoDbRecordHandler>();
+        var batchProcessor = Services.Provider.GetRequiredService<IDynamoDbStreamBatchProcessor>();
+        var recordHandler = Services.Provider.GetRequiredService<IDynamoDbStreamRecordHandler>();
         var result = await batchProcessor.ProcessAsync(dynamoDbEvent, recordHandler);
         return result.BatchItemFailuresResponse;
     }
@@ -769,7 +769,7 @@ To make the handler testable you can use Dependency Injection to resolve the Bat
 
 	```csharp hl_lines="2 4"
 	public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDBEvent dynamoDbEvent, 
-		CustomDynamoDbBatchProcessor batchProcessor, CustomDynamoDbRecordHandler recordHandler)
+		IDynamoDbStreamBatchProcessor batchProcessor, IDynamoDbStreamRecordHandler recordHandler)
     {
         var result = await batchProcessor.ProcessAsync(dynamoDbEvent, recordHandler);
         return result.BatchItemFailuresResponse;
@@ -795,8 +795,8 @@ To make the handler testable you can use Dependency Injection to resolve the Bat
 		private static IServiceProvider Build()
 		{
 			_services = new ServiceCollection();
-			_services.AddScoped<CustomDynamoDbBatchProcessor>();
-			_services.AddScoped<CustomDynamoDbRecordHandler>();
+			_services.AddScoped<IDynamoDbStreamBatchProcessor, CustomDynamoDbStreamBatchProcessor>();
+			_services.AddScoped<IDynamoDbStreamRecordHandler, CustomDynamoDbStreamRecordHandler>();
 			return _services.BuildServiceProvider();
 		}
 	}
@@ -829,7 +829,7 @@ You can also set `POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM` Environment Variab
 === "Function.cs"
 	
 	```csharp hl_lines="1"
-	[BatchProcessor(RecordHandler = typeof(CustomDynamoDbRecordHandler), BatchParallelProcessingEnabled = true )]
+	[BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler), BatchParallelProcessingEnabled = true )]
 	public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
 	{
 		return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
@@ -852,7 +852,7 @@ For these scenarios, you can create a class that inherits from `BatchProcessor` 
 
 	```csharp hl_lines="1 21 54 97"
 	
-	public class CustomDynamoDbBatchProcessor : DynamoDbStreamBatchProcessor
+	public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
 	{
 		public override async Task<ProcessingResult<DynamoDBEvent.DynamodbStreamRecord>> ProcessAsync(DynamoDBEvent @event,
 		IRecordHandler<DynamoDBEvent.DynamodbStreamRecord> recordHandler, ProcessingOptions processingOptions)

@@ -14,6 +14,7 @@
  */
 
 using System;
+using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Custom;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,8 +35,8 @@ internal class Services
     private static IServiceProvider Build()
     {
         _services = new ServiceCollection();
-        _services.AddScoped<CustomKinesisEventBatchProcessor>();
-        _services.AddScoped<CustomKinesisEventRecordHandler>();
+        _services.AddScoped<IKinesisEventBatchProcessor, CustomKinesisEventBatchProcessor>();
+        _services.AddScoped<IKinesisEventRecordHandler, CustomKinesisEventRecordHandler>();
         return _services.BuildServiceProvider();
     }
 }

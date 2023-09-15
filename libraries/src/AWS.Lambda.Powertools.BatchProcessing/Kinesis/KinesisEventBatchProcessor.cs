@@ -22,17 +22,17 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 /// <summary>
 /// The default batch processor for Kinesis Data Stream events.
 /// </summary>
-public class KinesisEventBatchProcessor : BatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>
+public class KinesisEventBatchProcessor : BatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>, IKinesisEventBatchProcessor
 {
     /// <summary>
     /// The singleton instance of the batch processor.
     /// </summary>
-    private static KinesisEventBatchProcessor _instance;
+    private static IKinesisEventBatchProcessor _instance;
 
     /// <summary>
     /// The singleton instance of the batch processor.
     /// </summary>
-    public static KinesisEventBatchProcessor Instance =>
+    public static IKinesisEventBatchProcessor Instance =>
         _instance ??= new KinesisEventBatchProcessor(PowertoolsConfigurations.Instance);
 
     /// <summary>

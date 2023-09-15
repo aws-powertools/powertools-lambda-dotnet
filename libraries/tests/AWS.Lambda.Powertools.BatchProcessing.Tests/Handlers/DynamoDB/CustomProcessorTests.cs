@@ -17,7 +17,9 @@ using Xunit;
 using TestHelper = AWS.Lambda.Powertools.BatchProcessing.Tests.Helpers.Helpers;
 using System.Threading.Tasks;
 using Amazon.Lambda.DynamoDBEvents;
+using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Handler;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB;
 
@@ -74,6 +76,27 @@ public class CustomProcessorTests
             };
             
             var function = new HandlerFunction();
+        
+            var response = await function.HandlerUsingUtilityFromIoc(request);
+        
+            Assert.Equal(4, response.BatchItemFailures.Count);
+            Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
+            Assert.Equal("3", response.BatchItemFailures[1].ItemIdentifier);
+            Assert.Equal("4", response.BatchItemFailures[2].ItemIdentifier);
+        }
+        
+        [Fact]
+        public async Task DynamoDb_Handler_Using_Utility_IoC_Constructor()
+        {
+            var request = new DynamoDBEvent
+            {
+                Records = TestHelper.DynamoDbMessages
+            };
+            
+            var batchProcessor = Services.Provider.GetRequiredService<IDynamoDbStreamBatchProcessor>();
+            var recordHandler = Services.Provider.GetRequiredService<IDynamoDbStreamRecordHandler>();
+            
+            var function = new HandlerFunction(batchProcessor, recordHandler);
         
             var response = await function.HandlerUsingUtilityFromIoc(request);
         

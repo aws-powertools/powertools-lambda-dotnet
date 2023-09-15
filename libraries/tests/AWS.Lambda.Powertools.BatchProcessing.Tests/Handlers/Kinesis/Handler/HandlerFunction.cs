@@ -25,6 +25,20 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Handler;
 
 public class HandlerFunction
 {
+    private readonly IKinesisEventBatchProcessor _batchProcessor;
+    private readonly IKinesisEventRecordHandler _recordHandler;
+
+    public HandlerFunction()
+    {
+      
+    }
+
+    public HandlerFunction(IKinesisEventBatchProcessor batchProcessor, IKinesisEventRecordHandler recordHandler)
+    {
+        _batchProcessor = batchProcessor;
+        _recordHandler = recordHandler;
+    }
+
     [BatchProcessor(RecordHandler = typeof(CustomKinesisEventRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttribute(KinesisEvent _)
     {
@@ -113,9 +127,15 @@ public class HandlerFunction
     
     public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(KinesisEvent kinesisEvent)
     {
-        var batchProcessor = Services.Provider.GetRequiredService<CustomKinesisEventBatchProcessor>();
-        var recordHandler = Services.Provider.GetRequiredService<CustomKinesisEventRecordHandler>();
+        var batchProcessor = Services.Provider.GetRequiredService<IKinesisEventBatchProcessor>();
+        var recordHandler = Services.Provider.GetRequiredService<IKinesisEventRecordHandler>();
         var result = await batchProcessor.ProcessAsync(kinesisEvent, recordHandler);
+        return result.BatchItemFailuresResponse;
+    }
+    
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIocConstructor(KinesisEvent kinesisEvent)
+    {
+        var result = await _batchProcessor.ProcessAsync(kinesisEvent, _recordHandler);
         return result.BatchItemFailuresResponse;
     }
 }
