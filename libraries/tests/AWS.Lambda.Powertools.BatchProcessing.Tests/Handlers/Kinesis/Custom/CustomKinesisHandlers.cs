@@ -22,9 +22,9 @@ using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Custom;
 
-internal class CustomKinesisDataStreamRecordHandler : KinesisCustomRecordHandler
+internal class CustomKinesisDataStreamRecordHandler : IKinesisEventRecordHandler
 {
-    public override async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record,
+    public async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record,
         CancellationToken cancellationToken)
     {
         var product = JsonSerializer.Deserialize<JsonElement>(record.Kinesis.Data);
@@ -38,9 +38,9 @@ internal class CustomKinesisDataStreamRecordHandler : KinesisCustomRecordHandler
     }
 }
 
-internal class CustomFailKinesisDataStreamRecordHandler : KinesisCustomRecordHandler
+internal class CustomFailKinesisDataStreamRecordHandler : IKinesisEventRecordHandler
 {
-    public override async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record,
+    public Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record,
         CancellationToken cancellationToken)
     {
         throw new ArgumentException("Raise exception on all!");

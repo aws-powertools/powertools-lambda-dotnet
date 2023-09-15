@@ -13,15 +13,12 @@
  * permissions and limitations under the License.
  */
 
-using System.Threading;
-using System.Threading.Tasks;
-using Amazon.Lambda.DynamoDBEvents;
+using Amazon.Lambda.KinesisEvents;
 
-namespace AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
+namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 
 /// <inheritdoc />
-public abstract class DynamoDbCustomRecordHandler : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
+public interface IKinesisEventRecordHandler : IRecordHandler<KinesisEvent.KinesisEventRecord>
 {
-    /// <inheritdoc />
-    public abstract Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken);
+ 
 }

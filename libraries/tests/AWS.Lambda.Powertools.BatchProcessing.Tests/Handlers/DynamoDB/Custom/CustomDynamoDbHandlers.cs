@@ -22,9 +22,9 @@ using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.DynamoDB.Custom;
 
-public class CustomDynamoDbRecordHandler : DynamoDbCustomRecordHandler
+public class CustomDynamoDbRecordHandler : IDynamoDbStreamRecordHandler
 {
-    public override async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
+    public async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
         CancellationToken cancellationToken)
     {
         var product = JsonSerializer.Deserialize<JsonElement>(record.Dynamodb.NewImage["Product"].S);
@@ -39,9 +39,9 @@ public class CustomDynamoDbRecordHandler : DynamoDbCustomRecordHandler
     }
 }
 
-internal class CustomFailDynamoDbRecordHandler : DynamoDbCustomRecordHandler
+internal class CustomFailDynamoDbRecordHandler : IDynamoDbStreamRecordHandler
 {
-    public override async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
+    public Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record,
         CancellationToken cancellationToken)
     {
         throw new ArgumentException("Raise exception on all!");

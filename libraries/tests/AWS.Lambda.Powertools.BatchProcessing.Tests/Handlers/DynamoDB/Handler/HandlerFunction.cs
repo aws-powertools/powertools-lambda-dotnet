@@ -38,9 +38,9 @@ public class HandlerFunction
     }
     
     [BatchProcessor(RecordHandler = typeof(CustomDynamoDbRecordHandler))]
-    public async Task<BatchItemFailuresResponse> HandlerUsingAttributeAsync(DynamoDBEvent _)
+    public Task<BatchItemFailuresResponse> HandlerUsingAttributeAsync(DynamoDBEvent _)
     {
-        return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return Task.FromResult(DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse);
     }
     
     [BatchProcessor]

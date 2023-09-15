@@ -44,9 +44,9 @@ public class HandlerFunction
     }
     
     [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
-    public async Task<BatchItemFailuresResponse> HandlerUsingAttributeAsync(KinesisEvent _)
+    public Task<BatchItemFailuresResponse> HandlerUsingAttributeAsync(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return Task.FromResult(KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse);
     }
     
     [BatchProcessor]

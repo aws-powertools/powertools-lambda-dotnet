@@ -22,9 +22,9 @@ using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
 
-public class CustomSqsRecordHandler : SqsCustomRecordHandler
+public class CustomSqsRecordHandler : ISqsRecordHandler
 {
-    public override async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+    public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
     {
         var product = JsonSerializer.Deserialize<JsonElement>(record.Body);
         
@@ -37,9 +37,9 @@ public class CustomSqsRecordHandler : SqsCustomRecordHandler
     }
 }
 
-public class CustomFailSqsRecordHandler : SqsCustomRecordHandler
+public class CustomFailSqsRecordHandler : ISqsRecordHandler
 {
-    public override async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+    public Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
     {
         throw new ArgumentException("Raise exception on all!");
     }

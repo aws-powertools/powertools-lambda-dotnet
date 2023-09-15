@@ -13,15 +13,12 @@
  * permissions and limitations under the License.
  */
 
-using System.Threading;
-using System.Threading.Tasks;
-using Amazon.Lambda.KinesisEvents;
+using Amazon.Lambda.SQSEvents;
 
-namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
+namespace AWS.Lambda.Powertools.BatchProcessing.Sqs;
 
 /// <inheritdoc />
-public abstract class KinesisCustomRecordHandler : IRecordHandler<KinesisEvent.KinesisEventRecord>
+public interface ISqsRecordHandler : IRecordHandler<SQSEvent.SQSMessage>
 {
-    /// <inheritdoc />
-    public abstract Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record, CancellationToken cancellationToken);
+ 
 }

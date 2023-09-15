@@ -109,16 +109,16 @@ The remaining sections of the documentation will rely on these samples. For comp
 Processing batches from SQS using Lambda handler decorator works in three stages:
 
 1. Decorate your handler with **`BatchProcessor`** attribute
-2. Create a class that implements **`SQSCustomRecordHandler`** and override the HandleAsync method. 
+2. Create a class that implements **`ISqsRecordHandler`** interface and the HandleAsync method. 
 3. Pass the type of that class to  **`RecordHandler`** property of the **`BatchProcessor`** attribute
 4. Return **`BatchItemFailuresResponse`** from Lambda handler using **`SqsBatchProcessor.Result.BatchItemFailuresResponse`**
 
 === "Function.cs"
 
     ```csharp hl_lines="1 12 22 17 25"
-	public class CustomSqsRecordHandler : SQSCustomRecordHandler // (1)!
+	public class CustomSqsRecordHandler : ISqsRecordHandler // (1)!
 	{
-		public override async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+		public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
 		{
 			 /*
 			 * Your business logic.
@@ -145,7 +145,7 @@ Processing batches from SQS using Lambda handler decorator works in three stages
 
     ```
 
-    1.  **Step 1**. Creates a class that inherits from SQSCustomRecordHandler and override the HandleAsync method.
+    1.  **Step 1**. Creates a class that implements ISqsRecordHandler interface and the HandleAsync method.
     2.  **Step 2**. You can have custom logic inside the record handler and throw exceptions that will cause this message to fail
     3.  **Step 3**. RecordHandlerResult can return empty (None) or some data.
 	3.  **Step 4**. Lambda function returns the Partial batch response
@@ -235,16 +235,16 @@ This helps preserve the ordering of messages in your queue. Powertools automatic
 Processing batches from Kinesis using Lambda handler decorator works in three stages:
 
 1. Decorate your handler with **`BatchProcessor`** attribute
-2. Create a class that implements **`KinesisCustomRecordHandler`** and override the HandleAsync method.
+2. Create a class that implements **`IKinesisEventRecordHandler`** interface and the HandleAsync method.
 3. Pass the type of that class to  **`RecordHandler`** property of the **`BatchProcessor`** attribute
 4. Return **`BatchItemFailuresResponse`** from Lambda handler using **`KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse`**
 
 === "Function.cs"
 
     ```csharp hl_lines="1 7 12 17 20"
-	internal class CustomKinesisDataStreamRecordHandler : KinesisCustomRecordHandler // (1)!
+	internal class CustomKinesisDataStreamRecordHandler : IKinesisEventRecordHandler // (1)!
 	{
-		public override async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record, CancellationToken cancellationToken)
+		public async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record, CancellationToken cancellationToken)
 		{
 			var product = JsonSerializer.Deserialize<Product>(record.Kinesis.Data);
 		
@@ -266,7 +266,7 @@ Processing batches from Kinesis using Lambda handler decorator works in three st
 
     ```
 
-    1.  **Step 1**. Creates a class that inherits from KinesisCustomRecordHandler and override the HandleAsync method.
+    1.  **Step 1**. Creates a class that implements the IKinesisEventRecordHandler interface and the HandleAsync method.
     2.  **Step 2**. You can have custom logic inside the record handler and throw exceptions that will cause this message to fail
     3.  **Step 3**. RecordHandlerResult can return empty (None) or some data.
 	3.  **Step 4**. Lambda function returns the Partial batch response
@@ -351,16 +351,16 @@ Processing batches from Kinesis using Lambda handler decorator works in three st
 Processing batches from DynamoDB Streams using Lambda handler decorator works in three stages:
 
 1. Decorate your handler with **`BatchProcessor`** attribute
-2. Create a class that implements **`DynamoDbCustomRecordHandler`** and override the HandleAsync method.
+2. Create a class that implements **`IDynamoDbStreamRecordHandler`** and the HandleAsync method.
 3. Pass the type of that class to  **`RecordHandler`** property of the **`BatchProcessor`** attribute
 4. Return **`BatchItemFailuresResponse`** from Lambda handler using **`DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse`**
 
 === "Function.cs"
 
     ```csharp hl_lines="1 7 12 17 20"
-	internal class CustomDynamoDbStreamRecordHandler : DynamoDbCustomRecordHandler // (1)!
+	internal class CustomDynamoDbStreamRecordHandler : IDynamoDbStreamRecordHandler // (1)!
 	{
-		public override async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
+		public async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
 		{
 			var product = JsonSerializer.Deserialize<Product>(record.Dynamodb.NewImage["Product"].S);
 		
@@ -382,7 +382,7 @@ Processing batches from DynamoDB Streams using Lambda handler decorator works in
 
     ```
 
-    1.  **Step 1**. Creates a class that inherits from DynamoDbCustomRecordHandler and override the HandleAsync method.
+    1.  **Step 1**. Creates a class that implements the IDynamoDbStreamRecordHandler and the HandleAsync method.
     2.  **Step 2**. You can have custom logic inside the record handler and throw exceptions that will cause this message to fail
     3.  **Step 3**. RecordHandlerResult can return empty (None) or some data.
 	3.  **Step 4**. Lambda function returns the Partial batch response
@@ -459,15 +459,15 @@ Processing batches from DynamoDB Streams using Lambda handler decorator works in
 
 ### Error handling
 
-By default, we catch any exception raised by your custom record handler HandleAsync method (SQSCustomRecordHandler, KinesisCustomRecordHandler, DynamoDbCustomRecordHandler). 
+By default, we catch any exception raised by your custom record handler HandleAsync method (ISqsRecordHandler, IKinesisEventRecordHandler, IDynamoDbStreamRecordHandler). 
 This allows us to **(1)** continue processing the batch, **(2)** collect each batch item that failed processing, and **(3)** return the appropriate response correctly without failing your Lambda function execution.
 
 === "Function.cs"
 
     ```csharp hl_lines="14"
-	public class CustomSqsRecordHandler : SQSCustomRecordHandler // (1)!
+	public class CustomSqsRecordHandler : ISqsRecordHandler // (1)!
 	{
-		public override async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+		public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
 		{
 			 /*
 			 * Your business logic.
@@ -995,9 +995,9 @@ As there is no external calls, you can unit test your code with `BatchProcessor`
 === "CustomSqsRecordHandler.cs"
 
 	```csharp
-    public class CustomSqsRecordHandler : SqsCustomRecordHandler
+    public class CustomSqsRecordHandler : ISqsRecordHandler
 	{
-		public override async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+		public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
 		{
 			var product = JsonSerializer.Deserialize<JsonElement>(record.Body);
 	

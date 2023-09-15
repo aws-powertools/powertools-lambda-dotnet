@@ -13,15 +13,12 @@
  * permissions and limitations under the License.
  */
 
-using System.Threading;
-using System.Threading.Tasks;
-using Amazon.Lambda.SQSEvents;
+using Amazon.Lambda.DynamoDBEvents;
 
-namespace AWS.Lambda.Powertools.BatchProcessing.Sqs;
+namespace AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
 /// <inheritdoc />
-public abstract class SqsCustomRecordHandler : IRecordHandler<SQSEvent.SQSMessage>
+public interface IDynamoDbStreamRecordHandler : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
 {
-    /// <inheritdoc />
-    public abstract Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken);
+ 
 }

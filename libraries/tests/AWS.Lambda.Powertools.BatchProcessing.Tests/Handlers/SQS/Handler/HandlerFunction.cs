@@ -44,9 +44,9 @@ public class HandlerFunction
     }
     
     [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
-    public async Task<BatchItemFailuresResponse> HandlerUsingAttributeAsync(SQSEvent _)
+    public Task<BatchItemFailuresResponse> HandlerUsingAttributeAsync(SQSEvent _)
     {
-        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
+        return Task.FromResult(SqsBatchProcessor.Result.BatchItemFailuresResponse);
     }
     
     [BatchProcessor]

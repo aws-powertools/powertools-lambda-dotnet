@@ -24,9 +24,9 @@ using AWS.Lambda.Powertools.Logging;
 using HelloWorld.Data;
 
 namespace HelloWorld.Sqs;
-public class CustomSqsRecordHandler : SqsCustomRecordHandler
+public class CustomSqsRecordHandler : ISqsRecordHandler
 {
-    public override async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+    public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
     {
         /*
          * Your business logic.

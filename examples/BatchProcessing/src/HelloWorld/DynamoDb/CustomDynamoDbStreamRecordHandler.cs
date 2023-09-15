@@ -24,9 +24,9 @@ using AWS.Lambda.Powertools.Logging;
 using HelloWorld.Data;
 
 namespace HelloWorld.DynamoDb;
-internal class CustomDynamoDbStreamRecordHandler : DynamoDbCustomRecordHandler
+internal class CustomDynamoDbStreamRecordHandler : IDynamoDbStreamRecordHandler
 {
-    public override async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
+    public async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
     {
         Logger.LogInformation($"Handling DynamoDB record with sequence number: '{record.Dynamodb.SequenceNumber}'.");
         
