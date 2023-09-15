@@ -251,7 +251,7 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
         return eventType switch
         {
             BatchEventType.DynamoDbStream => CreateBatchProcessingAspectHandler(() => DynamoDbStreamBatchProcessor.Instance),
-            BatchEventType.KinesisDataStream => CreateBatchProcessingAspectHandler(() => KinesisDataStreamBatchProcessor.Instance),
+            BatchEventType.KinesisDataStream => CreateBatchProcessingAspectHandler(() => KinesisEventBatchProcessor.Instance),
             BatchEventType.Sqs => CreateBatchProcessingAspectHandler(() => SqsBatchProcessor.Instance),
             _ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, "Unsupported event type.")
         };

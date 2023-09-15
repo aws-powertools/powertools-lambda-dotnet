@@ -25,81 +25,81 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Handler;
 
 public class HandlerFunction
 {
-    [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(CustomKinesisEventRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttribute(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomFailKinesisDataStreamRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(CustomFailKinesisEventRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttributeAllFail(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler), ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
+    [BatchProcessor(RecordHandler = typeof(CustomKinesisEventRecordHandler), ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
     public BatchItemFailuresResponse HandlerUsingAttributeErrorPolicy(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(CustomKinesisEventRecordHandler))]
     public Task<BatchItemFailuresResponse> HandlerUsingAttributeAsync(KinesisEvent _)
     {
-        return Task.FromResult(KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse);
+        return Task.FromResult(KinesisEventBatchProcessor.Result.BatchItemFailuresResponse);
     }
     
     [BatchProcessor]
     public BatchItemFailuresResponse HandlerUsingAttributeWithoutHandler(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
     [BatchProcessor]
     public BatchItemFailuresResponse HandlerUsingAttributeWithoutEvent(string _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(BadCustomKinesisRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(BadCustomKinesisEventRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadHandler(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(BatchProcessor = typeof(BadCustomKinesisDataStreamRecordProcessor))]
+    [BatchProcessor(BatchProcessor = typeof(BadCustomKinesisEventRecordProcessor))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadProcessor(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(BatchProcessorProvider = typeof(BadCustomKinesisDataStreamRecordProcessor))]
+    [BatchProcessor(BatchProcessorProvider = typeof(BadCustomKinesisEventRecordProcessor))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadProcessorProvider(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandlerProvider = typeof(BadCustomKinesisRecordHandler))]
+    [BatchProcessor(RecordHandlerProvider = typeof(BadCustomKinesisEventRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadHandlerProvider(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler), BatchProcessor = typeof(CustomKinesisDataStreamBatchProcessor))]
+    [BatchProcessor(RecordHandler = typeof(CustomKinesisEventRecordHandler), BatchProcessor = typeof(CustomKinesisEventBatchProcessor))]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessor(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler), BatchProcessorProvider = typeof(CustomKinesisDataStreamBatchProcessorProvider))]
+    [BatchProcessor(RecordHandler = typeof(CustomKinesisEventRecordHandler), BatchProcessorProvider = typeof(CustomKinesisEventBatchProcessorProvider))]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
     public async Task<BatchItemFailuresResponse> HandlerUsingUtility(KinesisEvent kinesisEvent)
     {
-        var result = await KinesisDataStreamBatchProcessor.Instance.ProcessAsync(kinesisEvent, RecordHandler<KinesisEvent.KinesisEventRecord>.From(kinesisRecord =>
+        var result = await KinesisEventBatchProcessor.Instance.ProcessAsync(kinesisEvent, RecordHandler<KinesisEvent.KinesisEventRecord>.From(kinesisRecord =>
         {
             var product = JsonSerializer.Deserialize<JsonElement>(kinesisRecord.Kinesis.Data);
         
@@ -113,8 +113,8 @@ public class HandlerFunction
     
     public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(KinesisEvent kinesisEvent)
     {
-        var batchProcessor = Services.Provider.GetRequiredService<CustomKinesisDataStreamBatchProcessor>();
-        var recordHandler = Services.Provider.GetRequiredService<CustomKinesisDataStreamRecordHandler>();
+        var batchProcessor = Services.Provider.GetRequiredService<CustomKinesisEventBatchProcessor>();
+        var recordHandler = Services.Provider.GetRequiredService<CustomKinesisEventRecordHandler>();
         var result = await batchProcessor.ProcessAsync(kinesisEvent, recordHandler);
         return result.BatchItemFailuresResponse;
     }

@@ -237,12 +237,12 @@ Processing batches from Kinesis using Lambda handler decorator works in three st
 1. Decorate your handler with **`BatchProcessor`** attribute
 2. Create a class that implements **`IKinesisEventRecordHandler`** interface and the HandleAsync method.
 3. Pass the type of that class to  **`RecordHandler`** property of the **`BatchProcessor`** attribute
-4. Return **`BatchItemFailuresResponse`** from Lambda handler using **`KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse`**
+4. Return **`BatchItemFailuresResponse`** from Lambda handler using **`KinesisEventBatchProcessor.Result.BatchItemFailuresResponse`**
 
 === "Function.cs"
 
     ```csharp hl_lines="1 7 12 17 20"
-	internal class CustomKinesisDataStreamRecordHandler : IKinesisEventRecordHandler // (1)!
+	internal class CustomKinesisEventRecordHandler : IKinesisEventRecordHandler // (1)!
 	{
 		public async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record, CancellationToken cancellationToken)
 		{
@@ -258,10 +258,10 @@ Processing batches from Kinesis using Lambda handler decorator works in three st
 	}
 
 
-	[BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
+	[BatchProcessor(RecordHandler = typeof(CustomKinesisEventRecordHandler))]
 	public BatchItemFailuresResponse HandlerUsingAttribute(KinesisEvent _)
 	{
-		return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
+		return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
 	}
 
     ```
@@ -729,7 +729,7 @@ sequenceDiagram
 
 You can use Batch processing without using the decorator.
 
-Calling the **`ProcessAsync`** method on the Instance of the static BatchProcessor (`SqsBatchProcessor`, `DynamoDbStreamBatchProcessor`, `KinesisDataStreamBatchProcessor`)
+Calling the **`ProcessAsync`** method on the Instance of the static BatchProcessor (`SqsBatchProcessor`, `DynamoDbStreamBatchProcessor`, `KinesisEventBatchProcessor`)
 
 === "Function.cs"
 
@@ -750,7 +750,7 @@ Calling the **`ProcessAsync`** method on the Instance of the static BatchProcess
 
     ```
 
-To make the handler testable you can use Dependency Injection to resolve the BatchProcessor (`SqsBatchProcessor`, `DynamoDbStreamBatchProcessor`, `KinesisDataStreamBatchProcessor`) instance and then call the **`ProcessAsync`** method.
+To make the handler testable you can use Dependency Injection to resolve the BatchProcessor (`SqsBatchProcessor`, `DynamoDbStreamBatchProcessor`, `KinesisEventBatchProcessor`) instance and then call the **`ProcessAsync`** method.
 
 === "GetRequiredService inside the method"
 
@@ -840,7 +840,7 @@ You can also set `POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM` Environment Variab
 
 You might want to bring custom logic to the existing `BatchProcessor` to slightly override how we handle successes and failures.
 
-For these scenarios, you can create a class that inherits from `BatchProcessor` (`SqsBatchProcessor`, `DynamoDbStreamBatchProcessor`, `KinesisDataStreamBatchProcessor`) and quickly override `ProcessAsync` and `HandleRecordFailureAsync` methods:
+For these scenarios, you can create a class that inherits from `BatchProcessor` (`SqsBatchProcessor`, `DynamoDbStreamBatchProcessor`, `KinesisEventBatchProcessor`) and quickly override `ProcessAsync` and `HandleRecordFailureAsync` methods:
 
 * **`ProcessAsync()`** – Keeps track of successful batch records
 * **`HandleRecordFailureAsync()`** – Keeps track of failed batch records

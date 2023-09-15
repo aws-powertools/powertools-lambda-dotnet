@@ -22,7 +22,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./src/HelloWorld/
-      Handler: HelloWorld::HelloWorld.Function::KinesisDataStreamHandlerUsingAttribute
+      Handler: HelloWorld::HelloWorld.Function::KinesisEventHandlerUsingAttribute
       Policies:
         # Lambda Destinations require additional permissions
         # to send failure records to DLQ from Kinesis/DynamoDB

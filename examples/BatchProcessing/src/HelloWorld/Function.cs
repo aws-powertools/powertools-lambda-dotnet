@@ -49,11 +49,11 @@ public class Function
         return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
     }
     
-    [BatchProcessor(RecordHandler = typeof(CustomKinesisDataStreamRecordHandler))]
+    [BatchProcessor(RecordHandler = typeof(CustomKinesisEventRecordHandler))]
     [Logging(LogEvent = true)]
-    public BatchItemFailuresResponse KinesisDataStreamHandlerUsingAttribute(KinesisEvent _)
+    public BatchItemFailuresResponse KinesisEventHandlerUsingAttribute(KinesisEvent _)
     {
-        return KinesisDataStreamBatchProcessor.Result.BatchItemFailuresResponse;
+        return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse;
     }
 
     [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]

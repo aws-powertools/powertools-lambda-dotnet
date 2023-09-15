@@ -127,13 +127,13 @@ Resources:
         
   # --------------
   # Batch Processing for Kinesis Data Streams
-  SampleKinesisDataStreamBatchProcessorFunction:
+  SampleKinesisEventBatchProcessorFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: powertools-dotnet-sample-batch-processor-kinesis-data-stream
       Runtime: dotnet6
       CodeUri: ./src/HelloWorld/
-      Handler: HelloWorld::HelloWorld.Function::KinesisDataStreamHandlerUsingAttribute
+      Handler: HelloWorld::HelloWorld.Function::KinesisEventHandlerUsingAttribute
       MemorySize: 256
       # ReservedConcurrentExecutions: 1
       Policies:

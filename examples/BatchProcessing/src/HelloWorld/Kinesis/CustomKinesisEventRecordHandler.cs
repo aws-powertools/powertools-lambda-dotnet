@@ -24,7 +24,7 @@ using AWS.Lambda.Powertools.Logging;
 using HelloWorld.Data;
 
 namespace HelloWorld.Kinesis;
-internal class CustomKinesisDataStreamRecordHandler : IKinesisEventRecordHandler
+internal class CustomKinesisEventRecordHandler : IKinesisEventRecordHandler
 {
     public async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record, CancellationToken cancellationToken)
     {

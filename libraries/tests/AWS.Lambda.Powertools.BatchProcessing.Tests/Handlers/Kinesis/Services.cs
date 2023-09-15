@@ -34,8 +34,8 @@ internal class Services
     private static IServiceProvider Build()
     {
         _services = new ServiceCollection();
-        _services.AddScoped<CustomKinesisDataStreamBatchProcessor>();
-        _services.AddScoped<CustomKinesisDataStreamRecordHandler>();
+        _services.AddScoped<CustomKinesisEventBatchProcessor>();
+        _services.AddScoped<CustomKinesisEventRecordHandler>();
         return _services.BuildServiceProvider();
     }
 }

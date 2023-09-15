@@ -65,7 +65,7 @@ public class BatchProcessingInternalTests
         var conf = new PowertoolsConfigurations(new SystemWrapper(env));
         
         // Act
-        var kinesisDataStreamBatchProcessor = new KinesisDataStreamBatchProcessor(conf);
+        var KinesisEventBatchProcessor = new KinesisEventBatchProcessor(conf);
 
         // Assert
         env.Received(1).SetEnvironmentVariable(
@@ -75,7 +75,7 @@ public class BatchProcessingInternalTests
 
         env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
         
-        Assert.NotNull(kinesisDataStreamBatchProcessor);
+        Assert.NotNull(KinesisEventBatchProcessor);
     }
     
     [Fact]

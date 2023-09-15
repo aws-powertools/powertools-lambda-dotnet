@@ -22,24 +22,24 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 /// <summary>
 /// The default batch processor for Kinesis Data Stream events.
 /// </summary>
-public class KinesisDataStreamBatchProcessor : BatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>
+public class KinesisEventBatchProcessor : BatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>
 {
     /// <summary>
     /// The singleton instance of the batch processor.
     /// </summary>
-    private static KinesisDataStreamBatchProcessor _instance;
+    private static KinesisEventBatchProcessor _instance;
 
     /// <summary>
     /// The singleton instance of the batch processor.
     /// </summary>
-    public static KinesisDataStreamBatchProcessor Instance =>
-        _instance ??= new KinesisDataStreamBatchProcessor(PowertoolsConfigurations.Instance);
+    public static KinesisEventBatchProcessor Instance =>
+        _instance ??= new KinesisEventBatchProcessor(PowertoolsConfigurations.Instance);
 
     /// <summary>
     /// This is the default constructor
     /// </summary>
     /// <param name="powertoolsConfigurations"></param>
-    public KinesisDataStreamBatchProcessor(IPowertoolsConfigurations powertoolsConfigurations) : base(powertoolsConfigurations)
+    public KinesisEventBatchProcessor(IPowertoolsConfigurations powertoolsConfigurations) : base(powertoolsConfigurations)
     {
         _instance = this;
     }
@@ -48,7 +48,7 @@ public class KinesisDataStreamBatchProcessor : BatchProcessor<KinesisEvent, Kine
     /// Need default constructor for when consumers create a custom batch processor
     /// </summary>
     // ReSharper disable once MemberCanBePrivate.Global
-    protected KinesisDataStreamBatchProcessor() : this(PowertoolsConfigurations.Instance)
+    protected KinesisEventBatchProcessor() : this(PowertoolsConfigurations.Instance)
     {
     }
 

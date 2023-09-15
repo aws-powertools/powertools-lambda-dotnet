@@ -25,7 +25,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Custom;
 
-internal class CustomKinesisDataStreamBatchProcessor : KinesisDataStreamBatchProcessor
+internal class CustomKinesisEventBatchProcessor : KinesisEventBatchProcessor
 {
     public override async Task<ProcessingResult<KinesisEvent.KinesisEventRecord>> ProcessAsync(KinesisEvent @event,
         IRecordHandler<KinesisEvent.KinesisEventRecord> recordHandler, ProcessingOptions processingOptions)
@@ -125,14 +125,14 @@ internal class CustomKinesisDataStreamBatchProcessor : KinesisDataStreamBatchPro
     }
 }
 
-internal class CustomKinesisDataStreamBatchProcessorProvider : IBatchProcessorProvider<KinesisEvent, KinesisEvent.KinesisEventRecord>
+internal class CustomKinesisEventBatchProcessorProvider : IBatchProcessorProvider<KinesisEvent, KinesisEvent.KinesisEventRecord>
 {
     public IBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord> Create()
     {
-        return Services.Provider.GetRequiredService<CustomKinesisDataStreamBatchProcessor>();
+        return Services.Provider.GetRequiredService<CustomKinesisEventBatchProcessor>();
     }
 }
 
-public class BadCustomKinesisDataStreamRecordProcessor
+public class BadCustomKinesisEventRecordProcessor
 {
 }

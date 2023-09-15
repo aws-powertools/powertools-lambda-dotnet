@@ -22,7 +22,7 @@ using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.Kinesis.Custom;
 
-internal class CustomKinesisDataStreamRecordHandler : IKinesisEventRecordHandler
+internal class CustomKinesisEventRecordHandler : IKinesisEventRecordHandler
 {
     public async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record,
         CancellationToken cancellationToken)
@@ -38,7 +38,7 @@ internal class CustomKinesisDataStreamRecordHandler : IKinesisEventRecordHandler
     }
 }
 
-internal class CustomFailKinesisDataStreamRecordHandler : IKinesisEventRecordHandler
+internal class CustomFailKinesisEventRecordHandler : IKinesisEventRecordHandler
 {
     public Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record,
         CancellationToken cancellationToken)
@@ -47,6 +47,6 @@ internal class CustomFailKinesisDataStreamRecordHandler : IKinesisEventRecordHan
     }
 }
 
-public class BadCustomKinesisRecordHandler
+public class BadCustomKinesisEventRecordHandler
 {
 }

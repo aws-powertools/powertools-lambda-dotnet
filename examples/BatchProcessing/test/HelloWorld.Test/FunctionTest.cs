@@ -213,7 +213,7 @@ namespace HelloWorld.Tests
 
             // Act
             var function = new Function();
-            var response = function.KinesisDataStreamHandlerUsingAttribute(request);
+            var response = function.KinesisEventHandlerUsingAttribute(request);
             
             foreach (var failure in response.BatchItemFailures)
             {
