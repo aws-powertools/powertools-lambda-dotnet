@@ -24,6 +24,8 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build --configuration Release --no-restore
+      - name: Test Examples
+        run: dotnet test ../examples/
       - name: Test & Code Coverage
         run: dotnet test --collect:"XPlat Code Coverage" -r ./codecov --no-restore --verbosity normal
       - name: Codecov
