@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AspectInjector" Version="2.8.2" />
+    <PackageVersion Include="AspectInjector" Version="2.8.1" />
     <PackageVersion Include="Amazon.Lambda.Core" Version="2.1.0" />
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="3.7.201.7" />
     <PackageVersion Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.12.0" />
