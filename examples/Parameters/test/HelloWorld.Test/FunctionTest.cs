@@ -134,7 +134,7 @@ namespace HelloWorld.Tests
 
             // Act
             var function = new Function(helper);
-            var response = await function.FunctionHandler(request, context).ConfigureAwait(false);
+            var response = await function.FunctionHandler(request, context);
 
             // Assert
             await helper.Received(1).GetSingleParameterWithSsmProvider();
