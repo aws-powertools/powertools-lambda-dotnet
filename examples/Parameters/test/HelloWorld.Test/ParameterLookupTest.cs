@@ -75,7 +75,7 @@ namespace HelloWorld.Tests
 
             // Act
             var helper = new ParameterLookupHelper(provider, parameterProviderType);
-            var result = await helper.GetSingleParameterWithSsmProvider().ConfigureAwait(false);
+            var result = await helper.GetSingleParameterWithSsmProvider();
 
             // Assert
             await provider.Received(1).GetAsync(parameterName);
@@ -107,7 +107,7 @@ namespace HelloWorld.Tests
 
             // Act
             var helper = new ParameterLookupHelper(provider, parameterProviderType);
-            var result = await helper.GetMultipleParametersWithSsmProvider().ConfigureAwait(false);
+            var result = await helper.GetMultipleParametersWithSsmProvider();
 
             // Assert
             await provider.Received(1).GetMultipleAsync(parameterPathPrefix);
@@ -147,7 +147,7 @@ namespace HelloWorld.Tests
 
             // Act
             var helper = new ParameterLookupHelper(provider, parameterProviderType);
-            var result = await helper.GetSingleSecretWithSecretsProvider().ConfigureAwait(false);
+            var result = await helper.GetSingleSecretWithSecretsProvider();
 
             // Assert
             await provider.Received(1).GetAsync<SecretRecord>(secretName);
@@ -184,7 +184,7 @@ namespace HelloWorld.Tests
 
             // Act
             var helper = new ParameterLookupHelper(provider, parameterProviderType);
-            var result = await helper.GetSingleParameterWithDynamoDBProvider().ConfigureAwait(false);
+            var result = await helper.GetSingleParameterWithDynamoDBProvider();
 
             // Assert
             await provider.Received(1).GetAsync(dynamoDbHashKey);
@@ -221,7 +221,7 @@ namespace HelloWorld.Tests
 
             // Act
             var helper = new ParameterLookupHelper(provider, parameterProviderType);
-            var result = await helper.GetMultipleParametersWithDynamoDBProvider().ConfigureAwait(false);
+            var result = await helper.GetMultipleParametersWithDynamoDBProvider();
 
             // Assert
             await provider.Received(1).GetMultipleAsync(dynamoDbHashKey);
