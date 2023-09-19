@@ -31,6 +31,7 @@ Core utilities such as Tracing, Logging, and Metrics will be available across al
 [Metrics](./core/metrics.md) | Custom AWS metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
 [Parameters](./utilities/parameters/) | provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
 [Idempotency (developer preview)](./utilities/idempotency/) | The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
+[Batch Processing (developer preview)](./utilities/batch-processing/) | The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
 
 ## Install
 
@@ -55,6 +56,10 @@ Powertools for AWS Lambda (.NET) is available as NuGet packages. You can install
 * [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Idempotency):
 
     `dotnet add package AWS.Lambda.Powertools.Idempotency`
+
+* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.BatchProcessing):
+
+    `dotnet add package AWS.Lambda.Powertools.BatchProcessing`
 
 ### Using SAM CLI template
 
@@ -104,9 +109,10 @@ We have provided a few examples that should you how to use the each of the core 
 * [Tracing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Tracing){target="_blank"}
 * [Logging](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Logging/){target="_blank"}
 * [Metrics](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Metrics/){target="_blank"}
-* [Serverless API example](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/ServerlessApi/){target="_blank"}
+* [Serverless API](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/ServerlessApi/){target="_blank"}
 * [Parameters](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Parameters/){target="_blank"}
 * [Idempotency](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Idempotency/){target="_blank"}
+* [Batch Processing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/BatchProcessing/){target="_blank"}
 
 ## Connect
 
