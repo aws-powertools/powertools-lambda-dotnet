@@ -14,5 +14,9 @@
     <PackageVersion Include="Amazon.Lambda.APIGatewayEvents" Version="2.6.0" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
     <PackageVersion Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.1.0" />
+    <PackageVersion Include="Amazon.Lambda.DynamoDBEvents" Version="2.2.0" />
+    <PackageVersion Include="Amazon.Lambda.KinesisEvents" Version="2.1.0" />
+    <PackageVersion Include="Amazon.Lambda.SQSEvents" Version="2.1.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
   </ItemGroup>
 </Project>

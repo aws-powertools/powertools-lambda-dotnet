@@ -1,0 +1,160 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Example project demoing the Batch Processing utility SQS in Powertools for AWS Lambda (.NET)
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 20
+    Runtime: dotnet6
+    MemorySize: 256
+    Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: powertools-dotnet-sample-batch-processing
+        POWERTOOLS_LOG_LEVEL: Debug
+        POWERTOOLS_LOGGER_CASE: SnakeCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+        POWERTOOLS_BATCH_ERROR_HANDLING_POLICY: DeriveFromEvent
+        POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM: 1
+        POWERTOOLS_BATCH_PARALLEL_ENABLED : false
+
+Resources:
+  
+  # --------------
+  # KMS key for encrypted queues
+  CustomerKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS key for encrypted queues
+      Enabled: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow use of the key
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey
+            Resource: '*'
+  
+  CustomerKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/powertools-batch-sqs-demo
+      TargetKeyId: !Ref CustomerKey
+
+  # --------------
+  # SQS DL Queue
+  DemoDlqSqsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref CustomerKey
+  
+  # --------------
+  # SQS Queue
+  DemoSqsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - "DemoDlqSqsQueue"
+            - "Arn"
+        maxReceiveCount: 2
+      KmsMasterKeyId: !Ref CustomerKey
+  
+  # --------------
+  # Batch Processing for SQS
+  SampleSqsBatchProcessorFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      FunctionName: powertools-dotnet-sample-batch-processor-sqs
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::SqsHandlerUsingAttribute
+      # ReservedConcurrentExecutions: 1
+      Policies:
+        - Statement:
+            - Sid: SQSDeleteGetAttribute
+              Effect: Allow
+              Action:
+                - sqs:DeleteMessageBatch
+                - sqs:GetQueueAttributes
+              Resource: !GetAtt DemoSqsQueue.Arn
+            - Sid: SQSSendMessageBatch
+              Effect: Allow
+              Action:
+                - sqs:SendMessageBatch
+                - sqs:SendMessage
+              Resource: !GetAtt DemoDlqSqsQueue.Arn
+            - Sid: SQSKMSKey
+              Effect: Allow
+              Action:
+                - kms:GenerateDataKey
+                - kms:Decrypt
+              Resource: !GetAtt CustomerKey.Arn
+      Events:
+        SqsBatch:
+          Type: SQS # More info about SQS Event Source: https://github.com/aws/serverless-application-model/blob/master/versions/2016-10-31.md#sqs
+          Properties:
+            Queue: !GetAtt DemoSqsQueue.Arn
+            BatchSize: 5
+#            MaximumBatchingWindowInSeconds: 300
+            FunctionResponseTypes: 
+              - ReportBatchItemFailures
+  
+  SampleDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: powertools-dotnet-sample-dynamodb-table
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+        
+  # --------------
+  # Batch Processing for Kinesis Data Streams
+  SampleKinesisEventBatchProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: powertools-dotnet-sample-batch-processor-kinesis-data-stream
+      Runtime: dotnet6
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::KinesisEventHandlerUsingAttribute
+      MemorySize: 256
+      # ReservedConcurrentExecutions: 1
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - KinesisStreamReadPolicy:
+            StreamName: !Ref SampleKinesisDataStream
+      Environment:
+        Variables:
+          POWERTOOLS_BATCH_PROCESSING_ERROR_HANDLING_POLICY: DeriveFromEvent
+          POWERTOOLS_BATCH_PROCESSING_MAX_DEGREE_OF_PARALLELISM: 1
+
+Outputs:
+  DemoSqsQueue:
+    Description: "ARN for main SQS queue"
+    Value: !GetAtt DemoSqsQueue.Arn
+  DemoDlqSqsQueue:
+    Description: "ARN for DLQ"
+    Value: !GetAtt DemoDlqSqsQueue.Arn
+  SampleSqsBatchProcessorFunction:
+    Description: "SQS Batch Handler - Lambda Function ARN"
+    Value: !GetAtt SampleSqsBatchProcessorFunction.Arn
+  SampleSqsBatchProcessorFunctionRole:
+    Description: "Implicit IAM Role created for SQS Lambda Function ARN"
+    Value: !GetAtt SampleSqsBatchProcessorFunctionRole.Arn

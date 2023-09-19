@@ -132,4 +132,24 @@ public interface IPowertoolsConfigurations
     /// </summary>
     /// <value><c>true</c> if [Idempotency is disabled]; otherwise, <c>false</c>.</value>
     bool IdempotencyDisabled { get; }
+
+    /// <summary>
+    /// Gets the error handling policy to apply during batch processing.
+    /// </summary>
+    /// <value>Defaults to 'DeriveFromEvent'.</value>
+    string BatchProcessingErrorHandlingPolicy { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether Batch processing in parallel is enabled.
+    /// </summary>
+    /// <value>Defaults to false</value>
+    bool BatchParallelProcessingEnabled { get; }
+    
+    /// <summary>
+    /// Gets the maximum degree of parallelism to apply during batch processing.
+    /// </summary>
+    /// <value>Defaults to 1 (no parallelism). Specify -1 to automatically use the value of <see cref="System.Environment.ProcessorCount">ProcessorCount</see>.</value>
+    int BatchProcessingMaxDegreeOfParallelism { get; }
+    
+    
 }
