@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: partial batch response sample
+
+Globals:
+  Function:
+    Timeout: 5
+    MemorySize: 256
+    Runtime: nodejs18.x
+    Tracing: Active
+    Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: powertools-dotnet-sample-batch-processing
+        POWERTOOLS_LOG_LEVEL: Debug
+        POWERTOOLS_LOGGER_CASE: PascalCase # Allowed values are: CamelCase, PascalCase and SnakeCase
+        POWERTOOLS_BATCH_ERROR_HANDLING_POLICY: DeriveFromEvent
+        POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM: 1
+        POWERTOOLS_BATCH_PARALLEL_ENABLED: false
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::SqsHandlerUsingAttribute
+      Policies:
+        - SQSPollerPolicy:
+            QueueName: !GetAtt SampleQueue.QueueName
+        - KMSDecryptPolicy:
+            KeyId: !Ref CustomerKey
+      Events:
+        Batch:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SampleQueue.Arn
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+
+  SampleDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref CustomerKey
+
+  SampleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 30 # Fn timeout * 6
+      SqsManagedSseEnabled: true
+      RedrivePolicy:
+        maxReceiveCount: 2
+        deadLetterTargetArn: !GetAtt SampleDLQ.Arn
+      KmsMasterKeyId: !Ref CustomerKey
+  
+  # --------------
+  # KMS key for encrypted queues
+  CustomerKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS key for encrypted queues
+      Enabled: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow use of the key
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey
+            Resource: '*'
+
+  CustomerKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/powertools-batch-sqs-demo
+      TargetKeyId: !Ref CustomerKey

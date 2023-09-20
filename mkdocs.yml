@@ -18,6 +18,7 @@ nav:
   - Utilities:
       - utilities/parameters.md
       - utilities/idempotency.md
+      - utilities/batch-processing.md
 
 theme:
   name: material

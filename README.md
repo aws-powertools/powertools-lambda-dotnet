@@ -29,6 +29,8 @@ Powertools for AWS Lambda (.NET) provides three core utilities:
 
 * **[Idempotency (developer preview)](https://docs.powertools.aws.dev/lambda/dotnet/utilities/idempotency/)** - The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
 
+* **[Batch Processing (developer preview)](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/)** - The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
+
 ### Installation
 
 The Powertools for AWS Lambda (.NET) utilities (.NET 6) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*) or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
@@ -53,6 +55,10 @@ The Powertools for AWS Lambda (.NET) utilities (.NET 6) are available as NuGet p
 
     `dotnet add package AWS.Lambda.Powertools.Idempotency`
 
+* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.BatchProcessing):
+
+    `dotnet add package AWS.Lambda.Powertools.BatchProcessing`
+
 ## Examples
 
 We have provided examples focused specifically on each of the utilities. Each solution comes with an AWS Serverless Application Model (AWS SAM) templates to run your functions as a Zip package using the AWS Lambda .NET 6 managed runtime; or as a container package using the AWS base images for .NET.
@@ -63,6 +69,7 @@ We have provided examples focused specifically on each of the utilities. Each so
 * **[Serverless API example](examples/ServerlessApi/)**
 * **[Parameters example](examples/Parameters/)**
 * **[Idempotency example](examples/Idempotency)**
+* **[Batch Processing example](examples/BatchProcessing)**
 
 ## Other members of the Powertools for AWS Lambda family
 
