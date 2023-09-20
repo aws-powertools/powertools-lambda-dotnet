@@ -111,6 +111,9 @@ Resources:
             FunctionResponseTypes: 
               - ReportBatchItemFailures
   
+  # --------------
+  # Batch Processing for DynamoDb
+  
   SampleDynamoDBTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -125,8 +128,38 @@ Resources:
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
         
+  DemoDynamoDBStreamProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: powertools-dotnet-sample-batch-processor-dynamodb
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::DynamoDbStreamHandlerUsingAttribute
+      Policies: AWSLambdaDynamoDBExecutionRole
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt SampleDynamoDBTable.StreamArn
+            BatchSize: 100
+            StartingPosition: TRIM_HORIZON
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+        
   # --------------
   # Batch Processing for Kinesis Data Streams
+  
+  DemoKinesisStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      ShardCount: 1
+
+  StreamConsumer:
+    Type: "AWS::Kinesis::StreamConsumer"
+    Properties:
+      StreamARN: !GetAtt DemoKinesisStream.Arn
+      ConsumerName: KinesisBatchHandlerConsumer
+  
+  
   SampleKinesisEventBatchProcessorFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -135,15 +168,13 @@ Resources:
       CodeUri: ./src/HelloWorld/
       Handler: HelloWorld::HelloWorld.Function::KinesisEventHandlerUsingAttribute
       MemorySize: 256
-      # ReservedConcurrentExecutions: 1
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - KinesisStreamReadPolicy:
-            StreamName: !Ref SampleKinesisDataStream
-      Environment:
-        Variables:
-          POWERTOOLS_BATCH_PROCESSING_ERROR_HANDLING_POLICY: DeriveFromEvent
-          POWERTOOLS_BATCH_PROCESSING_MAX_DEGREE_OF_PARALLELISM: 1
+      Events:
+        Kinesis:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt StreamConsumer.ConsumerARN
+            StartingPosition: LATEST
+            BatchSize: 2
 
 Outputs:
   DemoSqsQueue:
@@ -155,6 +186,9 @@ Outputs:
   SampleSqsBatchProcessorFunction:
     Description: "SQS Batch Handler - Lambda Function ARN"
     Value: !GetAtt SampleSqsBatchProcessorFunction.Arn
-  SampleSqsBatchProcessorFunctionRole:
-    Description: "Implicit IAM Role created for SQS Lambda Function ARN"
-    Value: !GetAtt SampleSqsBatchProcessorFunctionRole.Arn
+  DemoKinesisQueue:
+    Description: "ARN for Kinesis Stream"
+    Value: !GetAtt DemoKinesisStream.Arn
+  DemoSQSConsumerFunction:
+    Description: "SQS Batch Handler - Lambda Function ARN"
+    Value: !GetAtt SampleKinesisEventBatchProcessorFunction.Arn
