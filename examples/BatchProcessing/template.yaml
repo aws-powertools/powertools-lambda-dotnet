@@ -152,6 +152,9 @@ Resources:
     Type: AWS::Kinesis::Stream
     Properties:
       ShardCount: 1
+      StreamEncryption:
+        EncryptionType: KMS
+        KeyId: !Ref CustomerKey
 
   StreamConsumer:
     Type: "AWS::Kinesis::StreamConsumer"
