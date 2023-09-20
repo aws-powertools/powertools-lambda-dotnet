@@ -38,6 +38,7 @@ body:
         - Metrics
         - Parameters
         - Idempotency
+        - Batch Processing
         - Feature flags
         - Other
   - type: textarea
