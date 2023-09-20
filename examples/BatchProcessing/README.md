@@ -33,7 +33,6 @@ You will need the following for local testing.
 To build and deploy your application for the first time, run the following in your shell. Make sure the `template.yaml` file is in your current directory:
 
 ```bash
-cd deploy/sqs
 sam build
 sam deploy --guided
 ```
