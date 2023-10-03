@@ -65,15 +65,15 @@ public class Metrics : IMetrics
     internal Metrics(IPowertoolsConfigurations powertoolsConfigurations, string nameSpace = null, string service = null,
         bool raiseOnEmptyMetrics = false, bool captureColdStartEnabled = false)
     {
-        if (_instance != null) return;
+        _instance ??= this;
 
-        _instance = this;
         _powertoolsConfigurations = powertoolsConfigurations;
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
         _captureColdStartEnabled = captureColdStartEnabled;
         _context = InitializeContext(nameSpace, service, null);
         
         _powertoolsConfigurations.SetExecutionEnvironment(this);
+        
     }
 
     /// <summary>
