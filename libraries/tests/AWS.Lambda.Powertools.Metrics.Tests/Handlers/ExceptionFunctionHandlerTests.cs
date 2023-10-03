@@ -36,7 +36,5 @@ public sealed class ExceptionFunctionHandlerTests
         // Assert
         var tracedException = await Record.ExceptionAsync(Handle);
         Assert.Null(tracedException);
-        //Assert.StartsWith("at AWS.Lambda.Powertools.Metrics.Tests.Handlers.ExceptionFunctionHandler.ThisThrows()", tracedException.StackTrace?.TrimStart());
-
     }
 }
