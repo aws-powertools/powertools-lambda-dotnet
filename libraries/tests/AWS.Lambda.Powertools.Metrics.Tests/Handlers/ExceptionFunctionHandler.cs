@@ -22,16 +22,33 @@ public class ExceptionFunctionHandler
 
         return Task.FromResult(input.ToUpper(CultureInfo.InvariantCulture));
     }
+    
+    [Metrics(Namespace = "ns", Service = "svc")]
+    public Task<string> HandleDecoratorOutsideHandlerException(string input)
+    {
+        MethodDecorated();
+        
+        Metrics.AddMetric($"Metric Name", 1, MetricUnit.Count);
+        
+        ThisThrowsDecorated();
+        
+        return Task.FromResult(input.ToUpper(CultureInfo.InvariantCulture));
+    }
 
     [Metrics(Namespace = "ns", Service = "svc")]
     private void MethodDecorated()
     {
-        // NOOP
         Metrics.AddMetric($"Metric Name", 1, MetricUnit.Count);
         Metrics.AddMetric($"Metric Name Decorated", 1, MetricUnit.Count);
     }
 
     private void ThisThrows()
+    {
+        throw new NullReferenceException();
+    }
+    
+    [Metrics(Namespace = "ns", Service = "svc")]
+    private void ThisThrowsDecorated()
     {
         throw new NullReferenceException();
     }
