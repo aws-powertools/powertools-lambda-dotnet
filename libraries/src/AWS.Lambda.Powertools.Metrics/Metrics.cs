@@ -25,13 +25,13 @@ namespace AWS.Lambda.Powertools.Metrics;
 ///     Implements the <see cref="IMetrics" />
 /// </summary>
 /// <seealso cref="IMetrics" />
-public class Metrics : IMetrics
+public class Metrics : IMetrics, IDisposable
 {
     /// <summary>
     ///     The instance
     /// </summary>
     private static IMetrics _instance;
-
+    
     /// <summary>
     ///     The context
     /// </summary>
@@ -177,19 +177,19 @@ public class Metrics : IMetrics
     /// <summary>
     ///     Implements interface that sets default dimension list
     /// </summary>
-    /// <param name="defaultDimensions">Default Dimension List</param>
+    /// <param name="defaultDimension">Default Dimension List</param>
     /// <exception cref="System.ArgumentNullException">
     ///     'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty
     ///     values are not allowed.
     /// </exception>
-    void IMetrics.SetDefaultDimensions(Dictionary<string, string> defaultDimensions)
+    void IMetrics.SetDefaultDimensions(Dictionary<string, string> defaultDimension)
     {
-        foreach (var item in defaultDimensions)
+        foreach (var item in defaultDimension)
             if (string.IsNullOrWhiteSpace(item.Key) || string.IsNullOrWhiteSpace(item.Value))
                 throw new ArgumentNullException(
                     $"'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty values are not allowed.");
 
-        _context.SetDefaultDimensions(DictionaryToList(defaultDimensions));
+        _context.SetDefaultDimensions(DictionaryToList(defaultDimension));
     }
 
     /// <summary>
@@ -272,7 +272,21 @@ public class Metrics : IMetrics
     /// </summary>
     public void Dispose()
     {
-        _instance.Flush();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="disposing"></param>
+    protected virtual void Dispose(bool disposing)
+    {
+        // Cleanup
+        if (disposing)
+        {
+            _instance.Flush();
+        }
     }
 
     /// <summary>
