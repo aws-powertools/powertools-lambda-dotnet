@@ -91,11 +91,11 @@ public class Metrics : IMetrics, IDisposable
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(
-                $"'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+                nameof(key), "'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
         
         if (value < 0) {
             throw new ArgumentException(
-                "'AddMetric' method requires a valid metrics value. Value must be >= 0.");
+                "'AddMetric' method requires a valid metrics value. Value must be >= 0.", nameof(value));
         }
 
         var metrics = _context.GetMetrics();
@@ -150,8 +150,8 @@ public class Metrics : IMetrics, IDisposable
     void IMetrics.AddDimension(string key, string value)
     {
         if (string.IsNullOrWhiteSpace(key))
-            throw new ArgumentNullException(
-                $"'AddDimension' method requires a valid dimension key. 'Null' or empty values are not allowed.");
+            throw new ArgumentNullException(nameof(key),
+                "'AddDimension' method requires a valid dimension key. 'Null' or empty values are not allowed.");
 
         _context.AddDimension(key, value);
     }
@@ -168,8 +168,8 @@ public class Metrics : IMetrics, IDisposable
     void IMetrics.AddMetadata(string key, object value)
     {
         if (string.IsNullOrWhiteSpace(key))
-            throw new ArgumentNullException(
-                $"'AddMetadata' method requires a valid metadata key. 'Null' or empty values are not allowed.");
+            throw new ArgumentNullException(nameof(key),
+                "'AddMetadata' method requires a valid metadata key. 'Null' or empty values are not allowed.");
 
         _context.AddMetadata(key, value);
     }
@@ -186,8 +186,8 @@ public class Metrics : IMetrics, IDisposable
     {
         foreach (var item in defaultDimension)
             if (string.IsNullOrWhiteSpace(item.Key) || string.IsNullOrWhiteSpace(item.Value))
-                throw new ArgumentNullException(
-                    $"'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty values are not allowed.");
+                throw new ArgumentNullException(nameof(item.Key),
+                    "'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty values are not allowed.");
 
         _context.SetDefaultDimensions(DictionaryToList(defaultDimension));
     }
@@ -258,8 +258,8 @@ public class Metrics : IMetrics, IDisposable
         Dictionary<string, string> defaultDimensions, MetricResolution metricResolution)
     {
         if (string.IsNullOrWhiteSpace(metricName))
-            throw new ArgumentNullException(
-                $"'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+            throw new ArgumentNullException(nameof(metricName),
+                "'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
 
         using var context = InitializeContext(nameSpace, service, defaultDimensions);
         context.AddMetric(metricName, value, unit, metricResolution);
