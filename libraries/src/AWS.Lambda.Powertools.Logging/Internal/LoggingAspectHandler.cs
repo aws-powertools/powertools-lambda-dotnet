@@ -288,6 +288,8 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         jsonOptions.Converters.Add(new ExceptionConverter());
         jsonOptions.Converters.Add(new MemoryStreamConverter());
         jsonOptions.Converters.Add(new ConstantClassConverter());
+        jsonOptions.Converters.Add(new DateOnlyConverter());
+        jsonOptions.Converters.Add(new TimeOnlyConverter());
         return jsonOptions;
     }
 
