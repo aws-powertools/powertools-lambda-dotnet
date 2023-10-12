@@ -35,12 +35,12 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     The is cold start
     /// </summary>
-    private bool _isColdStart = true;
+    private static bool _isColdStart = true;
 
     /// <summary>
     ///     The initialize context
     /// </summary>
-    private bool _initializeContext = true;
+    private static bool _initializeContext = true;
 
     /// <summary>
     ///     Clear state?
@@ -388,6 +388,8 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// </summary>
     internal static void ResetForTest()
     {
+        _isColdStart = true;
+        _initializeContext = true;
         PowertoolsLambdaContext.Clear();
         Logger.LoggerProvider = null;
         Logger.RemoveAllKeys();
