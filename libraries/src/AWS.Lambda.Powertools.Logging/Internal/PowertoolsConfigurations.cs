@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using AWS.Lambda.Powertools.Common;
 using Microsoft.Extensions.Logging;
 
@@ -36,7 +37,12 @@ internal static class PowertoolsConfigurationsExtension
         if (logLevel.HasValue)
             return logLevel.Value;
 
-        if (Enum.TryParse((powertoolsConfigurations.LogLevel ?? "").Trim(), true, out LogLevel result))
+        var logFromEnv = (powertoolsConfigurations.LogLevel ?? "").Trim();
+
+        if (AwsLogLevelMapper.TryGetValue(logFromEnv.ToUpper(), out var awsLogLevel))
+            logFromEnv = awsLogLevel;
+        
+        if (Enum.TryParse(logFromEnv, true, out LogLevel result))
             return result;
 
         return LoggingConstants.DefaultLogLevel;
@@ -53,4 +59,14 @@ internal static class PowertoolsConfigurationsExtension
 
         return LoggingConstants.DefaultLoggerOutputCase;
     }
+
+    private static Dictionary<string, string> AwsLogLevelMapper = new()
+    {
+        { "TRACE", "TRACE" },
+        { "DEBUG", "DEBUG" },
+        { "INFO", "INFORMATION" },
+        { "WARN", "WARNING" },
+        { "ERROR", "ERROR" },
+        { "FATAL", "CRITICAL" }
+    };
 }

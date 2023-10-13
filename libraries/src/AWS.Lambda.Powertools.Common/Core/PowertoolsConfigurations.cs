@@ -149,6 +149,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
 
     /// <summary>
     ///     Gets the log level.
+    ///     Dont' use this method directly use GetLogLevel extension method instead
     /// </summary>
     /// <value>The log level.</value>
     public string LogLevel =>
