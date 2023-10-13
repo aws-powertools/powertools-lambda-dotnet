@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -21,8 +21,11 @@ using System.Linq;
 using System.Text;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Tests.Utilities;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NSubstitute.Extensions;
+using NSubstitute.ReceivedExtensions;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests
@@ -34,7 +37,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         {
             Logger.UseDefaultFormatter();
         }
-        
+
         private static void Log_WhenMinimumLevelIsBelowLogLevel_Logs(LogLevel logLevel, LogLevel minimumLevel)
         {
             // Arrange
@@ -1219,7 +1222,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 $"{Constants.FeatureContextIdentifier}/Logger/{assemblyVersion}");
             env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
         }
-        
+
         [Fact]
         public void Log_Should_Serialize_DateOnly()
         {
@@ -1260,7 +1263,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 )
             );
         }
-        
+
         [Fact]
         public void Log_Should_Serialize_TimeOnly()
         {
@@ -1300,6 +1303,75 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     s.Contains("\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\",\"time\":\"12:00:00\"}")
                 )
             );
+        }
+
+        [Theory]
+        [InlineData(true, LogLevel.Warning)]
+        [InlineData(false, LogLevel.Critical)]
+        public void Log_Should_Use_Lambda_Log_Level_When_Enabled(bool willLog, LogLevel logLevel)
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+
+            var environment = Substitute.For<IPowertoolsEnvironment>();
+            environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL").Returns("Error");
+            environment.GetEnvironmentVariable("AWS_LAMBDA_LOG_LEVEL").Returns(logLevel.ToString());
+
+            var systemWrapper = new SystemWrapperMock(environment);
+            var configuration = new PowertoolsConfigurations(systemWrapper);
+
+            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
+                new LoggerConfiguration
+                {
+                    LoggerOutputCase = LoggerOutputCase.CamelCase
+                });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2",
+                Time = new TimeOnly(12, 0, 0)
+            };
+
+            logger.LogWarning(message);
+            
+            Assert.True(logger.IsEnabled(logLevel));
+            Assert.Equal(logLevel.ToString(), configuration.LogLevel);
+            Assert.Equal(willLog, systemWrapper.LogMethodCalled);
+        }
+
+        [Theory]
+        [InlineData(true, LogLevel.Warning)]
+        [InlineData(false, LogLevel.Critical)]
+        public void Log_Should_Use_Powertools_Log_Level_When_Lambda_Log_Level_Unavailable(bool willLog, LogLevel logLevel)
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var environment = Substitute.For<IPowertoolsEnvironment>();
+            environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL").Returns(logLevel.ToString());
+
+            var systemWrapper = new SystemWrapperMock(environment);
+            var configuration = new PowertoolsConfigurations(systemWrapper);
+
+            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
+                new LoggerConfiguration
+                {
+                    LoggerOutputCase = LoggerOutputCase.CamelCase
+                });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2",
+                Time = new TimeOnly(12, 0, 0)
+            };
+
+            logger.LogWarning(message);
+
+            // Assert
+            Assert.True(logger.IsEnabled(logLevel));
+            Assert.Equal(logLevel.ToString(), configuration.LogLevel);
+            Assert.Equal(willLog, systemWrapper.LogMethodCalled);
         }
     }
 }
