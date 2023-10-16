@@ -153,7 +153,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// </summary>
     /// <value>The log level.</value>
     public string LogLevel =>
-        GetEnvironmentVariableOrDefault(Constants.AwsLogLevelNameEnv, GetEnvironmentVariable(Constants.LogLevelNameEnv));
+        GetEnvironmentVariableOrDefault(Constants.LogLevelNameEnv, GetEnvironmentVariable(Constants.AwsLogLevelNameEnv));
 
     /// <summary>
     ///     Gets the logger sample rate.
