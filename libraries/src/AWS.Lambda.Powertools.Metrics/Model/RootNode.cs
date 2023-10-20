@@ -43,14 +43,14 @@ public class RootNode
             var targetMembers = new Dictionary<string, object>();
 
             foreach (var dimension in AWS.ExpandAllDimensionSets()) targetMembers.Add(dimension.Key, dimension.Value);
-
-            foreach (var metadata in AWS.CustomMetadata) targetMembers.Add(metadata.Key, metadata.Value);
-
+            
             foreach (var metricDefinition in AWS.GetMetrics())
             {
                 var values = metricDefinition.Values;
                 targetMembers.Add(metricDefinition.Name, values.Count == 1 ? values[0] : values);
             }
+            
+            foreach (var metadata in AWS.CustomMetadata) targetMembers.TryAdd(metadata.Key, metadata.Value);
 
             return targetMembers;
         }
