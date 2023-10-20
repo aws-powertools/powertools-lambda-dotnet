@@ -467,7 +467,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             // Assert
             var exception = Assert.Throws<ArgumentException>(act);
-            Assert.Equal("'AddMetric' method requires a valid metrics value. Value must be >= 0.", exception.Message);
+            Assert.Equal("'AddMetric' method requires a valid metrics value. Value must be >= 0. (Parameter 'value')", exception.Message);
 
             // RESET
             handler.ResetForTest();
