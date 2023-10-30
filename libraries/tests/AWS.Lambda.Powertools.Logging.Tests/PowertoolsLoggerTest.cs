@@ -1219,5 +1219,87 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 $"{Constants.FeatureContextIdentifier}/Logger/{assemblyVersion}");
             env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
         }
+        
+        [Fact]
+        public void Log_Should_Serialize_DateOnly()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            configurations.Service.Returns(service);
+            configurations.LogLevel.Returns(logLevel.ToString());
+
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+            systemWrapper.GetRandom().Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+                new LoggerConfiguration
+                {
+                    Service = null,
+                    MinimumLevel = null,
+                    LoggerOutputCase = LoggerOutputCase.CamelCase
+                });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2",
+                Date = new DateOnly(2022, 1, 1)
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Received(1).LogLine(
+                Arg.Is<string>(s =>
+                    s.Contains("\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\",\"date\":\"2022-01-01\"}")
+                )
+            );
+        }
+        
+        [Fact]
+        public void Log_Should_Serialize_TimeOnly()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            configurations.Service.Returns(service);
+            configurations.LogLevel.Returns(logLevel.ToString());
+
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+            systemWrapper.GetRandom().Returns(randomSampleRate);
+
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+                new LoggerConfiguration
+                {
+                    Service = null,
+                    MinimumLevel = null,
+                    LoggerOutputCase = LoggerOutputCase.CamelCase
+                });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+                PropTwo = "Value 2",
+                Time = new TimeOnly(12, 0, 0)
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            systemWrapper.Received(1).LogLine(
+                Arg.Is<string>(s =>
+                    s.Contains("\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\",\"time\":\"12:00:00\"}")
+                )
+            );
+        }
     }
 }

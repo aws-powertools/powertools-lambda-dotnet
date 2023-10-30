@@ -467,7 +467,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             // Assert
             var exception = Assert.Throws<ArgumentException>(act);
-            Assert.Equal("'AddMetric' method requires a valid metrics value. Value must be >= 0.", exception.Message);
+            Assert.Equal("'AddMetric' method requires a valid metrics value. Value must be >= 0. (Parameter 'value')", exception.Message);
 
             // RESET
             handler.ResetForTest();
@@ -546,7 +546,47 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var result = consoleOut.ToString();
 
             // Assert
-            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}],\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]}]},\"Service\":\"testService\",\"functionVersion\":\"$LATEST\",\"env\":\"dev\",\"Time\":100.7}"
+            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}],\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]}]},\"Service\":\"testService\",\"functionVersion\":\"$LATEST\",\"Time\":100.7,\"env\":\"dev\"}"
+                , result);
+
+            // Reset
+            handler.ResetForTest();
+        }
+        
+        [Fact]
+        public void When_Metrics_And_Metadata_Added_With_Same_Key_Should_Only_Write_Metrics()
+        {
+            // Arrange
+            var methodName = Guid.NewGuid().ToString();
+            var consoleOut = new StringWriter();
+            Console.SetOut(consoleOut);
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+
+            var metrics = new Metrics(
+                configurations,
+                nameSpace: "dotnet-powertools-test",
+                service: "testService"
+            );
+
+            var handler = new MetricsAspectHandler(
+                metrics,
+                false
+            );
+
+            var eventArgs = new AspectEventArgs { Name = methodName };
+
+            // Act 
+            handler.OnEntry(eventArgs);
+            Metrics.AddDimension("functionVersion", "$LATEST");
+            Metrics.AddMetric("Time", 100.7, MetricUnit.Milliseconds);
+            Metrics.AddMetadata("Time", "dev");
+            handler.OnExit(eventArgs);
+
+            var result = consoleOut.ToString();
+
+            // Assert
+            // No Metadata key was added
+            Assert.Contains("CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}],\"Dimensions\":[[\"Service\"],[\"functionVersion\"]]}]},\"Service\":\"testService\",\"functionVersion\":\"$LATEST\",\"Time\":100.7}"
                 , result);
 
             // Reset

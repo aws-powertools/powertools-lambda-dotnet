@@ -23,7 +23,7 @@ namespace AWS.Lambda.Powertools.Metrics;
 ///     Implements the <see cref="System.IDisposable" />
 /// </summary>
 /// <seealso cref="System.IDisposable" />
-public interface IMetrics : IDisposable
+public interface IMetrics 
 {
     /// <summary>
     ///     Adds metric
