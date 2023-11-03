@@ -20,8 +20,6 @@ using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
-using System.Text.Json.Serialization;
-
 /// <summary>
 ///     Class Metrics.
 ///     Implements the <see cref="IMetrics" />

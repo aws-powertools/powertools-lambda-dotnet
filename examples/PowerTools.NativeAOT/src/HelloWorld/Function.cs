@@ -40,6 +40,8 @@ public class Function
     }
 
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+    [Metrics]
+    [Logging(LogEvent = true)]
     public async Task<APIGatewayProxyResponse> FunctionHandler(
         APIGatewayProxyRequest apigwProxyEvent,
         ILambdaContext context)
@@ -58,12 +60,6 @@ public class Function
         Logger.AppendKeys(lookupInfo);
 
         Logger.LogInformation("Getting ip address from external service");
-
-        // Add Metric to capture the amount of time 
-        Metrics.PushSingleMetric(
-            "CallingIP",
-            1,
-            MetricUnit.Count);
 
         var location = await GetCallingIp();
 
@@ -88,11 +84,6 @@ public class Function
         try
         {
             await SaveRecordInDynamo(lookupRecord);
-
-            Metrics.AddMetric(
-                "SuccessfulWrites",
-                1,
-                MetricUnit.Count);
 
             return new APIGatewayProxyResponse
             {
@@ -162,6 +153,8 @@ public class Function
                 {"Greeting", new AttributeValue(lookupRecord.Greeting)},
                 {"IpAddress", new AttributeValue(lookupRecord.IpAddress)},
             })!;
+            
+            Metrics.AddMetric("RecordSaved", 1, MetricUnit.Count);
         }
         catch (AmazonDynamoDBException e)
         {
