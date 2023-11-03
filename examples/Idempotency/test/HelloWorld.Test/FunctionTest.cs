@@ -14,22 +14,11 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.Model;
 using Xunit;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Containers;
-using Moq;
-using Moq.Protected;
 using Xunit.Abstractions;
 
 namespace HelloWorld.Tests
@@ -53,28 +42,14 @@ namespace HelloWorld.Tests
             // arrange
             var requestId = Guid.NewGuid().ToString("D");
             var accountId = Guid.NewGuid().ToString("D");
-            var location = "192.158.1.38";
+
             Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME","powertools-dotnet-idempotency-sample");
             Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL","INFO");
             Environment.SetEnvironmentVariable("TABLE_NAME",_tableName);
             
-            var handlerMock = new Mock<HttpMessageHandler>();
-            handlerMock
-                .Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.IsAny<HttpRequestMessage>(),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync(new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent(location)
-                });
-            
             var request = new APIGatewayProxyRequest
             {
-                Body = "{\"address\": \"https://checkip.amazonaws.com\"}",
+                Body = "{\"address\": \"Hello World\"}",
                 RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
                 {
                     RequestId = requestId,
@@ -89,25 +64,11 @@ namespace HelloWorld.Tests
                 MemoryLimitInMB = 215,
                 AwsRequestId = Guid.NewGuid().ToString("D")
             };
-            
-            var body = new Dictionary<string, string>
-            {
-                { "RequestId", requestId },
-                { "Greeting", "Hello Powertools for AWS Lambda (.NET)" },
-                { "IpAddress", location },
-            };
 
-            var expectedResponse = new APIGatewayProxyResponse
-            {
-                Body = JsonSerializer.Serialize(body),
-                StatusCode = 200,
-                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
-            };
-            
             // act
-            var function = new Function(_client, new HttpClient(handlerMock.Object));
+            var function = new Function(_client);
+            
             var firstResponse = await function.FunctionHandler(request, context);
-            await function.FunctionHandler(request, context);
             
             var secondCallContext = new TestLambdaContext
             {
@@ -116,6 +77,7 @@ namespace HelloWorld.Tests
                 MemoryLimitInMB = 215,
                 AwsRequestId = Guid.NewGuid().ToString("D")
             };
+
             var secondResponse = await function.FunctionHandler(request, secondCallContext);
             
             _testOutputHelper.WriteLine("First Response: \n" + firstResponse.Body);
@@ -123,9 +85,8 @@ namespace HelloWorld.Tests
             
             // assert
             Assert.Equal(firstResponse.Body, secondResponse.Body);
-            Assert.Equal(expectedResponse.Body, secondResponse.Body);
-            Assert.Equal(expectedResponse.Headers, secondResponse.Headers);
-            Assert.Equal(expectedResponse.StatusCode, secondResponse.StatusCode);
+            Assert.Equal(firstResponse.Headers, secondResponse.Headers);
+            Assert.Equal(firstResponse.StatusCode, secondResponse.StatusCode);
         }
 
     }

@@ -35,7 +35,13 @@ public interface IPersistenceStore
     Task<DataRecord> GetRecord(string idempotencyKey);
     
     /// <summary>
-    /// Add a DataRecord to persistence store if it does not already exist with that key
+    /// Add a DataRecord to persistence store if it does not already exist with that key.
+    /// Stores the given idempotency record in the DDB store. If there
+    /// is an existing record that has expired - either due to the
+    /// cache expiry or due to the in_progress_expiry - the record
+    /// will be overwritten and the idempotent operation can continue.
+    /// Note: This method writes only expiry and status information - not
+    ///       the results of the operation itself.
     /// </summary>
     /// <param name="record">record DataRecord instance</param>
     /// <param name="now"></param>

@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using AWS.Lambda.Powertools.Common;
 
@@ -116,14 +117,15 @@ internal class TracingAspectHandler : IMethodAspectHandler
         if (_captureAnnotations)
         {
             _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
-
-            _isColdStart = false;
+            
             _captureAnnotations = false;
             _isAnnotationsCaptured = true;
 
             if (_powertoolsConfigurations.IsServiceDefined)
                 _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
         }
+        
+        _isColdStart = false;
     }
 
     /// <summary>
@@ -152,14 +154,12 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Called when [exception].
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="eventArgs">
     ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
     ///     event data.
     /// </param>
     /// <param name="exception">The exception.</param>
-    /// <returns>T.</returns>
-    public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
+    public void OnException(AspectEventArgs eventArgs, Exception exception)
     {
         if (CaptureError())
         {
@@ -187,7 +187,9 @@ internal class TracingAspectHandler : IMethodAspectHandler
             );
         }
 
-        throw exception;
+        // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
+        // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
+        ExceptionDispatchInfo.Capture(exception).Throw();
     }
 
     /// <summary>

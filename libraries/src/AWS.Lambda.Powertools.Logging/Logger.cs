@@ -51,6 +51,11 @@ public class Logger
     internal static ILoggerProvider LoggerProvider { get; set; }
 
     /// <summary>
+    ///     The logger formatter instance
+    /// </summary>
+    private static ILogFormatter _logFormatter;
+
+    /// <summary>
     ///     Gets the scope.
     /// </summary>
     /// <value>The scope.</value>
@@ -421,7 +426,7 @@ public class Logger
     {
         LoggerInstance.LogWarning(message, args);
     }
-    
+
     #endregion
 
     #region Error
@@ -550,7 +555,7 @@ public class Logger
     {
         LoggerInstance.LogCritical(message, args);
     }
-    
+
     #endregion
 
     #region Log
@@ -623,9 +628,9 @@ public class Logger
     }
 
     #endregion
-    
+
     #endregion
-    
+
     #region JSON Logger Methods
 
     /// <summary>
@@ -775,7 +780,7 @@ public class Logger
     #region ExtraKeys Logger Methods
 
     #region Debug
-    
+
     /// <summary>
     /// Formats and writes a debug log message.
     /// </summary>
@@ -827,11 +832,11 @@ public class Logger
     {
         LoggerInstance.LogDebug(extraKeys, message, args);
     }
-    
+
     #endregion
 
     #region Trace
-    
+
     /// <summary>
     /// Formats and writes a trace log message.
     /// </summary>
@@ -887,7 +892,7 @@ public class Logger
     #endregion
 
     #region Information
-    
+
     /// <summary>
     /// Formats and writes an informational log message.
     /// </summary>
@@ -939,7 +944,7 @@ public class Logger
     {
         LoggerInstance.LogInformation(extraKeys, message, args);
     }
-    
+
     #endregion
 
     #region Warning
@@ -995,7 +1000,7 @@ public class Logger
     {
         LoggerInstance.LogWarning(extraKeys, message, args);
     }
-    
+
     #endregion
 
     #region Error
@@ -1111,7 +1116,7 @@ public class Logger
     #endregion
 
     #region Log
-    
+
     /// <summary>
     /// Formats and writes a log message at the specified log level.
     /// </summary>
@@ -1167,8 +1172,34 @@ public class Logger
     {
         LoggerInstance.Log(logLevel, extraKeys, message, args);
     }
-    
+
     #endregion
+
+    #endregion
+
+    #region Custom Log Formatter
+
+    /// <summary>
+    ///     Set the log formatter.
+    /// </summary>
+    /// <param name="logFormatter">The log formatter.</param>
+    public static void UseFormatter(ILogFormatter logFormatter)
+    {
+        _logFormatter = logFormatter ?? throw new ArgumentNullException(nameof(logFormatter));
+    }
+
+    /// <summary>
+    ///     Set the log formatter to default.
+    /// </summary>
+    public static void UseDefaultFormatter()
+    {
+        _logFormatter = null;
+    }
+
+    /// <summary>
+    ///     Returns the log formatter.
+    /// </summary>
+    internal static ILogFormatter GetFormatter() => _logFormatter;
 
     #endregion
 }

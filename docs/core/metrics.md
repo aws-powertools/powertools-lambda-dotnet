@@ -311,6 +311,9 @@ You can add high-cardinality data as part of your Metrics log with `AddMetadata`
 !!! info
     **This will not be available during metrics visualization** - Use **dimensions** for this purpose
 
+!!! info
+    Adding metadata with a key that is the same as an existing metric will be ignored
+
 === "Function.cs"
 
     ```csharp hl_lines="9"

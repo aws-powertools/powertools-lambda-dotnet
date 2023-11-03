@@ -113,8 +113,9 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     /// <param name="data">Payload</param>
     /// <param name="now">The current date time</param>
+    /// <param name="remainingTimeInMs">The remaining time from lambda execution</param>
     /// <exception cref="IdempotencyItemAlreadyExistsException"></exception>
-    public virtual async Task SaveInProgress(JsonDocument data, DateTimeOffset now)
+    public virtual async Task SaveInProgress(JsonDocument data, DateTimeOffset now, double? remainingTimeInMs)
     {
         var idempotencyKey = GetHashedIdempotencyKey(data);
         
@@ -122,13 +123,21 @@ public abstract class BasePersistenceStore : IPersistenceStore
         {
             throw new IdempotencyItemAlreadyExistsException();
         }
+        
+        long? inProgressExpirationMsTimestamp = null;
+        if (remainingTimeInMs.HasValue)
+        {
+            inProgressExpirationMsTimestamp = now.AddMilliseconds(remainingTimeInMs.Value).ToUnixTimeMilliseconds();
+        }
 
         var record = new DataRecord(
             idempotencyKey,
             DataRecord.DataRecordStatus.INPROGRESS,
             GetExpiryEpochSecond(now),
             null,
-            GetHashedPayload(data)
+            GetHashedPayload(data),
+            inProgressExpirationMsTimestamp
+            
         );
         await PutRecord(record, now);
     }
@@ -290,7 +299,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
             node = JsonDocument.Parse(result).RootElement;
         }
 
-        if (IsMissingIdemPotencyKey(node))
+        if (IsMissingIdempotencyKey(node))
         {
             if (_idempotencyOptions.ThrowOnNoIdempotencyKey)
             {
@@ -308,7 +317,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     /// <param name="data"></param>
     /// <returns>True if the Idempotency key is missing</returns>
-    private static bool IsMissingIdemPotencyKey(JsonElement data)
+    private static bool IsMissingIdempotencyKey(JsonElement data)
     {
         return data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined
             || (data.ValueKind == JsonValueKind.String && data.ToString() == string.Empty);

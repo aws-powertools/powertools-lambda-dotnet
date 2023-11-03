@@ -15,8 +15,10 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Amazon.Lambda.Core;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
@@ -74,8 +76,12 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         {
             return base.WrapSync(target, args, eventArgs);
         }
-        
-        var payload = args is not null && args.Any() ? JsonDocument.Parse(JsonSerializer.Serialize(args[0])) : null;
+        if (eventArgs.ReturnType == typeof(void))
+        {
+            throw new IdempotencyConfigurationException("The annotated method doesn't return anything. Unable to perform idempotency on void return type");
+        }
+
+        var payload = GetPayload<T>(eventArgs);
         if (payload == null)
         {
             throw new IdempotencyConfigurationException("Unable to get payload from the method. Ensure there is at least one parameter or that you use @IdempotencyKey");
@@ -83,7 +89,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
 
         Task<T> ResultDelegate() => Task.FromResult(target(args));
 
-        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload);
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload,GetContext(eventArgs));
         if (idempotencyHandler == null)
         {
             throw new Exception("Failed to create an instance of IdempotencyAspectHandler");
@@ -107,8 +113,13 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         {
             return await base.WrapAsync(target, args, eventArgs);
         }
+
+        if (eventArgs.ReturnType == typeof(void))
+        {
+            throw new IdempotencyConfigurationException("The annotated method doesn't return anything. Unable to perform idempotency on void return type");
+        }
         
-        var payload = args is not null && args.Any() ? JsonDocument.Parse(JsonSerializer.Serialize(args[0])) : null;
+        var payload = GetPayload<T>(eventArgs);
         if (payload == null)
         {
             throw new IdempotencyConfigurationException("Unable to get payload from the method. Ensure there is at least one parameter or that you use @IdempotencyKey");
@@ -116,12 +127,59 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         
         Task<T> ResultDelegate() => target(args);
         
-        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload);
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload, GetContext(eventArgs));
         if (idempotencyHandler == null)
         {
             throw new Exception("Failed to create an instance of IdempotencyAspectHandler");
         }
         var result = await idempotencyHandler.Handle();
         return result;
+    }
+    
+    /// <summary>
+    /// Retrieve the payload from the annotated method parameter
+    /// </summary>
+    /// <param name="eventArgs">The <see cref="AspectEventArgs" /> instance containing the event data.</param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns>The payload</returns>
+    private static JsonDocument GetPayload<T>(AspectEventArgs eventArgs)
+    {
+        JsonDocument payload = null;
+        var eventArgsMethod = eventArgs.Method;
+        var args = eventArgs.Args;
+        var isPlacedOnRequestHandler = IsPlacedOnRequestHandler(eventArgsMethod);
+        // Use the first argument if IdempotentAttribute placed on handler or number of arguments is 1
+        if (isPlacedOnRequestHandler || args.Count == 1)
+        {
+            payload = args is not null && args.Any() ? JsonDocument.Parse(JsonSerializer.Serialize(args[0])) : null;
+        }
+        else
+        {
+            //Find the first parameter in eventArgsMethod with attribute IdempotencyKeyAttribute
+            var parameter = eventArgsMethod.GetParameters().FirstOrDefault(p => p.GetCustomAttribute<IdempotencyKeyAttribute>() != null);
+            if (parameter != null)
+            {
+                // set payload to the value of the parameter
+                payload = JsonDocument.Parse(JsonSerializer.Serialize(args[Array.IndexOf(eventArgsMethod.GetParameters(), parameter)]));
+            }
+        }
+
+        return payload;
+    }
+
+    private static bool IsPlacedOnRequestHandler(MethodBase method)
+    {
+        //Check if method has two arguments and the second one is of type ILambdaContext
+        return method.GetParameters().Length == 2 && method.GetParameters()[1].ParameterType == typeof(ILambdaContext);
+    }
+    
+    private static ILambdaContext GetContext(AspectEventArgs args)
+    {
+        if (IsPlacedOnRequestHandler(args.Method))
+        {
+            return (ILambdaContext)args.Args[1];
+        }
+        
+        return Idempotency.Instance.LambdaContext;
     }
 }

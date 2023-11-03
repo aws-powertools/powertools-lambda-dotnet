@@ -1,12 +1,12 @@
 ﻿/*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -29,7 +29,7 @@ public class Metadata
     /// </summary>
     public Metadata()
     {
-        CloudWatchMetrics = new List<MetricDirective> {new()};
+        CloudWatchMetrics = new List<MetricDirective> { new() };
         CustomMetadata = new Dictionary<string, object>();
     }
 
@@ -66,6 +66,7 @@ public class Metadata
     internal void ClearMetrics()
     {
         _metricDirective.Metrics.Clear();
+        CustomMetadata?.Clear();
     }
 
     /// <summary>
@@ -158,7 +159,7 @@ public class Metadata
     /// <param name="value">Metadata value</param>
     internal void AddMetadata(string key, object value)
     {
-        CustomMetadata.Add(key, value);
+        CustomMetadata.TryAdd(key, value);
     }
 
     /// <summary>

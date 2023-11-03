@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
 using Xunit;
-using Moq;
+using NSubstitute;
 using System.Text.Json;
 
 namespace HelloWorld.Tests
@@ -32,7 +32,7 @@ namespace HelloWorld.Tests
             // Arrange
             var requestId = Guid.NewGuid().ToString("D");
             var accountId = Guid.NewGuid().ToString("D");
-            
+
             var request = new APIGatewayProxyRequest
             {
                 RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
@@ -41,7 +41,7 @@ namespace HelloWorld.Tests
                     AccountId = accountId
                 }
             };
-            
+
             var context = new TestLambdaContext()
             {
                 FunctionName = Guid.NewGuid().ToString("D"),
@@ -49,9 +49,9 @@ namespace HelloWorld.Tests
                 MemoryLimitInMB = 215,
                 AwsRequestId = requestId
             };
-            
-            var helper = new Mock<IParameterLookupHelper>();
-            
+
+            var helper = Substitute.For<IParameterLookupHelper>();
+
             var singleSsmRecord = new ParameterLookupRecord
             {
                 Provider = ParameterProviderType.SsmProvider,
@@ -59,10 +59,8 @@ namespace HelloWorld.Tests
                 Key = Guid.NewGuid().ToString("D"),
                 Value = Guid.NewGuid().ToString("D")
             };
-            helper.Setup(c =>
-                c.GetSingleParameterWithSsmProvider()
-            ).ReturnsAsync(singleSsmRecord);
-            
+            helper.GetSingleParameterWithSsmProvider().Returns(singleSsmRecord);
+
             var multipleSsmRecord = new ParameterLookupRecord
             {
                 Provider = ParameterProviderType.SsmProvider,
@@ -74,9 +72,7 @@ namespace HelloWorld.Tests
                     { Guid.NewGuid().ToString("D"), Guid.NewGuid().ToString("D") }
                 }
             };
-            helper.Setup(c =>
-                c.GetMultipleParametersWithSsmProvider()
-            ).ReturnsAsync(multipleSsmRecord);
+            helper.GetMultipleParametersWithSsmProvider().Returns(multipleSsmRecord);
 
             var singleSecretRecord = new ParameterLookupRecord
             {
@@ -89,10 +85,8 @@ namespace HelloWorld.Tests
                     Password = Guid.NewGuid().ToString("D")
                 }
             };
-            helper.Setup(c =>
-                c.GetSingleSecretWithSecretsProvider()
-            ).ReturnsAsync(singleSecretRecord);
-            
+            helper.GetSingleSecretWithSecretsProvider().Returns(singleSecretRecord);
+
             var singleDynamoDbRecord = new ParameterLookupRecord
             {
                 Provider = ParameterProviderType.DynamoDBProvider,
@@ -100,10 +94,8 @@ namespace HelloWorld.Tests
                 Key = Guid.NewGuid().ToString("D"),
                 Value = Guid.NewGuid().ToString("D")
             };
-            helper.Setup(c =>
-                c.GetSingleParameterWithDynamoDBProvider()
-            ).ReturnsAsync(singleDynamoDbRecord);
-            
+            helper.GetSingleParameterWithDynamoDBProvider().Returns(singleDynamoDbRecord);
+
             var multipleDynamoDbRecord = new ParameterLookupRecord
             {
                 Provider = ParameterProviderType.DynamoDBProvider,
@@ -115,10 +107,8 @@ namespace HelloWorld.Tests
                     { Guid.NewGuid().ToString("D"), Guid.NewGuid().ToString("D") }
                 }
             };
-            helper.Setup(c =>
-                c.GetMultipleParametersWithDynamoDBProvider()
-            ).ReturnsAsync(multipleDynamoDbRecord);
-            
+            helper.GetMultipleParametersWithDynamoDBProvider().Returns(multipleDynamoDbRecord);
+
             var body = new Dictionary<string, object>
             {
                 { "RequestId", requestId },
@@ -134,7 +124,7 @@ namespace HelloWorld.Tests
                     }
                 }
             };
-            
+
             var expectedResponse = new APIGatewayProxyResponse
             {
                 Body = JsonSerializer.Serialize(body),
@@ -143,15 +133,15 @@ namespace HelloWorld.Tests
             };
 
             // Act
-            var function = new Function(helper.Object);
-            var response = await function.FunctionHandler(request, context).ConfigureAwait(false);
+            var function = new Function(helper);
+            var response = await function.FunctionHandler(request, context);
 
             // Assert
-            helper.Verify(v => v.GetSingleParameterWithSsmProvider(), Times.Once);
-            helper.Verify(v => v.GetMultipleParametersWithSsmProvider(), Times.Once);
-            helper.Verify(v => v.GetSingleSecretWithSecretsProvider(), Times.Once);
-            helper.Verify(v => v.GetSingleParameterWithDynamoDBProvider(), Times.Once);
-            helper.Verify(v => v.GetMultipleParametersWithDynamoDBProvider(), Times.Once);
+            await helper.Received(1).GetSingleParameterWithSsmProvider();
+            await helper.Received(1).GetMultipleParametersWithSsmProvider();
+            await helper.Received(1).GetSingleSecretWithSecretsProvider();
+            await helper.Received(1).GetSingleParameterWithDynamoDBProvider();
+            await helper.Received(1).GetMultipleParametersWithDynamoDBProvider();
             Assert.Equal(expectedResponse.Body, response.Body);
             Assert.Equal(expectedResponse.Headers, response.Headers);
             Assert.Equal(expectedResponse.StatusCode, response.StatusCode);

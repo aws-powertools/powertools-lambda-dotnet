@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics;
@@ -122,14 +123,14 @@ internal class MetricsAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     OnException runs when an unhandled exception occurs inside the method marked with the Metrics Attribute
     /// </summary>
-    /// <typeparam name="T">Type of Exception expected</typeparam>
     /// <param name="eventArgs">Aspect Arguments</param>
     /// <param name="exception">Exception thrown by the method marked with Metrics Attribute</param>
-    /// <returns>Type of the Exception expected</returns>
     /// <exception cref="Exception">Generic unhandled exception</exception>
-    public T OnException<T>(AspectEventArgs eventArgs, Exception exception)
+    public void OnException(AspectEventArgs eventArgs, Exception exception)
     {
-        throw exception;
+        // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
+        // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
+        ExceptionDispatchInfo.Capture(exception).Throw();
     }
 
     /// <summary>

@@ -211,20 +211,43 @@ internal sealed class PowertoolsLogger : ILogger
         if (!IsEnabled(logLevel))
             return;
 
-        var message = new Dictionary<string, object>(StringComparer.Ordinal);
+        var timestamp = DateTime.UtcNow;
+        var message = CustomFormatter(state, exception, out var customMessage) && customMessage is not null
+            ? customMessage
+            : formatter(state, exception);
+
+        var logFormatter = Logger.GetFormatter();
+        var logEntry = logFormatter is null? 
+            GetLogEntry(logLevel, timestamp, message, exception) : 
+            GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter);
+
+        _systemWrapper.LogLine(JsonSerializer.Serialize(logEntry, JsonSerializerOptions));
+    }
+
+    /// <summary>
+    ///     Gets a log entry.
+    /// </summary>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="timestamp">Entry timestamp.</param>
+    /// <param name="message">The message to be written. Can be also an object.</param>
+    /// <param name="exception">The exception related to this entry.</param>
+    private Dictionary<string, object> GetLogEntry(LogLevel logLevel, DateTime timestamp, object message,
+        Exception exception)
+    {
+        var logEntry = new Dictionary<string, object>(StringComparer.Ordinal);
 
         // Add Custom Keys
         foreach (var (key, value) in Logger.GetAllKeys())
-            message.TryAdd(key, value);
+            logEntry.TryAdd(key, value);
 
         // Add Lambda Context Keys
         if (PowertoolsLambdaContext.Instance is not null)
         {
-            message.TryAdd(LoggingConstants.KeyFunctionName, PowertoolsLambdaContext.Instance.FunctionName);
-            message.TryAdd(LoggingConstants.KeyFunctionVersion, PowertoolsLambdaContext.Instance.FunctionVersion);
-            message.TryAdd(LoggingConstants.KeyFunctionMemorySize, PowertoolsLambdaContext.Instance.MemoryLimitInMB);
-            message.TryAdd(LoggingConstants.KeyFunctionArn, PowertoolsLambdaContext.Instance.InvokedFunctionArn);
-            message.TryAdd(LoggingConstants.KeyFunctionRequestId, PowertoolsLambdaContext.Instance.AwsRequestId);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionName, PowertoolsLambdaContext.Instance.FunctionName);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionVersion, PowertoolsLambdaContext.Instance.FunctionVersion);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionMemorySize, PowertoolsLambdaContext.Instance.MemoryLimitInMB);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionArn, PowertoolsLambdaContext.Instance.InvokedFunctionArn);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionRequestId, PowertoolsLambdaContext.Instance.AwsRequestId);
         }
 
         // Add Extra Fields
@@ -233,26 +256,109 @@ internal sealed class PowertoolsLogger : ILogger
             foreach (var (key, value) in CurrentScope.ExtraKeys)
             {
                 if (!string.IsNullOrWhiteSpace(key))
-                    message.TryAdd(key, value);
+                    logEntry.TryAdd(key, value);
             }
         }
 
-        message.TryAdd(LoggingConstants.KeyTimestamp, DateTime.UtcNow.ToString("o"));
-        message.TryAdd(LoggingConstants.KeyLogLevel, logLevel.ToString());
-        message.TryAdd(LoggingConstants.KeyService, Service);
-        message.TryAdd(LoggingConstants.KeyLoggerName, _name);
-        message.TryAdd(LoggingConstants.KeyMessage,
-            CustomFormatter(state, exception, out var customMessage) && customMessage is not null
-                ? customMessage
-                : formatter(state, exception));
-        if (CurrentConfig.SamplingRate.HasValue)
-            message.TryAdd(LoggingConstants.KeySamplingRate, CurrentConfig.SamplingRate.Value);
-        if (exception != null)
-            message.TryAdd(LoggingConstants.KeyException, exception);
+        logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString("o"));
+        logEntry.TryAdd(LoggingConstants.KeyLogLevel, logLevel.ToString());
+        logEntry.TryAdd(LoggingConstants.KeyService, Service);
+        logEntry.TryAdd(LoggingConstants.KeyLoggerName, _name);
+        logEntry.TryAdd(LoggingConstants.KeyMessage, message);
 
-        _systemWrapper.LogLine(Logger.PowerToolsSerializer.InternalSerializeAsString(
-            message,
-            JsonSerializerOptions));
+        if (CurrentConfig.SamplingRate.HasValue)
+            logEntry.TryAdd(LoggingConstants.KeySamplingRate, CurrentConfig.SamplingRate.Value);
+        if (exception != null)
+            logEntry.TryAdd(LoggingConstants.KeyException, exception);
+
+        return logEntry;
+    }
+
+    /// <summary>
+    ///     Gets a formatted log entry.
+    /// </summary>
+    /// <param name="logLevel">Entry will be written on this level.</param>
+    /// <param name="timestamp">Entry timestamp.</param>
+    /// <param name="message">The message to be written. Can be also an object.</param>
+    /// <param name="exception">The exception related to this entry.</param>
+    /// <param name="logFormatter">The custom log entry formatter.</param>
+    private object GetFormattedLogEntry(LogLevel logLevel, DateTime timestamp, object message,
+        Exception exception, ILogFormatter logFormatter)
+    {
+        if (logFormatter is null)
+            return null;
+
+        var logEntry = new LogEntry
+        {
+            Timestamp = timestamp,
+            Level = logLevel,
+            Service = Service,
+            Name = _name,
+            Message = message,
+            Exception = exception,
+            SamplingRate = CurrentConfig.SamplingRate,
+        };
+
+        var extraKeys = new Dictionary<string, object>();
+
+        // Add Custom Keys
+        foreach (var (key, value) in Logger.GetAllKeys())
+        {
+            switch (key)
+            {
+                case LoggingConstants.KeyColdStart:
+                    logEntry.ColdStart = (bool)value;
+                    break;
+                case LoggingConstants.KeyXRayTraceId:
+                    logEntry.XRayTraceId = value as string;
+                    break;
+                case LoggingConstants.KeyCorrelationId:
+                    logEntry.CorrelationId = value as string;
+                    break;
+                default:
+                    extraKeys.TryAdd(key, value);
+                    break;
+            }
+        }
+
+        // Add Extra Fields
+        if (CurrentScope?.ExtraKeys is not null)
+        {
+            foreach (var (key, value) in CurrentScope.ExtraKeys)
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                    extraKeys.TryAdd(key, value);
+            }
+        }
+
+        if (extraKeys.Any())
+            logEntry.ExtraKeys = extraKeys;
+
+        // Add Lambda Context Keys
+        if (PowertoolsLambdaContext.Instance is not null)
+        {
+            logEntry.LambdaContext = new LogEntryLambdaContext
+            {
+                FunctionName = PowertoolsLambdaContext.Instance.FunctionName,
+                FunctionVersion = PowertoolsLambdaContext.Instance.FunctionVersion,
+                MemoryLimitInMB = PowertoolsLambdaContext.Instance.MemoryLimitInMB,
+                InvokedFunctionArn = PowertoolsLambdaContext.Instance.InvokedFunctionArn,
+                AwsRequestId = PowertoolsLambdaContext.Instance.AwsRequestId,
+            };
+        }
+
+        try
+        {
+            var logObject = logFormatter.FormatLogEntry(logEntry);
+            if (logObject is null)
+                throw new LogFormatException($"{logFormatter.GetType().FullName} returned Null value.");
+            return logObject;
+        }
+        catch (Exception e)
+        {
+            throw new LogFormatException(
+                $"{logFormatter.GetType().FullName} raised an exception: {e.Message}.", e);
+        }
     }
 
     /// <summary>
@@ -365,6 +471,8 @@ internal sealed class PowertoolsLogger : ILogger
         jsonOptions.Converters.Add(new ExceptionConverter());
         jsonOptions.Converters.Add(new MemoryStreamConverter());
         jsonOptions.Converters.Add(new ConstantClassConverter());
+        jsonOptions.Converters.Add(new DateOnlyConverter());
+        jsonOptions.Converters.Add(new TimeOnlyConverter());
         
         jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         

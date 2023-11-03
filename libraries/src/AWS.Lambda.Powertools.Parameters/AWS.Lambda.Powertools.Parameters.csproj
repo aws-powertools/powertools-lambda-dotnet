@@ -1,48 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <!--  Remaining properties are defined in Directory.Build.props  -->
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <LangVersion>default</LangVersion>
         <PackageId>AWS.Lambda.Powertools.Parameters</PackageId>
-        <Version>0.0.1</Version>
-        <Authors>Amazon Web Services</Authors>
-        <Company>Amazon.com, Inc</Company>
-        <Title>Powertools for AWS Lambda (.NET)</Title>
         <Description>Powertools for AWS Lambda (.NET) - Parameters package.</Description>
-        <Copyright>Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.</Copyright>
-        <RepositoryUrl>https://github.com/aws-powertools/powertools-lambda-dotnet</RepositoryUrl>
-        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-        <PackageTags>AWS;Amazon;Lambda;Powertools</PackageTags>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageIconUrl>https://sdk-for-net.amazonwebservices.com/images/AWSLogo128x128.png</PackageIconUrl>
-        <PackageIcon>AWSLogo128x128.png</PackageIcon>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <AssemblyName>AWS.Lambda.Powertools.Parameters</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Parameters</RootNamespace>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
-      
     <ItemGroup>
-      <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath="\" />
+        <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
+        <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
+        <PackageReference Include="AWSSDK.DynamoDBv2"/>
+        <PackageReference Include="AWSSDK.SecretsManager"/>
+        <PackageReference Include="AWSSDK.SimpleSystemsManagement"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration"/>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="All" />
     </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.104.1" />
-        <PackageReference Include="AWSSDK.SecretsManager" Version="3.7.102.38" />
-        <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.104.29" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
-    </ItemGroup>
 </Project>

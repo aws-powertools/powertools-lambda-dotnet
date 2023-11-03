@@ -26,6 +26,8 @@ Powertools for AWS Lambda (.NET) are available as NuGet packages. You can instal
 
 ## Getting Started
 
+!!! note "Tracer relies on AWS X-Ray SDK over [OpenTelememetry Distro (ADOT)](https://aws-otel.github.io/docs/getting-started/lambda){target="_blank"} for optimal cold start (lower latency)."
+
 Before you use this utility, your AWS Lambda function [must have permissions](https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html#services-xray-permissions) to send traces to AWS X-Ray.
 
 To enable active tracing on an AWS Serverless Application Model (AWS SAM) AWS::Serverless::Function resource, use the `Tracing` property. You can use the Globals section of the AWS SAM template to set this for all  
@@ -242,5 +244,36 @@ under a subsegment, or you are doing multithreaded programming. Refer examples b
 
 ## Instrumenting SDK clients and HTTP calls
 
-User should make sure to instrument the SDK clients explicitly based on the function dependency. Refer details on
-[how to instrument SDK client with Xray](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-sdkclients.html) and [outgoing http calls](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-httpclients.html).
+You should make sure to instrument the SDK clients explicitly based on the function dependency. You can instrument all of your AWS SDK for .NET clients by calling RegisterForAllServices before you create them.
+
+=== "Function.cs"
+
+    ```c# hl_lines="14"
+    using Amazon.DynamoDBv2;
+    using Amazon.DynamoDBv2.Model;
+    using AWS.Lambda.Powertools.Tracing;
+    
+    public class Function
+    {
+        private static IAmazonDynamoDB _dynamoDb;
+
+        /// <summary>
+        /// Function constructor
+        /// </summary>
+        public Function()
+        {
+            Tracing.RegisterForAllServices();
+            
+            _dynamoDb = new AmazonDynamoDBClient();
+        }
+    }
+    ```
+
+To instrument clients for some services and not others, call Register instead of RegisterForAllServices. Replace the highlighted text with the name of the service's client interface.
+
+```c#
+Tracing.Register<IAmazonDynamoDB>()
+```
+
+This functionality is a thin wrapper for AWS X-Ray .NET SDK. Refer details on [how to instrument SDK client with Xray](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-sdkclients.html) and [outgoing http calls](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-httpclients.html).
+

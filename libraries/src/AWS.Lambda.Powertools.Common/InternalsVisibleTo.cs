@@ -22,4 +22,6 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Tracing.Tests")]
 [assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Metrics.Tests")]
 [assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Logging.Tests")]
+[assembly: InternalsVisibleTo("AWS.Lambda.Powertools.BatchProcessing")]
+[assembly: InternalsVisibleTo("AWS.Lambda.Powertools.BatchProcessing.Tests")]
 [assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Idempotency.Tests")]
