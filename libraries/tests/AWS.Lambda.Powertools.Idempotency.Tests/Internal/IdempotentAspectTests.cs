@@ -310,7 +310,7 @@ public class IdempotentAspectTests : IDisposable
     {
         // Arrange
         var store = Substitute.For<BasePersistenceStore>();
-        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>(), Arg.Any<double>())
+        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>(), null)
             .Throws(new IdempotencyItemAlreadyExistsException());
 
         Idempotency.Configure(builder => builder.WithPersistenceStore(store));
