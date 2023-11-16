@@ -147,12 +147,11 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     public string MetricsNamespace =>
         GetEnvironmentVariable(Constants.MetricsNamespaceEnv);
 
-    /// <summary>
-    ///     Gets the log level.
-    /// </summary>
-    /// <value>The log level.</value>
-    public string LogLevel =>
-        GetEnvironmentVariable(Constants.LogLevelNameEnv);
+    /// <inheritdoc />
+    public string LogLevel => GetEnvironmentVariable(Constants.LogLevelNameEnv);
+
+    /// <inheritdoc />
+    public string AWSLambdaLogLevel => GetEnvironmentVariable(Constants.AWSLambdaLogLevelNameEnv);
 
     /// <summary>
     ///     Gets the logger sample rate.

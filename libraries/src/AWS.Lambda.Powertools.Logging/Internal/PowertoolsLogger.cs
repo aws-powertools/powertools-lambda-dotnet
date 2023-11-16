@@ -50,16 +50,15 @@ internal sealed class PowertoolsLogger : ILogger
     ///     The system wrapper
     /// </summary>
     private readonly ISystemWrapper _systemWrapper;
-
-    /// <summary>
-    ///     The current configuration
-    /// </summary>
-    private LoggerConfiguration _currentConfig;
     
     /// <summary>
     ///     The JsonSerializer options
     /// </summary>
     private JsonSerializerOptions _jsonSerializerOptions;
+
+    private LogLevel _lambdaLogLevel;
+    private LogLevel _logLevel;
+    private bool _lambdaLogLevelEnabled;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="PowertoolsLogger" /> class.
@@ -78,14 +77,17 @@ internal sealed class PowertoolsLogger : ILogger
             powertoolsConfigurations, systemWrapper, getCurrentConfig);
         
         _powertoolsConfigurations.SetExecutionEnvironment(this);
+        CurrentConfig = GetCurrentConfig();
+        
+        if (_lambdaLogLevelEnabled && _logLevel < _lambdaLogLevel)
+        {
+            var message =
+                $"Current log level ({_logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({_lambdaLogLevel}). This can lead to data loss, consider adjusting them.";
+            this.LogWarning(message);
+        }
     }
 
-    /// <summary>
-    ///     Sets the current configuration.
-    /// </summary>
-    /// <value>The current configuration.</value>
-    private LoggerConfiguration CurrentConfig =>
-        _currentConfig ??= GetCurrentConfig();
+    private LoggerConfiguration CurrentConfig { get; set; }
 
     /// <summary>
     ///     Sets the minimum level.
@@ -255,8 +257,15 @@ internal sealed class PowertoolsLogger : ILogger
             }
         }
 
+        var keyLogLevel = LoggingConstants.KeyLogLevel;
+        // If ALC is enabled and PascalCase we need to convert Level to LogLevel for it to be parsed and sent to CW
+        if (_lambdaLogLevelEnabled && CurrentConfig.LoggerOutputCase == LoggerOutputCase.PascalCase)
+        {
+            keyLogLevel = "LogLevel";
+        }
+
         logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString("o"));
-        logEntry.TryAdd(LoggingConstants.KeyLogLevel, logLevel.ToString());
+        logEntry.TryAdd(keyLogLevel, logLevel.ToString());
         logEntry.TryAdd(LoggingConstants.KeyService, Service);
         logEntry.TryAdd(LoggingConstants.KeyLoggerName, _name);
         logEntry.TryAdd(LoggingConstants.KeyMessage, message);
@@ -361,7 +370,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     internal void ClearConfig()
     {
-        _currentConfig = null;
+        CurrentConfig = null;
     }
 
     /// <summary>
@@ -371,14 +380,22 @@ internal sealed class PowertoolsLogger : ILogger
     private LoggerConfiguration GetCurrentConfig()
     {
         var currConfig = _getCurrentConfig();
-        var minimumLevel = _powertoolsConfigurations.GetLogLevel(currConfig?.MinimumLevel);
+        _logLevel = _powertoolsConfigurations.GetLogLevel(currConfig?.MinimumLevel);
         var samplingRate = currConfig?.SamplingRate ?? _powertoolsConfigurations.LoggerSampleRate;
         var loggerOutputCase =  _powertoolsConfigurations.GetLoggerOutputCase(currConfig?.LoggerOutputCase);
-
+        _lambdaLogLevel = _powertoolsConfigurations.GetLambdaLogLevel();
+        _lambdaLogLevelEnabled = _lambdaLogLevel != LogLevel.None;
+        
+        var minLogLevel = _logLevel;
+        if (_lambdaLogLevelEnabled)
+        {
+            minLogLevel = _lambdaLogLevel;
+        }
+        
         var config = new LoggerConfiguration
         {
             Service = currConfig?.Service,
-            MinimumLevel = minimumLevel,
+            MinimumLevel = minLogLevel,
             SamplingRate = samplingRate,
             LoggerOutputCase = loggerOutputCase
         };
@@ -388,7 +405,7 @@ internal sealed class PowertoolsLogger : ILogger
 
         if (samplingRate.Value < 0 || samplingRate.Value > 1)
         {
-            if (minimumLevel is LogLevel.Debug or LogLevel.Trace)
+            if (minLogLevel is LogLevel.Debug or LogLevel.Trace)
                 _systemWrapper.LogLine(
                     $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate.Value}");
             config.SamplingRate = null;
