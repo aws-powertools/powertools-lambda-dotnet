@@ -50,11 +50,6 @@ internal sealed class PowertoolsLogger : ILogger
     ///     The system wrapper
     /// </summary>
     private readonly ISystemWrapper _systemWrapper;
-
-    /// <summary>
-    ///     The current configuration
-    /// </summary>
-    private LoggerConfiguration _currentConfig;
     
     /// <summary>
     ///     The JsonSerializer options
@@ -92,7 +87,7 @@ internal sealed class PowertoolsLogger : ILogger
         }
     }
 
-    private LoggerConfiguration CurrentConfig { get; }
+    private LoggerConfiguration CurrentConfig { get; set; }
 
     /// <summary>
     ///     Sets the minimum level.
@@ -375,7 +370,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     internal void ClearConfig()
     {
-        _currentConfig = null;
+        CurrentConfig = null;
     }
 
     /// <summary>

@@ -108,7 +108,7 @@ When the Advanced Logging Controls feature is enabled, we are unable to increase
 We prioritise log level settings in this order:
 
 1. AWS_LAMBDA_LOG_LEVEL environment variable
-2. Setting the log level in code using logger.setLevel()
+2. Setting the log level in code using `[Logging(LogLevel = )]`
 3. POWERTOOLS_LOG_LEVEL environment variable
 
 In the event you have set POWERTOOLS_LOG_LEVEL to a level lower than the ACL setting, Powertools for AWS Lambda will output a warning log message informing you that your messages will be discarded by Lambda.
