@@ -40,6 +40,11 @@ internal sealed class PowertoolsLogger : ILogger
     ///     The name
     /// </summary>
     private readonly string _name;
+    
+    /// <summary>
+    ///     The current configuration
+    /// </summary>
+    private LoggerConfiguration _currentConfig;
 
     /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations
@@ -77,7 +82,7 @@ internal sealed class PowertoolsLogger : ILogger
             powertoolsConfigurations, systemWrapper, getCurrentConfig);
         
         _powertoolsConfigurations.SetExecutionEnvironment(this);
-        CurrentConfig = GetCurrentConfig();
+        _currentConfig = GetCurrentConfig();
         
         if (_lambdaLogLevelEnabled && _logLevel < _lambdaLogLevel)
         {
@@ -87,7 +92,7 @@ internal sealed class PowertoolsLogger : ILogger
         }
     }
 
-    private LoggerConfiguration CurrentConfig { get; set; }
+    private LoggerConfiguration CurrentConfig => _currentConfig ??= GetCurrentConfig();
 
     /// <summary>
     ///     Sets the minimum level.
@@ -370,7 +375,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     internal void ClearConfig()
     {
-        CurrentConfig = null;
+        _currentConfig = null;
     }
 
     /// <summary>
