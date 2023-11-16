@@ -40,8 +40,7 @@ public class SystemWrapper : ISystemWrapper
     {
         _powertoolsEnvironment = powertoolsEnvironment;
         _instance ??= this;
-
-
+        
         // Clear AWS SDK Console injected parameters StdOut and StdErr
         var standardOutput = new StreamWriter(Console.OpenStandardOutput());
         standardOutput.AutoFlush = true;

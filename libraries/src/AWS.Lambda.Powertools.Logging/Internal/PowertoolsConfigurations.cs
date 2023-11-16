@@ -49,7 +49,6 @@ internal static class PowertoolsConfigurationsExtension
 
         if (Enum.TryParse(awsLogLevel, true, out LogLevel result))
         {
-            //Logger.LogWarning("Oopss!!");
             return result;
         }
 
