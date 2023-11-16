@@ -1,7 +1,7 @@
 {
 	"Core": {
-		"Logging": "1.3.3",
-		"Metrics": "1.4.3",
+		"Logging": "1.4.3",
+		"Metrics": "1.5.3",
 		"Tracing": "1.3.2"
 	},
 	"Utilities": {
