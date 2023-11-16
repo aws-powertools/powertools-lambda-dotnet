@@ -57,10 +57,16 @@ public interface IPowertoolsConfigurations
     string MetricsNamespace { get; }
 
     /// <summary>
-    ///     Gets the log level.
+    ///     Gets the Powertools log level.
     /// </summary>
     /// <value>The log level.</value>
     string LogLevel { get; }
+    
+    /// <summary>
+    ///     Gets the AWS Lambda log level.
+    /// </summary>
+    /// <value>The log level.</value>
+    string AWSLambdaLogLevel { get; }
 
     /// <summary>
     ///     Gets the logger sample rate.
