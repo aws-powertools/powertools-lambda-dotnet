@@ -1349,7 +1349,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         [Theory]
         [InlineData(true, "WARN", LogLevel.Warning)]
         [InlineData(false, "Fatal", LogLevel.Critical)]
-        [InlineData(true, "NotValid", LogLevel.Information)]
         public void Log_Should_Use_AWS_Lambda_Log_Level_When_Enabled(bool willLog, string awsLogLevel, LogLevel logLevel)
         {
             // Arrange
@@ -1381,8 +1380,105 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             
             // Assert
             Assert.True(logger.IsEnabled(logLevel));
-            Assert.Equal(logLevel, configuration.GetLogLevel());
+            Assert.Equal(LogLevel.Information, configuration.GetLogLevel()); //default
+            Assert.Equal(logLevel, configuration.GetLambdaLogLevel());
             Assert.Equal(willLog, systemWrapper.LogMethodCalled);
+        }
+        
+        [Fact]
+        public void Log_Should_Show_Warning_When_AWS_Lambda_Log_Level_Enabled()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+
+            var environment = Substitute.For<IPowertoolsEnvironment>();
+            environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL").Returns("Debug");
+            environment.GetEnvironmentVariable("AWS_LAMBDA_LOG_LEVEL").Returns("Warn");
+
+            var systemWrapper = new SystemWrapperMock(environment);
+            var configuration = new PowertoolsConfigurations(systemWrapper);
+            
+            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
+                new LoggerConfiguration
+                {
+                    LoggerOutputCase = LoggerOutputCase.CamelCase
+                });
+
+            var logLevel = configuration.GetLogLevel();
+            var lambdaLogLevel = configuration.GetLambdaLogLevel();
+            
+            // Assert
+            Assert.True(logger.IsEnabled(LogLevel.Warning));
+            Assert.Equal(LogLevel.Debug, logLevel);
+            Assert.Equal(LogLevel.Warning, lambdaLogLevel);
+            Assert.True(systemWrapper.LogMethodCalled);
+            Assert.Contains($"Current log level ({logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.",
+                systemWrapper.LogMethodCalledWithArgument);
+        }
+        
+        [Theory]
+        [InlineData(true,"LogLevel")]
+        [InlineData(false,"Level")]
+        public void Log_PascalCase_Outputs_Correct_Level_Property_When_AWS_Lambda_Log_Level_Enabled_Or_Disabled(bool alcEnabled, string levelProp)
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            
+            var environment = Substitute.For<IPowertoolsEnvironment>();
+            environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL").Returns("Information");
+            if(alcEnabled)
+                environment.GetEnvironmentVariable("AWS_LAMBDA_LOG_LEVEL").Returns("Info");
+
+            var systemWrapper = new SystemWrapperMock(environment);
+            var configuration = new PowertoolsConfigurations(systemWrapper);
+            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
+                new LoggerConfiguration
+                {
+                    LoggerOutputCase = LoggerOutputCase.PascalCase
+                });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            Assert.True(systemWrapper.LogMethodCalled);
+            Assert.Contains($"\"{levelProp}\":\"Information\"",systemWrapper.LogMethodCalledWithArgument);
+        }
+        
+        [Theory]
+        [InlineData(LoggerOutputCase.CamelCase)]
+        [InlineData(LoggerOutputCase.SnakeCase)]
+        public void Log_CamelCase_Outputs_Level_When_AWS_Lambda_Log_Level_Enabled(LoggerOutputCase casing)
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            
+            var environment = Substitute.For<IPowertoolsEnvironment>();
+            environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL").Returns(string.Empty);
+            environment.GetEnvironmentVariable("AWS_LAMBDA_LOG_LEVEL").Returns("Info");
+
+            var systemWrapper = new SystemWrapperMock(environment);
+            var configuration = new PowertoolsConfigurations(systemWrapper);
+            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
+                new LoggerConfiguration
+                {
+                    LoggerOutputCase = casing
+                });
+
+            var message = new
+            {
+                PropOne = "Value 1",
+            };
+
+            logger.LogInformation(message);
+
+            // Assert
+            Assert.True(systemWrapper.LogMethodCalled);
+            Assert.Contains("\"level\":\"Information\"",systemWrapper.LogMethodCalledWithArgument);
         }
         
         [Theory]
@@ -1392,7 +1488,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         [InlineData("WARN", LogLevel.Warning)]
         [InlineData("ERROR", LogLevel.Error)]
         [InlineData("Fatal", LogLevel.Critical)]
-        [InlineData("DoesNotExist", LogLevel.Information)]
+        [InlineData("DoesNotExist", LogLevel.None)]
         public void Should_Map_AWS_Log_Level_And_Default_To_Information(string awsLogLevel, LogLevel logLevel)
         {
             // Arrange
@@ -1403,7 +1499,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var configuration = new PowertoolsConfigurations(systemWrapper);
 
             // Act
-            var logLvl = configuration.GetLogLevel();
+            var logLvl = configuration.GetLambdaLogLevel();
             
             // Assert
             Assert.Equal(logLevel, logLvl);

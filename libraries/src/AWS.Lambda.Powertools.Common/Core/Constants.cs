@@ -58,7 +58,7 @@ internal static class Constants
     /// <summary>
     ///     Constant for POWERTOOLS_LOG_LEVEL environment variable
     /// </summary>
-    internal const string AwsLogLevelNameEnv = "AWS_LAMBDA_LOG_LEVEL";
+    internal const string AWSLambdaLogLevelNameEnv = "AWS_LAMBDA_LOG_LEVEL";
 
     /// <summary>
     ///     Constant for POWERTOOLS_LOGGER_SAMPLE_RATE environment variable

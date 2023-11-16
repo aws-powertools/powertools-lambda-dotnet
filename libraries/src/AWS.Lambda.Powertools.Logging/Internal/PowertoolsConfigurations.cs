@@ -37,15 +37,23 @@ internal static class PowertoolsConfigurationsExtension
         if (logLevel.HasValue)
             return logLevel.Value;
 
-        var logFromEnv = (powertoolsConfigurations.LogLevel ?? "").Trim();
-
-        if (AwsLogLevelMapper.TryGetValue(logFromEnv.ToUpper(), out var awsLogLevel))
-            logFromEnv = awsLogLevel;
-        
-        if (Enum.TryParse(logFromEnv, true, out LogLevel result))
+        if (Enum.TryParse((powertoolsConfigurations.LogLevel ?? "").Trim(), true, out LogLevel result))
             return result;
 
         return LoggingConstants.DefaultLogLevel;
+    }
+    
+    internal static LogLevel GetLambdaLogLevel(this IPowertoolsConfigurations powertoolsConfigurations)
+    {
+        AwsLogLevelMapper.TryGetValue((powertoolsConfigurations.AWSLambdaLogLevel ?? "").Trim().ToUpper(), out var awsLogLevel);
+
+        if (Enum.TryParse(awsLogLevel, true, out LogLevel result))
+        {
+            //Logger.LogWarning("Oopss!!");
+            return result;
+        }
+
+        return LogLevel.None;
     }
     
     internal static LoggerOutputCase GetLoggerOutputCase(this IPowertoolsConfigurations powertoolsConfigurations,

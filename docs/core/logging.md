@@ -29,6 +29,10 @@ Setting | Description | Environment variable | Attribute parameter
 **Service** | Sets **Service** key that will be present across all log statements | `POWERTOOLS_SERVICE_NAME` | `Service`
 **Logging level** | Sets how verbose Logger should be (Information, by default) |  `POWERTOOLS_LOG_LEVEL` | `LogLevel`
 
+!!! warning "When using Lambda Log Format JSON"
+    - And Powertools Logger output is set to `PascalCase` **`Level`**  property name will be replaced by **`LogLevel`** as a property name.
+    - The Lambda Application log level setting will control what is sent to CloudWatch. It takes precedence over **`POWERTOOLS_LOG_LEVEL`** and when setting it in code using **`[Logging(LogLevel = )]`**
+
 ### Example using AWS Serverless Application Model (AWS SAM)
 
 You can override log level by setting **`POWERTOOLS_LOG_LEVEL`** environment variable in the AWS SAM template.

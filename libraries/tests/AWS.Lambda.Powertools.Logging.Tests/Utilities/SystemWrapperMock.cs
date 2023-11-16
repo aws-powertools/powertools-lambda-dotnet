@@ -21,6 +21,7 @@ public class SystemWrapperMock : ISystemWrapper
 {
     private readonly IPowertoolsEnvironment _powertoolsEnvironment;
     public bool LogMethodCalled { get; private set; }
+    public string LogMethodCalledWithArgument { get; private set; }
 
     public SystemWrapperMock(IPowertoolsEnvironment powertoolsEnvironment)
     {
@@ -34,13 +35,16 @@ public class SystemWrapperMock : ISystemWrapper
 
     public void Log(string value)
     {
+        LogMethodCalledWithArgument = value;
         LogMethodCalled = true;
     }
     
     public void LogLine(string value)
     {
+        LogMethodCalledWithArgument = value;
         LogMethodCalled = true;
     }
+
 
     public double GetRandom()
     {

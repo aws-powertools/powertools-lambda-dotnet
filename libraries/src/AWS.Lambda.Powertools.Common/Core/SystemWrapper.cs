@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.IO;
 using System.Text;
 
 namespace AWS.Lambda.Powertools.Common;
@@ -39,6 +40,15 @@ public class SystemWrapper : ISystemWrapper
     {
         _powertoolsEnvironment = powertoolsEnvironment;
         _instance ??= this;
+
+
+        // Clear AWS SDK Console injected parameters StdOut and StdErr
+        var standardOutput = new StreamWriter(Console.OpenStandardOutput());
+        standardOutput.AutoFlush = true;
+        Console.SetOut(standardOutput);
+        var errordOutput = new StreamWriter(Console.OpenStandardError());
+        errordOutput.AutoFlush = true;
+        Console.SetError(errordOutput);
     }
 
     /// <summary>
@@ -97,21 +107,21 @@ public class SystemWrapper : ISystemWrapper
         var envValue = new StringBuilder();
         var currentEnvValue = GetEnvironmentVariable(envName);
         var assemblyName = ParseAssemblyName(_powertoolsEnvironment.GetAssemblyName(type));
-        
+
         // If there is an existing execution environment variable add the annotations package as a suffix.
-        if(!string.IsNullOrEmpty(currentEnvValue))
+        if (!string.IsNullOrEmpty(currentEnvValue))
         {
             // Avoid duplication - should not happen since the calling Instances are Singletons - defensive purposes
             if (currentEnvValue.Contains(assemblyName))
             {
                 return;
             }
-            
+
             envValue.Append($"{currentEnvValue} ");
         }
 
         var assemblyVersion = _powertoolsEnvironment.GetAssemblyVersion(type);
-        
+
         envValue.Append($"{assemblyName}/{assemblyVersion}");
 
         SetEnvironmentVariable(envName, envValue.ToString());
@@ -127,13 +137,14 @@ public class SystemWrapper : ISystemWrapper
     {
         try
         {
-            var parsedName = assemblyName.Substring(assemblyName.LastIndexOf(".", StringComparison.Ordinal)+1);
+            var parsedName = assemblyName.Substring(assemblyName.LastIndexOf(".", StringComparison.Ordinal) + 1);
             return $"{Constants.FeatureContextIdentifier}/{parsedName}";
         }
         catch
         {
             //NOOP
         }
+
         return $"{Constants.FeatureContextIdentifier}/{assemblyName}";
     }
 }
