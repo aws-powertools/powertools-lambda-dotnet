@@ -310,8 +310,8 @@ public class IdempotentAspectTests : IDisposable
     {
         // Arrange
         var store = Substitute.For<BasePersistenceStore>();
-        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>(), null)
-            .Throws(new IdempotencyItemAlreadyExistsException());
+        store.SaveInProgress(Arg.Any<JsonDocument>(), Arg.Any<DateTimeOffset>(), Arg.Any<double>())
+            .Returns(_ => throw new IdempotencyItemAlreadyExistsException());
 
         Idempotency.Configure(builder => builder.WithPersistenceStore(store));
 
@@ -327,7 +327,7 @@ public class IdempotentAspectTests : IDisposable
             .Returns(record);
 
         // Act
-        var function = new IdempotencyInternalFunction(false);
+        var function = new IdempotencyInternalFunction(true);
         Basket resultBasket = function.HandleRequest(product, new TestLambdaContext());
 
         // assert

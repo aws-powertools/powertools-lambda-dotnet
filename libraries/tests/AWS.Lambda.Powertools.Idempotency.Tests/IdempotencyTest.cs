@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -68,6 +69,13 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
             TableName = _tableName
         });
         scanResponse.Count.Should().Be(1);
+        
+        // delete row dynamo
+        var key = new Dictionary<string, AttributeValue>
+        {
+            ["id"] = new AttributeValue { S = "testFunction.GetPageContents#ff323c6f0c5ceb97eed49121babcec0f" }
+        };
+        await _client.DeleteItemAsync(new DeleteItemRequest{TableName = _tableName, Key = key});
     }
     
     [Fact]
@@ -96,7 +104,9 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
         var response2 = await function.Handle(request, context);
         function.MethodCalled.Should().BeFalse();
 
-        JsonSerializer.Serialize(response).Should().Be(JsonSerializer.Serialize(response));
+        // Assert
+        JsonSerializer.Serialize(response).Should().Be(JsonSerializer.Serialize(response2));
+        response.Body.Should().Contain("hello world");
         response2.Body.Should().Contain("hello world");
 
         var scanResponse = await _client.ScanAsync(new ScanRequest
@@ -104,5 +114,12 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
             TableName = _tableName
         });
         scanResponse.Count.Should().Be(1);
+        
+        // delete row dynamo
+        var key = new Dictionary<string, AttributeValue>
+        {
+            ["id"] = new AttributeValue { S = "testFunction.GetPageContents#ff323c6f0c5ceb97eed49121babcec0f" }
+        };
+        await _client.DeleteItemAsync(new DeleteItemRequest{TableName = _tableName, Key = key});
     }
 }
