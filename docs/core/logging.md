@@ -72,13 +72,18 @@ Here is an example using the AWS SAM [Globals section](https://docs.aws.amazon.c
 
 ### Using AWS Lambda Advanced Logging Controls (ALC)
 
-With [AWS Lambda Advanced Logging Controls (ALC)](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced), you can control the output format of your logs as either TEXT or JSON and specify the minimum accepted log level for your application. Regardless of the output format setting in Lambda, Powertools for AWS Lambda will always output JSON formatted logging messages.
+!!! question "When is it useful?"
+    When you want to set a logging policy to drop informational or verbose logs for one or all AWS Lambda functions, regardless of runtime and logger used.
 
-When you have this feature enabled, log messages that don’t meet the configured log level are discarded by Lambda. For example, if you set the minimum log level to WARN, you will only receive WARN and ERROR messages in your AWS CloudWatch Logs, all other log levels will be discarded by Lambda.
+With [AWS Lambda Advanced Logging Controls (ALC)](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced){target="_blank"}, you can enforce a minimum log level that Lambda will accept from your application code.
+
+When enabled, you should keep `Logger` and ALC log level in sync to avoid data loss.
 
 !!! warning "When using AWS Lambda Advanced Logging Controls (ALC)"
     - When Powertools Logger output is set to `PascalCase` **`Level`**  property name will be replaced by **`LogLevel`** as a property name.
     - ALC takes precedence over **`POWERTOOLS_LOG_LEVEL`** and when setting it in code using **`[Logging(LogLevel = )]`**
+
+Here's a sequence diagram to demonstrate how ALC will drop both `Information` and `Debug` logs emitted from `Logger`, when ALC log level is stricter than `Logger`.
 
 ```mermaid
 sequenceDiagram
@@ -88,6 +93,7 @@ sequenceDiagram
     participant Application Logger
     
     Note over Lambda service: AWS_LAMBDA_LOG_LEVEL="WARN"
+    Note over Application Logger: POWERTOOLS_LOG_LEVEL="DEBUG"
     Lambda service->>Lambda function: Invoke (event)
     Lambda function->>Lambda function: Calls handler
     Lambda function->>Application Logger: Logger.Warning("Something happened")
@@ -99,11 +105,7 @@ sequenceDiagram
     Lambda service->>CloudWatch Logs: Ingest error logs
 ```
 
-Logger will automatically listen for the AWS_LAMBDA_LOG_FORMAT and AWS_LAMBDA_LOG_LEVEL environment variables, and change behaviour if they’re found to ensure as much compatibility as possible.
-
 **Priority of log level settings in Powertools for AWS Lambda**
-
-When the Advanced Logging Controls feature is enabled, we are unable to increase the minimum log level below the AWS_LAMBDA_LOG_LEVEL environment variable value, see [AWS Lambda service documentation](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-log-level) for more details.
 
 We prioritise log level settings in this order:
 
@@ -111,8 +113,10 @@ We prioritise log level settings in this order:
 2. Setting the log level in code using `[Logging(LogLevel = )]`
 3. POWERTOOLS_LOG_LEVEL environment variable
 
-In the event you have set POWERTOOLS_LOG_LEVEL to a level lower than the ACL setting, Powertools for AWS Lambda will output a warning log message informing you that your messages will be discarded by Lambda.
+If you set `Logger` level lower than ALC, we will emit a warning informing you that your messages will be discarded by Lambda.
 
+> **NOTE**
+> With ALC enabled, we are unable to increase the minimum log level below the `AWS_LAMBDA_LOG_LEVEL` environment variable value, see [AWS Lambda service documentation](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-log-level){target="_blank"} for more details.
 
 ## Standard structured keys
 
