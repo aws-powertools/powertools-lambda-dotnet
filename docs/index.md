@@ -30,7 +30,7 @@ Core utilities such as Tracing, Logging, and Metrics will be available across al
 [Logger](./core/logging.md) | Structured logging made easier, and decorator to enrich structured logging with key Lambda context details
 [Metrics](./core/metrics.md) | Custom AWS metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
 [Parameters](./utilities/parameters/) | provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
-[Idempotency (developer preview)](./utilities/idempotency/) | The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
+[Idempotency](./utilities/idempotency/) | The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
 [Batch Processing (developer preview)](./utilities/batch-processing/) | The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
 
 ## Install

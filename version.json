@@ -6,7 +6,7 @@
 	},
 	"Utilities": {
 		"Parameters": "1.1.2",
-		"Idempotency": "0.2.2-preview",
+		"Idempotency": "1.0.0",
 		"BatchProcessing": "0.0.1-preview"
 	}
 }

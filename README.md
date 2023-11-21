@@ -27,7 +27,7 @@ Powertools for AWS Lambda (.NET) provides three core utilities:
 
 * **[Parameters](https://docs.powertools.aws.dev/lambda/dotnet/utilities/parameters/)** - provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/). We also provide extensibility to bring your own providers.
 
-* **[Idempotency (developer preview)](https://docs.powertools.aws.dev/lambda/dotnet/utilities/idempotency/)** - The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
+* **[Idempotency](https://docs.powertools.aws.dev/lambda/dotnet/utilities/idempotency/)** - The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
 
 * **[Batch Processing (developer preview)](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/)** - The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
 
