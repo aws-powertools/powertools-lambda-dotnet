@@ -7,6 +7,43 @@ All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 
+<a name="1.8.3"></a>
+## [1.8.3] - 2023-11-21
+## Pull Requests
+
+* Merge pull request [#525](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/525) from aws-powertools/idempotency-ga
+* Merge pull request [#523](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/523) from hjgraca/update-examples-182
+* Merge pull request [#513](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/513) from hjgraca/idempotency-method-e2e-test
+* Merge pull request [#521](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/521) from hjgraca/182-fix-examples-logging-batch
+
+
+<a name="1.8.2"></a>
+## [1.8.2] - 2023-11-16
+## Pull Requests
+
+* Merge pull request [#518](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/518) from aws-powertools/hjgraca-version-1.8.2
+* Merge pull request [#516](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/516) from hjgraca/lambda-log-level
+* Merge pull request [#510](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/510) from aws-powertools/hjgraca-examples-1.8.1
+
+
+<a name="1.8.1"></a>
+## [1.8.1] - 2023-10-30
+## Maintenance
+
+* **deps:** bump gitpython from 3.1.35 to 3.1.37
+
+## Pull Requests
+
+* Merge pull request [#507](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/507) from aws-powertools/hjgraca-release-1.8.1
+* Merge pull request [#505](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/505) from hjgraca/fix-exception-addmetadata
+* Merge pull request [#499](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/499) from hjgraca/metrics-decorator-exception
+* Merge pull request [#503](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/503) from hjgraca/dateonly-converter
+* Merge pull request [#502](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/502) from aws-powertools/dependabot/pip/gitpython-3.1.37
+* Merge pull request [#495](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/495) from hjgraca/update-projects-readme
+* Merge pull request [#493](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/493) from hjgraca/release1.8.0-example-updates
+* Merge pull request [#492](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/492) from aws-powertools/update-changelog-6248167844
+
+
 <a name="1.8.0"></a>
 ## [1.8.0] - 2023-09-20
 ## Documentation
@@ -492,7 +529,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Merge pull request [#1](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1) from sliedig/develop
 
 
-[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.8.0...HEAD
+[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.8.3...HEAD
+[1.8.3]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.8.2...1.8.3
+[1.8.2]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.8.1...1.8.2
+[1.8.1]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.8.0...1.8.1
 [1.8.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.7.1...1.8.0
 [1.7.1]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.7.0...1.7.1
 [1.7.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.6.0...1.7.0
