@@ -29,7 +29,7 @@ Powertools for AWS Lambda (.NET) provides three core utilities:
 
 * **[Idempotency](https://docs.powertools.aws.dev/lambda/dotnet/utilities/idempotency/)** - The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
 
-* **[Batch Processing (developer preview)](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/)** - The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
+* **[Batch Processing](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/)** - The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
 
 ### Installation
 
