@@ -13,18 +13,15 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        dotnet: [ '6.0.405', '8.0.101' ]
+
     steps:
       - uses: actions/checkout@v3
-      - name: Setup .NET ${{ matrix.dotnet }}
+      - name: Setup .NET 6.0
         uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
-        id: setup
         with:
-          dotnet-version: ${{ matrix.dotnet }}
-      - name: Create temporary global.json
-        run: echo '{"sdk":{"version":"${{ steps.setup.outputs.dotnet-version }}"}}' > ./global.json
+          dotnet-version: |
+            6.0.405
+            8.0.101
       - name: Install solution dependencies
         run: dotnet restore
       - name: Build
