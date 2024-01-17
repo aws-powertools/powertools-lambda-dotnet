@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
         <LangVersion>default</LangVersion>
         <AssemblyName>AWS.Lambda.Powertools.Logging.Tests</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Logging.Tests</RootNamespace>

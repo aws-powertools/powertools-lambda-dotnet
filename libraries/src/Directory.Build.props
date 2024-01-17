@@ -1,6 +1,6 @@
 <Project>
     <PropertyGroup>
-        
+        <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
         <LangVersion>default</LangVersion>
         <!-- Version is generated when packaging the individual csproj -->
         <Version>0.0.1</Version>
