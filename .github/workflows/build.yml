@@ -27,7 +27,7 @@ jobs:
       - name: Test Examples
         run: dotnet test ../examples/
       - name: Test & Code Coverage
-        run: dotnet test --collect:"XPlat Code Coverage" -r codecov --verbosity normal
+        run: dotnet test --collect:"XPlat Code Coverage" --results-directory ../../codecov --verbosity normal
       - name: Codecov
         uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # 3.1.0
         with:

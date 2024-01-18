@@ -5,19 +5,11 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace AWS.Lambda.Powertools.Common.Tests;
 
 public class PowertoolsEnvironmentTest : IDisposable
 {
-    private readonly ITestOutputHelper _testOutputHelper;
-
-    public PowertoolsEnvironmentTest(ITestOutputHelper testOutputHelper)
-    {
-        _testOutputHelper = testOutputHelper;
-    }
-
     [Fact]
     public void Set_Execution_Environment()
     {
@@ -77,14 +69,7 @@ public class PowertoolsEnvironmentTest : IDisposable
     {
         // This test must be present until Issue: https://github.com/pamidur/aspect-injector/issues/220 is fixed
         
-        var path = "../../../../../src/Directory.Packages.props";
-        // Test to see if running in CI/CD and add an extra ../
-        if (Environment.CurrentDirectory.EndsWith("codecov"))
-        {
-            path = "../../../../../../src/Directory.Packages.props";
-        }
-        
-        var directory = Path.GetFullPath(path);
+        var directory = Path.GetFullPath("../../../../../src/Directory.Packages.props");
         var doc = XDocument.Load(directory);
 
         var packageReference = doc.XPathSelectElements("//PackageVersion")
