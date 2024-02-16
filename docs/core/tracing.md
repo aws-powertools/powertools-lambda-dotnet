@@ -15,6 +15,7 @@ a provides functionality to reduce the overhead of performing common tracing tas
 * Capture function responses and full exceptions as metadata.
 * Better experience when developing with multiple threads.
 * Auto-patch supported modules by AWS X-Ray
+* Auto-disable when not running in AWS Lambda environment
 
 ## Installation
 

@@ -62,6 +62,20 @@ This behavior changes when you enable Report Batch Item Failures feature in your
 
 	You can find more details on how Lambda works with either [SQS](https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html){target="_blank"}, [Kinesis](https://docs.aws.amazon.com/lambda/latest/dg/with-kinesis.html){target="_blank"}, or [DynamoDB](https://docs.aws.amazon.com/lambda/latest/dg/with-ddb.html){target="_blank"} in the AWS Documentation.
 
+## Installation
+
+You should install with NuGet:
+
+```powershell
+Install-Package AWS.Lambda.Powertools.BatchProcessing
+```
+
+Or via the .NET Core command line interface:
+
+```bash
+dotnet add package AWS.Lambda.Powertools.BatchProcessing
+```
+
 ## Getting started
 
 For this feature to work, you need to **(1)** configure your Lambda function event source to use `ReportBatchItemFailures`, and **(2)** return [a specific response](https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#services-sqs-batchfailurereporting){target="_blank" rel="nofollow"} to report which records failed to be processed.
