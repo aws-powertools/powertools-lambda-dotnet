@@ -14,16 +14,20 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
+
 
 /// <summary>
 ///     Class LoggingAspectHandler.
@@ -283,6 +287,9 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         var jsonOptions = new JsonSerializerOptions
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+#if NET8_0_OR_GREATER
+            TypeInfoResolver = PowertoolsSourceGenerationContext.Default
+#endif
         };
         jsonOptions.Converters.Add(new ByteArrayConverter());
         jsonOptions.Converters.Add(new ExceptionConverter());
@@ -319,7 +326,15 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         try
         {
             var correlationId = string.Empty;
+            
+#if NET8_0_OR_GREATER
+            
+            JsonSerializerOptions.TypeInfoResolver = PowertoolsSourceGenerationContext2.Default;
+            var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg,eventArg.GetType(), JsonSerializerOptions));
+            // var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, PowertoolsSourceGenerationContext2.Default.ApplicationLoadBalancerRequest));
+#else
             var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, JsonSerializerOptions));
+#endif
             var element = jsonDoc.RootElement;
 
             for (var i = 0; i < correlationIdPaths.Length; i++)
@@ -395,3 +410,13 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         Logger.RemoveAllKeys();
     }
 }
+
+#if NET8_0_OR_GREATER
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(ApplicationLoadBalancerRequest))]
+[JsonSerializable(typeof(APIGatewayProxyRequest))]
+public partial class PowertoolsSourceGenerationContext2 : PowertoolsSourceGenerationContext
+{
+    // make public
+}
+#endif

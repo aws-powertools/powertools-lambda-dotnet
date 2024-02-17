@@ -6,7 +6,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Handlers;
 
 public class ExceptionFunctionHandler
 {
-    [Logging]
+    [Logging(LogEvent = true)]
     public async Task<string> Handle(string input)
     {
         ThisThrows();

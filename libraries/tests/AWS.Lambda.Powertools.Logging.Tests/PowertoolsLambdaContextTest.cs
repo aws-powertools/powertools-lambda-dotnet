@@ -1,24 +1,20 @@
 using System;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.TestUtilities;
+using AWS.Lambda.Powertools.Logging.Internal;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Common.Tests;
 
 public class PowertoolsLambdaContextTest
 {
-    private class TestLambdaContext
+    
+    
+    [Fact]
+    public void Extract_WhenHasLambdaContextArgument_InitializesLambdaContextInfo()
     {
-        public string AwsRequestId { get; set; }
-        public string FunctionName { get; set; }
-        public string FunctionVersion { get; set; }
-        public string InvokedFunctionArn { get; set; }
-        public string LogGroupName { get; set; }
-        public string LogStreamName { get; set; }
-        public int MemoryLimitInMB { get; set; }
-    }
-        
-    private static TestLambdaContext NewLambdaContext()
-    {
-        return new TestLambdaContext
+        // Arrange
+        var lambdaContext = new TestLambdaContext
         {
             AwsRequestId = Guid.NewGuid().ToString(),
             FunctionName = Guid.NewGuid().ToString(),
@@ -28,16 +24,11 @@ public class PowertoolsLambdaContextTest
             LogStreamName = Guid.NewGuid().ToString(),
             MemoryLimitInMB = new Random().Next()
         };
-    }
-    
-    [Fact]
-    public void Extract_WhenHasLambdaContextArgument_InitializesLambdaContextInfo()
-    {
-        // Arrange
-        var lambdaContext = NewLambdaContext();
+
         var eventArg = new {Source = "Test"};
         var eventArgs = new AspectEventArgs
         {
+            Method = GetType().GetMethod(nameof(Extract_WhenHasLambdaContextArgument_InitializesLambdaContextInfo)),
             Name = Guid.NewGuid().ToString(),
             Args = new object []
             {

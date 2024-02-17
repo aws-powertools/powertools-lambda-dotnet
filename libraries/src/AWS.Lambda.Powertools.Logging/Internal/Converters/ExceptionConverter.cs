@@ -14,9 +14,12 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AWS.Lambda.Powertools.Common;
+using System.Collections.Generic;
 
 namespace AWS.Lambda.Powertools.Logging.Internal.Converters;
 
@@ -63,7 +66,7 @@ internal class ExceptionConverter : JsonConverter<Exception>
 
         if (options.DefaultIgnoreCondition == JsonIgnoreCondition.WhenWritingNull)
             properties = properties.Where(prop => prop.Value != null);
-
+        
         var props = properties.ToArray();
         if (!props.Any())
             return;
@@ -86,6 +89,7 @@ internal class ExceptionConverter : JsonConverter<Exception>
                     break;
                 default:
                     writer.WritePropertyName(ApplyPropertyNamingPolicy(prop.Name, options));
+                    
                     JsonSerializer.Serialize(writer, prop.Value, options);
                     break;
             }

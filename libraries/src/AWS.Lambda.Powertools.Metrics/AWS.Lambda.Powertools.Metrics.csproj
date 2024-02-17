@@ -5,9 +5,11 @@
         <Description>Powertools for AWS Lambda (.NET) - Metrics package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Metrics</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Metrics</RootNamespace>
+        <Version>1.6.1</Version>
     </PropertyGroup>
     
     <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.Core" />
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="All" />
     </ItemGroup>
 

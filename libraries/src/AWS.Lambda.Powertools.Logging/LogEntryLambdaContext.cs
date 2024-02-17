@@ -13,12 +13,15 @@
  * permissions and limitations under the License.
  */
 
+using System;
+using Amazon.Lambda.Core;
+
 namespace AWS.Lambda.Powertools.Logging;
 
 /// <summary>
 /// Powertools Log Entry Lambda Context
 /// </summary>
-public class LogEntryLambdaContext
+public class LogEntryLambdaContext : ILambdaContext
 {
     /// <summary>
     /// The AWS request ID associated with the request.
@@ -26,7 +29,9 @@ public class LogEntryLambdaContext
     /// This ID is reused for retries on the same request.
     /// </summary>
     public string AwsRequestId { get; internal set; }
-    
+
+    public IClientContext ClientContext { get; }
+
     /// <summary>
     /// Name of the Lambda function that is running.
     /// </summary>
@@ -38,7 +43,11 @@ public class LogEntryLambdaContext
     /// the version the alias points to.
     /// </summary>
     public string FunctionVersion { get; internal set; }
-    
+
+    public ICognitoIdentity Identity { get; }
+
+    public string LogStreamName { get; }
+
     /// <summary>
     /// The ARN used to invoke this function.
     /// It can be function ARN or alias ARN.
@@ -46,11 +55,16 @@ public class LogEntryLambdaContext
     /// the function version they are pointing to.
     /// </summary>
     public int MemoryLimitInMB { get; internal set; }
-        
+
+    public TimeSpan RemainingTime { get; }
+
     /// <summary>
     /// The CloudWatch log group name associated with the invoked function.
     /// It can be null if the IAM user provided does not have permission for
     /// CloudWatch actions.
     /// </summary>
     public string InvokedFunctionArn { get; internal set; }
+
+    public ILambdaLogger Logger { get; }
+    public string LogGroupName { get; }
 }
