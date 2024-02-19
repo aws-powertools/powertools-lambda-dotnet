@@ -65,6 +65,14 @@ public class RootNode
     {
         if (string.IsNullOrWhiteSpace(AWS.GetNamespace())) throw new SchemaValidationException("namespace");
 
+#if NET8_0_OR_GREATER
+        var options = new JsonSerializerOptions
+        {
+            TypeInfoResolver = MetricsSerializationContext.Default
+        };
+        return JsonSerializer.Serialize(this, options);
+#else
         return JsonSerializer.Serialize(this);
+#endif
     }
 }
