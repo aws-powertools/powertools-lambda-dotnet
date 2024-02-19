@@ -223,7 +223,7 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
      */
     public class Function
     {
-        [Logging(CorrelationIdPath = CorrelationIdPaths.API_GATEWAY_REST)]
+        [Logging(CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest)]
         public async Task<APIGatewayProxyResponse> FunctionHandler
             (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {

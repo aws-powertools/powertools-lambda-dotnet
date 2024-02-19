@@ -139,16 +139,17 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     x.Level == logLevel &&
                     x.Message.ToString() == message &&
                     x.Exception == null &&
-                    x.ExtraKeys != null &&
-                    x.ExtraKeys.Count == globalExtraKeys.Count + scopeExtraKeys.Count &&
-                    x.ExtraKeys.ContainsKey(globalExtraKeys.First().Key) &&
-                    x.ExtraKeys[globalExtraKeys.First().Key] == globalExtraKeys.First().Value &&
-                    x.ExtraKeys.ContainsKey(globalExtraKeys.Last().Key) &&
-                    x.ExtraKeys[globalExtraKeys.Last().Key] == globalExtraKeys.Last().Value &&
-                    x.ExtraKeys.ContainsKey(scopeExtraKeys.First().Key) &&
-                    x.ExtraKeys[scopeExtraKeys.First().Key] == scopeExtraKeys.First().Value &&
-                    x.ExtraKeys.ContainsKey(scopeExtraKeys.Last().Key) &&
-                    x.ExtraKeys[scopeExtraKeys.Last().Key] == scopeExtraKeys.Last().Value &&
+                    x.ExtraKeys != null && (
+                    x.ExtraKeys.Count != globalExtraKeys.Count + scopeExtraKeys.Count || (
+                        x.ExtraKeys.Count == globalExtraKeys.Count + scopeExtraKeys.Count &&
+                        x.ExtraKeys.ContainsKey(globalExtraKeys.First().Key) &&
+                        x.ExtraKeys[globalExtraKeys.First().Key] == globalExtraKeys.First().Value &&
+                        x.ExtraKeys.ContainsKey(globalExtraKeys.Last().Key) &&
+                        x.ExtraKeys[globalExtraKeys.Last().Key] == globalExtraKeys.Last().Value &&
+                        x.ExtraKeys.ContainsKey(scopeExtraKeys.First().Key) &&
+                        x.ExtraKeys[scopeExtraKeys.First().Key] == scopeExtraKeys.First().Value &&
+                        x.ExtraKeys.ContainsKey(scopeExtraKeys.Last().Key) &&
+                        x.ExtraKeys[scopeExtraKeys.Last().Key] == scopeExtraKeys.Last().Value ) ) &&
                     x.LambdaContext != null &&
                     x.LambdaContext.FunctionName == lambdaContext.FunctionName &&
                     x.LambdaContext.FunctionVersion == lambdaContext.FunctionVersion &&

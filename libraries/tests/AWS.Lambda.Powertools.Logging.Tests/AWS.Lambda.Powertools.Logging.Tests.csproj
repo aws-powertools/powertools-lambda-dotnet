@@ -12,6 +12,7 @@
         <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" />
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" />
         <PackageReference Include="Amazon.Lambda.TestUtilities" />
+        <PackageReference Include="Amazon.Lambda.Core" />
         <PackageReference Include="coverlet.collector" >
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
