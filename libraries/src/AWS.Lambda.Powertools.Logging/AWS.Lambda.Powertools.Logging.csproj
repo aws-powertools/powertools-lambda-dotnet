@@ -6,7 +6,6 @@
         <Description>Powertools for AWS Lambda (.NET) - Logging package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Logging</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Logging</RootNamespace>
-        <Version>1.7.1</Version>
     </PropertyGroup>
 
     <ItemGroup>

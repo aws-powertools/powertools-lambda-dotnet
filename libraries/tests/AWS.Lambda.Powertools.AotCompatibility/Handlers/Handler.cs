@@ -15,23 +15,21 @@
 
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
 
 namespace AWS.Lambda.Powertools.AotCompatibility.Handlers;
 
 public class Handler
 {
     [Logging(LogEvent = true)]
+    [Metrics(CaptureColdStart = true, Namespace = "PT Demo NS")]
     public async Task<string> Handle(string input, ILambdaContext context)
     {
         Logger.LogInformation("Hello world!");
-        ThisThrows();
+        
+        Metrics.Metrics.AddMetric("Metric1", 1, MetricUnit.Count);
 
         await Task.Delay(1);
         return input;
-    }
-
-    private void ThisThrows()
-    {
-        throw new NullReferenceException();
     }
 }

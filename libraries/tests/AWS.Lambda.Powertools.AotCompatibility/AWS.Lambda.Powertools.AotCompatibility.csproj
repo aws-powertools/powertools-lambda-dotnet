@@ -15,11 +15,11 @@
         
     </PropertyGroup>
 
-<!--    <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible($(TargetFramework), 'net8.0'))">-->
-<!--        <IsAotCompatible>true</IsAotCompatible>-->
-<!--        <PublishAot>true</PublishAot>-->
-<!--        <TrimmerSingleWarn>false</TrimmerSingleWarn>-->
-<!--    </PropertyGroup>-->
+    <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible($(TargetFramework), 'net8.0'))">
+        <IsAotCompatible>true</IsAotCompatible>
+        <PublishAot>true</PublishAot>
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.Core" />
@@ -38,6 +38,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" />
     </ItemGroup>
 
 </Project>

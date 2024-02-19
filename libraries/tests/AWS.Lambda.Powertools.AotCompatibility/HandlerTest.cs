@@ -2,7 +2,7 @@ using Amazon.Lambda.TestUtilities;
 
 namespace AWS.Lambda.Powertools.AotCompatibility;
 
-public class UnitTest1
+public class HandlerTest
 {   
     [Fact]
     public async Task Test1()
@@ -19,10 +19,8 @@ public class UnitTest1
         };
 
         // Act
-        Task Handle() => handler.Handle("whatever", context);
+        var response = await handler.Handle("whatever", context);
 
-        var tracedException = await Assert.ThrowsAsync<NullReferenceException>(Handle);
-        Assert.StartsWith("at AWS.Lambda.Powertools.AotCompatibility.Handlers.Handler.ThisThrows()",
-            tracedException.StackTrace?.TrimStart());
+        Assert.Equal("whatever", response);
     }
 }
