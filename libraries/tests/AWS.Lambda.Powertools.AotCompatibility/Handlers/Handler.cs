@@ -16,6 +16,7 @@
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
+using AWS.Lambda.Powertools.Tracing;
 
 namespace AWS.Lambda.Powertools.AotCompatibility.Handlers;
 
@@ -23,13 +24,24 @@ public class Handler
 {
     [Logging(LogEvent = true)]
     [Metrics(CaptureColdStart = true, Namespace = "PT Demo NS")]
+    [Tracing(Namespace = "PT Demo NS", CaptureMode = TracingCaptureMode.ResponseAndError)]
     public async Task<string> Handle(string input, ILambdaContext context)
     {
         Logger.LogInformation("Hello world!");
         
         Metrics.Metrics.AddMetric("Metric1", 1, MetricUnit.Count);
+        
+        DoSomething();
+        
+        Tracing.Tracing.AddAnnotation("Annotation1", "My Anottation");
 
         await Task.Delay(1);
         return input;
+    }
+
+    [Tracing(SegmentName = "Do Something Method")]
+    public void DoSomething()
+    {
+        Tracing.Tracing.AddAnnotation("Annotation1", "My Anottation");
     }
 }

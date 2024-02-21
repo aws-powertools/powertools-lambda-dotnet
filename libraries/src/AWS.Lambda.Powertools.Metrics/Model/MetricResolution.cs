@@ -6,11 +6,7 @@ namespace AWS.Lambda.Powertools.Metrics;
 /// <summary>
 /// Enum MetricResolution
 /// </summary>
-#if NET8_0_OR_GREATER
-[JsonConverter(typeof(JsonStringEnumConverter<MetricResolution>))]
-#else
-[JsonConverter(typeof(StringEnumConverter))]
-#endif
+
 public enum MetricResolution
 {
     /// <summary>
