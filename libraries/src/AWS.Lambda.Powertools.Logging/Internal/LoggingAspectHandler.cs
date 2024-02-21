@@ -288,7 +288,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 #if NET8_0_OR_GREATER
-            TypeInfoResolver = PowertoolsSourceGenerationContext.Default
+            TypeInfoResolver = PowertoolsLoggerSourceGenerationContext.Default
 #endif
         };
         jsonOptions.Converters.Add(new ByteArrayConverter());
@@ -328,10 +328,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
             var correlationId = string.Empty;
             
 #if NET8_0_OR_GREATER
-            
-            JsonSerializerOptions.TypeInfoResolver = PowertoolsSourceGenerationContext2.Default;
             var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg,eventArg.GetType(), JsonSerializerOptions));
-            // var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, PowertoolsSourceGenerationContext2.Default.ApplicationLoadBalancerRequest));
 #else
             var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, JsonSerializerOptions));
 #endif
@@ -415,7 +412,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(ApplicationLoadBalancerRequest))]
 [JsonSerializable(typeof(APIGatewayProxyRequest))]
-public partial class PowertoolsSourceGenerationContext2 : PowertoolsSourceGenerationContext
+public partial class PowertoolsLoggerSourceGenerationContext : PowertoolsSourceGenerationContext
 {
     // make public
 }
