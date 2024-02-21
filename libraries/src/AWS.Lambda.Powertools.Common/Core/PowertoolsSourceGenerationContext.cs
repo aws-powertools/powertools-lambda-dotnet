@@ -16,11 +16,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.Common;
 
+
+
+#if NET8_0_OR_GREATER
+/// <summary>
+/// 
+/// </summary>
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(bool))]
@@ -41,3 +46,4 @@ public partial class PowertoolsSourceGenerationContext : JsonSerializerContext
 {
     // make public
 }
+#endif

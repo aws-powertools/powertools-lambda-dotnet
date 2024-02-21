@@ -30,6 +30,7 @@ public class LogEntryLambdaContext : ILambdaContext
     /// </summary>
     public string AwsRequestId { get; internal set; }
 
+    /// <inheritdoc />
     public IClientContext ClientContext { get; }
 
     /// <summary>
@@ -44,8 +45,10 @@ public class LogEntryLambdaContext : ILambdaContext
     /// </summary>
     public string FunctionVersion { get; internal set; }
 
+    /// <inheritdoc />
     public ICognitoIdentity Identity { get; }
 
+    /// <inheritdoc />
     public string LogStreamName { get; }
 
     /// <summary>
@@ -56,6 +59,7 @@ public class LogEntryLambdaContext : ILambdaContext
     /// </summary>
     public int MemoryLimitInMB { get; internal set; }
 
+    /// <inheritdoc />
     public TimeSpan RemainingTime { get; }
 
     /// <summary>
@@ -65,6 +69,11 @@ public class LogEntryLambdaContext : ILambdaContext
     /// </summary>
     public string InvokedFunctionArn { get; internal set; }
 
+    /// <summary>
+    /// Lambda Logger
+    /// </summary>
     public ILambdaLogger Logger { get; }
+
+    /// <inheritdoc />
     public string LogGroupName { get; }
 }

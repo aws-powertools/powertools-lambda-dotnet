@@ -13,28 +13,21 @@
  * permissions and limitations under the License.
  */
 
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.ApplicationLoadBalancerEvents;
+using AWS.Lambda.Powertools.Common;
 
-namespace AWS.Lambda.Powertools.Metrics;
+namespace AWS.Lambda.Powertools.Logging.Internal;
 
 #if NET8_0_OR_GREATER
 /// <summary>
-/// Source generator for Metrics types
+/// Powertools source generator that extends common generator
 /// </summary>
-[JsonSerializable(typeof(string))]
-[JsonSerializable(typeof(double))]
-[JsonSerializable(typeof(List<double>))]
-[JsonSerializable(typeof(MetricUnit))]
-[JsonSerializable(typeof(MetricDefinition))]
-[JsonSerializable(typeof(DimensionSet))]
-[JsonSerializable(typeof(Metadata))]
-[JsonSerializable(typeof(MetricDirective))]
-[JsonSerializable(typeof(MetricResolution))]
-[JsonSerializable(typeof(MetricsContext))]
-[JsonSerializable(typeof(RootNode))]
-public partial class MetricsSerializationContext : JsonSerializerContext
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(ApplicationLoadBalancerRequest))]
+[JsonSerializable(typeof(APIGatewayProxyRequest))]
+public partial class PowertoolsLoggerSourceGenerationContext : PowertoolsSourceGenerationContext
 {
-
 }
 #endif
