@@ -3,9 +3,11 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-<!--    Do not update AspectInjector from 2.8.1 until this issue is fixed https://github.com/pamidur/aspect-injector/issues/220-->
+    <!--    Do not update AspectInjector from 2.8.1 until this issue is fixed https://github.com/pamidur/aspect-injector/issues/220-->
     <PackageVersion Include="AspectInjector" Version="2.8.1" />
     <PackageVersion Include="Amazon.Lambda.Core" Version="2.1.0" />
+    <PackageVersion Include="AWSSDK.AppConfig" Version="3.7.300.53" />
+    <PackageVersion Include="AWSSDK.AppConfigData" Version="3.7.301.14" />
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="3.7.201.8" />
     <PackageVersion Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.12.0" />
     <PackageVersion Include="JmesPath.Net" Version="1.0.308" />
