@@ -14,6 +14,7 @@
  */
 
 using System.Collections.Concurrent;
+using System.Text.Json.Nodes;
 using Amazon;
 using Amazon.AppConfigData;
 using Amazon.AppConfigData.Model;
@@ -35,32 +36,32 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     /// The default application Id.
     /// </summary>
     private string _defaultApplicationId = string.Empty;
-    
+
     /// <summary>
     /// The default environment Id.
     /// </summary>
     private string _defaultEnvironmentId = string.Empty;
-    
+
     /// <summary>
     /// The default configuration profile Id.
     /// </summary>
     private string _defaultConfigProfileId = string.Empty;
-    
+
     /// <summary>
     /// Instance of datetime wrapper.
     /// </summary>
     private readonly IDateTimeWrapper _dateTimeWrapper;
-    
+
     /// <summary>
     /// Thread safe dictionary to store results.  
     /// </summary>
     private readonly ConcurrentDictionary<string, AppConfigResult> _results = new(StringComparer.OrdinalIgnoreCase);
-    
+
     /// <summary>
     /// The client instance.
     /// </summary>
     private IAmazonAppConfigData? _client;
-    
+
     /// <summary>
     /// Gets the client instance.
     /// </summary>
@@ -88,7 +89,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     }
 
     #region IParameterProviderConfigurableClient implementation
-    
+
     /// <summary>
     /// Use a custom client
     /// </summary>
@@ -238,7 +239,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         _client = new AmazonAppConfigDataClient(awsAccessKeyId, awsSecretAccessKey, awsSessionToken, config);
         return this;
     }
-    
+
     #endregion
 
     /// <summary>
@@ -253,7 +254,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         _defaultApplicationId = applicationId;
         return this;
     }
-    
+
     /// <summary>
     /// Sets the default environment ID or name.
     /// </summary>
@@ -266,7 +267,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         _defaultEnvironmentId = environmentId;
         return this;
     }
-    
+
     /// <summary>
     /// Sets the default configuration profile ID or name.
     /// </summary>
@@ -318,7 +319,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             .WithApplication(_defaultApplicationId)
             .WithEnvironment(_defaultEnvironmentId)
             .WithConfigProfile(_defaultConfigProfileId);
-        
+
     }
 
     /// <summary>
@@ -353,29 +354,29 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             .GetAsync()
             .ConfigureAwait(false);
     }
-    
+
     /// <summary>
     /// Get last AppConfig value and transform it to JSON value.
     /// </summary>
     /// <typeparam name="T">JSON value type.</typeparam>
     /// <returns>The AppConfig JSON value.</returns>
-    public T? Get<T>() where T: class
+    public T? Get<T>() where T : class
     {
         return GetAsync<T>().GetAwaiter().GetResult();
     }
-    
+
     /// <summary>
     /// Get last AppConfig value and transform it to JSON value.
     /// </summary>
     /// <typeparam name="T">JSON value type.</typeparam>
     /// <returns>The AppConfig JSON value.</returns>
-    public async Task<T?> GetAsync<T>()  where T: class
+    public async Task<T?> GetAsync<T>() where T : class
     {
         return await NewConfigurationBuilder()
             .GetAsync<T>()
             .ConfigureAwait(false);
     }
-    
+
     /// <summary>
     /// Get parameter value for the provided key. 
     /// </summary>
@@ -384,7 +385,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     /// <returns>The parameter value.</returns>
     protected override async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
     {
-        if(config is not AppConfigProviderConfiguration configuration)
+        if (config is not AppConfigProviderConfiguration configuration)
             throw new ArgumentNullException(nameof(config));
 
         var cacheKey = AppConfigProviderCacheHelper.GetCacheKey
@@ -395,7 +396,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         );
 
         var result = GetAppConfigResult(cacheKey);
-        
+
         if (_dateTimeWrapper.UtcNow < result.NextAllowedPollTime)
         {
             if (!config.ForceFetch)
@@ -427,7 +428,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 
         using (var reader = new StreamReader(response.Configuration))
         {
-            result.LastConfig = 
+            result.LastConfig =
                 await reader.ReadToEndAsync()
                     .ConfigureAwait(false);
         }
@@ -446,7 +447,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
     {
         throw new NotSupportedException("Impossible to get multiple values from AWS AppConfig");
     }
-    
+
     /// <summary>
     /// Gets Or Adds AppConfigResult with provided key
     /// </summary>
@@ -462,7 +463,7 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
 
         return cachedResult;
     }
-    
+
     /// <summary>
     /// Starts a configuration session used to retrieve a deployed configuration.
     /// </summary>
@@ -478,5 +479,58 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
         };
 
         return (await Client.StartConfigurationSessionAsync(request).ConfigureAwait(false)).InitialConfigurationToken;
+    }
+
+    /// <summary>
+    /// Check if the feature flag is enabled.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the flag</param>
+    /// <returns>The feature flag value, or defaultValue if the flag cannot be evaluated</returns>
+    public bool IsFeatureFlagEnabled(string key, bool defaultValue = false)
+    {
+        return IsFeatureFlagEnabledAsync(key, defaultValue).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Check if the feature flag is enabled.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the flag</param>
+    /// <returns>The feature flag value, or defaultValue if the flag cannot be evaluated</returns>
+    public async Task<bool> IsFeatureFlagEnabledAsync(string key, bool defaultValue = false)
+    {
+        return await GetFeatureFlagAttributeValueAsync(key, AppConfigFeatureFlagHelper.EnabledAttributeKey,
+            defaultValue).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Get feature flag's attribute value.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="attributeKey">The unique attribute key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the feature flag's attribute value</param>
+    /// <typeparam name="T">The type of the value to obtain from feature flag's attribute.</typeparam>
+    /// <returns>The feature flag's attribute value.</returns>
+    public T? GetFeatureFlagAttributeValue<T>(string key, string attributeKey, T? defaultValue = default)
+    {
+        return GetFeatureFlagAttributeValueAsync(key, attributeKey, defaultValue).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Get feature flag's attribute value.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="attributeKey">The unique attribute key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the feature flag's attribute value</param>
+    /// <typeparam name="T">The type of the value to obtain from feature flag's attribute.</typeparam>
+    /// <returns>The feature flag's attribute value.</returns>
+    public async Task<T?> GetFeatureFlagAttributeValueAsync<T>(string key, string attributeKey,
+        T? defaultValue = default)
+    {
+        return string.IsNullOrWhiteSpace(key)
+            ? defaultValue
+            : AppConfigFeatureFlagHelper.GetFeatureFlagAttributeValueAsync(key, attributeKey, defaultValue,
+                await GetAsync<JsonObject>().ConfigureAwait(false));
     }
 }

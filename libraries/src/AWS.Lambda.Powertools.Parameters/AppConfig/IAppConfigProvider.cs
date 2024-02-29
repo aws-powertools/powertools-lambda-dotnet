@@ -77,5 +77,41 @@ public interface IAppConfigProvider : IParameterProvider<AppConfigProviderConfig
     /// <typeparam name="T">JSON value type.</typeparam>
     /// <returns>The AppConfig JSON value.</returns>
     Task<T?> GetAsync<T>() where T : class;
+
+    /// <summary>
+    /// Check if the feature flag is enabled.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the flag</param>
+    /// <returns>The feature flag value, or defaultValue if the flag cannot be evaluated</returns>
+    bool IsFeatureFlagEnabled(string key, bool defaultValue = false);
+    
+    /// <summary>
+    /// Check if the feature flag is enabled.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the flag</param>
+    /// <returns>The feature flag value, or defaultValue if the flag cannot be evaluated</returns>
+    Task<bool> IsFeatureFlagEnabledAsync(string key, bool defaultValue = false);
+
+    /// <summary>
+    /// Get feature flag's attribute value.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="attributeKey">The unique attribute key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the feature flag's attribute value</param>
+    /// <typeparam name="T">The type of the value to obtain from feature flag's attribute.</typeparam>
+    /// <returns>The feature flag's attribute value.</returns>
+    T? GetFeatureFlagAttributeValue<T>(string key, string attributeKey, T? defaultValue = default);
+    
+    /// <summary>
+    /// Get feature flag's attribute value.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="attributeKey">The unique attribute key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the feature flag's attribute value</param>
+    /// <typeparam name="T">The type of the value to obtain from feature flag's attribute.</typeparam>
+    /// <returns>The feature flag's attribute value.</returns>
+    Task<T?> GetFeatureFlagAttributeValueAsync<T>(string key, string attributeKey, T? defaultValue = default);
 }
 

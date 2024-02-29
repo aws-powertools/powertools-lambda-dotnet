@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System.Text.Json.Nodes;
 using AWS.Lambda.Powertools.Parameters.Internal.AppConfig;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Provider;
@@ -163,5 +164,57 @@ public class AppConfigProviderConfigurationBuilder : ParameterProviderConfigurat
 
         return await base.GetAsync<T>(AppConfigProviderCacheHelper.GetCacheKey(_applicationId, _environmentId,
             _configProfileId)).ConfigureAwait(false);
+    }
+    
+    /// <summary>
+    /// Check if the feature flag is enabled.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the flag</param>
+    /// <returns>The feature flag value, or defaultValue if the flag cannot be evaluated</returns>
+    public bool IsFeatureFlagEnabled(string key, bool defaultValue = false)
+    {
+        return IsFeatureFlagEnabledAsync(key, defaultValue).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Check if the feature flag is enabled.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the flag</param>
+    /// <returns>The feature flag value, or defaultValue if the flag cannot be evaluated</returns>
+    public async Task<bool> IsFeatureFlagEnabledAsync(string key, bool defaultValue = false)
+    {
+        return await GetFeatureFlagAttributeValueAsync(key, AppConfigFeatureFlagHelper.EnabledAttributeKey,
+            defaultValue).ConfigureAwait(false);
+    }
+    
+    /// <summary>
+    /// Get feature flag's attribute value.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="attributeKey">The unique attribute key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the feature flag's attribute value</param>
+    /// <typeparam name="T">The type of the value to obtain from feature flag's attribute.</typeparam>
+    /// <returns>The feature flag's attribute value.</returns>
+    public T? GetFeatureFlagAttributeValue<T>(string key, string attributeKey, T? defaultValue = default)
+    {
+        return GetFeatureFlagAttributeValueAsync(key, attributeKey, defaultValue).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Get feature flag's attribute value.
+    /// </summary>
+    /// <param name="key">The unique feature key for the feature flag</param>
+    /// <param name="attributeKey">The unique attribute key for the feature flag</param>
+    /// <param name="defaultValue">The default value of the feature flag's attribute value</param>
+    /// <typeparam name="T">The type of the value to obtain from feature flag's attribute.</typeparam>
+    /// <returns>The feature flag's attribute value.</returns>
+    public async Task<T?> GetFeatureFlagAttributeValueAsync<T>(string key, string attributeKey, T? defaultValue = default)
+    {
+        return string.IsNullOrWhiteSpace(key)
+            ? defaultValue
+            : AppConfigFeatureFlagHelper.GetFeatureFlagAttributeValueAsync(key, attributeKey, defaultValue,
+                await GetAsync<JsonObject>().ConfigureAwait(false));
     }
 }
