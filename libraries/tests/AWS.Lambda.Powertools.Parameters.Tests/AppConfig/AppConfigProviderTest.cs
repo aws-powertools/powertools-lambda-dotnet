@@ -1155,14 +1155,14 @@ public class AppConfigProviderTest
 
         await Assert.ThrowsAsync<NotSupportedException>(Act);
     }
-    
+
     [Fact]
     public async Task IsFeatureFlagEnabled_WhenKeyIsEmptyOrNull_ReturnsDefaultValue()
     {
         // Arrange
         var featureFlagKey = string.Empty;
         var defaultFlagValue = false;
-        
+
         var appConfigProvider = new AppConfigProvider(Substitute.For<IDateTimeWrapper>());
 
         // Act
@@ -1189,7 +1189,7 @@ public class AppConfigProviderTest
         // Assert
         Assert.Equal(flagValue, defaultFlagValue);
     }
-    
+
     [Fact]
     public async Task IsFeatureFlagEnabled_WhenFlagIsEnabled_ReturnsTrue()
     {
@@ -1217,7 +1217,7 @@ public class AppConfigProviderTest
                 attributeTwo = 20
             },
         };
-        
+
         var lastConfigStr = JsonSerializer.Serialize(lastConfig);
         var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
 
@@ -1252,7 +1252,7 @@ public class AppConfigProviderTest
         // Assert
         Assert.Equal(currentConfig, lastConfig.FeatureFlagOne.enabled);
     }
-    
+
     [Fact]
     public async Task IsFeatureFlagEnabled_WhenFlagIsDisabled_ReturnsFalse()
     {
@@ -1280,7 +1280,7 @@ public class AppConfigProviderTest
                 attributeTwo = 20
             },
         };
-        
+
         var lastConfigStr = JsonSerializer.Serialize(lastConfig);
         var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
 
@@ -1343,7 +1343,7 @@ public class AppConfigProviderTest
                 attributeTwo = 20
             },
         };
-        
+
         var lastConfigStr = JsonSerializer.Serialize(lastConfig);
         var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
 
@@ -1373,14 +1373,16 @@ public class AppConfigProviderTest
             .WithConfigProfile(configProfileId);
 
         // Act
-        var attributeValue1 = await appConfigProvider.GetFeatureFlagAttributeValueAsync<string>("FeatureFlagOne", "attributeOne").ConfigureAwait(false);
-        var attributeValue2 = await appConfigProvider.GetFeatureFlagAttributeValueAsync<int>("FeatureFlagOne", "attributeTwo").ConfigureAwait(false);
+        var attributeValue1 = await appConfigProvider
+            .GetFeatureFlagAttributeValueAsync<string>("FeatureFlagOne", "attributeOne").ConfigureAwait(false);
+        var attributeValue2 = await appConfigProvider
+            .GetFeatureFlagAttributeValueAsync<int>("FeatureFlagOne", "attributeTwo").ConfigureAwait(false);
 
         // Assert
         Assert.Equal(attributeValue1, lastConfig.FeatureFlagOne.attributeOne);
         Assert.Equal(attributeValue2, lastConfig.FeatureFlagOne.attributeTwo);
     }
-    
+
     [Fact]
     public async Task GetFeatureFlagAttribute_WhenAttributeDoesNotExist_ReturnsNull()
     {
@@ -1408,7 +1410,7 @@ public class AppConfigProviderTest
                 attributeTwo = 20
             },
         };
-        
+
         var lastConfigStr = JsonSerializer.Serialize(lastConfig);
         var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
 
@@ -1438,12 +1440,13 @@ public class AppConfigProviderTest
             .WithConfigProfile(configProfileId);
 
         // Act
-        var attributeValue1 = await appConfigProvider.GetFeatureFlagAttributeValueAsync<string>("FeatureFlagOne", "INVALID").ConfigureAwait(false);
+        var attributeValue1 = await appConfigProvider
+            .GetFeatureFlagAttributeValueAsync<string>("FeatureFlagOne", "INVALID").ConfigureAwait(false);
 
         // Assert
         Assert.Null(attributeValue1);
     }
-    
+
     [Fact]
     public async Task GetFeatureFlagAttribute_WhenAttributeDoesNotExist_ReturnsSpecifiedDefaultValue()
     {
@@ -1472,7 +1475,7 @@ public class AppConfigProviderTest
                 attributeTwo = 20
             },
         };
-        
+
         var lastConfigStr = JsonSerializer.Serialize(lastConfig);
         var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
 
@@ -1502,7 +1505,8 @@ public class AppConfigProviderTest
             .WithConfigProfile(configProfileId);
 
         // Act
-        var attributeValue1 = await appConfigProvider.GetFeatureFlagAttributeValueAsync<string>("FeatureFlagOne", "INVALID", defaultAttributeVale).ConfigureAwait(false);
+        var attributeValue1 = await appConfigProvider
+            .GetFeatureFlagAttributeValueAsync("FeatureFlagOne", "INVALID", defaultAttributeVale).ConfigureAwait(false);
 
         // Assert
         Assert.Equal(attributeValue1, defaultAttributeVale);
