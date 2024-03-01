@@ -388,7 +388,7 @@ in order to get data from other regions or use specific credentials.
 
 === "AppConfigProvider"
 
-     ```c# hl_lines="10-13 16-18"
+    ```c# hl_lines="10-13 16-18"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.AppConfig;
 
@@ -413,7 +413,7 @@ in order to get data from other regions or use specific credentials.
 
 === "AppConfigProvider with an explicit region"
 
-     ```c# hl_lines="10-14"
+    ```c# hl_lines="10-14"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.AppConfig;
 
@@ -443,7 +443,7 @@ Feature flagging is a powerful tool that allows safely pushing out new features 
 
 === "AppConfigProvider"
 
-     ```c# hl_lines="10-13 16-18 23-25"
+    ```c# hl_lines="10-13 16-18 23-25"
     using AWS.Lambda.Powertools.Parameters;
     using AWS.Lambda.Powertools.Parameters.AppConfig;
 
