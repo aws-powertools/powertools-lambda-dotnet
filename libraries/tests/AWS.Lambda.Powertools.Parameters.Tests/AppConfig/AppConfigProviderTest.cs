@@ -15,6 +15,7 @@
 
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Amazon.AppConfigData;
 using Amazon.AppConfigData.Model;
 using AWS.Lambda.Powertools.Parameters.AppConfig;
@@ -1153,5 +1154,357 @@ public class AppConfigProviderTest
         Task<IDictionary<string, string?>> Act() => appConfigProvider.GetMultipleAsync(key);
 
         await Assert.ThrowsAsync<NotSupportedException>(Act);
+    }
+    
+    [Fact]
+    public async Task IsFeatureFlagEnabled_WhenKeyIsEmptyOrNull_ReturnsDefaultValue()
+    {
+        // Arrange
+        var featureFlagKey = string.Empty;
+        var defaultFlagValue = false;
+        
+        var appConfigProvider = new AppConfigProvider(Substitute.For<IDateTimeWrapper>());
+
+        // Act
+        var flagValue = await appConfigProvider.IsFeatureFlagEnabledAsync(featureFlagKey)
+            .ConfigureAwait(false);
+
+        // Assert
+        Assert.Equal(flagValue, defaultFlagValue);
+    }
+
+    [Fact]
+    public async Task IsFeatureFlagEnabled_WhenKeyIsEmptyOrNull_ReturnsSpecifiedDefaultValue()
+    {
+        // Arrange
+        var featureFlagKey = string.Empty;
+        var defaultFlagValue = true;
+
+        var appConfigProvider = new AppConfigProvider(Substitute.For<IDateTimeWrapper>());
+
+        // Act
+        var flagValue = await appConfigProvider.IsFeatureFlagEnabledAsync(featureFlagKey, defaultFlagValue)
+            .ConfigureAwait(false);
+
+        // Assert
+        Assert.Equal(flagValue, defaultFlagValue);
+    }
+    
+    [Fact]
+    public async Task IsFeatureFlagEnabled_WhenFlagIsEnabled_ReturnsTrue()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var configurationToken = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+
+        var dateTimeNow = DateTime.UtcNow;
+        var nextAllowedPollTime = dateTimeNow.AddSeconds(10);
+        var lastConfig = new
+        {
+            FeatureFlagOne = new
+            {
+                enabled = true,
+                attributeOne = "TestOne",
+                attributeTwo = 10
+            },
+            FeatureFlagTwo = new
+            {
+                enabled = false,
+                attributeOne = "TestTwo",
+                attributeTwo = 20
+            },
+        };
+        
+        var lastConfigStr = JsonSerializer.Serialize(lastConfig);
+        var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
+
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonAppConfigData>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var dateTimeWrapper = Substitute.For<IDateTimeWrapper>();
+
+        cacheManager.Get(cacheKey).Returns(transformedValue);
+        dateTimeWrapper.UtcNow.Returns(dateTimeNow);
+
+        var appConfigResult = new AppConfigResult
+        {
+            PollConfigurationToken = configurationToken,
+            NextAllowedPollTime = nextAllowedPollTime,
+            LastConfig = lastConfigStr
+        };
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper,
+                AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId),
+                appConfigResult)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
+
+        // Act
+        var currentConfig = await appConfigProvider.IsFeatureFlagEnabledAsync("FeatureFlagOne").ConfigureAwait(false);
+
+        // Assert
+        Assert.Equal(currentConfig, lastConfig.FeatureFlagOne.enabled);
+    }
+    
+    [Fact]
+    public async Task IsFeatureFlagEnabled_WhenFlagIsDisabled_ReturnsFalse()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var configurationToken = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+
+        var dateTimeNow = DateTime.UtcNow;
+        var nextAllowedPollTime = dateTimeNow.AddSeconds(10);
+        var lastConfig = new
+        {
+            FeatureFlagOne = new
+            {
+                enabled = true,
+                attributeOne = "TestOne",
+                attributeTwo = 10
+            },
+            FeatureFlagTwo = new
+            {
+                enabled = false,
+                attributeOne = "TestTwo",
+                attributeTwo = 20
+            },
+        };
+        
+        var lastConfigStr = JsonSerializer.Serialize(lastConfig);
+        var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
+
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonAppConfigData>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var dateTimeWrapper = Substitute.For<IDateTimeWrapper>();
+
+        cacheManager.Get(cacheKey).Returns(transformedValue);
+        dateTimeWrapper.UtcNow.Returns(dateTimeNow);
+
+        var appConfigResult = new AppConfigResult
+        {
+            PollConfigurationToken = configurationToken,
+            NextAllowedPollTime = nextAllowedPollTime,
+            LastConfig = lastConfigStr
+        };
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper,
+                AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId),
+                appConfigResult)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
+
+        // Act
+        var currentConfig = await appConfigProvider.IsFeatureFlagEnabledAsync("FeatureFlagTwo").ConfigureAwait(false);
+
+        // Assert
+        Assert.Equal(currentConfig, lastConfig.FeatureFlagTwo.enabled);
+    }
+
+    [Fact]
+    public async Task GetFeatureFlagAttribute_WhenHasAttribute_ReturnsAttributeValue()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var configurationToken = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+
+        var dateTimeNow = DateTime.UtcNow;
+        var nextAllowedPollTime = dateTimeNow.AddSeconds(10);
+        var lastConfig = new
+        {
+            FeatureFlagOne = new
+            {
+                enabled = true,
+                attributeOne = "TestOne",
+                attributeTwo = 10
+            },
+            FeatureFlagTwo = new
+            {
+                enabled = false,
+                attributeOne = "TestTwo",
+                attributeTwo = 20
+            },
+        };
+        
+        var lastConfigStr = JsonSerializer.Serialize(lastConfig);
+        var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
+
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonAppConfigData>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var dateTimeWrapper = Substitute.For<IDateTimeWrapper>();
+
+        cacheManager.Get(cacheKey).Returns(transformedValue);
+        dateTimeWrapper.UtcNow.Returns(dateTimeNow);
+
+        var appConfigResult = new AppConfigResult
+        {
+            PollConfigurationToken = configurationToken,
+            NextAllowedPollTime = nextAllowedPollTime,
+            LastConfig = lastConfigStr
+        };
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper,
+                AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId),
+                appConfigResult)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
+
+        // Act
+        var attributeValue1 = await appConfigProvider.GetFeatureFlagAttributeValueAsync<string>("FeatureFlagOne", "attributeOne").ConfigureAwait(false);
+        var attributeValue2 = await appConfigProvider.GetFeatureFlagAttributeValueAsync<int>("FeatureFlagOne", "attributeTwo").ConfigureAwait(false);
+
+        // Assert
+        Assert.Equal(attributeValue1, lastConfig.FeatureFlagOne.attributeOne);
+        Assert.Equal(attributeValue2, lastConfig.FeatureFlagOne.attributeTwo);
+    }
+    
+    [Fact]
+    public async Task GetFeatureFlagAttribute_WhenAttributeDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var configurationToken = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+
+        var dateTimeNow = DateTime.UtcNow;
+        var nextAllowedPollTime = dateTimeNow.AddSeconds(10);
+        var lastConfig = new
+        {
+            FeatureFlagOne = new
+            {
+                enabled = true,
+                attributeOne = "TestOne",
+                attributeTwo = 10
+            },
+            FeatureFlagTwo = new
+            {
+                enabled = false,
+                attributeOne = "TestTwo",
+                attributeTwo = 20
+            },
+        };
+        
+        var lastConfigStr = JsonSerializer.Serialize(lastConfig);
+        var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
+
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonAppConfigData>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var dateTimeWrapper = Substitute.For<IDateTimeWrapper>();
+
+        cacheManager.Get(cacheKey).Returns(transformedValue);
+        dateTimeWrapper.UtcNow.Returns(dateTimeNow);
+
+        var appConfigResult = new AppConfigResult
+        {
+            PollConfigurationToken = configurationToken,
+            NextAllowedPollTime = nextAllowedPollTime,
+            LastConfig = lastConfigStr
+        };
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper,
+                AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId),
+                appConfigResult)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
+
+        // Act
+        var attributeValue1 = await appConfigProvider.GetFeatureFlagAttributeValueAsync<string>("FeatureFlagOne", "INVALID").ConfigureAwait(false);
+
+        // Assert
+        Assert.Null(attributeValue1);
+    }
+    
+    [Fact]
+    public async Task GetFeatureFlagAttribute_WhenAttributeDoesNotExist_ReturnsSpecifiedDefaultValue()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid().ToString();
+        var environmentId = Guid.NewGuid().ToString();
+        var configProfileId = Guid.NewGuid().ToString();
+        var configurationToken = Guid.NewGuid().ToString();
+        var defaultAttributeVale = Guid.NewGuid().ToString();
+        var cacheKey = AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId);
+
+        var dateTimeNow = DateTime.UtcNow;
+        var nextAllowedPollTime = dateTimeNow.AddSeconds(10);
+        var lastConfig = new
+        {
+            FeatureFlagOne = new
+            {
+                enabled = true,
+                attributeOne = "TestOne",
+                attributeTwo = 10
+            },
+            FeatureFlagTwo = new
+            {
+                enabled = false,
+                attributeOne = "TestTwo",
+                attributeTwo = 20
+            },
+        };
+        
+        var lastConfigStr = JsonSerializer.Serialize(lastConfig);
+        var transformedValue = JsonSerializer.Deserialize<JsonObject>(lastConfigStr);
+
+        var cacheManager = Substitute.For<ICacheManager>();
+        var client = Substitute.For<IAmazonAppConfigData>();
+        var transformerManager = Substitute.For<ITransformerManager>();
+        var dateTimeWrapper = Substitute.For<IDateTimeWrapper>();
+
+        cacheManager.Get(cacheKey).Returns(transformedValue);
+        dateTimeWrapper.UtcNow.Returns(dateTimeNow);
+
+        var appConfigResult = new AppConfigResult
+        {
+            PollConfigurationToken = configurationToken,
+            NextAllowedPollTime = nextAllowedPollTime,
+            LastConfig = lastConfigStr
+        };
+
+        var appConfigProvider = new AppConfigProvider(dateTimeWrapper,
+                AppConfigProviderCacheHelper.GetCacheKey(applicationId, environmentId, configProfileId),
+                appConfigResult)
+            .UseClient(client)
+            .UseCacheManager(cacheManager)
+            .UseTransformerManager(transformerManager)
+            .WithApplication(applicationId)
+            .WithEnvironment(environmentId)
+            .WithConfigProfile(configProfileId);
+
+        // Act
+        var attributeValue1 = await appConfigProvider.GetFeatureFlagAttributeValueAsync<string>("FeatureFlagOne", "INVALID", defaultAttributeVale).ConfigureAwait(false);
+
+        // Assert
+        Assert.Equal(attributeValue1, defaultAttributeVale);
     }
 }
