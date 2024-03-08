@@ -5,9 +5,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
-        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.6.0" />
-        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.0" />
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
+        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.0" />
+        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.1" />
         <PackageReference Include="AWS.Lambda.Powertools.Parameters" Version="1.2.0" />
     </ItemGroup>
 </Project>
