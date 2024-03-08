@@ -13,8 +13,8 @@
         <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
         <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
       <PackageReference Include="Amazon.Lambda.Core" />
-      <PackageReference Include="AWSSDK.DynamoDBv2"/>
-      <PackageReference Include="JmesPath.Net"/>
+      <PackageReference Include="AWSSDK.DynamoDBv2" />
+      <PackageReference Include="JmesPath.Net" />
       <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="all" />
     </ItemGroup>
     
