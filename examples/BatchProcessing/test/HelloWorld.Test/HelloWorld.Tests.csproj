@@ -4,9 +4,6 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
-		<PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.0" />
-		<PackageReference Include="Amazon.Lambda.KinesisEvents" Version="2.2.0" />
-		<PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.0" />
 		<PackageReference Include="Amazon.Lambda.TestUtilities" Version="2.0.0" />
 		<PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.1" />
 		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.301.18" />
