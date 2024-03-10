@@ -11,8 +11,8 @@
     <ItemGroup>
         <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
         <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
-        <PackageReference Include="AWSSDK.XRay"/>
-        <PackageReference Include="AWSXRayRecorder.Core"/>
+        <PackageReference Include="AWSSDK.XRay" />
+        <PackageReference Include="AWSXRayRecorder.Core" />
         <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" />
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="All" />
     </ItemGroup>
