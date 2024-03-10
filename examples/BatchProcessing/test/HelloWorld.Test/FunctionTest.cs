@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.KinesisEvents;
 using Amazon.Lambda.SQSEvents;
@@ -237,15 +238,15 @@ namespace HelloWorld.Tests
                     new()
                     {
                         EventID = "1",
-                        Dynamodb = new DynamoDBEvent.StreamRecord
+                        Dynamodb = new StreamRecord
                         {
-                            Keys = new Dictionary<string, DynamoDBEvent.AttributeValue>
+                            Keys = new Dictionary<string, AttributeValue>
                             {
-                                { "Id", new DynamoDBEvent.AttributeValue { N = "1" } }
+                                { "Id", new AttributeValue { N = "1" } }
                             },
-                            NewImage = new Dictionary<string, DynamoDBEvent.AttributeValue>
+                            NewImage = new Dictionary<string, AttributeValue>
                             {
-                                { "Product", new DynamoDBEvent.AttributeValue { S = "{\"Id\":1,\"Name\":\"product-name\",\"Price\":14}" } }
+                                { "Product", new AttributeValue { S = "{\"Id\":1,\"Name\":\"product-name\",\"Price\":14}" } }
                             },
                             SequenceNumber = "1"
                         }
@@ -253,15 +254,15 @@ namespace HelloWorld.Tests
                     new()
                     {
                         EventID = "1",
-                        Dynamodb = new DynamoDBEvent.StreamRecord
+                        Dynamodb = new StreamRecord
                         {
-                            Keys = new Dictionary<string, DynamoDBEvent.AttributeValue>
+                            Keys = new Dictionary<string, AttributeValue>
                             {
-                                { "Id", new DynamoDBEvent.AttributeValue { N = "1" } }
+                                { "Id", new AttributeValue { N = "1" } }
                             },
-                            NewImage = new Dictionary<string, DynamoDBEvent.AttributeValue>
+                            NewImage = new Dictionary<string, AttributeValue>
                             {
-                                { "Product", new DynamoDBEvent.AttributeValue { S = "failure" } }
+                                { "Product", new AttributeValue { S = "failure" } }
                             },
                             SequenceNumber = "2"
                         }
@@ -269,15 +270,15 @@ namespace HelloWorld.Tests
                     new()
                     {
                         EventID = "1",
-                        Dynamodb = new DynamoDBEvent.StreamRecord
+                        Dynamodb = new StreamRecord
                         {
-                            Keys = new Dictionary<string, DynamoDBEvent.AttributeValue>
+                            Keys = new Dictionary<string, AttributeValue>
                             {
-                                { "Id", new DynamoDBEvent.AttributeValue { N = "1" } }
+                                { "Id", new AttributeValue { N = "1" } }
                             },
-                            NewImage = new Dictionary<string, DynamoDBEvent.AttributeValue>
+                            NewImage = new Dictionary<string, AttributeValue>
                             {
-                                { "Product", new DynamoDBEvent.AttributeValue { S = "{\"Id\":1,\"Name\":\"product-name\",\"Price\":14}" } }
+                                { "Product", new AttributeValue { S = "{\"Id\":1,\"Name\":\"product-name\",\"Price\":14}" } }
                             },
                             SequenceNumber = "3"
                         }
