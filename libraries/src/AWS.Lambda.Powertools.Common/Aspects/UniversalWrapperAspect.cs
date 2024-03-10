@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -32,19 +33,19 @@ public class UniversalWrapperAspect
     /// <summary>
     ///     The delegate cache
     /// </summary>
-    private static readonly Dictionary<MethodBase, Handler> _delegateCache = new();
+    private static readonly Dictionary<MethodBase, Handler> DelegateCache = new();
 
     /// <summary>
     ///     The asynchronous generic handler
     /// </summary>
-    private static readonly MethodInfo _asyncGenericHandler =
+    private static readonly MethodInfo AsyncGenericHandler =
         typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapAsync),
             BindingFlags.NonPublic | BindingFlags.Instance);
 
     /// <summary>
     ///     The synchronize generic handler
     /// </summary>
-    private static readonly MethodInfo _syncGenericHandler =
+    private static readonly MethodInfo SyncGenericHandler =
         typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapSync),
             BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -93,6 +94,7 @@ public class UniversalWrapperAspect
     /// <param name="returnType">Type of the return.</param>
     /// <param name="wrappers">The wrappers.</param>
     /// <returns>Handler.</returns>
+    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "<Pending>")]
     private static Handler CreateMethodHandler(Type returnType, IEnumerable<UniversalWrapperAttribute> wrappers)
     {
         var targetParam = Expression.Parameter(typeof(Func<object[], object>), "orig");
@@ -106,13 +108,13 @@ public class UniversalWrapperAspect
                 ? returnType.GenericTypeArguments[0]
                 : Type.GetType("System.Threading.Tasks.VoidTaskResult");
             returnType = typeof(Task<>).MakeGenericType(taskType);
-            wrapperMethod = _asyncGenericHandler.MakeGenericMethod(taskType);
+            wrapperMethod = AsyncGenericHandler.MakeGenericMethod(taskType);
         }
         else
         {
             if (returnType == typeof(void))
                 returnType = typeof(object);
-            wrapperMethod = _syncGenericHandler.MakeGenericMethod(returnType);
+            wrapperMethod = SyncGenericHandler.MakeGenericMethod(returnType);
         }
 
         var converArgs = Expression.Parameter(typeof(object[]), "args");
@@ -127,9 +129,9 @@ public class UniversalWrapperAspect
                 argsParam);
         }
 
-        var orig_args = Expression.Parameter(typeof(object[]), "orig_args");
-        var handler = Expression.Lambda<Handler>(Expression.Convert(Expression.Invoke(next, orig_args), typeof(object)),
-            targetParam, orig_args, eventArgsParam);
+        var origArgs = Expression.Parameter(typeof(object[]), "orig_args");
+        var handler = Expression.Lambda<Handler>(Expression.Convert(Expression.Invoke(next, origArgs), typeof(object)),
+            targetParam, origArgs, eventArgsParam);
 
         var handlerCompiled = handler.Compile();
 
@@ -146,14 +148,14 @@ public class UniversalWrapperAspect
     private static Handler GetMethodHandler(MethodBase method, Type returnType,
         IEnumerable<UniversalWrapperAttribute> wrappers)
     {
-        if (!_delegateCache.TryGetValue(method, out var handler))
-            lock (method)
-            {
-                if (!_delegateCache.TryGetValue(method, out handler))
-                    _delegateCache[method] = handler = CreateMethodHandler(returnType, wrappers);
-            }
+        lock (method)
+        {
+            if (!DelegateCache.TryGetValue(method, out var handler))
+                if (!DelegateCache.TryGetValue(method, out handler))
+                    DelegateCache[method] = handler = CreateMethodHandler(returnType, wrappers);
 
-        return handler;
+            return handler;
+        }
     }
 
     /// <summary>
