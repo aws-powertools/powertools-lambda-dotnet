@@ -33,7 +33,7 @@ Powertools for AWS Lambda (.NET) provides three core utilities:
 
 ### Installation
 
-The Powertools for AWS Lambda (.NET) utilities (.NET 6) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*) or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+The Powertools for AWS Lambda (.NET) utilities (.NET 6 and .NET 8) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*) or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
 
 * [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
 
@@ -61,7 +61,7 @@ The Powertools for AWS Lambda (.NET) utilities (.NET 6) are available as NuGet p
 
 ## Examples
 
-We have provided examples focused specifically on each of the utilities. Each solution comes with an AWS Serverless Application Model (AWS SAM) templates to run your functions as a Zip package using the AWS Lambda .NET 6 managed runtime; or as a container package using the AWS base images for .NET.
+We have provided examples focused specifically on each of the utilities. Each solution comes with an AWS Serverless Application Model (AWS SAM) templates to run your functions as a Zip package using the AWS Lambda .NET 6 or .NET 8 managed runtime; or as a container package using the AWS base images for .NET.
 
 * **[Logging example](examples/Logging/)**
 * **[Metrics example](examples/Metrics/)**
