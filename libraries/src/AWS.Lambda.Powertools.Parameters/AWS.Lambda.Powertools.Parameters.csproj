@@ -13,10 +13,12 @@
     <ItemGroup>
         <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
         <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
-        <PackageReference Include="AWSSDK.DynamoDBv2"/>
-        <PackageReference Include="AWSSDK.SecretsManager"/>
-        <PackageReference Include="AWSSDK.SimpleSystemsManagement"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration"/>
+        <PackageReference Include="AWSSDK.AppConfig" />
+        <PackageReference Include="AWSSDK.AppConfigData" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" />
+        <PackageReference Include="AWSSDK.SecretsManager" />
+        <PackageReference Include="AWSSDK.SimpleSystemsManagement" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" />
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="All" />
         <PackageReference Include="Amazon.Lambda.Core" />
     </ItemGroup>

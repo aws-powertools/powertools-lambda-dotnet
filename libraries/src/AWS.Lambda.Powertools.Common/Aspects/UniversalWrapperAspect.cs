@@ -84,7 +84,8 @@ public class UniversalWrapperAspect
         };
 
         var wrappers = triggers.OfType<UniversalWrapperAttribute>().ToArray();
-        var handler = GetMethodHandler(method, returnType, wrappers);
+        // Target.Method is more precise for cases when decorating generic methods
+        var handler = GetMethodHandler(target.Method, returnType, wrappers);
         return handler(target, args, eventArgs);
     }
 
