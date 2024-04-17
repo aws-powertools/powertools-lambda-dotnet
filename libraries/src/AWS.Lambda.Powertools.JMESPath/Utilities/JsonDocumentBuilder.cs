@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,11 +23,11 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
 {
     internal class JsonDocumentBuilder
     {
-        internal static JsonDocumentBuilder Default { get; } = new();
+        private static JsonDocumentBuilder Default { get; } = new();
 
         internal JsonValueKind ValueKind {get;}
 
-        private object? _item;
+        private readonly object? _item;
 
         private IList<JsonDocumentBuilder> GetList()
         {
@@ -23,7 +38,8 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         {
             return _item as IDictionary<string, JsonDocumentBuilder> ?? throw new InvalidOperationException("Item is null");
         }
-        internal JsonDocumentBuilder()
+
+        private JsonDocumentBuilder()
             : this(JsonValueKind.Null)
         {
         }
@@ -210,7 +226,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             {
                 throw new InvalidOperationException("This value's ValueKind is not Array.");
             }
-            return GetList().Count();
+            return GetList().Count;
         }
 
         internal int GetObjectLength()
@@ -219,7 +235,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             {
                 throw new InvalidOperationException("This value's ValueKind is not Object.");
             }
-            return GetDictionary().Count();
+            return GetDictionary().Count;
         }
 
         internal bool TryGetProperty(string name, out JsonDocumentBuilder value)
@@ -228,12 +244,10 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             {
                 throw new InvalidOperationException("This value's ValueKind is not Object.");
             }
-            if (ValueKind != JsonValueKind.Object)
-            {
-                value = Default;
-                return false;
-            }
-            return GetDictionary().TryGetValue(name, out value);
+
+            if (ValueKind == JsonValueKind.Object) return GetDictionary().TryGetValue(name, out value);
+            value = Default;
+            return false;
         }
 
         public override string ToString()
@@ -249,13 +263,13 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             {
                 case JsonValueKind.Array:
                 {
-                    buffer.Append("[");
+                    buffer.Append('[');
                     var first = true;
                     foreach (var item in EnumerateArray())
                     {
                         if (!first)
                         {
-                            buffer.Append(",");
+                            buffer.Append(',');
                         }
                         else
                         {
@@ -263,28 +277,28 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                         }
                         item.ToString(buffer);
                     }
-                    buffer.Append("]");
+                    buffer.Append(']');
                     break;
                 }
                 case JsonValueKind.Object:
                 {
-                    buffer.Append("{");
+                    buffer.Append('{');
                     var first = true;
                     foreach (var property in EnumerateObject())
                     {
                         if (!first)
                         {
-                            buffer.Append(",");
+                            buffer.Append(',');
                         }
                         else
                         {
                             first = false;
                         }
                         buffer.Append(JsonSerializer.Serialize(property.Key));
-                        buffer.Append(":");
+                        buffer.Append(':');
                         property.Value.ToString(buffer);
                     }
-                    buffer.Append("}");
+                    buffer.Append('}');
                     break;
                 }
                 default:
@@ -301,5 +315,4 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             return JsonDocument.Parse(json);
         }
     }
-
-} // namespace JsonCons.Utilities
+}

@@ -1,4 +1,18 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -91,7 +105,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return $"IdentifierSelector {_identifier}";
         }
-    };
+    }
 
     internal sealed class CurrentNode : BaseExpression
     {
@@ -112,7 +126,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "CurrentNode";
         }
-    };
+    }
 
     internal sealed class IndexSelector : BaseExpression
     {
@@ -153,7 +167,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return $"Index Selector {_index}";
         }
-    };
+    }
 
     internal abstract class Projection : BaseExpression
     {
@@ -190,7 +204,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             }
             return true;
         }
-    };
+    }
 
     internal sealed class ObjectProjection : Projection
     {
@@ -230,7 +244,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "ObjectProjection";
         }
-    };
+    }
 
     internal sealed class ListProjection : Projection
     {    
@@ -273,7 +287,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "ListProjection";
         }
-    };
+    }
 
     internal sealed class FlattenProjection : Projection
     {
@@ -338,7 +352,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "FlattenProjection";
         }
-    };
+    }
 
     internal sealed class SliceProjection : Projection
     {
@@ -426,7 +440,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "SliceProjection";
         }
-    };
+    }
 
     internal sealed class FilterExpression : Projection
     {
@@ -477,7 +491,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "FilterExpression";
         }
-    };
+    }
 
     internal sealed class MultiSelectList : BaseExpression
     {
@@ -517,7 +531,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "MultiSelectList";
         }
-    };
+    }
 
     internal struct KeyExpressionPair
     {
@@ -529,7 +543,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             Key = key;
             Expression = expression;
         }
-    };
+    }
 
     internal sealed class MultiSelectHash : BaseExpression
     {

@@ -1,4 +1,19 @@
-﻿using System.Text.RegularExpressions;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System.Text.RegularExpressions;
 
 namespace AWS.Lambda.Powertools.JMESPath
 {
@@ -7,7 +22,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         int PrecedenceLevel {get;}
         bool IsRightAssociative {get;}
         bool TryEvaluate(IValue elem, out IValue result);
-    };
+    }
 
     internal abstract class UnaryOperator : IUnaryOperator
     {
@@ -22,13 +37,13 @@ namespace AWS.Lambda.Powertools.JMESPath
         public bool IsRightAssociative {get;} 
 
         public abstract bool TryEvaluate(IValue elem, out IValue result);
-    };
+    }
 
     internal sealed class NotOperator : UnaryOperator
     {
         internal static NotOperator Instance { get; } = new();
 
-        internal NotOperator()
+        private NotOperator()
             : base(Operator.Not)
         {}
 
@@ -42,11 +57,11 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "Not";
         }
-    };
+    }
 
     internal sealed class RegexOperator : UnaryOperator
     {
-        private Regex _regex;
+        private readonly Regex _regex;
 
         internal RegexOperator(Regex regex)
             : base(Operator.Not)
@@ -56,7 +71,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public override bool TryEvaluate(IValue val, out IValue result)
         {
-            if (!(val.Type == JmesPathType.String))
+            if (val.Type != JmesPathType.String)
             {
                 result = JsonConstants.Null;
                 return false; // type error
@@ -69,7 +84,6 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "Regex";
         }
-    };
-
+    }
 }
 

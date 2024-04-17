@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -14,7 +29,6 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
     /// using System;
     /// using System.Diagnostics;
     /// using System.Text.Json;
-    /// using JsonCons.Utilities;
     /// 
     /// public class Example
     /// {
@@ -121,7 +135,6 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
     /// using System;
     /// using System.Diagnostics;
     /// using System.Text.Json;
-    /// using JsonCons.Utilities;
     /// 
     /// public class Example
     /// {
@@ -184,26 +197,26 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// number, true, false, null, empty object, or empty array. 
         /// </summary>
         /// <remarks>
-        /// It is the users responsibilty to properly Dispose the returned <see cref="JsonDocument"/> value
+        /// It is the users responsibility to properly Dispose the returned <see cref="JsonDocument"/> value
         /// </remarks>
         /// <param name="value">The value to be flattened.</param>
         /// <returns>The flattened value</returns>
         public static JsonDocument Flatten(JsonElement value)
         {
             var result = new JsonDocumentBuilder(JsonValueKind.Object);
-            var parentKey = "";
+            const string parentKey = "";
             _Flatten(parentKey, value, result);
             return result.ToJsonDocument();
         }
 
         /// <summary>
-        /// Recovers the orginal JSON value from a JSON object in flattened form, to the extent possible. 
+        /// Recovers the original JSON value from a JSON object in flattened form, to the extent possible. 
         /// There may not be a unique solution, an integer token in a JSON Pointer could be an array index or 
         /// it could be an object name. The default behavior is to attempt to recover arrays. The <paramref name="options"/>
         /// parameter can be used to recover objects with integer names instead.
         /// </summary>
         /// <remarks>
-        /// It is the users responsibilty to properly Dispose the returned <see cref="JsonDocument"/> value
+        /// It is the users responsibility to properly Dispose the returned <see cref="JsonDocument"/> value
         /// </remarks>
         /// <param name="flattenedValue">The flattened value, which must be a JSON object of name-value pairs, such that 
         /// the names are JSON Pointer strings, and the values are either string,
@@ -218,19 +231,10 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         {
             if (options == IntegerTokenUnflattening.TryIndex)
             {
-                if (TryUnflattenArray(flattenedValue, out var val))
-                 {
-                     return val.ToJsonDocument();
-                 }
-                 else
-                 {
-                     return UnflattenToObject(flattenedValue, options).ToJsonDocument();
-                 }
+                return TryUnflattenArray(flattenedValue, out var val) ? val.ToJsonDocument() : UnflattenToObject(flattenedValue, options).ToJsonDocument();
             }
-            else
-            {
-                return UnflattenToObject(flattenedValue, options).ToJsonDocument();
-            }
+
+            return UnflattenToObject(flattenedValue, options).ToJsonDocument();
         }
 
         private static void _Flatten(string parentKey,
@@ -260,7 +264,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
 
                 case JsonValueKind.Object:
                 {
-                    if (parentValue.EnumerateObject().Count() == 0)
+                    if (!parentValue.EnumerateObject().Any())
                     {
                         result.AddProperty(parentKey, new JsonDocumentBuilder(parentValue));
                     }
@@ -297,11 +301,9 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             var index = 0;
             foreach (var item in value.EnumerateObject())
             {
-                if (!int.TryParse(item.Key, out var n) || index++ != n)
-                {
-                    safe = false;
-                    break;
-                }
+                if (int.TryParse(item.Key, out var n) && index++ == n) continue;
+                safe = false;
+                break;
             }
 
             if (safe)
@@ -318,19 +320,17 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                 }
                 return a;
             }
-            else
+
+            var o = new JsonDocumentBuilder(JsonValueKind.Object);
+            foreach (var item in value.EnumerateObject())
             {
-                var o = new JsonDocumentBuilder(JsonValueKind.Object);
-                foreach (var item in value.EnumerateObject())
-                {
-                    //if (!o.ContainsPropertyName(item.Key))
-                    //{
-                    //    o.AddProperty(item.Key, SafeUnflatten (item.Value));
-                    //}
-                    o.TryAddProperty(item.Key, SafeUnflatten (item.Value));
-                }
-                return o;
+                //if (!o.ContainsPropertyName(item.Key))
+                //{
+                //    o.AddProperty(item.Key, SafeUnflatten (item.Value));
+                //}
+                o.TryAddProperty(item.Key, SafeUnflatten (item.Value));
             }
+            return o;
         }
 
         private static bool TryUnflattenArray(JsonElement value, out JsonDocumentBuilder result)
@@ -355,7 +355,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                 }
                 var index = 0;
 
-                var it = ptr.GetEnumerator();
+                using var it = ptr.GetEnumerator();
                 var more = it.MoveNext();
                 while (more)
                 {
@@ -461,7 +461,8 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                 {
                     throw new ArgumentException("Name contains invalid JSON Pointer");
                 }
-                var it = ptr.GetEnumerator();
+
+                using var it = ptr.GetEnumerator();
                 var more = it.MoveNext();
                 while (more)
                 {
@@ -499,5 +500,4 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             return options == IntegerTokenUnflattening.TryIndex ? SafeUnflatten (result) : result;
         }
     }
-
-} // namespace JsonCons.Utilities
+}

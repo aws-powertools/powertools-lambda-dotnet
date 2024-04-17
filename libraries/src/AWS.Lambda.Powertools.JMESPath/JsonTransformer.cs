@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System;
 using System.Text.Json;
 
 namespace AWS.Lambda.Powertools.JMESPath
@@ -93,7 +108,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             return compiler.Parse();
         }
 
-        private Expression _expr;
+        private readonly Expression _expr;
 
         internal JsonTransformer(Expression expr)
         {
@@ -115,7 +130,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             var resources = new DynamicResources();
             _expr.TryEvaluate(resources, new JsonElementValue(doc), out var temp);
-            return JsonDocument.Parse(temp.ToString());
+            return JsonDocument.Parse(temp.ToString() ?? string.Empty);
         }
 
         /// <summary>

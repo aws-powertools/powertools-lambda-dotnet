@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,15 +23,17 @@ namespace AWS.Lambda.Powertools.JMESPath
    {
        internal static ValueEqualityComparer Instance { get; } = new();
 
-       private int _maxHashDepth = 100;
+       private readonly int _maxHashDepth = 100;
 
        private ValueEqualityComparer() {}
 
        public bool Equals(IValue lhs, IValue rhs)
        {
-           if (lhs.Type != rhs.Type)
+           if (lhs != null && rhs != null && lhs.Type != rhs.Type)
                return false;
 
+           if (rhs == null || lhs == null) return false;
+           
            switch (lhs.Type)
            {
                case JmesPathType.Null:
@@ -30,18 +47,17 @@ namespace AWS.Lambda.Powertools.JMESPath
                    {
                        return dec1 == dec2;
                    }
-                   else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
+
+                   if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
                    {
-                       return val1 == val2;
+                       return Math.Abs(val1 - val2) < 0.000000001;
                    }
-                   else
-                   {
-                       return false;
-                   }
+
+                   return false;
                }
 
                case JmesPathType.String:
-                   return lhs.GetString().Equals(rhs.GetString()); 
+                   return lhs.GetString().Equals(rhs.GetString());
 
                case JmesPathType.Array:
                    return lhs.EnumerateArray().SequenceEqual(rhs.EnumerateArray(), this);
@@ -49,8 +65,10 @@ namespace AWS.Lambda.Powertools.JMESPath
                case JmesPathType.Object:
                {
                    // OrderBy performs a stable sort (Note that IValue supports duplicate property names)
-                   var enumerator1 = lhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
-                   var enumerator2 = rhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
+                   using var enumerator1 = lhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal)
+                       .GetEnumerator();
+                   using var enumerator2 = rhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal)
+                       .GetEnumerator();
 
                    var result1 = enumerator1.MoveNext();
                    var result2 = enumerator2.MoveNext();
@@ -60,19 +78,21 @@ namespace AWS.Lambda.Powertools.JMESPath
                        {
                            return false;
                        }
-                       if (!(Equals(enumerator1.Current.Value,enumerator2.Current.Value)))
+
+                       if (!(Equals(enumerator1.Current.Value, enumerator2.Current.Value)))
                        {
                            return false;
                        }
+
                        result1 = enumerator1.MoveNext();
                        result2 = enumerator2.MoveNext();
-                   }   
+                   }
 
                    return result1 == false && result2 == false;
                }
 
                default:
-                   throw new InvalidOperationException(string.Format("Unknown JmesPathType {0}", lhs.Type));
+                   throw new InvalidOperationException($"Unknown JmesPathType {lhs.Type}");
            }
        }
 
@@ -119,7 +139,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                     break;
 
                 default:
-                   throw new InvalidOperationException(string.Format("Unknown JmesPathType {0}", element.Type));
+                   throw new InvalidOperationException($"Unknown JmesPathType {element.Type}");
            }
            return hashCode;
        }

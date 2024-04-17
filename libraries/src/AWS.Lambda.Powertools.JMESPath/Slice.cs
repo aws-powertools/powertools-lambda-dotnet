@@ -1,4 +1,17 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 
 namespace AWS.Lambda.Powertools.JMESPath
 {
@@ -18,36 +31,17 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public int GetStart(int size)
         {
-            if (_start.HasValue)
-            {
-                var len = _start.Value >= 0 ? _start.Value : size + _start.Value;
-                return len <= size ? len : size;
-            }
-            else
-            {
-                if (Step >= 0)
-                {
-                    return 0;
-                }
-                else 
-                {
-                    return size;
-                }
-            }
+            if (!_start.HasValue) return Step >= 0 ? 0 : size;
+            var len = _start.Value >= 0 ? _start.Value : size + _start.Value;
+            return len <= size ? len : size;
         }
 
         public int GetStop(int size)
         {
-            if (_stop.HasValue)
-            {
-                var len = _stop.Value >= 0 ? _stop.Value : size + _stop.Value;
-                return len <= size ? len : size;
-            }
-            else
-            {
-                return Step >= 0 ? size : -1;
-            }
+            if (!_stop.HasValue) return Step >= 0 ? size : -1;
+            var len = _stop.Value >= 0 ? _stop.Value : size + _stop.Value;
+            return len <= size ? len : size;
         }
-    };
+    }
 
 }

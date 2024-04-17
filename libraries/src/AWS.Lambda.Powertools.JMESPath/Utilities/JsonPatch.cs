@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
@@ -44,7 +59,6 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
     /// using System;
     /// using System.Diagnostics;
     /// using System.Text.Json;
-    /// using JsonCons.Utilities;
     /// 
     /// public class Example
     /// {
@@ -128,7 +142,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// to a source JSON value.
         /// </summary>
         /// <remarks>
-        /// It is the users responsibilty to properly Dispose the returned <see cref="JsonDocument"/> value
+        /// It is the users responsibility to properly Dispose the returned <see cref="JsonDocument"/> value
         /// </remarks>
         /// <param name="source">The source JSON value.</param>
         /// <param name="patch">The patch to be applied to the source JSON value.</param>
@@ -139,16 +153,16 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// <exception cref="JsonPatchException">
         ///   A JSON Patch operation failed
         /// </exception>
-        public static JsonDocument ApplyPatch(JsonElement source, 
-                                              JsonElement patch)
+        public static JsonDocument ApplyPatch(JsonElement source,
+            JsonElement patch)
         {
             var documentBuilder = new JsonDocumentBuilder(source);
             ApplyPatch(ref documentBuilder, patch);
             return documentBuilder.ToJsonDocument();
         }
 
-        private static void ApplyPatch(ref JsonDocumentBuilder target, 
-                               JsonElement patch)
+        private static void ApplyPatch(ref JsonDocumentBuilder target,
+            JsonElement patch)
         {
             var comparer = JsonElementEqualityComparer.Instance;
 
@@ -158,132 +172,146 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             {
                 throw new ArgumentException("Patch must be an array");
             }
-            
+
             foreach (var operation in patch.EnumerateArray())
             {
                 if (!operation.TryGetProperty("op", out var opElement))
                 {
                     throw new ArgumentException("Invalid patch");
                 }
+
                 var op = opElement.GetString() ?? throw new InvalidOperationException("Operation cannot be null");
 
                 if (!operation.TryGetProperty("path", out var pathElement))
                 {
-                    throw new ArgumentException(op, "Invalid patch");
+                    throw new ArgumentException(op, nameof(patch));
                 }
-                var path = pathElement.GetString() ?? throw new InvalidOperationException("Operation cannot be null"); ;
+
+                var path = pathElement.GetString() ?? throw new InvalidOperationException("Operation cannot be null");
 
                 if (!JsonPointer.TryParse(path, out var location))
                 {
-                    throw new ArgumentException(op, "Invalid patch");
+                    throw new ArgumentException(op, nameof(patch));
                 }
 
-                if (op =="test")
+                switch (op)
                 {
-                    if (!operation.TryGetProperty("value", out var value))
+                    case "test":
                     {
-                        throw new ArgumentException(op, "Invalid patch");
-                    }
+                        if (!operation.TryGetProperty("value", out var value))
+                        {
+                            throw new ArgumentException(op, nameof(patch));
+                        }
 
-                    if (!location.TryGetValue(target, out var tested))
-                    {
-                        throw new ArgumentException(op, "Invalid patch");
-                    }
+                        if (!location.TryGetValue(target, out var tested))
+                        {
+                            throw new ArgumentException(op, nameof(patch));
+                        }
 
-                    using (var doc = tested.ToJsonDocument())
-                    {
+                        using var doc = tested.ToJsonDocument();
                         if (!comparer.Equals(doc.RootElement, value))
                         {
                             throw new JsonPatchException(op, "Test failed");
                         }
+
+                        break;
                     }
-                }
-                else if (op =="add")
-                {
-                    if (!operation.TryGetProperty("value", out var value))
+                    case "add":
                     {
-                        throw new ArgumentException(op, "Invalid patch");
-                    }
-                    var valueBuilder = new JsonDocumentBuilder(value);
-                    if (!location.TryAddIfAbsent(ref target, valueBuilder)) // try insert without replace
-                    {
+                        if (!operation.TryGetProperty("value", out var value))
+                        {
+                            throw new ArgumentException(op, nameof(patch));
+                        }
+
+                        var valueBuilder = new JsonDocumentBuilder(value);
+                        if (location.TryAddIfAbsent(ref target, valueBuilder)) continue; // try insert without replace
                         if (!location.TryReplace(ref target, valueBuilder)) // try insert without replace
                         {
                             throw new JsonPatchException(op, "Add failed");
                         }
+
+                        break;
                     }
-                }
-                else if (op =="remove")
-                {
-                    if (!location.TryRemove(ref target)) 
-                    {
+                    case "remove" when !location.TryRemove(ref target):
                         throw new JsonPatchException(op, "Add failed");
-                    }
-                }
-                else if (op =="replace")
-                {
-                    if (!operation.TryGetProperty("value", out var value))
+                    case "replace":
                     {
-                        throw new ArgumentException(op, "Invalid patch");
-                    }
-                    var valueBuilder = new JsonDocumentBuilder(value);
-                    if (!location.TryReplace(ref target, valueBuilder))
-                    {
-                        throw new JsonPatchException(op, "Replace failed");
-                    }
-                }
-                else if (op =="move")
-                {
-                    if (!operation.TryGetProperty("from", out var fromElement))
-                    {
-                        throw new ArgumentException(op, "Invalid patch");
-                    }
-                    var from = fromElement.GetString() ?? throw new InvalidOperationException("From element cannot be null"); ;
+                        if (!operation.TryGetProperty("value", out var value))
+                        {
+                            throw new ArgumentException(op, nameof(patch));
+                        }
 
-                    if (!JsonPointer.TryParse(from, out var fromPointer))
-                    {
-                        throw new ArgumentException(op, "Invalid patch");
-                    }
+                        var valueBuilder = new JsonDocumentBuilder(value);
+                        if (!location.TryReplace(ref target, valueBuilder))
+                        {
+                            throw new JsonPatchException(op, "Replace failed");
+                        }
 
-                    if (!fromPointer.TryGetValue(target, out var value))
-                    {
-                        throw new JsonPatchException(op, "Move failed");
+                        break;
                     }
+                    case "move":
+                    {
+                        if (!operation.TryGetProperty("from", out var fromElement))
+                        {
+                            throw new ArgumentException(op, nameof(patch));
+                        }
 
-                    if (!fromPointer.TryRemove(ref target))
-                    {
-                        throw new JsonPatchException(op, "Move failed");
-                    }
-                    if (!location.TryAddIfAbsent(ref target, value))
-                    {
-                        if (!location.TryReplace(ref target, value)) // try insert without replace
+                        var from = fromElement.GetString() ??
+                                   throw new InvalidOperationException("From element cannot be null");
+                        
+                        if (!JsonPointer.TryParse(from, out var fromPointer))
+                        {
+                            throw new ArgumentException(op, nameof(patch));
+                        }
+
+                        if (!fromPointer.TryGetValue(target, out var value))
                         {
                             throw new JsonPatchException(op, "Move failed");
                         }
-                    }
-                }
-                else if (op =="copy")
-                {
-                    if (!operation.TryGetProperty("from", out var fromElement))
-                    {
-                        throw new ArgumentException(op, "Invalid patch");
-                    }
-                    var from = fromElement.GetString() ?? throw new InvalidOperationException("from cannot be null");
-                    if (!JsonPointer.TryParse(from, out var fromPointer))
-                    {
-                        throw new ArgumentException(op, "Invalid patch");
-                    }
 
-                    if (!fromPointer.TryGetValue(target, out var value))
-                    {
-                        throw new JsonPatchException(op, "Copy failed");
-                    }
-                    if (!location.TryAddIfAbsent(ref target, value))
-                    {
-                        if (!location.TryReplace(ref target, value)) // try insert without replace
+                        if (!fromPointer.TryRemove(ref target))
                         {
                             throw new JsonPatchException(op, "Move failed");
                         }
+
+                        if (!location.TryAddIfAbsent(ref target, value))
+                        {
+                            if (!location.TryReplace(ref target, value)) // try insert without replace
+                            {
+                                throw new JsonPatchException(op, "Move failed");
+                            }
+                        }
+
+                        break;
+                    }
+                    case "copy":
+                    {
+                        if (!operation.TryGetProperty("from", out var fromElement))
+                        {
+                            throw new ArgumentException(op, nameof(patch));
+                        }
+
+                        var from = fromElement.GetString() ??
+                                   throw new InvalidOperationException("from cannot be null");
+                        if (!JsonPointer.TryParse(from, out var fromPointer))
+                        {
+                            throw new ArgumentException(op, nameof(patch));
+                        }
+
+                        if (!fromPointer.TryGetValue(target, out var value))
+                        {
+                            throw new JsonPatchException(op, "Copy failed");
+                        }
+
+                        if (!location.TryAddIfAbsent(ref target, value))
+                        {
+                            if (!location.TryReplace(ref target, value)) // try insert without replace
+                            {
+                                throw new JsonPatchException(op, "Move failed");
+                            }
+                        }
+
+                        break;
                     }
                 }
             }
@@ -294,60 +322,62 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// given two JSON values, a source and a target.
         /// </summary>
         /// <remarks>
-        /// It is the users responsibilty to properly Dispose the returned <see cref="JsonDocument"/> value
+        /// It is the users responsibility to properly Dispose the returned <see cref="JsonDocument"/> value
         /// </remarks>
         /// <param name="source">The source JSON value.</param>
         /// <param name="target">The target JSON value.</param>
         /// <returns>A JSON Merge Patch to convert the source JSON value to the target JSON value</returns>
-        public static JsonDocument FromDiff(JsonElement source, 
-                                            JsonElement target)
+        public static JsonDocument FromDiff(JsonElement source,
+            JsonElement target)
         {
             return _FromDiff(source, target, "").ToJsonDocument();
         }
 
-        private static JsonDocumentBuilder _FromDiff(JsonElement source, 
-                                            JsonElement target, 
-                                            string path)
+        private static JsonDocumentBuilder _FromDiff(JsonElement source,
+            JsonElement target,
+            string path)
         {
             var builder = new JsonDocumentBuilder(JsonValueKind.Array);
 
             var comparer = JsonElementEqualityComparer.Instance;
 
-            if (comparer.Equals(source,target))
+            if (comparer.Equals(source, target))
             {
                 return builder;
             }
 
             if (source.ValueKind == JsonValueKind.Array && target.ValueKind == JsonValueKind.Array)
             {
-                var common = Math.Min(source.GetArrayLength(),target.GetArrayLength());
+                var common = Math.Min(source.GetArrayLength(), target.GetArrayLength());
                 for (var i = 0; i < common; ++i)
                 {
-                    var buffer = new StringBuilder(path); 
+                    var buffer = new StringBuilder(path);
                     buffer.Append("/");
                     buffer.Append(i.ToString());
-                    var temp_diff = _FromDiff(source[i], target[i], buffer.ToString());
-                    foreach (var item in temp_diff.EnumerateArray())
+                    var tempDiff = _FromDiff(source[i], target[i], buffer.ToString());
+                    foreach (var item in tempDiff.EnumerateArray())
                     {
                         builder.AddArrayItem(item);
                     }
                 }
+
                 // Element in source, not in target - remove
                 for (var i = source.GetArrayLength(); i-- > target.GetArrayLength();)
                 {
-                    var buffer = new StringBuilder(path); 
-                    buffer.Append("/");
+                    var buffer = new StringBuilder(path);
+                    buffer.Append('/');
                     buffer.Append(i.ToString());
                     var valBuilder = new JsonDocumentBuilder(JsonValueKind.Object);
                     valBuilder.AddProperty("op", new JsonDocumentBuilder("remove"));
                     valBuilder.AddProperty("path", new JsonDocumentBuilder(buffer.ToString()));
                     builder.AddArrayItem(valBuilder);
                 }
+
                 // Element in target, not in source - add, 
                 for (var i = source.GetArrayLength(); i < target.GetArrayLength(); ++i)
                 {
                     var a = target[i];
-                    var buffer = new StringBuilder(path); 
+                    var buffer = new StringBuilder(path);
                     buffer.Append("/");
                     buffer.Append(i.ToString());
                     var valBuilder = new JsonDocumentBuilder(JsonValueKind.Object);
@@ -362,13 +392,13 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                 foreach (var a in source.EnumerateObject())
                 {
                     var buffer = new StringBuilder(path);
-                    buffer.Append("/"); 
+                    buffer.Append("/");
                     buffer.Append(JsonPointer.Escape(a.Name));
 
                     if (target.TryGetProperty(a.Name, out var element))
-                    { 
-                        var temp_diff = _FromDiff(a.Value, element, buffer.ToString());
-                        foreach (var item in temp_diff.EnumerateArray())
+                    {
+                        var tempDiff = _FromDiff(a.Value, element, buffer.ToString());
+                        foreach (var item in tempDiff.EnumerateArray())
                         {
                             builder.AddArrayItem(item);
                         }
@@ -381,20 +411,19 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                         builder.AddArrayItem(valBuilder);
                     }
                 }
+
                 foreach (var a in target.EnumerateObject())
                 {
-                    JsonElement element;
-                    if (!source.TryGetProperty(a.Name, out element))
-                    {
-                        var buffer = new StringBuilder(path); 
-                        buffer.Append("/");
-                        buffer.Append(JsonPointer.Escape(a.Name));
-                        var valBuilder = new JsonDocumentBuilder(JsonValueKind.Object);
-                        valBuilder.AddProperty("op", new JsonDocumentBuilder("add"));
-                        valBuilder.AddProperty("path", new JsonDocumentBuilder(buffer.ToString()));
-                        valBuilder.AddProperty("value", new JsonDocumentBuilder(a.Value));
-                        builder.AddArrayItem(valBuilder);
-                    }
+                    if (source.TryGetProperty(a.Name, out _)) continue;
+
+                    var buffer = new StringBuilder(path);
+                    buffer.Append("/");
+                    buffer.Append(JsonPointer.Escape(a.Name));
+                    var valBuilder = new JsonDocumentBuilder(JsonValueKind.Object);
+                    valBuilder.AddProperty("op", new JsonDocumentBuilder("add"));
+                    valBuilder.AddProperty("path", new JsonDocumentBuilder(buffer.ToString()));
+                    valBuilder.AddProperty("value", new JsonDocumentBuilder(a.Value));
+                    builder.AddArrayItem(valBuilder);
                 }
             }
             else
@@ -409,5 +438,4 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             return builder;
         }
     }
-
-} // namespace JsonCons.Utilities
+}

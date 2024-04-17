@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +30,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         /// <summary>
         /// Constructs a <see cref="ValueComparer"/>
         /// </summary>
-        public ValueComparer() {}
+        private ValueComparer() {}
 
         /// <summary>
         /// Compares two <see cref="IValue"/> instances.
@@ -81,18 +96,17 @@ namespace AWS.Lambda.Powertools.JMESPath
                     {
                         return dec1.CompareTo(dec2);
                     }
-                    else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
+
+                    if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
                     {
                         return val1.CompareTo(val2);
                     }
-                    else
-                    {
-                        throw new InvalidOperationException("Unable to compare numbers");
-                    }
+
+                    throw new InvalidOperationException("Unable to compare numbers");
                 }
     
                 case JmesPathType.String:
-                    return lhs.GetString().CompareTo(rhs.GetString()); 
+                    return string.Compare(lhs.GetString(), rhs.GetString(), StringComparison.Ordinal); 
     
                 case JmesPathType.Array:
                 {
@@ -116,8 +130,8 @@ namespace AWS.Lambda.Powertools.JMESPath
                 case JmesPathType.Object:
                 {
                     // OrderBy performs a stable sort (Note that <see cref="IValue"/> supports duplicate property names)
-                    var enumerator1 = lhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
-                    var enumerator2 = rhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
+                    using var enumerator1 = lhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
+                    using var enumerator2 = rhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
     
                     var result1 = enumerator1.MoveNext();
                     var result2 = enumerator2.MoveNext();
@@ -125,7 +139,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                     {
                         if (enumerator1.Current.Name != enumerator2.Current.Name)
                         {
-                            return enumerator1.Current.Name.CompareTo(enumerator2.Current.Name);
+                            return string.Compare(enumerator1.Current.Name, enumerator2.Current.Name, StringComparison.Ordinal);
                         }
                         var diff = Compare(enumerator1.Current.Value, enumerator2.Current.Value);
                         if (diff != 0)
@@ -140,7 +154,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 }
     
                 default:
-                    throw new InvalidOperationException(string.Format("Unknown JmesPathType {0}", lhs.Type));
+                    throw new InvalidOperationException($"Unknown JmesPathType {lhs.Type}");
             }
         }
 
@@ -149,6 +163,4 @@ namespace AWS.Lambda.Powertools.JMESPath
             return Compare((IValue)x, (IValue)y);
         }        
     }
-
-
-} // namespace JsonCons.JsonPath
+}

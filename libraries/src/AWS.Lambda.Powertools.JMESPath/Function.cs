@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -70,7 +85,7 @@ namespace AWS.Lambda.Powertools.JMESPath
     {
         int? Arity { get; }
         bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element);
-    };
+    }
 
     internal abstract class BaseFunction : IFunction
     {
@@ -82,7 +97,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public int? Arity { get; }
 
         public abstract bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element);
-    };
+    }
 
     internal sealed class AbsFunction : BaseFunction
     {
@@ -117,7 +132,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "abs";
         }
-    };
+    }
 
     internal sealed class AvgFunction : BaseFunction
     {
@@ -154,6 +169,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 result = new DoubleValue(dblVal / arg0.GetArrayLength());
                 return true;
             }
+
             result = JsonConstants.Null;
             return false;
         }
@@ -162,7 +178,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "avg";
         }
-    };
+    }
 
     internal sealed class CeilFunction : BaseFunction
     {
@@ -194,6 +210,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 result = new DoubleValue(Math.Ceiling(dblVal));
                 return true;
             }
+
             result = JsonConstants.Null;
             return false;
         }
@@ -202,7 +219,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "ceil";
         }
-    };
+    }
 
     internal sealed class ContainsFunction : BaseFunction
     {
@@ -266,7 +283,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "contains";
         }
-    };
+    }
 
     internal sealed class EndsWithFunction : BaseFunction
     {
@@ -308,7 +325,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "ends_with";
         }
-    };
+    }
 
     internal sealed class FloorFunction : BaseFunction
     {
@@ -340,6 +357,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 result = new DoubleValue(Math.Floor(dblVal));
                 return true;
             }
+
             result = JsonConstants.Null;
             return false;
         }
@@ -348,7 +366,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "floor";
         }
-    };
+    }
 
     internal sealed class JoinFunction : BaseFunction
     {
@@ -483,7 +501,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return "length";
         }
-    };
+    }
 
     internal sealed class MaxFunction : BaseFunction
     {
@@ -1221,17 +1239,18 @@ namespace AWS.Lambda.Powertools.JMESPath
                 case JmesPathType.String:
                 {
                     var s = arg0.GetString();
-                    if (decimal.TryParse(s, out var dec))
+                    if (decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var dec))
                     {
                         result = new DecimalValue(dec);
                         return true;
                     }
 
-                    if (double.TryParse(s, out var dbl))
+                    if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var dbl))
                     {
                         result = new DoubleValue(dbl);
                         return true;
                     }
+
                     result = JsonConstants.Null;
                     return false;
                 }
@@ -1383,7 +1402,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
             result = args[0];
-            
+
             //result = new JsonElementValue(JsonNode.Parse(args[0].GetString()).Deserialize<JsonElement>());
             return true;
         }
@@ -1428,7 +1447,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
-            
+
             var compressedBytes = Convert.FromBase64String(args[0].GetString());
 
             using var compressedStream = new MemoryStream(compressedBytes);
@@ -1488,5 +1507,5 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return _functions.TryGetValue(name, out func);
         }
-    };
+    }
 }

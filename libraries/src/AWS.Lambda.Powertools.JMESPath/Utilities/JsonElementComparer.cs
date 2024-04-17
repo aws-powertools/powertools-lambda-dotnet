@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +58,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// they are compared with the Decimal.CompareTo method, otherwise they are
         /// compared as doubles.
         /// 
-        /// If both are objects, they are compared accoring to the following rules:
+        /// If both are objects, they are compared according to the following rules:
         /// 
         /// <ul>
         /// <li>Order each object's properties by name and compare sequentially.
@@ -84,19 +99,18 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                     {
                         return dec1.CompareTo(dec2);
                     }
-                    else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
+
+                    if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
                     {
                         return val1.CompareTo(val2);
                     }
-                    else
-                    {
-                        throw new InvalidOperationException("Unable to compare numbers");
-                    }
+
+                    throw new InvalidOperationException("Unable to compare numbers");
                 }
     
                 case JsonValueKind.String:
                 {
-                    return string.Compare(lhs.GetString(), rhs.GetString());
+                    return string.CompareOrdinal(lhs.GetString(), rhs.GetString());
                 }
 
                 case JsonValueKind.Array:
@@ -121,8 +135,8 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                 case JsonValueKind.Object:
                 {
                     // OrderBy performs a stable sort (Note that <see cref="JsonElement"/> supports duplicate property names)
-                    var enumerator1 = lhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
-                    var enumerator2 = rhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
+                    using var enumerator1 = lhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
+                    using var enumerator2 = rhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
     
                     var result1 = enumerator1.MoveNext();
                     var result2 = enumerator2.MoveNext();
@@ -130,7 +144,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                     {
                         if (enumerator1.Current.Name != enumerator2.Current.Name)
                         {
-                            return enumerator1.Current.Name.CompareTo(enumerator2.Current.Name);
+                            return string.Compare(enumerator1.Current.Name, enumerator2.Current.Name, StringComparison.Ordinal);
                         }
                         var diff = Compare(enumerator1.Current.Value, enumerator2.Current.Value);
                         if (diff != 0)
@@ -145,7 +159,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                 }
     
                 default:
-                    throw new InvalidOperationException(string.Format("Unknown JsonValueKind {0}", lhs.ValueKind));
+                    throw new InvalidOperationException($"Unknown JsonValueKind {lhs.ValueKind}");
             }
         }
 
@@ -154,6 +168,4 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             return Compare((JsonElement)x, (JsonElement)y);
         }        
     }
-
-
-} // namespace JsonCons.JsonPath
+}

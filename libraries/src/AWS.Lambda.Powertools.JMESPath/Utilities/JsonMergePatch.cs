@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System.Text.Json;
 
 namespace AWS.Lambda.Powertools.JMESPath.Utilities
@@ -13,7 +28,6 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
     /// using System;
     /// using System.Diagnostics;
     /// using System.Text.Json;
-    /// using JsonCons.Utilities;
     /// 
     /// public class Example
     /// {
@@ -112,7 +126,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// to a source JSON value.
         /// </summary>
         /// <remarks>
-        /// It is the users responsibilty to properly Dispose the returned <see cref="JsonDocument"/> value
+        /// It is the users responsibility to properly Dispose the returned <see cref="JsonDocument"/> value
         /// </remarks>
         /// <param name="source">The source JSON value.</param>
         /// <param name="patch">The JSON merge patch to be applied to the source JSON value.</param>
@@ -161,7 +175,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// given two JSON values, a source and a target.
         /// </summary>
         /// <remarks>
-        /// It is the users responsibilty to properly Dispose the returned <see cref="JsonDocument"/> value
+        /// It is the users responsibility to properly Dispose the returned <see cref="JsonDocument"/> value
         /// </remarks>
         /// <param name="source">The source JSON value.</param>
         /// <param name="target">The target JSON value.</param>
@@ -198,8 +212,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
 
             foreach (var property in target.EnumerateObject())
             {
-                JsonElement value;
-                if (!source.TryGetProperty(property.Name, out value))
+                if (!source.TryGetProperty(property.Name, out _))
                 {
                     builder.AddProperty(property.Name, new JsonDocumentBuilder(property.Value));
                 }
@@ -208,6 +221,4 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             return builder;
         }
     }
-
-
-} // namespace JsonCons.Utilities
+}

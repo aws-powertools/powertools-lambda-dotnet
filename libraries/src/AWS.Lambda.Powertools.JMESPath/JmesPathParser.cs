@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -15,12 +30,12 @@ namespace AWS.Lambda.Powertools.JMESPath
         /// <summary>
         /// The line in the JMESPath string where a parse error was detected.
         /// </summary>
-        public int LineNumber {get;}
+        private int LineNumber {get;}
 
         /// <summary>
         /// The column in the JMESPath string where a parse error was detected.
         /// </summary>
-        public int ColumnNumber {get;}
+        private int ColumnNumber {get;}
 
         internal JmesPathParseException(string message, int line, int column)
             : base(message)
@@ -37,7 +52,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
             return $"{Message} at line {LineNumber} and column {ColumnNumber}";
         }
-    };
+    }
 
     internal enum JmesPathState
     {
@@ -334,7 +349,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                     throw new JmesPathParseException("Expected identifier", _line, _column);
                                 }
                                 break;
-                        };
+                        }
                         break;
                     }
 
@@ -386,7 +401,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                     throw new JmesPathParseException("Expected identifier", _line, _column);
                                 }
                                 break;
-                        };
+                        }
                         break;
                     }
                     case JmesPathState.KeyExpr:
@@ -506,7 +521,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 ++_index;
                                 ++_column;
                                 break;
-                        };
+                        }
                         break;
 
                     case JmesPathState.UnquotedString: 
@@ -528,7 +543,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                     _stateStack.Pop(); // unquotedString
                                 }
                                 break;
-                        };
+                        }
                         break;
 
                     case JmesPathState.RawStringEscapeChar:
@@ -730,7 +745,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 ++_index;
                                 ++_column;
                                 break;
-                        };
+                        }
                         break;
 
                     case JmesPathState.Literal: 
@@ -777,7 +792,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 ++_index;
                                 ++_column;
                                 break;
-                        };
+                        }
                         break;
 
                     case JmesPathState.Number:
@@ -1109,7 +1124,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                     throw new JmesPathParseException("Expected key", _line, _column);
                                 }
                                 break;
-                        };
+                        }
                         break;
                     }
                     case JmesPathState.CmpLtOrLte:
@@ -1727,21 +1742,19 @@ namespace AWS.Lambda.Powertools.JMESPath
         private uint AppendToCodepoint(uint cp, uint c)
         {
             cp *= 16;
-            if (c >= '0'  &&  c <= '9')
+            switch (c)
             {
-                cp += c - '0';
-            }
-            else if (c >= 'a'  &&  c <= 'f')
-            {
-                cp += c - 'a' + 10;
-            }
-            else if (c >= 'A'  &&  c <= 'F')
-            {
-                cp += c - 'A' + 10;
-            }
-            else
-            {
-                throw new JmesPathParseException("Invalid codepoint", _line, _column);
+                case >= '0' and <= '9':
+                    cp += c - '0';
+                    break;
+                case >= 'a' and <= 'f':
+                    cp += c - 'a' + 10;
+                    break;
+                case >= 'A' and <= 'F':
+                    cp += c - 'A' + 10;
+                    break;
+                default:
+                    throw new JmesPathParseException("Invalid codepoint", _line, _column);
             }
             return cp;
         }

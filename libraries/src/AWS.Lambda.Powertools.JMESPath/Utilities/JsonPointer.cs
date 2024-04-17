@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
@@ -14,7 +29,6 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
     /// using System;
     /// using System.Diagnostics;
     /// using System.Text.Json;
-    /// using JsonCons.Utilities;
     /// 
     /// public class Example
     /// {
@@ -58,7 +72,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
     public sealed class JsonPointer : IEnumerable<string>, IEquatable<JsonPointer>
     {
         /// <summary>Gets a singleton instance of a <see cref="JsonPointer"/> to the root value of a JSON document.</summary>
-        public static JsonPointer Default {get;} = new();
+        private static JsonPointer Default {get;} = new();
 
         private enum JsonPointerState {Start, Escaped, Delim}
 
@@ -70,8 +84,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// <summary>
         /// Constructs a JSON Pointer to the root value of a JSON document
         /// </summary>
-
-        public JsonPointer()
+        private JsonPointer()
         {
             Tokens = new List<string>();
         }
@@ -157,7 +170,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                                 default:
                                     pointer = Default;
                                     return false;
-                            };
+                            }
                             break;
                         case JsonPointerState.Delim: 
                             switch (input[index])
@@ -171,7 +184,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                                 default:
                                     buffer.Append(input[index]);
                                     break;
-                            };
+                            }
                             break;
                         case JsonPointerState.Escaped: 
                             switch (input[index])
@@ -187,11 +200,13 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                                 default:
                                     pointer = Default;
                                     return false;
-                            };
+                            }
                             break;
                         default:
+                        {
                             pointer = Default;
                             return false;
+                        }
                     }
                     ++index;
                 }
@@ -217,7 +232,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-           return (System.Collections.IEnumerator) GetEnumerator();
+           return GetEnumerator();
         }
 
         /// <summary>
@@ -230,7 +245,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             var buffer = new StringBuilder();
             foreach (var token in Tokens)
             {
-                buffer.Append("/");
+                buffer.Append('/');
                 Escape(token, buffer);
             }
             return buffer.ToString();
@@ -240,16 +255,15 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// Returns a string representing the JSON Pointer as a URI fragment identifier
         /// </summary>
         /// <returns>A JSON Pointer represented as a fragment identifier.</returns>
-
         public string ToUriFragment()
         {
             var buffer = new StringBuilder();
 
-            buffer.Append("#");
+            buffer.Append('#');
             foreach (var token in Tokens)
             {
-                buffer.Append("/");
-                var s = Uri.EscapeUriString(token);
+                buffer.Append('/');
+                var s = Uri.EscapeDataString(token);
                 var span = s.AsSpan();
                 for (var i = 0; i < span.Length; ++i)
                 {
@@ -435,7 +449,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         /// <param name="root">The root <see cref="JsonElement"/> that is to be queried.</param>
         /// <param name="value">Contains the value at the referenced location, if found.</param>
         /// <returns><c>true</c> if the value was found at the referenced location, otherwise <c>false</c>.</returns>
-        public bool TryGetValue(JsonElement root, out JsonElement value)
+        private bool TryGetValue(JsonElement root, out JsonElement value)
         {
             value = root;
 
@@ -572,5 +586,4 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             }
         }
     }
-
-} // namespace JsonCons.Utilities
+}
