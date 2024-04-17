@@ -21,8 +21,7 @@ using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
-using AWS.Lambda.Powertools.Idempotency.Serialization;
-using DevLab.JmesPath;
+using AWS.Lambda.Powertools.JMESPath;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 
@@ -262,14 +261,10 @@ public abstract class BasePersistenceStore : IPersistenceStore
             return "";
         }
         
-        var jmes = new JmesPath();
-        jmes.FunctionRepository.Register<JsonFunction>();
-        var result = jmes.Transform(data.RootElement.ToString(), _idempotencyOptions.PayloadValidationJmesPath);
-        var node = JsonDocument.Parse(result);
-        return GenerateHash(node.RootElement);
+        var transformer = JsonTransformer.Parse(_idempotencyOptions.PayloadValidationJmesPath);
+        JsonDocument result = transformer.Transform(data.RootElement);
+        return GenerateHash(result.RootElement);
     }
-    
-    
     
     /// <summary>
     /// Calculate unix timestamp of expiry date for idempotency record
@@ -293,10 +288,9 @@ public abstract class BasePersistenceStore : IPersistenceStore
         var eventKeyJmesPath = _idempotencyOptions.EventKeyJmesPath;
         if (eventKeyJmesPath != null) 
         {
-            var jmes = new JmesPath();
-            jmes.FunctionRepository.Register<JsonFunction>();
-            var result = jmes.Transform(node.ToString(), eventKeyJmesPath);
-            node = JsonDocument.Parse(result).RootElement;
+            var transformer = JsonTransformer.Parse(eventKeyJmesPath);
+            JsonDocument result = transformer.Transform(node);
+            node = result.RootElement;
         }
 
         if (IsMissingIdempotencyKey(node))

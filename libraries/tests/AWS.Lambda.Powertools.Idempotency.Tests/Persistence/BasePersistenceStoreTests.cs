@@ -545,7 +545,15 @@ public class BasePersistenceStoreTests
         };
         
         var eventJson = File.ReadAllText("./resources/apigw_event.json");
-        var request = JsonSerializer.Deserialize<APIGatewayProxyRequest>(eventJson, options);
-        return request!;
+        try
+        {
+            var request = JsonSerializer.Deserialize<APIGatewayProxyRequest>(eventJson, options);
+            return request!;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }
