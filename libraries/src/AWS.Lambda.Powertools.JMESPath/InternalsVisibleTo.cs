@@ -15,5 +15,4 @@
 
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Idempotency")]
 [assembly: InternalsVisibleTo("AWS.Lambda.Powertools.JMESPath.Tests")]
