@@ -89,7 +89,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
     internal abstract class BaseFunction : IFunction
     {
-        internal BaseFunction(int? argCount)
+        private protected BaseFunction(int? argCount)
         {
             Arity = argCount;
         }
@@ -241,13 +241,10 @@ namespace AWS.Lambda.Powertools.JMESPath
             switch (arg0.Type)
             {
                 case JmesPathType.Array:
-                    foreach (var item in arg0.EnumerateArray())
+                    if (arg0.EnumerateArray().Any(item => comparer.Equals(item, arg1)))
                     {
-                        if (comparer.Equals(item, arg1))
-                        {
-                            element = JsonConstants.True;
-                            return true;
-                        }
+                        element = JsonConstants.True;
+                        return true;
                     }
 
                     element = JsonConstants.False;

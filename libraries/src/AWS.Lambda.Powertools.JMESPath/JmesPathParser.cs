@@ -111,18 +111,16 @@ namespace AWS.Lambda.Powertools.JMESPath
 
     internal ref struct JmesPathParser
     {
-        private ReadOnlyMemory<char> _source;
-        private ReadOnlySpan<char> _span;
+        private readonly ReadOnlySpan<char> _span;
         private int _index;
         private int _column;
         private int _line;
-        private Stack<JmesPathState> _stateStack;
-        private Stack<Token>_outputStack;
-        private Stack<Token>_operatorStack;
+        private readonly Stack<JmesPathState> _stateStack;
+        private readonly Stack<Token>_outputStack;
+        private readonly Stack<Token>_operatorStack;
 
         internal JmesPathParser(string input)
         {
-            _source = input.AsMemory();
             _span = input.AsSpan();
             _index = 0;
             _column = 1;
@@ -155,8 +153,6 @@ namespace AWS.Lambda.Powertools.JMESPath
             {
                 switch (_stateStack.Peek())
                 {
-                    default:
-                        break;
                     case JmesPathState.Start: 
                     {
                         _stateStack.Pop();
@@ -487,8 +483,6 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 ++_column;
                                 break;
                             }
-                            default:
-                                break;
                         }
                         break;
 
@@ -972,7 +966,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 var s = buffer.ToString();
                                 if (!int.TryParse(s, out var n))
                                 {
-                                    n = s.StartsWith("-") ? int.MinValue : int.MaxValue;
+                                    n = s.StartsWith('-') ? int.MinValue : int.MaxValue;
                                 }
                                 sliceStart = n;
                                 buffer.Clear();
@@ -994,7 +988,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                             var s = buffer.ToString();
                             if (!int.TryParse(s, out var n))
                             {
-                                n = s.StartsWith("-") ? int.MinValue : int.MaxValue;
+                                n = s.StartsWith('-') ? int.MinValue : int.MaxValue;
                             }
                             sliceStop = n;
                             buffer.Clear();
@@ -1437,8 +1431,6 @@ namespace AWS.Lambda.Powertools.JMESPath
                     _column = 1;
                     ++_index;
                     break;
-                default:
-                    break;
             }
         }
 
@@ -1704,15 +1696,9 @@ namespace AWS.Lambda.Powertools.JMESPath
                     _operatorStack.Push(new Token(TokenType.LeftParen));
                     break;
                 }
-                case TokenType.BeginFilter:
-                    _outputStack.Push(token);
-                    _operatorStack.Push(new Token(TokenType.LeftParen));
-                    break;
-                case TokenType.BeginMultiSelectList:
-                    _outputStack.Push(token);
-                    _operatorStack.Push(new Token(TokenType.LeftParen));
-                    break;
                 case TokenType.BeginMultiSelectHash:
+                case TokenType.BeginMultiSelectList:
+                case TokenType.BeginFilter:
                     _outputStack.Push(token);
                     _operatorStack.Push(new Token(TokenType.LeftParen));
                     break;
@@ -1722,8 +1708,6 @@ namespace AWS.Lambda.Powertools.JMESPath
                     _operatorStack.Push(new Token(TokenType.LeftParen));
                     break;
                 case TokenType.CurrentNode:
-                    _outputStack.Push(token);
-                    break;
                 case TokenType.Key:
                 case TokenType.Pipe:
                 case TokenType.Argument:
@@ -1733,12 +1717,9 @@ namespace AWS.Lambda.Powertools.JMESPath
                 case TokenType.LeftParen:
                     _operatorStack.Push(token);
                     break;
-                default:
-                    break;
             }
         }
-
-
+        
         private uint AppendToCodepoint(uint cp, uint c)
         {
             cp *= 16;
