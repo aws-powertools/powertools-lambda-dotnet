@@ -24,35 +24,36 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         {
             result = current;
 
-            if (result.ValueKind == JsonValueKind.Array)
+            switch (result.ValueKind)
             {
-                if (token == "-")
-                {
+                case JsonValueKind.Array when token == "-":
                     return false;
-                }
+                case JsonValueKind.Array:
+                {
+                    if (!int.TryParse(token, out var index))
+                    {
+                        return false;
+                    }
 
-                if (!int.TryParse(token, out var index))
-                {
-                    return false;
-                }
+                    if (index >= result.GetArrayLength())
+                    {
+                        return false;
+                    }
 
-                if (index >= result.GetArrayLength())
-                {
-                    return false;
+                    result = result[index];
+                    break;
                 }
+                case JsonValueKind.Object:
+                {
+                    if (!result.TryGetProperty(token, out result))
+                    {
+                        return false;
+                    }
 
-                result = result[index];
-            }
-            else if (result.ValueKind == JsonValueKind.Object)
-            {
-                if (!result.TryGetProperty(token, out result))
-                {
-                    return false;
+                    break;
                 }
-            }
-            else
-            {
-                return false;
+                default:
+                    return false;
             }
 
             return true;
@@ -60,20 +61,17 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
 
         public static JsonPointer ToDefinitePath(this JsonPointer pointer, JsonDocumentBuilder value)
         {
-            if (value.ValueKind == JsonValueKind.Array && pointer.Tokens.Count > 0 &&
-                pointer.Tokens[pointer.Tokens.Count - 1] == "-")
+            if (value.ValueKind != JsonValueKind.Array || pointer.Tokens.Count <= 0 ||
+                pointer.Tokens[pointer.Tokens.Count - 1] != "-") return pointer;
+            var tokens = new List<string>();
+            for (var i = 0; i < pointer.Tokens.Count - 1; ++i)
             {
-                var tokens = new List<string>();
-                for (var i = 0; i < pointer.Tokens.Count - 1; ++i)
-                {
-                    tokens.Add(pointer.Tokens[i]);
-                }
-
-                tokens.Add(value.GetArrayLength().ToString());
-                return new JsonPointer(tokens);
+                tokens.Add(pointer.Tokens[i]);
             }
 
-            return pointer;
+            tokens.Add(value.GetArrayLength().ToString());
+            return new JsonPointer(tokens);
+
         }
 
         public static bool TryGetValue(this JsonPointer pointer, JsonDocumentBuilder root,
@@ -96,8 +94,41 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             ref JsonDocumentBuilder root,
             JsonDocumentBuilder value)
         {
-            var current = root;
-            var token = "";
+            if (!TryGetToken(location, root, out var current, out var token)) return false;
+
+            switch (current.ValueKind)
+            {
+                case JsonValueKind.Array when token.Length == 1 && token[0] == '-':
+                    current.AddArrayItem(value);
+                    break;
+                case JsonValueKind.Array:
+                {
+                    if (!TryGetArray(value, token, current)) return false;
+
+                    break;
+                }
+                case JsonValueKind.Object:
+                {
+                    if (current.ContainsPropertyName(token))
+                    {
+                        current.RemoveProperty(token);
+                    }
+
+                    current.AddProperty(token, value);
+                    break;
+                }
+                default:
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool TryGetToken(JsonPointer location, JsonDocumentBuilder root, out JsonDocumentBuilder current,
+            out string token)
+        {
+            current = root;
+            token = "";
 
             using var enumerator = location.GetEnumerator();
             var more = enumerator.MoveNext();
@@ -110,59 +141,11 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             {
                 token = enumerator.Current;
                 more = enumerator.MoveNext();
-                if (more)
+                if (!more) continue;
+                if (!TryResolve(token, current, out current))
                 {
-                    if (!TryResolve(token, current, out current))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
-            }
-
-            if (current.ValueKind == JsonValueKind.Array)
-            {
-                if (token.Length == 1 && token[0] == '-')
-                {
-                    current.AddArrayItem(value);
-                    current = current[current.GetArrayLength() - 1];
-                }
-                else
-                {
-                    if (!int.TryParse(token, out var index))
-                    {
-                        return false;
-                    }
-
-                    if (index > current.GetArrayLength())
-                    {
-                        return false;
-                    }
-
-                    if (index == current.GetArrayLength())
-                    {
-                        current.AddArrayItem(value);
-                        current = value;
-                    }
-                    else
-                    {
-                        current.InsertArrayItem(index, value);
-                        current = value;
-                    }
-                }
-            }
-            else if (current.ValueKind == JsonValueKind.Object)
-            {
-                if (current.ContainsPropertyName(token))
-                {
-                    current.RemoveProperty(token);
-                }
-
-                current.AddProperty(token, value);
-                current = value;
-            }
-            else
-            {
-                return false;
             }
 
             return true;
@@ -172,73 +155,50 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             ref JsonDocumentBuilder root,
             JsonDocumentBuilder value)
         {
-            var current = root;
-            var token = "";
+            if (!TryGetToken(location, root, out var current, out var token)) return false;
 
-            using var enumerator = location.GetEnumerator();
-            var more = enumerator.MoveNext();
-            if (!more)
+            switch (current.ValueKind)
+            {
+                case JsonValueKind.Array when token.Length == 1 && token[0] == '-':
+                    current.AddArrayItem(value);
+                    break;
+                case JsonValueKind.Array:
+                {
+                    if (!TryGetArray(value, token, current)) return false;
+
+                    break;
+                }
+                case JsonValueKind.Object when current.ContainsPropertyName(token):
+                    return false;
+                case JsonValueKind.Object:
+                    current.AddProperty(token, value);
+                    break;
+                default:
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool TryGetArray(JsonDocumentBuilder value, string token, JsonDocumentBuilder current)
+        {
+            if (!int.TryParse(token, out var index))
             {
                 return false;
             }
 
-            while (more)
+            if (index > current.GetArrayLength())
             {
-                token = enumerator.Current;
-                more = enumerator.MoveNext();
-                if (more)
-                {
-                    if (!TryResolve(token, current, out current))
-                    {
-                        return false;
-                    }
-                }
+                return false;
             }
 
-            if (current.ValueKind == JsonValueKind.Array)
+            if (index == current.GetArrayLength())
             {
-                if (token.Length == 1 && token[0] == '-')
-                {
-                    current.AddArrayItem(value);
-                    current = current[current.GetArrayLength() - 1];
-                }
-                else
-                {
-                    if (!int.TryParse(token, out var index))
-                    {
-                        return false;
-                    }
-
-                    if (index > current.GetArrayLength())
-                    {
-                        return false;
-                    }
-
-                    if (index == current.GetArrayLength())
-                    {
-                        current.AddArrayItem(value);
-                        current = value;
-                    }
-                    else
-                    {
-                        current.InsertArrayItem(index, value);
-                        current = value;
-                    }
-                }
-            }
-            else if (current.ValueKind == JsonValueKind.Object)
-            {
-                if (current.ContainsPropertyName(token))
-                {
-                    return false;
-                }
-
-                current.AddProperty(token, value);
-                current = value;
+                current.AddArrayItem(value);
             }
             else
             {
-                return false;
+                current.InsertArrayItem(index, value);
             }
 
             return true;
@@ -247,58 +207,38 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
         public static bool TryRemove(this JsonPointer location,
             ref JsonDocumentBuilder root)
         {
-            var current = root;
-            var token = "";
+            if (!TryGetToken(location, root, out var current, out var token)) return false;
 
-            using var enumerator = location.GetEnumerator();
-            var more = enumerator.MoveNext();
-            if (!more)
+            switch (current.ValueKind)
             {
-                return false;
-            }
-
-            while (more)
-            {
-                token = enumerator.Current;
-                more = enumerator.MoveNext();
-                if (more)
+                case JsonValueKind.Array when token.Length == 1 && token[0] == '-':
+                    return false;
+                case JsonValueKind.Array:
                 {
-                    if (!TryResolve(token, current, out current))
+                    if (!int.TryParse(token, out var index))
                     {
                         return false;
                     }
-                }
-            }
 
-            if (current.ValueKind == JsonValueKind.Array)
-            {
-                if (token.Length == 1 && token[0] == '-')
+                    if (index >= current.GetArrayLength())
+                    {
+                        return false;
+                    }
+
+                    current.RemoveArrayItemAt(index);
+                    break;
+                }
+                case JsonValueKind.Object:
                 {
+                    if (current.ContainsPropertyName(token))
+                    {
+                        current.RemoveProperty(token);
+                    }
+
+                    break;
+                }
+                default:
                     return false;
-                }
-
-                if (!int.TryParse(token, out var index))
-                {
-                    return false;
-                }
-
-                if (index >= current.GetArrayLength())
-                {
-                    return false;
-                }
-
-                current.RemoveArrayItemAt(index);
-            }
-            else if (current.ValueKind == JsonValueKind.Object)
-            {
-                if (current.ContainsPropertyName(token))
-                {
-                    current.RemoveProperty(token);
-                }
-            }
-            else
-            {
-                return false;
             }
 
             return true;
@@ -308,64 +248,43 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
             ref JsonDocumentBuilder root,
             JsonDocumentBuilder value)
         {
-            var current = root;
-            var token = "";
+            if (!TryGetToken(location, root, out var current, out var token)) return false;
 
-            using var enumerator = location.GetEnumerator();
-            var more = enumerator.MoveNext();
-            if (!more)
+            switch (current.ValueKind)
             {
-                return false;
-            }
-
-            while (more)
-            {
-                token = enumerator.Current;
-                more = enumerator.MoveNext();
-                if (more)
+                case JsonValueKind.Array when token.Length == 1 && token[0] == '-':
+                    return false;
+                case JsonValueKind.Array:
                 {
-                    if (!TryResolve(token, current, out current))
+                    if (!int.TryParse(token, out var index))
                     {
                         return false;
                     }
-                }
-            }
 
-            if (current.ValueKind == JsonValueKind.Array)
-            {
-                if (token.Length == 1 && token[0] == '-')
+                    if (index >= current.GetArrayLength())
+                    {
+                        return false;
+                    }
+
+                    current[index] = value;
+                    break;
+                }
+                case JsonValueKind.Object:
                 {
+                    if (current.ContainsPropertyName(token))
+                    {
+                        current.RemoveProperty(token);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+
+                    current.AddProperty(token, value);
+                    break;
+                }
+                default:
                     return false;
-                }
-
-                if (!int.TryParse(token, out var index))
-                {
-                    return false;
-                }
-
-                if (index >= current.GetArrayLength())
-                {
-                    return false;
-                }
-
-                current[index] = value;
-            }
-            else if (current.ValueKind == JsonValueKind.Object)
-            {
-                if (current.ContainsPropertyName(token))
-                {
-                    current.RemoveProperty(token);
-                }
-                else
-                {
-                    return false;
-                }
-
-                current.AddProperty(token, value);
-            }
-            else
-            {
-                return false;
             }
 
             return true;
