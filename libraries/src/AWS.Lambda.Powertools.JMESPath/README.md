@@ -74,3 +74,6 @@ Use powertools_base64 function to decode any base64 data.
 
 ### powertools_base64_gzip function
 Use powertools_base64_gzip function to decompress and decode base64 data.
+
+## Credit
+We took heavy inspiration in the https://github.com/danielaparker/JsonCons.Net repository.
