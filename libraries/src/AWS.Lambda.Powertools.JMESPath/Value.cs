@@ -43,20 +43,20 @@ namespace AWS.Lambda.Powertools.JMESPath
 
     internal enum JmesPathType
     {
-        Null,	      
+        Null,
         Array,
-        False,	      
-        Number,	      
-        Object,	      
-        String,	      
-        True,   
+        False,
+        Number,
+        Object,
+        String,
+        True,
         Expression
     }
 
-    internal interface IValue 
+    internal interface IValue
     {
-        JmesPathType Type {get;}
-        IValue this[int index] {get;}
+        JmesPathType Type { get; }
+        IValue this[int index] { get; }
         int GetArrayLength();
         string GetString();
         bool TryGetDecimal(out decimal value);
@@ -83,9 +83,25 @@ namespace AWS.Lambda.Powertools.JMESPath
                 return _enumerator.MoveNext();
             }
 
-            public void Reset() { _enumerator.Reset(); }
+            public void Reset()
+            {
+                _enumerator.Reset();
+            }
 
-            void IDisposable.Dispose() { _enumerator.Dispose();}
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            protected virtual void Dispose(bool disposing)
+            {
+                // Cleanup
+                if (disposing)
+                {
+                    _enumerator.Dispose();
+                }
+            }
 
             public IValue Current => new JsonElementValue(_enumerator.Current);
 
@@ -98,7 +114,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
             {
-               return GetEnumerator();
+                return GetEnumerator();
             }
         }
 
@@ -116,11 +132,28 @@ namespace AWS.Lambda.Powertools.JMESPath
                 return _enumerator.MoveNext();
             }
 
-            public void Reset() { _enumerator.Reset(); }
+            public void Reset()
+            {
+                _enumerator.Reset();
+            }
 
-            void IDisposable.Dispose() { _enumerator.Dispose();}
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
 
-            public NameValuePair Current => new(_enumerator.Current.Name, new JsonElementValue(_enumerator.Current.Value));
+            protected virtual void Dispose(bool disposing)
+            {
+                // Cleanup
+                if (disposing)
+                {
+                    _enumerator.Dispose();
+                }
+            }
+
+            public NameValuePair Current =>
+                new(_enumerator.Current.Name, new JsonElementValue(_enumerator.Current.Value));
 
             object System.Collections.IEnumerator.Current => Current;
 
@@ -131,7 +164,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
             {
-               return GetEnumerator();
+                return GetEnumerator();
             }
         }
 
@@ -142,7 +175,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             _element = element;
         }
 
-        public JmesPathType Type 
+        public JmesPathType Type
         {
             get
             {
@@ -168,7 +201,10 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public IValue this[int index] => new JsonElementValue(_element[index]);
 
-        public int GetArrayLength() {return _element.GetArrayLength();}
+        public int GetArrayLength()
+        {
+            return _element.GetArrayLength();
+        }
 
         public string GetString()
         {
@@ -188,11 +224,11 @@ namespace AWS.Lambda.Powertools.JMESPath
         public bool TryGetProperty(string propertyName, out IValue property)
         {
             var r = _element.TryGetProperty(propertyName, out var prop);
-            
-            property = prop.ValueKind == JsonValueKind.String && IsJsonValid(prop.GetString()) ? 
-                new JsonElementValue(JsonNode.Parse(prop.GetString() ?? string.Empty).Deserialize<JsonElement>()) : 
-                new JsonElementValue(prop);
-            
+
+            property = prop.ValueKind == JsonValueKind.String && IsJsonValid(prop.GetString())
+                ? new JsonElementValue(JsonNode.Parse(prop.GetString() ?? string.Empty).Deserialize<JsonElement>())
+                : new JsonElementValue(prop);
+
             return r;
         }
 
@@ -225,7 +261,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             throw new InvalidOperationException("Not an expression");
-        }    
+        }
 
         public override string ToString()
         {
@@ -247,7 +283,10 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public IValue this[int index] => throw new InvalidOperationException();
 
-        public int GetArrayLength() { throw new InvalidOperationException(); }
+        public int GetArrayLength()
+        {
+            throw new InvalidOperationException();
+        }
 
         public string GetString()
         {
@@ -256,7 +295,8 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public bool TryGetDecimal(out decimal value)
         {
-            if (!(double.IsNaN(_value) || double.IsInfinity(_value)) && _value is >= (double)decimal.MinValue and <= (double)decimal.MaxValue)
+            if (!(double.IsNaN(_value) || double.IsInfinity(_value)) &&
+                _value is >= (double)decimal.MinValue and <= (double)decimal.MaxValue)
             {
                 value = decimal.MinValue;
                 return false;
@@ -290,7 +330,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             throw new InvalidOperationException("Not an expression");
-        }      
+        }
 
         public override string ToString()
         {
@@ -312,7 +352,10 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public IValue this[int index] => throw new InvalidOperationException();
 
-        public int GetArrayLength() { throw new InvalidOperationException(); }
+        public int GetArrayLength()
+        {
+            throw new InvalidOperationException();
+        }
 
         public string GetString()
         {
@@ -349,7 +392,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             throw new InvalidOperationException("Not an expression");
-        }      
+        }
 
         public override string ToString()
         {
@@ -371,7 +414,10 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public IValue this[int index] => throw new InvalidOperationException();
 
-        public int GetArrayLength() { throw new InvalidOperationException(); }
+        public int GetArrayLength()
+        {
+            throw new InvalidOperationException();
+        }
 
         public string GetString()
         {
@@ -406,7 +452,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             throw new InvalidOperationException("Not an expression");
-        }      
+        }
 
         public override string ToString()
         {
@@ -421,9 +467,15 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public IValue this[int index] => throw new InvalidOperationException();
 
-        public int GetArrayLength() { throw new InvalidOperationException(); }
+        public int GetArrayLength()
+        {
+            throw new InvalidOperationException();
+        }
 
-        public string GetString() { throw new InvalidOperationException(); }
+        public string GetString()
+        {
+            throw new InvalidOperationException();
+        }
 
         public bool TryGetDecimal(out decimal value)
         {
@@ -453,7 +505,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             throw new InvalidOperationException("Not an expression");
-        }      
+        }
 
         public override string ToString()
         {
@@ -467,9 +519,15 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public IValue this[int index] => throw new InvalidOperationException();
 
-        public int GetArrayLength() { throw new InvalidOperationException(); }
+        public int GetArrayLength()
+        {
+            throw new InvalidOperationException();
+        }
 
-        public string GetString() { throw new InvalidOperationException(); }
+        public string GetString()
+        {
+            throw new InvalidOperationException();
+        }
 
         public bool TryGetDecimal(out decimal value)
         {
@@ -499,7 +557,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             throw new InvalidOperationException("Not an expression");
-        }      
+        }
 
         public override string ToString()
         {
@@ -513,9 +571,15 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public IValue this[int index] => throw new InvalidOperationException();
 
-        public int GetArrayLength() { throw new InvalidOperationException(); }
+        public int GetArrayLength()
+        {
+            throw new InvalidOperationException();
+        }
 
-        public string GetString() { throw new InvalidOperationException(); }
+        public string GetString()
+        {
+            throw new InvalidOperationException();
+        }
 
         public bool TryGetDecimal(out decimal value)
         {
@@ -545,7 +609,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             throw new InvalidOperationException("Not an expression");
-        }      
+        }
 
         public override string ToString()
         {
@@ -586,7 +650,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
             {
-               return GetEnumerator();
+                return GetEnumerator();
             }
         }
 
@@ -636,7 +700,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             throw new InvalidOperationException("Not an expression");
-        }      
+        }
 
         public override string ToString()
         {
@@ -653,8 +717,10 @@ namespace AWS.Lambda.Powertools.JMESPath
                 {
                     first = false;
                 }
+
                 buffer.Append(item);
             }
+
             buffer.Append(']');
             return buffer.ToString();
         }
@@ -664,10 +730,10 @@ namespace AWS.Lambda.Powertools.JMESPath
     {
         private class ObjectEnumerator : IObjectValueEnumerator
         {
-            private readonly IDictionary<string,IValue> _value;
+            private readonly IDictionary<string, IValue> _value;
             private readonly System.Collections.IEnumerator _enumerator;
 
-            public ObjectEnumerator(IDictionary<string,IValue> value)
+            public ObjectEnumerator(IDictionary<string, IValue> value)
             {
                 _value = value;
                 _enumerator = value.GetEnumerator();
@@ -678,14 +744,22 @@ namespace AWS.Lambda.Powertools.JMESPath
                 return _enumerator.MoveNext();
             }
 
-            public void Reset() { _enumerator.Reset(); }
+            public void Reset()
+            {
+                _enumerator.Reset();
+            }
 
-            void IDisposable.Dispose() {}
+            void IDisposable.Dispose()
+            {
+            }
 
             public NameValuePair Current
             {
-                get {var pair = (KeyValuePair<string, IValue>)_enumerator.Current!;
-                     return new NameValuePair(pair.Key, pair.Value); }
+                get
+                {
+                    var pair = (KeyValuePair<string, IValue>)_enumerator.Current!;
+                    return new NameValuePair(pair.Key, pair.Value);
+                }
             }
 
             object System.Collections.IEnumerator.Current => Current;
@@ -697,13 +771,13 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
             {
-               return GetEnumerator();
+                return GetEnumerator();
             }
         }
 
-        private readonly IDictionary<string,IValue> _value;
+        private readonly IDictionary<string, IValue> _value;
 
-        internal ObjectValue(IDictionary<string,IValue> value)
+        internal ObjectValue(IDictionary<string, IValue> value)
         {
             _value = value;
         }
@@ -712,8 +786,8 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public IValue this[int index] => throw new InvalidOperationException();
 
-        public int GetArrayLength() 
-        { 
+        public int GetArrayLength()
+        {
             throw new InvalidOperationException();
         }
 
@@ -750,7 +824,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             throw new InvalidOperationException("Not an expression");
-        }      
+        }
 
         public override string ToString()
         {
@@ -767,10 +841,12 @@ namespace AWS.Lambda.Powertools.JMESPath
                 {
                     first = false;
                 }
+
                 buffer.Append(JsonSerializer.Serialize(property.Key));
                 buffer.Append(':');
                 buffer.Append(property.Value);
             }
+
             buffer.Append('}');
             return buffer.ToString();
         }
@@ -789,9 +865,15 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public IValue this[int index] => throw new InvalidOperationException();
 
-        public int GetArrayLength() { throw new InvalidOperationException(); }
+        public int GetArrayLength()
+        {
+            throw new InvalidOperationException();
+        }
 
-        public string GetString() { throw new InvalidOperationException(); }
+        public string GetString()
+        {
+            throw new InvalidOperationException();
+        }
 
         public bool TryGetDecimal(out decimal value)
         {
@@ -821,7 +903,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         public IExpression GetExpression()
         {
             return _expr;
-        }      
+        }
 
         public override string ToString()
         {
