@@ -1,7 +1,8 @@
 # Powertools JMESPath support
 
 JMESPath is a query language for JSON used by AWS CLI, AWS Python SDK, and Powertools for AWS Lambda.
- With built-in JMESPath functions to easily deserialize common encoded JSON payloads in Lambda functions.
+
+With built-in JMESPath functions to easily deserialize common encoded JSON payloads in Lambda functions.
 
 ## Key features
 
