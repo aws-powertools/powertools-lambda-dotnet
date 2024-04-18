@@ -49,6 +49,10 @@ public class JmesPathTests
     [InlineData("test_files/test.json")]
     [InlineData("test_files/apigw_event.json")]
     [InlineData("test_files/apigw_event_2.json")]
+    [InlineData("test_files/sns.json")]
+    [InlineData("test_files/sqs.json")]
+    [InlineData("test_files/cloud_watch_logs.json")]
+    [InlineData("test_files/kinesis_data_stream.json")]
     public void RunJmesPathTests(string path)
     {
         _output.WriteLine($"Test {path}");
@@ -100,16 +104,14 @@ public class JmesPathTests
                     {
                         var expr = JsonTransformer.Parse(exprElement.ToString());
                         var result = expr.Transform(given);
-                        var success = comparer.Equals(result.RootElement, expected);
-                        if (!success)
-                        {
-                            _output.WriteLine("File: {0}", path);
 
-                            _output.WriteLine($"Document: {given}");
-                            _output.WriteLine($"Path: {exprElement}");
-                            _output.WriteLine($"Expected: {JsonSerializer.Serialize(expected)}");
-                            _output.WriteLine($"Result: {JsonSerializer.Serialize(result)}");
-                        }
+                        _output.WriteLine("File: {0}", path);
+
+                        // _output.WriteLine($"Document: {given}");
+                        _output.WriteLine($"Path: {exprElement}");
+                        _output.WriteLine($"Expected: {JsonSerializer.Serialize(expected)}");
+                        _output.WriteLine($"Result: {JsonSerializer.Serialize(result)}");
+                        
                         Assert.True(comparer.Equals(result.RootElement,expected));
                         
                     }
