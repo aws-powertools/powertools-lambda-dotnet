@@ -106,7 +106,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -114,17 +114,17 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             if (arg.TryGetDecimal(out var decVal))
             {
-                result = new DecimalValue(decVal >= 0 ? decVal : -decVal);
+                element = new DecimalValue(decVal >= 0 ? decVal : -decVal);
                 return true;
             }
 
             if (arg.TryGetDouble(out var dblVal))
             {
-                result = new DecimalValue(dblVal >= 0 ? decVal : new decimal(-dblVal));
+                element = new DecimalValue(dblVal >= 0 ? decVal : new decimal(-dblVal));
                 return true;
             }
 
-            result = JsonConstants.Null;
+            element = JsonConstants.Null;
             return false;
         }
 
@@ -141,36 +141,36 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var arg0 = args[0];
             if (arg0.Type != JmesPathType.Array || arg0.GetArrayLength() == 0)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             if (!SumFunction.Instance.TryEvaluate(resources, args, out var sum))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             if (sum.TryGetDecimal(out var decVal))
             {
-                result = new DecimalValue(decVal / arg0.GetArrayLength());
+                element = new DecimalValue(decVal / arg0.GetArrayLength());
                 return true;
             }
 
             if (sum.TryGetDouble(out var dblVal))
             {
-                result = new DoubleValue(dblVal / arg0.GetArrayLength());
+                element = new DoubleValue(dblVal / arg0.GetArrayLength());
                 return true;
             }
 
-            result = JsonConstants.Null;
+            element = JsonConstants.Null;
             return false;
         }
 
@@ -188,30 +188,30 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var val = args[0];
             if (val.Type != JmesPathType.Number)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             if (val.TryGetDecimal(out var decVal))
             {
-                result = new DecimalValue(decimal.Ceiling(decVal));
+                element = new DecimalValue(decimal.Ceiling(decVal));
                 return true;
             }
 
             if (val.TryGetDouble(out var dblVal))
             {
-                result = new DoubleValue(Math.Ceiling(dblVal));
+                element = new DoubleValue(Math.Ceiling(dblVal));
                 return true;
             }
 
-            result = JsonConstants.Null;
+            element = JsonConstants.Null;
             return false;
         }
 
@@ -229,7 +229,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -245,18 +245,18 @@ namespace AWS.Lambda.Powertools.JMESPath
                     {
                         if (comparer.Equals(item, arg1))
                         {
-                            result = JsonConstants.True;
+                            element = JsonConstants.True;
                             return true;
                         }
                     }
 
-                    result = JsonConstants.False;
+                    element = JsonConstants.False;
                     return true;
                 case JmesPathType.String:
                 {
                     if (arg1.Type != JmesPathType.String)
                     {
-                        result = JsonConstants.Null;
+                        element = JsonConstants.Null;
                         return false;
                     }
 
@@ -264,16 +264,16 @@ namespace AWS.Lambda.Powertools.JMESPath
                     var s1 = arg1.GetString();
                     if (s0.Contains(s1))
                     {
-                        result = JsonConstants.True;
+                        element = JsonConstants.True;
                         return true;
                     }
 
-                    result = JsonConstants.False;
+                    element = JsonConstants.False;
                     return true;
                 }
                 default:
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
             }
@@ -293,7 +293,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -302,7 +302,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             if (arg0.Type != JmesPathType.String
                 || arg1.Type != JmesPathType.String)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -311,11 +311,11 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             if (s0.EndsWith(s1))
             {
-                result = JsonConstants.True;
+                element = JsonConstants.True;
             }
             else
             {
-                result = JsonConstants.False;
+                element = JsonConstants.False;
             }
 
             return true;
@@ -335,30 +335,30 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var val = args[0];
             if (val.Type != JmesPathType.Number)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             if (val.TryGetDecimal(out var decVal))
             {
-                result = new DecimalValue(decimal.Floor(decVal));
+                element = new DecimalValue(decimal.Floor(decVal));
                 return true;
             }
 
             if (val.TryGetDouble(out var dblVal))
             {
-                result = new DoubleValue(Math.Floor(dblVal));
+                element = new DoubleValue(Math.Floor(dblVal));
                 return true;
             }
 
-            result = JsonConstants.Null;
+            element = JsonConstants.Null;
             return false;
         }
 
@@ -375,7 +375,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -384,7 +384,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             if (!(arg0.Type == JmesPathType.String && args[1].Type == JmesPathType.Array))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -394,7 +394,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             {
                 if (j.Type != JmesPathType.String)
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
@@ -407,7 +407,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 buf.Append(sv);
             }
 
-            result = new StringValue(buf.ToString());
+            element = new StringValue(buf.ToString());
             return true;
         }
 
@@ -425,14 +425,14 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var arg0 = args[0];
             if (arg0.Type != JmesPathType.Object)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -443,7 +443,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 values.Add(new StringValue(property.Name));
             }
 
-            result = new ArrayValue(values);
+            element = new ArrayValue(values);
             return true;
         }
 
@@ -461,7 +461,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -477,21 +477,21 @@ namespace AWS.Lambda.Powertools.JMESPath
                         ++count;
                     }
 
-                    result = new DecimalValue(new decimal(count));
+                    element = new DecimalValue(new decimal(count));
                     return true;
                 }
                 case JmesPathType.Array:
-                    result = new DecimalValue(new decimal(arg0.GetArrayLength()));
+                    element = new DecimalValue(new decimal(arg0.GetArrayLength()));
                     return true;
                 case JmesPathType.String:
                 {
                     var bytes = Encoding.UTF32.GetBytes(arg0.GetString().ToCharArray());
-                    result = new DecimalValue(new decimal(bytes.Length / 4));
+                    element = new DecimalValue(new decimal(bytes.Length / 4));
                     return true;
                 }
                 default:
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
             }
@@ -511,20 +511,20 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var arg0 = args[0];
             if (arg0.Type != JmesPathType.Array)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             if (arg0.GetArrayLength() == 0)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -532,7 +532,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             var isString = arg0[0].Type == JmesPathType.String;
             if (!isNumber && !isString)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -543,13 +543,13 @@ namespace AWS.Lambda.Powertools.JMESPath
                 if (!(((arg0[i].Type == JmesPathType.Number) == isNumber) &&
                       (arg0[i].Type == JmesPathType.String) == isString))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
                 if (!greater.TryEvaluate(arg0[i], arg0[index], out var value))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
@@ -559,7 +559,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 }
             }
 
-            result = arg0[index];
+            element = arg0[index];
             return true;
         }
 
@@ -576,20 +576,20 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             if (!(args[0].Type == JmesPathType.Array && args[1].Type == JmesPathType.Expression))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             var arg0 = args[0];
             if (arg0.GetArrayLength() == 0)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return true;
             }
 
@@ -597,7 +597,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             if (!expr.TryEvaluate(resources, arg0[0], out var key1))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -605,7 +605,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             var isString1 = key1.Type == JmesPathType.String;
             if (!(isNumber1 || isString1))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -615,7 +615,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             {
                 if (!expr.TryEvaluate(resources, arg0[i], out var key2))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
@@ -623,24 +623,22 @@ namespace AWS.Lambda.Powertools.JMESPath
                 var isString2 = key2.Type == JmesPathType.String;
                 if (!(isNumber2 == isNumber1 && isString2 == isString1))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
                 if (!greater.TryEvaluate(key2, key1, out var value))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
-                if (value.Type == JmesPathType.True)
-                {
-                    key1 = key2;
-                    index = i;
-                }
+                if (value.Type != JmesPathType.True) continue;
+                key1 = key2;
+                index = i;
             }
 
-            result = arg0[index];
+            element = arg0[index];
             return true;
         }
 
@@ -658,20 +656,20 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var arg0 = args[0];
             if (arg0.Type != JmesPathType.Array)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             if (arg0.GetArrayLength() == 0)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -679,7 +677,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             var isString = arg0[0].Type == JmesPathType.String;
             if (!isNumber && !isString)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -690,13 +688,13 @@ namespace AWS.Lambda.Powertools.JMESPath
                 if (!(((arg0[i].Type == JmesPathType.Number) == isNumber) &&
                       (arg0[i].Type == JmesPathType.String) == isString))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
                 if (!less.TryEvaluate(arg0[i], arg0[index], out var value))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
@@ -706,7 +704,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 }
             }
 
-            result = arg0[index];
+            element = arg0[index];
             return true;
         }
 
@@ -723,24 +721,24 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             if (!args.Any())
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             var arg0 = args[0];
             if (arg0.Type != JmesPathType.Object)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             if (args.Count == 1)
             {
-                result = arg0;
+                element = arg0;
                 return true;
             }
 
@@ -750,7 +748,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 var argi = args[i];
                 if (argi.Type != JmesPathType.Object)
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
@@ -764,7 +762,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 }
             }
 
-            result = new ObjectValue(dict);
+            element = new ObjectValue(dict);
             return true;
         }
 
@@ -781,16 +779,16 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             foreach (var arg in args)
             {
                 if (arg.Type == JmesPathType.Null) continue;
-                result = arg;
+                element = arg;
                 return true;
             }
 
-            result = JsonConstants.Null;
+            element = JsonConstants.Null;
             return true;
         }
 
@@ -807,7 +805,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -816,7 +814,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             {
                 case JmesPathType.String:
                 {
-                    result = new StringValue(string.Join("", GraphemeClusters(arg0.GetString()).Reverse().ToArray()));
+                    element = new StringValue(string.Join("", GraphemeClusters(arg0.GetString()).Reverse().ToArray()));
                     return true;
                 }
                 case JmesPathType.Array:
@@ -827,11 +825,11 @@ namespace AWS.Lambda.Powertools.JMESPath
                         list.Add(arg0[i]);
                     }
 
-                    result = new ArrayValue(list);
+                    element = new ArrayValue(list);
                     return true;
                 }
                 default:
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
             }
         }
@@ -858,13 +856,13 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             if (!(args[0].Type == JmesPathType.Expression && args[1].Type == JmesPathType.Array))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -877,14 +875,14 @@ namespace AWS.Lambda.Powertools.JMESPath
             {
                 if (!expr.TryEvaluate(resources, item, out var val))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
                 list.Add(val);
             }
 
-            result = new ArrayValue(list);
+            element = new ArrayValue(list);
             return true;
         }
 
@@ -901,20 +899,20 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             if (!(args[0].Type == JmesPathType.Array && args[1].Type == JmesPathType.Expression))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             var arg0 = args[0];
             if (arg0.GetArrayLength() == 0)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return true;
             }
 
@@ -922,7 +920,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             if (!expr.TryEvaluate(resources, arg0[0], out var key1))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -930,7 +928,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             var isString1 = key1.Type == JmesPathType.String;
             if (!(isNumber1 || isString1))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -940,7 +938,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             {
                 if (!expr.TryEvaluate(resources, arg0[i], out var key2))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
@@ -948,13 +946,13 @@ namespace AWS.Lambda.Powertools.JMESPath
                 var isString2 = key2.Type == JmesPathType.String;
                 if (!(isNumber2 == isNumber1 && isString2 == isString1))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
                 if (!lessor.TryEvaluate(key2, key1, out var value))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
@@ -965,7 +963,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 }
             }
 
-            result = arg0[index];
+            element = arg0[index];
             return true;
         }
 
@@ -982,20 +980,20 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var arg0 = args[0];
             if (arg0.Type != JmesPathType.Array)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             if (arg0.GetArrayLength() <= 1)
             {
-                result = arg0;
+                element = arg0;
                 return true;
             }
 
@@ -1003,7 +1001,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             var isString1 = arg0[0].Type == JmesPathType.String;
             if (!isNumber1 && !isString1)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -1016,7 +1014,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 var isString2 = item.Type == JmesPathType.String;
                 if (!(isNumber2 == isNumber1 && isString2 == isString1))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
@@ -1024,7 +1022,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             }
 
             list.Sort(comparer);
-            result = new ArrayValue(list);
+            element = new ArrayValue(list);
             return true;
         }
 
@@ -1041,20 +1039,20 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             if (!(args[0].Type == JmesPathType.Array && args[1].Type == JmesPathType.Expression))
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             var arg0 = args[0];
             if (arg0.GetArrayLength() <= 1)
             {
-                result = arg0;
+                element = arg0;
                 return true;
             }
 
@@ -1070,11 +1068,11 @@ namespace AWS.Lambda.Powertools.JMESPath
             list.Sort(comparer);
             if (comparer.IsValid)
             {
-                result = new ArrayValue(list);
+                element = new ArrayValue(list);
                 return true;
             }
 
-            result = JsonConstants.Null;
+            element = JsonConstants.Null;
             return false;
         }
 
@@ -1092,7 +1090,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -1101,13 +1099,13 @@ namespace AWS.Lambda.Powertools.JMESPath
             if (arg0.Type != JmesPathType.String
                 || arg1.Type != JmesPathType.String)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
             var s0 = arg0.GetString();
             var s1 = arg1.GetString();
-            result = s0.StartsWith(s1) ? JsonConstants.True : JsonConstants.False;
+            element = s0.StartsWith(s1) ? JsonConstants.True : JsonConstants.False;
 
             return true;
         }
@@ -1128,14 +1126,14 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var arg0 = args[0];
             if (arg0.Type != JmesPathType.Array)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -1143,7 +1141,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             {
                 if (item.Type != JmesPathType.Number)
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
             }
@@ -1163,7 +1161,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             if (success)
             {
-                result = new DecimalValue(decSum);
+                element = new DecimalValue(decSum);
                 return true;
             }
 
@@ -1172,14 +1170,14 @@ namespace AWS.Lambda.Powertools.JMESPath
             {
                 if (!item.TryGetDouble(out var dbl))
                 {
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
 
                 dblSum += dbl;
             }
 
-            result = new DoubleValue(dblSum);
+            element = new DoubleValue(dblSum);
             return true;
         }
 
@@ -1196,19 +1194,19 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var arg0 = args[0];
             if (arg0.Type == JmesPathType.Array)
             {
-                result = arg0;
+                element = arg0;
                 return true;
             }
 
             var list = new List<IValue> { arg0 };
-            result = new ArrayValue(list);
+            element = new ArrayValue(list);
             return true;
         }
 
@@ -1226,7 +1224,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         }
 
         public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-            out IValue result)
+            out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -1234,28 +1232,28 @@ namespace AWS.Lambda.Powertools.JMESPath
             switch (arg0.Type)
             {
                 case JmesPathType.Number:
-                    result = arg0;
+                    element = arg0;
                     return true;
                 case JmesPathType.String:
                 {
                     var s = arg0.GetString();
                     if (decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var dec))
                     {
-                        result = new DecimalValue(dec);
+                        element = new DecimalValue(dec);
                         return true;
                     }
 
                     if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var dbl))
                     {
-                        result = new DoubleValue(dbl);
+                        element = new DoubleValue(dbl);
                         return true;
                     }
 
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 }
                 default:
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
             }
         }
@@ -1273,13 +1271,13 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             if (args[0].Type == JmesPathType.Expression)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -1287,13 +1285,13 @@ namespace AWS.Lambda.Powertools.JMESPath
             switch (arg0.Type)
             {
                 case JmesPathType.String:
-                    result = arg0;
+                    element = arg0;
                     return true;
                 case JmesPathType.Expression:
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
                 default:
-                    result = new StringValue(arg0.ToString());
+                    element = new StringValue(arg0.ToString());
                     return true;
             }
         }
@@ -1311,14 +1309,14 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
             var arg0 = args[0];
             if (arg0.Type != JmesPathType.Object)
             {
-                result = JsonConstants.Null;
+                element = JsonConstants.Null;
                 return false;
             }
 
@@ -1329,7 +1327,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                 list.Add(item.Value);
             }
 
-            result = new ArrayValue(list);
+            element = new ArrayValue(list);
             return true;
         }
 
@@ -1346,7 +1344,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -1355,26 +1353,26 @@ namespace AWS.Lambda.Powertools.JMESPath
             switch (arg0.Type)
             {
                 case JmesPathType.Number:
-                    result = new StringValue("number");
+                    element = new StringValue("number");
                     return true;
                 case JmesPathType.True:
                 case JmesPathType.False:
-                    result = new StringValue("boolean");
+                    element = new StringValue("boolean");
                     return true;
                 case JmesPathType.String:
-                    result = new StringValue("string");
+                    element = new StringValue("string");
                     return true;
                 case JmesPathType.Object:
-                    result = new StringValue("object");
+                    element = new StringValue("object");
                     return true;
                 case JmesPathType.Array:
-                    result = new StringValue("array");
+                    element = new StringValue("array");
                     return true;
                 case JmesPathType.Null:
-                    result = new StringValue("null");
+                    element = new StringValue("null");
                     return true;
                 default:
-                    result = JsonConstants.Null;
+                    element = JsonConstants.Null;
                     return false;
             }
         }
@@ -1398,12 +1396,10 @@ namespace AWS.Lambda.Powertools.JMESPath
             return "powertools_json";
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
-            result = args[0];
-
-            //result = new JsonElementValue(JsonNode.Parse(args[0].GetString()).Deserialize<JsonElement>());
+            element = args[0];
             return true;
         }
     }
@@ -1421,12 +1417,12 @@ namespace AWS.Lambda.Powertools.JMESPath
             return "powertools_base64";
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
             var base64StringBytes = Convert.FromBase64String(args[0].GetString());
             var doc = JsonDocument.Parse(base64StringBytes);
-            result = new JsonElementValue(doc.RootElement);
+            element = new JsonElementValue(doc.RootElement);
             return true;
         }
     }
@@ -1444,7 +1440,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             return "powertools_base64_gzip";
         }
 
-        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue result)
+        public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
         {
             Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
@@ -1458,7 +1454,7 @@ namespace AWS.Lambda.Powertools.JMESPath
             }
 
             var doc = JsonDocument.Parse(Encoding.UTF8.GetString(decompressedStream.ToArray()));
-            result = new JsonElementValue(doc.RootElement);
+            element = new JsonElementValue(doc.RootElement);
 
             return true;
         }

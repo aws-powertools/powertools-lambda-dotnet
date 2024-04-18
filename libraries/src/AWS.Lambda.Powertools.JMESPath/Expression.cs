@@ -68,7 +68,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                          IValue current, 
                                          out IValue value);
 
-        public virtual void AddExpression(IExpression expressions)
+        public virtual void AddExpression(IExpression expr)
         {
         }
 
@@ -313,25 +313,8 @@ namespace AWS.Lambda.Powertools.JMESPath
                 {
                     foreach (var elem in item.EnumerateArray())
                     {
-                        if (elem.Type != JmesPathType.Null)
-                        {
-                            if (!TryApplyExpressions(resources, elem, out var val))
-                            {
-                                value = JsonConstants.Null;
-                                return false;
-                            }
-                            if (val.Type != JmesPathType.Null)
-                            {
-                                result.Add(val);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if (item.Type != JmesPathType.Null)
-                    {
-                        if (!TryApplyExpressions(resources, item, out var val))
+                        if (elem.Type == JmesPathType.Null) continue;
+                        if (!TryApplyExpressions(resources, elem, out var val))
                         {
                             value = JsonConstants.Null;
                             return false;
@@ -340,6 +323,19 @@ namespace AWS.Lambda.Powertools.JMESPath
                         {
                             result.Add(val);
                         }
+                    }
+                }
+                else
+                {
+                    if (item.Type == JmesPathType.Null) continue;
+                    if (!TryApplyExpressions(resources, item, out var val))
+                    {
+                        value = JsonConstants.Null;
+                        return false;
+                    }
+                    if (val.Type != JmesPathType.Null)
+                    {
+                        result.Add(val);
                     }
                 }
             }
@@ -470,17 +466,16 @@ namespace AWS.Lambda.Powertools.JMESPath
                     value = JsonConstants.Null;
                     return false;
                 }
-                if (Expression.IsTrue(test))
+
+                if (!Expression.IsTrue(test)) continue;
+                if (!TryApplyExpressions(resources, item, out var val))
                 {
-                    if (!TryApplyExpressions(resources, item, out var val))
-                    {
-                        value = JsonConstants.Null;
-                        return false;
-                    }
-                    if (val.Type != JmesPathType.Null)
-                    {
-                        result.Add(val);
-                    }
+                    value = JsonConstants.Null;
+                    return false;
+                }
+                if (val.Type != JmesPathType.Null)
+                {
+                    result.Add(val);
                 }
             }
             value = new ArrayValue(result);

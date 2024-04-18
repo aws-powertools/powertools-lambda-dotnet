@@ -141,31 +141,35 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(IValue lhs, IValue rhs, out IValue result) 
+        public override bool TryEvaluate(IValue lhs, IValue rhs, out IValue result)
         {
-            if (lhs.Type == JmesPathType.Number && rhs.Type == JmesPathType.Number)
+            switch (lhs.Type)
             {
-                if (lhs.TryGetDecimal(out var dec1) && rhs.TryGetDecimal(out var dec2))
+                case JmesPathType.Number when rhs.Type == JmesPathType.Number:
                 {
-                    result = dec1 < dec2 ? JsonConstants.True : JsonConstants.False;
+                    if (lhs.TryGetDecimal(out var dec1) && rhs.TryGetDecimal(out var dec2))
+                    {
+                        result = dec1 < dec2 ? JsonConstants.True : JsonConstants.False;
+                    }
+                    else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
+                    {
+                        result = val1 < val2 ? JsonConstants.True : JsonConstants.False;
+                    }
+                    else
+                    {
+                        result = JsonConstants.Null;
+                    }
+
+                    break;
                 }
-                else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
-                {
-                    result = val1 < val2 ? JsonConstants.True : JsonConstants.False;
-                }
-                else
-                {
+                case JmesPathType.String when rhs.Type == JmesPathType.String:
+                    result = string.CompareOrdinal(lhs.GetString(), rhs.GetString()) < 0 ? JsonConstants.True : JsonConstants.False;
+                    break;
+                default:
                     result = JsonConstants.Null;
-                }
+                    break;
             }
-            else if (lhs.Type == JmesPathType.String && rhs.Type == JmesPathType.String)
-            {
-                result = string.CompareOrdinal(lhs.GetString(), rhs.GetString()) < 0 ? JsonConstants.True : JsonConstants.False;
-            }
-            else
-            {
-                result = JsonConstants.Null;
-            }
+
             return true;
         }
 
@@ -184,31 +188,35 @@ namespace AWS.Lambda.Powertools.JMESPath
         {
         }
 
-        public override bool TryEvaluate(IValue lhs, IValue rhs, out IValue result) 
+        public override bool TryEvaluate(IValue lhs, IValue rhs, out IValue result)
         {
-            if (lhs.Type == JmesPathType.Number && rhs.Type == JmesPathType.Number)
+            switch (lhs.Type)
             {
-                if (lhs.TryGetDecimal(out var dec1) && rhs.TryGetDecimal(out var dec2))
+                case JmesPathType.Number when rhs.Type == JmesPathType.Number:
                 {
-                    result = dec1 <= dec2 ? JsonConstants.True : JsonConstants.False;
+                    if (lhs.TryGetDecimal(out var dec1) && rhs.TryGetDecimal(out var dec2))
+                    {
+                        result = dec1 <= dec2 ? JsonConstants.True : JsonConstants.False;
+                    }
+                    else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
+                    {
+                        result = val1 <= val2 ? JsonConstants.True : JsonConstants.False;
+                    }
+                    else
+                    {
+                        result = JsonConstants.Null;
+                    }
+
+                    break;
                 }
-                else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
-                {
-                    result = val1 <= val2 ? JsonConstants.True : JsonConstants.False;
-                }
-                else
-                {
+                case JmesPathType.String when rhs.Type == JmesPathType.String:
+                    result = string.CompareOrdinal(lhs.GetString(), rhs.GetString()) <= 0 ? JsonConstants.True : JsonConstants.False;
+                    break;
+                default:
                     result = JsonConstants.Null;
-                }
+                    break;
             }
-            else if (lhs.Type == JmesPathType.String && rhs.Type == JmesPathType.String)
-            {
-                result = string.CompareOrdinal(lhs.GetString(), rhs.GetString()) <= 0 ? JsonConstants.True : JsonConstants.False;
-            }
-            else
-            {
-                result = JsonConstants.Null;
-            }
+
             return true;
         }
 
@@ -230,29 +238,33 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public override bool TryEvaluate(IValue lhs, IValue rhs, out IValue result)
         {
-            if (lhs.Type == JmesPathType.Number && rhs.Type == JmesPathType.Number)
+            switch (lhs.Type)
             {
-                if (lhs.TryGetDecimal(out var dec1) && rhs.TryGetDecimal(out var dec2))
+                case JmesPathType.Number when rhs.Type == JmesPathType.Number:
                 {
-                    result = dec1 > dec2 ? JsonConstants.True : JsonConstants.False;
+                    if (lhs.TryGetDecimal(out var dec1) && rhs.TryGetDecimal(out var dec2))
+                    {
+                        result = dec1 > dec2 ? JsonConstants.True : JsonConstants.False;
+                    }
+                    else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
+                    {
+                        result = val1 > val2 ? JsonConstants.True : JsonConstants.False;
+                    }
+                    else
+                    {
+                        result = JsonConstants.Null;
+                    }
+
+                    break;
                 }
-                else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
-                {
-                    result = val1 > val2 ? JsonConstants.True : JsonConstants.False;
-                }
-                else
-                {
+                case JmesPathType.String when rhs.Type == JmesPathType.String:
+                    result = string.CompareOrdinal(lhs.GetString(), rhs.GetString()) > 0 ? JsonConstants.True : JsonConstants.False;
+                    break;
+                default:
                     result = JsonConstants.Null;
-                }
+                    break;
             }
-            else if (lhs.Type == JmesPathType.String && rhs.Type == JmesPathType.String)
-            {
-                result = string.CompareOrdinal(lhs.GetString(), rhs.GetString()) > 0 ? JsonConstants.True : JsonConstants.False;
-            }
-            else
-            {
-                result = JsonConstants.Null;
-            }
+
             return true;
         }
 
@@ -273,29 +285,33 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public override bool TryEvaluate(IValue lhs, IValue rhs, out IValue result)
         {
-            if (lhs.Type == JmesPathType.Number && rhs.Type == JmesPathType.Number)
+            switch (lhs.Type)
             {
-                if (lhs.TryGetDecimal(out var dec1) && rhs.TryGetDecimal(out var dec2))
+                case JmesPathType.Number when rhs.Type == JmesPathType.Number:
                 {
-                    result = dec1 >= dec2 ? JsonConstants.True : JsonConstants.False;
+                    if (lhs.TryGetDecimal(out var dec1) && rhs.TryGetDecimal(out var dec2))
+                    {
+                        result = dec1 >= dec2 ? JsonConstants.True : JsonConstants.False;
+                    }
+                    else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
+                    {
+                        result = val1 >= val2 ? JsonConstants.True : JsonConstants.False;
+                    }
+                    else
+                    {
+                        result = JsonConstants.Null;
+                    }
+
+                    break;
                 }
-                else if (lhs.TryGetDouble(out var val1) && rhs.TryGetDouble(out var val2))
-                {
-                    result = val1 >= val2 ? JsonConstants.True : JsonConstants.False;
-                }
-                else
-                {
+                case JmesPathType.String when rhs.Type == JmesPathType.String:
+                    result = string.CompareOrdinal(lhs.GetString(), rhs.GetString()) >= 0 ? JsonConstants.True : JsonConstants.False;
+                    break;
+                default:
                     result = JsonConstants.Null;
-                }
+                    break;
             }
-            else if (lhs.Type == JmesPathType.String && rhs.Type == JmesPathType.String)
-            {
-                result = string.CompareOrdinal(lhs.GetString(), rhs.GetString()) >= 0 ? JsonConstants.True : JsonConstants.False;
-            }
-            else
-            {
-                result = JsonConstants.Null;
-            }
+
             return true;
         }
 
