@@ -55,9 +55,9 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         public bool IsRightAssociative {get;} 
 
-        public bool IsProjection {get;} 
+        public bool IsProjection {get;}
 
-        internal BaseExpression(Operator oper, bool isProjection)
+        private protected BaseExpression(Operator oper, bool isProjection)
         {
             PrecedenceLevel = OperatorTable.PrecedenceLevel(oper);
             IsRightAssociative = OperatorTable.IsRightAssociative(oper);
@@ -173,7 +173,7 @@ namespace AWS.Lambda.Powertools.JMESPath
     {
         private readonly List<IExpression> _expressions;
 
-        internal Projection(Operator oper)
+        private protected Projection(Operator oper)
             : base(oper, true)
         {
             _expressions = new List<IExpression>();
