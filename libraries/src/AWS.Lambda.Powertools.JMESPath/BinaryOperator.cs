@@ -24,7 +24,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
     internal abstract class BinaryOperator : IBinaryOperator
     {
-        internal BinaryOperator(Operator oper)
+        private protected BinaryOperator(Operator oper)
         {
             PrecedenceLevel = OperatorTable.PrecedenceLevel(oper);
         }

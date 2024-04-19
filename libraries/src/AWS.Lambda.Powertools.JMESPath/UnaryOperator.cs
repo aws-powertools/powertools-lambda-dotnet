@@ -26,7 +26,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
     internal abstract class UnaryOperator : IUnaryOperator
     {
-        internal UnaryOperator(Operator oper)
+        private protected UnaryOperator(Operator oper)
         {
             PrecedenceLevel = OperatorTable.PrecedenceLevel(oper);
             IsRightAssociative = OperatorTable.IsRightAssociative(oper);
