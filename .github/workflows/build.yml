@@ -30,6 +30,7 @@ jobs:
         run: dotnet test --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity normal
       - name: Codecov
         uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # 3.1.0
+        continue-on-error: true # prevent build fail when codecov service is down (very frequent)
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
