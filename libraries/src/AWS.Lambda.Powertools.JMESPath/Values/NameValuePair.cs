@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
@@ -13,13 +13,17 @@
  * permissions and limitations under the License.
  */
 
-using System.Collections.Generic;
-using AWS.Lambda.Powertools.JMESPath.Values;
-
-namespace AWS.Lambda.Powertools.JMESPath.Functions;
-
-internal interface IFunction
+namespace AWS.Lambda.Powertools.JMESPath.Values
 {
-    int? Arity { get; }
-    bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element);
+    internal readonly struct NameValuePair
+    {
+        public string Name { get; }
+        public IValue Value { get; }
+
+        public NameValuePair(string name, IValue value)
+        {
+            Name = name;
+            Value = value;
+        }
+    }
 }

@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using AWS.Lambda.Powertools.JMESPath.Values;
+
 namespace AWS.Lambda.Powertools.JMESPath
 {
     internal interface IBinaryOperator 

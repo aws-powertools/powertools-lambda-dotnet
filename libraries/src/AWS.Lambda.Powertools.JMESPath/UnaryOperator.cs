@@ -14,6 +14,7 @@
  */
 
 using System.Text.RegularExpressions;
+using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath
 {

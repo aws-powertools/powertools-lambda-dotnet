@@ -14,28 +14,9 @@
  */
 
 using System.Collections.Generic;
-using System.Diagnostics;
-using AWS.Lambda.Powertools.JMESPath.Values;
 
-namespace AWS.Lambda.Powertools.JMESPath.Functions;
+namespace AWS.Lambda.Powertools.JMESPath.Values;
 
-internal sealed class MinFunction : BaseFunction
+internal interface IObjectValueEnumerator : IEnumerator<NameValuePair>, IEnumerable<NameValuePair>
 {
-    internal MinFunction()
-        : base(1)
-    {
-    }
-
-    public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
-        out IValue element)
-    {
-        Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
-
-        return EvaluateMinMax.TryEvaluate(args, LtOperator.Instance, out element);
-    }
-
-    public override string ToString()
-    {
-        return "min";
-    }
 }

@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using AWS.Lambda.Powertools.JMESPath.Functions;
+using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath
 {

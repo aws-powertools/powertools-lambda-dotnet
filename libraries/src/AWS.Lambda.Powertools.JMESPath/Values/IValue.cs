@@ -13,13 +13,18 @@
  * permissions and limitations under the License.
  */
 
-using System.Collections.Generic;
-using AWS.Lambda.Powertools.JMESPath.Values;
+namespace AWS.Lambda.Powertools.JMESPath.Values;
 
-namespace AWS.Lambda.Powertools.JMESPath.Functions;
-
-internal interface IFunction
+internal interface IValue
 {
-    int? Arity { get; }
-    bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element);
+    JmesPathType Type { get; }
+    IValue this[int index] { get; }
+    int GetArrayLength();
+    string GetString();
+    bool TryGetDecimal(out decimal value);
+    bool TryGetDouble(out double value);
+    bool TryGetProperty(string propertyName, out IValue property);
+    IArrayValueEnumerator EnumerateArray();
+    IObjectValueEnumerator EnumerateObject();
+    IExpression GetExpression();
 }

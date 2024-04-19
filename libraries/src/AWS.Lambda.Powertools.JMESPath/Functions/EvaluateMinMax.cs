@@ -14,6 +14,7 @@
  */
 
 using System.Collections.Generic;
+using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 

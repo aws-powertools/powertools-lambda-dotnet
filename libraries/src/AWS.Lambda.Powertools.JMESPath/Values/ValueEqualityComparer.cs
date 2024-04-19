@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AWS.Lambda.Powertools.JMESPath
+namespace AWS.Lambda.Powertools.JMESPath.Values
 {
     internal sealed class ValueEqualityComparer : IEqualityComparer<IValue>
    {
