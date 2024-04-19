@@ -13,27 +13,28 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
-internal sealed class MaxByFunction : BaseFunction
+internal static class EvaluateStartEndWith
 {
-    internal MaxByFunction()
-        : base(2)
+    internal static bool TryEvaluate(IList<IValue> args, out IValue element, Func<string, Func<string, bool>> method)
     {
-    }
+        var arg0 = args[0];
+        var arg1 = args[1];
+        if (arg0.Type != JmesPathType.String
+            || arg1.Type != JmesPathType.String)
+        {
+            element = JsonConstants.Null;
+            return false;
+        }
 
-    public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
-    {
-        Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
-        
-        return EvaluateMinMaxBy.TryEvaluate(resources, args, GtOperator.Instance, out element);
-    }
+        var s0 = arg0.GetString();
+        var s1 = arg1.GetString();
+        element = method(s0)(s1) ? JsonConstants.True : JsonConstants.False;
 
-    public override string ToString()
-    {
-        return "max_by";
+        return true;
     }
 }
