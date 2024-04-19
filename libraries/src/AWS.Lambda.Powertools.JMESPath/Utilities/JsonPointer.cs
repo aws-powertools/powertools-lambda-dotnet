@@ -159,55 +159,56 @@ namespace AWS.Lambda.Powertools.JMESPath.Utilities
                 var done = false;
                 while (index < input.Length && !done)
                 {
-                    switch (state)
+                    if (state == JsonPointerState.Start)
                     {
-                        case JsonPointerState.Start: 
-                            switch (input[index])
-                            {
-                                case '/':
-                                    state = JsonPointerState.Delim;
-                                    break;
-                                default:
-                                    pointer = Default;
-                                    return false;
-                            }
-                            break;
-                        case JsonPointerState.Delim: 
-                            switch (input[index])
-                            {
-                                case '/':
-                                    done = true;
-                                    break;
-                                case '~':
-                                    state = JsonPointerState.Escaped;
-                                    break;
-                                default:
-                                    buffer.Append(input[index]);
-                                    break;
-                            }
-                            break;
-                        case JsonPointerState.Escaped: 
-                            switch (input[index])
-                            {
-                                case '0':
-                                    buffer.Append('~');
-                                    state = JsonPointerState.Delim;
-                                    break;
-                                case '1':
-                                    buffer.Append('/');
-                                    state = JsonPointerState.Delim;
-                                    break;
-                                default:
-                                    pointer = Default;
-                                    return false;
-                            }
-                            break;
-                        default:
+                        switch (input[index])
                         {
-                            pointer = Default;
-                            return false;
+                            case '/':
+                                state = JsonPointerState.Delim;
+                                break;
+                            default:
+                                pointer = Default;
+                                return false;
                         }
                     }
+                    else if (state == JsonPointerState.Delim)
+                    {
+                        switch (input[index])
+                        {
+                            case '/':
+                                done = true;
+                                break;
+                            case '~':
+                                state = JsonPointerState.Escaped;
+                                break;
+                            default:
+                                buffer.Append(input[index]);
+                                break;
+                        }
+                    }
+                    else if (state == JsonPointerState.Escaped)
+                    {
+                        switch (input[index])
+                        {
+                            case '0':
+                                buffer.Append('~');
+                                state = JsonPointerState.Delim;
+                                break;
+                            case '1':
+                                buffer.Append('/');
+                                state = JsonPointerState.Delim;
+                                break;
+                            default:
+                                pointer = Default;
+                                return false;
+                        }
+                    }
+                    else
+                    {
+                        pointer = Default;
+                        return false;
+                    }
+
                     ++index;
                 }
                 tokens.Add(buffer.ToString());
