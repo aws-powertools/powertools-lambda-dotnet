@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using AWS.Lambda.Powertools.JMESPath.Functions;
 
 namespace AWS.Lambda.Powertools.JMESPath
 {

@@ -15,6 +15,7 @@
 
 using System;
 using System.Diagnostics;
+using AWS.Lambda.Powertools.JMESPath.Functions;
 
 namespace AWS.Lambda.Powertools.JMESPath
 {
