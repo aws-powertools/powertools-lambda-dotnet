@@ -18,9 +18,7 @@ using System.Text.Json;
 
 namespace AWS.Lambda.Powertools.JMESPath
 {
-    internal sealed class DynamicResources 
-    {
-    }
+    internal sealed class DynamicResources;
     /// <summary>
     /// Provides functionality for applying a JMESPath expression to transform a JSON document into
     /// another JSON document

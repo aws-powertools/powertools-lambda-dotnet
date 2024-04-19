@@ -728,7 +728,6 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         internal static bool IsFalse(IValue val)
         {
-            var comparer = ValueEqualityComparer.Instance;
             switch (val.Type)
             {
                 case JmesPathType.False:

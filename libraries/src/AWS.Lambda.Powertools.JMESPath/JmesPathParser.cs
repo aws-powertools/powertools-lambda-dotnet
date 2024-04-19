@@ -149,8 +149,10 @@ namespace AWS.Lambda.Powertools.JMESPath
             PushToken(new Token(TokenType.CurrentNode));
             _stateStack.Push(JmesPathState.Start);
 
+            var syntaxErrorMsg = "Syntax error";
             while (_index < _span.Length)
             {
+                var expectedRightBracket = "Expected right bracket";
                 switch (_stateStack.Peek())
                 {
                     case JmesPathState.Start: 
@@ -215,7 +217,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 }
                                 else
                                 {
-                                    throw new JmesPathParseException("Syntax error", _line, _column);
+                                    throw new JmesPathParseException(syntaxErrorMsg, _line, _column);
                                 }
                                 break;
                         }
@@ -256,7 +258,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 }
                                 else
                                 {
-                                    throw new JmesPathParseException("Syntax error", _line, _column);
+                                    throw new JmesPathParseException(syntaxErrorMsg, _line, _column);
                                 }
                                 break;
                         }
@@ -978,7 +980,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 break;
                             }
                             default:
-                                throw new JmesPathParseException("Expected right bracket", _line, _column);
+                                throw new JmesPathParseException(expectedRightBracket, _line, _column);
                         }
                         break;
                     case JmesPathState.RhsSliceExpressionStop :
@@ -1012,7 +1014,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 ++_column;
                                 break;
                             default:
-                                throw new JmesPathParseException("Expected right bracket", _line, _column);
+                                throw new JmesPathParseException(expectedRightBracket, _line, _column);
                         }
                         break;
                     }
@@ -1045,7 +1047,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 ++_column;
                                 break;
                             default:
-                                throw new JmesPathParseException("Expected right bracket", _line, _column);
+                                throw new JmesPathParseException(expectedRightBracket, _line, _column);
                         }
                         break;
                     }
@@ -1059,7 +1061,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 ++_column;
                                 break;
                             default:
-                                throw new JmesPathParseException("Expected right bracket", _line, _column);
+                                throw new JmesPathParseException(expectedRightBracket, _line, _column);
                         }
                         break;
                     }
@@ -1281,7 +1283,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 break;
                             }
                             default:
-                                throw new JmesPathParseException("Expected right bracket", _line, _column);
+                                throw new JmesPathParseException(expectedRightBracket, _line, _column);
                         }
                         break;
                     }
@@ -1301,7 +1303,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                                 break;
                             }
                             default:
-                                throw new JmesPathParseException("Expected right bracket", _line, _column);
+                                throw new JmesPathParseException(expectedRightBracket, _line, _column);
                         }
                         break;
                     }
@@ -1365,7 +1367,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             if (_stateStack.Count == 0)
             {
-                throw new JmesPathParseException("Syntax error", _line, _column);
+                throw new JmesPathParseException(syntaxErrorMsg, _line, _column);
             }
             while (_stateStack.Count > 1)
             {
@@ -1378,7 +1380,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                         }
                         else
                         {
-                            throw new JmesPathParseException("Syntax error", _line, _column);
+                            throw new JmesPathParseException(syntaxErrorMsg, _line, _column);
                         }
                         break;
                     case JmesPathState.ValExpr:
@@ -1390,7 +1392,7 @@ namespace AWS.Lambda.Powertools.JMESPath
                         _stateStack.Pop(); 
                         break;
                     default:
-                        throw new JmesPathParseException("Syntax error", _line, _column);
+                        throw new JmesPathParseException(syntaxErrorMsg, _line, _column);
                 }
             }
 

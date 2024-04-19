@@ -619,7 +619,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
     internal readonly struct ArrayValue : IValue
     {
-        private class ArrayEnumerator : IArrayValueEnumerator
+        private sealed class ArrayEnumerator : IArrayValueEnumerator
         {
             private readonly IList<IValue> _value;
             private readonly System.Collections.IEnumerator _enumerator;
@@ -728,7 +728,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
     internal readonly struct ObjectValue : IValue
     {
-        private class ObjectEnumerator : IObjectValueEnumerator
+        private sealed class ObjectEnumerator : IObjectValueEnumerator
         {
             private readonly IDictionary<string, IValue> _value;
             private readonly System.Collections.IEnumerator _enumerator;
