@@ -47,9 +47,9 @@ namespace AWS.Lambda.Powertools.JMESPath
             : base(Operator.Not)
         {}
 
-        public override bool TryEvaluate(IValue val, out IValue result)
+        public override bool TryEvaluate(IValue elem, out IValue result)
         {
-            result = Expression.IsFalse(val) ? JsonConstants.True : JsonConstants.False;
+            result = Expression.IsFalse(elem) ? JsonConstants.True : JsonConstants.False;
             return true;
         }
 
@@ -69,14 +69,14 @@ namespace AWS.Lambda.Powertools.JMESPath
             _regex = regex;
         }
 
-        public override bool TryEvaluate(IValue val, out IValue result)
+        public override bool TryEvaluate(IValue elem, out IValue result)
         {
-            if (val.Type != JmesPathType.String)
+            if (elem.Type != JmesPathType.String)
             {
                 result = JsonConstants.Null;
                 return false; // type error
             }
-            result = _regex.IsMatch(val.GetString()) ? JsonConstants.True : JsonConstants.False;
+            result = _regex.IsMatch(elem.GetString()) ? JsonConstants.True : JsonConstants.False;
             return true;
         }
 

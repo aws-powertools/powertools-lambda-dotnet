@@ -110,52 +110,62 @@ namespace AWS.Lambda.Powertools.JMESPath
     
                 case JmesPathType.Array:
                 {
-                    var enumerator1 = lhs.EnumerateArray();
-                    var enumerator2 = rhs.EnumerateArray();
-                    var result1 = enumerator1.MoveNext();
-                    var result2 = enumerator2.MoveNext();
-                    while (result1 && result2)
-                    {
-                        var diff = Compare(enumerator1.Current, enumerator2.Current);
-                        if (diff != 0)
-                        {
-                            return diff;
-                        }
-                        result1 = enumerator1.MoveNext();
-                        result2 = enumerator2.MoveNext();
-                    }   
-                    return result1 ? 1 : result2 ? -1 : 0;
+                    return ArrayComparer(lhs, rhs);
                 }
 
                 case JmesPathType.Object:
                 {
-                    // OrderBy performs a stable sort (Note that <see cref="IValue"/> supports duplicate property names)
-                    using var enumerator1 = lhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
-                    using var enumerator2 = rhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
-    
-                    var result1 = enumerator1.MoveNext();
-                    var result2 = enumerator2.MoveNext();
-                    while (result1 && result2)
-                    {
-                        if (enumerator1.Current.Name != enumerator2.Current.Name)
-                        {
-                            return string.Compare(enumerator1.Current.Name, enumerator2.Current.Name, StringComparison.Ordinal);
-                        }
-                        var diff = Compare(enumerator1.Current.Value, enumerator2.Current.Value);
-                        if (diff != 0)
-                        {
-                            return diff;
-                        }
-                        result1 = enumerator1.MoveNext();
-                        result2 = enumerator2.MoveNext();
-                    }   
-    
-                    return result1 ? 1 : result2 ? -1 : 0;
+                    return ObjectComparer(lhs, rhs);
                 }
     
                 default:
                     throw new InvalidOperationException($"Unknown JmesPathType {lhs.Type}");
             }
+        }
+
+        private int ArrayComparer(IValue lhs, IValue rhs)
+        {
+            var enumerator1 = lhs.EnumerateArray();
+            var enumerator2 = rhs.EnumerateArray();
+            var result1 = enumerator1.MoveNext();
+            var result2 = enumerator2.MoveNext();
+            while (result1 && result2)
+            {
+                var diff = Compare(enumerator1.Current, enumerator2.Current);
+                if (diff != 0)
+                {
+                    return diff;
+                }
+                result1 = enumerator1.MoveNext();
+                result2 = enumerator2.MoveNext();
+            }   
+            return result1 ? 1 : result2 ? -1 : 0;
+        }
+
+        private int ObjectComparer(IValue lhs, IValue rhs)
+        {
+            // OrderBy performs a stable sort (Note that <see cref="IValue"/> supports duplicate property names)
+            using var enumerator1 = lhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
+            using var enumerator2 = rhs.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).GetEnumerator();
+    
+            var result1 = enumerator1.MoveNext();
+            var result2 = enumerator2.MoveNext();
+            while (result1 && result2)
+            {
+                if (enumerator1.Current.Name != enumerator2.Current.Name)
+                {
+                    return string.Compare(enumerator1.Current.Name, enumerator2.Current.Name, StringComparison.Ordinal);
+                }
+                var diff = Compare(enumerator1.Current.Value, enumerator2.Current.Value);
+                if (diff != 0)
+                {
+                    return diff;
+                }
+                result1 = enumerator1.MoveNext();
+                result2 = enumerator2.MoveNext();
+            }   
+    
+            return result1 ? 1 : result2 ? -1 : 0;
         }
 
         int System.Collections.IComparer.Compare(object x, object y)

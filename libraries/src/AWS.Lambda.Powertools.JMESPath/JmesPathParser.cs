@@ -1382,9 +1382,6 @@ namespace AWS.Lambda.Powertools.JMESPath
                         }
                         break;
                     case JmesPathState.ValExpr:
-                        PushToken(new Token(new IdentifierSelector(buffer.ToString())));
-                        _stateStack.Pop(); 
-                        break;
                     case JmesPathState.IdentifierOrFunctionExpr:
                         PushToken(new Token(new IdentifierSelector(buffer.ToString())));
                         _stateStack.Pop(); 
