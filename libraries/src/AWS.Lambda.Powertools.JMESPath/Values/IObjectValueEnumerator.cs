@@ -17,6 +17,9 @@ using System.Collections.Generic;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
+/// <summary>
+/// Interface for object value enumerator.
+/// </summary>
 internal interface IObjectValueEnumerator : IEnumerator<NameValuePair>, IEnumerable<NameValuePair>
 {
 }

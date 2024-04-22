@@ -15,10 +15,14 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using AWS.Lambda.Powertools.JMESPath.Operators;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the maximum value in a list.
+/// </summary>
 internal sealed class MaxFunction : BaseFunction
 {
     internal MaxFunction()
@@ -26,6 +30,7 @@ internal sealed class MaxFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
         out IValue element)
     {

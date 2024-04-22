@@ -15,6 +15,9 @@
 
 namespace AWS.Lambda.Powertools.JMESPath.Values
 {
+    /// <summary>
+    /// Represents a name-value pair.
+    /// </summary>
     internal readonly struct NameValuePair
     {
         public string Name { get; }

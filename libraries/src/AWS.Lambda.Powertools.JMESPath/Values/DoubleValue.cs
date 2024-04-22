@@ -15,11 +15,18 @@
 
 using System;
 using System.Text.Json;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
+/// <summary>
+/// Represents a double value.
+/// </summary>
 internal readonly struct DoubleValue : IValue
 {
+    /// <summary>
+    /// The value of this <see cref="DoubleValue"/>.
+    /// </summary>
     private readonly double _value;
 
     internal DoubleValue(double value)
@@ -27,20 +34,29 @@ internal readonly struct DoubleValue : IValue
         _value = value;
     }
 
+    /// <inheritdoc />
     public JmesPathType Type => JmesPathType.Number;
 
+    /// <summary>
+    /// Gets the value at the specified index.
+    /// </summary>
+    /// <param name="index"></param>
+    /// <exception cref="InvalidOperationException"></exception>
     public IValue this[int index] => throw new InvalidOperationException();
 
+    /// <inheritdoc />
     public int GetArrayLength()
     {
         throw new InvalidOperationException();
     }
-
+    
+    /// <inheritdoc />
     public string GetString()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetDecimal(out decimal value)
     {
         if (!(double.IsNaN(_value) || double.IsInfinity(_value)) &&
@@ -54,27 +70,32 @@ internal readonly struct DoubleValue : IValue
         return true;
     }
 
+    /// <inheritdoc />
     public bool TryGetDouble(out double value)
     {
         value = _value;
         return true;
     }
 
+    /// <inheritdoc />
     public bool TryGetProperty(string propertyName, out IValue property)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IArrayValueEnumerator EnumerateArray()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IObjectValueEnumerator EnumerateObject()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IExpression GetExpression()
     {
         throw new InvalidOperationException("Not an expression");

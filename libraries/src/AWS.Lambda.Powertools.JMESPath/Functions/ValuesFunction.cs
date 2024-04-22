@@ -15,10 +15,14 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the values of an object.
+/// </summary>
 internal sealed class ValuesFunction : BaseFunction
 {
     internal ValuesFunction()
@@ -26,6 +30,7 @@ internal sealed class ValuesFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);

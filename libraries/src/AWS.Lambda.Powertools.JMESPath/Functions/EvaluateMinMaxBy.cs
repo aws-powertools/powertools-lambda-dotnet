@@ -14,12 +14,25 @@
  */
 
 using System.Collections.Generic;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
+using AWS.Lambda.Powertools.JMESPath.Operators;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Evaluates the min and max functions by resources.
+/// </summary>
 internal static class EvaluateMinMaxBy
 {
+    /// <summary>
+    /// Evaluates the min and max function by resources.
+    /// </summary>
+    /// <param name="resources"></param>
+    /// <param name="args"></param>
+    /// <param name="binaryOperator"></param>
+    /// <param name="element"></param>
+    /// <returns></returns>
     internal static bool TryEvaluate(DynamicResources resources, IList<IValue> args, IBinaryOperator binaryOperator, out IValue element)
     {
         if (!(args[0].Type == JmesPathType.Array && args[1].Type == JmesPathType.Expression))

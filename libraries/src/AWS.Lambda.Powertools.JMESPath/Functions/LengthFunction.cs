@@ -16,10 +16,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the number of elements in a value.
+/// </summary>
 internal sealed class LengthFunction : BaseFunction
 {
     internal LengthFunction()
@@ -27,6 +31,7 @@ internal sealed class LengthFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
         out IValue element)
     {

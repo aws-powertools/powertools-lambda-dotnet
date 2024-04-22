@@ -15,7 +15,9 @@
 
 using System;
 using System.Diagnostics;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Functions;
+using AWS.Lambda.Powertools.JMESPath.Operators;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath
@@ -47,8 +49,14 @@ namespace AWS.Lambda.Powertools.JMESPath
         EndOfExpression
     }
 
+    /// <summary>
+    /// Represents a token in the JMESPath expression.
+    /// </summary>
     internal readonly struct Token : IEquatable<Token>
     {
+        /// <summary>
+        /// The expression associated with this token.
+        /// </summary>
         private readonly object? _expr;
 
         internal Token(TokenType type)
@@ -95,6 +103,9 @@ namespace AWS.Lambda.Powertools.JMESPath
 
         internal TokenType Type{get;}
 
+        /// <summary>
+        /// Return if it is an Operator
+        /// </summary>
         internal bool IsOperator
         {
             get
@@ -111,6 +122,9 @@ namespace AWS.Lambda.Powertools.JMESPath
             }
         }
 
+        /// <summary>
+        /// True if the expression is a projection, false otherwise.
+        /// </summary>
         internal bool IsProjection
         {
             get
@@ -125,6 +139,9 @@ namespace AWS.Lambda.Powertools.JMESPath
             }
         }
 
+        /// <summary>
+        /// True if the expression is right-associative, false otherwise.
+        /// </summary>
         internal bool IsRightAssociative
         {
             get
@@ -143,6 +160,9 @@ namespace AWS.Lambda.Powertools.JMESPath
             }
         }
 
+        /// <summary>
+        /// The precedence level of the operator.
+        /// </summary>
         internal int PrecedenceLevel 
         {
             get
@@ -161,36 +181,64 @@ namespace AWS.Lambda.Powertools.JMESPath
             }
         }
 
+        /// <summary>
+        /// Returns the token expression key if Type is Key
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         internal string GetKey()
         {
             Debug.Assert(Type == TokenType.Key);
             return _expr as string ?? throw new InvalidOperationException("Key cannot be null");
         }
 
+        /// <summary>
+        /// Returns the token expression key if Type is UnaryOperator
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         internal IUnaryOperator GetUnaryOperator()
         {
             Debug.Assert(Type == TokenType.UnaryOperator);
             return _expr as IUnaryOperator ?? throw new InvalidOperationException("Unary operator cannot be null");
         }
 
+        /// <summary>
+        /// Returns the token expression key if Type is BinaryOperator
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         internal IBinaryOperator GetBinaryOperator()
         {
             Debug.Assert(Type == TokenType.BinaryOperator);
             return _expr as IBinaryOperator ?? throw new InvalidOperationException("Binary operator cannot be null");
         }
 
+        /// <summary>
+        /// Returns the token expression key if Type is Literal
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         internal IValue GetValue()
         {
             Debug.Assert(Type == TokenType.Literal);
             return _expr as IValue ?? throw new InvalidOperationException("Value cannot be null");
         }
 
+        /// <summary>
+        /// Returns the token expression key if Type is Function
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         internal IFunction GetFunction()
         {
             Debug.Assert(Type == TokenType.Function);
             return _expr as IFunction ?? throw new InvalidOperationException("Function cannot be null");
         }
 
+        /// <summary>
+        /// Returns the token expression key if Type is Expression
+        /// </summary>
         internal IExpression GetExpression()
         {
             Debug.Assert(Type == TokenType.Expression);

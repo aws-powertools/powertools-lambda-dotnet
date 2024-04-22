@@ -18,8 +18,18 @@ using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Represents a JMESPath function.
+/// </summary>
 internal interface IFunction
 {
+    /// <summary>
+    /// The number of arguments the function takes.
+    /// </summary>
     int? Arity { get; }
+    
+    /// <summary>
+    /// Evaluates the function.
+    /// </summary>
     bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element);
 }

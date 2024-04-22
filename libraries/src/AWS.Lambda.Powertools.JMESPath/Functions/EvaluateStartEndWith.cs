@@ -15,12 +15,25 @@
 
 using System;
 using System.Collections.Generic;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Evaluates true if the first string starts with the second string.
+/// Evaluates true if the first string ends with the second string.
+/// </summary>
 internal static class EvaluateStartEndWith
 {
+    /// <summary>
+    /// Evaluates true if the first string starts with the second string.
+    /// Evaluates true if the first string ends with the second string.
+    /// </summary>
+    /// <param name="args"></param>
+    /// <param name="element"></param>
+    /// <param name="method"></param>
+    /// <returns></returns>
     internal static bool TryEvaluate(IList<IValue> args, out IValue element, Func<string, Func<string, bool>> method)
     {
         var arg0 = args[0];

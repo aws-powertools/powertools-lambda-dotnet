@@ -14,10 +14,14 @@
  */
 
 using System.Collections.Generic;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions
 {
+    /// <summary>
+    /// Implements the <code>sort_by</code> function.
+    /// </summary>
     internal sealed class SortByComparer : IComparer<IValue>, System.Collections.IComparer
     {
         private readonly DynamicResources _resources;

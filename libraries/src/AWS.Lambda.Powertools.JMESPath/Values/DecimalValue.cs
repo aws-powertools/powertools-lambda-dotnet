@@ -15,11 +15,18 @@
 
 using System;
 using System.Text.Json;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
+/// <summary>
+/// Represents a JMESPath number value.
+/// </summary>
 internal readonly struct DecimalValue : IValue
 {
+    /// <summary>
+    /// The value of the JMESPath number.
+    /// </summary>
     private readonly decimal _value;
 
     internal DecimalValue(decimal value)
@@ -27,47 +34,63 @@ internal readonly struct DecimalValue : IValue
         _value = value;
     }
 
+    /// <summary>
+    /// The type of the JMESPath value.
+    /// </summary>
     public JmesPathType Type => JmesPathType.Number;
 
+    /// <summary>
+    /// Gets the value at the specified index.
+    /// </summary>
+    /// <param name="index"></param>
+    /// <exception cref="InvalidOperationException"></exception>
     public IValue this[int index] => throw new InvalidOperationException();
 
+    /// <inheritdoc />
     public int GetArrayLength()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public string GetString()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetDecimal(out decimal value)
     {
         value = _value;
         return true;
     }
 
+    /// <inheritdoc />
     public bool TryGetDouble(out double value)
     {
         value = (double)_value;
         return true;
     }
 
+    /// <inheritdoc />
     public bool TryGetProperty(string propertyName, out IValue property)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IArrayValueEnumerator EnumerateArray()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IObjectValueEnumerator EnumerateObject()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IExpression GetExpression()
     {
         throw new InvalidOperationException("Not an expression");

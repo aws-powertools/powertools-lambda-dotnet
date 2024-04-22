@@ -17,6 +17,9 @@ using System.Collections.Generic;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
+/// <summary>
+/// Represents an enumerator for an array value.
+/// </summary>
 internal interface IArrayValueEnumerator : IEnumerator<IValue>, IEnumerable<IValue>
 {
 }

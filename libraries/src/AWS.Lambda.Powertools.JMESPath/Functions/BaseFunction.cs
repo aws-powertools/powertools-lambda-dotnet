@@ -18,6 +18,9 @@ using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Base class for JMESPath functions.
+/// </summary>
 internal abstract class BaseFunction : IFunction
 {
     private protected BaseFunction(int? argCount)
@@ -25,7 +28,9 @@ internal abstract class BaseFunction : IFunction
         Arity = argCount;
     }
 
+    /// <inheritdoc />
     public int? Arity { get; }
 
+    /// <inheritdoc />
     public abstract bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element);
 }

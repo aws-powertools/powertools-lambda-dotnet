@@ -21,6 +21,9 @@ using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the Base64 encoded value of a string. powertools_base64
+/// </summary>
 internal sealed class Base64Function : BaseFunction
 {
     /// <inheritdoc />
@@ -34,6 +37,7 @@ internal sealed class Base64Function : BaseFunction
         return "powertools_base64";
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);

@@ -15,10 +15,14 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using AWS.Lambda.Powertools.JMESPath.Operators;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the maximum value of the expression by resource.
+/// </summary>
 internal sealed class MaxByFunction : BaseFunction
 {
     internal MaxByFunction()
@@ -26,6 +30,7 @@ internal sealed class MaxByFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);

@@ -15,10 +15,14 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the absolute value of a number.
+/// </summary>
 internal sealed class AbsFunction : BaseFunction
 {
     internal AbsFunction()
@@ -26,6 +30,7 @@ internal sealed class AbsFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);

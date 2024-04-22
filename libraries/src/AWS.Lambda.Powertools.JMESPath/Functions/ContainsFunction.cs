@@ -16,10 +16,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns true if the first argument contains the second argument.
+/// </summary>
 internal sealed class ContainsFunction : BaseFunction
 {
     internal ContainsFunction()
@@ -27,6 +31,7 @@ internal sealed class ContainsFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
         out IValue element)
     {

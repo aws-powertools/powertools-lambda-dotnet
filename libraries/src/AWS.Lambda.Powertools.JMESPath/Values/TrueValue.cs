@@ -14,50 +14,64 @@
  */
 
 using System;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
+/// <summary>
+/// True value
+/// </summary>
 internal readonly struct TrueValue : IValue
 {
+    /// <inheritdoc />
     public JmesPathType Type => JmesPathType.True;
 
+    /// <inheritdoc />
     public IValue this[int index] => throw new InvalidOperationException();
 
+    /// <inheritdoc />
     public int GetArrayLength()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public string GetString()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetDecimal(out decimal value)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetDouble(out double value)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetProperty(string propertyName, out IValue property)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IArrayValueEnumerator EnumerateArray()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IObjectValueEnumerator EnumerateObject()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IExpression GetExpression()
     {
         throw new InvalidOperationException("Not an expression");

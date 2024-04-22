@@ -19,6 +19,9 @@ using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the JSON representation of a value.
+/// </summary>
 internal sealed class JsonFunction : BaseFunction
 {
     /// <inheritdoc />
@@ -32,6 +35,7 @@ internal sealed class JsonFunction : BaseFunction
         return "powertools_json";
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);

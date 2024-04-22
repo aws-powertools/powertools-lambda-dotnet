@@ -17,14 +17,28 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
+/// <summary>
+/// Represents an object value.
+/// </summary>
 internal readonly struct ObjectValue : IValue
 {
+    /// <summary>
+    /// An <see cref="IObjectValueEnumerator"/> that can be used to iterate over the
+    /// </summary>
     private sealed class ObjectEnumerator : IObjectValueEnumerator
     {
+        /// <summary>
+        /// The underlying <see cref="IDictionary{TKey, TValue}"/> that is being enumerated.
+        /// </summary>
         private readonly IDictionary<string, IValue> _value;
+        
+        /// <summary>
+        /// The underlying <see cref="System.Collections.IEnumerator"/> that is being enumerated.
+        /// </summary>
         private readonly System.Collections.IEnumerator _enumerator;
 
         public ObjectEnumerator(IDictionary<string, IValue> value)
@@ -47,6 +61,7 @@ internal readonly struct ObjectValue : IValue
         {
         }
 
+        /// <inheritdoc />
         public NameValuePair Current
         {
             get
@@ -56,6 +71,7 @@ internal readonly struct ObjectValue : IValue
             }
         }
 
+        /// <inheritdoc />
         object System.Collections.IEnumerator.Current => Current;
 
         public IEnumerator<NameValuePair> GetEnumerator()
@@ -76,45 +92,55 @@ internal readonly struct ObjectValue : IValue
         _value = value;
     }
 
+    /// <inheritdoc />
     public JmesPathType Type => JmesPathType.Object;
 
+    /// <inheritdoc />
     public IValue this[int index] => throw new InvalidOperationException();
 
+    /// <inheritdoc />
     public int GetArrayLength()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public string GetString()
     {
         throw new InvalidOperationException();
     }
-
+    
+    /// <inheritdoc />
     public bool TryGetDecimal(out decimal value)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetDouble(out double value)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetProperty(string propertyName, out IValue property)
     {
         return _value.TryGetValue(propertyName, out property);
     }
 
+    /// <inheritdoc />
     public IArrayValueEnumerator EnumerateArray()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IObjectValueEnumerator EnumerateObject()
     {
         return new ObjectEnumerator(_value);
     }
 
+    /// <inheritdoc />
     public IExpression GetExpression()
     {
         throw new InvalidOperationException("Not an expression");

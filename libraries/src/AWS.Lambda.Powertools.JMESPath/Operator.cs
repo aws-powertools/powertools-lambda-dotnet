@@ -30,7 +30,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         Gte,
         Not
     }
-
+    
     internal static class OperatorTable
     {
         internal static int PrecedenceLevel(Operator oper)

@@ -15,6 +15,9 @@
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
+/// <summary>
+/// Represents the type of a JMESPath value.
+/// </summary>
 internal enum JmesPathType
 {
     Null,

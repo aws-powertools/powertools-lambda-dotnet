@@ -16,10 +16,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the smallest integer greater than or equal to the argument.
+/// </summary>
 internal sealed class CeilFunction : BaseFunction
 {
     internal CeilFunction()
@@ -27,6 +31,7 @@ internal sealed class CeilFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
         out IValue element)
     {

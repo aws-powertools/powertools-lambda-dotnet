@@ -19,14 +19,24 @@ using System.Linq;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values
 {
+    /// <summary>
+    /// Compares two <see cref="IValue"/> instances for equality.
+    /// </summary>
     internal sealed class ValueEqualityComparer : IEqualityComparer<IValue>
    {
+       /// <summary>
+       /// Singleton instance of <see cref="ValueEqualityComparer"/>.
+       /// </summary>
        internal static ValueEqualityComparer Instance { get; } = new();
 
+       /// <summary>
+       /// Max Hash depth
+       /// </summary>
        private readonly int _maxHashDepth = 100;
 
        private ValueEqualityComparer() {}
 
+       /// <inheritdoc />
        public bool Equals(IValue lhs, IValue rhs)
        {
            if (lhs != null && rhs != null && lhs.Type != rhs.Type)
@@ -144,6 +154,4 @@ namespace AWS.Lambda.Powertools.JMESPath.Values
            return hashCode;
        }
    }
-
-
 }

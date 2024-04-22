@@ -19,6 +19,9 @@ using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns true if the first argument starts with the second argument.
+/// </summary>
 internal sealed class StartsWithFunction : BaseFunction
 {
     internal StartsWithFunction()
@@ -26,6 +29,7 @@ internal sealed class StartsWithFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
         out IValue element)
     {

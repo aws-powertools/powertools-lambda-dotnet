@@ -14,11 +14,18 @@
  */
 
 using System;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
+/// <summary>
+/// Represents a JMESPath expression.
+/// </summary>
 internal readonly struct ExpressionValue : IValue
 {
+    /// <summary>
+    /// The expression to evaluate.
+    /// </summary>
     private readonly IExpression _expr;
 
     internal ExpressionValue(IExpression expr)
@@ -26,45 +33,55 @@ internal readonly struct ExpressionValue : IValue
         _expr = expr;
     }
 
+    /// <inheritdoc />
     public JmesPathType Type => JmesPathType.Expression;
 
+    /// <inheritdoc />
     public IValue this[int index] => throw new InvalidOperationException();
 
+    /// <inheritdoc />
     public int GetArrayLength()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public string GetString()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetDecimal(out decimal value)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetDouble(out double value)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public bool TryGetProperty(string propertyName, out IValue property)
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IArrayValueEnumerator EnumerateArray()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IObjectValueEnumerator EnumerateObject()
     {
         throw new InvalidOperationException();
     }
 
+    /// <inheritdoc />
     public IExpression GetExpression()
     {
         return _expr;

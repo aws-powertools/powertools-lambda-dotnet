@@ -16,10 +16,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Converts a string to a number.
+/// </summary>
 internal sealed class ToNumberFunction : BaseFunction
 {
     internal ToNumberFunction()
@@ -27,6 +31,7 @@ internal sealed class ToNumberFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
         out IValue element)
     {

@@ -15,10 +15,14 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using AWS.Lambda.Powertools.JMESPath.Operators;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the minimum value in a element.
+/// </summary>
 internal sealed class MinFunction : BaseFunction
 {
     internal MinFunction()
@@ -26,6 +30,7 @@ internal sealed class MinFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args,
         out IValue element)
     {

@@ -14,12 +14,24 @@
  */
 
 using System.Collections.Generic;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
+using AWS.Lambda.Powertools.JMESPath.Operators;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Evaluates the min and max functions.
+/// </summary>
 internal static class EvaluateMinMax
 {
+    /// <summary>
+    /// Evaluates the min and max functions.
+    /// </summary>
+    /// <param name="args"></param>
+    /// <param name="binaryOperator"></param>
+    /// <param name="element"></param>
+    /// <returns></returns>
     internal static bool TryEvaluate(IList<IValue> args, IBinaryOperator binaryOperator, out IValue element)
     {
         var arg0 = args[0];

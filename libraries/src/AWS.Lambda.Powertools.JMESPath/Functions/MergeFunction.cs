@@ -15,10 +15,14 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Merges multiple objects into a single object.
+/// </summary>
 internal sealed class MergeFunction : BaseFunction
 {
     internal MergeFunction()
@@ -26,6 +30,7 @@ internal sealed class MergeFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         if (!args.Any())

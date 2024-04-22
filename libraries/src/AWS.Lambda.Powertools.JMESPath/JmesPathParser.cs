@@ -18,99 +18,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Functions;
+using AWS.Lambda.Powertools.JMESPath.Operators;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath
 {
     /// <summary>
-    /// Defines a custom exception object that is thrown when JMESPath parsing fails.
-    /// </summary>    
-
-    public sealed class JmesPathParseException : Exception
-    {
-        /// <summary>
-        /// The line in the JMESPath string where a parse error was detected.
-        /// </summary>
-        private int LineNumber {get;}
-
-        /// <summary>
-        /// The column in the JMESPath string where a parse error was detected.
-        /// </summary>
-        private int ColumnNumber {get;}
-
-        internal JmesPathParseException(string message, int line, int column)
-            : base(message)
-        {
-            LineNumber = line;
-            ColumnNumber = column;
-        }
-
-        /// <summary>
-        /// Returns an error message that describes the current exception.
-        /// </summary>
-        /// <returns>A string representation of the current exception.</returns>
-        public override string ToString ()
-        {
-            return $"{Message} at line {LineNumber} and column {ColumnNumber}";
-        }
-    }
-
-    internal enum JmesPathState
-    {
-        Start,
-        LhsExpression,
-        RhsExpression,
-        SubExpression,
-        ExpressionType,
-        ComparatorExpression,
-        FunctionExpression,
-        Argument,
-        ExpressionOrExpressionType,
-        QuotedString,
-        RawString,
-        RawStringEscapeChar,
-        QuotedStringEscapeChar,
-        EscapeU1, 
-        EscapeU2, 
-        EscapeU3, 
-        EscapeU4, 
-        EscapeExpectSurrogatePair1, 
-        EscapeExpectSurrogatePair2, 
-        EscapeU5, 
-        EscapeU6, 
-        EscapeU7, 
-        EscapeU8, 
-        Literal,
-        KeyExpr,
-        ValExpr,
-        IdentifierOrFunctionExpr,
-        UnquotedString,
-        KeyValExpr,
-        Number,
-        Digit,
-        IndexOrSliceExpression,
-        BracketSpecifier,
-        BracketSpecifierOrMultiSelectList,
-        Filter,
-        MultiSelectList,
-        MultiSelectHash,
-        RhsSliceExpressionStop,
-        RhsSliceExpressionStep,
-        ExpectRightBracket,
-        ExpectRightParen,
-        ExpectDot,
-        ExpectRightBrace,
-        ExpectColon,
-        ExpectMultiSelectList,
-        CmpLtOrLte,
-        CmpEq,
-        CmpGtOrGte,
-        CmpNe,
-        ExpectPipeOrOr,
-        ExpectAnd
-    }
-
+    /// Parses a JMESPath expression and returns a <see cref="JsonTransformer"/>.
+    /// </summary>
     internal ref struct JmesPathParser
     {
         private readonly ReadOnlySpan<char> _span;
@@ -132,6 +49,9 @@ namespace AWS.Lambda.Powertools.JMESPath
             _operatorStack = new Stack<Token>();
         }
 
+        /// <summary>
+        /// Parses a JMESPath expression and returns a <see cref="JsonTransformer"/>.
+        /// </summary>
         internal JsonTransformer Parse()
         {
             _stateStack.Clear();
@@ -1411,7 +1331,7 @@ namespace AWS.Lambda.Powertools.JMESPath
 
             return new JsonTransformer(new Expression(a));
         }
-
+        
         private void SkipWhiteSpace()
         {
             switch (_span[_index])
@@ -1448,6 +1368,11 @@ namespace AWS.Lambda.Powertools.JMESPath
             _operatorStack.Pop(); // TokenType.LeftParen
         }
 
+        /// <summary>
+        /// Pushes a token onto the output stack.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <exception cref="JmesPathParseException"></exception>
         private void PushToken(Token token)
         {
             switch (token.Type)
@@ -1721,6 +1646,13 @@ namespace AWS.Lambda.Powertools.JMESPath
             }
         }
         
+        /// <summary>
+        /// Appends the given codepoint to the current codepoint.
+        /// </summary>
+        /// <param name="cp"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        /// <exception cref="JmesPathParseException"></exception>
         private uint AppendToCodepoint(uint cp, uint c)
         {
             cp *= 16;

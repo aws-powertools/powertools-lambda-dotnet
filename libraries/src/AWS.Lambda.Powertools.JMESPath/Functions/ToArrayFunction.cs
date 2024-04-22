@@ -19,6 +19,9 @@ using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the input as an array if it is not already an array.
+/// </summary>
 internal sealed class ToArrayFunction : BaseFunction
 {
     internal ToArrayFunction()
@@ -26,6 +29,7 @@ internal sealed class ToArrayFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);

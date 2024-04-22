@@ -17,13 +17,23 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
+/// <summary>
+/// Represents a <see cref="JsonElement"/> value.
+/// </summary>
 internal readonly struct JsonElementValue : IValue
 {
+    /// <summary>
+    /// The underlying <see cref="JsonElement"/> value.
+    /// </summary>
     private class ArrayEnumerator : IArrayValueEnumerator
     {
+        /// <summary>
+        /// The underlying <see cref="JsonElement.ArrayEnumerator"/> value.
+        /// </summary>
         private JsonElement.ArrayEnumerator _enumerator;
 
         public ArrayEnumerator(JsonElement.ArrayEnumerator enumerator)
@@ -56,8 +66,14 @@ internal readonly struct JsonElementValue : IValue
             }
         }
 
+        /// <summary>
+        /// The current <see cref="IValue"/> in the <see cref="IArrayValueEnumerator"/>.
+        /// </summary>
         public IValue Current => new JsonElementValue(_enumerator.Current);
 
+        /// <summary>
+        /// The current <see cref="JsonElement"/> in the <see cref="IArrayValueEnumerator"/>.
+        /// </summary>
         object System.Collections.IEnumerator.Current => Current;
 
         public IEnumerator<IValue> GetEnumerator()
@@ -73,6 +89,9 @@ internal readonly struct JsonElementValue : IValue
 
     private class ObjectEnumerator : IObjectValueEnumerator
     {
+        /// <summary>
+        /// The underlying <see cref="JsonElement.ObjectEnumerator"/> value.
+        /// </summary>
         private JsonElement.ObjectEnumerator _enumerator;
 
         public ObjectEnumerator(JsonElement.ObjectEnumerator enumerator)
@@ -105,9 +124,15 @@ internal readonly struct JsonElementValue : IValue
             }
         }
 
+        /// <summary>
+        /// The current <see cref="NameValuePair"/> in the <see cref="IObjectValueEnumerator"/>.
+        /// </summary>
         public NameValuePair Current =>
             new(_enumerator.Current.Name, new JsonElementValue(_enumerator.Current.Value));
 
+        /// <summary>
+        /// The current <see cref="JsonElement"/> in the <see cref="IObjectValueEnumerator"/>.
+        /// </summary>
         object System.Collections.IEnumerator.Current => Current;
 
         public IEnumerator<NameValuePair> GetEnumerator()
@@ -152,6 +177,7 @@ internal readonly struct JsonElementValue : IValue
         }
     }
 
+    /// <inheritdoc />
     public IValue this[int index] => new JsonElementValue(_element[index]);
 
     public int GetArrayLength()

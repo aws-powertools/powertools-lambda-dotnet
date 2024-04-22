@@ -14,10 +14,14 @@
  */
 
 using System.Collections.Generic;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns the first non-null argument.
+/// </summary>
 internal sealed class NotNullFunction : BaseFunction
 {
     internal NotNullFunction()
@@ -25,6 +29,7 @@ internal sealed class NotNullFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         foreach (var arg in args)

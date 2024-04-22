@@ -16,10 +16,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using AWS.Lambda.Powertools.JMESPath.Expressions;
 using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Returns a string consisting of a list of strings joined by a separator.
+/// </summary>
 internal sealed class JoinFunction : BaseFunction
 {
     internal JoinFunction()
@@ -27,6 +31,7 @@ internal sealed class JoinFunction : BaseFunction
     {
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);

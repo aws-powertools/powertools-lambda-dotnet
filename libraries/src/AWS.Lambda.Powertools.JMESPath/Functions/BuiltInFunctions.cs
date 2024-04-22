@@ -17,6 +17,9 @@ using System.Collections.Generic;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// A registry of built-in functions.
+/// </summary>
 internal sealed class BuiltInFunctions
 {
     internal static BuiltInFunctions Instance { get; } = new();

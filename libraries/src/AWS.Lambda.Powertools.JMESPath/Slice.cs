@@ -15,11 +15,23 @@
 
 namespace AWS.Lambda.Powertools.JMESPath
 {
+    /// <summary>
+    /// A slice of a list or string.
+    /// </summary>
     internal readonly struct Slice
     {
+        /// <summary>
+        /// The start of the slice.
+        /// </summary>
         private readonly int? _start;
+        /// <summary>
+        /// The stop of the slice.
+        /// </summary>
         private readonly int? _stop;
 
+        /// <summary>
+        /// The step of the slice.
+        /// </summary>
         public int Step {get;}
 
         public Slice(int? start, int? stop, int step) 
@@ -29,6 +41,11 @@ namespace AWS.Lambda.Powertools.JMESPath
             Step = step;
         }
 
+        /// <summary>
+        /// Gets the start of the slice.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
         public int GetStart(int size)
         {
             if (!_start.HasValue) return Step >= 0 ? 0 : size;
@@ -36,6 +53,11 @@ namespace AWS.Lambda.Powertools.JMESPath
             return len <= size ? len : size;
         }
 
+        /// <summary>
+        /// Gets the stop of the slice.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
         public int GetStop(int size)
         {
             if (!_stop.HasValue) return Step >= 0 ? size : -1;

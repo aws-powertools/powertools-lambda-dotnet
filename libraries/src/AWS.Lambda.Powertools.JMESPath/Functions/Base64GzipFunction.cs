@@ -24,6 +24,9 @@ using AWS.Lambda.Powertools.JMESPath.Values;
 
 namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
+/// <summary>
+/// Decodes a base64-encoded, gzip-compressed string into a JSON document.
+/// </summary>
 internal sealed class Base64GzipFunction : BaseFunction
 {
     /// <inheritdoc />
@@ -37,6 +40,7 @@ internal sealed class Base64GzipFunction : BaseFunction
         return "powertools_base64_gzip";
     }
 
+    /// <inheritdoc />
     public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
     {
         Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
