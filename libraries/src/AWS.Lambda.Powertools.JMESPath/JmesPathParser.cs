@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  * Copyright JsonCons.Net authors. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -71,9 +71,11 @@ namespace AWS.Lambda.Powertools.JMESPath
             PushToken(new Token(TokenType.CurrentNode));
             _stateStack.Push(JmesPathState.Start);
 
+            // 2024-04-19: Powertools addition.
             var syntaxErrorMsg = "Syntax error";
             while (_index < _span.Length)
             {
+                // 2024-04-19: Powertools addition.
                 var expectedRightBracket = "Expected right bracket";
                 switch (_stateStack.Peek())
                 {
@@ -1655,6 +1657,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         /// <exception cref="JmesPathParseException"></exception>
         private uint AppendToCodepoint(uint cp, uint c)
         {
+            // 2024-04-19: Powertools addition.
             cp *= 16;
             switch (c)
             {

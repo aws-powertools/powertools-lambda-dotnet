@@ -1,5 +1,5 @@
 /*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  * Copyright JsonCons.Net authors. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -110,11 +110,13 @@ namespace AWS.Lambda.Powertools.JMESPath.Values
     
                 case JmesPathType.Array:
                 {
+                    // 2024-04-19: Powertools addition.
                     return ArrayComparer(lhs, rhs);
                 }
 
                 case JmesPathType.Object:
                 {
+                    // 2024-04-19: Powertools addition.
                     return ObjectComparer(lhs, rhs);
                 }
     
@@ -123,6 +125,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Values
             }
         }
 
+        // 2024-04-19: Powertools addition.
         private int ArrayComparer(IValue lhs, IValue rhs)
         {
             var enumerator1 = lhs.EnumerateArray();
@@ -142,6 +145,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Values
             return result1 ? 1 : result2 ? -1 : 0;
         }
 
+        // 2024-04-19: Powertools addition.
         private int ObjectComparer(IValue lhs, IValue rhs)
         {
             // OrderBy performs a stable sort (Note that <see cref="IValue"/> supports duplicate property names)

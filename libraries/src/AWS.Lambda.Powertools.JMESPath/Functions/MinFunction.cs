@@ -1,5 +1,5 @@
 /*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  * Copyright JsonCons.Net authors. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ internal sealed class MinFunction : BaseFunction
     {
         Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
 
+        // 2024-04-19: Powertools addition.
         return EvaluateMinMax.TryEvaluate(args, LtOperator.Instance, out element);
     }
 

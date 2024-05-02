@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  * Copyright JsonCons.Net authors. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ namespace AWS.Lambda.Powertools.JMESPath
         /// <returns></returns>
         public int GetStart(int size)
         {
+            // 2024-04-19: Powertools addition.
             if (!_start.HasValue) return Step >= 0 ? 0 : size;
             var len = _start.Value >= 0 ? _start.Value : size + _start.Value;
             return len <= size ? len : size;
@@ -60,10 +61,10 @@ namespace AWS.Lambda.Powertools.JMESPath
         /// <returns></returns>
         public int GetStop(int size)
         {
+            // 2024-04-19: Powertools addition.
             if (!_stop.HasValue) return Step >= 0 ? size : -1;
             var len = _stop.Value >= 0 ? _stop.Value : size + _stop.Value;
             return len <= size ? len : size;
         }
     }
-
 }
