@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-namespace AWS.Lambda.Powertools.JMESPath
+namespace AWS.Lambda.Powertools.JMESPath.Expressions
 {
     /// <summary>
     /// A slice of a list or string.
