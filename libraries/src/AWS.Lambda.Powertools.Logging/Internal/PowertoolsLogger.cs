@@ -247,7 +247,7 @@ internal sealed class PowertoolsLogger : ILogger
                 foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(values))
                 {
                     object obj = propertyDescriptor.GetValue(values);
-                    if (obj.GetType().Name.Contains("Anonymous"))
+                    if (obj is not null && obj.GetType().Name.Contains("Anonymous"))
                     {
                         dict.Add(propertyDescriptor.Name,ToDictionary(obj));
                     }
