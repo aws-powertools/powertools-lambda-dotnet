@@ -33,6 +33,8 @@ jobs:
         run: dotnet test --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity normal
       - name: Codecov
         uses: codecov/codecov-action@5ecb98a3c6b747ed38dc09f787459979aebb39be # 4.3.1
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           flags: unittests
           fail_ci_if_error: false
