@@ -12,4 +12,15 @@
         <Compile Remove="..\AWS.Lambda.Powertools.Common\obj\**" />
     </ItemGroup>
 
+
+    <ItemGroup Condition="'$(MSBuildProjectName)' == 'AWS.Lambda.Powertools.Idempotency' AND '$(Configuration)'=='Release'">
+
+        <ProjectReference Remove="..\AWS.Lambda.Powertools.JMESPath\AWS.Lambda.Powertools.JMESPath.csproj" />
+
+        <Compile Include="..\AWS.Lambda.Powertools.JMESPath\**\*.cs">
+            <Link>JMESPath\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        </Compile>
+        <Compile Remove="..\AWS.Lambda.Powertools.JMESPath\obj\**" />
+    </ItemGroup>
+
 </Project>
