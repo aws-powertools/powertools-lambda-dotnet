@@ -6,6 +6,8 @@
         <Description>Powertools for AWS Lambda (.NET) - Idempotency package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Idempotency</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Idempotency</RootNamespace>
+        <Version>1.2.13</Version>
+        <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeInOutput</TargetsForTfmSpecificBuildOutput>
     </PropertyGroup>
     
 
@@ -15,7 +17,12 @@
       <PackageReference Include="Amazon.Lambda.Core" />
       <PackageReference Include="AWSSDK.DynamoDBv2" />
       <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="all" />
-      <ProjectReference Include="..\AWS.Lambda.Powertools.JMESPath\AWS.Lambda.Powertools.JMESPath.csproj" />
+      <ProjectReference Include="..\AWS.Lambda.Powertools.JMESPath\AWS.Lambda.Powertools.JMESPath.csproj" PrivateAssets="all"/>
     </ItemGroup>
-    
+
+    <Target Name="IncludeInOutput">
+        <ItemGroup>
+            <BuildOutputInPackage Include="$(OutputPath)\AWS.Lambda.Powertools.JMESPath.dll" />
+        </ItemGroup>
+    </Target>
 </Project>
