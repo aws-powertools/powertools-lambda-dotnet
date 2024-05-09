@@ -225,15 +225,13 @@ public abstract class BasePersistenceStore : IPersistenceStore
     {
         if (!_idempotencyOptions.UseLocalCache)
             return null;
-        
-        if (_cache.TryGet(idempotencyKey, out var record) && record!=null)
+
+        if (!_cache.TryGet(idempotencyKey, out var record) || record == null) return null;
+        if (!record.IsExpired(now)) 
         {
-            if (!record.IsExpired(now)) 
-            {
-                return record;
-            }
-            DeleteFromCache(idempotencyKey);
+            return record;
         }
+        DeleteFromCache(idempotencyKey);
         return null;
     }
     
@@ -262,7 +260,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         }
         
         var transformer = JsonTransformer.Parse(_idempotencyOptions.PayloadValidationJmesPath);
-        JsonDocument result = transformer.Transform(data.RootElement);
+        var result = transformer.Transform(data.RootElement);
         return GenerateHash(result.RootElement);
     }
     
@@ -289,7 +287,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         if (eventKeyJmesPath != null) 
         {
             var transformer = JsonTransformer.Parse(eventKeyJmesPath);
-            JsonDocument result = transformer.Transform(node);
+            var result = transformer.Transform(node);
             node = result.RootElement;
         }
 
