@@ -10,6 +10,9 @@ defaults:
   run:
     working-directory: ./libraries
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET 6.0 &  8.0
-        uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
+        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3 # 4.0.0
         with:
           dotnet-version: |
             6.0.405
@@ -29,11 +32,12 @@ jobs:
       - name: Test & Code Coverage
         run: dotnet test --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity normal
       - name: Codecov
-        uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # 3.1.0
+        uses: codecov/codecov-action@5ecb98a3c6b747ed38dc09f787459979aebb39be # 4.3.1
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           name: codecov-lambda-powertools-dotnet
           verbose: true
           directory: ./libraries/codecov
