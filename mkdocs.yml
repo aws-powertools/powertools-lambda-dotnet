@@ -11,6 +11,7 @@ nav:
   - Roadmap: roadmap.md
   - API Reference: api/" target="_blank
   - We Made This (Community): we_made_this.md
+  - Workshop 🆕: https://s12d.com/powertools-for-aws-lambda-workshop" target="_blank
   - Core utilities:
       - core/logging.md
       - core/metrics.md
