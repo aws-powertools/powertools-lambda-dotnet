@@ -6,7 +6,6 @@
         <Description>Powertools for AWS Lambda (.NET) - Idempotency package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Idempotency</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Idempotency</RootNamespace>
-        <Version>1.2.13</Version>
         <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeInOutput</TargetsForTfmSpecificBuildOutput>
     </PropertyGroup>
     
