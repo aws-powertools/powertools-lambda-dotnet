@@ -1,0 +1,74 @@
+[
+  {
+    "given": {
+      "Records": [
+        {
+          "kinesis": {
+            "partitionKey": "partitionKey-03",
+            "kinesisSchemaVersion": "1.0",
+            "data": "IlRlc3QgZnJvbSBLaW5lc2lzIg==",
+            "sequenceNumber": "49545115243490985018280067714973144582180062593244200961",
+            "approximateArrivalTimestamp": 1428537600
+          },
+          "eventSource": "aws:kinesis",
+          "eventID": "shardId-000000000000:49545115243490985018280067714973144582180062593244200961",
+          "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+          "eventVersion": "1.0",
+          "eventName": "aws:kinesis:record",
+          "eventSourceARN": "arn:aws:kinesis:EXAMPLE",
+          "awsRegion": "us-east-1"
+        }
+      ]
+    },
+    "cases": [
+      {
+        "expression": "Records[0].kinesis.powertools_json(powertools_base64(data))",
+        "result": "Test from Kinesis"
+      }
+    ]
+  },
+  {
+    "given": {
+      "Records": [
+        {
+          "kinesis": {
+            "partitionKey": "partitionKey-03",
+            "kinesisSchemaVersion": "1.0",
+            "data": "IlRlc3QgZnJvbSBLaW5lc2lzIg==",
+            "sequenceNumber": "49545115243490985018280067714973144582180062593244200961",
+            "approximateArrivalTimestamp": 1428537600
+          },
+          "eventSource": "aws:kinesis",
+          "eventID": "shardId-000000000000:49545115243490985018280067714973144582180062593244200961",
+          "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+          "eventVersion": "1.0",
+          "eventName": "aws:kinesis:record",
+          "eventSourceARN": "arn:aws:kinesis:EXAMPLE",
+          "awsRegion": "us-east-1"
+        },
+        {
+          "kinesis": {
+            "partitionKey": "partitionKey-03",
+            "kinesisSchemaVersion": "1.0",
+            "data": "IlNlY29uZCBSZWNvcmQgU3RyZWFtIg==",
+            "sequenceNumber": "49545115243490985018280067714973144582180062593244200961",
+            "approximateArrivalTimestamp": 1428537600
+          },
+          "eventSource": "aws:kinesis",
+          "eventID": "shardId-000000000000:49545115243490985018280067714973144582180062593244200961",
+          "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+          "eventVersion": "1.0",
+          "eventName": "aws:kinesis:record",
+          "eventSourceARN": "arn:aws:kinesis:EXAMPLE",
+          "awsRegion": "us-east-1"
+        }
+      ]
+    },
+    "cases": [
+      {
+        "expression": "Records[*].kinesis.powertools_json(powertools_base64(data))",
+        "result": ["Test from Kinesis", "Second Record Stream"]
+      }
+    ]
+  }
+]

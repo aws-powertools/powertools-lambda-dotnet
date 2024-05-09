@@ -1,6 +1,6 @@
 <Project>
     
-    <ItemGroup Condition="'$(MSBuildProjectName)' != 'AWS.Lambda.Powertools.Common' AND '$(Configuration)'=='Release'">
+    <ItemGroup Condition="'$(MSBuildProjectName)' != 'AWS.Lambda.Powertools.Common' AND '$(MSBuildProjectName)' != 'AWS.Lambda.Powertools.JMESPath' AND '$(Configuration)'=='Release'">
         
         <ProjectReference Remove="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
 
