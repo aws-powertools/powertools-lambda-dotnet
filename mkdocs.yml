@@ -20,6 +20,7 @@ nav:
       - utilities/parameters.md
       - utilities/idempotency.md
       - utilities/batch-processing.md
+      - utilities/jmespath-functions.md
 
 theme:
   name: material
@@ -48,7 +49,6 @@ theme:
     - navigation.tracking
     - content.code.annotate
     - toc.follow
-    - toc.integrate
     - announce.dismiss
   icon:
     repo: fontawesome/brands/github
@@ -82,7 +82,7 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - md_in_html
   
-copyright: Copyright &copy; 2023 Amazon Web Services
+copyright: Copyright &copy; 2024 Amazon Web Services
 
 plugins:
   - git-revision-date
