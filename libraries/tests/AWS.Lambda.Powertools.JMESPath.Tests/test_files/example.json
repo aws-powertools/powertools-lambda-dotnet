@@ -1,0 +1,50 @@
+[
+  {
+    "given": {
+      "_id": "63ba60670fe420f2fb346866",
+      "isActive": true,
+      "balance": "$2,285.51",
+      "age": 20,
+      "eyeColor": "blue",
+      "name": "Eva Sharpe",
+      "email": "evasharpe@zaggles.com",
+      "phone": "+1 (950) 479-2130",
+      "registered": "2023-01-08T08:07:44.1787922+00:00",
+      "latitude": 46.325291,
+      "longitude": 5.211461,
+      "friends": [
+        {
+          "id": 0,
+          "name": "Nielsen Casey",
+          "age": 19
+        },
+        {
+          "id": 1,
+          "name": "Carlene Long",
+          "age": 38
+        }
+      ]
+    },
+    "cases": [
+      {
+        "expression": "balance",
+        "result": "$2,285.51"
+      },
+      {
+        "expression": "to_string(latitude)",
+        "result": "46.325291"
+      },
+      {
+        "expression": "friends[*].name",
+        "result": [
+          "Nielsen Casey",
+          "Carlene Long"
+        ]
+      },
+      {
+        "expression": "{email: email, name: name}",
+        "result": {"email": "evasharpe@zaggles.com", "name": "Eva Sharpe"}
+      }
+    ]
+  }
+]
