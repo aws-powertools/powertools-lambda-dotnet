@@ -17,7 +17,6 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
 
