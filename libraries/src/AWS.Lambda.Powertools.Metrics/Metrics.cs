@@ -52,6 +52,11 @@ public class Metrics : IMetrics, IDisposable
     /// </summary>
     private readonly bool _captureColdStartEnabled;
 
+    // <summary>
+    // Shared synchronization object
+    // </summary>
+    private readonly object _lockObj = new();
+
     /// <summary>
     ///     Creates a Metrics object that provides features to send metrics to Amazon Cloudwatch using the Embedded metric
     ///     format (EMF). See
@@ -98,17 +103,20 @@ public class Metrics : IMetrics, IDisposable
                 "'AddMetric' method requires a valid metrics value. Value must be >= 0.", nameof(value));
         }
 
-        var metrics = _context.GetMetrics();
-        
-        if (metrics.Count > 0 && 
-            (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
-             metrics.FirstOrDefault(x => x.Name == key)
-                 ?.Values.Count == PowertoolsConfigurations.MaxMetrics))
+        lock (_lockObj)
         {
-            _instance.Flush(true);
-        }
+            var metrics = _context.GetMetrics();
+        
+            if (metrics.Count > 0 && 
+                (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
+                 metrics.FirstOrDefault(x => x.Name == key)
+                     ?.Values.Count == PowertoolsConfigurations.MaxMetrics))
+            {
+                _instance.Flush(true);
+            }
 
-        _context.AddMetric(key, value, unit, metricResolution);
+            _context.AddMetric(key, value, unit, metricResolution);
+        }
     }
 
     /// <summary>
