@@ -127,6 +127,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             logger.LogInformation(scopeExtraKeys, message);
 
             // Assert
+
             logFormatter.Received(1).FormatLogEntry(Arg.Is<LogEntry>
             (
                 x =>

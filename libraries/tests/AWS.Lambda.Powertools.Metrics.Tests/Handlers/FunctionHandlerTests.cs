@@ -49,4 +49,16 @@ public class FunctionHandlerTests
         exception = await Record.ExceptionAsync( () => handler.HandleTestSecondCall("whatever"));
         Assert.Null(exception);
     }
+    
+    [Fact]
+    public async Task When_Metrics_Add_Metadata_FromMultipleThread_Should_Not_Throw_Exception()
+    {
+        // Arrange
+        Metrics.ResetForTest();
+        var handler = new FunctionHandler();
+
+        // Act
+        var exception = await Record.ExceptionAsync(() => handler.HandleMultipleThreads("whatever"));
+        Assert.Null(exception);
+    }
 }

@@ -13,30 +13,33 @@
  * permissions and limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Diagnostics;
-using DevLab.JmesPath.Functions;
-using Newtonsoft.Json.Linq;
+using AWS.Lambda.Powertools.JMESPath.Values;
 
-namespace AWS.Lambda.Powertools.Idempotency.Serialization;
+namespace AWS.Lambda.Powertools.JMESPath.Functions;
 
 /// <summary>
-/// Creates JMESPath function <c>powertools_json()</c> to treat the payload as a JSON object rather than a string.
+/// Returns the JSON representation of a value.
 /// </summary>
-public class JsonFunction : JmesPathFunction
+internal sealed class JsonFunction : BaseFunction
 {
     /// <inheritdoc />
     public JsonFunction()
-        : base("powertools_json", 1)
+        : base(1)
     {
     }
 
-    /// <inheritdoc />
-    public override JToken Execute(params JmesPathFunctionArgument[] args)
+    public override string ToString()
     {
-        Debug.Assert(args.Length == 1);
-        Debug.Assert(args[0].IsToken);
-        var argument = args[0];
-        var token = argument.Token;
-        return JToken.Parse(token.ToString());
+        return "powertools_json";
+    }
+
+    /// <inheritdoc />
+    public override bool TryEvaluate(DynamicResources resources, IList<IValue> args, out IValue element)
+    {
+        Debug.Assert(Arity.HasValue && args.Count == Arity!.Value);
+        element = args[0];
+        return true;
     }
 }

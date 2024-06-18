@@ -8,11 +8,8 @@
     </PropertyGroup>
     
     <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.Core" />
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="All" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Serializer\" />
     </ItemGroup>
 
 </Project>

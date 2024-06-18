@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.KinesisEvents;
 using Amazon.Lambda.SQSEvents;
@@ -101,15 +100,15 @@ internal static class Helpers
         new DynamoDBEvent.DynamodbStreamRecord
         {
             EventID = "1",
-            Dynamodb = new StreamRecord
+            Dynamodb = new DynamoDBEvent.StreamRecord
             {
-                Keys = new Dictionary<string, AttributeValue>
+                Keys = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Id", new AttributeValue { N = "1" } }
+                    { "Id", new DynamoDBEvent.AttributeValue { N = "1" } }
                 },
-                NewImage = new Dictionary<string, AttributeValue>
+                NewImage = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Product", new AttributeValue { S = "{\"Id\":1,\"Name\":\"product-name\",\"Price\":14}" } }
+                    { "Product", new DynamoDBEvent.AttributeValue { S = "{\"Id\":1,\"Name\":\"product-name\",\"Price\":14}" } }
                 },
                 SequenceNumber = "1"
             }
@@ -117,15 +116,15 @@ internal static class Helpers
         new DynamoDBEvent.DynamodbStreamRecord
         {
             EventID = "1",
-            Dynamodb = new StreamRecord
+            Dynamodb = new DynamoDBEvent.StreamRecord
             {
-                Keys = new Dictionary<string, AttributeValue>
+                Keys = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Id", new AttributeValue { N = "2" } }
+                    { "Id", new DynamoDBEvent.AttributeValue { N = "2" } }
                 },
-                NewImage = new Dictionary<string, AttributeValue>
+                NewImage = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Product", new AttributeValue { S = "failure" } }
+                    { "Product", new DynamoDBEvent.AttributeValue { S = "failure" } }
                 },
                 SequenceNumber = "2"
             }
@@ -133,15 +132,15 @@ internal static class Helpers
         new DynamoDBEvent.DynamodbStreamRecord
         {
             EventID = "1",
-            Dynamodb = new StreamRecord
+            Dynamodb = new DynamoDBEvent.StreamRecord
             {
-                Keys = new Dictionary<string, AttributeValue>
+                Keys = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Id", new AttributeValue { N = "3" } }
+                    { "Id", new DynamoDBEvent.AttributeValue { N = "3" } }
                 },
-                NewImage = new Dictionary<string, AttributeValue>
+                NewImage = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Product", new AttributeValue { S = "{\"Id\":3,\"Name\":\"product-name\",\"Price\":14}" } }
+                    { "Product", new DynamoDBEvent.AttributeValue { S = "{\"Id\":3,\"Name\":\"product-name\",\"Price\":14}" } }
                 },
                 SequenceNumber = "3"
             }
@@ -149,15 +148,15 @@ internal static class Helpers
         new DynamoDBEvent.DynamodbStreamRecord
         {
             EventID = "1",
-            Dynamodb = new StreamRecord
+            Dynamodb = new DynamoDBEvent.StreamRecord
             {
-                Keys = new Dictionary<string, AttributeValue>
+                Keys = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Id", new AttributeValue { N = "4" } }
+                    { "Id", new DynamoDBEvent.AttributeValue { N = "4" } }
                 },
-                NewImage = new Dictionary<string, AttributeValue>
+                NewImage = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Product", new AttributeValue { S = "{\"Id\":4,\"Name\":\"product-name\",\"Price\":14}" } }
+                    { "Product", new DynamoDBEvent.AttributeValue { S = "{\"Id\":4,\"Name\":\"product-name\",\"Price\":14}" } }
                 },
                 SequenceNumber = "4"
             }
@@ -165,15 +164,15 @@ internal static class Helpers
         new DynamoDBEvent.DynamodbStreamRecord
         {
             EventID = "1",
-            Dynamodb = new StreamRecord
+            Dynamodb = new DynamoDBEvent.StreamRecord
             {
-                Keys = new Dictionary<string, AttributeValue>
+                Keys = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Id", new AttributeValue { N = "5" } }
+                    { "Id", new DynamoDBEvent.AttributeValue { N = "5" } }
                 },
-                NewImage = new Dictionary<string, AttributeValue>
+                NewImage = new Dictionary<string, DynamoDBEvent.AttributeValue>
                 {
-                    { "Product", new AttributeValue { S = "{\"Id\":5,\"Name\":\"product-name\",\"Price\":14}" } }
+                    { "Product", new DynamoDBEvent.AttributeValue { S = "{\"Id\":5,\"Name\":\"product-name\",\"Price\":14}" } }
                 },
                 SequenceNumber = "5"
             }

@@ -13,7 +13,9 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
@@ -38,6 +40,18 @@ public class FunctionHandler
         Metrics.AddMetadata("MyMetadata", "meta");
         
         await Task.Delay(1);
+
+        return input.ToUpper(CultureInfo.InvariantCulture);
+    }
+    
+    [Metrics(Namespace = "ns", Service = "svc")]
+    public async Task<string> HandleMultipleThreads(string input)
+    {
+        await Parallel.ForEachAsync(Enumerable.Range(0, Environment.ProcessorCount * 2), async (x, _) =>
+        {
+            Metrics.AddMetric("MyMetric", 1);
+            await Task.Delay(1);
+        });
 
         return input.ToUpper(CultureInfo.InvariantCulture);
     }
