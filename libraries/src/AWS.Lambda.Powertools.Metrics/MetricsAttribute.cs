@@ -14,6 +14,7 @@
  */
 
 using System;
+using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics;
@@ -96,13 +97,13 @@ namespace AWS.Lambda.Powertools.Metrics;
 ///         }
 ///     </code>
 /// </example>
-[AttributeUsage(AttributeTargets.Method)]
-public class MetricsAttribute : MethodAspectAttribute
+[Injection(typeof(MetricsAspect))]
+public class MetricsAttribute : Attribute
 {
-    /// <summary>
-    ///     The metrics instance
-    /// </summary>
-    private IMetrics _metricsInstance;
+    // /// <summary>
+    // ///     The metrics instance
+    // /// </summary>
+    // private IMetrics _metricsInstance;
 
     /// <summary>
     ///     Set namespace.
@@ -134,25 +135,24 @@ public class MetricsAttribute : MethodAspectAttribute
     ///     Gets the metrics instance.
     /// </summary>
     /// <value>The metrics instance.</value>
-    private IMetrics MetricsInstance =>
-        _metricsInstance ??= new Metrics(
+    internal IMetrics MetricsInstance => new Metrics(
             PowertoolsConfigurations.Instance,
             Namespace,
             Service,
             RaiseOnEmptyMetrics,
             CaptureColdStart
         );
-
-    /// <summary>
-    ///     Creates the handler.
-    /// </summary>
-    /// <returns>IMethodAspectHandler.</returns>
-    protected override IMethodAspectHandler CreateHandler()
-    {
-        return new MetricsAspectHandler
-        (
-            MetricsInstance,
-            CaptureColdStart
-        );
-    }
+    //
+    // /// <summary>
+    // ///     Creates the handler.
+    // /// </summary>
+    // /// <returns>IMethodAspectHandler.</returns>
+    // protected override IMethodAspectHandler CreateHandler()
+    // {
+    //     return new MetricsAspectHandler
+    //     (
+    //         MetricsInstance,
+    //         CaptureColdStart
+    //     );
+    // }
 }
