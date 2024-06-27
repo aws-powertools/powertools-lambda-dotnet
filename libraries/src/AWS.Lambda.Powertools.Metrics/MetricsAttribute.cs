@@ -142,17 +142,4 @@ public class MetricsAttribute : Attribute
             RaiseOnEmptyMetrics,
             CaptureColdStart
         );
-    //
-    // /// <summary>
-    // ///     Creates the handler.
-    // /// </summary>
-    // /// <returns>IMethodAspectHandler.</returns>
-    // protected override IMethodAspectHandler CreateHandler()
-    // {
-    //     return new MetricsAspectHandler
-    //     (
-    //         MetricsInstance,
-    //         CaptureColdStart
-    //     );
-    // }
 }
