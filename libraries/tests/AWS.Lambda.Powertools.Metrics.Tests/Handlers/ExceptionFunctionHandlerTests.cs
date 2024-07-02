@@ -5,7 +5,7 @@ using Xunit;
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
 
 [Collection("Sequential")]
-public sealed class ExceptionFunctionHandlerTests
+public sealed class ExceptionFunctionHandlerTests : IDisposable
 {
     [Fact]
     public async Task Stack_Trace_Included_When_Decorator_Present()
@@ -50,5 +50,10 @@ public sealed class ExceptionFunctionHandlerTests
         // Assert
         var tracedException = await Record.ExceptionAsync(Handle);
         Assert.Null(tracedException);
+    }
+
+    public void Dispose()
+    {
+        MetricsAspect.ResetForTest();
     }
 }

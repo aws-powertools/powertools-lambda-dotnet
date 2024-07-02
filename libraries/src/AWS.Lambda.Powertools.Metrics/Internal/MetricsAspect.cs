@@ -39,13 +39,17 @@ public class MetricsAspect
     /// </summary>
     private bool _clearLambdaContext;
 
-    private IMetrics _metricsInstance;
+    /// <summary>
+    ///     Gets the metrics instance.
+    /// </summary>
+    /// <value>The metrics instance.</value>
+    private static IMetrics _metricsInstance;
 
     static MetricsAspect()
     {
         _isColdStart = true;
     }
-    
+
     /// <summary>
     /// Runs before the execution of the method marked with the Metrics Attribute
     /// </summary>
@@ -66,13 +70,18 @@ public class MetricsAspect
         [Argument(Source.ReturnType)] Type returnType,
         [Argument(Source.Triggers)] Attribute[] triggers)
     {
-        
         // Before running Function
-        
+
         var trigger = triggers.OfType<MetricsAttribute>().First();
-        
-        _metricsInstance = trigger.MetricsInstance;
-        
+
+        _metricsInstance ??= new Metrics(
+            PowertoolsConfigurations.Instance,
+            trigger.Namespace,
+            trigger.Service,
+            trigger.RaiseOnEmptyMetrics,
+            trigger.CaptureColdStart
+        );
+
         var eventArgs = new AspectEventArgs
         {
             Instance = instance,
@@ -112,25 +121,27 @@ public class MetricsAspect
             );
         }
     }
-    
+
     /// <summary>
     /// OnExit runs after the execution of the method marked with the Metrics Attribute
     /// </summary>
     [Advice(Kind.After)]
-    public void Exit() {
+    public void Exit()
+    {
         _metricsInstance.Flush();
         if (_clearLambdaContext)
             PowertoolsLambdaContext.Clear();
     }
-    
-    
+
+
     /// <summary>
     /// Reset the aspect for testing purposes.
     /// </summary>
-     internal static void ResetForTest()
-     {
-         _isColdStart = true;
-         Metrics.ResetForTest();
-         PowertoolsLambdaContext.Clear();
-     }
+    internal static void ResetForTest()
+    {
+        _metricsInstance = null;
+        _isColdStart = true;
+        Metrics.ResetForTest();
+        PowertoolsLambdaContext.Clear();
+    }
 }

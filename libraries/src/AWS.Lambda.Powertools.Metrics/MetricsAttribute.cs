@@ -130,16 +130,4 @@ public class MetricsAttribute : Attribute
     /// </summary>
     /// <value><c>true</c> if [raise on empty metrics]; otherwise, <c>false</c>.</value>
     public bool RaiseOnEmptyMetrics { get; set; }
-
-    /// <summary>
-    ///     Gets the metrics instance.
-    /// </summary>
-    /// <value>The metrics instance.</value>
-    internal IMetrics MetricsInstance => new Metrics(
-            PowertoolsConfigurations.Instance,
-            Namespace,
-            Service,
-            RaiseOnEmptyMetrics,
-            CaptureColdStart
-        );
 }
