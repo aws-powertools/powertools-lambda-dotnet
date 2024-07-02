@@ -126,6 +126,12 @@ public class SystemWrapper : ISystemWrapper
         SetEnvironmentVariable(envName, envValue.ToString());
     }
 
+    /// <inheritdoc />
+    public void SetOut(TextWriter writeTo)
+    {
+        Console.SetOut(writeTo);
+    }
+
     /// <summary>
     /// Parsing the name to conform with the required naming convention for the UserAgent header (PTFeature/Name/Version)
     /// Fallback to Assembly Name on exception

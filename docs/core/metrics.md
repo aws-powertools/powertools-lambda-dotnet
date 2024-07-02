@@ -13,6 +13,7 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://aws.
 * Validating your metrics against common metric definitions mistakes (for example, metric unit, values, max dimensions, max metrics)
 * Metrics are created asynchronously by the CloudWatch service. You do not need any custom stacks, and there is no impact to Lambda function latency
 * Context manager to create a one off metric with a different dimension
+* Ahead-of-Time compilation to native code support [AOT](https://docs.aws.amazon.com/lambda/latest/dg/dotnet-native-aot.html) from version 1.7.0
 
 <br />
 

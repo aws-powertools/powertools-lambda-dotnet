@@ -13,13 +13,14 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
 
 [Collection("Sequential")]
-public class FunctionHandlerTests
+public class FunctionHandlerTests : IDisposable
 {
     [Fact]
     public async Task When_Metrics_Add_Metadata_Same_Key_Should_Ignore_Metadata()
@@ -60,5 +61,10 @@ public class FunctionHandlerTests
         // Act
         var exception = await Record.ExceptionAsync(() => handler.HandleMultipleThreads("whatever"));
         Assert.Null(exception);
+    }
+
+    public void Dispose()
+    {
+        MetricsAspect.ResetForTest();
     }
 }

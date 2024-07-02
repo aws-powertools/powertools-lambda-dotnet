@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System.IO;
 using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Utilities;
@@ -58,5 +59,10 @@ public class SystemWrapperMock : ISystemWrapper
 
     public void SetExecutionEnvironment<T>(T type)
     {
+    }
+
+    public void SetOut(TextWriter writeTo)
+    {
+        
     }
 }
