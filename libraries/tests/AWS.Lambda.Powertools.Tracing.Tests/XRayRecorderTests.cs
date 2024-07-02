@@ -8,6 +8,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
+[Collection("Sequential")]
 public class XRayRecorderTests
 {
     [Fact]

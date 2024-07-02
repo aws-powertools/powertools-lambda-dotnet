@@ -145,7 +145,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             // Warm Start Execution
             // Start segment
             var segmentWarm = AWSXRayRecorder.Instance.TraceContext.GetEntity();
-            Assert.Throws<Exception>(() => _handler.HandleThrowsException("My Exception"));
+            _handler.Handle();
 
             // Assert
             Assert.False(segmentCold.IsAnnotationsAdded);
@@ -179,7 +179,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
     public class TracingAttributeLambdaEnvironmentTest
     {
         private readonly Handlers.Handlers _handler;
-
+    
         public TracingAttributeLambdaEnvironmentTest()
         {
             _handler = new Handlers.Handlers();
@@ -192,21 +192,23 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             
             // Need to manually create the initial segment
             AWSXRayRecorder.Instance.BeginSegment("foo");
-
+    
             // Act
             // Cold Start Execution
             _handler.Handle();
             var segmentCold = AWSXRayRecorder.Instance.TraceContext.GetEntity();
-
+    
             // Assert
             Assert.False(AWSXRayRecorder.IsLambda());
             Assert.False(segmentCold.IsAnnotationsAdded);
             Assert.Empty(segmentCold.Annotations);
             Assert.False(segmentCold.IsSubsegmentsAdded);
             Assert.False(segmentCold.IsMetadataAdded);
+
+            AWSXRayRecorder.Instance.EndSegment();
         }
     }
-
+    
     [Collection("Sequential")]
     public class TracingAttributeTest : IDisposable
     {

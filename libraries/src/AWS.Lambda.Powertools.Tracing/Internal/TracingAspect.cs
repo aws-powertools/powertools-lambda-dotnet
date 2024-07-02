@@ -23,24 +23,27 @@ using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Tracing.Internal;
 
+/// <summary>
+///     This aspect will automatically trace all function handlers.
+///     Scope.Global is singleton
+/// </summary>
 [Aspect(Scope.Global)]
 public class TracingAspect
 {
-    
     /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations
     /// </summary>
-    private static readonly IPowertoolsConfigurations _powertoolsConfigurations = _powertoolsConfigurations ?? PowertoolsConfigurations.Instance;
-    
+    private IPowertoolsConfigurations _powertoolsConfigurations;
+
     /// <summary>
     ///     X-Ray Recorder
     /// </summary>
-    private static readonly IXRayRecorder _xRayRecorder = _xRayRecorder ?? XRayRecorder.Instance;
+    private IXRayRecorder _xRayRecorder;
     
     /// <summary>
     ///     If true, then is cold start
     /// </summary>
-    private static bool _isColdStart = true;
+    private static bool _isColdStart;
 
     /// <summary>
     ///     If true, capture annotations
@@ -61,7 +64,31 @@ public class TracingAspect
     ///     The capture mode
     /// </summary>
     private TracingCaptureMode _captureMode;
+
+    /// <summary>
+    /// Initializes a new instance
+    /// </summary>
+    public TracingAspect()
+    {
+        _isColdStart = true;
+        _xRayRecorder = XRayRecorder.Instance;
+        _powertoolsConfigurations = PowertoolsConfigurations.Instance;
+    }
     
+    /// <summary>
+    /// the code is executed instead of the target method.
+    /// The call to original method is wrapped around the following code
+    /// the original code is called with var result = target(args);
+    /// </summary>
+    /// <param name="instance"></param>
+    /// <param name="name"></param>
+    /// <param name="args"></param>
+    /// <param name="hostType"></param>
+    /// <param name="method"></param>
+    /// <param name="returnType"></param>
+    /// <param name="target"></param>
+    /// <param name="triggers"></param>
+    /// <returns></returns>
     [Advice(Kind.Around)]
     public object Around(
         [Argument(Source.Instance)] object instance,
@@ -127,6 +154,9 @@ public class TracingAspect
         }
     }
 
+    /// <summary>
+    /// the code is injected after the method ends.
+    /// </summary>
     [Advice(Kind.After)]
     public void OnExit() {
         if(TracingDisabled())
@@ -138,6 +168,11 @@ public class TracingAspect
         _xRayRecorder.EndSubsegment();
     }
     
+    /// <summary>
+    /// Code that handles when exceptions occur in the client method
+    /// </summary>
+    /// <param name="exception"></param>
+    /// <param name="name"></param>
     private void HandleException(Exception exception, string name)
     {
         if (CaptureError())
@@ -168,7 +203,7 @@ public class TracingAspect
 
         // // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
         // // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
-        // ExceptionDispatchInfo.Capture(exception).Throw();
+        ExceptionDispatchInfo.Capture(exception).Throw();
     }
 
     /// <summary>
@@ -180,6 +215,10 @@ public class TracingAspect
         return !string.IsNullOrWhiteSpace(_namespace) ? _namespace : _powertoolsConfigurations.Service;
     }
     
+    /// <summary>
+    /// Method that checks if tracing is disabled
+    /// </summary>
+    /// <returns></returns>
     private bool TracingDisabled()
     {
         if (_powertoolsConfigurations.TracingDisabled)
