@@ -1,10 +1,13 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Amazon.XRay.Recorder.Core;
+using AWS.Lambda.Powertools.Tracing.Internal;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests.Handlers;
 
-public sealed class HandlerTests
+public sealed class HandlerTests : IDisposable
 {
     [Fact]
     public async Task Stack_Trace_Included_When_Decorator_Present()
@@ -31,6 +34,30 @@ public sealed class HandlerTests
         await handler.Handle("whatever");
         
         // Assert
+    }
+    
+    [Fact]
+    public void When_Handler_Is_Decorated()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+        var handler = new Handlers();
+        var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
 
+        // Act
+        handler.Handle();
+        var subSegment = segment.Subsegments[0];
+        
+        // Assert
+        Assert.True(segment.IsSubsegmentsAdded);
+        Assert.True(subSegment.IsAnnotationsAdded);
+        Assert.True(subSegment.Annotations.Any());
+        Assert.Equal("ColdStart", subSegment.Annotations.First().Key);
+        Assert.Equal(true, subSegment.Annotations.First().Value);
+    }
+
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "");
     }
 }

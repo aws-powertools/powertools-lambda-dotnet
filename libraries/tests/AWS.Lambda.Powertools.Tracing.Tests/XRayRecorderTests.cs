@@ -54,7 +54,7 @@ public class XRayRecorderTests
     }
 
     [Fact]
-    public void Tracing_Being_Subsegment()
+    public void Tracing_Begin_Subsegment()
     {
         // Arrange
         var conf = Substitute.For<IPowertoolsConfigurations>();
