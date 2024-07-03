@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: Docs
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
         with:
           fetch-depth: 0
       - name: Set up Python
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: Docs
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
       - name: Setup .NET 6.0
         uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
         with:
