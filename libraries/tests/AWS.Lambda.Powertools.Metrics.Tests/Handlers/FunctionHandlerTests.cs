@@ -13,23 +13,35 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.Threading.Tasks;
+using Amazon.Lambda.TestUtilities;
+using AWS.Lambda.Powertools.Common;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
 
 [Collection("Sequential")]
-public class FunctionHandlerTests
+public class FunctionHandlerTests : IDisposable
 {
+    private readonly FunctionHandler _handler;
+    private readonly CustomConsoleWriter _consoleOut;
+    
+    public FunctionHandlerTests()
+    {
+        _handler = new FunctionHandler();
+        _consoleOut = new CustomConsoleWriter();
+        SystemWrapper.Instance.SetOut(_consoleOut);
+    }
+    
     [Fact]
     public async Task When_Metrics_Add_Metadata_Same_Key_Should_Ignore_Metadata()
     {
         // Arrange
-        Metrics.ResetForTest();
-        var handler = new FunctionHandler();
+        
         
         // Act
-        var exception = await Record.ExceptionAsync( () => handler.HandleSameKey("whatever"));
+        var exception = await Record.ExceptionAsync( () => _handler.HandleSameKey("whatever"));
         
         // Assert
         Assert.Null(exception);
@@ -38,27 +50,48 @@ public class FunctionHandlerTests
     [Fact]
     public async Task When_Metrics_Add_Metadata_Second_Invocation_Should_Not_Throw_Exception()
     {
-        // Arrange
-        Metrics.ResetForTest();
-        var handler = new FunctionHandler();
-
         // Act
-        var exception = await Record.ExceptionAsync( () => handler.HandleTestSecondCall("whatever"));
+        var exception = await Record.ExceptionAsync( () => _handler.HandleTestSecondCall("whatever"));
         Assert.Null(exception);
         
-        exception = await Record.ExceptionAsync( () => handler.HandleTestSecondCall("whatever"));
+        exception = await Record.ExceptionAsync( () => _handler.HandleTestSecondCall("whatever"));
         Assert.Null(exception);
     }
     
     [Fact]
     public async Task When_Metrics_Add_Metadata_FromMultipleThread_Should_Not_Throw_Exception()
     {
-        // Arrange
-        Metrics.ResetForTest();
-        var handler = new FunctionHandler();
-
         // Act
-        var exception = await Record.ExceptionAsync(() => handler.HandleMultipleThreads("whatever"));
+        var exception = await Record.ExceptionAsync(() => _handler.HandleMultipleThreads("whatever"));
         Assert.Null(exception);
+    }
+    
+    [Fact]
+    public void When_LambdaContext_Should_Add_FunctioName_Dimension_CaptureColdStart()
+    {
+        // Arrange
+        var context = new TestLambdaContext
+        {
+            FunctionName = "My Function with context"
+        };
+        
+        // Act
+        _handler.HandleWithLambdaContext(context);
+        var metricsOutput = _consoleOut.ToString();
+        
+        // Assert
+        Assert.Contains(
+            "\"FunctionName\":\"My Function with context\"",
+            metricsOutput);
+        
+        Assert.Contains(
+            "\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"FunctionName\"],[\"Service\"]]}]}",
+            metricsOutput);
+    }
+
+    public void Dispose()
+    {
+        Metrics.ResetForTest();
+        MetricsAspect.ResetForTest();
     }
 }
