@@ -22,9 +22,12 @@ using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
+#if NET6_0
+
 /// <summary>
 ///     Class StringEnumConverter.
 ///     Implements the <see cref="System.Text.Json.Serialization.JsonConverterFactory" />
+///     .NET 6 only
 /// </summary>
 /// <seealso cref="System.Text.Json.Serialization.JsonConverterFactory" />
 public class StringEnumConverter : JsonConverterFactory
@@ -96,3 +99,4 @@ public class StringEnumConverter : JsonConverterFactory
             : _baseConverter.CreateConverter(typeToConvert, options);
     }
 }
+#endif
