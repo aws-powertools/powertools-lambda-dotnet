@@ -23,7 +23,7 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
       # Maintenance: Persist state per PR as an artifact to avoid spam on label add
       - name: "Suggest split large Pull Request"
         uses: actions/github-script@v6

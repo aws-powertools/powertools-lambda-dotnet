@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
       - name: Ensure 3rd party workflows have SHA pinned
         uses: zgosalvez/github-actions-ensure-sha-pinned-actions@6ca5574367befbc9efdb2fa25978084159c5902d # v1.3.0
         with:
