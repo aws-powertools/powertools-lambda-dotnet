@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.TestUtilities;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
 
@@ -158,5 +160,17 @@ public class FunctionHandler
         });
 
         return input.ToUpper(CultureInfo.InvariantCulture);
+    }
+
+    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
+    public void HandleWithLambdaContext(ILambdaContext context)
+    {
+        
+    }
+
+    [Metrics(Namespace = "ns", Service = "svc")]
+    public void HandleWithLambdaContextAndMetrics(TestLambdaContext context)
+    {
+        Metrics.AddMetric("MyMetric", 1);
     }
 }
