@@ -542,6 +542,29 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Assert.NotNull(exception.InnerException);
             Assert.Equal("Inner Exception!!",exception.InnerException.Message);
         }
+        
+        [Fact]
+        public void OnException_When_Tracing_Disabled_Does_Not_CapturesError()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "true");
+            
+            // Act
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleWithCaptureModeError(true);
+            });
+            
+            // Assert
+            Assert.NotNull(exception);
+            Assert.False(segment.IsSubsegmentsAdded);
+            Assert.Empty(segment.Subsegments);
+            Assert.False(segment.IsMetadataAdded);
+        }
 
         [Fact]
         public void OnException_WhenTracerCaptureModeIsResponseAndError_CapturesError()

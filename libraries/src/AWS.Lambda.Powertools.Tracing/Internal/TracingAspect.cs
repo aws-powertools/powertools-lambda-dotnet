@@ -242,9 +242,6 @@ public class TracingAspect
     /// <returns><c>true</c> if tracing should capture responses, <c>false</c> otherwise.</returns>
     private bool CaptureResponse()
     {
-        if(TracingDisabled())
-            return false;
-        
         switch (_captureMode)
         {
             case TracingCaptureMode.EnvironmentVariable:
