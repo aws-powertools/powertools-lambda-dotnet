@@ -514,6 +514,34 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var handlerErrorMessage = metadata.Values.Cast<string>().First();
             Assert.Contains(handlerErrorMessage, GetException(exception));
         }
+        
+        [Fact]
+        public void OnException_WhenTracerCaptureModeIsError_CapturesError_Inner_Exception()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
+            // Act
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleWithCaptureModeErrorInner(true);
+            });
+            var subSegment = segment.Subsegments[0];
+            
+            // Assert
+            Assert.NotNull(exception);
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("HandleWithCaptureModeErrorInner error", metadata.Keys.Cast<string>().First());
+            Assert.NotNull(exception.InnerException);
+            Assert.Equal("Inner Exception!!",exception.InnerException.Message);
+        }
 
         [Fact]
         public void OnException_WhenTracerCaptureModeIsResponseAndError_CapturesError()

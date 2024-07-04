@@ -67,6 +67,14 @@ public class Handlers
             throw new Exception("Failed");
         return new[] { "A", "B" };
     }
+    
+    [Tracing(CaptureMode = TracingCaptureMode.Error)]
+    public string[] HandleWithCaptureModeErrorInner(bool exception = false)
+    {
+        if (exception)
+            throw new Exception("Failed", new Exception("Inner Exception!!"));
+        return new[] { "A", "B" };
+    }
 
     [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
     public string[] HandleWithCaptureModeDisabled(bool exception = false)
