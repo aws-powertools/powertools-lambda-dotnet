@@ -8,6 +8,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
+// This has to be the last tests to run otherwise it will keep state and fail other random tests
 [Collection("Sequential")]
 public class XRayRecorderTests
 {

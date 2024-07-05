@@ -27,11 +27,11 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
     [Collection("Sequential")]
     public class TracingAttributeColdStartTest : IDisposable
     {
-        private readonly Handlers.Handlers _handler;
+        private readonly HandlerFunctions _handler;
 
         public TracingAttributeColdStartTest()
         {
-            _handler = new Handlers.Handlers();
+            _handler = new HandlerFunctions();
         }
         
         [Fact]
@@ -122,11 +122,11 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
     [Collection("Sequential")]
     public class TracingAttributeDisableTest : IDisposable
     {
-        private readonly Handlers.Handlers _handler;
+        private readonly HandlerFunctions _handler;
 
         public TracingAttributeDisableTest()
         {
-            _handler = new Handlers.Handlers();
+            _handler = new HandlerFunctions();
         }
         
         [Fact]
@@ -178,11 +178,11 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
     [Collection("Sequential")]
     public class TracingAttributeLambdaEnvironmentTest
     {
-        private readonly Handlers.Handlers _handler;
+        private readonly HandlerFunctions _handler;
     
         public TracingAttributeLambdaEnvironmentTest()
         {
-            _handler = new Handlers.Handlers();
+            _handler = new HandlerFunctions();
         }
         
         [Fact]
@@ -212,11 +212,11 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
     [Collection("Sequential")]
     public class TracingAttributeTest : IDisposable
     {
-        private readonly Handlers.Handlers _handler;
+        private readonly HandlerFunctions _handler;
 
         public TracingAttributeTest()
         {
-            _handler = new Handlers.Handlers();
+            _handler = new HandlerFunctions();
         }
         
         #region OnEntry Tests

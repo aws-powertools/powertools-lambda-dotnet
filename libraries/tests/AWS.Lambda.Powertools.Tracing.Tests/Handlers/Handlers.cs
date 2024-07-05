@@ -15,9 +15,9 @@
 
 using System;
 
-namespace AWS.Lambda.Powertools.Tracing.Tests.Handlers;
+namespace AWS.Lambda.Powertools.Tracing.Tests;
 
-public class Handlers
+public class HandlerFunctions
 {
     [Tracing()]
     public string[] Handle()

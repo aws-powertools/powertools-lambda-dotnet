@@ -13,13 +13,42 @@
  * permissions and limitations under the License.
  */
 
+using System.Threading.Tasks;
+using Amazon.Lambda.Core;
+
 namespace AWS.Lambda.Powertools.Tracing.Tests.Handlers;
 
 public class FullExampleHandler
 {
-    [Tracing()]
-    public string[] Handle()
+    [Tracing(Namespace = "ns", CaptureMode = TracingCaptureMode.ResponseAndError)]
+    public Task<string> Handle(string text, ILambdaContext context)
     {
-        return new[] { "A", "B" };
+        Tracing.AddAnnotation("annotation", "value");
+        BusinessLogic1().GetAwaiter().GetResult();
+        
+        return Task.FromResult(text.ToUpper());
+    }
+    
+    [Tracing(SegmentName = "First Call")]
+    private async Task BusinessLogic1()
+    {
+        await BusinessLogic2();
+    }
+
+    [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+    private async Task BusinessLogic2()
+    {
+        Tracing.AddMetadata("metadata", "value");
+        
+        Tracing.WithSubsegment("localNamespace", "GetSomething", (subsegment) => {
+            GetSomething();
+        });
+        
+        await Task.FromResult(0);
+    }
+
+    private void GetSomething()
+    {
+        Tracing.AddAnnotation("getsomething", "value");
     }
 }
