@@ -14,14 +14,120 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.TestUtilities;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
 
 public class FunctionHandler
 {
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    public void AddMetric(string name = "TestMetric", double value =1, MetricUnit  unit = MetricUnit.Count,MetricResolution resolution = MetricResolution.Default)
+    {
+        Metrics.AddMetric(name, value, unit, resolution);
+    }
+
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void AddDimensions()
+    {
+        Metrics.AddDimension("functionVersion", "$LATEST");
+        Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
+    }
+
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void ClearDimensions()
+    {
+        Metrics.ClearDefaultDimensions();
+        Metrics.AddMetric("Metric Name", 1, MetricUnit.Count);
+    }
+
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void MaxMetrics(int maxMetrics)
+    {
+        for (var i = 0; i <= maxMetrics; i++)
+        {
+            Metrics.AddMetric($"Metric Name {i + 1}", i, MetricUnit.Count);
+        }
+    }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void MaxMetricsSameName(int maxMetrics)
+    {
+        for (var i = 0; i <= maxMetrics; i++)
+        {
+            Metrics.AddMetric("Metric Name", i, MetricUnit.Count);
+        }
+    }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void MaxDimensions(int maxDimensions)
+    {
+        for (var i = 0; i <= maxDimensions; i++)
+        {
+            Metrics.AddDimension($"Dimension Name {i + 1}", $"Dimension Value {i + 1}");
+        }
+    }
+    
+    [Metrics(Service = "testService")]
+    public void NoNamespace()
+    {
+        Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
+    }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void AddMetadata()
+    {
+        Metrics.AddMetadata("test_metadata", "test_value");
+    }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void AddDefaultDimensions(Dictionary<string, string> defaultDimensions)
+    {
+        Metrics.SetDefaultDimensions(defaultDimensions);
+        Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
+    }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void AddDefaultDimensionsTwice(Dictionary<string, string> defaultDimensions)
+    {
+        Metrics.SetDefaultDimensions(defaultDimensions);
+        Metrics.SetDefaultDimensions(defaultDimensions);
+        Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
+    }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void AddDimensionMetricMetadata(string metricKey, string metadataKey)
+    {
+        Metrics.AddDimension("functionVersion", "$LATEST");
+        Metrics.AddMetric(metricKey, 100.7, MetricUnit.Milliseconds);
+        Metrics.AddMetadata(metadataKey, "dev");
+    }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void AddMetricSameName()
+    {
+        Metrics.AddDimension("functionVersion", "$LATEST");
+        Metrics.AddMetric("Time", 100.5, MetricUnit.Milliseconds);
+        Metrics.AddMetric("Time", 200, MetricUnit.Milliseconds);
+    }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public async Task RaceConditon()
+    {
+        var tasks = new List<Task>();
+        for (var i = 0; i < 100; i++)
+        {
+            tasks.Add(Task.Run(() => { Metrics.AddMetric($"Metric Name", 0, MetricUnit.Count); }));
+        }
+
+        await Task.WhenAll(tasks);
+    }
+
     [Metrics(Namespace = "ns", Service = "svc")]
     public async Task<string> HandleSameKey(string input)
     {
@@ -32,18 +138,18 @@ public class FunctionHandler
 
         return input.ToUpper(CultureInfo.InvariantCulture);
     }
-    
+
     [Metrics(Namespace = "ns", Service = "svc")]
     public async Task<string> HandleTestSecondCall(string input)
     {
         Metrics.AddMetric("MyMetric", 1);
         Metrics.AddMetadata("MyMetadata", "meta");
-        
+
         await Task.Delay(1);
 
         return input.ToUpper(CultureInfo.InvariantCulture);
     }
-    
+
     [Metrics(Namespace = "ns", Service = "svc")]
     public async Task<string> HandleMultipleThreads(string input)
     {
@@ -54,5 +160,17 @@ public class FunctionHandler
         });
 
         return input.ToUpper(CultureInfo.InvariantCulture);
+    }
+
+    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
+    public void HandleWithLambdaContext(ILambdaContext context)
+    {
+        
+    }
+
+    [Metrics(Namespace = "ns", Service = "svc")]
+    public void HandleWithLambdaContextAndMetrics(TestLambdaContext context)
+    {
+        Metrics.AddMetric("MyMetric", 1);
     }
 }
