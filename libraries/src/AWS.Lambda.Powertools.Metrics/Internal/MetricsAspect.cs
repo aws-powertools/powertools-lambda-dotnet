@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Amazon.Lambda.Core;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 
@@ -33,11 +34,6 @@ public class MetricsAspect
     ///     The is cold start
     /// </summary>
     private static bool _isColdStart;
-
-    /// <summary>
-    ///     Specify to clear Lambda Context on exit
-    /// </summary>
-    private bool _clearLambdaContext;
 
     /// <summary>
     ///     Gets the metrics instance.
@@ -100,14 +96,14 @@ public class MetricsAspect
             var nameSpace = _metricsInstance.GetNamespace();
             var service = _metricsInstance.GetService();
             Dictionary<string, string> dimensions = null;
-
-            _clearLambdaContext = PowertoolsLambdaContext.Extract(eventArgs);
-
-            if (PowertoolsLambdaContext.Instance is not null)
+            
+            var context = GetContext(eventArgs);
+            
+            if (context is not null)
             {
                 dimensions = new Dictionary<string, string>
                 {
-                    { "FunctionName", PowertoolsLambdaContext.Instance.FunctionName }
+                    { "FunctionName", context.FunctionName }
                 };
             }
 
@@ -129,8 +125,6 @@ public class MetricsAspect
     public void Exit()
     {
         _metricsInstance.Flush();
-        if (_clearLambdaContext)
-            PowertoolsLambdaContext.Clear();
     }
 
 
@@ -142,6 +136,21 @@ public class MetricsAspect
         _metricsInstance = null;
         _isColdStart = true;
         Metrics.ResetForTest();
-        PowertoolsLambdaContext.Clear();
+    }
+    
+    /// <summary>
+    /// Gets the Lambda context
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    private static ILambdaContext GetContext(AspectEventArgs args)
+    {
+        var index = Array.FindIndex(args.Method.GetParameters(), p => p.ParameterType == typeof(ILambdaContext));
+        if (index >= 0)
+        {
+            return (ILambdaContext)args.Args[index];
+        }
+
+        return null;
     }
 }
