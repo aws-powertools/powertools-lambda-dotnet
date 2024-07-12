@@ -169,8 +169,14 @@ public class FunctionHandler
     }
 
     [Metrics(Namespace = "ns", Service = "svc")]
-    public void HandleWithLambdaContextAndMetrics(TestLambdaContext context)
+    public void HandleColdStartNoContext()
     {
         Metrics.AddMetric("MyMetric", 1);
+    }
+    
+    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
+    public void HandleWithParamAndLambdaContext(string input, ILambdaContext context)
+    {
+        
     }
 }

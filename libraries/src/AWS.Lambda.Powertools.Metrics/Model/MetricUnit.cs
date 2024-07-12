@@ -24,7 +24,7 @@ namespace AWS.Lambda.Powertools.Metrics;
 #if NET8_0_OR_GREATER
 [JsonConverter(typeof(JsonStringEnumConverter<MetricUnit>))]
 #else
-[JsonConverter(typeof(StringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter))]
 #endif
 public enum MetricUnit
 {
