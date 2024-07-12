@@ -20,20 +20,17 @@ public class MetricResolutionJsonConverter : JsonConverter<MetricResolution>
     /// <returns>The object value.</returns>
     public override MetricResolution Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        switch (reader.TokenType)
+        if (reader.TokenType == JsonTokenType.String)
         {
-            case JsonTokenType.String:
+            var stringValue = reader.GetString();
+            if (int.TryParse(stringValue, out int value))
             {
-                string stringValue = reader.GetString();
-                if (int.TryParse(stringValue, out int value))
-                {
-                    return (MetricResolution)value;
-                }
-
-                break;
+                return (MetricResolution)value;
             }
-            case JsonTokenType.Number:
-                return (MetricResolution)reader.GetInt32();
+        }
+        else if (reader.TokenType == JsonTokenType.Number)
+        {
+            return (MetricResolution)reader.GetInt32();
         }
 
         throw new JsonException();
