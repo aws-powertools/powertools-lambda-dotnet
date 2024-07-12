@@ -88,6 +88,46 @@ public class FunctionHandlerTests : IDisposable
             "\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"FunctionName\"],[\"Service\"]]}]}",
             metricsOutput);
     }
+    
+    [Fact]
+    public void When_LambdaContext_And_Parameter_Should_Add_FunctioName_Dimension_CaptureColdStart()
+    {
+        // Arrange
+        var context = new TestLambdaContext
+        {
+            FunctionName = "My Function with context"
+        };
+        
+        // Act
+        _handler.HandleWithParamAndLambdaContext("Hello",context);
+        var metricsOutput = _consoleOut.ToString();
+        
+        // Assert
+        Assert.Contains(
+            "\"FunctionName\":\"My Function with context\"",
+            metricsOutput);
+        
+        Assert.Contains(
+            "\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"FunctionName\"],[\"Service\"]]}]}",
+            metricsOutput);
+    }
+    
+    [Fact]
+    public void When_No_LambdaContext_Should_Not_Add_FunctioName_Dimension_CaptureColdStart()
+    {
+        // Act
+        _handler.HandleColdStartNoContext();
+        var metricsOutput = _consoleOut.ToString();
+        
+        // Assert
+        Assert.DoesNotContain(
+            "\"FunctionName\"",
+            metricsOutput);
+        
+        Assert.Contains(
+            "\"Metrics\":[{\"Name\":\"MyMetric\",\"Unit\":\"None\"}],\"Dimensions\":[[\"Service\"]]}]},\"Service\":\"svc\",\"MyMetric\":1}",
+            metricsOutput);
+    }
 
     public void Dispose()
     {
