@@ -55,7 +55,7 @@ public class Function
 
     private static string ToUpper(string input)
     {
-        Metrics.AddMetric("GetGuid invocation", 1, MetricUnit.Count);
+        Metrics.AddMetric("ToUpper invocation", 1, MetricUnit.Count);
         
         var upper =  input.ToUpper();
         
