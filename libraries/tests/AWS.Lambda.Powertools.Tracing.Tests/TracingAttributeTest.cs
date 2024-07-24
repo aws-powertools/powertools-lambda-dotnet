@@ -61,7 +61,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Assert.Single(segmentCold.Subsegments);
             Assert.True(subSegmentCold.IsAnnotationsAdded);
             Assert.Equal(2, subSegmentCold.Annotations.Count());
-            Assert.Equal(true, subSegmentCold.Annotations.Single(x => x.Key == "ColdStart").Value);
+            Assert.True((bool)subSegmentCold.Annotations.Single(x => x.Key == "ColdStart").Value);
             Assert.Equal("POWERTOOLS", subSegmentCold.Annotations.Single(x => x.Key == "Service").Value);
 
             // Warm
@@ -69,7 +69,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Assert.Single(segmentWarm.Subsegments);
             Assert.True(subSegmentWarm.IsAnnotationsAdded);
             Assert.Equal(2, subSegmentWarm.Annotations.Count());
-            Assert.Equal(false, subSegmentWarm.Annotations.Single(x => x.Key == "ColdStart").Value);
+            Assert.False((bool)subSegmentWarm.Annotations.Single(x => x.Key == "ColdStart").Value);
             Assert.Equal("POWERTOOLS", subSegmentWarm.Annotations.Single(x => x.Key == "Service").Value);
         }
 
@@ -98,14 +98,14 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Assert.Single(segmentCold.Subsegments);
             Assert.True(subSegmentCold.IsAnnotationsAdded);
             Assert.Single(subSegmentCold.Annotations);
-            Assert.Equal(true, subSegmentCold.Annotations.Single(x => x.Key == "ColdStart").Value);
+            Assert.True((bool)subSegmentCold.Annotations.Single(x => x.Key == "ColdStart").Value);
 
             // Warm
             Assert.True(segmentWarm.IsSubsegmentsAdded);
             Assert.Single(segmentWarm.Subsegments);
             Assert.True(subSegmentWarm.IsAnnotationsAdded);
             Assert.Single(subSegmentWarm.Annotations);
-            Assert.Equal(false, subSegmentWarm.Annotations.Single(x => x.Key == "ColdStart").Value);
+            Assert.False((bool)subSegmentWarm.Annotations.Single(x => x.Key == "ColdStart").Value);
         }
 
         public void Dispose()

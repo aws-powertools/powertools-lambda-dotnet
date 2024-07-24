@@ -68,7 +68,7 @@ public sealed class HandlerTests : IDisposable
         Assert.True(handleSegment.IsSubsegmentsAdded);
         
         Assert.Equal("POWERTOOLS", handleSegment.Annotations["Service"]);
-        Assert.Equal(true, handleSegment.Annotations["ColdStart"]);
+        Assert.True((bool)handleSegment.Annotations["ColdStart"]);
         Assert.Equal("value", handleSegment.Annotations["annotation"]);
         Assert.Equal("## Handle", handleSegment.Name);
 

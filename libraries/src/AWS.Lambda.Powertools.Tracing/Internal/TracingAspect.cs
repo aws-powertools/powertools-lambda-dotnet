@@ -33,17 +33,17 @@ public class TracingAspect
     /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations
     /// </summary>
-    private IPowertoolsConfigurations _powertoolsConfigurations;
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
     /// <summary>
     ///     X-Ray Recorder
     /// </summary>
-    private IXRayRecorder _xRayRecorder;
+    private readonly IXRayRecorder _xRayRecorder;
     
     /// <summary>
     ///     If true, then is cold start
     /// </summary>
-    private static bool _isColdStart;
+    private static bool _isColdStart = true;
 
     /// <summary>
     ///     If true, capture annotations
@@ -70,7 +70,6 @@ public class TracingAspect
     /// </summary>
     public TracingAspect()
     {
-        _isColdStart = true;
         _xRayRecorder = XRayRecorder.Instance;
         _powertoolsConfigurations = PowertoolsConfigurations.Instance;
     }
@@ -91,12 +90,8 @@ public class TracingAspect
     /// <returns></returns>
     [Advice(Kind.Around)]
     public object Around(
-        [Argument(Source.Instance)] object instance,
         [Argument(Source.Name)] string name,
         [Argument(Source.Arguments)] object[] args,
-        [Argument(Source.Type)] Type hostType,
-        [Argument(Source.Metadata)] MethodBase method,
-        [Argument(Source.ReturnType)] Type returnType,
         [Argument(Source.Target)] Func<object[], object> target,
         [Argument(Source.Triggers)] Attribute[] triggers)
     {
