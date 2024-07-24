@@ -16,6 +16,7 @@ a provides functionality to reduce the overhead of performing common tracing tas
 * Better experience when developing with multiple threads.
 * Auto-patch supported modules by AWS X-Ray
 * Auto-disable when not running in AWS Lambda environment
+* Ahead-of-Time compilation to native code support [AOT](https://docs.aws.amazon.com/lambda/latest/dg/dotnet-native-aot.html) from version 1.5.0
 
 ## Installation
 
@@ -278,3 +279,23 @@ Tracing.Register<IAmazonDynamoDB>()
 
 This functionality is a thin wrapper for AWS X-Ray .NET SDK. Refer details on [how to instrument SDK client with Xray](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-sdkclients.html) and [outgoing http calls](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-httpclients.html).
 
+## AOT Support
+
+Native AOT trims your application code as part of the compilation to ensure that the binary is as small as possible. .NET 8 for Lambda provides improved trimming support compared to previous versions of .NET.
+
+These improvements offer the potential to eliminate build-time trimming warnings, but .NET will never be completely trim safe. This means that parts of libraries that your function relies on may be trimmed out as part of the compilation step. You can manage this by defining TrimmerRootAssemblies as part of your `.csproj` file as shown in the following example.
+
+For the Tracing utility to work correctly and without trim warnings please add the following to your `.csproj` file
+
+```xaml
+<ItemGroup>
+    <TrimmerRootAssembly Include="AWSSDK.Core" />
+    <TrimmerRootAssembly Include="AWSXRayRecorder.Core" />
+    <TrimmerRootAssembly Include="AWSXRayRecorder.Handlers.AwsSdk" />
+    <TrimmerRootAssembly Include="Amazon.Lambda.APIGatewayEvents" />
+</ItemGroup>
+```
+
+Note that when you receive a trim warning, adding the class that generates the warning to TrimmerRootAssembly might not resolve the issue. A trim warning indicates that the class is trying to access some other class that can't be determined until runtime. To avoid runtime errors, add this second class to TrimmerRootAssembly.
+
+To learn more about managing trim warnings, see [Introduction to trim warnings](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings) in the Microsoft .NET documentation.

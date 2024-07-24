@@ -8,6 +8,8 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
+// This has to be the last tests to run otherwise it will keep state and fail other random tests
+[Collection("Sequential")]
 public class XRayRecorderTests
 {
     [Fact]
@@ -54,7 +56,7 @@ public class XRayRecorderTests
     }
 
     [Fact]
-    public void Tracing_Being_Subsegment()
+    public void Tracing_Begin_Subsegment()
     {
         // Arrange
         var conf = Substitute.For<IPowertoolsConfigurations>();

@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -16,9 +16,8 @@
 using System;
 using System.Linq;
 using System.Text;
-using AWS.Lambda.Powertools.Common;
+using Amazon.XRay.Recorder.Core;
 using AWS.Lambda.Powertools.Tracing.Internal;
-using NSubstitute;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -26,350 +25,273 @@ using Xunit;
 namespace AWS.Lambda.Powertools.Tracing.Tests
 {
     [Collection("Sequential")]
-    public class TracingAttributeColdStartTest
+    public class TracingAttributeColdStartTest : IDisposable
     {
+        private readonly HandlerFunctions _handler;
+
+        public TracingAttributeColdStartTest()
+        {
+            _handler = new HandlerFunctions();
+        }
+        
         [Fact]
         public void OnEntry_WhenFirstCall_CapturesColdStart()
         {
             // Arrange
-            const bool isColdStart = true;
-            var methodName = Guid.NewGuid().ToString();
-            var service = Guid.NewGuid().ToString();
-
-            var configurations1 = Substitute.For<IPowertoolsConfigurations>();
-            configurations1.TracingDisabled.Returns(false);
-            configurations1.IsLambdaEnvironment.Returns(true);
-            configurations1.IsServiceDefined.Returns(true);
-            configurations1.Service.Returns(service);
-
-            var configurations2 = Substitute.For<IPowertoolsConfigurations>();
-            configurations2.TracingDisabled.Returns(false);
-            configurations2.IsLambdaEnvironment.Returns(true);
-            configurations2.IsServiceDefined.Returns(false);
-
-            var recorder1 = Substitute.For<IXRayRecorder>();
-            var recorder2 = Substitute.For<IXRayRecorder>();
-            var recorder3 = Substitute.For<IXRayRecorder>();
-            var recorder4 = Substitute.For<IXRayRecorder>();
-
-            TracingAspectHandler.ResetForTest();
-            var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations1, recorder1);
-            var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations1, recorder2);
-            var handler3 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations2, recorder3);
-            var handler4 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations2, recorder4);
-
-            var eventArgs = new AspectEventArgs { Name = methodName };
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
 
             // Act
             // Cold Start Execution
-            handler1.OnEntry(eventArgs);
-            handler2.OnEntry(eventArgs);
-            handler2.OnExit(eventArgs);
-            handler1.OnExit(eventArgs);
+            // Start segment
+            var segmentCold = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
+
+            var subSegmentCold = segmentCold.Subsegments[0];
 
             // Warm Start Execution
-            handler3.OnEntry(eventArgs);
-            handler4.OnEntry(eventArgs);
-            handler4.OnExit(eventArgs);
-            handler3.OnExit(eventArgs);
+            // Start segment
+            var segmentWarm = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
+            var subSegmentWarm = segmentWarm.Subsegments[0];
 
             // Assert
-            recorder1.Received(1).AddAnnotation(
-                Arg.Is<string>(i => i == "ColdStart"),
-                Arg.Is<bool>(i => i == isColdStart)
-            );
+            // Cold
+            Assert.True(segmentCold.IsSubsegmentsAdded);
+            Assert.Single(segmentCold.Subsegments);
+            Assert.True(subSegmentCold.IsAnnotationsAdded);
+            Assert.Equal(2, subSegmentCold.Annotations.Count());
+            Assert.True((bool)subSegmentCold.Annotations.Single(x => x.Key == "ColdStart").Value);
+            Assert.Equal("POWERTOOLS", subSegmentCold.Annotations.Single(x => x.Key == "Service").Value);
 
-            recorder1.Received(1).AddAnnotation(
-                Arg.Is<string>(i => i == "Service"),
-                Arg.Is<string>(i => i == service)
-            );
+            // Warm
+            Assert.True(segmentWarm.IsSubsegmentsAdded);
+            Assert.Single(segmentWarm.Subsegments);
+            Assert.True(subSegmentWarm.IsAnnotationsAdded);
+            Assert.Equal(2, subSegmentWarm.Annotations.Count());
+            Assert.False((bool)subSegmentWarm.Annotations.Single(x => x.Key == "ColdStart").Value);
+            Assert.Equal("POWERTOOLS", subSegmentWarm.Annotations.Single(x => x.Key == "Service").Value);
+        }
 
-            recorder2.DidNotReceive().AddAnnotation(
-                Arg.Any<string>(),
-                Arg.Any<bool>()
-            );
+        [Fact]
+        public void OnEntry_WhenFirstCall_And_Service_Not_Set_CapturesColdStart()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
 
-            recorder2.DidNotReceive().AddAnnotation(
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
+            // Act
+            // Cold Start Execution
+            // Start segment
+            var segmentCold = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
+            var subSegmentCold = segmentCold.Subsegments[0];
 
-            recorder3.Received(1).AddAnnotation(
-                Arg.Is<string>(i => i == "ColdStart"),
-                Arg.Is<bool>(i => i == !isColdStart)
-            );
+            // Warm Start Execution
+            // Start segment
+            var segmentWarm = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
+            var subSegmentWarm = segmentWarm.Subsegments[0];
 
-            recorder3.DidNotReceive().AddAnnotation(
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
+            // Assert
+            // Cold
+            Assert.True(segmentCold.IsSubsegmentsAdded);
+            Assert.Single(segmentCold.Subsegments);
+            Assert.True(subSegmentCold.IsAnnotationsAdded);
+            Assert.Single(subSegmentCold.Annotations);
+            Assert.True((bool)subSegmentCold.Annotations.Single(x => x.Key == "ColdStart").Value);
 
-            recorder4.DidNotReceive().AddAnnotation(
-                Arg.Any<string>(),
-                Arg.Any<bool>()
-            );
+            // Warm
+            Assert.True(segmentWarm.IsSubsegmentsAdded);
+            Assert.Single(segmentWarm.Subsegments);
+            Assert.True(subSegmentWarm.IsAnnotationsAdded);
+            Assert.Single(subSegmentWarm.Annotations);
+            Assert.False((bool)subSegmentWarm.Annotations.Single(x => x.Key == "ColdStart").Value);
+        }
 
-            recorder4.DidNotReceive().AddAnnotation(
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
+        public void Dispose()
+        {
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
+            TracingAspect.ResetForTest();
         }
     }
 
     [Collection("Sequential")]
-    public class TracingAttributeDisableTest
+    public class TracingAttributeDisableTest : IDisposable
     {
+        private readonly HandlerFunctions _handler;
+
+        public TracingAttributeDisableTest()
+        {
+            _handler = new HandlerFunctions();
+        }
+        
         [Fact]
         public void Tracing_WhenTracerDisabled_DisablesTracing()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var configurations1 = Substitute.For<IPowertoolsConfigurations>();
-            configurations1.TracingDisabled.Returns(true);
-            configurations1.IsLambdaEnvironment.Returns(true);
-
-            var configurations2 = Substitute.For<IPowertoolsConfigurations>();
-            configurations2.TracingDisabled.Returns(true);
-            configurations2.IsLambdaEnvironment.Returns(true);
-
-            var recorder1 = Substitute.For<IXRayRecorder>();
-            var recorder2 = Substitute.For<IXRayRecorder>();
-
-            TracingAspectHandler.ResetForTest();
-            var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations1, recorder1);
-            var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations2, recorder2);
-
-            var results = new[] { "A", "B" };
-            var exception = new Exception("Test Exception");
-            var eventArgs = new AspectEventArgs { Name = methodName };
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "true");
 
             // Act
             // Cold Start Execution
-            handler1.OnEntry(eventArgs);
-            handler1.OnSuccess(eventArgs, results);
-            void Act1() => handler1.OnException(eventArgs, exception);
-            handler1.OnExit(eventArgs);
+            // Start segment
+            var segmentCold = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
 
             // Warm Start Execution
-            handler2.OnEntry(eventArgs);
-            handler2.OnSuccess(eventArgs, results);
-            void Act2() => handler2.OnException(eventArgs, exception);
-            handler2.OnExit(eventArgs);
+            // Start segment
+            var segmentWarm = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
 
             // Assert
-            recorder1.DidNotReceive().BeginSubsegment(Arg.Any<string>());
-            recorder1.DidNotReceive().EndSubsegment();
-            recorder1.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
-            Assert.Throws<Exception>(Act1);
-            recorder1.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<Exception>()
-            );
+            Assert.False(segmentCold.IsAnnotationsAdded);
+            Assert.Empty(segmentCold.Annotations);
+            Assert.False(segmentCold.IsSubsegmentsAdded);
+            Assert.False(segmentCold.IsMetadataAdded);
 
-            recorder2.DidNotReceive().BeginSubsegment(Arg.Any<string>());
-            recorder2.DidNotReceive().EndSubsegment();
-            recorder2.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
-            Assert.Throws<Exception>(Act2);
-            recorder2.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<Exception>()
-            );
+            Assert.False(segmentWarm.IsAnnotationsAdded);
+            Assert.Empty(segmentWarm.Annotations);
+            Assert.False(segmentWarm.IsSubsegmentsAdded);
+            Assert.False(segmentWarm.IsMetadataAdded);
+        }
+
+        public void Dispose()
+        {
+            ClearEnvironment();
+        }
+
+        private static void ClearEnvironment()
+        {
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
+            TracingAspect.ResetForTest();
         }
     }
 
     [Collection("Sequential")]
     public class TracingAttributeLambdaEnvironmentTest
     {
+        private readonly HandlerFunctions _handler;
+    
+        public TracingAttributeLambdaEnvironmentTest()
+        {
+            _handler = new HandlerFunctions();
+        }
+        
         [Fact]
         public void Tracing_WhenOutsideOfLambdaEnv_DisablesTracing()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var configurations1 = Substitute.For<IPowertoolsConfigurations>();
-            configurations1.TracingDisabled.Returns(false);
-            configurations1.IsLambdaEnvironment.Returns(false);
-
-            var configurations2 = Substitute.For<IPowertoolsConfigurations>();
-            configurations2.TracingDisabled.Returns(true);
-            configurations2.IsLambdaEnvironment.Returns(true);
-
-            var recorder1 = Substitute.For<IXRayRecorder>();
-            var recorder2 = Substitute.For<IXRayRecorder>();
-
-            TracingAspectHandler.ResetForTest();
-            var handler1 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations1, recorder1);
-            var handler2 = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations1, recorder2);
-
-            var results = new[] { "A", "B" };
-            var exception = new Exception("Test Exception");
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            
+            // Need to manually create the initial segment
+            AWSXRayRecorder.Instance.BeginSegment("foo");
+    
             // Act
             // Cold Start Execution
-            handler1.OnEntry(eventArgs);
-            handler1.OnSuccess(eventArgs, results);
-            void Act1() => handler1.OnException(eventArgs, exception);
-            handler1.OnExit(eventArgs);
-
-            // Warm Start Execution
-            handler2.OnEntry(eventArgs);
-            handler2.OnSuccess(eventArgs, results);
-            void Act2() => handler2.OnException(eventArgs, exception);
-            handler2.OnExit(eventArgs);
-
+            _handler.Handle();
+            var segmentCold = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+    
             // Assert
-            recorder1.DidNotReceive().BeginSubsegment(Arg.Any<string>());
-            recorder1.DidNotReceive().EndSubsegment();
-            recorder1.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
-            Assert.Throws<Exception>(Act1);
-            recorder1.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<Exception>()
-            );
+            Assert.False(AWSXRayRecorder.IsLambda());
+            Assert.False(segmentCold.IsAnnotationsAdded);
+            Assert.Empty(segmentCold.Annotations);
+            Assert.False(segmentCold.IsSubsegmentsAdded);
+            Assert.False(segmentCold.IsMetadataAdded);
 
-            recorder2.DidNotReceive().BeginSubsegment(Arg.Any<string>());
-            recorder2.DidNotReceive().EndSubsegment();
-            recorder2.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
-            Assert.Throws<Exception>(Act2);
-            recorder2.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<Exception>()
-            );
+            AWSXRayRecorder.Instance.EndSegment();
         }
     }
-
+    
     [Collection("Sequential")]
-    public class TracingAttributeTest
+    public class TracingAttributeTest : IDisposable
     {
+        private readonly HandlerFunctions _handler;
+
         public TracingAttributeTest()
         {
-            TracingAspectHandler.ResetForTest();
+            _handler = new HandlerFunctions();
         }
-
+        
         #region OnEntry Tests
 
         [Fact]
         public void OnEntry_WhenSegmentNameIsNull_BeginSubsegmentWithMethodName()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
             // Act
-            handler.OnEntry(eventArgs);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.Received(1).BeginSubsegment(
-                Arg.Is<string>(i => i == $"## {methodName}")
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.Equal("## Handle", subSegment.Name);
         }
 
         [Fact]
         public void OnEntry_WhenSegmentNameHasValue_BeginSubsegmentWithValue()
         {
             // Arrange
-            var segmentName = Guid.NewGuid().ToString();
-            var methodName = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-
-            var handler = new TracingAspectHandler(segmentName, null, TracingCaptureMode.EnvironmentVariable,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
 
             // Act
-            handler.OnEntry(eventArgs);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.HandleWithSegmentName();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.Received(1).BeginSubsegment(
-                Arg.Is<string>(i => i == segmentName)
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.Equal("SegmentName", subSegment.Name);
         }
 
         [Fact]
         public void OnEntry_WhenNamespaceIsNull_SetNamespaceWithService()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var service = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            configurations.Service.Returns(service);
-            var recorder = Substitute.For<IXRayRecorder>();
-
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
+            var serviceName = "POWERTOOLS";
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", serviceName);
 
             // Act
-            handler.OnEntry(eventArgs);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.Received(1).SetNamespace(
-                Arg.Is<string>(i => i == service)
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.Equal(serviceName, subSegment.Namespace);
         }
 
         [Fact]
         public void OnEntry_WhenNamespaceHasValue_SetNamespaceWithValue()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
 
             // Act
-            handler.OnEntry(eventArgs);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.HandleWithNamespace();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.Received(1).SetNamespace(
-                Arg.Is<string>(i => i == nameSpace)
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.Equal("Namespace Defined", subSegment.Namespace);
         }
 
         #endregion
@@ -380,173 +302,132 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
         public void OnSuccess_WhenTracerCaptureResponseEnvironmentVariableIsTrue_CapturesResponse()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            configurations.TracerCaptureResponse.Returns(true);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var results = new[] { "A", "B" };
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "true");
+            
             // Act
-            handler.OnSuccess(eventArgs, results);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.Received(1).AddMetadata(
-                Arg.Is<string>(i => i == nameSpace),
-                Arg.Is<string>(i => i == $"{methodName} response"),
-                Arg.Is<string[]>(i =>
-                    i.First() == results.First() &&
-                    i.Last() == results.Last()
-                )
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("Handle response", metadata.Keys.Cast<string>().First());
+            var handlerResponse = metadata.Values.Cast<string[]>().First();
+            Assert.Equal("A", handlerResponse[0]);
+            Assert.Equal("B", handlerResponse[1]);
         }
 
         [Fact]
         public void OnSuccess_WhenTracerCaptureResponseEnvironmentVariableIsFalse_DoesNotCaptureResponse()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            configurations.TracerCaptureResponse.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var results = new[] { "A", "B" };
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "false");
+            
             // Act
-            handler.OnSuccess(eventArgs, results);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.False(subSegment.IsMetadataAdded);
+            Assert.Empty(subSegment.Metadata);
         }
 
         [Fact]
         public void OnSuccess_WhenTracerCaptureModeIsResponse_CapturesResponse()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var results = new[] { "A", "B" };
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Response,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
             // Act
-            handler.OnSuccess(eventArgs, results);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.HandleWithCaptureModeResponse();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.Received(1).AddMetadata(
-                Arg.Is<string>(i => i == nameSpace),
-                Arg.Is<string>(i => i == $"{methodName} response"),
-                Arg.Is<string[]>(i =>
-                    i.First() == results.First() &&
-                    i.Last() == results.Last()
-                )
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("HandleWithCaptureModeResponse response", metadata.Keys.Cast<string>().First());
+            var handlerResponse = metadata.Values.Cast<string[]>().First();
+            Assert.Equal("A", handlerResponse[0]);
+            Assert.Equal("B", handlerResponse[1]);
         }
 
         [Fact]
         public void OnSuccess_WhenTracerCaptureModeIsResponseAndError_CapturesResponse()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var results = new[] { "A", "B" };
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ResponseAndError,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
             // Act
-            handler.OnSuccess(eventArgs, results);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.HandleWithCaptureModeResponseAndError();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.Received(1).AddMetadata(
-                Arg.Is<string>(i => i == nameSpace),
-                Arg.Is<string>(i => i == $"{methodName} response"),
-                Arg.Is<string[]>(i =>
-                    i.First() == results.First() &&
-                    i.Last() == results.Last()
-                )
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("HandleWithCaptureModeResponseAndError response", metadata.Keys.Cast<string>().First());
+            var handlerResponse = metadata.Values.Cast<string[]>().First();
+            Assert.Equal("A", handlerResponse[0]);
+            Assert.Equal("B", handlerResponse[1]);
         }
 
         [Fact]
         public void OnSuccess_WhenTracerCaptureModeIsError_DoesNotCaptureResponse()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var results = new[] { "A", "B" };
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Error,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
             // Act
-            handler.OnSuccess(eventArgs, results);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.HandleWithCaptureModeError();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.False(subSegment.IsMetadataAdded); // does not add metadata
         }
 
         [Fact]
         public void OnSuccess_WhenTracerCaptureModeIsDisabled_DoesNotCaptureResponse()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var results = new[] { "A", "B" };
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Disabled,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
             // Act
-            handler.OnSuccess(eventArgs, results);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.HandleWithCaptureModeDisabled();
+            var subSegment = segment.Subsegments[0];
 
             // Assert
-            recorder.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>()
-            );
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.False(subSegment.IsMetadataAdded); // does not add metadata
         }
 
         #endregion
@@ -557,176 +438,206 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
         public void OnException_WhenTracerCaptureErrorEnvironmentVariableIsTrue_CapturesError()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            configurations.TracerCaptureError.Returns(true);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var exception = new Exception("Test Exception");
-            var message = GetException(exception);
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "true");
+            
             // Act
-            void Act() => handler.OnException(eventArgs, exception);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
 
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleThrowsException("My Exception");
+            });
+            var subSegment = segment.Subsegments[0];
+            
             // Assert
-            Assert.Throws<Exception>((Action)Act);
-            recorder.Received(1).AddMetadata(
-                Arg.Is<string>(i => i == nameSpace),
-                Arg.Is<string>(i => i == $"{methodName} error"),
-                Arg.Is<string>(i => i == message)
-            );
+            Assert.NotNull(exception);
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("HandleThrowsException error", metadata.Keys.Cast<string>().First());
+            var handlerErrorMessage = metadata.Values.Cast<string>().First();
+            Assert.Contains(handlerErrorMessage, GetException(exception));
         }
 
         [Fact]
-        public void OnException_WhenTracerCaptureErrorEnvironmentVariableIsTrueFalse_DoesNotCaptureError()
+        public void OnException_WhenTracerCaptureErrorEnvironmentVariableIsFalse_DoesNotCaptureError()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            configurations.TracerCaptureError.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var exception = new Exception("Test Exception");
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.EnvironmentVariable,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "false");
+            
             // Act
-            void Act() => handler.OnException(eventArgs, exception);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
 
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleThrowsException("My Exception");
+            });
+            var subSegment = segment.Subsegments[0];
+            
             // Assert
-            Assert.Throws<Exception>((Action)Act);
-            recorder.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<Exception>()
-            );
+            Assert.NotNull(exception);
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.False(subSegment.IsMetadataAdded); // no metadata for errors added
         }
 
         [Fact]
         public void OnException_WhenTracerCaptureModeIsError_CapturesError()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var exception = new Exception("Test Exception");
-            var message = GetException(exception);
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Error,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
             // Act
-            void Act() => handler.OnException(eventArgs, exception);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
 
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleWithCaptureModeError(true);
+            });
+            var subSegment = segment.Subsegments[0];
+            
             // Assert
-            Assert.Throws<Exception>((Action)Act);
-            recorder.Received(1).AddMetadata(
-                Arg.Is<string>(i => i == nameSpace),
-                Arg.Is<string>(i => i == $"{methodName} error"),
-                Arg.Is<string>(i => i == message)
-            );
+            Assert.NotNull(exception);
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("HandleWithCaptureModeError error", metadata.Keys.Cast<string>().First());
+            var handlerErrorMessage = metadata.Values.Cast<string>().First();
+            Assert.Contains(handlerErrorMessage, GetException(exception));
+        }
+        
+        [Fact]
+        public void OnException_WhenTracerCaptureModeIsError_CapturesError_Inner_Exception()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
+            // Act
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleWithCaptureModeErrorInner(true);
+            });
+            var subSegment = segment.Subsegments[0];
+            
+            // Assert
+            Assert.NotNull(exception);
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("HandleWithCaptureModeErrorInner error", metadata.Keys.Cast<string>().First());
+            Assert.NotNull(exception.InnerException);
+            Assert.Equal("Inner Exception!!",exception.InnerException.Message);
+        }
+        
+        [Fact]
+        public void OnException_When_Tracing_Disabled_Does_Not_CapturesError()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "true");
+            
+            // Act
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleWithCaptureModeError(true);
+            });
+            
+            // Assert
+            Assert.NotNull(exception);
+            Assert.False(segment.IsSubsegmentsAdded);
+            Assert.Empty(segment.Subsegments);
+            Assert.False(segment.IsMetadataAdded);
         }
 
         [Fact]
         public void OnException_WhenTracerCaptureModeIsResponseAndError_CapturesError()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var exception = new Exception("Test Exception");
-            var message = GetException(exception);
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.ResponseAndError,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
             // Act
-            void Act() => handler.OnException(eventArgs, exception);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
 
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleWithCaptureModeResponseAndError(true);
+            });
+            var subSegment = segment.Subsegments[0];
+            
             // Assert
-            Assert.Throws<Exception>((Action)Act);
-            recorder.Received(1).AddMetadata(
-                Arg.Is<string>(i => i == nameSpace),
-                Arg.Is<string>(i => i == $"{methodName} error"),
-                Arg.Is<string>(i => i == message)
-            );
+            Assert.NotNull(exception);
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("HandleWithCaptureModeResponseAndError error", metadata.Keys.Cast<string>().First());
+            var handlerErrorMessage = metadata.Values.Cast<string>().First();
+            Assert.Contains(handlerErrorMessage, GetException(exception));
         }
-
 
         [Fact]
         public void OnException_WhenTracerCaptureModeIsResponse_DoesNotCaptureError()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            configurations.TracerCaptureError.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var exception = new Exception("Test Exception");
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Response,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
             // Act
-            void Act() => handler.OnException(eventArgs, exception);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
 
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleWithCaptureModeResponse(true);
+            });
+            var subSegment = segment.Subsegments[0];
+            
             // Assert
-            Assert.Throws<Exception>((Action)Act);
-            recorder.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<Exception>()
-            );
+            Assert.NotNull(exception);
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.False(subSegment.IsMetadataAdded); // no metadata for errors added
         }
 
         [Fact]
         public void OnException_WhenTracerCaptureModeIsDisabled_DoesNotCaptureError()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var nameSpace = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(true);
-            configurations.TracingDisabled.Returns(false);
-            configurations.TracerCaptureError.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-            var exception = new Exception("Test Exception");
-
-            var handler = new TracingAspectHandler(null, nameSpace, TracingCaptureMode.Disabled,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
             // Act
-            void Act() => handler.OnException(eventArgs, exception);
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
 
+            var exception = Record.Exception(() =>
+            {
+                _handler.HandleWithCaptureModeDisabled(true);
+            });
+            var subSegment = segment.Subsegments[0];
+            
             // Assert
-            Assert.Throws<Exception>((Action)Act);
-            recorder.DidNotReceive().AddMetadata(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<Exception>()
-            );
+            Assert.NotNull(exception);
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.False(subSegment.IsMetadataAdded); // no metadata for errors added
         }
 
         #endregion
@@ -760,24 +671,30 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
         public void OnExit_WhenOutsideOfLambdaEnvironment_DoesNotEndSubsegment()
         {
             // Arrange
-            var methodName = Guid.NewGuid().ToString();
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            configurations.IsLambdaEnvironment.Returns(false);
-            configurations.TracingDisabled.Returns(true);
-            configurations.IsSamLocal.Returns(false);
-            var recorder = Substitute.For<IXRayRecorder>();
-
-            var handler = new TracingAspectHandler(null, null, TracingCaptureMode.EnvironmentVariable,
-                configurations, recorder);
-            var eventArgs = new AspectEventArgs { Name = methodName };
-
+            
+            AWSXRayRecorder.Instance.BeginSegment("foo");
+            
             // Act
-            handler.OnExit(eventArgs);
-
+            _handler.Handle();
+            
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            
             // Assert
-            recorder.DidNotReceive().EndSubsegment();
+            Assert.True(segment.IsInProgress);
+            Assert.False(segment.IsSubsegmentsAdded);
+            Assert.False(segment.IsAnnotationsAdded);
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
+            TracingAspect.ResetForTest();
+        }
     }
 }
