@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using System;
+using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Tracing.Internal;
 
@@ -105,7 +107,8 @@ namespace AWS.Lambda.Powertools.Tracing;
 ///         }
 ///     </code>
 /// </example>
-public class TracingAttribute : MethodAspectAttribute
+[Injection(typeof(TracingAspect))]
+public class TracingAttribute : Attribute
 {
     /// <summary>
     ///     Set custom segment name for the operation.
@@ -128,20 +131,4 @@ public class TracingAttribute : MethodAspectAttribute
     /// </summary>
     /// <value>The capture mode.</value>
     public TracingCaptureMode CaptureMode { get; set; } = TracingCaptureMode.EnvironmentVariable;
-
-    /// <summary>
-    ///     Creates the handler.
-    /// </summary>
-    /// <returns>IMethodAspectHandler.</returns>
-    protected override IMethodAspectHandler CreateHandler()
-    {
-        return new TracingAspectHandler
-        (
-            SegmentName,
-            Namespace,
-            CaptureMode,
-            PowertoolsConfigurations.Instance,
-            XRayRecorder.Instance
-        );
-    }
 }
