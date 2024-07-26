@@ -287,7 +287,7 @@ These improvements offer the potential to eliminate build-time trimming warnings
 
 For the Tracing utility to work correctly and without trim warnings please add the following to your `.csproj` file
 
-```xaml
+```xml
 <ItemGroup>
     <TrimmerRootAssembly Include="AWSSDK.Core" />
     <TrimmerRootAssembly Include="AWSXRayRecorder.Core" />
