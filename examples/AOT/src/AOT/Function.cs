@@ -3,6 +3,7 @@ using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using System.Text.Json.Serialization;
 using AWS.Lambda.Powertools.Metrics;
+using AWS.Lambda.Powertools.Tracing;
 
 namespace AOT;
 
@@ -45,6 +46,7 @@ public class Function
     
     // You can optionally capture cold start metrics by setting CaptureColdStart parameter to true.
     [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
+    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public static string FunctionHandler(string input, ILambdaContext context)
     {
         // You can create metrics using AddMetric
@@ -53,11 +55,14 @@ public class Function
         return ToUpper(input);
     }
 
+    [Tracing(SegmentName = "ToUpper Call")]
     private static string ToUpper(string input)
     {
         Metrics.AddMetric("ToUpper invocation", 1, MetricUnit.Count);
         
         var upper =  input.ToUpper();
+        
+        Tracing.AddAnnotation("Upper text", upper);
         
         // You can add high-cardinality data as part of your Metrics log with AddMetadata method.
         // This is useful when you want to search highly contextual information along with your metrics in your logs.
