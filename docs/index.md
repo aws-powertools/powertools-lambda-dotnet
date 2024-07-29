@@ -120,7 +120,48 @@ We have provided a few examples that should you how to use the each of the core 
 ## Connect
 
 * **Powertools for AWS Lambda (.NET) on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET){target="_blank"}**
-* **Email**: aws-lambda-powertools-feedback@amazon.com
+* **Email**: aws-powertools-maintainers@amazon.com
+
+## Support Powertools for AWS Lambda (.NET)
+
+There are many ways you can help us gain future investments to improve everyone's experience:
+
+<div class="grid cards" markdown>
+
+- :heart:{ .lg .middle } __Become a public reference__
+
+    ---
+
+    Add your company name and logo on our [landing page](https://powertools.aws.dev).
+
+    [:octicons-arrow-right-24: GitHub Issue template](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=customer-reference&template=support_powertools.yml&title=%5BSupport+Lambda+Powertools%5D%3A+%3Cyour+organization+name%3E){target="_blank"}
+
+- :mega:{ .lg .middle } __Share your work__
+
+    ---
+
+    Blog posts, video, and sample projects about Powertools for AWS Lambda.
+
+    [:octicons-arrow-right-24: GitHub Issue template](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=customer-reference&template=support_powertools.yml&title=%5BSupport+Lambda+Powertools%5D%3A+%3Cyour+organization+name%3E){target="_blank"}
+
+- :partying_face:{ .lg .middle } __Join the community__
+
+    ---
+
+    Connect, ask questions, and share what features you use.
+
+    [:octicons-arrow-right-24: Discord invite](https://discord.gg/B8zZKbbyET){target="blank"}
+
+</div>
+
+### Becoming a reference customer
+
+Knowing which companies are using this library is important to help prioritize the project internally. The following companies, among others, use Powertools:
+
+<div class="grid" style="text-align:center;" markdown>
+
+[**Caylent**](https://caylent.com/){target="_blank" rel="nofollow"}
+{ .card }
 
 ## Tenets
 
