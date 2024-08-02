@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -15,11 +15,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
+using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -40,7 +43,7 @@ internal sealed class PowertoolsLogger : ILogger
     ///     The name
     /// </summary>
     private readonly string _name;
-    
+
     /// <summary>
     ///     The current configuration
     /// </summary>
@@ -55,7 +58,7 @@ internal sealed class PowertoolsLogger : ILogger
     ///     The system wrapper
     /// </summary>
     private readonly ISystemWrapper _systemWrapper;
-    
+
     /// <summary>
     ///     The JsonSerializer options
     /// </summary>
@@ -80,10 +83,10 @@ internal sealed class PowertoolsLogger : ILogger
     {
         (_name, _powertoolsConfigurations, _systemWrapper, _getCurrentConfig) = (name,
             powertoolsConfigurations, systemWrapper, getCurrentConfig);
-        
+
         _powertoolsConfigurations.SetExecutionEnvironment(this);
         _currentConfig = GetCurrentConfig();
-        
+
         if (_lambdaLogLevelEnabled && _logLevel < _lambdaLogLevel)
         {
             var message =
@@ -148,10 +151,10 @@ internal sealed class PowertoolsLogger : ILogger
     private static Dictionary<string, object> GetScopeKeys<TState>(TState state)
     {
         var keys = new Dictionary<string, object>();
-        
-        if (state is null) 
+
+        if (state is null)
             return keys;
-        
+
         switch (state)
         {
             case IEnumerable<KeyValuePair<string, string>> pairs:
@@ -161,6 +164,7 @@ internal sealed class PowertoolsLogger : ILogger
                     if (!string.IsNullOrWhiteSpace(key))
                         keys.TryAdd(key, value);
                 }
+
                 break;
             }
             case IEnumerable<KeyValuePair<string, object>> pairs:
@@ -170,6 +174,7 @@ internal sealed class PowertoolsLogger : ILogger
                     if (!string.IsNullOrWhiteSpace(key))
                         keys.TryAdd(key, value);
                 }
+
                 break;
             }
             default:
@@ -178,10 +183,11 @@ internal sealed class PowertoolsLogger : ILogger
                 {
                     keys.TryAdd(property.Name, property.GetValue(state));
                 }
+
                 break;
             }
         }
-        
+
         return keys;
     }
 
@@ -204,6 +210,11 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="exception">The exception related to this entry.</param>
     /// <param name="formatter">Function to create a <see cref="T:System.String" /> message of the <paramref name="state" /> and <paramref name="exception" />.</param>
     /// <typeparam name="TState">The type of the object to be written.</typeparam>
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode",
+        Justification = "Everything referenced in the loaded assembly is manually preserved, so it's safe")]
+    [UnconditionalSuppressMessage("AOT",
+        "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+        Justification = "Everything is ok with serialization")]
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
         Func<TState, Exception, string> formatter)
     {
@@ -219,11 +230,16 @@ internal sealed class PowertoolsLogger : ILogger
             : formatter(state, exception);
 
         var logFormatter = Logger.GetFormatter();
-        var logEntry = logFormatter is null? 
-            GetLogEntry(logLevel, timestamp, message, exception) : 
-            GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter);
+        var logEntry = logFormatter is null
+            ? GetLogEntry(logLevel, timestamp, message, exception)
+            : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter);
 
+
+#if NET8_0_OR_GREATER
+        _systemWrapper.LogLine(JsonSerializer.Serialize(logEntry, typeof(object), JsonSerializerOptions));
+#else
         _systemWrapper.LogLine(JsonSerializer.Serialize(logEntry, JsonSerializerOptions));
+#endif
     }
 
     /// <summary>
@@ -361,7 +377,11 @@ internal sealed class PowertoolsLogger : ILogger
             var logObject = logFormatter.FormatLogEntry(logEntry);
             if (logObject is null)
                 throw new LogFormatException($"{logFormatter.GetType().FullName} returned Null value.");
+#if NET8_0_OR_GREATER
+            return PowertoolsLoggerHelpers.ObjectToDictionary(logObject);
+#else
             return logObject;
+#endif
         }
         catch (Exception e)
         {
@@ -369,6 +389,8 @@ internal sealed class PowertoolsLogger : ILogger
                 $"{logFormatter.GetType().FullName} raised an exception: {e.Message}.", e);
         }
     }
+    
+    
 
     /// <summary>
     ///     Clears the configuration.
@@ -387,16 +409,16 @@ internal sealed class PowertoolsLogger : ILogger
         var currConfig = _getCurrentConfig();
         _logLevel = _powertoolsConfigurations.GetLogLevel(currConfig?.MinimumLevel);
         var samplingRate = currConfig?.SamplingRate ?? _powertoolsConfigurations.LoggerSampleRate;
-        var loggerOutputCase =  _powertoolsConfigurations.GetLoggerOutputCase(currConfig?.LoggerOutputCase);
+        var loggerOutputCase = _powertoolsConfigurations.GetLoggerOutputCase(currConfig?.LoggerOutputCase);
         _lambdaLogLevel = _powertoolsConfigurations.GetLambdaLogLevel();
         _lambdaLogLevelEnabled = _lambdaLogLevel != LogLevel.None;
-        
+
         var minLogLevel = _logLevel;
         if (_lambdaLogLevelEnabled)
         {
             minLogLevel = _lambdaLogLevel;
         }
-        
+
         var config = new LoggerConfiguration
         {
             Service = currConfig?.Service,
@@ -445,8 +467,13 @@ internal sealed class PowertoolsLogger : ILogger
         if (exception is not null)
             return false;
 
+#if NET8_0_OR_GREATER
+        var stateKeys = (state as IEnumerable<KeyValuePair<string, object>>)?
+            .ToDictionary(i => i.Key, i => PowertoolsLoggerHelpers.ObjectToDictionary(i.Value));
+#else
         var stateKeys = (state as IEnumerable<KeyValuePair<string, object>>)?
             .ToDictionary(i => i.Key, i => i.Value);
+#endif
 
         if (stateKeys is null || stateKeys.Count != 2)
             return false;
@@ -458,9 +485,10 @@ internal sealed class PowertoolsLogger : ILogger
             return false;
 
         message = stateKeys.First(k => k.Key != "{OriginalFormat}").Value;
+
         return true;
     }
-    
+
     /// <summary>
     ///     Builds JsonSerializer options.
     /// </summary>
@@ -490,9 +518,12 @@ internal sealed class PowertoolsLogger : ILogger
         jsonOptions.Converters.Add(new ConstantClassConverter());
         jsonOptions.Converters.Add(new DateOnlyConverter());
         jsonOptions.Converters.Add(new TimeOnlyConverter());
-        
+
         jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-        
+#if NET8_0_OR_GREATER
+        jsonOptions.TypeInfoResolver = LoggingSerializationContext.Default;
+#endif
+
         return jsonOptions;
     }
 }

@@ -67,7 +67,7 @@ internal static class PowertoolsConfigurationsExtension
         return LoggingConstants.DefaultLoggerOutputCase;
     }
 
-    private static Dictionary<string, string> AwsLogLevelMapper = new()
+    private static readonly Dictionary<string, string> AwsLogLevelMapper = new()
     {
         { "TRACE", "TRACE" },
         { "DEBUG", "DEBUG" },

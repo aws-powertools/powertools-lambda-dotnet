@@ -1251,6 +1251,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             {
                 PropOne = "Value 1",
                 PropTwo = "Value 2",
+                PropThree = new
+                {
+                    PropFour = 1
+                },
                 Date = new DateOnly(2022, 1, 1)
             };
 
@@ -1259,7 +1263,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Assert
             systemWrapper.Received(1).LogLine(
                 Arg.Is<string>(s =>
-                    s.Contains("\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\",\"date\":\"2022-01-01\"}")
+                    s.Contains("\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\",\"propThree\":{\"propFour\":1},\"date\":\"2022-01-01\"}}")
                 )
             );
         }
