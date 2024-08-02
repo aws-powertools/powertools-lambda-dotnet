@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -21,6 +22,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
+using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -61,7 +63,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     The log level
     /// </summary>
     private readonly LogLevel? _logLevel;
-    
+
     /// <summary>
     ///     The logger output case
     /// </summary>
@@ -91,17 +93,17 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     The is context initialized
     /// </summary>
     private bool _isContextInitialized;
-    
+
     /// <summary>
     ///     Specify to clear Lambda Context on exit
     /// </summary>
     private bool _clearLambdaContext;
-    
+
     /// <summary>
     ///     The JsonSerializer options
     /// </summary>
     private static JsonSerializerOptions _jsonSerializerOptions;
-    
+
     /// <summary>
     ///     Get JsonSerializer options.
     /// </summary>
@@ -168,7 +170,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
                 Logger.LoggerProvider = new LoggerProvider(loggerConfig);
                 break;
             case LoggerProvider:
-                ((LoggerProvider) Logger.LoggerProvider).Configure(loggerConfig);
+                ((LoggerProvider)Logger.LoggerProvider).Configure(loggerConfig);
                 break;
         }
 
@@ -274,7 +276,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
             _systemWrapper.LogLine(
                 "Skipping Lambda Context injection because ILambdaContext context parameter not found.");
     }
-    
+
     /// <summary>
     ///     Builds JsonSerializer options.
     /// </summary>
@@ -290,6 +292,11 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         jsonOptions.Converters.Add(new ConstantClassConverter());
         jsonOptions.Converters.Add(new DateOnlyConverter());
         jsonOptions.Converters.Add(new TimeOnlyConverter());
+
+#if NET8_0_OR_GREATER
+        jsonOptions.TypeInfoResolver = LoggingSerializationContext.Default;
+#endif
+
         return jsonOptions;
     }
 
@@ -297,6 +304,9 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     Captures the correlation identifier.
     /// </summary>
     /// <param name="eventArg">The event argument.</param>
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode",
+        Justification = "Everything referenced in the loaded assembly is manually preserved, so it's safe")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "Everything is ok with serialization")]
     private void CaptureCorrelationId(object eventArg)
     {
         if (string.IsNullOrWhiteSpace(_correlationIdPath))
@@ -319,7 +329,14 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         try
         {
             var correlationId = string.Empty;
-            var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, JsonSerializerOptions));
+
+#if NET8_0_OR_GREATER
+            var jsonDoc =
+                JsonDocument.Parse(JsonSerializer.Serialize(eventArg, eventArg.GetType(), JsonSerializerOptions));
+#else
+        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, JsonSerializerOptions));
+#endif
+
             var element = jsonDoc.RootElement;
 
             for (var i = 0; i < correlationIdPaths.Length; i++)
