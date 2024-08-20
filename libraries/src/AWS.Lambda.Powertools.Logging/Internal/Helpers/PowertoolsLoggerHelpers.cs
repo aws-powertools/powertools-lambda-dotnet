@@ -17,7 +17,7 @@ using System.Linq;
 
 namespace AWS.Lambda.Powertools.Logging.Internal.Helpers;
 
-internal sealed class PowertoolsLoggerHelpers
+internal static class PowertoolsLoggerHelpers
 {
     internal static object ObjectToDictionary(object anonymousObject)
     {
