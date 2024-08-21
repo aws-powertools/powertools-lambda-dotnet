@@ -429,6 +429,69 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Assert.Single(segment.Subsegments);
             Assert.False(subSegment.IsMetadataAdded); // does not add metadata
         }
+        
+        [Fact]
+        public void OnSuccess_WhenTracerCaptureResponseEnvironmentVariableIsFalse_ButDecoratorCapturesResponse()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "false");
+            
+            // Act
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.DecoratedHandlerCaptureResponse();
+            var subSegment = segment.Subsegments[0];
+
+            // Assert
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("DecoratedHandlerCaptureResponse response", metadata.Keys.Cast<string>().First());
+            var handlerResponse = metadata.Values.Cast<string>().First();
+            Assert.Equal("Hello World", handlerResponse);
+
+            var decoratedMethodSegmentDisabled = subSegment.Subsegments[0];
+            Assert.False(decoratedMethodSegmentDisabled.IsMetadataAdded);
+            Assert.Equal("## DecoratedMethodCaptureDisabled", decoratedMethodSegmentDisabled.Name);
+            
+            var decoratedMethodSegmentEnabled = decoratedMethodSegmentDisabled.Subsegments[0];
+            Assert.True(decoratedMethodSegmentEnabled.IsMetadataAdded);
+            
+            var decoratedMethodSegmentEnabledMetadata = decoratedMethodSegmentEnabled.Metadata["POWERTOOLS"];
+            var decoratedMethodSegmentEnabledResponse = decoratedMethodSegmentEnabledMetadata.Values.Cast<string>().First();
+            Assert.Equal("DecoratedMethod Enabled", decoratedMethodSegmentEnabledResponse);
+            Assert.Equal("## DecoratedMethodCaptureEnabled", decoratedMethodSegmentEnabled.Name);
+        }
+        
+        [Fact]
+        public void OnSuccess_WhenTracerCaptureResponseEnvironmentVariableIsTrue_ButDecoratorCapturesResponseDisabled()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "true");
+            
+            // Act
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.DecoratedMethodCaptureDisabled();
+            var subSegment = segment.Subsegments[0];
+
+            // Assert
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.False(subSegment.IsMetadataAdded);
+
+            var decoratedMethodSegmentEnabled = subSegment.Subsegments[0];
+            var metadata = decoratedMethodSegmentEnabled.Metadata["POWERTOOLS"];
+            Assert.True(decoratedMethodSegmentEnabled.IsMetadataAdded);
+            var decoratedMethodSegmentEnabledResponse = metadata.Values.Cast<string>().First();
+            Assert.Equal("DecoratedMethod Enabled", decoratedMethodSegmentEnabledResponse);
+            Assert.Equal("## DecoratedMethodCaptureEnabled", decoratedMethodSegmentEnabled.Name);
+        }
 
         #endregion
 
