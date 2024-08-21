@@ -85,6 +85,10 @@ Not using .NET? No problem, we have you covered. Here are the other members of t
 
 Knowing which companies are using this library is important to help prioritize the project internally. If your company is using Powertools for AWS Lambda (.NET), you can request to have your name and logo added to the README file by raising a [Support Powertools for AWS Lambda (.NET) (become a reference)](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=customer-reference&template=support_powertools.yml&title=%5BSupport+Lambda+Powertools%5D%3A+%3Cyour+organization+name%3E) issue.
 
+The following companies, among others, use Powertools:
+
+* [Caylent](https://caylent.com/)
+
 ### Sharing your work
 
 Share what you did with Powertools for AWS Lambda (.NET) 💞💞. Blog post, workshops, presentation, sample apps and others. Check out what the community has already shared about Powertools for AWS Lambda (.NET) [here](https://docs.powertools.aws.dev/lambda/dotnet/we_made_this/).
