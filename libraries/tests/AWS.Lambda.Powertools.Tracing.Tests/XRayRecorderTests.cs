@@ -171,8 +171,10 @@ public class XRayRecorderTests
         tracing.EndSubsegment();
 
         // Assert
-        awsXray.Received(2).EndSubsegment();
+        awsXray.Received(1).BeginSubsegment("Error in Tracing utility - see Exceptions tab");
+        awsXray.Received(1).MarkError();
         awsXray.Received(1).AddException(exception);
+        awsXray.Received(2).EndSubsegment();
     }
 
     [Fact]

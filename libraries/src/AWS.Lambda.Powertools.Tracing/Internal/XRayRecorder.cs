@@ -113,25 +113,29 @@ internal class XRayRecorder : IXRayRecorder
         if (_isLambda)
             _awsxRayRecorder.AddMetadata(nameSpace, key, value);
     }
-
+    
     /// <summary>
     ///     Ends the subsegment.
     /// </summary>
     public void EndSubsegment()
     {
-        if (_isLambda)
+        if (!_isLambda) return;
+        try
         {
-            try
-            {
-                _awsxRayRecorder.EndSubsegment();
-            }
-            catch (Exception e)
-            {
-                _awsxRayRecorder.AddException(e);
-                _awsxRayRecorder.MarkFault();
-                _awsxRayRecorder.MarkError();
-                _awsxRayRecorder.EndSubsegment();
-            }
+            _awsxRayRecorder.EndSubsegment();
+        }
+        catch (Exception e)
+        {
+            // if it fails at this stage the data is lost
+            // so lets create a new subsegment with the error
+
+            Console.WriteLine("Error in Tracing utility - see Exceptions tab in Cloudwatch Traces");
+
+            _awsxRayRecorder.TraceContext.ClearEntity();
+            _awsxRayRecorder.BeginSubsegment("Error in Tracing utility - see Exceptions tab");
+            _awsxRayRecorder.AddException(e);
+            _awsxRayRecorder.MarkError();
+            _awsxRayRecorder.EndSubsegment();
         }
     }
 
