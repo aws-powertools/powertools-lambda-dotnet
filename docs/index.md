@@ -163,6 +163,9 @@ Knowing which companies are using this library is important to help prioritize t
 [**Caylent**](https://caylent.com/){target="_blank" rel="nofollow"}
 { .card }
 
+[**Pushpay**](https://pushpay.com/){target="_blank" rel="nofollow"}
+{ .card }
+
 ## Tenets
 
 These are our core principles to guide our decision making.
