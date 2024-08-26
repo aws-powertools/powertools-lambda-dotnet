@@ -126,7 +126,7 @@ public class XRayRecorderTests
         // Assert
         awsXray.Received(1).AddMetadata("nameSpace", "key", "value");
     }
-
+    
     [Fact]
     public void Tracing_End_Subsegment()
     {
@@ -143,6 +143,38 @@ public class XRayRecorderTests
 
         // Assert
         awsXray.Received(1).EndSubsegment();
+    }
+    
+    [Fact]
+    public void Tracing_End_Subsegment_Failed_Should_Cath_And_AddException()
+    {
+        // Arrange
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        conf.IsLambdaEnvironment.Returns(true);
+
+        var awsXray = Substitute.For<IAWSXRayRecorder>();
+        var fail = true;
+        var exception = new Exception("Oops, something went wrong");
+        
+        awsXray.When(x=> x.EndSubsegment()).Do(x => 
+        {
+            if (fail)
+            {
+                fail = false;
+                throw exception;
+            }
+        });
+        
+        // Act
+        var tracing = new XRayRecorder(awsXray, conf);
+
+        tracing.EndSubsegment();
+
+        // Assert
+        awsXray.Received(1).BeginSubsegment("Error in Tracing utility - see Exceptions tab");
+        awsXray.Received(1).MarkError();
+        awsXray.Received(1).AddException(exception);
+        awsXray.Received(2).EndSubsegment();
     }
 
     [Fact]
