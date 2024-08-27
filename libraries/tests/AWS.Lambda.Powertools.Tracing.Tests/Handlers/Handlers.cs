@@ -83,4 +83,24 @@ public class HandlerFunctions
             throw new Exception("Failed");
         return new[] { "A", "B" };
     }
+    
+    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+    public string DecoratedHandlerCaptureResponse()
+    {
+        DecoratedMethodCaptureDisabled();
+        return "Hello World";
+    }
+
+    [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
+    public string DecoratedMethodCaptureDisabled()
+    {
+        DecoratedMethodCaptureEnabled();
+        return "DecoratedMethod Disabled";
+    }
+    
+    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+    private string DecoratedMethodCaptureEnabled()
+    {
+        return "DecoratedMethod Enabled";
+    }
 }

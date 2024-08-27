@@ -11,13 +11,13 @@
     <PackageVersion Include="AWSSDK.AppConfig" Version="3.7.301" />
     <PackageVersion Include="AWSSDK.AppConfigData" Version="3.7.301.15" />
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="3.7.301.18" />
-    <PackageVersion Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.12.0" />
+    <PackageVersion Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.13.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageVersion Include="AWSSDK.SecretsManager" Version="3.7.302.29" />
     <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="3.7.303.2" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageVersion Include="AWSSDK.XRay" Version="3.7.300.54" />
-    <PackageVersion Include="AWSXRayRecorder.Core" Version="2.14.0" />
+    <PackageVersion Include="AWSSDK.XRay" Version="3.7.400.8" />
+    <PackageVersion Include="AWSXRayRecorder.Core" Version="2.15.0" />
     <PackageVersion Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.0" />
     <PackageVersion Include="Amazon.Lambda.KinesisEvents" Version="2.2.0" />
     <PackageVersion Include="Amazon.Lambda.SQSEvents" Version="2.2.0" />

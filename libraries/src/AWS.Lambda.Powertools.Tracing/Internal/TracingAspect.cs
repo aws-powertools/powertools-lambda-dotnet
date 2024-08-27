@@ -15,7 +15,6 @@
 
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using AspectInjector.Broker;
@@ -39,7 +38,7 @@ public class TracingAspect
     ///     X-Ray Recorder
     /// </summary>
     private readonly IXRayRecorder _xRayRecorder;
-    
+
     /// <summary>
     ///     If true, then is cold start
     /// </summary>
@@ -49,17 +48,17 @@ public class TracingAspect
     ///     If true, capture annotations
     /// </summary>
     private static bool _captureAnnotations = true;
-    
+
     /// <summary>
     ///     If true, annotations have been captured
     /// </summary>
     private bool _isAnnotationsCaptured;
-    
+
     /// <summary>
     ///     Tracing namespace
     /// </summary>
     private string _namespace;
-    
+
     /// <summary>
     ///     The capture mode
     /// </summary>
@@ -73,18 +72,14 @@ public class TracingAspect
         _xRayRecorder = XRayRecorder.Instance;
         _powertoolsConfigurations = PowertoolsConfigurations.Instance;
     }
-    
+
     /// <summary>
     /// the code is executed instead of the target method.
     /// The call to original method is wrapped around the following code
     /// the original code is called with var result = target(args);
     /// </summary>
-    /// <param name="instance"></param>
     /// <param name="name"></param>
     /// <param name="args"></param>
-    /// <param name="hostType"></param>
-    /// <param name="method"></param>
-    /// <param name="returnType"></param>
     /// <param name="target"></param>
     /// <param name="triggers"></param>
     /// <returns></returns>
@@ -97,38 +92,39 @@ public class TracingAspect
     {
         // Before running Function
 
+        var trigger = triggers.OfType<TracingAttribute>().First();
         try
         {
-            var trigger = triggers.OfType<TracingAttribute>().First();
-        
-            if(TracingDisabled())
+            if (TracingDisabled())
                 return target(args);
 
             _namespace = trigger.Namespace;
-            _captureMode = trigger.CaptureMode;
-        
+
             var segmentName = !string.IsNullOrWhiteSpace(trigger.SegmentName) ? trigger.SegmentName : $"## {name}";
             var nameSpace = GetNamespace();
 
             _xRayRecorder.BeginSubsegment(segmentName);
             _xRayRecorder.SetNamespace(nameSpace);
 
-            if (_captureAnnotations)    
+            if (_captureAnnotations)
             {
                 _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
-            
+
                 _captureAnnotations = false;
                 _isAnnotationsCaptured = true;
 
                 if (_powertoolsConfigurations.IsServiceDefined)
                     _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
             }
-        
+
             _isColdStart = false;
-        
+
             // return of the handler
             var result = target(args);
-        
+
+            // must get capture after all subsegments run
+            _captureMode = trigger.CaptureMode;
+
             if (CaptureResponse())
             {
                 _xRayRecorder.AddMetadata
@@ -138,12 +134,13 @@ public class TracingAspect
                     result
                 );
             }
-        
+
             // after 
             return result;
         }
         catch (Exception e)
         {
+            _captureMode = trigger.CaptureMode;
             HandleException(e, name);
             throw;
         }
@@ -153,8 +150,9 @@ public class TracingAspect
     /// the code is injected after the method ends.
     /// </summary>
     [Advice(Kind.After)]
-    public void OnExit() {
-        if(TracingDisabled())
+    public void OnExit()
+    {
+        if (TracingDisabled())
             return;
 
         if (_isAnnotationsCaptured)
@@ -162,7 +160,7 @@ public class TracingAspect
 
         _xRayRecorder.EndSubsegment();
     }
-    
+
     /// <summary>
     /// Code that handles when exceptions occur in the client method
     /// </summary>
@@ -173,7 +171,7 @@ public class TracingAspect
         if (CaptureError())
         {
             var nameSpace = GetNamespace();
-            
+
             var sb = new StringBuilder();
             sb.AppendLine($"Exception type: {exception.GetType()}");
             sb.AppendLine($"Exception message: {exception.Message}");
@@ -187,7 +185,7 @@ public class TracingAspect
                 sb.AppendLine($"Stack trace: {exception.InnerException.StackTrace}");
                 sb.AppendLine("---END Inner Exception");
             }
-            
+
             _xRayRecorder.AddMetadata
             (
                 nameSpace,
@@ -209,7 +207,7 @@ public class TracingAspect
     {
         return !string.IsNullOrWhiteSpace(_namespace) ? _namespace : _powertoolsConfigurations.Service;
     }
-    
+
     /// <summary>
     /// Method that checks if tracing is disabled
     /// </summary>
@@ -230,7 +228,7 @@ public class TracingAspect
 
         return false;
     }
-    
+
     /// <summary>
     ///     Captures the response.
     /// </summary>
@@ -250,16 +248,16 @@ public class TracingAspect
                 return false;
         }
     }
-    
+
     /// <summary>
     ///     Captures the error.
     /// </summary>
     /// <returns><c>true</c> if tracing should capture errors, <c>false</c> otherwise.</returns>
     private bool CaptureError()
     {
-        if(TracingDisabled())
+        if (TracingDisabled())
             return false;
-        
+
         switch (_captureMode)
         {
             case TracingCaptureMode.EnvironmentVariable:
@@ -273,7 +271,7 @@ public class TracingAspect
                 return false;
         }
     }
-    
+
     /// <summary>
     ///     Resets static variables for test.
     /// </summary>
