@@ -23,7 +23,7 @@ public class RecordHandlerResult
     /// <summary>
     /// Returns an empty <see cref="RecordHandlerResult"/> value.
     /// </summary>
-    public static readonly RecordHandlerResult None = new();
+    public static RecordHandlerResult None { get; } = null!;
 
     /// <summary>
     /// Convenience method for the creation of a <see cref="RecordHandlerResult"/>.
