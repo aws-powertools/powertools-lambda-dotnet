@@ -166,6 +166,8 @@ Knowing which companies are using this library is important to help prioritize t
 [**Pushpay**](https://pushpay.com/){target="_blank" rel="nofollow"}
 { .card }
 
+</div>
+
 ## Tenets
 
 These are our core principles to guide our decision making.
