@@ -1040,7 +1040,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                            error.Message + "\"")
             ));
             systemWrapper.Received(1).LogLine(Arg.Is<string>(s =>
-                s.Contains("\"exception\":{\"type\":\"System.InvalidOperationException\",\"message\":\"TestError\",\"source\":\"AWS.Lambda.Powertools.Logging.Tests\",\"stack_trace\":\"   at AWS.Lambda.Powertools.Logging.Tests.PowertoolsLoggerTest.Log_WhenException_LogsExceptionDetails() in /Users/henrigra/work/aws-lambda-powertools-dotnet/libraries/tests/AWS.Lambda.Powertools.Logging.Tests/PowertoolsLoggerTest.cs:line 1030\"}}")
+                s.Contains("\"exception\":{\"type\":\"System.InvalidOperationException\",\"message\":\"TestError\",\"source\":\"AWS.Lambda.Powertools.Logging.Tests\",\"stack_trace\":\"   at AWS.Lambda.Powertools.Logging.Tests.PowertoolsLoggerTest.Log_WhenException_LogsExceptionDetails()")
             ));
         }
 
