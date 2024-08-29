@@ -58,15 +58,13 @@ internal class ExceptionConverter : JsonConverter<Exception>
     public override void Write(Utf8JsonWriter writer, Exception value, JsonSerializerOptions options)
     {
         var exceptionType = value.GetType();
-        var properties = exceptionType.GetProperties()
-            .Where(prop => prop.Name != nameof(Exception.TargetSite))
-            .Select(prop => new { prop.Name, Value = prop.GetValue(value) });
+        var properties = ExceptionPropertyExtractor.ExtractProperties(value);
 
         if (options.DefaultIgnoreCondition == JsonIgnoreCondition.WhenWritingNull)
             properties = properties.Where(prop => prop.Value != null);
 
         var props = properties.ToArray();
-        if (!props.Any())
+        if (props.Length == 0)
             return;
 
         writer.WriteStartObject();
@@ -77,16 +75,16 @@ internal class ExceptionConverter : JsonConverter<Exception>
             switch (prop.Value)
             {
                 case IntPtr intPtr:
-                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Name, options), intPtr.ToInt64());
+                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Key, options), intPtr.ToInt64());
                     break;
                 case UIntPtr uIntPtr:
-                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Name, options), uIntPtr.ToUInt64());
+                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Key, options), uIntPtr.ToUInt64());
                     break;
                 case Type propType:
-                    writer.WriteString(ApplyPropertyNamingPolicy(prop.Name, options), propType.FullName);
+                    writer.WriteString(ApplyPropertyNamingPolicy(prop.Key, options), propType.FullName);
                     break;
                 case string propString:
-                    writer.WriteString(ApplyPropertyNamingPolicy(prop.Name, options), propString);
+                    writer.WriteString(ApplyPropertyNamingPolicy(prop.Key, options), propString);
                     break;
             }
         }

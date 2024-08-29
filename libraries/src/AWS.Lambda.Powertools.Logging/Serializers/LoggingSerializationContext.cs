@@ -27,7 +27,7 @@ namespace AWS.Lambda.Powertools.Logging.Serializers;
 /// <summary>
 /// Custom JSON serializer context for AWS.Lambda.Powertools.Logging
 /// </summary>
-// [JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(string))]
@@ -45,12 +45,16 @@ namespace AWS.Lambda.Powertools.Logging.Serializers;
 [JsonSerializable(typeof(MemoryStream))]
 [JsonSerializable(typeof(APIGatewayProxyRequest))]
 [JsonSerializable(typeof(APIGatewayProxyResponse))]
-[JsonSerializable(typeof(APIGatewayProxyRequest.ProxyRequestContext))]
+[JsonSerializable(typeof(APIGatewayProxyRequest.ProxyRequestContext), TypeInfoPropertyName = "APIGatewayProxyRequestContext")]
+[JsonSerializable(typeof(APIGatewayProxyRequest.ProxyRequestClientCert), TypeInfoPropertyName = "APIGatewayProxyRequestProxyRequestClientCert")]
+[JsonSerializable(typeof(APIGatewayProxyRequest.ClientCertValidity), TypeInfoPropertyName = "APIGatewayProxyRequestClientCertValidity")]
 [JsonSerializable(typeof(ApplicationLoadBalancerRequest))]
 [JsonSerializable(typeof(LogEntry))]
 [JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
 [JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
-[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest.ProxyRequestContext))]
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest.ProxyRequestContext), TypeInfoPropertyName = "APIGatewayHttpApiV2ProxyRequestContext")]
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest.ProxyRequestClientCert), TypeInfoPropertyName = "APIGatewayHttpApiV2ProxyRequestProxyRequestClientCert")]
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest.ClientCertValidity), TypeInfoPropertyName = "APIGatewayHttpApiV2ProxyRequestClientCertValidity")]
 internal partial class LoggingSerializationContext : JsonSerializerContext
 {
     
