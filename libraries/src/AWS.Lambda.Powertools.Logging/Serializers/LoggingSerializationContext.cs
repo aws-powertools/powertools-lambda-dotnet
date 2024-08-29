@@ -44,8 +44,13 @@ namespace AWS.Lambda.Powertools.Logging.Serializers;
 [JsonSerializable(typeof(Byte[]))]
 [JsonSerializable(typeof(MemoryStream))]
 [JsonSerializable(typeof(APIGatewayProxyRequest))]
+[JsonSerializable(typeof(APIGatewayProxyResponse))]
+[JsonSerializable(typeof(APIGatewayProxyRequest.ProxyRequestContext))]
 [JsonSerializable(typeof(ApplicationLoadBalancerRequest))]
 [JsonSerializable(typeof(LogEntry))]
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest.ProxyRequestContext))]
 internal partial class LoggingSerializationContext : JsonSerializerContext
 {
     

@@ -19,10 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AWS.Lambda.Powertools.Common;
-using AWS.Lambda.Powertools.Logging.Internal.Converters;
-using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -108,8 +105,8 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     Get JsonSerializer options.
     /// </summary>
     /// <value>The current configuration.</value>
-    private static JsonSerializerOptions JsonSerializerOptions =>
-        _jsonSerializerOptions ??= BuildJsonSerializerOptions();
+    private JsonSerializerOptions JsonSerializerOptions =>
+        _jsonSerializerOptions ??= _powertoolsConfigurations.BuildJsonSerializerOptions(_loggerOutputCase);
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LoggingAspectHandler" /> class.
@@ -230,7 +227,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         if (!_isContextInitialized)
             return;
         if (_clearLambdaContext)
-            PowertoolsLambdaContext.Clear();
+            LoggingLambdaContext.Clear();
         if (_clearState)
             Logger.RemoveAllKeys();
         _initializeContext = true;
@@ -271,33 +268,10 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// </param>
     private void CaptureLambdaContext(AspectEventArgs eventArgs)
     {
-        _clearLambdaContext = PowertoolsLambdaContext.Extract(eventArgs);
-        if (PowertoolsLambdaContext.Instance is null && IsDebug())
+        _clearLambdaContext = LoggingLambdaContext.Extract(eventArgs);
+        if (LoggingLambdaContext.Instance is null && IsDebug())
             _systemWrapper.LogLine(
                 "Skipping Lambda Context injection because ILambdaContext context parameter not found.");
-    }
-
-    /// <summary>
-    ///     Builds JsonSerializer options.
-    /// </summary>
-    private static JsonSerializerOptions BuildJsonSerializerOptions()
-    {
-        var jsonOptions = new JsonSerializerOptions
-        {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        };
-        jsonOptions.Converters.Add(new ByteArrayConverter());
-        jsonOptions.Converters.Add(new ExceptionConverter());
-        jsonOptions.Converters.Add(new MemoryStreamConverter());
-        jsonOptions.Converters.Add(new ConstantClassConverter());
-        jsonOptions.Converters.Add(new DateOnlyConverter());
-        jsonOptions.Converters.Add(new TimeOnlyConverter());
-
-#if NET8_0_OR_GREATER
-        jsonOptions.TypeInfoResolver = LoggingSerializationContext.Default;
-#endif
-
-        return jsonOptions;
     }
 
     /// <summary>
@@ -306,7 +280,9 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <param name="eventArg">The event argument.</param>
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode",
         Justification = "Everything referenced in the loaded assembly is manually preserved, so it's safe")]
-    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "Everything is ok with serialization")]
+    [UnconditionalSuppressMessage("AOT",
+        "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+        Justification = "Everything is ok with serialization")]
     private void CaptureCorrelationId(object eventArg)
     {
         if (string.IsNullOrWhiteSpace(_correlationIdPath))
@@ -336,12 +312,12 @@ internal class LoggingAspectHandler : IMethodAspectHandler
 #else
         var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, JsonSerializerOptions));
 #endif
-
             var element = jsonDoc.RootElement;
 
             for (var i = 0; i < correlationIdPaths.Length; i++)
             {
-                if (!element.TryGetProperty(correlationIdPaths[i], out var childElement))
+                var pathWithOutputCase = ConvertToOutputCase(correlationIdPaths[i]);
+                if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
                     break;
 
                 element = childElement;
@@ -358,6 +334,32 @@ internal class LoggingAspectHandler : IMethodAspectHandler
                 _systemWrapper.LogLine(
                     $"Skipping CorrelationId capture because of error caused while parsing the event object {e.Message}.");
         }
+    }
+
+    private string ConvertToOutputCase(string correlationIdPath)
+    {
+        return _loggerOutputCase switch
+        {
+            LoggerOutputCase.CamelCase => ToCamelCase(correlationIdPath),
+            LoggerOutputCase.PascalCase => ToPascalCase(correlationIdPath),
+            _ => ToSnakeCase(correlationIdPath), // default snake_case
+        };
+    }
+
+    private string ToSnakeCase(string correlationIdPath)
+    {
+        return string.Concat(correlationIdPath.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x : x.ToString()))
+            .ToLowerInvariant();
+    }
+
+    private string ToPascalCase(string correlationIdPath)
+    {
+        return char.ToUpperInvariant(correlationIdPath[0]) + correlationIdPath.Substring(1);
+    }
+
+    private string ToCamelCase(string correlationIdPath)
+    {
+        return char.ToLowerInvariant(correlationIdPath[0]) + correlationIdPath.Substring(1);
     }
 
     /// <summary>
@@ -407,7 +409,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     {
         _isColdStart = true;
         _initializeContext = true;
-        PowertoolsLambdaContext.Clear();
+        LoggingLambdaContext.Clear();
         Logger.LoggerProvider = null;
         Logger.RemoveAllKeys();
     }

@@ -118,7 +118,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     /// <value>The current configuration.</value>
     private JsonSerializerOptions JsonSerializerOptions =>
-        _jsonSerializerOptions ??= BuildJsonSerializerOptions();
+        _jsonSerializerOptions ??= _powertoolsConfigurations.BuildJsonSerializerOptions(CurrentConfig.LoggerOutputCase);
 
     internal PowertoolsLoggerScope CurrentScope { get; private set; }
 
@@ -259,13 +259,13 @@ internal sealed class PowertoolsLogger : ILogger
             logEntry.TryAdd(key, value);
 
         // Add Lambda Context Keys
-        if (PowertoolsLambdaContext.Instance is not null)
+        if (LoggingLambdaContext.Instance is not null)
         {
-            logEntry.TryAdd(LoggingConstants.KeyFunctionName, PowertoolsLambdaContext.Instance.FunctionName);
-            logEntry.TryAdd(LoggingConstants.KeyFunctionVersion, PowertoolsLambdaContext.Instance.FunctionVersion);
-            logEntry.TryAdd(LoggingConstants.KeyFunctionMemorySize, PowertoolsLambdaContext.Instance.MemoryLimitInMB);
-            logEntry.TryAdd(LoggingConstants.KeyFunctionArn, PowertoolsLambdaContext.Instance.InvokedFunctionArn);
-            logEntry.TryAdd(LoggingConstants.KeyFunctionRequestId, PowertoolsLambdaContext.Instance.AwsRequestId);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionName, LoggingLambdaContext.Instance.FunctionName);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionVersion, LoggingLambdaContext.Instance.FunctionVersion);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionMemorySize, LoggingLambdaContext.Instance.MemoryLimitInMB);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionArn, LoggingLambdaContext.Instance.InvokedFunctionArn);
+            logEntry.TryAdd(LoggingConstants.KeyFunctionRequestId, LoggingLambdaContext.Instance.AwsRequestId);
         }
 
         // Add Extra Fields
@@ -360,15 +360,15 @@ internal sealed class PowertoolsLogger : ILogger
             logEntry.ExtraKeys = extraKeys;
 
         // Add Lambda Context Keys
-        if (PowertoolsLambdaContext.Instance is not null)
+        if (LoggingLambdaContext.Instance is not null)
         {
             logEntry.LambdaContext = new LogEntryLambdaContext
             {
-                FunctionName = PowertoolsLambdaContext.Instance.FunctionName,
-                FunctionVersion = PowertoolsLambdaContext.Instance.FunctionVersion,
-                MemoryLimitInMB = PowertoolsLambdaContext.Instance.MemoryLimitInMB,
-                InvokedFunctionArn = PowertoolsLambdaContext.Instance.InvokedFunctionArn,
-                AwsRequestId = PowertoolsLambdaContext.Instance.AwsRequestId,
+                FunctionName = LoggingLambdaContext.Instance.FunctionName,
+                FunctionVersion = LoggingLambdaContext.Instance.FunctionVersion,
+                MemoryLimitInMB = LoggingLambdaContext.Instance.MemoryLimitInMB,
+                InvokedFunctionArn = LoggingLambdaContext.Instance.InvokedFunctionArn,
+                AwsRequestId = LoggingLambdaContext.Instance.AwsRequestId,
             };
         }
 
@@ -487,43 +487,5 @@ internal sealed class PowertoolsLogger : ILogger
         message = stateKeys.First(k => k.Key != "{OriginalFormat}").Value;
 
         return true;
-    }
-
-    /// <summary>
-    ///     Builds JsonSerializer options.
-    /// </summary>
-    private JsonSerializerOptions BuildJsonSerializerOptions()
-    {
-        var jsonOptions = CurrentConfig.LoggerOutputCase switch
-        {
-            LoggerOutputCase.CamelCase => new JsonSerializerOptions(JsonSerializerDefaults.Web)
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
-            },
-            LoggerOutputCase.PascalCase => new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = PascalCaseNamingPolicy.Instance,
-                DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance
-            },
-            _ => new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance,
-                DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance
-            }
-        };
-        jsonOptions.Converters.Add(new ByteArrayConverter());
-        jsonOptions.Converters.Add(new ExceptionConverter());
-        jsonOptions.Converters.Add(new MemoryStreamConverter());
-        jsonOptions.Converters.Add(new ConstantClassConverter());
-        jsonOptions.Converters.Add(new DateOnlyConverter());
-        jsonOptions.Converters.Add(new TimeOnlyConverter());
-
-        jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-#if NET8_0_OR_GREATER
-        jsonOptions.TypeInfoResolver = LoggingSerializationContext.Default;
-#endif
-
-        return jsonOptions;
     }
 }

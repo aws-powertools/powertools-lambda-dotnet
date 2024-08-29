@@ -20,6 +20,7 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Tests.Utilities;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
@@ -236,7 +237,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Information;
 
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            var configurations = new PowertoolsConfigurations(new SystemWrapperMock(new PowertoolsEnvironment()));
             var systemWrapper = Substitute.For<ISystemWrapper>();
 
             var eventArgs = new AspectEventArgs

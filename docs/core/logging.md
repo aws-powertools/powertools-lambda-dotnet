@@ -166,6 +166,10 @@ When debugging in non-production environments, you can instruct Logger to log th
 
 You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}.
 
+!!! Attention
+    The JSON Pointer expression is `case sensitive`. In the bellow example `/headers/my_request_id_header` would work but `/Headers/my_request_id_header` would not find the element.
+
+
 === "Function.cs"
 
     ```c# hl_lines="6"

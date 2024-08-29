@@ -16,14 +16,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReturnsExtensions;
 using Xunit;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace AWS.Lambda.Powertools.Logging.Tests
 {
@@ -57,7 +60,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             };
             Logger.AppendKeys(globalExtraKeys);
 
-            var lambdaContext = new LogEntryLambdaContext
+            var lambdaContext = new TestLambdaContext
             {
                 FunctionName = Guid.NewGuid().ToString(),
                 FunctionVersion = Guid.NewGuid().ToString(),
@@ -65,21 +68,25 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 AwsRequestId = Guid.NewGuid().ToString(),
                 MemoryLimitInMB = (new Random()).Next()
             };
+            
+            var args = Substitute.For<AspectEventArgs>();
+            var method = Substitute.For<MethodInfo>();
+            var parameter = Substitute.For<ParameterInfo>();
+         
+            // Setup parameter
+            parameter.ParameterType.Returns(typeof(ILambdaContext));
 
-            var eventArgs = new AspectEventArgs
-            {
-                Name = Guid.NewGuid().ToString(),
-                Args = new object[]
-                {
-                    new
-                    {
-                        Source = "Test"
-                    },
-                    lambdaContext
-                }
-            };
-            PowertoolsLambdaContext.Extract(eventArgs);
+            // Setup method
+            method.GetParameters().Returns(new[] { parameter });
 
+            // Setup args
+            args.Method = method;
+            args.Args = new object[] { lambdaContext }; 
+            
+            // Act
+            
+            LoggingLambdaContext.Extract(args);
+            
             var logFormatter = Substitute.For<ILogFormatter>();
             var formattedLogEntry = new
             {
@@ -161,7 +168,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             //Clean up
             Logger.UseDefaultFormatter();
             Logger.RemoveAllKeys();
-            PowertoolsLambdaContext.Clear();
+            LoggingLambdaContext.Clear();
             LoggingAspectHandler.ResetForTest();
         }
     }
