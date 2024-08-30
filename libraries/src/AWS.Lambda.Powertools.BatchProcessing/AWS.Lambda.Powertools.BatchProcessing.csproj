@@ -12,6 +12,9 @@
         <PackageReference Include="Amazon.Lambda.DynamoDBEvents" />
         <PackageReference Include="Amazon.Lambda.KinesisEvents" />
         <PackageReference Include="Amazon.Lambda.SQSEvents" />
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj">
+            <Private>false</Private>
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </ProjectReference>
     </ItemGroup>
 </Project>

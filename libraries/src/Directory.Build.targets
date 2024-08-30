@@ -1,15 +1,19 @@
 <Project>
-    
-    <ItemGroup Condition="'$(MSBuildProjectName)' != 'AWS.Lambda.Powertools.Common' AND '$(MSBuildProjectName)' != 'AWS.Lambda.Powertools.JMESPath' AND '$(Configuration)'=='Release'">
-        
-        <ProjectReference Remove="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" />
-
+    <ItemGroup>
         <PackageReference Include="AspectInjector" />
-
-        <Compile Include="..\AWS.Lambda.Powertools.Common\**\*.cs">
-            <Link>Common\%(RecursiveDir)%(Filename)%(Extension)</Link>
-        </Compile>
-        <Compile Remove="..\AWS.Lambda.Powertools.Common\obj\**" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+    </PropertyGroup>
+
+    <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+        <ItemGroup>
+            <_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))"/>
+        </ItemGroup>
+
+        <ItemGroup>
+            <BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)"/>
+        </ItemGroup>
+    </Target>
 </Project>
