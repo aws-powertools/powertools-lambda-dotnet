@@ -19,7 +19,10 @@
         <PackageReference Include="AWSSDK.SecretsManager" />
         <PackageReference Include="AWSSDK.SimpleSystemsManagement" />
         <PackageReference Include="Microsoft.Extensions.Configuration" />
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" PrivateAssets="All" />
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj">
+            <Private>false</Private>
+            <ExcludeAssets>runtime</ExcludeAssets>
+        </ProjectReference>
     </ItemGroup>
 
 </Project>
