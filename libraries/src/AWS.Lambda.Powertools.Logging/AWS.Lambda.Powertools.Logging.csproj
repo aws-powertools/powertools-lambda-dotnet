@@ -6,16 +6,14 @@
         <Description>Powertools for AWS Lambda (.NET) - Logging package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Logging</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Logging</RootNamespace>
+        <IncludeCommonFiles>true</IncludeCommonFiles>
     </PropertyGroup>
 
     <ItemGroup>
         <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
         <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
-        <PackageReference Include="Microsoft.Extensions.Logging" />
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj">
-            <Private>false</Private>
-            <ExcludeAssets>runtime</ExcludeAssets>
-        </ProjectReference>
+        <PackageReference Include="Microsoft.Extensions.Logging"/>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
-
+    
 </Project>

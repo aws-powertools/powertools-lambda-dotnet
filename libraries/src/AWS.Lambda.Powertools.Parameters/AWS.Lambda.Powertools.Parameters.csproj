@@ -8,6 +8,7 @@
         <Description>Powertools for AWS Lambda (.NET) - Parameters package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Parameters</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Parameters</RootNamespace>
+        <IncludeCommonFiles>true</IncludeCommonFiles>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,10 +20,7 @@
         <PackageReference Include="AWSSDK.SecretsManager" />
         <PackageReference Include="AWSSDK.SimpleSystemsManagement" />
         <PackageReference Include="Microsoft.Extensions.Configuration" />
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj">
-            <Private>false</Private>
-            <ExcludeAssets>runtime</ExcludeAssets>
-        </ProjectReference>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
 
 </Project>

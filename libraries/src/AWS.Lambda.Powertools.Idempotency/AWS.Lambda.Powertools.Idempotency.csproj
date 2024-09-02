@@ -6,6 +6,7 @@
         <Description>Powertools for AWS Lambda (.NET) - Idempotency package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Idempotency</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Idempotency</RootNamespace>
+        <IncludeCommonFiles>true</IncludeCommonFiles>
     </PropertyGroup>
 
 
@@ -14,13 +15,19 @@
         <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
         <PackageReference Include="Amazon.Lambda.Core"/>
         <PackageReference Include="AWSSDK.DynamoDBv2"/>
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj">
-            <Private>false</Private>
-            <ExcludeAssets>runtime</ExcludeAssets>
-        </ProjectReference>
-        <ProjectReference Include="..\AWS.Lambda.Powertools.JMESPath\AWS.Lambda.Powertools.JMESPath.csproj">
-            <Private>false</Private>
-            <ExcludeAssets>runtime</ExcludeAssets>
-        </ProjectReference>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.JMESPath\AWS.Lambda.Powertools.JMESPath.csproj" Condition="'$(Configuration)'=='Debug'"/>
+    </ItemGroup>
+
+    <!--    Include JMESPath files in projects that reference AWS.Lambda.Powertools.JMESPath -->
+    <!--    This is needed because of the way nuget expects dependencies to be nuget packages as well which is not what we want -->
+    <ItemGroup Condition="'$(Configuration)'=='Release'">
+
+        <ProjectReference Remove="..\AWS.Lambda.Powertools.JMESPath\AWS.Lambda.Powertools.JMESPath.csproj"/>
+
+        <Compile Include="..\AWS.Lambda.Powertools.JMESPath\**\*.cs">
+            <Link>JMESPath\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        </Compile>
+        <Compile Remove="..\AWS.Lambda.Powertools.JMESPath\obj\**"/>
     </ItemGroup>
 </Project>
