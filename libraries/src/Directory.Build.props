@@ -26,11 +26,23 @@
         <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
         <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
-    
+
     <ItemGroup>
-        <None Include="README.md" Pack="true" PackagePath="\" />
-        <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath="" />
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="../../AWSLogo128x128.png" Pack="true" Visible="false" PackagePath=""/>
     </ItemGroup>
-    
-    
+
+    <!--    Include Common files in projects that reference AWS.Lambda.Powertools.Common -->
+    <!--    This is needed because of the way nuget expects dependencies to be nuget packages as well which is not what we want -->
+    <ItemGroup Condition="'$(IncludeCommonFiles)' == 'true' AND '$(Configuration)'=='Release'">
+
+        <ProjectReference Remove="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj"/>
+        <PackageReference Include="AspectInjector"/>
+        <Compile Include="..\AWS.Lambda.Powertools.Common\**\*.cs">
+            <Link>Common\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        </Compile>
+        <Compile Remove="..\AWS.Lambda.Powertools.Common\obj\**"/>
+    </ItemGroup>
+
+
 </Project>
