@@ -7,8 +7,6 @@
         <AssemblyName>AWS.Lambda.Powertools.Idempotency</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Idempotency</RootNamespace>
         <IncludeCommonFiles>true</IncludeCommonFiles>
-        
-        <Version>0.0.29</Version>
     </PropertyGroup>
 
 
