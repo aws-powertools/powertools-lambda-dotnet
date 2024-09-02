@@ -6,6 +6,8 @@
         <Description>Powertools for AWS Lambda (.NET) - Tracing package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Tracing</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Tracing</RootNamespace>
+
+        <IncludeCommonFiles>true</IncludeCommonFiles>
     </PropertyGroup>
    
     <ItemGroup>
@@ -14,10 +16,7 @@
         <PackageReference Include="AWSSDK.XRay" />
         <PackageReference Include="AWSXRayRecorder.Core" />
         <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" />
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj">
-            <Private>false</Private>
-            <ExcludeAssets>runtime</ExcludeAssets>
-        </ProjectReference>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
 
 
