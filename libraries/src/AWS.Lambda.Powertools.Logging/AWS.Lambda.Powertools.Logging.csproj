@@ -6,6 +6,7 @@
         <Description>Powertools for AWS Lambda (.NET) - Logging package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Logging</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Logging</RootNamespace>
+        <IncludeCommonFiles>true</IncludeCommonFiles>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,10 +16,7 @@
         <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" />
         <PackageReference Include="Amazon.Lambda.Core" />
         <PackageReference Include="Microsoft.Extensions.Logging" />
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj">
-            <Private>false</Private>
-            <ExcludeAssets>runtime</ExcludeAssets>
-        </ProjectReference>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
 
 </Project>
