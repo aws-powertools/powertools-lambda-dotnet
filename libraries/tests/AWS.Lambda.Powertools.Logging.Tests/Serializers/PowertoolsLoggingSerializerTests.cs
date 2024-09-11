@@ -1,8 +1,24 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
 using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
@@ -110,6 +126,27 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         Assert.Contains("\"level\":\"Error\"", json);
     }
 
+#if NET8_0_OR_GREATER
+    [Fact]
+    public void Serialize_UnknownType_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var unknownObject = new UnknownType();
+
+        // Act & Assert
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            PowertoolsLoggingSerializer.Serialize(unknownObject, typeof(UnknownType)));
+
+        Assert.Contains("is not known to the serializer", exception.Message);
+        Assert.Contains(typeof(UnknownType).ToString(), exception.Message);
+    }
+
+    private class UnknownType
+    {
+        public string SomeProperty { get; set; }
+    }
+#endif
+
     private string SerializeTestObject(LoggerOutputCase? outputCase)
     {
         if (outputCase.HasValue)
@@ -123,6 +160,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
 
     public void Dispose()
     {
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
 #if NET8_0_OR_GREATER
         PowertoolsLoggingSerializer.ClearContext();
 #endif

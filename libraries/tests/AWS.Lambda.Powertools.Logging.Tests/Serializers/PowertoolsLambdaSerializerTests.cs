@@ -1,3 +1,17 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 
 #if NET8_0_OR_GREATER
 
@@ -7,6 +21,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AWS.Lambda.Powertools.Logging.Internal;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Serializers;
@@ -45,23 +60,6 @@ public class PowertoolsLambdaSerializerTests : IDisposable
         Assert.True(PowertoolsLoggingSerializer.HasContext(customerContext));
     }
 
-    // [Fact]
-    // public void Deserialize_ValidJson_ShouldReturnDeserializedObject()
-    // {
-    //     // Arrange
-    //     var serializer = new PowertoolsLambdaSerializer(TestJsonContext.Default);
-    //     var json = "{\"Name\":\"John\",\"Age\":30}";
-    //     var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-    //
-    //     // Act
-    //     var result = serializer.Deserialize<TestObject>(stream);
-    //
-    //     // Assert
-    //     Assert.NotNull(result);
-    //     Assert.Equal("John", result.Name);
-    //     Assert.Equal(30, result.Age);
-    // }
-    
     [Theory]
     [InlineData(LoggerOutputCase.CamelCase,"{\"fullName\":\"John\",\"age\":30}", "John", 30)]
     [InlineData(LoggerOutputCase.PascalCase,"{\"FullName\":\"Jane\",\"Age\":25}", "Jane", 25)]
@@ -132,10 +130,58 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     }
 
     private class UnknownType { }
+    
+    [Fact]
+    public void Deserialize_NonSeekableStream_ShouldDeserializeCorrectly()
+    {
+        // Arrange
+        var serializer = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+        var json = "{\"full_name\":\"John\",\"age\":30}";
+        var jsonBytes = Encoding.UTF8.GetBytes(json);
+        var nonSeekableStream = new NonSeekableStream(jsonBytes);
+
+        // Act
+        var result = serializer.Deserialize<TestObject>(nonSeekableStream);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("John", result.FullName);
+        Assert.Equal(30, result.Age);
+    }
+    
+    public class NonSeekableStream : Stream
+    {
+        private readonly MemoryStream _innerStream;
+
+        public NonSeekableStream(byte[] data)
+        {
+            _innerStream = new MemoryStream(data);
+        }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => _innerStream.Length;
+        public override long Position
+        {
+            get => _innerStream.Position;
+            set => throw new NotSupportedException();
+        }
+
+        public override void Flush() => _innerStream.Flush();
+        public override int Read(byte[] buffer, int offset, int count) => _innerStream.Read(buffer, offset, count);
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        // Override the Close and Dispose methods to prevent the inner stream from being closed
+        public override void Close() { }
+        protected override void Dispose(bool disposing) { }
+    }
 
     public void Dispose()
     {
-        PowertoolsLoggingSerializer.ClearContext();
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
     }
 }
 #endif

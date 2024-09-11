@@ -276,7 +276,7 @@ internal class LoggingAspectHandler : IMethodAspectHandler
 
             for (var i = 0; i < correlationIdPaths.Length; i++)
             {
-                var pathWithOutputCase = PowertoolsLoggerHelpers.ConvertToOutputCase(correlationIdPaths[i]);
+                var pathWithOutputCase = _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i]);
                 if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
                     break;
 

@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
@@ -184,5 +186,130 @@ internal static class PowertoolsConfigurationsExtension
     internal static bool LambdaLogLevelEnabled(this IPowertoolsConfigurations powertoolsConfigurations)
     {
         return powertoolsConfigurations.GetLambdaLogLevel() != LogLevel.None;
+    }
+
+    /// <summary>
+    /// Converts the input string to the configured output case.
+    /// </summary>
+    /// <param name="powertoolsConfigurations"></param>
+    /// <param name="correlationIdPath">The string to convert.</param>
+    /// <param name="loggerOutputCase"></param>
+    /// <returns>
+    /// The input string converted to the configured case (camel, pascal, or snake case).
+    /// </returns>
+    internal static string ConvertToOutputCase(this IPowertoolsConfigurations powertoolsConfigurations, string correlationIdPath, LoggerOutputCase? loggerOutputCase = null)
+    {
+        return powertoolsConfigurations.GetLoggerOutputCase(loggerOutputCase) switch
+        {
+            LoggerOutputCase.CamelCase => ToCamelCase(correlationIdPath),
+            LoggerOutputCase.PascalCase => ToPascalCase(correlationIdPath),
+            _ => ToSnakeCase(correlationIdPath), // default snake_case
+        };
+    }
+
+    /// <summary>
+    /// Converts a string to snake_case.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns>The input string converted to snake_case.</returns>
+    private static string ToSnakeCase(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        var result = new StringBuilder(input.Length + 10);
+        bool lastCharWasUnderscore = false;
+        bool lastCharWasUpper = false;
+
+        for (int i = 0; i < input.Length; i++)
+        {
+            char currentChar = input[i];
+
+            if (currentChar == '_')
+            {
+                result.Append('_');
+                lastCharWasUnderscore = true;
+                lastCharWasUpper = false;
+            }
+            else if (char.IsUpper(currentChar))
+            {
+                if (i > 0 && !lastCharWasUnderscore && 
+                    (!lastCharWasUpper || (i + 1 < input.Length && char.IsLower(input[i + 1]))))
+                {
+                    result.Append('_');
+                }
+                result.Append(char.ToLowerInvariant(currentChar));
+                lastCharWasUnderscore = false;
+                lastCharWasUpper = true;
+            }
+            else
+            {
+                result.Append(char.ToLowerInvariant(currentChar));
+                lastCharWasUnderscore = false;
+                lastCharWasUpper = false;
+            }
+        }
+
+        return result.ToString();
+    }
+
+
+
+
+    /// <summary>
+    /// Converts a string to PascalCase.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns>The input string converted to PascalCase.</returns>
+    private static string ToPascalCase(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        var words = input.Split(new[] { '_' }, StringSplitOptions.RemoveEmptyEntries);
+        var result = new StringBuilder();
+
+        foreach (var word in words)
+        {
+            if (word.Length > 0)
+            {
+                // Capitalize the first character of each word
+                result.Append(char.ToUpperInvariant(word[0]));
+            
+                // Handle the rest of the characters
+                if (word.Length > 1)
+                {
+                    // If the word is all uppercase, convert the rest to lowercase
+                    if (word.All(char.IsUpper))
+                    {
+                        result.Append(word.Substring(1).ToLowerInvariant());
+                    }
+                    else
+                    {
+                        // Otherwise, keep the original casing
+                        result.Append(word.Substring(1));
+                    }
+                }
+            }
+        }
+
+        return result.ToString();
+    }
+
+    /// <summary>
+    /// Converts a string to camelCase.
+    /// </summary>
+    /// <param name="input">The string to convert.</param>
+    /// <returns>The input string converted to camelCase.</returns>
+    private static string ToCamelCase(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        // First, convert to PascalCase
+        string pascalCase = ToPascalCase(input);
+
+        // Then convert the first character to lowercase
+        return char.ToLowerInvariant(pascalCase[0]) + pascalCase.Substring(1);
     }
 }

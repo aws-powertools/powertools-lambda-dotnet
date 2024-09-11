@@ -41,12 +41,13 @@ public class PowertoolsLambdaSerializer : ILambdaSerializer
     /// </summary>
     public T Deserialize<T>(Stream requestStream)
     {
+        Stream streamToUse = requestStream;
         if (!requestStream.CanSeek)
         {
-            using var ms = new MemoryStream();
+            var ms = new MemoryStream();
             requestStream.CopyTo(ms);
             ms.Position = 0;
-            requestStream = ms;
+            streamToUse = ms;
         }
 
         var typeInfo = PowertoolsLoggingSerializer.GetTypeInfo(typeof(T));
@@ -56,8 +57,9 @@ public class PowertoolsLambdaSerializer : ILambdaSerializer
                 $"Type {typeof(T)} is not known to the serializer. Ensure it's included in the JsonSerializerContext.");
         }
 
-        return (T)JsonSerializer.Deserialize(requestStream, typeInfo)!;
+        return (T)JsonSerializer.Deserialize(streamToUse, typeInfo)!;
     }
+
 
     /// <summary>
     /// Serializes the specified object and writes the result to the output stream.
