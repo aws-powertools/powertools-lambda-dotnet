@@ -50,7 +50,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Configure the substitute for IPowertoolsConfigurations
             configurations.Service.Returns(service);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = service,
@@ -102,7 +102,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Configure the substitute for IPowertoolsConfigurations
             configurations.Service.Returns(service);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = service,
@@ -274,12 +274,16 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null
+            };
+
+            configurations.SetCurrentConfig(loggerConfiguration, systemWrapper);
+            
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
+                loggerConfiguration);
 
             logger.LogInformation("Test");
 
@@ -309,13 +313,20 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
+            
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null
+            };
+            
+            //var (_, output) = configurations.SetCurrentConfig(loggerConfiguration);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null
-                });
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+
+            var logger = provider.CreateLogger("test");
+            // var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
+            //     loggerConfiguration);
 
             logger.LogInformation("Test");
 
@@ -344,12 +355,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null
+            };  
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             logger.LogInformation("Test");
 
@@ -379,12 +392,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null
+            };
+
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -418,13 +433,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null,
-                    LoggerOutputCase = LoggerOutputCase.CamelCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null,
+                LoggerOutputCase = LoggerOutputCase.CamelCase
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -459,12 +476,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -498,13 +517,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null,
-                    LoggerOutputCase = LoggerOutputCase.PascalCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null,
+                LoggerOutputCase = LoggerOutputCase.PascalCase
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -537,7 +558,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = null,
@@ -574,13 +595,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null,
-                    LoggerOutputCase = LoggerOutputCase.SnakeCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null,
+                LoggerOutputCase = LoggerOutputCase.SnakeCase
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -612,12 +635,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null
+            };  
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -645,7 +670,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             configurations.LogLevel.Returns(logLevel.ToString());
             var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = service,
@@ -686,7 +711,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             configurations.LogLevel.Returns(logLevel.ToString());
             var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = service,
@@ -727,7 +752,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             configurations.LogLevel.Returns(logLevel.ToString());
             var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = service,
@@ -781,12 +806,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             configurations.LoggerOutputCase.Returns(LoggerOutputCase.PascalCase.ToString());
             var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = service,
-                    MinimumLevel = LogLevel.Trace,
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = service,
+                MinimumLevel = LogLevel.Trace,
+            };
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = (PowertoolsLogger)provider.CreateLogger(loggerName);
 
             var scopeKeys = new Dictionary<string, object>
             {
@@ -863,12 +889,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             configurations.LoggerOutputCase.Returns(LoggerOutputCase.PascalCase.ToString());
             var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = service,
-                    MinimumLevel = LogLevel.Trace,
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = service,
+                MinimumLevel = LogLevel.Trace,
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = (PowertoolsLogger)provider.CreateLogger(loggerName);
 
             var scopeKeys = new Dictionary<string, string>
             {
@@ -945,12 +973,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             configurations.LoggerOutputCase.Returns(LoggerOutputCase.PascalCase.ToString());
             var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = service,
-                    MinimumLevel = LogLevel.Trace,
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = service,
+                MinimumLevel = LogLevel.Trace,
+            };
+           
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = (PowertoolsLogger)provider.CreateLogger(loggerName);
 
             var scopeKeys = new
             {
@@ -1018,7 +1048,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = null,
@@ -1061,7 +1091,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = null,
@@ -1102,12 +1132,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null
+            };
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             // Act
             logger.LogInformation(new { Name = "Test Object", Bytes = bytes });
@@ -1140,7 +1171,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = null,
@@ -1180,7 +1211,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, 
                 new LoggerConfiguration
                 {
                     Service = null,
@@ -1212,7 +1243,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var wrapper = new SystemWrapper(env);
             var conf = new PowertoolsConfigurations(wrapper);
 
-            var logger = new PowertoolsLogger(loggerName, conf, wrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, conf, wrapper, 
                 new LoggerConfiguration
                 {
                     Service = null,
@@ -1242,13 +1273,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null,
-                    LoggerOutputCase = LoggerOutputCase.CamelCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null,
+                LoggerOutputCase = LoggerOutputCase.CamelCase
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -1287,13 +1320,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var systemWrapper = Substitute.For<ISystemWrapper>();
             systemWrapper.GetRandom().Returns(randomSampleRate);
 
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = null,
-                    MinimumLevel = null,
-                    LoggerOutputCase = LoggerOutputCase.CamelCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = null,
+                LoggerOutputCase = LoggerOutputCase.CamelCase
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -1329,13 +1364,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             environment.GetEnvironmentVariable("AWS_LAMBDA_LOG_LEVEL").Returns(awsLogLevel);
 
             var systemWrapper = new SystemWrapperMock(environment);
-            var configuration = new PowertoolsConfigurations(systemWrapper);
+            var configurations = new PowertoolsConfigurations(systemWrapper);
 
-            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    LoggerOutputCase = LoggerOutputCase.CamelCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                LoggerOutputCase = LoggerOutputCase.CamelCase
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -1349,13 +1386,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             
             // Assert
             Assert.True(logger.IsEnabled(logLevel));
-            Assert.Equal(logLevel, configuration.GetLogLevel());
+            Assert.Equal(logLevel, configurations.GetLogLevel());
             Assert.Equal(willLog, systemWrapper.LogMethodCalled);
         }
         
         [Theory]
         [InlineData(true, "WARN", LogLevel.Warning)]
-        [InlineData(false, "Fatal", LogLevel.Critical)]
+        [InlineData(true, "Fatal", LogLevel.Critical)]
         public void Log_Should_Use_AWS_Lambda_Log_Level_When_Enabled(bool willLog, string awsLogLevel, LogLevel logLevel)
         {
             // Arrange
@@ -1367,13 +1404,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             environment.GetEnvironmentVariable("AWS_LAMBDA_LOG_LEVEL").Returns(awsLogLevel);
 
             var systemWrapper = new SystemWrapperMock(environment);
-            var configuration = new PowertoolsConfigurations(systemWrapper);
+            var configurations = new PowertoolsConfigurations(systemWrapper);
 
-            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    LoggerOutputCase = LoggerOutputCase.CamelCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                LoggerOutputCase = LoggerOutputCase.CamelCase,
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -1387,8 +1426,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             
             // Assert
             Assert.True(logger.IsEnabled(logLevel));
-            Assert.Equal(LogLevel.Information, configuration.GetLogLevel()); //default
-            Assert.Equal(logLevel, configuration.GetLambdaLogLevel());
+            Assert.Equal(LogLevel.Information, configurations.GetLogLevel()); //default
+            Assert.Equal(logLevel, configurations.GetLambdaLogLevel());
             Assert.Equal(willLog, systemWrapper.LogMethodCalled);
         }
         
@@ -1403,22 +1442,24 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             environment.GetEnvironmentVariable("AWS_LAMBDA_LOG_LEVEL").Returns("Warn");
 
             var systemWrapper = new SystemWrapperMock(environment);
-            var configuration = new PowertoolsConfigurations(systemWrapper);
-            
-            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    LoggerOutputCase = LoggerOutputCase.CamelCase
-                });
+            var configurations = new PowertoolsConfigurations(systemWrapper);
 
-            var logLevel = configuration.GetLogLevel();
-            var lambdaLogLevel = configuration.GetLambdaLogLevel();
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                LoggerOutputCase = LoggerOutputCase.CamelCase
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
+
+            var logLevel = configurations.GetLogLevel();
+            var lambdaLogLevel = configurations.GetLambdaLogLevel();
             
             // Assert
             Assert.True(logger.IsEnabled(LogLevel.Warning));
             Assert.Equal(LogLevel.Debug, logLevel);
             Assert.Equal(LogLevel.Warning, lambdaLogLevel);
-            Assert.True(systemWrapper.LogMethodCalled);
+
             Assert.Contains($"Current log level ({logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.",
                 systemWrapper.LogMethodCalledWithArgument);
         }
@@ -1437,12 +1478,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 environment.GetEnvironmentVariable("AWS_LAMBDA_LOG_LEVEL").Returns("Info");
 
             var systemWrapper = new SystemWrapperMock(environment);
-            var configuration = new PowertoolsConfigurations(systemWrapper);
-            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    LoggerOutputCase = LoggerOutputCase.PascalCase
-                });
+            var configurations = new PowertoolsConfigurations(systemWrapper);
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                LoggerOutputCase = LoggerOutputCase.PascalCase
+            };
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -1470,7 +1512,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             var systemWrapper = new SystemWrapperMock(environment);
             var configuration = new PowertoolsConfigurations(systemWrapper);
-            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, 
                 new LoggerConfiguration
                 {
                     LoggerOutputCase = casing
@@ -1523,13 +1565,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL").Returns(logLevel.ToString());
 
             var systemWrapper = new SystemWrapperMock(environment);
-            var configuration = new PowertoolsConfigurations(systemWrapper);
+            var configurations = new PowertoolsConfigurations(systemWrapper);
 
-            var logger = new PowertoolsLogger(loggerName, configuration, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    LoggerOutputCase = LoggerOutputCase.CamelCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                LoggerOutputCase = LoggerOutputCase.CamelCase
+            };
+           
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var message = new
             {
@@ -1543,7 +1587,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             // Assert
             Assert.True(logger.IsEnabled(logLevel));
-            Assert.Equal(logLevel.ToString(), configuration.LogLevel);
+            Assert.Equal(logLevel.ToString(), configurations.LogLevel);
             Assert.Equal(willLog, systemWrapper.LogMethodCalled);
         }
     }

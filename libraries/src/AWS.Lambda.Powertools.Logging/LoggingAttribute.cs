@@ -128,10 +128,6 @@ public class LoggingAttribute : MethodAspectAttribute
     /// </summary>
     private LogLevel? _logLevel;
     
-    /// <summary>
-    ///     The logger output case
-    /// </summary>
-    private LoggerOutputCase? _loggerOutputCase;
 
     /// <summary>
     ///     The sampling rate
@@ -195,17 +191,13 @@ public class LoggingAttribute : MethodAspectAttribute
     /// </summary>
     /// <value><c>true</c> if [clear state]; otherwise, <c>false</c>.</value>
     public bool ClearState { get; set; } = false;
-    
+
     /// <summary>
     ///     Specify output case for logging (SnakeCase, by default).
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
     /// </summary>
     /// <value>The log level.</value>
-    public LoggerOutputCase LoggerOutputCase
-    {
-        get => _loggerOutputCase ?? LoggingConstants.DefaultLoggerOutputCase;
-        set => _loggerOutputCase = value;
-    }
+    public LoggerOutputCase? LoggerOutputCase { get; set; }
 
     /// <summary>
     ///     Creates the handler.
@@ -213,13 +205,18 @@ public class LoggingAttribute : MethodAspectAttribute
     /// <returns>IMethodAspectHandler.</returns>
     protected override IMethodAspectHandler CreateHandler()
     {
+        var config = new LoggerConfiguration 
+        {
+            Service = Service,
+            LoggerOutputCase = LoggerOutputCase,
+            SamplingRate = SamplingRate,
+        };
+        
         return new LoggingAspectHandler
         (
-            Service,
-            _logLevel,
-            _loggerOutputCase,
-            _samplingRate,
-            _logEvent,
+            config,
+            LogLevel,
+            LogEvent,
             CorrelationIdPath,
             ClearState,
             PowertoolsConfigurations.Instance,

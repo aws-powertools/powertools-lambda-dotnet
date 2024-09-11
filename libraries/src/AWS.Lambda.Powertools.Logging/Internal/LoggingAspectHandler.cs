@@ -14,12 +14,13 @@
  */
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
+using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -62,24 +63,9 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     private readonly LogLevel? _logLevel;
 
     /// <summary>
-    ///     The logger output case
-    /// </summary>
-    private readonly LoggerOutputCase? _loggerOutputCase;
-
-    /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
-
-    /// <summary>
-    ///     The sampling rate
-    /// </summary>
-    private readonly double? _samplingRate;
-
-    /// <summary>
-    ///     Service name
-    /// </summary>
-    private readonly string _service;
 
     /// <summary>
     ///     The system wrapper
@@ -97,24 +83,15 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     private bool _clearLambdaContext;
 
     /// <summary>
-    ///     The JsonSerializer options
+    ///     The configuration
     /// </summary>
-    private static JsonSerializerOptions _jsonSerializerOptions;
-
-    /// <summary>
-    ///     Get JsonSerializer options.
-    /// </summary>
-    /// <value>The current configuration.</value>
-    private JsonSerializerOptions JsonSerializerOptions =>
-        _jsonSerializerOptions ??= _powertoolsConfigurations.BuildJsonSerializerOptions(_loggerOutputCase);
+    private readonly LoggerConfiguration _config;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LoggingAspectHandler" /> class.
     /// </summary>
-    /// <param name="service">Service name</param>
+    /// <param name="config"></param>
     /// <param name="logLevel">The log level.</param>
-    /// <param name="loggerOutputCase">The logger output case.</param>
-    /// <param name="samplingRate">The sampling rate.</param>
     /// <param name="logEvent">if set to <c>true</c> [log event].</param>
     /// <param name="correlationIdPath">The correlation identifier path.</param>
     /// <param name="clearState">if set to <c>true</c> [clear state].</param>
@@ -122,10 +99,8 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <param name="systemWrapper">The system wrapper.</param>
     internal LoggingAspectHandler
     (
-        string service,
+        LoggerConfiguration config,
         LogLevel? logLevel,
-        LoggerOutputCase? loggerOutputCase,
-        double? samplingRate,
         bool? logEvent,
         string correlationIdPath,
         bool clearState,
@@ -133,15 +108,13 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         ISystemWrapper systemWrapper
     )
     {
-        _service = service;
         _logLevel = logLevel;
-        _loggerOutputCase = loggerOutputCase;
-        _samplingRate = samplingRate;
         _logEvent = logEvent;
         _clearState = clearState;
         _correlationIdPath = correlationIdPath;
         _powertoolsConfigurations = powertoolsConfigurations;
         _systemWrapper = systemWrapper;
+        _config = config;
     }
 
     /// <summary>
@@ -153,21 +126,13 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// </param>
     public void OnEntry(AspectEventArgs eventArgs)
     {
-        var loggerConfig = new LoggerConfiguration
-        {
-            Service = _service,
-            MinimumLevel = _logLevel,
-            SamplingRate = _samplingRate,
-            LoggerOutputCase = _loggerOutputCase
-        };
-
         switch (Logger.LoggerProvider)
         {
             case null:
-                Logger.LoggerProvider = new LoggerProvider(loggerConfig);
+                Logger.LoggerProvider = new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper );
                 break;
             case LoggerProvider:
-                ((LoggerProvider)Logger.LoggerProvider).Configure(loggerConfig);
+                ((LoggerProvider)Logger.LoggerProvider).Configure(_config);
                 break;
         }
 
@@ -278,11 +243,6 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     ///     Captures the correlation identifier.
     /// </summary>
     /// <param name="eventArg">The event argument.</param>
-    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode",
-        Justification = "Everything referenced in the loaded assembly is manually preserved, so it's safe")]
-    [UnconditionalSuppressMessage("AOT",
-        "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
-        Justification = "Everything is ok with serialization")]
     private void CaptureCorrelationId(object eventArg)
     {
         if (string.IsNullOrWhiteSpace(_correlationIdPath))
@@ -308,15 +268,15 @@ internal class LoggingAspectHandler : IMethodAspectHandler
 
 #if NET8_0_OR_GREATER
             var jsonDoc =
-                JsonDocument.Parse(JsonSerializer.Serialize(eventArg, eventArg.GetType(), JsonSerializerOptions));
+                JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg, eventArg.GetType()));
 #else
-        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(eventArg, JsonSerializerOptions));
+        var jsonDoc = JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg));
 #endif
             var element = jsonDoc.RootElement;
 
             for (var i = 0; i < correlationIdPaths.Length; i++)
             {
-                var pathWithOutputCase = ConvertToOutputCase(correlationIdPaths[i]);
+                var pathWithOutputCase = PowertoolsLoggerHelpers.ConvertToOutputCase(correlationIdPaths[i]);
                 if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
                     break;
 
@@ -334,32 +294,6 @@ internal class LoggingAspectHandler : IMethodAspectHandler
                 _systemWrapper.LogLine(
                     $"Skipping CorrelationId capture because of error caused while parsing the event object {e.Message}.");
         }
-    }
-
-    private string ConvertToOutputCase(string correlationIdPath)
-    {
-        return _loggerOutputCase switch
-        {
-            LoggerOutputCase.CamelCase => ToCamelCase(correlationIdPath),
-            LoggerOutputCase.PascalCase => ToPascalCase(correlationIdPath),
-            _ => ToSnakeCase(correlationIdPath), // default snake_case
-        };
-    }
-
-    private string ToSnakeCase(string correlationIdPath)
-    {
-        return string.Concat(correlationIdPath.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x : x.ToString()))
-            .ToLowerInvariant();
-    }
-
-    private string ToPascalCase(string correlationIdPath)
-    {
-        return char.ToUpperInvariant(correlationIdPath[0]) + correlationIdPath.Substring(1);
-    }
-
-    private string ToCamelCase(string correlationIdPath)
-    {
-        return char.ToLowerInvariant(correlationIdPath[0]) + correlationIdPath.Substring(1);
     }
 
     /// <summary>

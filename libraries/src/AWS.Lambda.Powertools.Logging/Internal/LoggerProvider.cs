@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -28,10 +28,19 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 public sealed class LoggerProvider : ILoggerProvider
 {
     /// <summary>
+    ///     The powertools configurations
+    /// </summary>
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
+    
+    /// <summary>
+    ///     The system wrapper
+    /// </summary>
+    private readonly ISystemWrapper _systemWrapper;
+
+    /// <summary>
     ///     The loggers
     /// </summary>
     private readonly ConcurrentDictionary<string, PowertoolsLogger> _loggers = new();
-
 
     /// <summary>
     ///     The current configuration
@@ -42,9 +51,14 @@ public sealed class LoggerProvider : ILoggerProvider
     ///     Initializes a new instance of the <see cref="LoggerProvider" /> class.
     /// </summary>
     /// <param name="config">The configuration.</param>
-    public LoggerProvider(IOptions<LoggerConfiguration> config)
+    /// <param name="powertoolsConfigurations"></param>
+    /// <param name="systemWrapper"></param>
+    public LoggerProvider(IOptions<LoggerConfiguration> config, IPowertoolsConfigurations powertoolsConfigurations, ISystemWrapper systemWrapper)
     {
-        _currentConfig = config?.Value;
+        _powertoolsConfigurations = powertoolsConfigurations;
+        _systemWrapper = systemWrapper;
+
+        _currentConfig= powertoolsConfigurations.SetCurrentConfig(config?.Value, systemWrapper);
     }
 
     /// <summary>
@@ -56,9 +70,9 @@ public sealed class LoggerProvider : ILoggerProvider
     {
         return _loggers.GetOrAdd(categoryName,
             name => new PowertoolsLogger(name,
-                PowertoolsConfigurations.Instance,
-                SystemWrapper.Instance,
-                GetCurrentConfig));
+                _powertoolsConfigurations,
+                _systemWrapper,
+                _currentConfig));
     }
 
     /// <summary>
@@ -69,14 +83,6 @@ public sealed class LoggerProvider : ILoggerProvider
         _loggers.Clear();
     }
 
-    /// <summary>
-    ///     Gets the current configuration.
-    /// </summary>
-    /// <returns>LoggerConfiguration.</returns>
-    private LoggerConfiguration GetCurrentConfig()
-    {
-        return _currentConfig;
-    }
 
     /// <summary>
     ///     Configures the loggers.

@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -22,6 +22,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Serializers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReturnsExtensions;
@@ -53,6 +54,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var configurations = Substitute.For<IPowertoolsConfigurations>();
             configurations.Service.Returns(service);
 
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = service,
+                MinimumLevel = minimumLevel,
+                LoggerOutputCase = LoggerOutputCase.PascalCase
+            };
+
             var globalExtraKeys = new Dictionary<string, object>
             {
                 { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
@@ -68,11 +76,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 AwsRequestId = Guid.NewGuid().ToString(),
                 MemoryLimitInMB = (new Random()).Next()
             };
-            
+
             var args = Substitute.For<AspectEventArgs>();
             var method = Substitute.For<MethodInfo>();
             var parameter = Substitute.For<ParameterInfo>();
-         
+
             // Setup parameter
             parameter.ParameterType.Returns(typeof(ILambdaContext));
 
@@ -81,12 +89,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             // Setup args
             args.Method = method;
-            args.Args = new object[] { lambdaContext }; 
-            
+            args.Args = new object[] { lambdaContext };
+
             // Act
-            
+
             LoggingLambdaContext.Extract(args);
-            
+
             var logFormatter = Substitute.For<ILogFormatter>();
             var formattedLogEntry = new
             {
@@ -116,13 +124,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             Logger.UseFormatter(logFormatter);
 
             var systemWrapper = Substitute.For<ISystemWrapper>();
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
-                new LoggerConfiguration
-                {
-                    Service = service,
-                    MinimumLevel = minimumLevel,
-                    LoggerOutputCase = LoggerOutputCase.PascalCase
-                });
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             var scopeExtraKeys = new Dictionary<string, object>
             {
@@ -146,16 +150,16 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     x.Message.ToString() == message &&
                     x.Exception == null &&
                     x.ExtraKeys != null && (
-                    x.ExtraKeys.Count != globalExtraKeys.Count + scopeExtraKeys.Count || (
-                        x.ExtraKeys.Count == globalExtraKeys.Count + scopeExtraKeys.Count &&
-                        x.ExtraKeys.ContainsKey(globalExtraKeys.First().Key) &&
-                        x.ExtraKeys[globalExtraKeys.First().Key] == globalExtraKeys.First().Value &&
-                        x.ExtraKeys.ContainsKey(globalExtraKeys.Last().Key) &&
-                        x.ExtraKeys[globalExtraKeys.Last().Key] == globalExtraKeys.Last().Value &&
-                        x.ExtraKeys.ContainsKey(scopeExtraKeys.First().Key) &&
-                        x.ExtraKeys[scopeExtraKeys.First().Key] == scopeExtraKeys.First().Value &&
-                        x.ExtraKeys.ContainsKey(scopeExtraKeys.Last().Key) &&
-                        x.ExtraKeys[scopeExtraKeys.Last().Key] == scopeExtraKeys.Last().Value ) ) &&
+                        x.ExtraKeys.Count != globalExtraKeys.Count + scopeExtraKeys.Count || (
+                            x.ExtraKeys.Count == globalExtraKeys.Count + scopeExtraKeys.Count &&
+                            x.ExtraKeys.ContainsKey(globalExtraKeys.First().Key) &&
+                            x.ExtraKeys[globalExtraKeys.First().Key] == globalExtraKeys.First().Value &&
+                            x.ExtraKeys.ContainsKey(globalExtraKeys.Last().Key) &&
+                            x.ExtraKeys[globalExtraKeys.Last().Key] == globalExtraKeys.Last().Value &&
+                            x.ExtraKeys.ContainsKey(scopeExtraKeys.First().Key) &&
+                            x.ExtraKeys[scopeExtraKeys.First().Key] == scopeExtraKeys.First().Value &&
+                            x.ExtraKeys.ContainsKey(scopeExtraKeys.Last().Key) &&
+                            x.ExtraKeys[scopeExtraKeys.Last().Key] == scopeExtraKeys.Last().Value)) &&
                     x.LambdaContext != null &&
                     x.LambdaContext.FunctionName == lambdaContext.FunctionName &&
                     x.LambdaContext.FunctionVersion == lambdaContext.FunctionVersion &&
@@ -163,8 +167,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                     x.LambdaContext.InvokedFunctionArn == lambdaContext.InvokedFunctionArn &&
                     x.LambdaContext.AwsRequestId == lambdaContext.AwsRequestId
             ));
-            systemWrapper.Received(1).LogLine(JsonSerializer.Serialize(formattedLogEntry));
             
+            systemWrapper.Received(1).LogLine(JsonSerializer.Serialize(formattedLogEntry));
+
             //Clean up
             Logger.UseDefaultFormatter();
             Logger.RemoveAllKeys();
@@ -172,7 +177,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             LoggingAspectHandler.ResetForTest();
         }
     }
-    
+
     [Collection("Sequential")]
     public class LogFormatterNullTest
     {
@@ -192,7 +197,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             Logger.UseFormatter(logFormatter);
 
             var systemWrapper = Substitute.For<ISystemWrapper>();
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper,
                 new LoggerConfiguration
                 {
                     Service = service,
@@ -212,7 +217,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             Logger.UseDefaultFormatter();
         }
     }
-    
+
     [Collection("Sequential")]
     public class LogFormatterExceptionTest
     {
@@ -233,7 +238,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             Logger.UseFormatter(logFormatter);
 
             var systemWrapper = Substitute.For<ISystemWrapper>();
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper, () =>
+            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper,
                 new LoggerConfiguration
                 {
                     Service = service,

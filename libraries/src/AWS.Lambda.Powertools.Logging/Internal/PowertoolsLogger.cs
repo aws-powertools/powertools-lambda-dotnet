@@ -15,12 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using AWS.Lambda.Powertools.Common;
-using AWS.Lambda.Powertools.Logging.Internal.Converters;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
@@ -35,11 +31,6 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 internal sealed class PowertoolsLogger : ILogger
 {
     /// <summary>
-    ///     The get current configuration
-    /// </summary>
-    private readonly Func<LoggerConfiguration> _getCurrentConfig;
-
-    /// <summary>
     ///     The name
     /// </summary>
     private readonly string _name;
@@ -47,7 +38,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// <summary>
     ///     The current configuration
     /// </summary>
-    private LoggerConfiguration _currentConfig;
+    private static LoggerConfiguration _currentConfig;
 
     /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations
@@ -60,65 +51,39 @@ internal sealed class PowertoolsLogger : ILogger
     private readonly ISystemWrapper _systemWrapper;
 
     /// <summary>
-    ///     The JsonSerializer options
-    /// </summary>
-    private JsonSerializerOptions _jsonSerializerOptions;
-
-    private LogLevel _lambdaLogLevel;
-    private LogLevel _logLevel;
-    private bool _lambdaLogLevelEnabled;
-
-    /// <summary>
     ///     Initializes a new instance of the <see cref="PowertoolsLogger" /> class.
     /// </summary>
     /// <param name="name">The name.</param>
     /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
-    /// <param name="getCurrentConfig">The get current configuration.</param>
+    /// <param name="currentConfig"></param>
     public PowertoolsLogger(
         string name,
         IPowertoolsConfigurations powertoolsConfigurations,
         ISystemWrapper systemWrapper,
-        Func<LoggerConfiguration> getCurrentConfig)
+        LoggerConfiguration currentConfig)
     {
-        (_name, _powertoolsConfigurations, _systemWrapper, _getCurrentConfig) = (name,
-            powertoolsConfigurations, systemWrapper, getCurrentConfig);
+        (_name, _powertoolsConfigurations, _systemWrapper, _currentConfig) = (name,
+            powertoolsConfigurations, systemWrapper, currentConfig);
 
         _powertoolsConfigurations.SetExecutionEnvironment(this);
-        _currentConfig = GetCurrentConfig();
-
-        if (_lambdaLogLevelEnabled && _logLevel < _lambdaLogLevel)
-        {
-            var message =
-                $"Current log level ({_logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({_lambdaLogLevel}). This can lead to data loss, consider adjusting them.";
-            this.LogWarning(message);
-        }
     }
-
-    private LoggerConfiguration CurrentConfig => _currentConfig ??= GetCurrentConfig();
 
     /// <summary>
     ///     Sets the minimum level.
     /// </summary>
     /// <value>The minimum level.</value>
     private LogLevel MinimumLevel =>
-        CurrentConfig.MinimumLevel ?? LoggingConstants.DefaultLogLevel;
+        _currentConfig.MinimumLevel ?? LoggingConstants.DefaultLogLevel;
 
     /// <summary>
     ///     Sets the service.
     /// </summary>
     /// <value>The service.</value>
     private string Service =>
-        !string.IsNullOrWhiteSpace(CurrentConfig.Service)
-            ? CurrentConfig.Service
+        !string.IsNullOrWhiteSpace(_currentConfig.Service)
+            ? _currentConfig.Service
             : _powertoolsConfigurations.Service;
-
-    /// <summary>
-    ///     Get JsonSerializer options.
-    /// </summary>
-    /// <value>The current configuration.</value>
-    private JsonSerializerOptions JsonSerializerOptions =>
-        _jsonSerializerOptions ??= _powertoolsConfigurations.BuildJsonSerializerOptions(CurrentConfig.LoggerOutputCase);
 
     internal PowertoolsLoggerScope CurrentScope { get; private set; }
 
@@ -210,11 +175,6 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="exception">The exception related to this entry.</param>
     /// <param name="formatter">Function to create a <see cref="T:System.String" /> message of the <paramref name="state" /> and <paramref name="exception" />.</param>
     /// <typeparam name="TState">The type of the object to be written.</typeparam>
-    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode",
-        Justification = "Everything referenced in the loaded assembly is manually preserved, so it's safe")]
-    [UnconditionalSuppressMessage("AOT",
-        "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
-        Justification = "Everything is ok with serialization")]
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
         Func<TState, Exception, string> formatter)
     {
@@ -236,9 +196,9 @@ internal sealed class PowertoolsLogger : ILogger
 
 
 #if NET8_0_OR_GREATER
-        _systemWrapper.LogLine(JsonSerializer.Serialize(logEntry, typeof(object), JsonSerializerOptions));
+        _systemWrapper.LogLine(PowertoolsLoggingSerializer.Serialize(logEntry, typeof(object)));
 #else
-        _systemWrapper.LogLine(JsonSerializer.Serialize(logEntry, JsonSerializerOptions));
+        _systemWrapper.LogLine(PowertoolsLoggingSerializer.Serialize(logEntry));
 #endif
     }
 
@@ -279,8 +239,10 @@ internal sealed class PowertoolsLogger : ILogger
         }
 
         var keyLogLevel = LoggingConstants.KeyLogLevel;
+        var lambdaLogLevelEnabled = _powertoolsConfigurations.LambdaLogLevelEnabled();
+        
         // If ALC is enabled and PascalCase we need to convert Level to LogLevel for it to be parsed and sent to CW
-        if (_lambdaLogLevelEnabled && CurrentConfig.LoggerOutputCase == LoggerOutputCase.PascalCase)
+        if (lambdaLogLevelEnabled && _currentConfig.LoggerOutputCase == LoggerOutputCase.PascalCase)
         {
             keyLogLevel = "LogLevel";
         }
@@ -291,8 +253,8 @@ internal sealed class PowertoolsLogger : ILogger
         logEntry.TryAdd(LoggingConstants.KeyLoggerName, _name);
         logEntry.TryAdd(LoggingConstants.KeyMessage, message);
 
-        if (CurrentConfig.SamplingRate.HasValue)
-            logEntry.TryAdd(LoggingConstants.KeySamplingRate, CurrentConfig.SamplingRate.Value);
+        if (_currentConfig.SamplingRate.HasValue)
+            logEntry.TryAdd(LoggingConstants.KeySamplingRate, _currentConfig.SamplingRate.Value);
         if (exception != null)
             logEntry.TryAdd(LoggingConstants.KeyException, exception);
 
@@ -321,7 +283,7 @@ internal sealed class PowertoolsLogger : ILogger
             Name = _name,
             Message = message,
             Exception = exception,
-            SamplingRate = CurrentConfig.SamplingRate,
+            SamplingRate = _currentConfig.SamplingRate,
         };
 
         var extraKeys = new Dictionary<string, object>();
@@ -389,8 +351,7 @@ internal sealed class PowertoolsLogger : ILogger
                 $"{logFormatter.GetType().FullName} raised an exception: {e.Message}.", e);
         }
     }
-    
-    
+
 
     /// <summary>
     ///     Clears the configuration.
@@ -398,59 +359,6 @@ internal sealed class PowertoolsLogger : ILogger
     internal void ClearConfig()
     {
         _currentConfig = null;
-    }
-
-    /// <summary>
-    ///     Gets the current configuration.
-    /// </summary>
-    /// <returns>AWS.Lambda.Powertools.Logging.LoggerConfiguration.</returns>
-    private LoggerConfiguration GetCurrentConfig()
-    {
-        var currConfig = _getCurrentConfig();
-        _logLevel = _powertoolsConfigurations.GetLogLevel(currConfig?.MinimumLevel);
-        var samplingRate = currConfig?.SamplingRate ?? _powertoolsConfigurations.LoggerSampleRate;
-        var loggerOutputCase = _powertoolsConfigurations.GetLoggerOutputCase(currConfig?.LoggerOutputCase);
-        _lambdaLogLevel = _powertoolsConfigurations.GetLambdaLogLevel();
-        _lambdaLogLevelEnabled = _lambdaLogLevel != LogLevel.None;
-
-        var minLogLevel = _logLevel;
-        if (_lambdaLogLevelEnabled)
-        {
-            minLogLevel = _lambdaLogLevel;
-        }
-
-        var config = new LoggerConfiguration
-        {
-            Service = currConfig?.Service,
-            MinimumLevel = minLogLevel,
-            SamplingRate = samplingRate,
-            LoggerOutputCase = loggerOutputCase
-        };
-
-        if (!samplingRate.HasValue)
-            return config;
-
-        if (samplingRate.Value < 0 || samplingRate.Value > 1)
-        {
-            if (minLogLevel is LogLevel.Debug or LogLevel.Trace)
-                _systemWrapper.LogLine(
-                    $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate.Value}");
-            config.SamplingRate = null;
-            return config;
-        }
-
-        if (samplingRate.Value == 0)
-            return config;
-
-        var sample = _systemWrapper.GetRandom();
-        if (samplingRate.Value > sample)
-        {
-            _systemWrapper.LogLine(
-                $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate.Value}, Sampler Value: {sample}.");
-            config.MinimumLevel = LogLevel.Debug;
-        }
-
-        return config;
     }
 
     /// <summary>

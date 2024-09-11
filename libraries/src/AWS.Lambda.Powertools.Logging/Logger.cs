@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -64,8 +63,6 @@ public class Logger
     {
         if (string.IsNullOrWhiteSpace(categoryName))
             throw new ArgumentNullException(nameof(categoryName));
-
-        LoggerProvider ??= new LoggerProvider(null);
 
         return LoggerProvider.CreateLogger(categoryName);
     }
