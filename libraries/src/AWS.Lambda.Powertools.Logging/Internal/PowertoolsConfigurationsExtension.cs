@@ -112,50 +112,75 @@ internal static class PowertoolsConfigurationsExtension
                 $"Current log level ({logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
         }
 
-        var samplingRate = config?.SamplingRate ?? powertoolsConfigurations.LoggerSampleRate;
-        var loggerOutputCase = powertoolsConfigurations.GetLoggerOutputCase(config?.LoggerOutputCase);
+        // set service
         var service = config?.Service ?? powertoolsConfigurations.Service;
+        config.Service = service;
+        
+        // set output case
+        var loggerOutputCase = powertoolsConfigurations.GetLoggerOutputCase(config?.LoggerOutputCase);
+        config.LoggerOutputCase = loggerOutputCase;
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase);
 
-
+        // log level
         var minLogLevel = logLevel;
         if (lambdaLogLevelEnabled)
         {
             minLogLevel = lambdaLogLevel;
         }
 
-        config.Service = service;
         config.MinimumLevel = minLogLevel;
+        
+        // set sampling rate
+        config = SetSamplingRate(powertoolsConfigurations, config, systemWrapper, minLogLevel);
+        return config;
+    }
+
+    /// <summary>
+    /// Set sampling rate
+    /// </summary>
+    /// <param name="powertoolsConfigurations"></param>
+    /// <param name="config"></param>
+    /// <param name="systemWrapper"></param>
+    /// <param name="minLogLevel"></param>
+    /// <returns></returns>
+    private static LoggerConfiguration SetSamplingRate(IPowertoolsConfigurations powertoolsConfigurations,
+        LoggerConfiguration config, ISystemWrapper systemWrapper, LogLevel minLogLevel)
+    {
+        var samplingRate = config.SamplingRate ?? powertoolsConfigurations.LoggerSampleRate;
         config.SamplingRate = samplingRate;
-        config.LoggerOutputCase = loggerOutputCase;
 
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase);
-
-        if (!samplingRate.HasValue)
-            return config;
-
-        if (samplingRate.Value < 0 || samplingRate.Value > 1)
+        switch (samplingRate)
         {
-            if (minLogLevel is LogLevel.Debug or LogLevel.Trace)
-                systemWrapper.LogLine(
-                    $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate.Value}");
-            config.SamplingRate = null;
-            return config;
+            case null:
+                return config;
+            case < 0 or > 1:
+            {
+                if (minLogLevel is LogLevel.Debug or LogLevel.Trace)
+                    systemWrapper.LogLine(
+                        $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate.Value}");
+                config.SamplingRate = null;
+                return config;
+            }
+            case 0:
+                return config;
         }
-
-        if (samplingRate.Value == 0)
-            return config;
 
         var sample = systemWrapper.GetRandom();
-        if (samplingRate.Value > sample)
-        {
-            systemWrapper.LogLine(
-                $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate.Value}, Sampler Value: {sample}.");
-            config.MinimumLevel = LogLevel.Debug;
-        }
+        
+        if (!(samplingRate.Value > sample)) return config;
+        
+        systemWrapper.LogLine(
+            $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate.Value}, Sampler Value: {sample}.");
+        config.MinimumLevel = LogLevel.Debug;
 
         return config;
     }
 
+    /// <summary>
+    /// Determines whether [is lambda log level enabled].
+    /// </summary>
+    /// <param name="powertoolsConfigurations"></param>
+    /// <returns></returns>
     internal static bool LambdaLogLevelEnabled(this IPowertoolsConfigurations powertoolsConfigurations)
     {
         return powertoolsConfigurations.GetLambdaLogLevel() != LogLevel.None;
