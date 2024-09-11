@@ -21,6 +21,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
+using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Serializers;
 
@@ -45,14 +46,9 @@ internal static class PowertoolsLoggingSerializer
     /// Configures the naming policy for the serializer.
     /// </summary>
     /// <param name="loggerOutputCase">The case to use for serialization.</param>
-    public static void ConfigureNamingPolicy(LoggerOutputCase? loggerOutputCase)
+    public static void ConfigureNamingPolicy(LoggerOutputCase loggerOutputCase)
     {
-        if (loggerOutputCase == null || loggerOutputCase == _currentOutputCase)
-        {
-            return;
-        }
-
-        _currentOutputCase = loggerOutputCase.Value;
+        _currentOutputCase = loggerOutputCase;
         var newOptions = BuildJsonSerializerOptions();
 
 #if NET8_0_OR_GREATER
@@ -76,9 +72,9 @@ internal static class PowertoolsLoggingSerializer
         return JsonSerializer.Serialize(value, SerializerOptions);
     }
 #endif
-    
+
 #if NET8_0_OR_GREATER
-    
+
     /// <summary>
     /// Serializes an object to a JSON string.
     /// </summary>
@@ -111,7 +107,6 @@ internal static class PowertoolsLoggingSerializer
         if (!AdditionalContexts.Contains(context))
         {
             AdditionalContexts.Add(context);
-            _serializerOptions?.TypeInfoResolverChain.Add(context);
         }
     }
 
@@ -157,6 +152,12 @@ internal static class PowertoolsLoggingSerializer
         jsonOptions.Converters.Add(new DateOnlyConverter());
         jsonOptions.Converters.Add(new TimeOnlyConverter());
 
+#if NET8_0_OR_GREATER
+        jsonOptions.Converters.Add(new JsonStringEnumConverter<LogLevel>());
+#elif NET6_0
+        jsonOptions.Converters.Add(new JsonStringEnumConverter());
+#endif
+
         jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
 
 #if NET8_0_OR_GREATER
@@ -168,4 +169,15 @@ internal static class PowertoolsLoggingSerializer
 #endif
         return jsonOptions;
     }
+
+#if NET8_0_OR_GREATER
+    internal static bool HasContext(JsonSerializerContext customContext)
+    {
+        return AdditionalContexts.Contains(customContext);
+    }
+    internal static void ClearContext()
+    {
+        AdditionalContexts.Clear();
+    }
+#endif
 }

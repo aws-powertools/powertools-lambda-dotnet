@@ -135,6 +135,11 @@ public class LoggingAttribute : MethodAspectAttribute
     private double? _samplingRate;
 
     /// <summary>
+    ///     The logger output case
+    /// </summary>
+    private LoggerOutputCase? _loggerOutputCase;
+
+    /// <summary>
     ///     Service name is used for logging.
     ///     This can be also set using the environment variable <c>POWERTOOLS_SERVICE_NAME</c>.
     /// </summary>
@@ -197,7 +202,10 @@ public class LoggingAttribute : MethodAspectAttribute
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
     /// </summary>
     /// <value>The log level.</value>
-    public LoggerOutputCase? LoggerOutputCase { get; set; }
+    public LoggerOutputCase LoggerOutputCase  {
+        get => _loggerOutputCase ?? LoggingConstants.DefaultLoggerOutputCase;
+        set => _loggerOutputCase = value;
+    }
 
     /// <summary>
     ///     Creates the handler.

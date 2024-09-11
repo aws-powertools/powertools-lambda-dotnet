@@ -119,7 +119,7 @@ internal static class PowertoolsConfigurationsExtension
         // set output case
         var loggerOutputCase = powertoolsConfigurations.GetLoggerOutputCase(config.LoggerOutputCase);
         config.LoggerOutputCase = loggerOutputCase;
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase);
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase ?? LoggingConstants.DefaultLoggerOutputCase);
 
         // log level
         var minLogLevel = logLevel;
