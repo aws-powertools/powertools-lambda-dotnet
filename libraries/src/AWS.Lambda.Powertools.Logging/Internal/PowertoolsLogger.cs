@@ -38,7 +38,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// <summary>
     ///     The current configuration
     /// </summary>
-    private static LoggerConfiguration _currentConfig;
+    private LoggerConfiguration _currentConfig;
 
     /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations

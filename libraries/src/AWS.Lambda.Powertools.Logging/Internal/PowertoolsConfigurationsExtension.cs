@@ -102,7 +102,7 @@ internal static class PowertoolsConfigurationsExtension
     {
         config ??= new LoggerConfiguration();
 
-        var logLevel = powertoolsConfigurations.GetLogLevel(config?.MinimumLevel);
+        var logLevel = powertoolsConfigurations.GetLogLevel(config.MinimumLevel);
         var lambdaLogLevel = powertoolsConfigurations.GetLambdaLogLevel();
         var lambdaLogLevelEnabled = powertoolsConfigurations.LambdaLogLevelEnabled();
 
@@ -113,11 +113,11 @@ internal static class PowertoolsConfigurationsExtension
         }
 
         // set service
-        var service = config?.Service ?? powertoolsConfigurations.Service;
+        var service = config.Service ?? powertoolsConfigurations.Service;
         config.Service = service;
         
         // set output case
-        var loggerOutputCase = powertoolsConfigurations.GetLoggerOutputCase(config?.LoggerOutputCase);
+        var loggerOutputCase = powertoolsConfigurations.GetLoggerOutputCase(config.LoggerOutputCase);
         config.LoggerOutputCase = loggerOutputCase;
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase);
 
@@ -167,7 +167,7 @@ internal static class PowertoolsConfigurationsExtension
 
         var sample = systemWrapper.GetRandom();
         
-        if (!(samplingRate.Value > sample)) return config;
+        if ((samplingRate.Value <= sample)) return config;
         
         systemWrapper.LogLine(
             $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate.Value}, Sampler Value: {sample}.");
