@@ -23,6 +23,11 @@ namespace AWS.Lambda.Powertools.Logging;
 public enum LoggerOutputCase
 {
     /// <summary>
+    ///     Default value when Not Set - must be first element in Enum
+    /// </summary>
+    [EnumMember(Value = "Default")] Default,
+        
+    /// <summary>
     ///     Camel Case
     /// </summary>
     [EnumMember(Value = "CamelCase")] CamelCase,

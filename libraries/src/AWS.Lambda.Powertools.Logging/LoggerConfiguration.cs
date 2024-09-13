@@ -45,7 +45,7 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_SAMPLE_RATE</c>.
     /// </summary>
     /// <value>The sampling rate.</value>
-    public double? SamplingRate { get; set; }
+    public double SamplingRate { get; set; }
 
     /// <summary>
     ///     The default configured options instance
@@ -58,5 +58,5 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
     /// </summary>
     /// <value>The logger output case.</value>
-    public LoggerOutputCase? LoggerOutputCase { get; set; }
+    public LoggerOutputCase LoggerOutputCase { get; set; }
 }

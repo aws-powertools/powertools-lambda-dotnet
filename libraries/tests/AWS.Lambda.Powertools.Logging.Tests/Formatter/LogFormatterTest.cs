@@ -22,14 +22,13 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
-using AWS.Lambda.Powertools.Logging.Serializers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReturnsExtensions;
 using Xunit;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
-namespace AWS.Lambda.Powertools.Logging.Tests
+namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
 {
     [Collection("Sequential")]
     public class LogFormatterTest
@@ -174,7 +173,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             Logger.UseDefaultFormatter();
             Logger.RemoveAllKeys();
             LoggingLambdaContext.Clear();
-            LoggingAspectHandler.ResetForTest();
+            LoggingAspect.ResetForTest();
         }
     }
 

@@ -7,7 +7,7 @@ using AWS.Lambda.Powertools.Logging.Internal;
 using NSubstitute;
 using Xunit;
 
-namespace AWS.Lambda.Powertools.Logging.Tests;
+namespace AWS.Lambda.Powertools.Logging.Tests.Context;
 
 public class LambdaContextTest
 {

@@ -159,6 +159,7 @@ internal static class PowertoolsLoggingSerializer
 #endif
 
         jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+        jsonOptions.PropertyNameCaseInsensitive = true;
 
 #if NET8_0_OR_GREATER
         jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
@@ -175,6 +176,7 @@ internal static class PowertoolsLoggingSerializer
     {
         return AdditionalContexts.Contains(customContext);
     }
+
     internal static void ClearContext()
     {
         AdditionalContexts.Clear();

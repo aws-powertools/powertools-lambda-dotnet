@@ -71,10 +71,10 @@ internal static class PowertoolsConfigurationsExtension
     /// <param name="loggerOutputCase">Optional explicit logger output case.</param>
     /// <returns>The determined LoggerOutputCase.</returns>
     internal static LoggerOutputCase GetLoggerOutputCase(this IPowertoolsConfigurations powertoolsConfigurations,
-        LoggerOutputCase? loggerOutputCase = null)
+        LoggerOutputCase loggerOutputCase)
     {
-        if (loggerOutputCase.HasValue)
-            return loggerOutputCase.Value;
+        if (loggerOutputCase != LoggerOutputCase.Default)
+            return loggerOutputCase;
 
         if (Enum.TryParse((powertoolsConfigurations.LoggerOutputCase ?? "").Trim(), true, out LoggerOutputCase result))
             return result;
@@ -99,7 +99,7 @@ internal static class PowertoolsConfigurationsExtension
     ///     Gets the current configuration.
     /// </summary>
     /// <returns>AWS.Lambda.Powertools.Logging.LoggerConfiguration.</returns>
-    public static LoggerConfiguration SetCurrentConfig(this IPowertoolsConfigurations powertoolsConfigurations,
+    internal static LoggerConfiguration SetCurrentConfig(this IPowertoolsConfigurations powertoolsConfigurations,
         LoggerConfiguration config, ISystemWrapper systemWrapper)
     {
         config ??= new LoggerConfiguration();
@@ -121,7 +121,7 @@ internal static class PowertoolsConfigurationsExtension
         // set output case
         var loggerOutputCase = powertoolsConfigurations.GetLoggerOutputCase(config.LoggerOutputCase);
         config.LoggerOutputCase = loggerOutputCase;
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase ?? LoggingConstants.DefaultLoggerOutputCase);
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase);
 
         // log level
         var minLogLevel = logLevel;
@@ -148,19 +148,17 @@ internal static class PowertoolsConfigurationsExtension
     private static LoggerConfiguration SetSamplingRate(IPowertoolsConfigurations powertoolsConfigurations,
         LoggerConfiguration config, ISystemWrapper systemWrapper, LogLevel minLogLevel)
     {
-        var samplingRate = config.SamplingRate ?? powertoolsConfigurations.LoggerSampleRate;
+        var samplingRate = config.SamplingRate == 0 ? powertoolsConfigurations.LoggerSampleRate : config.SamplingRate;
         config.SamplingRate = samplingRate;
 
         switch (samplingRate)
         {
-            case null:
-                return config;
             case < 0 or > 1:
             {
                 if (minLogLevel is LogLevel.Debug or LogLevel.Trace)
                     systemWrapper.LogLine(
-                        $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate.Value}");
-                config.SamplingRate = null;
+                        $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate}");
+                config.SamplingRate = 0;
                 return config;
             }
             case 0:
@@ -169,10 +167,10 @@ internal static class PowertoolsConfigurationsExtension
 
         var sample = systemWrapper.GetRandom();
         
-        if ((samplingRate.Value <= sample)) return config;
+        if (samplingRate <= sample) return config;
         
         systemWrapper.LogLine(
-            $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate.Value}, Sampler Value: {sample}.");
+            $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
         config.MinimumLevel = LogLevel.Debug;
 
         return config;
@@ -197,7 +195,7 @@ internal static class PowertoolsConfigurationsExtension
     /// <returns>
     /// The input string converted to the configured case (camel, pascal, or snake case).
     /// </returns>
-    internal static string ConvertToOutputCase(this IPowertoolsConfigurations powertoolsConfigurations, string correlationIdPath, LoggerOutputCase? loggerOutputCase = null)
+    internal static string ConvertToOutputCase(this IPowertoolsConfigurations powertoolsConfigurations, string correlationIdPath, LoggerOutputCase loggerOutputCase)
     {
         return powertoolsConfigurations.GetLoggerOutputCase(loggerOutputCase) switch
         {

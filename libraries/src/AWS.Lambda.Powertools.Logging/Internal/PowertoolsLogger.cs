@@ -253,8 +253,8 @@ internal sealed class PowertoolsLogger : ILogger
         logEntry.TryAdd(LoggingConstants.KeyLoggerName, _name);
         logEntry.TryAdd(LoggingConstants.KeyMessage, message);
 
-        if (_currentConfig.SamplingRate.HasValue)
-            logEntry.TryAdd(LoggingConstants.KeySamplingRate, _currentConfig.SamplingRate.Value);
+        if (_currentConfig.SamplingRate > 0)
+            logEntry.TryAdd(LoggingConstants.KeySamplingRate, _currentConfig.SamplingRate);
         if (exception != null)
             logEntry.TryAdd(LoggingConstants.KeyException, exception);
 

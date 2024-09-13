@@ -16,21 +16,31 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text.Json;
+using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
-using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
+internal class LoggingAspectFactory
+{
+    public static object GetInstance(Type type)
+    {
+        return new LoggingAspect(PowertoolsConfigurations.Instance, SystemWrapper.Instance);
+    }
+}
+
 /// <summary>
-///     Class LoggingAspectHandler.
-///     Implements the <see cref="IMethodAspectHandler" />
+///     Logging Aspect
+///     Scope.Global is singleton
 /// </summary>
 /// <seealso cref="IMethodAspectHandler" />
-internal class LoggingAspectHandler : IMethodAspectHandler
+[Aspect(Scope.Global, Factory = typeof(LoggingAspectFactory))]
+public class LoggingAspect
 {
     /// <summary>
     ///     The is cold start
@@ -45,22 +55,22 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Clear state?
     /// </summary>
-    private readonly bool _clearState;
+    private bool _clearState;
 
     /// <summary>
     ///     The correlation identifier path
     /// </summary>
-    private readonly string _correlationIdPath;
+    private string _correlationIdPath;
 
     /// <summary>
     ///     The log event
     /// </summary>
-    private readonly bool? _logEvent;
+    private bool? _logEvent;
 
     /// <summary>
     ///     The log level
     /// </summary>
-    private readonly LogLevel? _logLevel;
+    private LogLevel? _logLevel;
 
     /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations
@@ -85,51 +95,69 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     The configuration
     /// </summary>
-    private readonly LoggerConfiguration _config;
+    private LoggerConfiguration _config;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="LoggingAspectHandler" /> class.
+    ///     Initializes a new instance of the <see cref="LoggingAspect" /> class.
     /// </summary>
-    /// <param name="config"></param>
-    /// <param name="logLevel">The log level.</param>
-    /// <param name="logEvent">if set to <c>true</c> [log event].</param>
-    /// <param name="correlationIdPath">The correlation identifier path.</param>
-    /// <param name="clearState">if set to <c>true</c> [clear state].</param>
     /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
-    internal LoggingAspectHandler
-    (
-        LoggerConfiguration config,
-        LogLevel? logLevel,
-        bool? logEvent,
-        string correlationIdPath,
-        bool clearState,
-        IPowertoolsConfigurations powertoolsConfigurations,
-        ISystemWrapper systemWrapper
-    )
+    public LoggingAspect(IPowertoolsConfigurations powertoolsConfigurations, ISystemWrapper systemWrapper)
     {
-        _logLevel = logLevel;
-        _logEvent = logEvent;
-        _clearState = clearState;
-        _correlationIdPath = correlationIdPath;
         _powertoolsConfigurations = powertoolsConfigurations;
         _systemWrapper = systemWrapper;
-        _config = config;
     }
 
     /// <summary>
-    ///     Handles the <see cref="E:Entry" /> event.
+    /// Runs before the execution of the method marked with the Logging Attribute
     /// </summary>
-    /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
-    ///     event data.
-    /// </param>
-    public void OnEntry(AspectEventArgs eventArgs)
+    /// <param name="instance"></param>
+    /// <param name="name"></param>
+    /// <param name="args"></param>
+    /// <param name="hostType"></param>
+    /// <param name="method"></param>
+    /// <param name="returnType"></param>
+    /// <param name="triggers"></param>
+    [Advice(Kind.Before)]
+    public void OnEntry(
+        [Argument(Source.Instance)] object instance,
+        [Argument(Source.Name)] string name,
+        [Argument(Source.Arguments)] object[] args,
+        [Argument(Source.Type)] Type hostType,
+        [Argument(Source.Metadata)] MethodBase method,
+        [Argument(Source.ReturnType)] Type returnType,
+        [Argument(Source.Triggers)] Attribute[] triggers)
     {
+        // Called before the method
+        var trigger = triggers.OfType<LoggingAttribute>().First();
+
+        var eventArgs = new AspectEventArgs
+        {
+            Instance = instance,
+            Type = hostType,
+            Method = method,
+            Name = name,
+            Args = args,
+            ReturnType = returnType,
+            Triggers = triggers
+        };
+
+        _config = new LoggerConfiguration
+        {
+            Service = trigger.Service,
+            LoggerOutputCase = trigger.LoggerOutputCase,
+            SamplingRate = trigger.SamplingRate
+        };
+
+        _logLevel = trigger.LogLevel;
+        _logEvent = trigger.LogEvent;
+        _correlationIdPath = trigger.CorrelationIdPath;
+        _clearState = trigger.ClearState;
+
         switch (Logger.LoggerProvider)
         {
             case null:
-                Logger.LoggerProvider = new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper );
+                Logger.LoggerProvider = new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
                 break;
             case LoggerProvider:
                 ((LoggerProvider)Logger.LoggerProvider).Configure(_config);
@@ -154,18 +182,6 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     }
 
     /// <summary>
-    ///     Called when [success].
-    /// </summary>
-    /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
-    ///     event data.
-    /// </param>
-    /// <param name="result">The result.</param>
-    public void OnSuccess(AspectEventArgs eventArgs, object result)
-    {
-    }
-
-    /// <summary>
     ///     Called when [exception].
     /// </summary>
     /// <param name="eventArgs">
@@ -181,13 +197,10 @@ internal class LoggingAspectHandler : IMethodAspectHandler
     }
 
     /// <summary>
-    ///     Handles the <see cref="E:Exit" /> event.
+    ///     Handles the Kind.After event.
     /// </summary>
-    /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
-    ///     event data.
-    /// </param>
-    public void OnExit(AspectEventArgs eventArgs)
+    [Advice(Kind.After)]
+    public void OnExit()
     {
         if (!_isContextInitialized)
             return;
@@ -270,13 +283,14 @@ internal class LoggingAspectHandler : IMethodAspectHandler
             var jsonDoc =
                 JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg, eventArg.GetType()));
 #else
-        var jsonDoc = JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg));
+            var jsonDoc = JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg));
 #endif
             var element = jsonDoc.RootElement;
 
             for (var i = 0; i < correlationIdPaths.Length; i++)
             {
-                var pathWithOutputCase = _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i]);
+                // For casing parsing to be removed from Logging v2 when we get rid of outputcase
+                var pathWithOutputCase = _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
                 if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
                     break;
 
@@ -346,5 +360,6 @@ internal class LoggingAspectHandler : IMethodAspectHandler
         LoggingLambdaContext.Clear();
         Logger.LoggerProvider = null;
         Logger.RemoveAllKeys();
+        
     }
 }

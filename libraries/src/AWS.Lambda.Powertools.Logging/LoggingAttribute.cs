@@ -14,6 +14,7 @@
  */
 
 using System;
+using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
@@ -116,7 +117,8 @@ namespace AWS.Lambda.Powertools.Logging;
 ///     </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Method)]
-public class LoggingAttribute : MethodAspectAttribute
+[Injection(typeof(LoggingAspect))]
+public class LoggingAttribute : Attribute
 {
     /// <summary>
     ///     The log event
@@ -127,17 +129,6 @@ public class LoggingAttribute : MethodAspectAttribute
     ///     The log level
     /// </summary>
     private LogLevel? _logLevel;
-    
-
-    /// <summary>
-    ///     The sampling rate
-    /// </summary>
-    private double? _samplingRate;
-
-    /// <summary>
-    ///     The logger output case
-    /// </summary>
-    private LoggerOutputCase? _loggerOutputCase;
 
     /// <summary>
     ///     Service name is used for logging.
@@ -162,11 +153,7 @@ public class LoggingAttribute : MethodAspectAttribute
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_SAMPLE_RATE</c>.
     /// </summary>
     /// <value>The sampling rate.</value>
-    public double SamplingRate
-    {
-        get => _samplingRate.GetValueOrDefault();
-        set => _samplingRate = value;
-    }
+    public double SamplingRate { get; set; }
 
     /// <summary>
     ///     Explicitly log any incoming event, The first handler parameter is the input to the handler,
@@ -202,33 +189,30 @@ public class LoggingAttribute : MethodAspectAttribute
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
     /// </summary>
     /// <value>The log level.</value>
-    public LoggerOutputCase LoggerOutputCase  {
-        get => _loggerOutputCase ?? LoggingConstants.DefaultLoggerOutputCase;
-        set => _loggerOutputCase = value;
-    }
+    public LoggerOutputCase LoggerOutputCase  { get; set; } = LoggerOutputCase.Default;
 
-    /// <summary>
-    ///     Creates the handler.
-    /// </summary>
-    /// <returns>IMethodAspectHandler.</returns>
-    protected override IMethodAspectHandler CreateHandler()
-    {
-        var config = new LoggerConfiguration 
-        {
-            Service = Service,
-            LoggerOutputCase = LoggerOutputCase,
-            SamplingRate = SamplingRate,
-        };
-        
-        return new LoggingAspectHandler
-        (
-            config,
-            LogLevel,
-            LogEvent,
-            CorrelationIdPath,
-            ClearState,
-            PowertoolsConfigurations.Instance,
-            SystemWrapper.Instance
-        );
-    }
+    // /// <summary>
+    // ///     Creates the handler.
+    // /// </summary>
+    // /// <returns>IMethodAspectHandler.</returns>
+    // protected override IMethodAspectHandler CreateHandler()
+    // {
+    //     var config = new LoggerConfiguration 
+    //     {
+    //         Service = Service,
+    //         LoggerOutputCase = LoggerOutputCase,
+    //         SamplingRate = SamplingRate,
+    //     };
+    //     
+    //     return new LoggingAspect
+    //     (
+    //         config,
+    //         LogLevel,
+    //         LogEvent,
+    //         CorrelationIdPath,
+    //         ClearState,
+    //         PowertoolsConfigurations.Instance,
+    //         SystemWrapper.Instance
+    //     );
+    // }
 }

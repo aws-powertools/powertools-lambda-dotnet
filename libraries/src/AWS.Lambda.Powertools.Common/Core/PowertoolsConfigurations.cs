@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using System.Globalization;
+
 namespace AWS.Lambda.Powertools.Common;
 
 /// <summary>
@@ -157,10 +159,10 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     ///     Gets the logger sample rate.
     /// </summary>
     /// <value>The logger sample rate.</value>
-    public double? LoggerSampleRate =>
-        double.TryParse(_systemWrapper.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv), out var result)
+    public double LoggerSampleRate =>
+        double.TryParse(_systemWrapper.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture,  out var result)
             ? result
-            : null;
+            : 0;
 
     /// <summary>
     ///     Gets a value indicating whether [logger log event].

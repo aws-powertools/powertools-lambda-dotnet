@@ -51,7 +51,7 @@ public class Logger
     ///     Gets the scope.
     /// </summary>
     /// <value>The scope.</value>
-    private static IDictionary<string, object> _scope { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
+    private static IDictionary<string, object> Scope { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
     /// <summary>
     ///     Creates a new <see cref="T:Microsoft.Extensions.Logging.ILogger" /> instance.
@@ -91,13 +91,7 @@ public class Logger
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(nameof(key));
 
-        if (value is null)
-            throw new ArgumentNullException(nameof(value));
-
-        if (_scope.ContainsKey(key))
-            _scope[key] = value;
-        else
-            _scope.Add(key, value);
+        Scope[key] = value ?? throw new ArgumentNullException(nameof(value));
     }
 
     /// <summary>
@@ -128,8 +122,8 @@ public class Logger
     {
         if (keys == null) return;
         foreach (var key in keys)
-            if (_scope.ContainsKey(key))
-                _scope.Remove(key);
+            if (Scope.ContainsKey(key))
+                Scope.Remove(key);
     }
 
     /// <summary>
@@ -138,7 +132,7 @@ public class Logger
     /// <returns>IEnumerable&lt;KeyValuePair&lt;System.String, System.Object&gt;&gt;.</returns>
     public static IEnumerable<KeyValuePair<string, object>> GetAllKeys()
     {
-        return _scope.AsEnumerable();
+        return Scope.AsEnumerable();
     }
 
     /// <summary>
@@ -146,7 +140,7 @@ public class Logger
     /// </summary>
     internal static void RemoveAllKeys()
     {
-        _scope.Clear();
+        Scope.Clear();
     }
 
     #endregion

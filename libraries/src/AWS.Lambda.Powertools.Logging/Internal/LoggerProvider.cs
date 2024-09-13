@@ -90,8 +90,8 @@ public sealed class LoggerProvider : ILoggerProvider
     /// <param name="config">The configuration.</param>
     internal void Configure(IOptions<LoggerConfiguration> config)
     {
-        if (_currentConfig is not null || config is null)
-            return;
+        // if (_currentConfig is not null || config is null)
+        //     return;
 
         _currentConfig = config.Value;
         foreach (var logger in _loggers.Values)
