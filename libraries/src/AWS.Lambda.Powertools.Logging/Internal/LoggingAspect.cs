@@ -123,61 +123,55 @@ public class LoggingAspect
         // Called before the method
         var trigger = triggers.OfType<LoggingAttribute>().First();
 
-        var eventArgs = new AspectEventArgs
+        try
         {
-            Instance = instance,
-            Type = hostType,
-            Method = method,
-            Name = name,
-            Args = args,
-            ReturnType = returnType,
-            Triggers = triggers
-        };
+            var eventArgs = new AspectEventArgs
+            {
+                Instance = instance,
+                Type = hostType,
+                Method = method,
+                Name = name,
+                Args = args,
+                ReturnType = returnType,
+                Triggers = triggers
+            };
 
-        _config = new LoggerConfiguration
+            _config = new LoggerConfiguration
+            {
+                Service = trigger.Service,
+                LoggerOutputCase = trigger.LoggerOutputCase,
+                SamplingRate = trigger.SamplingRate
+            };
+
+            _logLevel = trigger.LogLevel;
+            _logEvent = trigger.LogEvent;
+            _correlationIdPath = trigger.CorrelationIdPath;
+            _clearState = trigger.ClearState;
+
+            Logger.LoggerProvider ??= new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
+
+            if (!_initializeContext)
+                return;
+
+            Logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
+
+            _isColdStart = false;
+            _initializeContext = false;
+            _isContextInitialized = true;
+
+            var eventObject = eventArgs.Args.FirstOrDefault();
+            CaptureXrayTraceId();
+            CaptureLambdaContext(eventArgs);
+            CaptureCorrelationId(eventObject);
+            if (_logEvent ?? _powertoolsConfigurations.LoggerLogEvent)
+                LogEvent(eventObject);
+        }
+        catch (Exception exception)
         {
-            Service = trigger.Service,
-            LoggerOutputCase = trigger.LoggerOutputCase,
-            SamplingRate = trigger.SamplingRate
-        };
-
-        _logLevel = trigger.LogLevel;
-        _logEvent = trigger.LogEvent;
-        _correlationIdPath = trigger.CorrelationIdPath;
-        _clearState = trigger.ClearState;
-
-        Logger.LoggerProvider ??= new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
-
-        if (!_initializeContext)
-            return;
-
-        Logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
-
-        _isColdStart = false;
-        _initializeContext = false;
-        _isContextInitialized = true;
-
-        var eventObject = eventArgs.Args.FirstOrDefault();
-        CaptureXrayTraceId();
-        CaptureLambdaContext(eventArgs);
-        CaptureCorrelationId(eventObject);
-        if (_logEvent ?? _powertoolsConfigurations.LoggerLogEvent)
-            LogEvent(eventObject);
-    }
-
-    /// <summary>
-    ///     Called when [exception].
-    /// </summary>
-    /// <param name="eventArgs">
-    ///     The <see cref="T:AWS.Lambda.Powertools.Aspects.AspectEventArgs" /> instance containing the
-    ///     event data.
-    /// </param>
-    /// <param name="exception">The exception.</param>
-    public void OnException(AspectEventArgs eventArgs, Exception exception)
-    {
-        // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
-        // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
-        ExceptionDispatchInfo.Capture(exception).Throw();
+            // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
+            // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
+            ExceptionDispatchInfo.Capture(exception).Throw();
+        }
     }
 
     /// <summary>
@@ -274,7 +268,8 @@ public class LoggingAspect
             for (var i = 0; i < correlationIdPaths.Length; i++)
             {
                 // For casing parsing to be removed from Logging v2 when we get rid of outputcase
-                var pathWithOutputCase = _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
+                var pathWithOutputCase =
+                    _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
                 if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
                     break;
 
@@ -344,6 +339,5 @@ public class LoggingAspect
         LoggingLambdaContext.Clear();
         Logger.LoggerProvider = null;
         Logger.RemoveAllKeys();
-        
     }
 }

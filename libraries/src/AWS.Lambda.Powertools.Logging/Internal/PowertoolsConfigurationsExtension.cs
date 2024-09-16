@@ -138,7 +138,7 @@ internal static class PowertoolsConfigurationsExtension
     /// <returns></returns>
     private static void SetSamplingRate(IPowertoolsConfigurations powertoolsConfigurations, ISystemWrapper systemWrapper, LogLevel minLogLevel)
     {
-        double samplingRate = _config.SamplingRate == 0 ? powertoolsConfigurations.LoggerSampleRate : _config.SamplingRate;
+        var samplingRate = _config.SamplingRate > 0 ? _config.SamplingRate : powertoolsConfigurations.LoggerSampleRate;
         samplingRate = ValidateSamplingRate(samplingRate, minLogLevel, systemWrapper);
 
         _config.SamplingRate = samplingRate;
