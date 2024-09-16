@@ -28,17 +28,26 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Serializers;
 
 public class PowertoolsLoggingSerializerTests : IDisposable
 {
+
+    public PowertoolsLoggingSerializerTests()
+    {
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
+#if NET8_0_OR_GREATER
+        PowertoolsLoggingSerializer.ClearContext();
+#endif
+    }
+    
     [Fact]
     public void SerializerOptions_ShouldNotBeNull()
     {
-        var options = PowertoolsLoggingSerializer.SerializerOptions;
+        var options = PowertoolsLoggingSerializer.GetSerializerOptions();
         Assert.NotNull(options);
     }
 
     [Fact]
     public void SerializerOptions_ShouldHaveCorrectDefaultSettings()
     {
-        var options = PowertoolsLoggingSerializer.SerializerOptions;
+        var options = PowertoolsLoggingSerializer.GetSerializerOptions();
 
         Assert.Collection(options.Converters,
             converter => Assert.IsType<ByteArrayConverter>(converter),
@@ -110,7 +119,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             }
         };
 
-        var json = JsonSerializer.Serialize(testObject, PowertoolsLoggingSerializer.SerializerOptions);
+        var json = JsonSerializer.Serialize(testObject, PowertoolsLoggingSerializer.GetSerializerOptions());
         Assert.Contains("\"cold_start\":true", json);
         Assert.Contains("\"nested_object\":{\"property_name\":\"Value\"}", json);
     }
@@ -122,7 +131,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         {
             Level = LogLevel.Error
         };
-        var json = JsonSerializer.Serialize(testObject, PowertoolsLoggingSerializer.SerializerOptions);
+        var json = JsonSerializer.Serialize(testObject, PowertoolsLoggingSerializer.GetSerializerOptions());
         Assert.Contains("\"level\":\"Error\"", json);
     }
 
@@ -155,7 +164,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         }
 
         LogEntry testObject = new LogEntry { ColdStart = true };
-        return JsonSerializer.Serialize(testObject, PowertoolsLoggingSerializer.SerializerOptions);
+        return JsonSerializer.Serialize(testObject, PowertoolsLoggingSerializer.GetSerializerOptions());
     }
 
     public void Dispose()

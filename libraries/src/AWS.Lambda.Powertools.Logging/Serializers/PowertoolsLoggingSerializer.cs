@@ -14,7 +14,9 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -30,16 +32,29 @@ namespace AWS.Lambda.Powertools.Logging.Serializers;
 /// </summary>
 internal static class PowertoolsLoggingSerializer
 {
-    private static JsonSerializerOptions _serializerOptions;
-    private static readonly List<JsonSerializerContext> AdditionalContexts = new List<JsonSerializerContext>();
     private static LoggerOutputCase _currentOutputCase = LoggerOutputCase.SnakeCase;
+    private static readonly object _lock = new object();
+    private static readonly ConcurrentBag<JsonSerializerContext> AdditionalContexts =
+        new ConcurrentBag<JsonSerializerContext>();
 
     /// <summary>
     /// Gets the JsonSerializerOptions instance.
     /// </summary>
-    internal static JsonSerializerOptions SerializerOptions
+    internal static JsonSerializerOptions GetSerializerOptions()
     {
-        get { return _serializerOptions ??= BuildJsonSerializerOptions(); }
+        lock (_lock)
+        {
+            var options = BuildJsonSerializerOptions();
+
+#if NET8_0_OR_GREATER
+            foreach (var context in AdditionalContexts)
+            {
+                options.TypeInfoResolverChain.Add(context);
+            }
+#endif
+
+            return options;
+        }
     }
 
     /// <summary>
@@ -48,17 +63,10 @@ internal static class PowertoolsLoggingSerializer
     /// <param name="loggerOutputCase">The case to use for serialization.</param>
     public static void ConfigureNamingPolicy(LoggerOutputCase loggerOutputCase)
     {
-        _currentOutputCase = loggerOutputCase;
-        var newOptions = BuildJsonSerializerOptions();
-
-#if NET8_0_OR_GREATER
-        foreach (var context in AdditionalContexts)
+        lock (_lock)
         {
-            newOptions.TypeInfoResolverChain.Add(context);
+            _currentOutputCase = loggerOutputCase;
         }
-#endif
-
-        _serializerOptions = newOptions;
     }
 
 #if NET6_0
@@ -69,7 +77,8 @@ internal static class PowertoolsLoggingSerializer
     /// <returns>A JSON string representation of the object.</returns>
     public static string Serialize(object value)
     {
-        return JsonSerializer.Serialize(value, SerializerOptions);
+        var options = GetSerializerOptions();
+        return JsonSerializer.Serialize(value, options);
     }
 #endif
 
@@ -117,7 +126,8 @@ internal static class PowertoolsLoggingSerializer
     /// <returns>The JsonTypeInfo for the specified type, or null if not found.</returns>
     internal static JsonTypeInfo GetTypeInfo(Type type)
     {
-        return SerializerOptions.TypeInfoResolver?.GetTypeInfo(type, SerializerOptions);
+        var options = GetSerializerOptions();
+        return options.TypeInfoResolver?.GetTypeInfo(type, options);
     }
 #endif
 

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using AWS.Lambda.Powertools.Logging.Serializers;
@@ -34,21 +35,39 @@ internal sealed class PowertoolsLogger : ILogger
     ///     The name
     /// </summary>
     private readonly string _name;
-
+    
     /// <summary>
     ///     The current configuration
     /// </summary>
-    private LoggerConfiguration _currentConfig;
-
-    /// <summary>
-    ///     The Powertools for AWS Lambda (.NET) configurations
-    /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
-
+    
     /// <summary>
     ///     The system wrapper
     /// </summary>
     private readonly ISystemWrapper _systemWrapper;
+
+    /// <summary>
+    ///     The current scope
+    /// </summary>
+    internal PowertoolsLoggerScope CurrentScope { get; private set; }
+
+    /// <summary>
+    ///     Private constructor - Is initialized on CreateLogger
+    /// </summary>
+    /// <param name="name">The name.</param>
+    /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
+    /// <param name="systemWrapper">The system wrapper.</param>
+    private PowertoolsLogger(
+        string name,
+        IPowertoolsConfigurations powertoolsConfigurations,
+        ISystemWrapper systemWrapper)
+    {
+        _name = name;
+        _powertoolsConfigurations = powertoolsConfigurations;
+        _systemWrapper = systemWrapper;
+
+        _powertoolsConfigurations.SetExecutionEnvironment(this);
+    }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="PowertoolsLogger" /> class.
@@ -56,36 +75,12 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="name">The name.</param>
     /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
-    /// <param name="currentConfig"></param>
-    public PowertoolsLogger(
-        string name,
+    internal static PowertoolsLogger CreateLogger(string name,
         IPowertoolsConfigurations powertoolsConfigurations,
-        ISystemWrapper systemWrapper,
-        LoggerConfiguration currentConfig)
+        ISystemWrapper systemWrapper)
     {
-        (_name, _powertoolsConfigurations, _systemWrapper, _currentConfig) = (name,
-            powertoolsConfigurations, systemWrapper, currentConfig);
-
-        _powertoolsConfigurations.SetExecutionEnvironment(this);
+        return new PowertoolsLogger(name, powertoolsConfigurations, systemWrapper);
     }
-
-    /// <summary>
-    ///     Sets the minimum level.
-    /// </summary>
-    /// <value>The minimum level.</value>
-    private LogLevel MinimumLevel =>
-        _currentConfig.MinimumLevel ?? LoggingConstants.DefaultLogLevel;
-
-    /// <summary>
-    ///     Sets the service.
-    /// </summary>
-    /// <value>The service.</value>
-    private string Service =>
-        !string.IsNullOrWhiteSpace(_currentConfig.Service)
-            ? _currentConfig.Service
-            : _powertoolsConfigurations.Service;
-
-    internal PowertoolsLoggerScope CurrentScope { get; private set; }
 
     /// <summary>
     ///     Begins the scope.
@@ -108,63 +103,12 @@ internal sealed class PowertoolsLogger : ILogger
     }
 
     /// <summary>
-    ///     Extract provided scope keys
-    /// </summary>
-    /// <typeparam name="TState">The type of the t state.</typeparam>
-    /// <param name="state">The state.</param>
-    /// <returns>Key/Value pair of provided scope keys</returns>
-    private static Dictionary<string, object> GetScopeKeys<TState>(TState state)
-    {
-        var keys = new Dictionary<string, object>();
-
-        if (state is null)
-            return keys;
-
-        switch (state)
-        {
-            case IEnumerable<KeyValuePair<string, string>> pairs:
-            {
-                foreach (var (key, value) in pairs)
-                {
-                    if (!string.IsNullOrWhiteSpace(key))
-                        keys.TryAdd(key, value);
-                }
-
-                break;
-            }
-            case IEnumerable<KeyValuePair<string, object>> pairs:
-            {
-                foreach (var (key, value) in pairs)
-                {
-                    if (!string.IsNullOrWhiteSpace(key))
-                        keys.TryAdd(key, value);
-                }
-
-                break;
-            }
-            default:
-            {
-                foreach (var property in state.GetType().GetProperties())
-                {
-                    keys.TryAdd(property.Name, property.GetValue(state));
-                }
-
-                break;
-            }
-        }
-
-        return keys;
-    }
-
-    /// <summary>
     ///     Determines whether the specified log level is enabled.
     /// </summary>
     /// <param name="logLevel">The log level.</param>
     /// <returns>bool.</returns>
-    public bool IsEnabled(LogLevel logLevel)
-    {
-        return logLevel != LogLevel.None && logLevel >= MinimumLevel;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsEnabled(LogLevel logLevel) => _powertoolsConfigurations.IsLogLevelEnabled(logLevel);
 
     /// <summary>
     ///     Writes a log entry.
@@ -194,7 +138,6 @@ internal sealed class PowertoolsLogger : ILogger
             ? GetLogEntry(logLevel, timestamp, message, exception)
             : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter);
 
-
 #if NET8_0_OR_GREATER
         _systemWrapper.LogLine(PowertoolsLoggingSerializer.Serialize(logEntry, typeof(object)));
 #else
@@ -216,16 +159,14 @@ internal sealed class PowertoolsLogger : ILogger
 
         // Add Custom Keys
         foreach (var (key, value) in Logger.GetAllKeys())
+        {
             logEntry.TryAdd(key, value);
+        }
 
         // Add Lambda Context Keys
         if (LoggingLambdaContext.Instance is not null)
         {
-            logEntry.TryAdd(LoggingConstants.KeyFunctionName, LoggingLambdaContext.Instance.FunctionName);
-            logEntry.TryAdd(LoggingConstants.KeyFunctionVersion, LoggingLambdaContext.Instance.FunctionVersion);
-            logEntry.TryAdd(LoggingConstants.KeyFunctionMemorySize, LoggingLambdaContext.Instance.MemoryLimitInMB);
-            logEntry.TryAdd(LoggingConstants.KeyFunctionArn, LoggingLambdaContext.Instance.InvokedFunctionArn);
-            logEntry.TryAdd(LoggingConstants.KeyFunctionRequestId, LoggingLambdaContext.Instance.AwsRequestId);
+            AddLambdaContextKeys(logEntry);
         }
 
         // Add Extra Fields
@@ -238,31 +179,24 @@ internal sealed class PowertoolsLogger : ILogger
             }
         }
 
-        var keyLogLevel = LoggingConstants.KeyLogLevel;
-        var lambdaLogLevelEnabled = _powertoolsConfigurations.LambdaLogLevelEnabled();
-        
-        // If ALC is enabled and PascalCase we need to convert Level to LogLevel for it to be parsed and sent to CW
-        if (lambdaLogLevelEnabled && _currentConfig.LoggerOutputCase == LoggerOutputCase.PascalCase)
-        {
-            keyLogLevel = "LogLevel";
-        }
+        var keyLogLevel = GetLogLevelKey();
 
         logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString("o"));
         logEntry.TryAdd(keyLogLevel, logLevel.ToString());
-        logEntry.TryAdd(LoggingConstants.KeyService, Service);
+        logEntry.TryAdd(LoggingConstants.KeyService, _powertoolsConfigurations.CurrentConfig().Service);
         logEntry.TryAdd(LoggingConstants.KeyLoggerName, _name);
         logEntry.TryAdd(LoggingConstants.KeyMessage, message);
 
-        if (_currentConfig.SamplingRate > 0)
-            logEntry.TryAdd(LoggingConstants.KeySamplingRate, _currentConfig.SamplingRate);
+        if (_powertoolsConfigurations.CurrentConfig().SamplingRate > 0)
+            logEntry.TryAdd(LoggingConstants.KeySamplingRate, _powertoolsConfigurations.CurrentConfig().SamplingRate);
         if (exception != null)
             logEntry.TryAdd(LoggingConstants.KeyException, exception);
 
         return logEntry;
     }
-
+    
     /// <summary>
-    ///     Gets a formatted log entry.
+    ///     Gets a formatted log entry. For custom log formatter
     /// </summary>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="timestamp">Entry timestamp.</param>
@@ -279,11 +213,11 @@ internal sealed class PowertoolsLogger : ILogger
         {
             Timestamp = timestamp,
             Level = logLevel,
-            Service = Service,
+            Service = _powertoolsConfigurations.CurrentConfig().Service,
             Name = _name,
             Message = message,
             Exception = exception,
-            SamplingRate = _currentConfig.SamplingRate,
+            SamplingRate = _powertoolsConfigurations.CurrentConfig().SamplingRate,
         };
 
         var extraKeys = new Dictionary<string, object>();
@@ -324,14 +258,7 @@ internal sealed class PowertoolsLogger : ILogger
         // Add Lambda Context Keys
         if (LoggingLambdaContext.Instance is not null)
         {
-            logEntry.LambdaContext = new LogEntryLambdaContext
-            {
-                FunctionName = LoggingLambdaContext.Instance.FunctionName,
-                FunctionVersion = LoggingLambdaContext.Instance.FunctionVersion,
-                MemoryLimitInMB = LoggingLambdaContext.Instance.MemoryLimitInMB,
-                InvokedFunctionArn = LoggingLambdaContext.Instance.InvokedFunctionArn,
-                AwsRequestId = LoggingLambdaContext.Instance.AwsRequestId,
-            };
+            logEntry.LambdaContext = CreateLambdaContext();
         }
 
         try
@@ -352,15 +279,6 @@ internal sealed class PowertoolsLogger : ILogger
         }
     }
 
-
-    /// <summary>
-    ///     Clears the configuration.
-    /// </summary>
-    internal void ClearConfig()
-    {
-        _currentConfig = null;
-    }
-
     /// <summary>
     ///     Formats message for a log entry.
     /// </summary>
@@ -369,6 +287,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="exception">The exception related to this entry.</param>
     /// <param name="message">The formatted message</param>
     /// <returns>bool</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool CustomFormatter<TState>(TState state, Exception exception, out object message)
     {
         message = null;
@@ -395,5 +314,91 @@ internal sealed class PowertoolsLogger : ILogger
         message = stateKeys.First(k => k.Key != "{OriginalFormat}").Value;
 
         return true;
+    }
+
+    /// <summary>
+    ///     Gets the log level key.
+    /// </summary>
+    /// <returns>System.String.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private string GetLogLevelKey()
+    {
+        return _powertoolsConfigurations.LambdaLogLevelEnabled() &&
+               _powertoolsConfigurations.CurrentConfig().LoggerOutputCase == LoggerOutputCase.PascalCase
+            ? "LogLevel"
+            : LoggingConstants.KeyLogLevel;
+    }
+
+    /// <summary>
+    ///     Adds the lambda context keys.
+    /// </summary>
+    /// <param name="logEntry">The log entry.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddLambdaContextKeys(Dictionary<string, object> logEntry)
+    {
+        var context = LoggingLambdaContext.Instance;
+        logEntry.TryAdd(LoggingConstants.KeyFunctionName, context.FunctionName);
+        logEntry.TryAdd(LoggingConstants.KeyFunctionVersion, context.FunctionVersion);
+        logEntry.TryAdd(LoggingConstants.KeyFunctionMemorySize, context.MemoryLimitInMB);
+        logEntry.TryAdd(LoggingConstants.KeyFunctionArn, context.InvokedFunctionArn);
+        logEntry.TryAdd(LoggingConstants.KeyFunctionRequestId, context.AwsRequestId);
+    }
+
+    /// <summary>
+    ///     Creates the lambda context.
+    /// </summary>
+    /// <returns>LogEntryLambdaContext.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private LogEntryLambdaContext CreateLambdaContext()
+    {
+        var context = LoggingLambdaContext.Instance;
+        return new LogEntryLambdaContext
+        {
+            FunctionName = context.FunctionName,
+            FunctionVersion = context.FunctionVersion,
+            MemoryLimitInMB = context.MemoryLimitInMB,
+            InvokedFunctionArn = context.InvokedFunctionArn,
+            AwsRequestId = context.AwsRequestId,
+        };
+    }
+
+    /// <summary>
+    ///     Gets the scope keys.
+    /// </summary>
+    /// <typeparam name="TState">The type of the state.</typeparam>
+    /// <param name="state">The state.</param>
+    /// <returns>Dictionary&lt;System.String, System.Object&gt;.</returns>
+    private static Dictionary<string, object> GetScopeKeys<TState>(TState state)
+    {
+        var keys = new Dictionary<string, object>();
+
+        if (state is null)
+            return keys;
+
+        switch (state)
+        {
+            case IEnumerable<KeyValuePair<string, string>> stringPairs:
+                foreach (var (key, value) in stringPairs)
+                {
+                    if (!string.IsNullOrWhiteSpace(key))
+                        keys.TryAdd(key, value);
+                }
+                break;
+            case IEnumerable<KeyValuePair<string, object>> objectPairs:
+                foreach (var (key, value) in objectPairs)
+                {
+                    if (!string.IsNullOrWhiteSpace(key))
+                        keys.TryAdd(key, value);
+                }
+                break;
+            default:
+                foreach (var property in state.GetType().GetProperties())
+                {
+                    keys.TryAdd(property.Name, property.GetValue(state));
+                }
+                break;
+        }
+
+        return keys;
     }
 }

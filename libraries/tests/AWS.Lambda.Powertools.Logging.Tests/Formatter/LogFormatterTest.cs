@@ -190,19 +190,23 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
 
             var configurations = Substitute.For<IPowertoolsConfigurations>();
             configurations.Service.Returns(service);
+            configurations.LoggerOutputCase.Returns(LoggerOutputCase.PascalCase.ToString());
+            configurations.LogLevel.Returns(LogLevel.Information.ToString());
 
             var logFormatter = Substitute.For<ILogFormatter>();
             logFormatter.FormatLogEntry(new LogEntry()).ReturnsNullForAnyArgs();
             Logger.UseFormatter(logFormatter);
 
             var systemWrapper = Substitute.For<ISystemWrapper>();
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper,
-                new LoggerConfiguration
-                {
-                    Service = service,
-                    MinimumLevel = LogLevel.Information,
-                    LoggerOutputCase = LoggerOutputCase.PascalCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = service,
+                MinimumLevel = LogLevel.Information,
+                LoggerOutputCase = LoggerOutputCase.PascalCase
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             // Act
             void Act() => logger.LogInformation(message);
@@ -231,19 +235,23 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
 
             var configurations = Substitute.For<IPowertoolsConfigurations>();
             configurations.Service.Returns(service);
+            configurations.LoggerOutputCase.Returns(LoggerOutputCase.PascalCase.ToString());
+            configurations.LogLevel.Returns(LogLevel.Information.ToString());
 
             var logFormatter = Substitute.For<ILogFormatter>();
             logFormatter.FormatLogEntry(new LogEntry()).ThrowsForAnyArgs(new Exception(errorMessage));
             Logger.UseFormatter(logFormatter);
 
             var systemWrapper = Substitute.For<ISystemWrapper>();
-            var logger = new PowertoolsLogger(loggerName, configurations, systemWrapper,
-                new LoggerConfiguration
-                {
-                    Service = service,
-                    MinimumLevel = LogLevel.Information,
-                    LoggerOutputCase = LoggerOutputCase.PascalCase
-                });
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = service,
+                MinimumLevel = LogLevel.Information,
+                LoggerOutputCase = LoggerOutputCase.PascalCase
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
 
             // Act
             void Act() => logger.LogInformation(message);

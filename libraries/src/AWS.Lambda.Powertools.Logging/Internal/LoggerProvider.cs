@@ -42,10 +42,6 @@ public sealed class LoggerProvider : ILoggerProvider
     /// </summary>
     private readonly ConcurrentDictionary<string, PowertoolsLogger> _loggers = new();
 
-    /// <summary>
-    ///     The current configuration
-    /// </summary>
-    private LoggerConfiguration _currentConfig;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LoggerProvider" /> class.
@@ -57,8 +53,7 @@ public sealed class LoggerProvider : ILoggerProvider
     {
         _powertoolsConfigurations = powertoolsConfigurations;
         _systemWrapper = systemWrapper;
-
-        _currentConfig= powertoolsConfigurations.SetCurrentConfig(config?.Value, systemWrapper);
+        _powertoolsConfigurations.SetCurrentConfig(config?.Value, systemWrapper);
     }
 
     /// <summary>
@@ -69,10 +64,9 @@ public sealed class LoggerProvider : ILoggerProvider
     public ILogger CreateLogger(string categoryName)
     {
         return _loggers.GetOrAdd(categoryName,
-            name => new PowertoolsLogger(name,
+            name => PowertoolsLogger.CreateLogger(name,
                 _powertoolsConfigurations,
-                _systemWrapper,
-                _currentConfig));
+                _systemWrapper));
     }
 
     /// <summary>
@@ -81,20 +75,5 @@ public sealed class LoggerProvider : ILoggerProvider
     public void Dispose()
     {
         _loggers.Clear();
-    }
-
-
-    /// <summary>
-    ///     Configures the loggers.
-    /// </summary>
-    /// <param name="config">The configuration.</param>
-    internal void Configure(IOptions<LoggerConfiguration> config)
-    {
-        // if (_currentConfig is not null || config is null)
-        //     return;
-
-        _currentConfig = config.Value;
-        foreach (var logger in _loggers.Values)
-            logger.ClearConfig();
     }
 }

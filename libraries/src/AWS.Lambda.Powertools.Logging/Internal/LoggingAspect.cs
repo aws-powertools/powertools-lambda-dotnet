@@ -26,14 +26,6 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
-internal class LoggingAspectFactory
-{
-    public static object GetInstance(Type type)
-    {
-        return new LoggingAspect(PowertoolsConfigurations.Instance, SystemWrapper.Instance);
-    }
-}
-
 /// <summary>
 ///     Logging Aspect
 ///     Scope.Global is singleton
@@ -154,15 +146,7 @@ public class LoggingAspect
         _correlationIdPath = trigger.CorrelationIdPath;
         _clearState = trigger.ClearState;
 
-        switch (Logger.LoggerProvider)
-        {
-            case null:
-                Logger.LoggerProvider = new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
-                break;
-            case LoggerProvider:
-                ((LoggerProvider)Logger.LoggerProvider).Configure(_config);
-                break;
-        }
+        Logger.LoggerProvider ??= new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
 
         if (!_initializeContext)
             return;
