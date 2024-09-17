@@ -17,7 +17,7 @@ using System;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Serializers;
-using AWS.Lambda.Powertools.Logging.Tests.Utilities;
+using AWS.Lambda.Powertools.Logging.Tests.Serializers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
@@ -42,7 +42,7 @@ public class LoggerAspectTests : IDisposable
         // Arrange
 #if NET8_0_OR_GREATER
         // Add seriolization context for AOT
-        var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+        var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
 #endif
 
         var instance = new object();
@@ -86,7 +86,7 @@ public class LoggerAspectTests : IDisposable
 #if NET8_0_OR_GREATER
 
         // Add seriolization context for AOT
-        var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+        var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
 #endif
 
         var instance = new object();
@@ -136,7 +136,7 @@ public class LoggerAspectTests : IDisposable
 #if NET8_0_OR_GREATER
 
         // Add seriolization context for AOT
-        var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+        var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
 #endif
 
         var instance = new object();

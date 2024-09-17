@@ -24,7 +24,7 @@ using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Serializers;
-using AWS.Lambda.Powertools.Logging.Tests.Utilities;
+using AWS.Lambda.Powertools.Logging.Tests.Serializers;
 using NSubstitute;
 using Xunit;
 
@@ -120,7 +120,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
 #endif
             var context = new TestLambdaContext()
             {
@@ -145,7 +145,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
 #endif
             var context = new TestLambdaContext()
             {
@@ -202,7 +202,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
 #endif
 
             // Act
@@ -263,7 +263,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
 #endif
 
             // Act
@@ -318,7 +318,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
 #endif
 
             // Act

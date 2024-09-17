@@ -18,7 +18,7 @@ using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.CloudWatchEvents.S3Events;
 using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.Logging.Tests.Utilities;
+using AWS.Lambda.Powertools.Logging.Tests.Serializers;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Attributes;

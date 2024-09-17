@@ -32,7 +32,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     public void Constructor_ShouldNotThrowException()
     {
         // Arrange & Act & Assert
-        var exception = Record.Exception(() => new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default));
+        var exception = Record.Exception(() => new PowertoolsLambdaSerializer(TestJsonContext.Default));
         Assert.Null(exception);
     }
     
@@ -40,7 +40,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     public void Constructor_ShouldAddCustomerContext()
     {
         // Arrange
-        var customerContext = new Utilities.TestJsonContext();
+        var customerContext = new TestJsonContext();
     
         // Act
         var serializer = new PowertoolsLambdaSerializer(customerContext);
@@ -56,7 +56,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     public void Deserialize_ValidJson_ShouldReturnDeserializedObject(LoggerOutputCase outputCase,string json, string expectedName, int expectedAge)
     {
         // Arrange
-        var serializer = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+        var serializer = new PowertoolsLambdaSerializer(TestJsonContext.Default);
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(outputCase);
         
         var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -74,7 +74,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     public void Deserialize_InvalidType_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var serializer = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+        var serializer = new PowertoolsLambdaSerializer(TestJsonContext.Default);
         
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase.PascalCase);
         
@@ -89,7 +89,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     public void Serialize_ValidObject_ShouldSerializeToStream()
     {
         // Arrange
-        var serializer = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+        var serializer = new PowertoolsLambdaSerializer(TestJsonContext.Default);
         
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase.PascalCase);
         
@@ -110,7 +110,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     public void Serialize_InvalidType_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var serializer = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+        var serializer = new PowertoolsLambdaSerializer(TestJsonContext.Default);
         var unknownObject = new UnknownType();
         var stream = new MemoryStream();
 
@@ -124,7 +124,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     public void Deserialize_NonSeekableStream_ShouldDeserializeCorrectly()
     {
         // Arrange
-        var serializer = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+        var serializer = new PowertoolsLambdaSerializer(TestJsonContext.Default);
         var json = "{\"full_name\":\"John\",\"age\":30}";
         var jsonBytes = Encoding.UTF8.GetBytes(json);
         var nonSeekableStream = new NonSeekableStream(jsonBytes);
