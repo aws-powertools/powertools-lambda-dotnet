@@ -20,6 +20,7 @@ using System.Linq;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents.S3Events;
+using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Serializers;
@@ -29,7 +30,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 {
-    [Collection("Attribute Tests")]
+    [Collection("Sequential")]
     public class LoggingAttributeTests : IDisposable
     {
         private TestClass _testClass;
@@ -102,7 +103,57 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
 
             // Act
-            _testClass.LogEvent();
+            _testClass.LogEventNoArgs();
+
+            consoleOut.DidNotReceive().WriteLine(
+                Arg.Any<string>()
+            );
+        }
+        
+        [Fact]
+        public void OnEntry_WhenEventArgExist_LogEvent()
+        {
+            // Arrange
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+            
+#if NET8_0_OR_GREATER
+
+            // Add seriolization context for AOT
+            var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+#endif
+            var context = new TestLambdaContext()
+            {
+                FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
+            };
+            
+            // Act
+            _testClass.LogEvent(context);
+
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i => i.Contains("FunctionName\":\"PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"))
+            );
+        }
+        
+        [Fact]
+        public void OnEntry_WhenEventArgExist_LogEvent_False_Should_Not_Log()
+        {
+            // Arrange
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+            
+#if NET8_0_OR_GREATER
+
+            // Add seriolization context for AOT
+            var _ = new PowertoolsLambdaSerializer(Utilities.TestJsonContext.Default);
+#endif
+            var context = new TestLambdaContext()
+            {
+                FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
+            };
+            
+            // Act
+            _testClass.LogEventFalse(context);
 
             consoleOut.DidNotReceive().WriteLine(
                 Arg.Any<string>()
@@ -316,7 +367,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void When_Setting_SamplingRate_Should_Add_Key()
         {
             // Arrange
-            var consoleOut = new StringWriter();
+            var consoleOut = Substitute.For<StringWriter>();
             SystemWrapper.Instance.SetOut(consoleOut);
         
             // Act
@@ -324,8 +375,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         
             // Assert
         
-            var st = consoleOut.ToString().Split(Environment.NewLine);
-            Assert.Contains("\"message\":\"test\",\"samplingRate\":0.5", st[st.Length -2]);
+            consoleOut.Received().WriteLine(
+                Arg.Is<string>(i => i.Contains("\"message\":\"test\",\"samplingRate\":0.5"))
+            );
         }
         
         [Fact]
@@ -346,6 +398,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 
         public void Dispose()
         {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "");
             LoggingAspect.ResetForTest();
         }
     }

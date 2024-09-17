@@ -17,8 +17,9 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.CloudWatchEvents.S3Events;
+using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Logging.Tests.Utilities;
-using Microsoft.Extensions.Logging;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Attributes;
 
@@ -35,7 +36,17 @@ class TestClass
     }
 
     [Logging(LogEvent = true)]
-    public void LogEvent()
+    public void LogEventNoArgs()
+    {
+    }
+    
+    [Logging(LogEvent = true, LoggerOutputCase = LoggerOutputCase.PascalCase)]
+    public void LogEvent(ILambdaContext context)
+    {
+    }
+    
+    [Logging(LogEvent = false)]
+    public void LogEventFalse(ILambdaContext context)
     {
     }
 
@@ -112,7 +123,7 @@ class TestClass
         Logger.LogInformation("test");
     }
         
-    [Logging(SamplingRate = 0.5, LoggerOutputCase = LoggerOutputCase.CamelCase)]
+    [Logging(SamplingRate = 0.5, LoggerOutputCase = LoggerOutputCase.CamelCase, LogLevel = LogLevel.Information)]
     public void HandlerSamplingRate()
     {
         Logger.LogInformation("test");

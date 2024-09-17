@@ -120,16 +120,6 @@ namespace AWS.Lambda.Powertools.Logging;
 public class LoggingAttribute : Attribute
 {
     /// <summary>
-    ///     The log event
-    /// </summary>
-    private bool? _logEvent;
-
-    /// <summary>
-    ///     The log level
-    /// </summary>
-    private LogLevel? _logLevel;
-
-    /// <summary>
     ///     Service name is used for logging.
     ///     This can be also set using the environment variable <c>POWERTOOLS_SERVICE_NAME</c>.
     /// </summary>
@@ -141,11 +131,7 @@ public class LoggingAttribute : Attribute
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOG_LEVEL</c>.
     /// </summary>
     /// <value>The log level.</value>
-    public LogLevel LogLevel
-    {
-        get => _logLevel ?? LoggingConstants.DefaultLogLevel;
-        set => _logLevel = value;
-    }
+    public LogLevel LogLevel{ get; set; } = LoggingConstants.DefaultLogLevel;
 
     /// <summary>
     ///     Dynamically set a percentage of logs to DEBUG level.
@@ -160,11 +146,7 @@ public class LoggingAttribute : Attribute
     ///     such as a string or any custom data object.
     /// </summary>
     /// <value><c>true</c> if [log event]; otherwise, <c>false</c>.</value>
-    public bool LogEvent
-    {
-        get => _logEvent.GetValueOrDefault();
-        set => _logEvent = value;
-    }
+    public bool LogEvent { get; set; }
 
     /// <summary>
     ///     Pointer path to extract correlation id from input parameter.

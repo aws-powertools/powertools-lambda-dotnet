@@ -142,6 +142,11 @@ public class Logger
     {
         Scope.Clear();
     }
+    
+    internal static void Dispose()
+    {
+        _loggerInstance = null;
+    }
 
     #endregion
 

@@ -55,11 +55,6 @@ public class LoggingAspect
     private string _correlationIdPath;
 
     /// <summary>
-    ///     The log event
-    /// </summary>
-    private bool? _logEvent;
-
-    /// <summary>
     ///     The log level
     /// </summary>
     private LogLevel? _logLevel;
@@ -144,7 +139,7 @@ public class LoggingAspect
             };
 
             _logLevel = trigger.LogLevel;
-            _logEvent = trigger.LogEvent;
+            var logEvent = trigger.LogEvent;
             _correlationIdPath = trigger.CorrelationIdPath;
             _clearState = trigger.ClearState;
 
@@ -163,7 +158,7 @@ public class LoggingAspect
             CaptureXrayTraceId();
             CaptureLambdaContext(eventArgs);
             CaptureCorrelationId(eventObject);
-            if (_logEvent ?? _powertoolsConfigurations.LoggerLogEvent)
+            if (logEvent || _powertoolsConfigurations.LoggerLogEvent)
                 LogEvent(eventObject);
         }
         catch (Exception exception)
@@ -335,5 +330,6 @@ public class LoggingAspect
         LoggingLambdaContext.Clear();
         Logger.LoggerProvider = null;
         Logger.RemoveAllKeys();
+        Logger.Dispose();
     }
 }
