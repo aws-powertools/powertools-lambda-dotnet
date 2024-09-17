@@ -37,12 +37,12 @@ public class LoggingAspect
     /// <summary>
     ///     The is cold start
     /// </summary>
-    private static bool _isColdStart = true;
+    private bool _isColdStart = true;
 
     /// <summary>
     ///     The initialize context
     /// </summary>
-    private static bool _initializeContext = true;
+    private bool _initializeContext = true;
 
     /// <summary>
     ///     Clear state?
@@ -208,9 +208,7 @@ public class LoggingAspect
             return;
 
         xRayTraceId = xRayTraceId
-            .Split(';', StringSplitOptions.RemoveEmptyEntries)
-            .First()
-            .Replace("Root=", "");
+            .Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", "");
 
         Logger.AppendKey(LoggingConstants.KeyXRayTraceId, xRayTraceId);
     }
@@ -334,8 +332,6 @@ public class LoggingAspect
     /// </summary>
     internal static void ResetForTest()
     {
-        _isColdStart = true;
-        _initializeContext = true;
         LoggingLambdaContext.Clear();
         Logger.LoggerProvider = null;
         Logger.RemoveAllKeys();

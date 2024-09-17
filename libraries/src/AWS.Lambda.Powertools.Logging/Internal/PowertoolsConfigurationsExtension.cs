@@ -132,7 +132,6 @@ internal static class PowertoolsConfigurationsExtension
     /// Set sampling rate
     /// </summary>
     /// <param name="powertoolsConfigurations"></param>
-    /// <param name="config"></param>
     /// <param name="systemWrapper"></param>
     /// <param name="minLogLevel"></param>
     /// <returns></returns>

@@ -15,7 +15,6 @@
 
 using System;
 using AspectInjector.Broker;
-using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 
@@ -190,29 +189,4 @@ public class LoggingAttribute : Attribute
     /// </summary>
     /// <value>The log level.</value>
     public LoggerOutputCase LoggerOutputCase  { get; set; } = LoggerOutputCase.Default;
-
-    // /// <summary>
-    // ///     Creates the handler.
-    // /// </summary>
-    // /// <returns>IMethodAspectHandler.</returns>
-    // protected override IMethodAspectHandler CreateHandler()
-    // {
-    //     var config = new LoggerConfiguration 
-    //     {
-    //         Service = Service,
-    //         LoggerOutputCase = LoggerOutputCase,
-    //         SamplingRate = SamplingRate,
-    //     };
-    //     
-    //     return new LoggingAspect
-    //     (
-    //         config,
-    //         LogLevel,
-    //         LogEvent,
-    //         CorrelationIdPath,
-    //         ClearState,
-    //         PowertoolsConfigurations.Instance,
-    //         SystemWrapper.Instance
-    //     );
-    // }
 }

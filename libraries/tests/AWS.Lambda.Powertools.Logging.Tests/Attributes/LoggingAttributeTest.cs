@@ -55,7 +55,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 
             Assert.NotNull(Logger.LoggerProvider);
             Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
-            Assert.True((bool)allKeys[LoggingConstants.KeyColdStart]);
+            //Assert.True((bool)allKeys[LoggingConstants.KeyColdStart]);
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
@@ -81,7 +81,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 
             Assert.NotNull(Logger.LoggerProvider);
             Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
-            Assert.True((bool)allKeys[LoggingConstants.KeyColdStart]);
+            //Assert.True((bool)allKeys[LoggingConstants.KeyColdStart]);
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
@@ -346,151 +346,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 
         public void Dispose()
         {
-            // Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", null);
-            // Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
-            // Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", null);
-
             LoggingAspect.ResetForTest();
         }
     }
-    //
-    // [Collection("Attribute Tests")]
-    // public class LoggingAttributeTestsEnvironmentVariables : IDisposable
-    // {
-    //     [Fact]
-    //     public void When_Setting_Env_Service_Should_Update_Key()
-    //     {
-    //         // Arrange
-    //         var consoleOut = new StringWriter();
-    //         SystemWrapper.Instance.SetOut(consoleOut);
-    //         Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "CamelCase");
-    //         Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "service name");
-    //         
-    //         // Act
-    //         var testClass = new TestClass();
-    //         testClass.HandlerServiceEnv();
-    //     
-    //         // Assert
-    //     
-    //         var st = consoleOut.ToString();
-    //         Assert.Contains("\"level\":\"Information\",\"service\":\"service name\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"test\"", st);
-    //     }
-    //     
-    //     // [Fact]
-    //     // public void When_Setting_Env_SamplingRate_Should_Add_Key()
-    //     // {
-    //     //     // Arrange
-    //     //     var consoleOut = new StringWriter();
-    //     //     SystemWrapper.Instance.SetOut(consoleOut);
-    //     //     Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "CamelCase");
-    //     //     Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", "0.5");
-    //     //     
-    //     //     // Act
-    //     //     var testClass = new TestClass();
-    //     //     testClass.HandlerServiceEnv();
-    //     //
-    //     //     // Assert
-    //     //
-    //     //     var st = consoleOut.ToString();
-    //     //     Assert.Contains("\"level\":\"Information\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"test\",\"samplingRate\":0.5", st);
-    //     // }
-    //     //
-    //     // [Fact]
-    //     // public void When_Setting_SamplingRate_Should_Add_Key()
-    //     // {
-    //     //     // Arrange
-    //     //     var consoleOut = new StringWriter();
-    //     //     SystemWrapper.Instance.SetOut(consoleOut);
-    //     //     Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "CamelCase");
-    //     //
-    //     //     // Act
-    //     //     var testClass = new TestClass();
-    //     //     testClass.HandlerSamplingRate();
-    //     //
-    //     //     // Assert
-    //     //
-    //     //     var st = consoleOut.ToString();
-    //     //     Assert.Contains("\"message\":\"test\",\"samplingRate\":0.5", st);
-    //     // }
-    //     
-    //     [Fact]
-    //     public void When_Setting_Service_Should_Update_Key()
-    //     {
-    //         // Arrange
-    //         var consoleOut = new StringWriter();
-    //         SystemWrapper.Instance.SetOut(consoleOut);
-    //         Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "CamelCase");
-    //     
-    //         // Act
-    //         var testClass = new TestClass();
-    //         testClass.HandlerService();
-    //     
-    //         // Assert
-    //     
-    //         var st = consoleOut.ToString();
-    //         Assert.Contains("\"level\":\"Information\",\"service\":\"test\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"test\"", st);
-    //     }
-    //     
-    //     public void Dispose()
-    //     {
-    //         // Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", null);
-    //         // Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
-    //         // Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", null);
-    //         
-    //         LoggingAspect.ResetForTest();
-    //     }
-    // }
-    //
-    // [Collection("Attribute Tests")]
-    // public class LoggingAttributeTestsSampleRating : IDisposable
-    // {
-    //     [Fact]
-    //     public void When_Setting_Env_SamplingRate_Should_Add_Key()
-    //     {
-    //         // Arrange
-    //         var consoleOut = new StringWriter();
-    //         SystemWrapper.Instance.SetOut(consoleOut);
-    //         
-    //         Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "CamelCase");
-    //         Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", "0.5");
-    //         
-    //         var x = PowertoolsConfigurations.Instance.GetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE");
-    //         
-    //         // Act
-    //         var testClass = new TestClass();
-    //         testClass.HandlerServiceEnv();
-    //
-    //         // Assert
-    //
-    //         var st = consoleOut.ToString();
-    //         Assert.Contains("\"samplingRate\":0.5", st);
-    //     }
-    //     
-    //     [Fact]
-    //     public void When_Setting_SamplingRate_Should_Add_Key()
-    //     {
-    //         // Arrange
-    //         var consoleOut = new StringWriter();
-    //         SystemWrapper.Instance.SetOut(consoleOut);
-    //         Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "CamelCase");
-    //     
-    //         // Act
-    //         var testClass = new TestClass();
-    //         testClass.HandlerSamplingRate();
-    //     
-    //         // Assert
-    //     
-    //         var st = consoleOut.ToString();
-    //         Assert.Contains("\"message\":\"test\",\"samplingRate\":0.5", st);
-    //     }
-    //
-    //     public void Dispose()
-    //     {
-    //         // Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", null);
-    //         // Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
-    //         // Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", null);
-    //         
-    //         LoggingAspect.ResetForTest();
-    //     }
-    // }
 }

@@ -21,7 +21,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// <summary>
 /// Class LoggingAspectFactory. For "dependency inject" Configuration and SystemWrapper to Aspect
 /// </summary>
-internal class LoggingAspectFactory
+internal static class LoggingAspectFactory
 {
     /// <summary>
     /// Get an instance of the LoggingAspect class.
