@@ -330,6 +330,6 @@ public class LoggingAspect
         LoggingLambdaContext.Clear();
         Logger.LoggerProvider = null;
         Logger.RemoveAllKeys();
-        Logger.Dispose();
+        Logger.ClearLoggerInstance();
     }
 }

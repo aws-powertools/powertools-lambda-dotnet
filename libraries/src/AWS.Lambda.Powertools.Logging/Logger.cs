@@ -143,7 +143,7 @@ public class Logger
         Scope.Clear();
     }
     
-    internal static void Dispose()
+    internal static void ClearLoggerInstance()
     {
         _loggerInstance = null;
     }
