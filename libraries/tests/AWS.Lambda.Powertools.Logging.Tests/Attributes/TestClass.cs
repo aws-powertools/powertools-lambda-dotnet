@@ -117,21 +117,25 @@ class TestClass
         Logger.LogInformation("test");
     }
         
-    [Logging]
-    public void HandlerServiceEnv()
-    {
-        Logger.LogInformation("test");
-    }
-        
     [Logging(SamplingRate = 0.5, LoggerOutputCase = LoggerOutputCase.CamelCase, LogLevel = LogLevel.Information)]
     public void HandlerSamplingRate()
     {
         Logger.LogInformation("test");
     }
-        
-    [Logging]
-    public void HandlerSamplingRateEnv()
+    
+    [Logging(LogLevel = LogLevel.Critical)]
+    public void TestLogLevelCritical()
     {
-        Logger.LogInformation("test");
+        Logger.LogCritical("test");
+    }
+    
+    [Logging(LogLevel = LogLevel.Critical, LogEvent = true)]
+    public void TestLogLevelCriticalLogEvent(ILambdaContext context)
+    {
+    }
+    
+    [Logging(LogLevel = LogLevel.Debug, LogEvent = true)]
+    public void TestLogEventWithoutContext()
+    {
     }
 }

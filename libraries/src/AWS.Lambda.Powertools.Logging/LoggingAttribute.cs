@@ -131,7 +131,7 @@ public class LoggingAttribute : Attribute
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOG_LEVEL</c>.
     /// </summary>
     /// <value>The log level.</value>
-    public LogLevel LogLevel{ get; set; } = LoggingConstants.DefaultLogLevel;
+    public LogLevel LogLevel{ get; set; } = LogLevel.None;
 
     /// <summary>
     ///     Dynamically set a percentage of logs to DEBUG level.

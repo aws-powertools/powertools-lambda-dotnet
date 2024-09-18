@@ -203,6 +203,50 @@ public class LoggerAspectTests : IDisposable
                 "\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":{\"test_data\":\"test-data\"}}")
         ));
     }
+    
+    [Fact]
+    public void OnEntry_ShouldNot_Log_Info_When_LogLevel_Higher_EnvironmentVariable()
+    {
+        // Arrange
+#if NET8_0_OR_GREATER
+
+        // Add seriolization context for AOT
+        var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+#endif
+
+        var instance = new object();
+        var name = "TestMethod";
+        var args = new object[] { new TestObject { FullName = "Powertools", Age = 20 } };
+        var hostType = typeof(string);
+        var method = typeof(TestClass).GetMethod("TestMethod");
+        var returnType = typeof(string);
+        var triggers = new Attribute[]
+        {
+            new LoggingAttribute
+            {
+                Service = "TestService",
+                LoggerOutputCase = LoggerOutputCase.PascalCase,
+                //LogLevel = LogLevel.Information,
+                LogEvent = true,
+                CorrelationIdPath = "/age"
+            }
+        };
+
+        // Env returns true
+        _mockPowertoolsConfigurations.LogLevel.Returns(LogLevel.Error.ToString());
+
+        // Act
+        var loggingAspect = new LoggingAspect(_mockPowertoolsConfigurations, _mockSystemWrapper);
+        loggingAspect.OnEntry(instance, name, args, hostType, method, returnType, triggers);
+
+        // Assert
+        var config = _mockPowertoolsConfigurations.CurrentConfig();
+        Assert.NotNull(Logger.LoggerProvider);
+        Assert.Equal("TestService", config.Service);
+        Assert.Equal(LoggerOutputCase.PascalCase, config.LoggerOutputCase);
+
+        _mockSystemWrapper.DidNotReceive().LogLine(Arg.Any<string>());
+    }
 
     public void Dispose()
     {

@@ -50,11 +50,10 @@ internal static class PowertoolsConfigurationsExtension
     /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
     /// <param name="logLevel">The log level.</param>
     /// <returns>LogLevel.</returns>
-    internal static LogLevel GetLogLevel(this IPowertoolsConfigurations powertoolsConfigurations,
-        LogLevel? logLevel = null)
+    internal static LogLevel GetLogLevel(this IPowertoolsConfigurations powertoolsConfigurations, LogLevel logLevel = LogLevel.None)
     {
-        if (logLevel.HasValue)
-            return logLevel.Value;
+        if (logLevel != LogLevel.None)
+            return logLevel;
 
         if (Enum.TryParse((powertoolsConfigurations.LogLevel ?? "").Trim(), true, out LogLevel result))
             return result;

@@ -395,6 +395,54 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             var st = consoleOut.ToString();
             Assert.Contains("\"level\":\"Information\",\"service\":\"test\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"test\"", st);
         }
+        
+        [Fact]
+        public void When_Setting_LogLevel_Should_Update_LogLevel()
+        {
+            // Arrange
+            var consoleOut = new StringWriter();
+            SystemWrapper.Instance.SetOut(consoleOut);
+
+            // Act
+            _testClass.TestLogLevelCritical();
+        
+            // Assert
+        
+            var st = consoleOut.ToString();
+            Assert.Contains("\"level\":\"Critical\"", st);
+        }
+        
+        [Fact]
+        public void When_Setting_LogLevel_HigherThanInformation_Should_Not_LogEvent()
+        {
+            // Arrange
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+            var context = new TestLambdaContext()
+            {
+                FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
+            };
+            
+            // Act
+            _testClass.TestLogLevelCriticalLogEvent(context);
+        
+            // Assert
+            consoleOut.DidNotReceive().WriteLine(Arg.Any<string>());
+        }
+        
+        [Fact]
+        public void When_LogLevel_Debug_Should_Log_Message_When_No_Context_And_LogEvent_True()
+        {
+            // Arrange
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+            
+            // Act
+            _testClass.TestLogEventWithoutContext();
+        
+            // Assert
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => s == "Skipping Event Log because event parameter not found."));
+        }
 
         public void Dispose()
         {

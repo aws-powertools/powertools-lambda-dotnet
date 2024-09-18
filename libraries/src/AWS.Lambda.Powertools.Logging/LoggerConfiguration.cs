@@ -38,7 +38,7 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOG_LEVEL</c>.
     /// </summary>
     /// <value>The minimum level.</value>
-    public LogLevel? MinimumLevel { get; set; }
+    public LogLevel MinimumLevel { get; set; } = LogLevel.None;
 
     /// <summary>
     ///     Dynamically set a percentage of logs to DEBUG level.

@@ -55,11 +55,6 @@ public class LoggingAspect
     private string _correlationIdPath;
 
     /// <summary>
-    ///     The log level
-    /// </summary>
-    private LogLevel? _logLevel;
-
-    /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
@@ -135,10 +130,10 @@ public class LoggingAspect
             {
                 Service = trigger.Service,
                 LoggerOutputCase = trigger.LoggerOutputCase,
-                SamplingRate = trigger.SamplingRate
+                SamplingRate = trigger.SamplingRate,
+                MinimumLevel = trigger.LogLevel
             };
 
-            _logLevel = trigger.LogLevel;
             var logEvent = trigger.LogEvent;
             _correlationIdPath = trigger.CorrelationIdPath;
             _clearState = trigger.ClearState;
@@ -190,7 +185,7 @@ public class LoggingAspect
     /// <returns><c>true</c> if this instance is debug; otherwise, <c>false</c>.</returns>
     private bool IsDebug()
     {
-        return LogLevel.Debug >= _powertoolsConfigurations.GetLogLevel(_logLevel);
+        return LogLevel.Debug >= _powertoolsConfigurations.GetLogLevel(_config.MinimumLevel);
     }
 
     /// <summary>

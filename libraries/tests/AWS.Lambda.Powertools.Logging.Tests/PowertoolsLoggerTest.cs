@@ -53,7 +53,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
@@ -282,7 +282,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
 
             // Act
@@ -322,7 +322,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             
             // Act
@@ -361,7 +361,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };  
             
             // Act
@@ -399,7 +399,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
 
             // Act
@@ -441,7 +441,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null,
+                MinimumLevel = LogLevel.None,
                 LoggerOutputCase = LoggerOutputCase.CamelCase
             };
             
@@ -485,7 +485,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
@@ -526,7 +526,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null,
+                MinimumLevel = LogLevel.None,
                 LoggerOutputCase = LoggerOutputCase.PascalCase
             };
             
@@ -567,7 +567,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
@@ -606,7 +606,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null,
+                MinimumLevel = LogLevel.None,
                 LoggerOutputCase = LoggerOutputCase.SnakeCase
             };
             
@@ -646,7 +646,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };  
             
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
@@ -1065,7 +1065,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
@@ -1110,7 +1110,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
@@ -1153,7 +1153,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
             var logger = provider.CreateLogger(loggerName);
@@ -1192,7 +1192,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
@@ -1234,7 +1234,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
@@ -1268,7 +1268,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null
+                MinimumLevel = LogLevel.None
             };
             
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
@@ -1300,7 +1300,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null,
+                MinimumLevel = LogLevel.None,
                 LoggerOutputCase = LoggerOutputCase.CamelCase
             };
             
@@ -1347,7 +1347,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             var loggerConfiguration = new LoggerConfiguration
             {
                 Service = null,
-                MinimumLevel = null,
+                MinimumLevel = LogLevel.None,
                 LoggerOutputCase = LoggerOutputCase.CamelCase
             };
             
