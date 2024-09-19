@@ -44,7 +44,7 @@ public class HandlerTests : IDisposable
     
         return Task.CompletedTask;
     }
-    
+
     [Fact]
     public Task Sqs_Handler_All_Fail_Using_Attribute_Should_Throw_BatchProcessingException()
     {
@@ -186,9 +186,152 @@ public class HandlerTests : IDisposable
     
         return Task.CompletedTask;
     }
-    
+
+    [Fact]
+    public Task Sqs_Handler_Using_Attribute_All_Fail_Should_Not_Throw_BatchProcessingException_With_Throw_On_Full_Batch_Failure_False_Attribute()
+    {
+        // Arrange
+        var request = new SQSEvent
+        {
+            Records = TestHelper.SqsMessages
+        };
+        var function = new HandlerFunction();
+
+        // Act
+        var response = function.HandlerUsingAttributeAllFail_ThrowOnFullBatchFailureFalseAttribute(request);
+
+        // Assert
+        Assert.Equal(5, response.BatchItemFailures.Count);
+        Assert.Equal("1", response.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("2", response.BatchItemFailures[1].ItemIdentifier);
+        Assert.Equal("3", response.BatchItemFailures[2].ItemIdentifier);
+        Assert.Equal("4", response.BatchItemFailures[3].ItemIdentifier);
+        Assert.Equal("5", response.BatchItemFailures[4].ItemIdentifier);
+
+        return Task.CompletedTask;
+    }
+
+    [Fact]
+    public Task Sqs_Handler_Using_Attribute_All_Fail_Should_Not_Throw_BatchProcessingException_With_Throw_On_Full_Batch_Failure_False_Env()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE", "false");
+        var request = new SQSEvent
+        {
+            Records = TestHelper.SqsMessages
+        };
+        var function = new HandlerFunction();
+
+        // Act
+        var response = function.HandlerUsingAttributeAllFail_ThrowOnFullBatchFailureFalseEnv(request);
+
+        // Assert
+        Assert.Equal(5, response.BatchItemFailures.Count);
+        Assert.Equal("1", response.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("2", response.BatchItemFailures[1].ItemIdentifier);
+        Assert.Equal("3", response.BatchItemFailures[2].ItemIdentifier);
+        Assert.Equal("4", response.BatchItemFailures[3].ItemIdentifier);
+        Assert.Equal("5", response.BatchItemFailures[4].ItemIdentifier);
+
+        return Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task Sqs_Handler_Using_Utility_All_Fail_Should_Not_Throw_BatchProcessingException_With_Throw_On_Full_Batch_Failure_False_Option()
+    {
+        // Arrange
+        var request = new SQSEvent
+        {
+            Records = TestHelper.SqsMessages
+        };
+        var function = new HandlerFunction();
+
+        // Act
+        var response = await function.HandlerUsingUtilityAllFail_ThrowOnFullBatchFailureFalseOption(request);
+
+        // Assert
+        Assert.Equal(5, response.BatchItemFailures.Count);
+        Assert.Equal("1", response.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("2", response.BatchItemFailures[1].ItemIdentifier);
+        Assert.Equal("3", response.BatchItemFailures[2].ItemIdentifier);
+        Assert.Equal("4", response.BatchItemFailures[3].ItemIdentifier);
+        Assert.Equal("5", response.BatchItemFailures[4].ItemIdentifier);
+    }
+
+    [Fact]
+    public Task Sqs_Fifo_Handler_Using_Attribute_All_Fail_With_Stop_On_First_Error_Attr_Should_Not_Throw_BatchProcessingException_With_Throw_On_Full_Batch_Failure_False_Attribute()
+    {
+        // Arrange
+        var request = new SQSEvent
+        {
+            Records = TestHelper.SqsFifoMessagesWithFirstMessagePoisened
+        };
+        var function = new HandlerFunction();
+
+        // Act
+        var response = function.HandlerUsingAttributeFailAll_StopOnFirstErrorAttr_ThrowOnFullBatchFailureFalseAttr(request);
+
+        // Assert
+        Assert.Equal(5, response.BatchItemFailures.Count);
+        Assert.Equal("1", response.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("2", response.BatchItemFailures[1].ItemIdentifier);
+        Assert.Equal("3", response.BatchItemFailures[2].ItemIdentifier);
+        Assert.Equal("4", response.BatchItemFailures[3].ItemIdentifier);
+        Assert.Equal("5", response.BatchItemFailures[4].ItemIdentifier);
+
+        return Task.CompletedTask;
+    }
+
+    [Fact]
+    public Task Sqs_Fifo_Handler_Using_Attribute_All_Fail_With_Stop_On_First_Error_Attr_Should_Not_Throw_BatchProcessingException_With_Throw_On_Full_Batch_Failure_False_Env()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE", "false");
+        var request = new SQSEvent
+        {
+            Records = TestHelper.SqsFifoMessagesWithFirstMessagePoisened
+        };
+        var function = new HandlerFunction();
+
+        // Act
+        var response = function.HandlerUsingAttributeFailAll_StopOnFirstErrorAttr_ThrowOnFullBatchFailureFalseEnv(request);
+
+        // Assert
+        Assert.Equal(5, response.BatchItemFailures.Count);
+        Assert.Equal("1", response.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("2", response.BatchItemFailures[1].ItemIdentifier);
+        Assert.Equal("3", response.BatchItemFailures[2].ItemIdentifier);
+        Assert.Equal("4", response.BatchItemFailures[3].ItemIdentifier);
+        Assert.Equal("5", response.BatchItemFailures[4].ItemIdentifier);
+
+        return Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task Sqs_Fifo_Handler_Using_Utility_All_Fail_With_Stop_On_First_Error_Attr_Should_Not_Throw_BatchProcessingException_With_Throw_On_Full_Batch_Failure_False_Option()
+    {
+        // Arrange
+        var request = new SQSEvent
+        {
+            Records = TestHelper.SqsFifoMessagesWithFirstMessagePoisened
+        };
+        var function = new HandlerFunction();
+
+        // Act
+        var response = await function.HandlerUsingUtility_StopOnFirstErrorOption_ThrowOnFullBatchFailureFalseOption(request);
+
+        // Assert
+        Assert.Equal(5, response.BatchItemFailures.Count);
+        Assert.Equal("1", response.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("2", response.BatchItemFailures[1].ItemIdentifier);
+        Assert.Equal("3", response.BatchItemFailures[2].ItemIdentifier);
+        Assert.Equal("4", response.BatchItemFailures[3].ItemIdentifier);
+        Assert.Equal("5", response.BatchItemFailures[4].ItemIdentifier);
+    }
+
     public void Dispose()
     {
+        Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE", "true");
         Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_PARALLEL_ENABLED", "false");
         Environment.SetEnvironmentVariable("POWERTOOLS_BATCH_ERROR_HANDLING_POLICY", null);
     }

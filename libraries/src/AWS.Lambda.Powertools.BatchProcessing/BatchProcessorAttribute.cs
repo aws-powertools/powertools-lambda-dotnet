@@ -23,6 +23,7 @@ using Amazon.Lambda.KinesisEvents;
 using Amazon.Lambda.SQSEvents;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
+using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
 using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
@@ -157,13 +158,19 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
     /// <summary>
     /// Batch processing enabled (default false)
     /// </summary>
-    public bool BatchParallelProcessingEnabled = PowertoolsConfigurations.Instance.BatchParallelProcessingEnabled; 
+    public bool BatchParallelProcessingEnabled = PowertoolsConfigurations.Instance.BatchParallelProcessingEnabled;
 
     /// <summary>
     /// The maximum degree of parallelism to apply during batch processing.
     /// Must enable BatchParallelProcessingEnabled
     /// </summary>
     public int MaxDegreeOfParallelism = PowertoolsConfigurations.Instance.BatchProcessingMaxDegreeOfParallelism;
+
+    /// <summary>
+    /// By default, the Batch processor throws a <see cref="BatchProcessingException"/> on full batch failure.
+    /// This behaviour can be disabled by setting this value to false.
+    /// </summary>
+    public bool ThrowOnFullBatchFailure = PowertoolsConfigurations.Instance.BatchThrowOnFullBatchFailureEnabled;
 
     private static readonly Dictionary<Type, BatchEventType> EventTypes = new()
     {
@@ -332,7 +339,8 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
             CancellationToken = CancellationToken.None,
             ErrorHandlingPolicy = errorHandlingPolicy,
             MaxDegreeOfParallelism = MaxDegreeOfParallelism,
-            BatchParallelProcessingEnabled = BatchParallelProcessingEnabled
+            BatchParallelProcessingEnabled = BatchParallelProcessingEnabled,
+            ThrowOnFullBatchFailure = ThrowOnFullBatchFailure
         });
     }
 }
