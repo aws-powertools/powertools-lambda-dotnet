@@ -33,7 +33,7 @@ public class LoggerAspectTests : IDisposable
     public LoggerAspectTests()
     {
         _mockSystemWrapper = Substitute.For<ISystemWrapper>();
-        _mockPowertoolsConfigurations =  Substitute.For<IPowertoolsConfigurations>();
+        _mockPowertoolsConfigurations = Substitute.For<IPowertoolsConfigurations>();
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class LoggerAspectTests : IDisposable
         // Arrange
 #if NET8_0_OR_GREATER
         // Add seriolization context for AOT
-        var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+        PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
 #endif
 
         var instance = new object();
@@ -60,7 +60,7 @@ public class LoggerAspectTests : IDisposable
                 SamplingRate = 0.5,
                 LogLevel = LogLevel.Information,
                 LogEvent = true,
-                CorrelationIdPath = "/age",
+                CorrelationIdPath = "/Age",
                 ClearState = true
             }
         };
@@ -78,7 +78,7 @@ public class LoggerAspectTests : IDisposable
             && s.Contains("\"CorrelationId\":\"20\"")
         ));
     }
-    
+
     [Fact]
     public void OnEntry_ShouldLog_Event_When_EnvironmentVariable_Set()
     {
@@ -86,7 +86,7 @@ public class LoggerAspectTests : IDisposable
 #if NET8_0_OR_GREATER
 
         // Add seriolization context for AOT
-        var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+        PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
 #endif
 
         var instance = new object();
@@ -103,11 +103,11 @@ public class LoggerAspectTests : IDisposable
                 LoggerOutputCase = LoggerOutputCase.PascalCase,
                 LogLevel = LogLevel.Information,
                 LogEvent = false,
-                CorrelationIdPath = "/age",
+                CorrelationIdPath = "/Age",
                 ClearState = true
             }
         };
-        
+
         // Env returns true
         _mockPowertoolsConfigurations.LoggerLogEvent.Returns(true);
 
@@ -128,7 +128,7 @@ public class LoggerAspectTests : IDisposable
             && s.Contains("\"CorrelationId\":\"20\"")
         ));
     }
-    
+
     [Fact]
     public void OnEntry_ShouldLog_SamplingRate_When_EnvironmentVariable_Set()
     {
@@ -136,7 +136,7 @@ public class LoggerAspectTests : IDisposable
 #if NET8_0_OR_GREATER
 
         // Add seriolization context for AOT
-        var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+        PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
 #endif
 
         var instance = new object();
@@ -153,7 +153,7 @@ public class LoggerAspectTests : IDisposable
                 LoggerOutputCase = LoggerOutputCase.PascalCase,
                 LogLevel = LogLevel.Information,
                 LogEvent = true,
-                CorrelationIdPath = "/age",
+                CorrelationIdPath = "/Age",
                 ClearState = true
             }
         };
@@ -191,19 +191,19 @@ public class LoggerAspectTests : IDisposable
                 LogEvent = true
             }
         };
-    
+
         // Act
 
         var loggingAspect = new LoggingAspect(_mockPowertoolsConfigurations, _mockSystemWrapper);
         loggingAspect.OnEntry(null, null, new object[] { eventObject }, null, null, null, triggers);
-    
+
         // Assert
         _mockSystemWrapper.Received().LogLine(Arg.Is<string>(s =>
             s.Contains(
                 "\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":{\"test_data\":\"test-data\"}}")
         ));
     }
-    
+
     [Fact]
     public void OnEntry_ShouldNot_Log_Info_When_LogLevel_Higher_EnvironmentVariable()
     {
@@ -211,7 +211,7 @@ public class LoggerAspectTests : IDisposable
 #if NET8_0_OR_GREATER
 
         // Add seriolization context for AOT
-        var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+        PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
 #endif
 
         var instance = new object();
@@ -226,7 +226,7 @@ public class LoggerAspectTests : IDisposable
             {
                 Service = "TestService",
                 LoggerOutputCase = LoggerOutputCase.PascalCase,
-                //LogLevel = LogLevel.Information,
+
                 LogEvent = true,
                 CorrelationIdPath = "/age"
             }
@@ -248,8 +248,63 @@ public class LoggerAspectTests : IDisposable
         _mockSystemWrapper.DidNotReceive().LogLine(Arg.Any<string>());
     }
 
+    [Fact]
+    public void OnEntry_Should_LogDebug_WhenSet_EnvironmentVariable()
+    {
+        // Arrange
+#if NET8_0_OR_GREATER
+
+        // Add seriolization context for AOT
+        PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
+#endif
+
+        var instance = new object();
+        var name = "TestMethod";
+        var args = new object[]
+        {
+            new TestObject { FullName = "Powertools", Age = 20, Headers = new Header { MyRequestIdHeader = "test" } }
+        };
+        var hostType = typeof(string);
+        var method = typeof(TestClass).GetMethod("TestMethod");
+        var returnType = typeof(string);
+        var triggers = new Attribute[]
+        {
+            new LoggingAttribute
+            {
+                Service = "TestService",
+                LoggerOutputCase = LoggerOutputCase.PascalCase,
+                LogEvent = true,
+                CorrelationIdPath = "/Headers/MyRequestIdHeader"
+            }
+        };
+
+        // Env returns true
+        _mockPowertoolsConfigurations.LogLevel.Returns(LogLevel.Debug.ToString());
+
+        // Act
+        var loggingAspect = new LoggingAspect(_mockPowertoolsConfigurations, _mockSystemWrapper);
+        loggingAspect.OnEntry(instance, name, args, hostType, method, returnType, triggers);
+
+        // Assert
+        var config = _mockPowertoolsConfigurations.CurrentConfig();
+        Assert.NotNull(Logger.LoggerProvider);
+        Assert.Equal("TestService", config.Service);
+        Assert.Equal(LoggerOutputCase.PascalCase, config.LoggerOutputCase);
+        Assert.Equal(LogLevel.Debug, config.MinimumLevel);
+
+        _mockSystemWrapper.Received(1).LogLine(Arg.Is<string>(s =>
+            s == "Skipping Lambda Context injection because ILambdaContext context parameter not found."));
+
+        _mockSystemWrapper.Received(1).LogLine(Arg.Is<string>(s =>
+            s.Contains("\"CorrelationId\":\"test\"") &&
+            s.Contains(
+                "\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":{\"MyRequestIdHeader\":\"test\"}")
+        ));
+    }
+
     public void Dispose()
     {
         LoggingAspect.ResetForTest();
+        PowertoolsLoggingSerializer.ClearOptions();
     }
 }

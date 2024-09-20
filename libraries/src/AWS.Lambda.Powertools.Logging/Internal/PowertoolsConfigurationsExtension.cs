@@ -99,7 +99,7 @@ internal static class PowertoolsConfigurationsExtension
     {
         lock (_lock)
         {
-            _config = config;
+            _config = config ?? new LoggerConfiguration();
 
             var logLevel = powertoolsConfigurations.GetLogLevel(_config.MinimumLevel);
             var lambdaLogLevel = powertoolsConfigurations.GetLambdaLogLevel();

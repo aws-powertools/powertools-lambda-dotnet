@@ -143,7 +143,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         var unknownObject = new UnknownType();
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<ApplicationException>(() =>
             PowertoolsLoggingSerializer.Serialize(unknownObject, typeof(UnknownType)));
 
         Assert.Contains("is not known to the serializer", exception.Message);
@@ -173,5 +173,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
 #if NET8_0_OR_GREATER
         PowertoolsLoggingSerializer.ClearContext();
 #endif
+        PowertoolsLoggingSerializer.ClearOptions();
     }
 }

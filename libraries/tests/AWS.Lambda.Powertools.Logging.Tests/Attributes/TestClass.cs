@@ -40,8 +40,8 @@ class TestClass
     {
     }
     
-    [Logging(LogEvent = true, LoggerOutputCase = LoggerOutputCase.PascalCase)]
-    public void LogEvent(ILambdaContext context)
+    [Logging(LogEvent = true, LoggerOutputCase = LoggerOutputCase.PascalCase, CorrelationIdPath = "/Headers/MyRequestIdHeader")]
+    public void LogEvent(TestObject testObject, ILambdaContext context)
     {
     }
     
@@ -137,5 +137,10 @@ class TestClass
     [Logging(LogLevel = LogLevel.Debug, LogEvent = true)]
     public void TestLogEventWithoutContext()
     {
+    }
+    
+    public void TestLogNoDecorator()
+    {
+        Logger.LogInformation("test");
     }
 }

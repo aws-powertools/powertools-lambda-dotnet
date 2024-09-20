@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Serializers;
 using AWS.Lambda.Powertools.Logging.Tests.Utilities;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -29,7 +30,7 @@ using Xunit;
 namespace AWS.Lambda.Powertools.Logging.Tests
 {
     [Collection("Sequential")]
-    public class PowertoolsLoggerTest
+    public class PowertoolsLoggerTest : IDisposable
     {
         public PowertoolsLoggerTest()
         {
@@ -1617,6 +1618,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             Assert.True(logger.IsEnabled(logLevel));
             Assert.Equal(logLevel.ToString(), configurations.LogLevel);
             Assert.Equal(willLog, systemWrapper.LogMethodCalled);
+        }
+
+        public void Dispose()
+        {
+            PowertoolsLoggingSerializer.ClearOptions();
         }
     }
 }

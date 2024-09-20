@@ -35,12 +35,12 @@ internal sealed class PowertoolsLogger : ILogger
     ///     The name
     /// </summary>
     private readonly string _name;
-    
+
     /// <summary>
     ///     The current configuration
     /// </summary>
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
-    
+
     /// <summary>
     ///     The system wrapper
     /// </summary>
@@ -155,7 +155,7 @@ internal sealed class PowertoolsLogger : ILogger
     private Dictionary<string, object> GetLogEntry(LogLevel logLevel, DateTime timestamp, object message,
         Exception exception)
     {
-        var logEntry = new Dictionary<string, object>(StringComparer.Ordinal);
+        var logEntry = new Dictionary<string, object>();
 
         // Add Custom Keys
         foreach (var (key, value) in Logger.GetAllKeys())
@@ -186,7 +186,6 @@ internal sealed class PowertoolsLogger : ILogger
         logEntry.TryAdd(LoggingConstants.KeyService, _powertoolsConfigurations.CurrentConfig().Service);
         logEntry.TryAdd(LoggingConstants.KeyLoggerName, _name);
         logEntry.TryAdd(LoggingConstants.KeyMessage, message);
-
         if (_powertoolsConfigurations.CurrentConfig().SamplingRate > 0)
             logEntry.TryAdd(LoggingConstants.KeySamplingRate, _powertoolsConfigurations.CurrentConfig().SamplingRate);
         if (exception != null)
@@ -194,7 +193,7 @@ internal sealed class PowertoolsLogger : ILogger
 
         return logEntry;
     }
-    
+
     /// <summary>
     ///     Gets a formatted log entry. For custom log formatter
     /// </summary>
@@ -383,6 +382,7 @@ internal sealed class PowertoolsLogger : ILogger
                     if (!string.IsNullOrWhiteSpace(key))
                         keys.TryAdd(key, value);
                 }
+
                 break;
             case IEnumerable<KeyValuePair<string, object>> objectPairs:
                 foreach (var (key, value) in objectPairs)
@@ -390,12 +390,14 @@ internal sealed class PowertoolsLogger : ILogger
                     if (!string.IsNullOrWhiteSpace(key))
                         keys.TryAdd(key, value);
                 }
+
                 break;
             default:
                 foreach (var property in state.GetType().GetProperties())
                 {
                     keys.TryAdd(property.Name, property.GetValue(state));
                 }
+
                 break;
         }
 

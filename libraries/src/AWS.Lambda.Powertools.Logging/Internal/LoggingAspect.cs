@@ -256,6 +256,7 @@ public class LoggingAspect
             for (var i = 0; i < correlationIdPaths.Length; i++)
             {
                 // For casing parsing to be removed from Logging v2 when we get rid of outputcase
+                // without this CorrelationIdPaths.ApiGatewayRest would not work
                 var pathWithOutputCase =
                     _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
                 if (!element.TryGetProperty(pathWithOutputCase, out var childElement))

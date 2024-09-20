@@ -33,8 +33,6 @@ namespace AWS.Lambda.Powertools.Logging.Serializers;
 [JsonSerializable(typeof(Double))]
 [JsonSerializable(typeof(DateOnly))]
 [JsonSerializable(typeof(TimeOnly))]
-[JsonSerializable(typeof(InvalidOperationException))]
-[JsonSerializable(typeof(Exception))]
 [JsonSerializable(typeof(IEnumerable<object>))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(IEnumerable<string>))]

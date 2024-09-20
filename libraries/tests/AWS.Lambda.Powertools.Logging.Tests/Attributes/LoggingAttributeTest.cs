@@ -116,19 +116,28 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
             SystemWrapper.Instance.SetOut(consoleOut);
-            
+            var correlationId = Guid.NewGuid().ToString();
+                
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+            PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
 #endif
             var context = new TestLambdaContext()
             {
                 FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
             };
+
+            var testObj = new TestObject
+            {
+                Headers = new Header
+                {
+                    MyRequestIdHeader = correlationId
+                }
+            };
             
             // Act
-            _testClass.LogEvent(context);
+            _testClass.LogEvent(testObj, context);
 
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i => i.Contains("FunctionName\":\"PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"))
@@ -145,7 +154,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+            PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
 #endif
             var context = new TestLambdaContext()
             {
@@ -202,7 +211,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+            PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
 #endif
 
             // Act
@@ -263,7 +272,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+            PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
 #endif
 
             // Act
@@ -318,7 +327,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
 #if NET8_0_OR_GREATER
 
             // Add seriolization context for AOT
-            var _ = new PowertoolsLambdaSerializer(TestJsonContext.Default);
+            PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
 #endif
 
             // Act
@@ -443,11 +452,30 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Assert
             consoleOut.Received(1).WriteLine(Arg.Is<string>(s => s == "Skipping Event Log because event parameter not found."));
         }
+        
+        [Fact]
+        public void Should_Log_When_Not_Using_Decorator()
+        {
+            // Arrange
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+            
+            var test = new TestClass();
+            
+            // Act
+            test.TestLogNoDecorator();
+
+            // Assert
+            consoleOut.Received().WriteLine(
+                Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"test\"}"))
+            );
+        }
 
         public void Dispose()
         {
             Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "");
             LoggingAspect.ResetForTest();
+            PowertoolsLoggingSerializer.ClearOptions();
         }
     }
 }

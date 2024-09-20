@@ -55,6 +55,13 @@ public sealed class LoggerProvider : ILoggerProvider
         _systemWrapper = systemWrapper;
         _powertoolsConfigurations.SetCurrentConfig(config?.Value, systemWrapper);
     }
+    
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="LoggerProvider" /> class.
+    /// </summary>
+    /// <param name="config">The configuration.</param>
+    public LoggerProvider(IOptions<LoggerConfiguration> config)
+        : this(config, PowertoolsConfigurations.Instance, SystemWrapper.Instance) { }
 
     /// <summary>
     ///     Creates a new <see cref="T:Microsoft.Extensions.Logging.ILogger" /> instance.

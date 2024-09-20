@@ -21,6 +21,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
 using Microsoft.Extensions.Logging;
@@ -32,8 +33,9 @@ namespace AWS.Lambda.Powertools.Logging.Serializers;
 /// </summary>
 internal static class PowertoolsLoggingSerializer
 {
-    private static LoggerOutputCase _currentOutputCase = LoggerOutputCase.SnakeCase;
-    private static readonly object _lock = new object();
+    private static LoggerOutputCase _currentOutputCase;
+    private static JsonSerializerOptions _jsonOptions;
+
     private static readonly ConcurrentBag<JsonSerializerContext> AdditionalContexts =
         new ConcurrentBag<JsonSerializerContext>();
 
@@ -42,31 +44,16 @@ internal static class PowertoolsLoggingSerializer
     /// </summary>
     internal static JsonSerializerOptions GetSerializerOptions()
     {
-        lock (_lock)
-        {
-            var options = BuildJsonSerializerOptions();
-
-#if NET8_0_OR_GREATER
-            foreach (var context in AdditionalContexts)
-            {
-                options.TypeInfoResolverChain.Add(context);
-            }
-#endif
-
-            return options;
-        }
+        return _jsonOptions ?? BuildJsonSerializerOptions();
     }
 
     /// <summary>
     /// Configures the naming policy for the serializer.
     /// </summary>
     /// <param name="loggerOutputCase">The case to use for serialization.</param>
-    public static void ConfigureNamingPolicy(LoggerOutputCase loggerOutputCase)
+    internal static void ConfigureNamingPolicy(LoggerOutputCase loggerOutputCase)
     {
-        lock (_lock)
-        {
-            _currentOutputCase = loggerOutputCase;
-        }
+        _currentOutputCase = loggerOutputCase;
     }
 
 #if NET6_0
@@ -75,7 +62,7 @@ internal static class PowertoolsLoggingSerializer
     /// </summary>
     /// <param name="value">The object to serialize.</param>
     /// <returns>A JSON string representation of the object.</returns>
-    public static string Serialize(object value)
+    internal static string Serialize(object value)
     {
         var options = GetSerializerOptions();
         return JsonSerializer.Serialize(value, options);
@@ -91,13 +78,12 @@ internal static class PowertoolsLoggingSerializer
     /// <param name="inputType">The type of the object to serialize.</param>
     /// <returns>A JSON string representation of the object.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the input type is not known to the serializer.</exception>
-    public static string Serialize(object value, Type inputType)
+    internal static string Serialize(object value, Type inputType)
     {
         var typeInfo = GetTypeInfo(inputType);
-
         if (typeInfo == null)
         {
-            throw new InvalidOperationException(
+            throw new ApplicationException(
                 $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.");
         }
 
@@ -137,48 +123,53 @@ internal static class PowertoolsLoggingSerializer
     /// <returns>A configured JsonSerializerOptions instance.</returns>
     private static JsonSerializerOptions BuildJsonSerializerOptions()
     {
-        var jsonOptions = new JsonSerializerOptions();
+        _jsonOptions = new JsonSerializerOptions();
 
         switch (_currentOutputCase)
         {
             case LoggerOutputCase.CamelCase:
-                jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+                _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
                 break;
             case LoggerOutputCase.PascalCase:
-                jsonOptions.PropertyNamingPolicy = PascalCaseNamingPolicy.Instance;
-                jsonOptions.DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance;
+                _jsonOptions.PropertyNamingPolicy = PascalCaseNamingPolicy.Instance;
+                _jsonOptions.DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance;
                 break;
             default: // Snake case
-                jsonOptions.PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance;
-                jsonOptions.DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance;
+#if NET8_0_OR_GREATER
+                _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+                _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
+#else
+                _jsonOptions.PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance;
+                _jsonOptions.DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance;
+#endif
                 break;
         }
 
-        jsonOptions.Converters.Add(new ByteArrayConverter());
-        jsonOptions.Converters.Add(new ExceptionConverter());
-        jsonOptions.Converters.Add(new MemoryStreamConverter());
-        jsonOptions.Converters.Add(new ConstantClassConverter());
-        jsonOptions.Converters.Add(new DateOnlyConverter());
-        jsonOptions.Converters.Add(new TimeOnlyConverter());
+        _jsonOptions.Converters.Add(new ByteArrayConverter());
+        _jsonOptions.Converters.Add(new ExceptionConverter());
+        _jsonOptions.Converters.Add(new MemoryStreamConverter());
+        _jsonOptions.Converters.Add(new ConstantClassConverter());
+        _jsonOptions.Converters.Add(new DateOnlyConverter());
+        _jsonOptions.Converters.Add(new TimeOnlyConverter());
 
 #if NET8_0_OR_GREATER
-        jsonOptions.Converters.Add(new JsonStringEnumConverter<LogLevel>());
+        _jsonOptions.Converters.Add(new JsonStringEnumConverter<LogLevel>());
 #elif NET6_0
-        jsonOptions.Converters.Add(new JsonStringEnumConverter());
+        _jsonOptions.Converters.Add(new JsonStringEnumConverter());
 #endif
 
-        jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-        jsonOptions.PropertyNameCaseInsensitive = true;
+        _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+        _jsonOptions.PropertyNameCaseInsensitive = true;
 
 #if NET8_0_OR_GREATER
-        jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
+        _jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
         foreach (var context in AdditionalContexts)
         {
-            jsonOptions.TypeInfoResolverChain.Add(context);
+            _jsonOptions.TypeInfoResolverChain.Add(context);
         }
 #endif
-        return jsonOptions;
+        return _jsonOptions;
     }
 
 #if NET8_0_OR_GREATER
@@ -192,4 +183,12 @@ internal static class PowertoolsLoggingSerializer
         AdditionalContexts.Clear();
     }
 #endif
+
+    /// <summary>
+    /// Clears options for tests
+    /// </summary>
+    internal static void ClearOptions()
+    {
+        _jsonOptions = null;
+    }
 }
