@@ -91,6 +91,10 @@ namespace AWS.Lambda.Powertools.BatchProcessing;
 ///             <term>POWERTOOLS_BATCH_PROCESSING_MAX_DEGREE_OF_PARALLELISM</term>
 ///             <description>int, defaults to 1 (no parallelism). Specify -1 to automatically use the value of <see cref="System.Environment.ProcessorCount">ProcessorCount</see>.</description>
 ///         </item>
+///         <item>
+///             <term>POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE</term>
+///             <description>bool, defaults to true. Controls if an exception is thrown on full batch failure.</description>
+///         </item>
 ///     </list>
 ///                                                                                                   <br/>
 ///     Parameters                                                                                    <br/>
@@ -123,6 +127,10 @@ namespace AWS.Lambda.Powertools.BatchProcessing;
 ///         <item>
 ///             <term>MaxDegreeOfParallelism</term>
 ///             <description>int, defaults to 1 (no parallelism). Specify -1 to automatically use the value of <see cref="System.Environment.ProcessorCount">ProcessorCount</see>.</description>
+///         </item>
+///         <item>
+///             <term>ThrowOnFullBatchFailure</term>
+///             <description>bool, defaults to true. Controls if an exception is thrown on full batch failure.</description>
 ///         </item>
 ///     </list>
 /// </summary>
