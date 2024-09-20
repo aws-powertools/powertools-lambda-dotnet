@@ -51,7 +51,7 @@ public sealed class PowertoolsSourceGeneratorSerializer<
         var constructor = typeof(TSgContext).GetConstructor(new Type[] { typeof(JsonSerializerOptions) });
         if (constructor == null)
         {
-            throw new ApplicationException(
+            throw new JsonSerializerException(
                 $"The serializer {typeof(TSgContext).FullName} is missing a constructor that takes in JsonSerializerOptions object");
         }
 

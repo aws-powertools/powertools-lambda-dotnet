@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
 using AWS.Lambda.Powertools.Logging.Serializers;
@@ -143,7 +144,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         var unknownObject = new UnknownType();
 
         // Act & Assert
-        var exception = Assert.Throws<ApplicationException>(() =>
+        var exception = Assert.Throws<JsonSerializerException>(() =>
             PowertoolsLoggingSerializer.Serialize(unknownObject, typeof(UnknownType)));
 
         Assert.Contains("is not known to the serializer", exception.Message);

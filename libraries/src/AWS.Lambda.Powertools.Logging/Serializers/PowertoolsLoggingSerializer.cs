@@ -83,7 +83,7 @@ internal static class PowertoolsLoggingSerializer
         var typeInfo = GetTypeInfo(inputType);
         if (typeInfo == null)
         {
-            throw new ApplicationException(
+            throw new JsonSerializerException(
                 $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.");
         }
 
