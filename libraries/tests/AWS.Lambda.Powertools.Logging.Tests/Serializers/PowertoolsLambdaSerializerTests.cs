@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-#if NET8_0_OR_GREATER
 
 using AWS.Lambda.Powertools.Logging.Serializers;
 using System;
@@ -31,6 +30,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Serializers;
 
 public class PowertoolsLambdaSerializerTests : IDisposable
 {
+#if NET8_0_OR_GREATER
     [Fact]
     public void Constructor_ShouldNotThrowException()
     {
@@ -220,10 +220,42 @@ public class PowertoolsLambdaSerializerTests : IDisposable
             outptuMySerializer);
     }
 
+
+#endif
     public void Dispose()
     {
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
         PowertoolsLoggingSerializer.ClearOptions();
     }
-}
+
+#if NET6_0
+
+    [Fact]
+    public void Should_Serialize_Net6()
+    {
+        // Arrange
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
+        var testObject = new APIGatewayProxyRequest
+        {
+            Path = "asda",
+            RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
+            {
+                RequestId = "asdas"
+            }
+        };
+
+        var log = new LogEntry
+        {
+            Name = "dasda",
+            Message = testObject
+        };
+
+        var outptuMySerializer = PowertoolsLoggingSerializer.Serialize(log, null);
+
+        // Assert
+        Assert.Equal(
+            "{\"cold_start\":false,\"x_ray_trace_id\":null,\"correlation_id\":null,\"timestamp\":\"0001-01-01T00:00:00\",\"level\":\"Trace\",\"service\":null,\"name\":\"dasda\",\"message\":{\"resource\":null,\"path\":\"asda\",\"http_method\":null,\"headers\":null,\"multi_value_headers\":null,\"query_string_parameters\":null,\"multi_value_query_string_parameters\":null,\"path_parameters\":null,\"stage_variables\":null,\"request_context\":{\"path\":null,\"account_id\":null,\"resource_id\":null,\"stage\":null,\"request_id\":\"asdas\",\"identity\":null,\"resource_path\":null,\"http_method\":null,\"api_id\":null,\"extended_request_id\":null,\"connection_id\":null,\"connected_at\":0,\"domain_name\":null,\"domain_prefix\":null,\"event_type\":null,\"message_id\":null,\"route_key\":null,\"authorizer\":null,\"operation_name\":null,\"error\":null,\"integration_latency\":null,\"message_direction\":null,\"request_time\":null,\"request_time_epoch\":0,\"status\":null},\"body\":null,\"is_base64_encoded\":false},\"sampling_rate\":null,\"extra_keys\":null,\"exception\":null,\"lambda_context\":null}",
+            outptuMySerializer);
+    }
 #endif
+}

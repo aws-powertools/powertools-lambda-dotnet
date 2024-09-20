@@ -56,21 +56,6 @@ internal static class PowertoolsLoggingSerializer
         _currentOutputCase = loggerOutputCase;
     }
 
-#if NET6_0
-    /// <summary>
-    /// Serializes an object to a JSON string.
-    /// </summary>
-    /// <param name="value">The object to serialize.</param>
-    /// <returns>A JSON string representation of the object.</returns>
-    internal static string Serialize(object value)
-    {
-        var options = GetSerializerOptions();
-        return JsonSerializer.Serialize(value, options);
-    }
-#endif
-
-#if NET8_0_OR_GREATER
-
     /// <summary>
     /// Serializes an object to a JSON string.
     /// </summary>
@@ -80,6 +65,10 @@ internal static class PowertoolsLoggingSerializer
     /// <exception cref="InvalidOperationException">Thrown when the input type is not known to the serializer.</exception>
     internal static string Serialize(object value, Type inputType)
     {
+#if NET6_0
+        var options = GetSerializerOptions();
+        return JsonSerializer.Serialize(value, options);
+#else
         var typeInfo = GetTypeInfo(inputType);
         if (typeInfo == null)
         {
@@ -88,8 +77,10 @@ internal static class PowertoolsLoggingSerializer
         }
 
         return JsonSerializer.Serialize(value, typeInfo);
+#endif
     }
 
+#if NET8_0_OR_GREATER
     /// <summary>
     /// Adds a JsonSerializerContext to the serializer options.
     /// </summary>

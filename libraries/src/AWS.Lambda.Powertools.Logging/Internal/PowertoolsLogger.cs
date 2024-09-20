@@ -138,11 +138,7 @@ internal sealed class PowertoolsLogger : ILogger
             ? GetLogEntry(logLevel, timestamp, message, exception)
             : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter);
 
-#if NET8_0_OR_GREATER
         _systemWrapper.LogLine(PowertoolsLoggingSerializer.Serialize(logEntry, typeof(object)));
-#else
-        _systemWrapper.LogLine(PowertoolsLoggingSerializer.Serialize(logEntry));
-#endif
     }
 
     /// <summary>

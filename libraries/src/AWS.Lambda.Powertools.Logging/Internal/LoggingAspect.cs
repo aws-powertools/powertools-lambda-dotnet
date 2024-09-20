@@ -245,12 +245,9 @@ public class LoggingAspect
         {
             var correlationId = string.Empty;
 
-#if NET8_0_OR_GREATER
             var jsonDoc =
                 JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg, eventArg.GetType()));
-#else
-            var jsonDoc = JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg));
-#endif
+
             var element = jsonDoc.RootElement;
 
             for (var i = 0; i < correlationIdPaths.Length; i++)
