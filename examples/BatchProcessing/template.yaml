@@ -96,6 +96,12 @@ Resources:
               - ReportBatchItemFailures
             Queue: !GetAtt SqsQueue.Arn
 
+  SqsBatchProcessorFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${SqsBatchProcessorFunction}"
+      RetentionInDays: 7
+
   # --------------
   # Batch Processing for DynamoDb (DDB) Stream
   DdbStreamDeadLetterQueue:
@@ -116,7 +122,7 @@ Resources:
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
 
-  DdbStreamProcessorFunction:
+  DdbStreamBatchProcessorFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./src/HelloWorld/
@@ -151,6 +157,12 @@ Resources:
             ParallelizationFactor: 1
             StartingPosition: LATEST
             Stream: !GetAtt DdbTable.StreamArn
+
+  DdbStreamBatchProcessorFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${DdbStreamBatchProcessorFunction}"
+      RetentionInDays: 7
 
   # --------------
   # Batch Processing for Kinesis Data Stream
@@ -214,6 +226,12 @@ Resources:
             ParallelizationFactor: 1
             StartingPosition: LATEST
             Stream: !GetAtt KinesisStreamConsumer.ConsumerARN
+
+  KinesisBatchProcessorFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${KinesisBatchProcessorFunction}"
+      RetentionInDays: 7
 
 Outputs:
   SqsQueueUrl:

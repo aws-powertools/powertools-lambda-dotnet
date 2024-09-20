@@ -133,44 +133,44 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
     /// <summary>
     /// Type of batch processor.
     /// </summary>
-    public Type BatchProcessor;
+    public Type BatchProcessor { get; set; }
 
     /// <summary>
     /// Type of batch processor provider.
     /// </summary>
-    public Type BatchProcessorProvider;
+    public Type BatchProcessorProvider { get; set; }
 
     /// <summary>
     /// Type of record handler.
     /// </summary>
-    public Type RecordHandler;
+    public Type RecordHandler { get; set; }
 
     /// <summary>
     /// Type of record handler provider.
     /// </summary>
-    public Type RecordHandlerProvider;
+    public Type RecordHandlerProvider { get; set; }
 
     /// <summary>
     /// Error handling policy.
     /// </summary>
-    public BatchProcessorErrorHandlingPolicy ErrorHandlingPolicy;
+    public BatchProcessorErrorHandlingPolicy ErrorHandlingPolicy { get; set; }
 
     /// <summary>
     /// Batch processing enabled (default false)
     /// </summary>
-    public bool BatchParallelProcessingEnabled = PowertoolsConfigurations.Instance.BatchParallelProcessingEnabled;
+    public bool BatchParallelProcessingEnabled { get; set; } = PowertoolsConfigurations.Instance.BatchParallelProcessingEnabled;
 
     /// <summary>
     /// The maximum degree of parallelism to apply during batch processing.
     /// Must enable BatchParallelProcessingEnabled
     /// </summary>
-    public int MaxDegreeOfParallelism = PowertoolsConfigurations.Instance.BatchProcessingMaxDegreeOfParallelism;
+    public int MaxDegreeOfParallelism { get; set; } = PowertoolsConfigurations.Instance.BatchProcessingMaxDegreeOfParallelism;
 
     /// <summary>
     /// By default, the Batch processor throws a <see cref="BatchProcessingException"/> on full batch failure.
     /// This behaviour can be disabled by setting this value to false.
     /// </summary>
-    public bool ThrowOnFullBatchFailure = PowertoolsConfigurations.Instance.BatchThrowOnFullBatchFailureEnabled;
+    public bool ThrowOnFullBatchFailure { get; set; } = PowertoolsConfigurations.Instance.BatchThrowOnFullBatchFailureEnabled;
 
     private static readonly Dictionary<Type, BatchEventType> EventTypes = new()
     {
