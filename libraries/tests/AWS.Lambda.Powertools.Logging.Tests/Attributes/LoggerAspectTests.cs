@@ -17,6 +17,7 @@ using System;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Serializers;
+using AWS.Lambda.Powertools.Logging.Tests.Handlers;
 using AWS.Lambda.Powertools.Logging.Tests.Serializers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -49,7 +50,7 @@ public class LoggerAspectTests : IDisposable
         var name = "TestMethod";
         var args = new object[] { new TestObject { FullName = "Powertools", Age = 20 } };
         var hostType = typeof(string);
-        var method = typeof(TestClass).GetMethod("TestMethod");
+        var method = typeof(TestHandlers).GetMethod("TestMethod");
         var returnType = typeof(string);
         var triggers = new Attribute[]
         {
@@ -93,7 +94,7 @@ public class LoggerAspectTests : IDisposable
         var name = "TestMethod";
         var args = new object[] { new TestObject { FullName = "Powertools", Age = 20 } };
         var hostType = typeof(string);
-        var method = typeof(TestClass).GetMethod("TestMethod");
+        var method = typeof(TestHandlers).GetMethod("TestMethod");
         var returnType = typeof(string);
         var triggers = new Attribute[]
         {
@@ -143,7 +144,7 @@ public class LoggerAspectTests : IDisposable
         var name = "TestMethod";
         var args = new object[] { new TestObject { FullName = "Powertools", Age = 20 } };
         var hostType = typeof(string);
-        var method = typeof(TestClass).GetMethod("TestMethod");
+        var method = typeof(TestHandlers).GetMethod("TestMethod");
         var returnType = typeof(string);
         var triggers = new Attribute[]
         {
@@ -218,7 +219,7 @@ public class LoggerAspectTests : IDisposable
         var name = "TestMethod";
         var args = new object[] { new TestObject { FullName = "Powertools", Age = 20 } };
         var hostType = typeof(string);
-        var method = typeof(TestClass).GetMethod("TestMethod");
+        var method = typeof(TestHandlers).GetMethod("TestMethod");
         var returnType = typeof(string);
         var triggers = new Attribute[]
         {
@@ -265,7 +266,7 @@ public class LoggerAspectTests : IDisposable
             new TestObject { FullName = "Powertools", Age = 20, Headers = new Header { MyRequestIdHeader = "test" } }
         };
         var hostType = typeof(string);
-        var method = typeof(TestClass).GetMethod("TestMethod");
+        var method = typeof(TestHandlers).GetMethod("TestMethod");
         var returnType = typeof(string);
         var triggers = new Attribute[]
         {

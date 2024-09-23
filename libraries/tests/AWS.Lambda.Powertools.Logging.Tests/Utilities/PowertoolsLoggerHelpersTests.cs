@@ -65,22 +65,30 @@ public class PowertoolsLoggerHelpersTests : IDisposable
     }
 
     [Fact]
-    public void ObjectToDictionary_NullObject_ThrowsArgumentNullException()
+    public void ObjectToDictionary_NullObject_Return_New_Dictionary()
     {
         // Act & Assert
-        Assert.Throws<NullReferenceException>(() => PowertoolsLoggerHelpers.ObjectToDictionary(null));
+        Assert.NotNull(() => PowertoolsLoggerHelpers.ObjectToDictionary(null));
     }
     
     [Fact]
     public void Should_Log_With_Anonymous()
     {
+        var consoleOut = Substitute.For<StringWriter>();
+        SystemWrapper.Instance.SetOut(consoleOut);
+        
         // Act & Assert
-        Logger.AppendKey("asd", new 
+        Logger.AppendKey("newKey", new 
         {
-            name = "sada"
+            name = "my name"
         });
         
         Logger.LogInformation("test");
+        
+        consoleOut.Received(1).WriteLine(
+            Arg.Is<string>(i =>
+                i.Contains("\"new_key\":{\"name\":\"my name\"}"))
+        );
     }
     
     [Fact]

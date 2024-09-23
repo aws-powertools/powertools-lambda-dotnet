@@ -21,9 +21,9 @@ using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Logging.Tests.Serializers;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
-namespace AWS.Lambda.Powertools.Logging.Tests.Attributes;
+namespace AWS.Lambda.Powertools.Logging.Tests.Handlers;
 
-class TestClass
+class TestHandlers
 {
     [Logging]
     public void TestMethod()
@@ -137,6 +137,21 @@ class TestClass
     [Logging(LogLevel = LogLevel.Debug, LogEvent = true)]
     public void TestLogEventWithoutContext()
     {
+    }
+    
+    [Logging(LogEvent = true, SamplingRate = 0.2, Service = "my_service")]
+    public void TestCustomFormatterWithDecorator(string input, ILambdaContext context)
+    {
+    }
+    
+    [Logging(LogEvent = true, SamplingRate = 0.2, Service = "my_service")]
+    public void TestCustomFormatterWithDecoratorNoContext(string input)
+    {
+    }
+    
+    public void TestCustomFormatterNoDecorator(string input, ILambdaContext context)
+    {
+        Logger.LogInformation(input);
     }
     
     public void TestLogNoDecorator()

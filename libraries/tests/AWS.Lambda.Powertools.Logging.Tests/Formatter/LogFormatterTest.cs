@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -22,6 +23,8 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Serializers;
+using AWS.Lambda.Powertools.Logging.Tests.Handlers;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReturnsExtensions;
@@ -31,8 +34,15 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
 {
     [Collection("Sequential")]
-    public class LogFormatterTest
+    public class LogFormatterTest : IDisposable
     {
+        private readonly TestHandlers _testHandler;
+
+        public LogFormatterTest()
+        {
+            _testHandler = new TestHandlers();
+        }
+        
         [Fact]
         public void Log_WhenCustomFormatter_LogsCustomFormat()
         {
@@ -123,7 +133,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             Logger.UseFormatter(logFormatter);
 
             var systemWrapper = Substitute.For<ISystemWrapper>();
-            
+
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
             var logger = provider.CreateLogger(loggerName);
 
@@ -166,14 +176,113 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                     x.LambdaContext.InvokedFunctionArn == lambdaContext.InvokedFunctionArn &&
                     x.LambdaContext.AwsRequestId == lambdaContext.AwsRequestId
             ));
-            
-            systemWrapper.Received(1).LogLine(JsonSerializer.Serialize(formattedLogEntry));
 
-            //Clean up
+            systemWrapper.Received(1).LogLine(JsonSerializer.Serialize(formattedLogEntry));
+        }
+
+        [Fact]
+        public void Should_Log_CustomFormatter_When_Decorated()
+        {
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+            var lambdaContext = new TestLambdaContext
+            {
+                FunctionName = "funtionName",
+                FunctionVersion = "version",
+                InvokedFunctionArn = "function::arn",
+                AwsRequestId = "requestId",
+                MemoryLimitInMB = 128
+            };
+
+            Logger.UseFormatter(new CustomLogFormatter());
+            _testHandler.TestCustomFormatterWithDecorator("test", lambdaContext);
+
+            // serializer works differently in .net 8 and AOT. In .net 6 it writes properties that have null
+            // in .net 8 it removes null properties
+
+#if NET8_0_OR_GREATER
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i =>
+                    i ==
+                    "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":\"requestId\"},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_mb\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
+            );
+#else
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i =>
+                    i.Contains(
+                    "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":\"requestId\",\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_m_b\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\""))
+            );
+#endif
+        }
+
+        [Fact]
+        public void Should_Log_CustomFormatter_When_No_Decorated_Just_Log()
+        {
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+            var lambdaContext = new TestLambdaContext
+            {
+                FunctionName = "funtionName",
+                FunctionVersion = "version",
+                InvokedFunctionArn = "function::arn",
+                AwsRequestId = "requestId",
+                MemoryLimitInMB = 128
+            };
+
+            Logger.UseFormatter(new CustomLogFormatter());
+
+            _testHandler.TestCustomFormatterNoDecorator("test", lambdaContext);
+
+            // serializer works differently in .net 8 and AOT. In .net 6 it writes properties that have null
+            // in .net 8 it removes null properties
+
+#if NET8_0_OR_GREATER
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i =>
+                    i ==
+                    "{\"message\":\"test\",\"service\":\"service_undefined\",\"correlation_ids\":{},\"lambda_function\":{\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0}}")
+            );
+#else
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i =>
+                    i ==
+                    "{\"message\":\"test\",\"service\":\"service_undefined\",\"correlation_ids\":{\"aws_request_id\":null,\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":null,\"arn\":null,\"memory_limit_in_m_b\":null,\"version\":null,\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0}}")
+            );
+#endif
+        }
+
+        [Fact]
+        public void Should_Log_CustomFormatter_When_Decorated_No_Context()
+        {
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+
+            Logger.UseFormatter(new CustomLogFormatter());
+
+            _testHandler.TestCustomFormatterWithDecoratorNoContext("test");
+
+#if NET8_0_OR_GREATER
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i =>
+                    i ==
+                    "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{},\"lambda_function\":{\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
+            );
+#else
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i =>
+                    i ==
+                    "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":null,\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":null,\"arn\":null,\"memory_limit_in_m_b\":null,\"version\":null,\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
+            );
+#endif
+        }
+
+        public void Dispose()
+        {
             Logger.UseDefaultFormatter();
             Logger.RemoveAllKeys();
             LoggingLambdaContext.Clear();
             LoggingAspect.ResetForTest();
+            PowertoolsLoggingSerializer.ClearOptions();
         }
     }
 
@@ -204,7 +313,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 MinimumLevel = LogLevel.Information,
                 LoggerOutputCase = LoggerOutputCase.PascalCase
             };
-            
+
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
             var logger = provider.CreateLogger(loggerName);
 
@@ -249,7 +358,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 MinimumLevel = LogLevel.Information,
                 LoggerOutputCase = LoggerOutputCase.PascalCase
             };
-            
+
             var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
             var logger = provider.CreateLogger(loggerName);
 

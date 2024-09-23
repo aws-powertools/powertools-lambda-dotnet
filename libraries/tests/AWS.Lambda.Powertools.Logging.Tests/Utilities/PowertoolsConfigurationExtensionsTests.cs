@@ -18,10 +18,11 @@ using Xunit;
 using NSubstitute;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Serializers;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Utilities;
 
-public class PowertoolsConfigurationExtensionsTests
+public class PowertoolsConfigurationExtensionsTests : IDisposable
 {
     [Theory]
     [InlineData(LoggerOutputCase.CamelCase, "TestString", "testString")]
@@ -138,6 +139,12 @@ public class PowertoolsConfigurationExtensionsTests
 
         // Assert
         Assert.Equal(expected, result);
+    }
+
+    public void Dispose()
+    {
+        LoggingAspect.ResetForTest();
+        PowertoolsLoggingSerializer.ClearOptions();
     }
 }
 

@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AWS.Lambda.Powertools.Logging.Internal.Helpers;
@@ -32,12 +33,24 @@ internal static class PowertoolsLoggerHelpers
     /// </returns>
     internal static object ObjectToDictionary(object anonymousObject)
     {
+        if (anonymousObject == null)
+        {
+            return new Dictionary<string, object>();
+        }
+
         if (anonymousObject.GetType().Namespace is not null)
         {
             return anonymousObject;
         }
 
         return anonymousObject.GetType().GetProperties()
-            .ToDictionary(prop => prop.Name, prop => ObjectToDictionary(prop.GetValue(anonymousObject, null)));
+            .Where(prop => prop.GetValue(anonymousObject, null) != null)
+            .ToDictionary(
+                prop => prop.Name,
+                prop => {
+                    var value = prop.GetValue(anonymousObject, null);
+                    return value != null ? ObjectToDictionary(value) : string.Empty;
+                }
+            );
     }
 }

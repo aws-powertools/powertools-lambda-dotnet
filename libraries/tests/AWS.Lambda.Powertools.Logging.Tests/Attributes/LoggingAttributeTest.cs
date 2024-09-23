@@ -24,6 +24,7 @@ using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Serializers;
+using AWS.Lambda.Powertools.Logging.Tests.Handlers;
 using AWS.Lambda.Powertools.Logging.Tests.Serializers;
 using NSubstitute;
 using Xunit;
@@ -33,11 +34,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
     [Collection("Sequential")]
     public class LoggingAttributeTests : IDisposable
     {
-        private TestClass _testClass;
+        private TestHandlers _testHandlers;
 
         public LoggingAttributeTests()
         {
-            _testClass = new TestClass();
+            _testHandlers = new TestHandlers();
         }
 
         [Fact]
@@ -48,7 +49,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
 
             // Act
-            _testClass.TestMethod();
+            _testHandlers.TestMethod();
 
             // Assert
             var allKeys = Logger.GetAllKeys()
@@ -74,7 +75,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
 
             // Act
-            _testClass.TestMethodDebug();
+            _testHandlers.TestMethodDebug();
 
             // Assert
             var allKeys = Logger.GetAllKeys()
@@ -103,7 +104,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
 
             // Act
-            _testClass.LogEventNoArgs();
+            _testHandlers.LogEventNoArgs();
 
             consoleOut.DidNotReceive().WriteLine(
                 Arg.Any<string>()
@@ -137,7 +138,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             };
             
             // Act
-            _testClass.LogEvent(testObj, context);
+            _testHandlers.LogEvent(testObj, context);
 
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i => i.Contains("FunctionName\":\"PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"))
@@ -162,7 +163,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             };
             
             // Act
-            _testClass.LogEventFalse(context);
+            _testHandlers.LogEventFalse(context);
 
             consoleOut.DidNotReceive().WriteLine(
                 Arg.Any<string>()
@@ -177,7 +178,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
 
             // Act
-            _testClass.LogEventDebug();
+            _testHandlers.LogEventDebug();
 
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i => i == "Skipping Event Log because event parameter not found.")
@@ -192,7 +193,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
 
             // Act
-            _testClass.ClearState();
+            _testHandlers.ClearState();
 
             Assert.NotNull(Logger.LoggerProvider);
             Assert.False(Logger.GetAllKeys().Any());
@@ -218,7 +219,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             switch (correlationIdPath)
             {
                 case CorrelationIdPaths.ApiGatewayRest:
-                    _testClass.CorrelationApiGatewayProxyRequest(new APIGatewayProxyRequest
+                    _testHandlers.CorrelationApiGatewayProxyRequest(new APIGatewayProxyRequest
                     {
                         RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
                         {
@@ -227,7 +228,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                     });
                     break;
                 case CorrelationIdPaths.ApplicationLoadBalancer:
-                    _testClass.CorrelationApplicationLoadBalancerRequest(new ApplicationLoadBalancerRequest
+                    _testHandlers.CorrelationApplicationLoadBalancerRequest(new ApplicationLoadBalancerRequest
                     {
                         Headers = new Dictionary<string, string>
                         {
@@ -236,13 +237,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                     });
                     break;
                 case CorrelationIdPaths.EventBridge:
-                    _testClass.CorrelationCloudWatchEvent(new S3ObjectCreateEvent
+                    _testHandlers.CorrelationCloudWatchEvent(new S3ObjectCreateEvent
                     {
                         Id = correlationId
                     });
                     break;
                 case "/headers/my_request_id_header":
-                    _testClass.CorrelationIdFromString(new TestObject
+                    _testHandlers.CorrelationIdFromString(new TestObject
                     {
                         Headers = new Header
                         {
@@ -279,7 +280,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             switch (outputCase)
             {
                 case LoggerOutputCase.CamelCase:
-                    _testClass.CorrelationIdFromStringCamel(new TestObject
+                    _testHandlers.CorrelationIdFromStringCamel(new TestObject
                     {
                         Headers = new Header
                         {
@@ -288,7 +289,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                     });
                     break;
                 case LoggerOutputCase.PascalCase:
-                    _testClass.CorrelationIdFromStringPascal(new TestObject
+                    _testHandlers.CorrelationIdFromStringPascal(new TestObject
                     {
                         Headers = new Header
                         {
@@ -297,7 +298,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                     });
                     break;
                 case LoggerOutputCase.SnakeCase:
-                    _testClass.CorrelationIdFromStringSnake(new TestObject
+                    _testHandlers.CorrelationIdFromStringSnake(new TestObject
                     {
                         Headers = new Header
                         {
@@ -335,7 +336,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             {
                 case LoggerOutputCase.CamelCase:
                     Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "CamelCase");
-                    _testClass.CorrelationIdFromStringCamelEnv(new TestObject
+                    _testHandlers.CorrelationIdFromStringCamelEnv(new TestObject
                     {
                         Headers = new Header
                         {
@@ -345,7 +346,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                     break;
                 case LoggerOutputCase.PascalCase:
                     Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "PascalCase");
-                    _testClass.CorrelationIdFromStringPascalEnv(new TestObject
+                    _testHandlers.CorrelationIdFromStringPascalEnv(new TestObject
                     {
                         Headers = new Header
                         {
@@ -354,7 +355,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                     });
                     break;
                 case LoggerOutputCase.SnakeCase:
-                    _testClass.CorrelationIdFromStringSnakeEnv(new TestObject
+                    _testHandlers.CorrelationIdFromStringSnakeEnv(new TestObject
                     {
                         Headers = new Header
                         {
@@ -380,7 +381,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
         
             // Act
-            _testClass.HandlerSamplingRate();
+            _testHandlers.HandlerSamplingRate();
         
             // Assert
         
@@ -397,7 +398,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
         
             // Act
-            _testClass.HandlerService();
+            _testHandlers.HandlerService();
         
             // Assert
         
@@ -413,7 +414,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
 
             // Act
-            _testClass.TestLogLevelCritical();
+            _testHandlers.TestLogLevelCritical();
         
             // Assert
         
@@ -433,7 +434,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             };
             
             // Act
-            _testClass.TestLogLevelCriticalLogEvent(context);
+            _testHandlers.TestLogLevelCriticalLogEvent(context);
         
             // Assert
             consoleOut.DidNotReceive().WriteLine(Arg.Any<string>());
@@ -447,7 +448,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
             
             // Act
-            _testClass.TestLogEventWithoutContext();
+            _testHandlers.TestLogEventWithoutContext();
         
             // Assert
             consoleOut.Received(1).WriteLine(Arg.Is<string>(s => s == "Skipping Event Log because event parameter not found."));
@@ -460,7 +461,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             var consoleOut = Substitute.For<StringWriter>();
             SystemWrapper.Instance.SetOut(consoleOut);
             
-            var test = new TestClass();
+            var test = new TestHandlers();
             
             // Act
             test.TestLogNoDecorator();
