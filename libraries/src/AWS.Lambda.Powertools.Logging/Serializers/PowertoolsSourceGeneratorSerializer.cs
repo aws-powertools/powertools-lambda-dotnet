@@ -32,8 +32,17 @@ public sealed class PowertoolsSourceGeneratorSerializer<
     /// Constructs instance of serializer.
     /// </summary>
     public PowertoolsSourceGeneratorSerializer()
-        : this(null)
+        : this((Action<JsonSerializerOptions>)null)
     {
+    }
+    
+    /// <summary>
+    /// Constructs instance of serializer.
+    /// </summary>
+    public PowertoolsSourceGeneratorSerializer(ILogFormatter logFormatter)
+        : this((Action<JsonSerializerOptions>)null)
+    {
+        Logger.UseFormatter(logFormatter);
     }
 
     /// <summary>
