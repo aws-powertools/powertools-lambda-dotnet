@@ -672,8 +672,10 @@ You can customize the structure (keys and values) of your log entries by impleme
 
 Logging utility supports native AOT serialization by default without any changes needed.
 
-In case you want to use the `LogEvent`, `Custom Log Formatter` features or serialize your own types when Logging events it is required 
-that you do some changes in your Lambda `Main` method.
+!!! info
+    
+    In case you want to use the `LogEvent`, `Custom Log Formatter` features or serialize your own types when Logging events it is required 
+    that you do some changes in your Lambda `Main` method.
 
 ### Configure
 
