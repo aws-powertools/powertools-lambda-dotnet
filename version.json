@@ -1,6 +1,6 @@
 {
 	"Core": {
-		"Logging": "1.5.1",
+		"Logging": "1.6.0",
 		"Metrics": "1.7.1",
 		"Tracing": "1.5.1"
 	},

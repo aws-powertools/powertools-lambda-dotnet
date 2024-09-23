@@ -21,7 +21,7 @@
 
     <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
         <!--        Enable to force errors on AOT common warnings -->
-        <!--        <WarningsAsErrors>IL2026,IL2067,IL2075</WarningsAsErrors>-->
+<!--                <WarningsAsErrors>IL2026,IL2067,IL2075</WarningsAsErrors>-->
         <IsTrimmable>true</IsTrimmable>
         <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
         <IsAotCompatible>true</IsAotCompatible>

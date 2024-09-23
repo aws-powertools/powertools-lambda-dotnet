@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!--    Do not update AspectInjector from 2.8.1 until this issue is fixed https://github.com/pamidur/aspect-injector/issues/220-->
+    <PackageVersion Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3" />
     <PackageVersion Include="AspectInjector" Version="2.8.1" />
     <PackageVersion Include="Amazon.Lambda.Core" Version="2.2.0" />
     <PackageVersion Include="AWSSDK.AppConfig" Version="3.7.301" />

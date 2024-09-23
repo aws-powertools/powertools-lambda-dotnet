@@ -2,12 +2,12 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using System.Text.Json.Serialization;
-using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Tracing;
+using AWS.Lambda.Powertools.Logging;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
-namespace AOT;
+namespace AOT_Logging;
 
-public class Function
+public static class Function
 {
     /// <summary>
     /// The main entry point for the Lambda function. The main function is called once during the Lambda init phase. It
@@ -43,31 +43,21 @@ public class Function
     /// <param name="input">The event for the Lambda function handler to process.</param>
     /// <param name="context">The ILambdaContext that provides methods for logging and describing the Lambda environment.</param>
     /// <returns></returns>
-    
-    // You can optionally capture cold start metrics by setting CaptureColdStart parameter to true.
-    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
-    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+    [Logging(LogEvent = true, Service = "pt_service", LogLevel = LogLevel.Debug)]
     public static string FunctionHandler(string input, ILambdaContext context)
     {
-        // You can create metrics using AddMetric
-        // MetricUnit enum facilitates finding a supported metric unit by CloudWatch.
-        Metrics.AddMetric("Handler invocation", 1, MetricUnit.Count);
+        Logger.LogInformation("FunctionHandler invocation");
         return ToUpper(input);
     }
 
-    [Tracing(SegmentName = "ToUpper Call")]
     private static string ToUpper(string input)
     {
-        Metrics.AddMetric("ToUpper invocation", 1, MetricUnit.Count);
-        
-        var upper =  input.ToUpper();
-        
-        Tracing.AddAnnotation("Upper text", upper);
-        
-        // You can add high-cardinality data as part of your Metrics log with AddMetadata method.
-        // This is useful when you want to search highly contextual information along with your metrics in your logs.
-        Metrics.AddMetadata("Input Uppercase", upper);
-        
+        Logger.LogInformation("ToUpper invocation");
+
+        var upper = input.ToUpper();
+
+        Logger.LogInformation("ToUpper result: {Result}", upper);
+
         return upper;
     }
 }

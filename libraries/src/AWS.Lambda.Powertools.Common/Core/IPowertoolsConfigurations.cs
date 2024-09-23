@@ -72,7 +72,7 @@ public interface IPowertoolsConfigurations
     ///     Gets the logger sample rate.
     /// </summary>
     /// <value>The logger sample rate.</value>
-    double? LoggerSampleRate { get; }
+    double LoggerSampleRate { get; }
 
     /// <summary>
     ///     Gets a value indicating whether [logger log event].
