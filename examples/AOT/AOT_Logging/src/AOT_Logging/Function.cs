@@ -7,7 +7,7 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace AOT_Logging;
 
-public class Function
+public static class Function
 {
     /// <summary>
     /// The main entry point for the Lambda function. The main function is called once during the Lambda init phase. It

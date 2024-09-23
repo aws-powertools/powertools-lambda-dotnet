@@ -6,7 +6,7 @@ using AWS.Lambda.Powertools.Tracing;
 
 namespace AOT_Tracing;
 
-public class Function
+public static class Function
 {
     /// <summary>
     /// The main entry point for the Lambda function. The main function is called once during the Lambda init phase. It
