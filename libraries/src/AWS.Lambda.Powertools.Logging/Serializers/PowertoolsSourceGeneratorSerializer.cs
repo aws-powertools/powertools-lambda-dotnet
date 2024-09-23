@@ -23,7 +23,12 @@ using Amazon.Lambda.Serialization.SystemTextJson;
 
 namespace AWS.Lambda.Powertools.Logging.Serializers;
 
-/// <inheritdoc />
+/// <summary>
+/// ILambdaSerializer implementation that supports the source generator support of System.Text.Json. 
+/// When the class is compiled it will generate all the JSON serialization code to convert between JSON and the list types. This
+/// will avoid any reflection based serialization.
+/// </summary>
+/// <typeparam name="TSgContext"></typeparam>
 public sealed class PowertoolsSourceGeneratorSerializer<
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     TSgContext> : SourceGeneratorLambdaJsonSerializer<TSgContext> where TSgContext : JsonSerializerContext

@@ -11,6 +11,7 @@ The logging utility provides a Lambda optimized logger with output structured as
 * Log Lambda event when instructed (disabled by default)
 * Log sampling enables DEBUG log level for a percentage of requests (disabled by default)
 * Append additional keys to structured log at any point in time
+* Ahead-of-Time compilation to native code support [AOT](https://docs.aws.amazon.com/lambda/latest/dg/dotnet-native-aot.html) from version 1.6.0
 
 ## Installation
 
@@ -21,6 +22,12 @@ Powertools for AWS Lambda (.NET) are available as NuGet packages. You can instal
     `dotnet add package AWS.Lambda.Powertools.Logging`
 
 ## Getting started
+
+!!! info
+    
+    AOT Support
+    If loooking for AOT specific configurations navigate to the [AOT section](#aot-support)    
+
 
 Logging requires two settings:
 
@@ -660,3 +667,125 @@ You can customize the structure (keys and values) of your log entries by impleme
         }
     }
     ```
+
+## AOT Support
+
+Logging utility supports native AOT serialization by default without any changes needed.
+
+In case you want to use the `LogEvent`, `Custom Log Formatter` features or serialize your own types when Logging events it is required 
+that you do some changes in your Lambda `Main` method.
+
+### Configure
+
+The change needed is to replace `SourceGeneratorLambdaJsonSerializer` with `PowertoolsSourceGeneratorSerializer`. 
+
+This change enables Powertools to construct an instance of JsonSerializerOptions that is used to customize the serialization and deserialization of the Lambda JSON events and your own types.
+
+=== "Before"
+
+    ```csharp
+     Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
+     await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<MyCustomJsonSerializerContext>())
+         .Build()
+         .RunAsync();
+    ```
+
+=== "After"
+
+    ```csharp hl_lines="2"
+    Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
+    await LambdaBootstrapBuilder.Create(handler, new PowertoolsSourceGeneratorSerializer<MyCustomJsonSerializerContext>())
+        .Build()
+        .RunAsync();
+    ```
+
+For example when you have your own Demo type 
+
+```csharp
+public class Demo
+{
+    public string Name { get; set; }
+    public Headers Headers { get; set; }
+}
+```
+
+To be able to serialize it in AOT you have to have your own `JsonSerializerContext`
+
+```csharp
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
+[JsonSerializable(typeof(Demo))]
+public partial class MyCustomJsonSerializerContext : JsonSerializerContext
+{
+}
+```
+
+When you change to `PowertoolsSourceGeneratorSerializer<MyCustomJsonSerializerContext>` we are 
+combining your `JsonSerializerContext` types with Powertools `JsonSerializerContext`. This allows Powertools to serialize your types and Lambda events.
+
+### Custom Log Formatter
+
+To be able to use a custom log formatter with AOT we need to pass an instance of ` ILogFormatter` to `PowertoolsSourceGeneratorSerializer` 
+instead of using the static `Logger.UseFormatter` in the Function contructor.
+
+=== "Function Main method"
+
+    ```csharp hl_lines="5"
+
+    Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
+    await LambdaBootstrapBuilder.Create(handler, 
+        new PowertoolsSourceGeneratorSerializer<LambdaFunctionJsonSerializerContext>
+        ( 
+            new CustomLogFormatter()
+        )
+    )
+    .Build()
+    .RunAsync();
+    
+    ```
+
+=== "CustomLogFormatter.cs"
+
+    ```csharp
+    public class CustomLogFormatter : ILogFormatter
+    {
+        public object FormatLogEntry(LogEntry logEntry)
+        {
+            return new
+            {
+                Message = logEntry.Message,
+                Service = logEntry.Service,
+                CorrelationIds = new
+                {
+                    AwsRequestId = logEntry.LambdaContext?.AwsRequestId,
+                    XRayTraceId = logEntry.XRayTraceId,
+                    CorrelationId = logEntry.CorrelationId
+                },
+                LambdaFunction = new
+                {
+                    Name = logEntry.LambdaContext?.FunctionName,
+                    Arn = logEntry.LambdaContext?.InvokedFunctionArn,
+                    MemoryLimitInMB = logEntry.LambdaContext?.MemoryLimitInMB,
+                    Version = logEntry.LambdaContext?.FunctionVersion,
+                    ColdStart = logEntry.ColdStart,
+                },
+                Level = logEntry.Level.ToString(),
+                Timestamp = logEntry.Timestamp.ToString("o"),
+                Logger = new
+                {
+                Name = logEntry.Name,
+                SampleRate = logEntry.SamplingRate
+                },
+            };
+        }
+    }
+    ```
+
+### Anonymous types
+
+!!! note
+    
+    Although we support anonymous type serialization by converting to a `Dictionary<string, object>`, 
+    this is not a best practice and is not recommendede when using native AOT. 
+
+    Recommendation is to use concrete classes and add them to your `JsonSerializerContext`.
