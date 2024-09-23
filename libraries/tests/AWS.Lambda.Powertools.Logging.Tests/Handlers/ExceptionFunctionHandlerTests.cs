@@ -1,11 +1,13 @@
 using System;
 using System.Threading.Tasks;
 using Amazon.Lambda.TestUtilities;
+using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Serializers;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Handlers;
 
-public sealed class ExceptionFunctionHandlerTests
+public sealed class ExceptionFunctionHandlerTests : IDisposable
 {
     [Fact]
     public async Task Stack_Trace_Included_When_Decorator_Present()
@@ -35,5 +37,11 @@ public sealed class ExceptionFunctionHandlerTests
         
         // Assert
         Assert.Equal("OK", res);
+    }
+
+    public void Dispose()
+    {
+        LoggingAspect.ResetForTest();
+        PowertoolsLoggingSerializer.ClearOptions();
     }
 }

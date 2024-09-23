@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -52,7 +53,7 @@ public class Logger
     ///     Gets the scope.
     /// </summary>
     /// <value>The scope.</value>
-    private static IDictionary<string, object> _scope { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
+    private static IDictionary<string, object> Scope { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
     /// <summary>
     ///     Creates a new <see cref="T:Microsoft.Extensions.Logging.ILogger" /> instance.
@@ -65,6 +66,7 @@ public class Logger
         if (string.IsNullOrWhiteSpace(categoryName))
             throw new ArgumentNullException(nameof(categoryName));
 
+        // Needed for when using Logger directly with decorator
         LoggerProvider ??= new LoggerProvider(null);
 
         return LoggerProvider.CreateLogger(categoryName);
@@ -93,14 +95,13 @@ public class Logger
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(nameof(key));
-
-        if (value is null)
-            throw new ArgumentNullException(nameof(value));
-
-        if (_scope.ContainsKey(key))
-            _scope[key] = value;
-        else
-            _scope.Add(key, value);
+            
+#if NET8_0_OR_GREATER
+        Scope[key] = PowertoolsLoggerHelpers.ObjectToDictionary(value) ??
+                     throw new ArgumentNullException(nameof(value));
+#else
+        Scope[key] = value ?? throw new ArgumentNullException(nameof(value));
+#endif
     }
 
     /// <summary>
@@ -131,8 +132,8 @@ public class Logger
     {
         if (keys == null) return;
         foreach (var key in keys)
-            if (_scope.ContainsKey(key))
-                _scope.Remove(key);
+            if (Scope.ContainsKey(key))
+                Scope.Remove(key);
     }
 
     /// <summary>
@@ -141,7 +142,7 @@ public class Logger
     /// <returns>IEnumerable&lt;KeyValuePair&lt;System.String, System.Object&gt;&gt;.</returns>
     public static IEnumerable<KeyValuePair<string, object>> GetAllKeys()
     {
-        return _scope.AsEnumerable();
+        return Scope.AsEnumerable();
     }
 
     /// <summary>
@@ -149,7 +150,12 @@ public class Logger
     /// </summary>
     internal static void RemoveAllKeys()
     {
-        _scope.Clear();
+        Scope.Clear();
+    }
+
+    internal static void ClearLoggerInstance()
+    {
+        _loggerInstance = null;
     }
 
     #endregion
@@ -773,7 +779,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogDebug(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogDebug<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    public static void LogDebug<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
         LoggerInstance.LogDebug(extraKeys, eventId, exception, message, args);
     }
@@ -799,7 +806,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogDebug(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogDebug<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    public static void LogDebug<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.LogDebug(extraKeys, exception, message, args);
     }
@@ -829,7 +837,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogTrace(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogTrace<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    public static void LogTrace<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
         LoggerInstance.LogTrace(extraKeys, eventId, exception, message, args);
     }
@@ -855,7 +864,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogTrace(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogTrace<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    public static void LogTrace<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.LogTrace(extraKeys, exception, message, args);
     }
@@ -885,7 +895,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogInformation(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogInformation<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    public static void LogInformation<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
         LoggerInstance.LogInformation(extraKeys, eventId, exception, message, args);
     }
@@ -898,7 +909,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogInformation(extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void LogInformation<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    public static void LogInformation<T>(T extraKeys, EventId eventId, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.LogInformation(extraKeys, eventId, message, args);
     }
@@ -911,7 +923,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogInformation(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogInformation<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    public static void LogInformation<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.LogInformation(extraKeys, exception, message, args);
     }
@@ -941,7 +954,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogWarning(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogWarning<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    public static void LogWarning<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
         LoggerInstance.LogWarning(extraKeys, eventId, exception, message, args);
     }
@@ -967,7 +981,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogWarning(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogWarning<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    public static void LogWarning<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.LogWarning(extraKeys, exception, message, args);
     }
@@ -997,7 +1012,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogError(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogError<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    public static void LogError<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
         LoggerInstance.LogError(extraKeys, eventId, exception, message, args);
     }
@@ -1023,7 +1039,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogError(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogError<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    public static void LogError<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.LogError(extraKeys, exception, message, args);
     }
@@ -1053,7 +1070,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogCritical(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogCritical<T>(T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    public static void LogCritical<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
         LoggerInstance.LogCritical(extraKeys, eventId, exception, message, args);
     }
@@ -1066,7 +1084,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogCritical(extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void LogCritical<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    public static void LogCritical<T>(T extraKeys, EventId eventId, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.LogCritical(extraKeys, eventId, message, args);
     }
@@ -1079,7 +1098,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogCritical(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogCritical<T>(T extraKeys, Exception exception, string message, params object[] args) where T : class
+    public static void LogCritical<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.LogCritical(extraKeys, exception, message, args);
     }
@@ -1110,7 +1130,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.Log(LogLevel.Information, extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void Log<T>(LogLevel logLevel, T extraKeys, EventId eventId, Exception exception, string message, params object[] args) where T : class
+    public static void Log<T>(LogLevel logLevel, T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
         LoggerInstance.Log(logLevel, extraKeys, eventId, exception, message, args);
     }
@@ -1124,7 +1145,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.Log(LogLevel.Information, extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void Log<T>(LogLevel logLevel, T extraKeys, EventId eventId, string message, params object[] args) where T : class
+    public static void Log<T>(LogLevel logLevel, T extraKeys, EventId eventId, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.Log(logLevel, extraKeys, eventId, message, args);
     }
@@ -1138,7 +1160,8 @@ public class Logger
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.Log(LogLevel.Information, extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void Log<T>(LogLevel logLevel, T extraKeys, Exception exception, string message, params object[] args) where T : class
+    public static void Log<T>(LogLevel logLevel, T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
         LoggerInstance.Log(logLevel, extraKeys, exception, message, args);
     }
@@ -1166,6 +1189,7 @@ public class Logger
     ///     Set the log formatter.
     /// </summary>
     /// <param name="logFormatter">The log formatter.</param>
+    /// <remarks>WARNING: This method should not be called when using AOT. ILogFormatter should be passed to PowertoolsSourceGeneratorSerializer constructor</remarks>
     public static void UseFormatter(ILogFormatter logFormatter)
     {
         _logFormatter = logFormatter ?? throw new ArgumentNullException(nameof(logFormatter));

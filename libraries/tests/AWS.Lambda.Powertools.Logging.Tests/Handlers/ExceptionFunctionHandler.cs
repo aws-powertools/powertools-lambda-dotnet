@@ -52,4 +52,10 @@ public class ExceptionFunctionHandler
         
         return "OK";
     }
+    
+    [Logging(LogEvent = true)]
+    public string HandleOk(string input)
+    {
+        return input.ToUpper(CultureInfo.InvariantCulture);
+    }
 }

@@ -1,4 +1,4 @@
-# AWS Lambda Native AOT Project with Powertools for AWS Lambda (.NET)
+# AWS Lambda Native AOT Project
 
 This starter project consists of:
 * Function.cs - contains a class with a `Main` method that starts the bootstrap and a single function handler method.
@@ -71,12 +71,12 @@ If already installed check if new version is available.
 
 Execute unit tests
 ```
-    cd "AOT/test/AOT.Tests"
+    cd "AOT_Logging/test/AOT_Logging.Tests"
     dotnet test
 ```
 
 Deploy function to AWS Lambda
 ```
-    cd "AOT/src/AOT"
+    cd "AOT_Logging/src/AOT_Logging"
     dotnet lambda deploy-function
 ```

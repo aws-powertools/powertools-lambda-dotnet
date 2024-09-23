@@ -49,7 +49,7 @@ public class SystemWrapperMock : ISystemWrapper
 
     public double GetRandom()
     {
-        throw new System.NotImplementedException();
+        return 0.7;
     }
 
     public void SetEnvironmentVariable(string variable, string value)

@@ -11,7 +11,9 @@
         <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
         <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" />
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" />
+        <PackageReference Include="Amazon.Lambda.CloudWatchEvents" />
         <PackageReference Include="Amazon.Lambda.Core" />
+        <PackageReference Include="Amazon.Lambda.RuntimeSupport" />
         <PackageReference Include="Amazon.Lambda.TestUtilities" />
         <PackageReference Include="coverlet.collector">
           <PrivateAssets>all</PrivateAssets>
