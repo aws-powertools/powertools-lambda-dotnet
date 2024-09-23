@@ -1189,6 +1189,7 @@ public class Logger
     ///     Set the log formatter.
     /// </summary>
     /// <param name="logFormatter">The log formatter.</param>
+    /// <remarks>WARNING: This method should not be called when using AOT. ILogFormatter should be passed to PowertoolsSourceGeneratorSerializer constructor</remarks>
     public static void UseFormatter(ILogFormatter logFormatter)
     {
         _logFormatter = logFormatter ?? throw new ArgumentNullException(nameof(logFormatter));

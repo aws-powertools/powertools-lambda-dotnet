@@ -37,7 +37,11 @@ public sealed class PowertoolsSourceGeneratorSerializer<
     }
     
     /// <summary>
-    /// Constructs instance of serializer.
+    /// Constructs instance of serializer with an ILogFormatter instance
+    /// <param name="logFormatter">The ILogFormatter instance to use for formatting log messages.</param>
+    /// <remarks>
+    /// The ILogFormatter instance is used to format log messages before they are serialized.
+    /// </remarks>
     /// </summary>
     public PowertoolsSourceGeneratorSerializer(ILogFormatter logFormatter)
         : this((Action<JsonSerializerOptions>)null)
@@ -46,7 +50,7 @@ public sealed class PowertoolsSourceGeneratorSerializer<
     }
 
     /// <summary>
-    /// Constructs instance of serializer with the option to customize the JsonSerializerOptions after the 
+    /// Constructs instance of serializer with the option to customize the JsonSerializerOptions after the
     /// Amazon.Lambda.Serialization.SystemTextJson's default settings have been applied.
     /// </summary>
     /// <param name="customizer"></param>
