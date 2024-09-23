@@ -677,6 +677,10 @@ Logging utility supports native AOT serialization by default without any changes
     In case you want to use the `LogEvent`, `Custom Log Formatter` features or serialize your own types when Logging events it is required 
     that you do some changes in your Lambda `Main` method.
 
+!!! info
+
+    Starting from version 1.6.0 it is required to update `Amazon.Lambda.Serialization.SystemTextJson` to `version 2.4.3` in your `csproj`.
+
 ### Configure
 
 The change needed is to replace `SourceGeneratorLambdaJsonSerializer` with `PowertoolsSourceGeneratorSerializer`. 
