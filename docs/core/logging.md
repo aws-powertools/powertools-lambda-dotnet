@@ -670,22 +670,19 @@ You can customize the structure (keys and values) of your log entries by impleme
 
 ## AOT Support
 
-Logging utility supports native AOT serialization by default without any changes needed.
-
 !!! info
     
-    In case you want to use the `LogEvent`, `Custom Log Formatter` features or serialize your own types when Logging events it is required 
-    that you do some changes in your Lambda `Main` method.
+    If you want to use the `LogEvent`, `Custom Log Formatter` features, or serialize your own types when Logging events, you need to make changes in your Lambda `Main` method.
 
 !!! info
 
-    Starting from version 1.6.0 it is required to update `Amazon.Lambda.Serialization.SystemTextJson` to `version 2.4.3` in your `csproj`.
+    Starting from version 1.6.0, it is required to update the Amazon.Lambda.Serialization.SystemTextJson NuGet package to version 2.4.3 in your csproj.
 
 ### Configure
 
-The change needed is to replace `SourceGeneratorLambdaJsonSerializer` with `PowertoolsSourceGeneratorSerializer`. 
+Replace `SourceGeneratorLambdaJsonSerializer` with `PowertoolsSourceGeneratorSerializer`.
 
-This change enables Powertools to construct an instance of JsonSerializerOptions that is used to customize the serialization and deserialization of the Lambda JSON events and your own types.
+This change enables Powertools to construct an instance of `JsonSerializerOptions` used to customize the serialization and deserialization of Lambda JSON events and your own types.
 
 === "Before"
 
@@ -726,13 +723,11 @@ public partial class MyCustomJsonSerializerContext : JsonSerializerContext
 }
 ```
 
-When you change to `PowertoolsSourceGeneratorSerializer<MyCustomJsonSerializerContext>` we are 
-combining your `JsonSerializerContext` types with Powertools `JsonSerializerContext`. This allows Powertools to serialize your types and Lambda events.
+When you update your code to use `PowertoolsSourceGeneratorSerializer<MyCustomJsonSerializerContext>`, we combine your `JsonSerializerContext` with Powertools' `JsonSerializerContext`. This allows Powertools to serialize your types and Lambda events.
 
 ### Custom Log Formatter
 
-To be able to use a custom log formatter with AOT we need to pass an instance of ` ILogFormatter` to `PowertoolsSourceGeneratorSerializer` 
-instead of using the static `Logger.UseFormatter` in the Function contructor.
+To use a custom log formatter with AOT, pass an instance of `ILogFormatter` to `PowertoolsSourceGeneratorSerializer` instead of using the static `Logger.UseFormatter` in the Function constructor as you do in non-AOT Lambdas.
 
 === "Function Main method"
 
@@ -790,8 +785,7 @@ instead of using the static `Logger.UseFormatter` in the Function contructor.
 ### Anonymous types
 
 !!! note
-    
-    Although we support anonymous type serialization by converting to a `Dictionary<string, object>`, 
-    this is not a best practice and is not recommendede when using native AOT. 
 
-    Recommendation is to use concrete classes and add them to your `JsonSerializerContext`.
+    While we support anonymous type serialization by converting to a `Dictionary<string, object>`, this is **not** a best practice and is **not recommended** when using native AOT. 
+    
+    We recommend using concrete classes and adding them to your `JsonSerializerContext`.
