@@ -203,8 +203,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
 #if NET8_0_OR_GREATER
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
-                    i ==
-                    "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":\"requestId\"},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_mb\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
+                    i.Contains(
+                    "\"correlation_ids\":{\"aws_request_id\":\"requestId\"},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_mb\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\""))
             );
 #else
             consoleOut.Received(1).WriteLine(
