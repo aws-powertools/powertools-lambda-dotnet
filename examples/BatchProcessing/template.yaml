@@ -13,7 +13,7 @@ Globals:
       Variables:
         POWERTOOLS_SERVICE_NAME: powertools-dotnet-sample-batch
         POWERTOOLS_LOG_LEVEL: Debug
-        POWERTOOLS_LOGGER_CASE: SnakeCase
+        POWERTOOLS_LOGGER_CASE: PascalCase
         POWERTOOLS_BATCH_ERROR_HANDLING_POLICY: DeriveFromEvent
         POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM: 1
         POWERTOOLS_BATCH_PARALLEL_ENABLED : false
@@ -49,7 +49,7 @@ Resources:
   CustomerKeyAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: alias/powertools-dotnet-sample-batch-kms-key
+      AliasName: !Sub alias/${AWS::StackName}-kms-key
       TargetKeyId: !Ref CustomerKey
 
   # --------------
