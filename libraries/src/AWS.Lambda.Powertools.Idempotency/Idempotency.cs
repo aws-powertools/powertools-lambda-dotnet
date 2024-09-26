@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -14,8 +14,10 @@
  */
 
 using System;
+using System.Text.Json.Serialization;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 
 namespace AWS.Lambda.Powertools.Idempotency;
@@ -27,7 +29,7 @@ namespace AWS.Lambda.Powertools.Idempotency;
 /// Use it before the function handler get called.
 /// Example: Idempotency.Configure(builder => builder.WithPersistenceStore(...));
 /// </summary>
-public sealed class Idempotency 
+public sealed class Idempotency
 {
     /// <summary>
     /// The general configurations for the idempotency
@@ -47,6 +49,7 @@ public sealed class Idempotency
     {
         powertoolsConfigurations.SetExecutionEnvironment(this);
     }
+
     /// <summary>
     /// Set Idempotency options
     /// </summary>
@@ -90,7 +93,7 @@ public sealed class Idempotency
     /// Holds ILambdaContext
     /// </summary>
     public ILambdaContext LambdaContext { get; private set; }
-    
+
     /// <summary>
     /// Can be used in a method which is not the handler to capture the Lambda context,
     /// to calculate the remaining time before the invocation times out.
@@ -177,5 +180,18 @@ public sealed class Idempotency
             Options = options;
             return this;
         }
+
+#if NET8_0_OR_GREATER
+        /// <summary>
+        /// Set Customer JsonSerializerContext to append to IdempotencySerializationContext 
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns>IdempotencyBuilder</returns>
+        public IdempotencyBuilder WithJsonSerializationContext(JsonSerializerContext context)
+        {
+            IdempotencySerializer.AddTypeInfoResolver(context);
+            return this;
+        }
+#endif
     }
 }

@@ -22,6 +22,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
+using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 using AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 using AWS.Lambda.Powertools.Idempotency.Tests.Persistence;
 using FluentAssertions;
@@ -39,20 +40,17 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
         _client = fixture.Client;
         _tableName = fixture.TableName;
     }
-    
+
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task EndToEndTest() 
+    public async Task EndToEndTest()
     {
         var function = new IdempotencyFunction(_client);
-        
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        
-        var request = JsonSerializer.Deserialize<APIGatewayProxyRequest>(await File.ReadAllTextAsync("./resources/apigw_event2.json"),options);
-        
+
+        var request =
+            IdempotencySerializer.Deserialize<APIGatewayProxyRequest>(
+                await File.ReadAllTextAsync("./resources/apigw_event2.json"));
+
         var response = await function.Handle(request);
         function.HandlerExecuted.Should().BeTrue();
 
@@ -61,7 +59,10 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
         var response2 = await function.Handle(request);
         function.HandlerExecuted.Should().BeFalse();
 
-        JsonSerializer.Serialize(response).Should().Be(JsonSerializer.Serialize(response));
+        IdempotencySerializer.Serialize(response, typeof(APIGatewayProxyResponse)).Should()
+            .Be(
+                "{\"statusCode\":200,\"headers\":{\"Content-Type\":\"application/json\",\"Access-Control-Allow-Origin\":\"*\",\"Access-Control-Allow-Methods\":\"GET, OPTIONS\",\"Access-Control-Allow-Headers\":\"*\"},\"multiValueHeaders\":null,\"body\":\"{ \\u0022message\\u0022: \\u0022hello world\\u0022, \\u0022location\\u0022: \\u002295.92.53.22\\n\\u0022 }\",\"isBase64Encoded\":false}");
+
         response2.Body.Should().Contain("hello world");
 
         var scanResponse = await _client.ScanAsync(new ScanRequest
@@ -69,33 +70,30 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
             TableName = _tableName
         });
         scanResponse.Count.Should().Be(1);
-        
+
         // delete row dynamo
         var key = new Dictionary<string, AttributeValue>
         {
             ["id"] = new AttributeValue { S = "testFunction.GetPageContents#ff323c6f0c5ceb97eed49121babcec0f" }
         };
-        await _client.DeleteItemAsync(new DeleteItemRequest{TableName = _tableName, Key = key});
+        await _client.DeleteItemAsync(new DeleteItemRequest { TableName = _tableName, Key = key });
     }
-    
+
     [Fact]
     [Trait("Category", "Integration")]
-    public async Task EndToEndTestMethod() 
+    public async Task EndToEndTestMethod()
     {
         var function = new IdempotencyFunctionMethodDecorated(_client);
-        
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        
+
         var context = new TestLambdaContext
         {
             RemainingTime = TimeSpan.FromSeconds(30)
         };
-        
-        var request = JsonSerializer.Deserialize<APIGatewayProxyRequest>(await File.ReadAllTextAsync("./resources/apigw_event2.json"),options);
-        
+
+        var request =
+            IdempotencySerializer.Deserialize<APIGatewayProxyRequest>(
+                await File.ReadAllTextAsync("./resources/apigw_event2.json"));
+
         var response = await function.Handle(request, context);
         function.MethodCalled.Should().BeTrue();
 
@@ -105,7 +103,8 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
         function.MethodCalled.Should().BeFalse();
 
         // Assert
-        JsonSerializer.Serialize(response).Should().Be(JsonSerializer.Serialize(response2));
+        IdempotencySerializer.Serialize(response, typeof(APIGatewayProxyResponse)).Should()
+            .Be(IdempotencySerializer.Serialize(response2, typeof(APIGatewayProxyResponse)));
         response.Body.Should().Contain("hello world");
         response2.Body.Should().Contain("hello world");
 
@@ -114,12 +113,12 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
             TableName = _tableName
         });
         scanResponse.Count.Should().Be(1);
-        
+
         // delete row dynamo
         var key = new Dictionary<string, AttributeValue>
         {
             ["id"] = new AttributeValue { S = "testFunction.GetPageContents#ff323c6f0c5ceb97eed49121babcec0f" }
         };
-        await _client.DeleteItemAsync(new DeleteItemRequest{TableName = _tableName, Key = key});
+        await _client.DeleteItemAsync(new DeleteItemRequest { TableName = _tableName, Key = key });
     }
 }

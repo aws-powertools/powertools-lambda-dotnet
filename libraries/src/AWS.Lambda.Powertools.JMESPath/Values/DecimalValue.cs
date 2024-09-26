@@ -14,8 +14,8 @@
  */
 
 using System;
-using System.Text.Json;
 using AWS.Lambda.Powertools.JMESPath.Expressions;
+using AWS.Lambda.Powertools.JMESPath.Serializers;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
@@ -98,7 +98,6 @@ internal readonly struct DecimalValue : IValue
 
     public override string ToString()
     {
-        var s = JsonSerializer.Serialize(_value);
-        return s;
+        return JMESPathSerializer.Serialize(_value, typeof(decimal));
     }
 }

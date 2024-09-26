@@ -16,8 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.Json;
 using AWS.Lambda.Powertools.JMESPath.Expressions;
+using AWS.Lambda.Powertools.JMESPath.Serializers;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
@@ -44,7 +44,8 @@ internal readonly struct ObjectValue : IValue
         public ObjectEnumerator(IDictionary<string, IValue> value)
         {
             _value = value;
-            _enumerator = value.GetEnumerator();
+            using var enumerator = value.GetEnumerator();
+            _enumerator = enumerator;
         }
 
         public bool MoveNext()
@@ -162,7 +163,7 @@ internal readonly struct ObjectValue : IValue
                 first = false;
             }
 
-            buffer.Append(JsonSerializer.Serialize(property.Key));
+            buffer.Append(JMESPathSerializer.Serialize(property.Key, property.Key.GetType()));
             buffer.Append(':');
             buffer.Append(property.Value);
         }
