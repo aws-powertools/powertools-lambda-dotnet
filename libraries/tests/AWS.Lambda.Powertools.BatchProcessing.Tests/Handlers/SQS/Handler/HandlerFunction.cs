@@ -30,7 +30,6 @@ public class HandlerFunction
 
     public HandlerFunction()
     {
-      
     }
 
     public HandlerFunction(ISqsBatchProcessor batchProcessor, ISqsRecordHandler recordHandler)
@@ -38,20 +37,19 @@ public class HandlerFunction
         _batchProcessor = batchProcessor;
         _recordHandler = recordHandler;
     }
-    
-    
+
     [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     [BatchProcessor(RecordHandler = typeof(CustomFailSqsRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttributeAllFail(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
     public BatchItemFailuresResponse HandlerUsingAttributeErrorPolicy(SQSEvent _)
     {
@@ -63,61 +61,60 @@ public class HandlerFunction
     {
         return Task.FromResult(SqsBatchProcessor.Result.BatchItemFailuresResponse);
     }
-    
+
     [BatchProcessor]
     public BatchItemFailuresResponse HandlerUsingAttributeWithoutHandler(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     [BatchProcessor]
     public BatchItemFailuresResponse HandlerUsingAttributeWithoutEvent(string _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     [BatchProcessor(RecordHandler = typeof(BadCustomSqsRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadHandler(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     [BatchProcessor(BatchProcessor = typeof(BadCustomSqsRecordProcessor))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadProcessor(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     [BatchProcessor(BatchProcessorProvider = typeof(BadCustomSqsRecordProcessor))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadProcessorProvider(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     [BatchProcessor(RecordHandlerProvider = typeof(BadCustomSqsRecordHandler))]
     public BatchItemFailuresResponse HandlerUsingAttributeBadHandlerProvider(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessor = typeof(CustomSqsBatchProcessor))]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessor(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler), BatchProcessorProvider = typeof(CustomSqsBatchProcessorProvider))]
     public BatchItemFailuresResponse HandlerUsingAttributeAndCustomBatchProcessorProvider(SQSEvent _)
     {
         return SqsBatchProcessor.Result.BatchItemFailuresResponse;
     }
-    
+
     public async Task<BatchItemFailuresResponse> HandlerUsingUtility(SQSEvent sqsEvent)
     {
         var result = await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent, RecordHandler<SQSEvent.SQSMessage>.From(sqsMessage =>
         {
             var product = JsonSerializer.Deserialize<JsonElement>(sqsMessage.Body);
-        
             if (product.GetProperty("Id").GetInt16() == 4)
             {
                 throw new ArgumentException("Error on 4");
@@ -125,7 +122,7 @@ public class HandlerFunction
         }));
         return result.BatchItemFailuresResponse;
     }
-    
+
     public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(SQSEvent sqsEvent)
     {
         var batchProcessor = Services.Provider.GetRequiredService<ISqsBatchProcessor>();
@@ -133,10 +130,70 @@ public class HandlerFunction
         var result = await batchProcessor.ProcessAsync(sqsEvent, recordHandler);
         return result.BatchItemFailuresResponse;
     }
-    
+
     public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIocConstructor(SQSEvent sqsEvent)
     {
         var result = await _batchProcessor.ProcessAsync(sqsEvent, _recordHandler);
+        return result.BatchItemFailuresResponse;
+    }
+
+    [BatchProcessor(RecordHandler = typeof(CustomFailSqsRecordHandler), ThrowOnFullBatchFailure = false)]
+    public BatchItemFailuresResponse HandlerUsingAttributeAllFail_ThrowOnFullBatchFailureFalseAttribute(SQSEvent _)
+    {
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
+    }
+
+    [BatchProcessor(RecordHandler = typeof(CustomFailSqsRecordHandler))]
+    public BatchItemFailuresResponse HandlerUsingAttributeAllFail_ThrowOnFullBatchFailureFalseEnv(SQSEvent _)
+    {
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
+    }
+
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityAllFail_ThrowOnFullBatchFailureFalseOption(SQSEvent sqsEvent)
+    {
+        var result = await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent,
+            RecordHandler<SQSEvent.SQSMessage>.From(_ => throw new ArgumentException("Raise exception on all!")),
+            new ProcessingOptions
+            {
+                ThrowOnFullBatchFailure = false
+            });
+        return result.BatchItemFailuresResponse;
+    }
+
+    [BatchProcessor(
+        RecordHandler = typeof(CustomFailSqsRecordHandler),
+        ErrorHandlingPolicy =  BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure,
+        ThrowOnFullBatchFailure = false)]
+    public BatchItemFailuresResponse HandlerUsingAttributeFailAll_StopOnFirstErrorAttr_ThrowOnFullBatchFailureFalseAttr(SQSEvent _)
+    {
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
+    }
+
+    [BatchProcessor(
+        RecordHandler = typeof(CustomFailSqsRecordHandler),
+        ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
+    public BatchItemFailuresResponse HandlerUsingAttributeFailAll_StopOnFirstErrorAttr_ThrowOnFullBatchFailureFalseEnv(SQSEvent _)
+    {
+        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
+    }
+
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtility_StopOnFirstErrorOption_ThrowOnFullBatchFailureFalseOption(SQSEvent sqsEvent)
+    {
+        var result = await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent,
+            RecordHandler<SQSEvent.SQSMessage>.From(async record =>
+            {
+                var product = JsonSerializer.Deserialize<JsonElement>(record.Body);
+                if (product.GetProperty("Id").GetInt16() == 4)
+                {
+                    throw new ArgumentException("Error on 4");
+                }
+                return await Task.FromResult(RecordHandlerResult.None);
+            }),
+            new ProcessingOptions
+            {
+                ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure,
+                ThrowOnFullBatchFailure = false
+            });
         return result.BatchItemFailuresResponse;
     }
 }

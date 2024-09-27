@@ -216,4 +216,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
 
     /// <inheritdoc />
     public int BatchProcessingMaxDegreeOfParallelism => GetEnvironmentVariableOrDefault(Constants.BatchMaxDegreeOfParallelismEnv, 1);
+
+    /// <inheritdoc />
+    public bool BatchThrowOnFullBatchFailureEnabled => GetEnvironmentVariableOrDefault(Constants.BatchThrowOnFullBatchFailureEnv, true);
 }

@@ -32,7 +32,7 @@ internal static class Helpers
         new SQSEvent.SQSMessage
         {
             MessageId = "1",
-            Body = "{\"Id\":1,\"Name\":\"product-4\",\"Price\":14}",
+            Body = "{\"Id\":1,\"Name\":\"product-1\",\"Price\":14}",
             EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
         },
         new SQSEvent.SQSMessage
@@ -44,7 +44,7 @@ internal static class Helpers
         new SQSEvent.SQSMessage
         {
             MessageId = "3",
-            Body = "{\"Id\":3,\"Name\":\"product-4\",\"Price\":14}",
+            Body = "{\"Id\":3,\"Name\":\"product-3\",\"Price\":14}",
             EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
         },
         new SQSEvent.SQSMessage
@@ -56,7 +56,7 @@ internal static class Helpers
         new SQSEvent.SQSMessage
         {
             MessageId = "5",
-            Body = "{\"Id\":5,\"Name\":\"product-4\",\"Price\":14}",
+            Body = "{\"Id\":5,\"Name\":\"product-5\",\"Price\":14}",
             EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
         },
     };
@@ -66,7 +66,7 @@ internal static class Helpers
         new SQSEvent.SQSMessage
         {
             MessageId = "1",
-            Body = "{\"Id\":1,\"Name\":\"product-4\",\"Price\":14}",
+            Body = "{\"Id\":1,\"Name\":\"product-1\",\"Price\":14}",
             EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
         },
         new SQSEvent.SQSMessage
@@ -78,7 +78,7 @@ internal static class Helpers
         new SQSEvent.SQSMessage
         {
             MessageId = "3",
-            Body = "{\"Id\":3,\"Name\":\"product-4\",\"Price\":14}",
+            Body = "{\"Id\":3,\"Name\":\"product-3\",\"Price\":14}",
             EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
         },
         new SQSEvent.SQSMessage
@@ -90,10 +90,44 @@ internal static class Helpers
         new SQSEvent.SQSMessage
         {
             MessageId = "5",
-            Body = "{\"Id\":5,\"Name\":\"product-4\",\"Price\":14}",
+            Body = "{\"Id\":5,\"Name\":\"product-5\",\"Price\":14}",
             EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
         },
     };
+
+    internal static List<SQSEvent.SQSMessage> SqsFifoMessagesWithFirstMessagePoisened =>
+    [
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "1",
+            Body = "fail",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "2",
+            Body = "{\"Id\":2,\"Name\":\"product-2\",\"Price\":14}",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "3",
+            Body = "{\"Id\":3,\"Name\":\"product-3\",\"Price\":14}",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "4",
+            Body = "{\"Id\":4,\"Name\":\"product-4\",\"Price\":14}",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        },
+        new SQSEvent.SQSMessage
+        {
+            MessageId = "5",
+            Body = "{\"Id\":5,\"Name\":\"product-5\",\"Price\":14}",
+            EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue.fifo"
+        }
+    ];
 
     internal static List<DynamoDBEvent.DynamodbStreamRecord> DynamoDbMessages => new()
     {
