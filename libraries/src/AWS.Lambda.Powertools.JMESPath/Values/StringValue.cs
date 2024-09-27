@@ -90,6 +90,6 @@ internal readonly struct StringValue : IValue
 
     public override string ToString()
     {
-        return JMESPathSerializer.Serialize(_value, typeof(string));
+        return JmesPathSerializer.Serialize(_value, typeof(string));
     }
 }

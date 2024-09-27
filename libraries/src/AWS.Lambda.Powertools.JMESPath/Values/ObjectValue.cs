@@ -163,7 +163,7 @@ internal readonly struct ObjectValue : IValue
                 first = false;
             }
 
-            buffer.Append(JMESPathSerializer.Serialize(property.Key, property.Key.GetType()));
+            buffer.Append(JmesPathSerializer.Serialize(property.Key, property.Key.GetType()));
             buffer.Append(':');
             buffer.Append(property.Value);
         }

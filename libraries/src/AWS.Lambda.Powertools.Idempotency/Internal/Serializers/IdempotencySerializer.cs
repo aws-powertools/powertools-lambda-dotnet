@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -71,7 +72,7 @@ internal static class IdempotencySerializer
         var typeInfo = _jsonOptions.TypeInfoResolver?.GetTypeInfo(type, _jsonOptions);
         if (typeInfo == null)
         {
-            throw new Exception(
+            throw new SerializationException(
                 $"Type {type} is not known to the serializer. Ensure it's included in the JsonSerializerContext.");
         }
 

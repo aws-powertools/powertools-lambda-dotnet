@@ -104,6 +104,6 @@ internal readonly struct DoubleValue : IValue
 
     public override string ToString()
     {
-        return JMESPathSerializer.Serialize(_value, typeof(double));
+        return JmesPathSerializer.Serialize(_value, typeof(double));
     }
 }

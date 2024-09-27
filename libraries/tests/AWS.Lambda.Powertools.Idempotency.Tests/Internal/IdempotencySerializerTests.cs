@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
@@ -64,7 +65,7 @@ public class IdempotencySerializerTests
         field!.SetValue(null, options);
 
         // Act & Assert
-        var exception = Assert.Throws<Exception>(() => IdempotencySerializer.GetTypeInfo(typeof(TestClass)));
+        var exception = Assert.Throws<SerializationException>(() => IdempotencySerializer.GetTypeInfo(typeof(TestClass)));
         Assert.Equal("Type AWS.Lambda.Powertools.Idempotency.Tests.Model.TestClass is not known to the serializer. Ensure it's included in the JsonSerializerContext.", exception.Message);
     }
 

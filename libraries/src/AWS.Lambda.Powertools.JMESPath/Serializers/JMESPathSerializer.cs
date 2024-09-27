@@ -19,9 +19,9 @@ using System.Text.Json;
 namespace AWS.Lambda.Powertools.JMESPath.Serializers;
 
 /// <summary>
-/// Class JMESPathSerializer.
+/// Class used to serialize JMESPath types
 /// </summary>
-internal static class JMESPathSerializer
+internal static class JmesPathSerializer
 {
     /// <summary>
     /// Serializes the specified value.
@@ -35,7 +35,7 @@ internal static class JMESPathSerializer
         return JsonSerializer.Serialize(value);
 #else
 
-        return JsonSerializer.Serialize(value, inputType, JMESPathSerializationContext.Default);
+        return JsonSerializer.Serialize(value, inputType, JmesPathSerializationContext.Default);
 #endif
     }
     
@@ -51,7 +51,7 @@ internal static class JMESPathSerializer
         return JsonSerializer.Deserialize<T>(value);
 #else
 
-        return (T)JsonSerializer.Deserialize(value, typeof(T), JMESPathSerializationContext.Default);
+        return (T)JsonSerializer.Deserialize(value, typeof(T), JmesPathSerializationContext.Default);
 #endif
     }
 }

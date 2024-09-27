@@ -29,7 +29,7 @@ namespace AWS.Lambda.Powertools.JMESPath.Serializers;
 [JsonSerializable(typeof(decimal))]
 [JsonSerializable(typeof(double))]
 [JsonSerializable(typeof(JsonElement))]
-public partial class JMESPathSerializationContext : JsonSerializerContext
+public partial class JmesPathSerializationContext : JsonSerializerContext
 {
 }
 

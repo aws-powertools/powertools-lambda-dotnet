@@ -204,13 +204,7 @@ internal readonly struct JsonElementValue : IValue
     public bool TryGetProperty(string propertyName, out IValue property)
     {
         var r = _element.TryGetProperty(propertyName, out var prop);
-
-        // property = prop.ValueKind == JsonValueKind.String && IsJsonValid(prop.GetString())
-        //     ? new JsonElementValue(JsonNode.Parse(prop.GetString() ?? string.Empty).Deserialize<JsonElement>())
-        //     : new JsonElementValue(prop);
-        
         property = CreateJsonElementValue(prop);
-
         return r;
     }
     
@@ -219,8 +213,7 @@ internal readonly struct JsonElementValue : IValue
         if (prop.ValueKind == JsonValueKind.String && IsJsonValid(prop.GetString()))
         {
             var jsonString = prop.GetString() ?? string.Empty;
-            // var jsonNode = JsonNode.Parse(jsonString);
-            var jsonElement = JMESPathSerializer.Deserialize<JsonElement>(jsonString);
+            var jsonElement = JmesPathSerializer.Deserialize<JsonElement>(jsonString);
             return new JsonElementValue(jsonElement);
         }
     
@@ -261,6 +254,6 @@ internal readonly struct JsonElementValue : IValue
 
     public override string ToString()
     {
-        return JMESPathSerializer.Serialize(_element, typeof(JsonElement));
+        return JmesPathSerializer.Serialize(_element, typeof(JsonElement));
     }
 }
