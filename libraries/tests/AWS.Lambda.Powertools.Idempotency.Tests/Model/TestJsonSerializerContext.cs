@@ -22,6 +22,7 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Model;
 [JsonSerializable(typeof(APIGatewayProxyRequest))]
 [JsonSerializable(typeof(APIGatewayProxyResponse))]
 [JsonSerializable(typeof(Product))]
+[JsonSerializable(typeof(TestClass))]
 public partial class TestJsonSerializerContext : JsonSerializerContext
 {
     
