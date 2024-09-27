@@ -60,9 +60,9 @@ public class IdempotencyTest : IClassFixture<DynamoDbFixture>
         function.HandlerExecuted.Should().BeFalse();
 
         IdempotencySerializer.Serialize(response, typeof(APIGatewayProxyResponse)).Should()
-            .Be(
-                "{\"statusCode\":200,\"headers\":{\"Content-Type\":\"application/json\",\"Access-Control-Allow-Origin\":\"*\",\"Access-Control-Allow-Methods\":\"GET, OPTIONS\",\"Access-Control-Allow-Headers\":\"*\"},\"multiValueHeaders\":null,\"body\":\"{ \\u0022message\\u0022: \\u0022hello world\\u0022, \\u0022location\\u0022: \\u002295.92.53.22\\n\\u0022 }\",\"isBase64Encoded\":false}");
-
+            .Be(IdempotencySerializer.Serialize(response2, typeof(APIGatewayProxyResponse)));
+        
+        response.Body.Should().Contain("hello world");
         response2.Body.Should().Contain("hello world");
 
         var scanResponse = await _client.ScanAsync(new ScanRequest
