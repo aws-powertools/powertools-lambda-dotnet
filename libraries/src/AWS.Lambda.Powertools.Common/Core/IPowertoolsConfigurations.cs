@@ -156,6 +156,10 @@ public interface IPowertoolsConfigurations
     /// </summary>
     /// <value>Defaults to 1 (no parallelism). Specify -1 to automatically use the value of <see cref="System.Environment.ProcessorCount">ProcessorCount</see>.</value>
     int BatchProcessingMaxDegreeOfParallelism { get; }
-    
-    
+
+    /// <summary>
+    /// Gets a value indicating whether Batch processing will throw an exception on full batch failure.
+    /// </summary>
+    /// <value>Defaults to true</value>
+    bool BatchThrowOnFullBatchFailureEnabled { get; }
 }

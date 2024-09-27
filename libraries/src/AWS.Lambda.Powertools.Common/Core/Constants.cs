@@ -124,5 +124,10 @@ internal static class Constants
     /// <summary>
     /// Constant for POWERTOOLS_BATCH_PARALLEL_ENABLED environment variable
     /// </summary>
-    public const string BatchParallelProcessingEnabled = "POWERTOOLS_BATCH_PARALLEL_ENABLED";
+    internal const string BatchParallelProcessingEnabled = "POWERTOOLS_BATCH_PARALLEL_ENABLED";
+
+    /// <summary>
+    /// Constant for POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE environment variable
+    /// </summary>
+    internal const string BatchThrowOnFullBatchFailureEnv = "POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE";
 }
