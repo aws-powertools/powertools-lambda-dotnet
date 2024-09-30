@@ -71,7 +71,7 @@ public sealed class Idempotency
     /// <summary>
     /// Holds the idempotency Instance:
     /// </summary>
-    public static Idempotency Instance { get; } = new(PowertoolsConfigurations.Instance);
+    internal static Idempotency Instance { get; } = new(PowertoolsConfigurations.Instance);
 
     /// <summary>
     /// Use this method to configure persistence layer (mandatory) and idempotency options (optional)
