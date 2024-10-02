@@ -23,6 +23,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
 using Microsoft.Extensions.Logging;
 
@@ -69,6 +70,13 @@ internal static class PowertoolsLoggingSerializer
         var options = GetSerializerOptions();
         return JsonSerializer.Serialize(value, options);
 #else
+        if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        {
+            var options = GetSerializerOptions();
+#pragma warning disable
+            return JsonSerializer.Serialize(value, options);
+        }
+
         var typeInfo = GetTypeInfo(inputType);
         if (typeInfo == null)
         {
@@ -154,10 +162,15 @@ internal static class PowertoolsLoggingSerializer
         _jsonOptions.PropertyNameCaseInsensitive = true;
 
 #if NET8_0_OR_GREATER
-        _jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
-        foreach (var context in AdditionalContexts)
+
+        // Only add TypeInfoResolver if AOT mode
+        if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
-            _jsonOptions.TypeInfoResolverChain.Add(context);
+            _jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
+            foreach (var context in AdditionalContexts)
+            {
+                _jsonOptions.TypeInfoResolverChain.Add(context);
+            }
         }
 #endif
         return _jsonOptions;
