@@ -23,6 +23,7 @@ using Amazon.Lambda.KinesisEvents;
 using Amazon.Lambda.SQSEvents;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
+using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
 using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
@@ -90,6 +91,10 @@ namespace AWS.Lambda.Powertools.BatchProcessing;
 ///             <term>POWERTOOLS_BATCH_PROCESSING_MAX_DEGREE_OF_PARALLELISM</term>
 ///             <description>int, defaults to 1 (no parallelism). Specify -1 to automatically use the value of <see cref="System.Environment.ProcessorCount">ProcessorCount</see>.</description>
 ///         </item>
+///         <item>
+///             <term>POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE</term>
+///             <description>bool, defaults to true. Controls if an exception is thrown on full batch failure.</description>
+///         </item>
 ///     </list>
 ///                                                                                                   <br/>
 ///     Parameters                                                                                    <br/>
@@ -123,6 +128,10 @@ namespace AWS.Lambda.Powertools.BatchProcessing;
 ///             <term>MaxDegreeOfParallelism</term>
 ///             <description>int, defaults to 1 (no parallelism). Specify -1 to automatically use the value of <see cref="System.Environment.ProcessorCount">ProcessorCount</see>.</description>
 ///         </item>
+///         <item>
+///             <term>ThrowOnFullBatchFailure</term>
+///             <description>bool, defaults to true. Controls if an exception is thrown on full batch failure.</description>
+///         </item>
 ///     </list>
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
@@ -132,38 +141,44 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
     /// <summary>
     /// Type of batch processor.
     /// </summary>
-    public Type BatchProcessor;
+    public Type BatchProcessor { get; set; }
 
     /// <summary>
     /// Type of batch processor provider.
     /// </summary>
-    public Type BatchProcessorProvider;
+    public Type BatchProcessorProvider { get; set; }
 
     /// <summary>
     /// Type of record handler.
     /// </summary>
-    public Type RecordHandler;
+    public Type RecordHandler { get; set; }
 
     /// <summary>
     /// Type of record handler provider.
     /// </summary>
-    public Type RecordHandlerProvider;
+    public Type RecordHandlerProvider { get; set; }
 
     /// <summary>
     /// Error handling policy.
     /// </summary>
-    public BatchProcessorErrorHandlingPolicy ErrorHandlingPolicy;
+    public BatchProcessorErrorHandlingPolicy ErrorHandlingPolicy { get; set; }
 
     /// <summary>
     /// Batch processing enabled (default false)
     /// </summary>
-    public bool BatchParallelProcessingEnabled = PowertoolsConfigurations.Instance.BatchParallelProcessingEnabled; 
+    public bool BatchParallelProcessingEnabled { get; set; } = PowertoolsConfigurations.Instance.BatchParallelProcessingEnabled;
 
     /// <summary>
     /// The maximum degree of parallelism to apply during batch processing.
     /// Must enable BatchParallelProcessingEnabled
     /// </summary>
-    public int MaxDegreeOfParallelism = PowertoolsConfigurations.Instance.BatchProcessingMaxDegreeOfParallelism;
+    public int MaxDegreeOfParallelism { get; set; } = PowertoolsConfigurations.Instance.BatchProcessingMaxDegreeOfParallelism;
+
+    /// <summary>
+    /// By default, the Batch processor throws a <see cref="BatchProcessingException"/> on full batch failure.
+    /// This behaviour can be disabled by setting this value to false.
+    /// </summary>
+    public bool ThrowOnFullBatchFailure { get; set; } = PowertoolsConfigurations.Instance.BatchThrowOnFullBatchFailureEnabled;
 
     private static readonly Dictionary<Type, BatchEventType> EventTypes = new()
     {
@@ -332,7 +347,8 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
             CancellationToken = CancellationToken.None,
             ErrorHandlingPolicy = errorHandlingPolicy,
             MaxDegreeOfParallelism = MaxDegreeOfParallelism,
-            BatchParallelProcessingEnabled = BatchParallelProcessingEnabled
+            BatchParallelProcessingEnabled = BatchParallelProcessingEnabled,
+            ThrowOnFullBatchFailure = ThrowOnFullBatchFailure
         });
     }
 }

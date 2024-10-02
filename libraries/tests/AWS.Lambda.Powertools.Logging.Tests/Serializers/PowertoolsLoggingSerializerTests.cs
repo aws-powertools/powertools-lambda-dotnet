@@ -15,10 +15,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
 using AWS.Lambda.Powertools.Logging.Serializers;
@@ -48,8 +50,10 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     [Fact]
     public void SerializerOptions_ShouldHaveCorrectDefaultSettings()
     {
-        var options = PowertoolsLoggingSerializer.GetSerializerOptions();
-
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+        
+        var options = PowertoolsLoggingSerializer.GetSerializerOptions(); 
+        
         Assert.Collection(options.Converters,
             converter => Assert.IsType<ByteArrayConverter>(converter),
             converter => Assert.IsType<ExceptionConverter>(converter),
@@ -68,6 +72,33 @@ public class PowertoolsLoggingSerializerTests : IDisposable
 #if NET8_0_OR_GREATER
         Assert.Collection(options.TypeInfoResolverChain,
             resolver => Assert.IsType<PowertoolsLoggingSerializationContext>(resolver));
+#endif
+    }
+    
+    [Fact]
+    public void SerializerOptions_ShouldHaveCorrectDefaultSettings_WhenDynamic()
+    {
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(true);
+        
+        var options = PowertoolsLoggingSerializer.GetSerializerOptions();
+        
+        Assert.Collection(options.Converters,
+            converter => Assert.IsType<ByteArrayConverter>(converter),
+            converter => Assert.IsType<ExceptionConverter>(converter),
+            converter => Assert.IsType<MemoryStreamConverter>(converter),
+            converter => Assert.IsType<ConstantClassConverter>(converter),
+            converter => Assert.IsType<DateOnlyConverter>(converter),
+            converter => Assert.IsType<TimeOnlyConverter>(converter),
+#if NET8_0_OR_GREATER
+            converter => Assert.IsType<JsonStringEnumConverter<LogLevel>>(converter));
+#elif NET6_0
+            converter => Assert.IsType<JsonStringEnumConverter>(converter));
+#endif
+
+        Assert.Equal(JavaScriptEncoder.UnsafeRelaxedJsonEscaping, options.Encoder);
+
+#if NET8_0_OR_GREATER
+        Assert.Empty(options.TypeInfoResolverChain);
 #endif
     }
 
@@ -143,12 +174,27 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         // Arrange
         var unknownObject = new UnknownType();
 
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
         // Act & Assert
         var exception = Assert.Throws<JsonSerializerException>(() =>
             PowertoolsLoggingSerializer.Serialize(unknownObject, typeof(UnknownType)));
 
         Assert.Contains("is not known to the serializer", exception.Message);
         Assert.Contains(typeof(UnknownType).ToString(), exception.Message);
+    }
+    
+    [Fact]
+    public void Serialize_UnknownType_Should_Not_Throw_InvalidOperationException_When_Dynamic()
+    {
+        // Arrange
+        var unknownObject = new UnknownType{ SomeProperty = "Hello"};
+
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(true);
+        // Act & Assert
+        var expected =
+            PowertoolsLoggingSerializer.Serialize(unknownObject, typeof(UnknownType));
+
+        Assert.Equal("{\"some_property\":\"Hello\"}", expected);
     }
 
     private class UnknownType
@@ -175,5 +221,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         PowertoolsLoggingSerializer.ClearContext();
 #endif
         PowertoolsLoggingSerializer.ClearOptions();
+        RuntimeFeatureWrapper.Reset();
     }
 }

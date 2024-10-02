@@ -87,7 +87,7 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
                 : processingOptions.ErrorHandlingPolicy;
 
         // Invoke hook
-        await BeforeBatchProcessingAsync(@event);
+        await BeforeBatchProcessingAsync(@event, processingOptions);
 
         try
         {
@@ -139,9 +139,13 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
             ProcessingResult.FailureRecords.AddRange(failureRecords.Values);
         }
 
-        if (successRecords != null) ProcessingResult.SuccessRecords.AddRange(successRecords.Values);
+        if (successRecords != null)
+        {
+            ProcessingResult.SuccessRecords.AddRange(successRecords.Values);
+        }
+
         // Invoke hook
-        await AfterBatchProcessingAsync(@event, ProcessingResult);
+        await AfterBatchProcessingAsync(@event, ProcessingResult, processingOptions);
 
         // Return result
         return ProcessingResult;
@@ -226,8 +230,9 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
     /// Hook invoked before the batch event is processed.
     /// </summary>
     /// <param name="event">The event to be processed.</param>
+    /// <param name="processingOptions">The configured batch processing options for this batch processing run.</param>
     /// <returns>An awaitable <see cref="Task"/>.</returns>
-    protected virtual async Task BeforeBatchProcessingAsync(TEvent @event)
+    protected virtual async Task BeforeBatchProcessingAsync(TEvent @event, ProcessingOptions processingOptions)
     {
         await Task.CompletedTask;
     }
@@ -272,12 +277,15 @@ public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, 
     /// Hook invoked after the batch event has been processed.
     /// </summary>
     /// <param name="event">The event that was processed.</param>
-    /// <param name="processingResult"></param>
+    /// <param name="processingResult">The result of this batch processing run.</param>
+    /// <param name="processingOptions">The configured batch processing options for this batch processing run.</param>
     /// <returns>An awaitable <see cref="Task"/>.</returns>
     /// <exception cref="BatchProcessingException"/>
-    protected virtual async Task AfterBatchProcessingAsync(TEvent @event, ProcessingResult<TRecord> processingResult)
+    protected virtual async Task AfterBatchProcessingAsync(TEvent @event,
+        ProcessingResult<TRecord> processingResult,
+        ProcessingOptions processingOptions)
     {
-        if (processingResult.BatchRecords.Count == processingResult.FailureRecords.Count)
+        if (processingOptions.ThrowOnFullBatchFailure && processingResult.BatchRecords.Count == processingResult.FailureRecords.Count)
         {
             throw new BatchProcessingException(
                 $"Entire batch of '{processingResult.BatchRecords.Count}' record(s) failed processing. See inner exceptions for details.",

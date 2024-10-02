@@ -84,11 +84,12 @@ You use your preferred deployment framework to set the correct configuration whi
 
 Batch processing can be configured with the settings bellow:
 
-Setting | Description                                                             | Environment variable | Default
-------------------------------------------------- |-------------------------------------------------------------------------| ------------------------------------------------- | -------------------------------------------------
-**Error Handling Policy** | Sets the error handling policy applied during batch processing.         | `POWERTOOLS_BATCH_ERROR_HANDLING_POLICY` | `DeriveFromEvent`
-**Parallel Enabled** | Sets if parallelism is enabled                                          |  `POWERTOOLS_BATCH_PARALLEL_ENABLED` | `false`
-**Max Degree of Parallelism** | Sets the maximum degree of parallelism to apply during batch processing |  `POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM` | `1`
+Setting                         | Description                                                                   | Environment variable                           | Default
+-------                         | -----------                                                                   | --------------------                           | -------
+**Error Handling Policy**       | The error handling policy to apply during batch processing.                   | `POWERTOOLS_BATCH_ERROR_HANDLING_POLICY`       | `DeriveFromEvent`
+**Parallel Enabled**            | Controls if parallel processing of batch items is enabled.                    | `POWERTOOLS_BATCH_PARALLEL_ENABLED`            | `false`
+**Max Degree of Parallelism**   | The maximum degree of parallelism to apply if parallel processing is enabled. | `POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM`   | `1`
+**Throw on Full Batch Failure** | Controls if a `BatchProcessingException` is thrown on full batch failure.     | `POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE` | `true`
 
 ### Required resources
 
@@ -98,19 +99,19 @@ The remaining sections of the documentation will rely on these samples. For comp
 
 === "SQS"
 
-    ```yaml title="template.yaml" hl_lines="36-37"
+    ```yaml title="template.yaml" hl_lines="93-94"
     --8<-- "docs/snippets/batch/templates/sqs.yaml"
     ```
 
 === "Kinesis Data Streams"
 
-    ```yaml title="template.yaml" hl_lines="50-51"
+    ```yaml title="template.yaml" hl_lines="109-110"
     --8<-- "docs/snippets/batch/templates/kinesis.yaml"
     ```
 
 === "DynamoDB Streams"
 
-    ```yaml title="template.yaml" hl_lines="49-50"
+    ```yaml title="template.yaml" hl_lines="102-103"
     --8<-- "docs/snippets/batch/templates/dynamodb.yaml"
     ```
 
@@ -613,14 +614,13 @@ Another approach is to decorate the handler and use one of the policies in the *
 
     ```
 
-
 ### Partial failure mechanics
 
 All records in the batch will be passed to this handler for processing, even if exceptions are thrown - Here's the behaviour after completing the batch:
 
-* **All records successfully processed**. We will return an empty list of item failures `{'batchItemFailures': []}`
-* **Partial success with some exceptions**. We will return a list of all item IDs/sequence numbers that failed processing
-* **All records failed to be processed**. We will raise `AWS.Lambda.Powertools.BatchProcessing.Exceptions.BatchProcessingException` exception with a list of all exceptions raised when processing
+* **All records successfully processed**. We will return an empty list of item failures `{'batchItemFailures': []}`.
+* **Partial success with some exceptions**. We will return a list of all item IDs/sequence numbers that failed processing.
+* **All records failed to be processed**. By defaullt, we will throw a `BatchProcessingException` with a list of all exceptions raised during processing to reflect the failure in your operational metrics. However, in some scenarios, this might not be desired. See [Working with full batch failures](#working-with-full-batch-failures) for more information.
 
 The following sequence diagrams explain how each Batch processor behaves under different scenarios.
 
@@ -735,7 +735,6 @@ sequenceDiagram
 <i>Kinesis and DynamoDB streams mechanism with multiple batch item failures</i>
 </center>
 
-
 ### Advanced
 #### Using utility outside handler and IoC
 
@@ -847,6 +846,44 @@ You can also set `POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM` Environment Variab
 		return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
 	}
 	```
+
+#### Working with full batch failures
+
+By default, the `BatchProcessor` will throw a `BatchProcessingException` if all records in the batch fail to process. We do this to reflect the failure in your operational metrics.
+
+When working with functions that handle batches with a small number of records, or when you use errors as a flow control mechanism, this behavior might not be desirable as your function might generate an unnaturally high number of errors. When this happens, the [Lambda service will scale down the concurrency of your function](https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-errorhandling.html#services-sqs-backoff-strategy){target="_blank"}, potentially impacting performance.
+
+For these scenarios, you can set `POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE = false`, or the equivalent on either the `BatchProcessor` decorator or on the `ProcessingOptions` object. See examples below.
+
+=== "Setting ThrowOnFullBatchFailure on Decorator"
+
+    ```csharp hl_lines="3"
+	[BatchProcessor(
+        RecordHandler = typeof(CustomSqsRecordHandler),
+        ThrowOnFullBatchFailure = false)]
+	public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
+	{
+		return SqsBatchProcessor.Result.BatchItemFailuresResponse;
+	}
+
+    ```
+
+=== "Setting ThrowOnFullBatchFailure outside Decorator"
+
+    ```csharp hl_lines="8"
+    public async Task<BatchItemFailuresResponse> HandlerUsingUtility(SQSEvent sqsEvent)
+    {
+        var result = await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent, RecordHandler<SQSEvent.SQSMessage>.From(x =>
+        {
+            // Inline handling of SQS message...
+        }), new ProcessingOptions
+        {
+            ThrowOnFullBatchFailure = false
+        });
+        return result.BatchItemFailuresResponse;
+    }
+
+    ```
 
 #### Extending BatchProcessor
 
