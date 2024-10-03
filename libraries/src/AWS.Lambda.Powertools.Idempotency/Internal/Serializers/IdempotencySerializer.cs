@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -18,6 +18,7 @@ using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using AWS.Lambda.Powertools.Common.Utils;
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 
@@ -43,12 +44,15 @@ internal static class IdempotencySerializer
             PropertyNameCaseInsensitive = true
         };
 #if NET8_0_OR_GREATER
-        _jsonOptions.TypeInfoResolverChain.Add(IdempotencySerializationContext.Default);
+        if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        {
+            _jsonOptions.TypeInfoResolverChain.Add(IdempotencySerializationContext.Default);
+        }
 #endif
     }
 
 #if NET8_0_OR_GREATER
-    
+
     /// <summary>
     /// Adds a JsonTypeInfoResolver to the JsonSerializerOptions.
     /// </summary>
@@ -61,7 +65,7 @@ internal static class IdempotencySerializer
         BuildDefaultOptions();
         _jsonOptions.TypeInfoResolverChain.Add(context);
     }
-    
+
     /// <summary>
     /// Gets the JsonTypeInfo for a given type.
     /// </summary>
@@ -91,6 +95,12 @@ internal static class IdempotencySerializer
 #if NET6_0
         return JsonSerializer.Serialize(value, _jsonOptions);
 #else
+        if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        {
+#pragma warning disable
+            return JsonSerializer.Serialize(value, _jsonOptions);
+        }
+
         return JsonSerializer.Serialize(value, GetTypeInfo(inputType));
 #endif
     }
@@ -106,6 +116,12 @@ internal static class IdempotencySerializer
 #if NET6_0
         return JsonSerializer.Deserialize<T>(value,_jsonOptions);
 #else
+        if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        {
+#pragma warning disable
+            return JsonSerializer.Deserialize<T>(value, _jsonOptions);
+        }
+
         return (T)JsonSerializer.Deserialize(value, GetTypeInfo(typeof(T)));
 #endif
     }
