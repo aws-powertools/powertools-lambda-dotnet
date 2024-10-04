@@ -55,12 +55,12 @@ internal class TracingAspectHandler : IMethodAspectHandler
     /// <summary>
     ///     Tracing namespace
     /// </summary>
-    private string _namespace;
+    private readonly string _namespace;
     
     /// <summary>
     ///     The capture mode
     /// </summary>
-    private TracingCaptureMode _captureMode;
+    private readonly TracingCaptureMode _captureMode;
     
     /// <summary>
     ///     The segment name
