@@ -21,12 +21,12 @@ namespace AWS.Lambda.Powertools.Tracing.Tests.Handlers;
 public class FullExampleHandler
 {
     [Tracing(Namespace = "ns", CaptureMode = TracingCaptureMode.ResponseAndError)]
-    public Task<string> Handle(string text, ILambdaContext context)
+    public async Task<string> Handle(string text, ILambdaContext context)
     {
         Tracing.AddAnnotation("annotation", "value");
-        BusinessLogic1().GetAwaiter().GetResult();
+        await BusinessLogic1();
         
-        return Task.FromResult(text.ToUpper());
+        return await Task.FromResult(text.ToUpper());
     }
     
     [Tracing(SegmentName = "First Call")]
