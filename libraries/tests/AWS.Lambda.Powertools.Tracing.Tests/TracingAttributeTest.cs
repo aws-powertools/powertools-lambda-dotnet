@@ -115,7 +115,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
-            TracingAspect.ResetForTest();
+            TracingAspectHandler.ResetForTest();
         }
     }
 
@@ -171,7 +171,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
-            TracingAspect.ResetForTest();
+            TracingAspectHandler.ResetForTest();
         }
     }
 
@@ -757,7 +757,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
-            TracingAspect.ResetForTest();
+            TracingAspectHandler.ResetForTest();
         }
     }
 }

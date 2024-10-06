@@ -60,8 +60,9 @@ public sealed class HandlerTests : IDisposable
         };
 
         // Act
+        var facadeSegment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
         await handler.Handle("Hello World", context);
-        var handleSegment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+        var handleSegment = facadeSegment.Subsegments[0];
         
         // Assert
         Assert.True(handleSegment.IsAnnotationsAdded);
@@ -106,6 +107,6 @@ public sealed class HandlerTests : IDisposable
         Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "");
         Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "");
         Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
-        TracingAspect.ResetForTest();
+        TracingAspectHandler.ResetForTest();
     }
 }
