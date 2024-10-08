@@ -121,7 +121,9 @@ public class MetricDirective
 
             defaultKeys.AddRange(keys);
 
-            return defaultKeys.Any() ? defaultKeys : new List<string>();
+            if (defaultKeys.Count == 0) defaultKeys = new List<string>();
+
+            return defaultKeys;
         }
     }
     
