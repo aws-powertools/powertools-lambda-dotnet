@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -97,8 +98,7 @@ internal static class IdempotencySerializer
 #else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
-#pragma warning disable
-            return JsonSerializer.Serialize(value, _jsonOptions);
+            return JsonSerializer.Serialize(value, _jsonOptions.GetTypeInfo(inputType));
         }
 
         return JsonSerializer.Serialize(value, GetTypeInfo(inputType));
@@ -111,6 +111,8 @@ internal static class IdempotencySerializer
     /// <typeparam name="T">The type of the object to deserialize to.</typeparam>
     /// <param name="value">The JSON string to deserialize.</param>
     /// <returns>An object of type T represented by the JSON string.</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "False positive")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "False positive")]
     internal static T Deserialize<T>(string value)
     {
 #if NET6_0
@@ -118,7 +120,6 @@ internal static class IdempotencySerializer
 #else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
-#pragma warning disable
             return JsonSerializer.Deserialize<T>(value, _jsonOptions);
         }
 
