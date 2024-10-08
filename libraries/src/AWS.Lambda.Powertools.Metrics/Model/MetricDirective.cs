@@ -105,25 +105,23 @@ public class MetricDirective
     /// </summary>
     /// <value>All dimension keys.</value>
     [JsonPropertyName("Dimensions")]
-    public List<List<string>> AllDimensionKeys
+    public List<string> AllDimensionKeys
     {
         get
         {
             var defaultKeys = DefaultDimensions
                 .Where(d => d.DimensionKeys.Any())
-                .Select(s => s.DimensionKeys)
+                .SelectMany(s => s.DimensionKeys)
                 .ToList();
 
             var keys = Dimensions
                 .Where(d => d.DimensionKeys.Any())
-                .Select(s => s.DimensionKeys)
+                .SelectMany(s => s.DimensionKeys)
                 .ToList();
 
             defaultKeys.AddRange(keys);
 
-            if (defaultKeys.Count == 0) defaultKeys.Add(new List<string>());
-
-            return defaultKeys;
+            return defaultKeys.Any() ? defaultKeys : new List<string>();
         }
     }
     
