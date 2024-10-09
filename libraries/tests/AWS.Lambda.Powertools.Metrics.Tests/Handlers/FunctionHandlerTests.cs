@@ -85,7 +85,7 @@ public class FunctionHandlerTests : IDisposable
             metricsOutput);
         
         Assert.Contains(
-            "\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[\"FunctionName\",\"Service\"]}]}",
+            "\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"FunctionName\",\"Service\"]]}]}",
             metricsOutput);
     }
     
@@ -108,7 +108,7 @@ public class FunctionHandlerTests : IDisposable
             metricsOutput);
         
         Assert.Contains(
-            "\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[\"FunctionName\",\"Service\"]}]}",
+            "\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"FunctionName\",\"Service\"]]}]}",
             metricsOutput);
     }
     
@@ -125,7 +125,7 @@ public class FunctionHandlerTests : IDisposable
             metricsOutput);
         
         Assert.Contains(
-            "\"Metrics\":[{\"Name\":\"MyMetric\",\"Unit\":\"None\"}],\"Dimensions\":[\"Service\"]}]},\"Service\":\"svc\",\"MyMetric\":1}",
+            "\"Metrics\":[{\"Name\":\"MyMetric\",\"Unit\":\"None\"}],\"Dimensions\":[[\"Service\"]]}]},\"Service\":\"svc\",\"MyMetric\":1}",
             metricsOutput);
     }
 
