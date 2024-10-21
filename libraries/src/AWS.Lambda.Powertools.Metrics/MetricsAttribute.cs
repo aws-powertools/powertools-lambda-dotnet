@@ -66,7 +66,7 @@ namespace AWS.Lambda.Powertools.Metrics;
 ///         </listheader>
 ///         <item>
 ///             <term>Service</term>
-///             <description>string, service name is used for metric dimension across all metrics, by default service_undefined</description>
+///             <description>string, service name is used for metric dimension</description>
 ///         </item>
 ///         <item>
 ///             <term>Namespace</term>

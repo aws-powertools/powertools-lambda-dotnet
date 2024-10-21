@@ -157,11 +157,39 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             var metricsOutput = _consoleOut.ToString();
 
             // Assert
-            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"ns1\",\"Metrics\":[{\"Name\":\"Lambda Execute\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Type\",\"Service\"]]}]},\"Type\":\"Start\",\"Service\":\"service_undefined\",\"Lambda Execute\":1}", metricsOutput);
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]]}]},\"Service\":\"ServiceName\",\"ColdStart\":1}", metricsOutput);
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SingleMetric1\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Default1\"]]}]},\"Default1\":\"SingleMetric1\",\"SingleMetric1\":1}", metricsOutput);
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"ns2\",\"Metrics\":[{\"Name\":\"SingleMetric2\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Default1\",\"Default2\"]]}]},\"Default1\":\"SingleMetric2\",\"Default2\":\"SingleMetric2\",\"SingleMetric2\":1}", metricsOutput);
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"AddMetric\",\"Unit\":\"Count\",\"StorageResolution\":1},{\"Name\":\"AddMetric2\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Service\"]]}]},\"Service\":\"ServiceName\",\"AddMetric\":1,\"AddMetric2\":1}", metricsOutput);
+        }
+        
+        [Trait("Category", "SchemaValidation")]
+        [Fact]
+        public void When_PushSingleMetric_With_Namespace()
+        {
+            // Act
+            _handler.PushSingleMetricWithNamespace();
+
+            var metricsOutput = _consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"ExampleApplication\",\"Metrics\":[{\"Name\":\"SingleMetric\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Default\"]]}]},\"Default\":\"SingleMetric\",\"SingleMetric\":1}", metricsOutput);
+        }
+        
+        [Trait("Category", "SchemaValidation")]
+        [Fact]
+        public void When_PushSingleMetric_With_Env_Namespace()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "EnvNamespace");
             
-            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"ns2\",\"Metrics\":[{\"Name\":\"Lambda Execute\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Type\",\"SessionId\",\"Service\"]]}]},\"Type\":\"Start\",\"SessionId\":\"Unset\",\"Service\":\"service_undefined\",\"Lambda Execute\":1}", metricsOutput);
-            
-            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Lambda Execute\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Service\",\"Default\",\"SessionId\",\"Type\"]]}]},\"Service\":\"testService\",\"Default\":\"Initial\",\"SessionId\":\"MySessionId\",\"Type\":\"Start\",\"Lambda Execute\":1}", metricsOutput);
+            // Act
+            _handler.PushSingleMetricWithEnvNamespace();
+
+            var metricsOutput = _consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"EnvNamespace\",\"Metrics\":[{\"Name\":\"SingleMetric\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Default\"]]}]},\"Default\":\"SingleMetric\",\"SingleMetric\":1}", metricsOutput);
         }
 
         [Trait("Category", "MetricsImplementation")]
@@ -366,6 +394,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
         {
             // need to reset instance after each test
             MetricsAspect.ResetForTest();
+            Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", null);
         }
     }
 }
