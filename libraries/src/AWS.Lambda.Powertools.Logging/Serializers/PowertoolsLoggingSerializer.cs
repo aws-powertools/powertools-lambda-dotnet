@@ -153,9 +153,9 @@ internal static class PowertoolsLoggingSerializer
         _jsonOptions.Converters.Add(new TimeOnlyConverter());
 
 #if NET8_0_OR_GREATER
-        _jsonOptions.Converters.Add(new JsonStringEnumConverter<LogLevel>());
+        _jsonOptions.Converters.Add(new LogLevelJsonConverter());
 #elif NET6_0
-        _jsonOptions.Converters.Add(new JsonStringEnumConverter());
+        _jsonOptions.Converters.Add(new LogLevelJsonConverter());
 #endif
 
         _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
