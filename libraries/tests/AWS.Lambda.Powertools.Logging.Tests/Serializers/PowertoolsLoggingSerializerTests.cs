@@ -62,9 +62,9 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             converter => Assert.IsType<DateOnlyConverter>(converter),
             converter => Assert.IsType<TimeOnlyConverter>(converter),
 #if NET8_0_OR_GREATER
-            converter => Assert.IsType<JsonStringEnumConverter<LogLevel>>(converter));
+            converter => Assert.IsType<LogLevelJsonConverter>(converter));
 #elif NET6_0
-            converter => Assert.IsType<JsonStringEnumConverter>(converter));
+            converter => Assert.IsType<LogLevelJsonConverter>(converter));
 #endif
 
         Assert.Equal(JavaScriptEncoder.UnsafeRelaxedJsonEscaping, options.Encoder);
@@ -90,9 +90,9 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             converter => Assert.IsType<DateOnlyConverter>(converter),
             converter => Assert.IsType<TimeOnlyConverter>(converter),
 #if NET8_0_OR_GREATER
-            converter => Assert.IsType<JsonStringEnumConverter<LogLevel>>(converter));
+            converter => Assert.IsType<LogLevelJsonConverter>(converter));
 #elif NET6_0
-            converter => Assert.IsType<JsonStringEnumConverter>(converter));
+            converter => Assert.IsType<LogLevelJsonConverter>(converter));
 #endif
 
         Assert.Equal(JavaScriptEncoder.UnsafeRelaxedJsonEscaping, options.Encoder);

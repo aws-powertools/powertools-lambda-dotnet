@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System.Text.Json.Serialization;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents;
@@ -157,5 +158,27 @@ class TestHandlers
     public void TestLogNoDecorator()
     {
         Logger.LogInformation("test");
+    }
+    
+    [Logging(Service = "test", LoggerOutputCase = LoggerOutputCase.SnakeCase)]
+    public void TestEnums(string input, ILambdaContext context)
+    {
+        Logger.LogInformation(Pet.Dog);
+        Logger.LogInformation(Thing.Five);
+    }
+    
+    public enum Thing
+    {
+        One = 1,
+        Three = 3,
+        Five = 5
+    }
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum Pet
+    {
+        Cat = 1,
+        Dog = 3,
+        Lizard = 5
     }
 }
