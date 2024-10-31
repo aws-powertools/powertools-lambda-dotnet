@@ -1,0 +1,310 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using AspectInjector.Broker;
+using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Utils;
+
+namespace AWS.Lambda.Powertools.Tracing.Internal;
+
+/// <summary>
+///     Tracing Aspect
+///     Scope.Global is singleton
+/// </summary>
+[Aspect(Scope.Global, Factory = typeof(TracingAspectFactory))]
+public class TracingAspect
+{
+    /// <summary>
+    ///     The Powertools for AWS Lambda (.NET) configurations
+    /// </summary>
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
+
+    /// <summary>
+    ///     X-Ray Recorder
+    /// </summary>
+    private readonly IXRayRecorder _xRayRecorder;
+
+    /// <summary>
+    ///     If true, then is cold start
+    /// </summary>
+    private static bool _isColdStart = true;
+
+    /// <summary>
+    ///     If true, capture annotations
+    /// </summary>
+    private static bool _captureAnnotations = true;
+
+    /// <summary>
+    ///     If true, annotations have been captured
+    /// </summary>
+    private bool _isAnnotationsCaptured;
+
+    /// <summary>
+    /// Aspect constructor
+    /// </summary>
+    /// <param name="powertoolsConfigurations"></param>
+    /// <param name="xRayRecorder"></param>
+    public TracingAspect(IPowertoolsConfigurations powertoolsConfigurations, IXRayRecorder xRayRecorder)
+    {
+        _powertoolsConfigurations = powertoolsConfigurations;
+        _xRayRecorder = xRayRecorder;
+    }
+    
+    /// <summary>
+    /// Surrounds the specific method with Tracing aspect
+    /// </summary>
+    /// <param name="instance"></param>
+    /// <param name="name"></param>
+    /// <param name="args"></param>
+    /// <param name="hostType"></param>
+    /// <param name="method"></param>
+    /// <param name="returnType"></param>
+    /// <param name="target"></param>
+    /// <param name="triggers"></param>
+    /// <returns></returns>
+    [Advice(Kind.Around)]
+    public object Around(
+        [Argument(Source.Instance)] object instance,
+        [Argument(Source.Name)] string name,
+        [Argument(Source.Arguments)] object[] args,
+        [Argument(Source.Type)] Type hostType,
+        [Argument(Source.Metadata)] MethodBase method,
+        [Argument(Source.ReturnType)] Type returnType,
+        [Argument(Source.Target)] Func<object[], object> target,
+        [Argument(Source.Triggers)] Attribute[] triggers)
+    {
+        var trigger = triggers.OfType<TracingAttribute>().First();
+
+        if (TracingDisabled())
+            return target(args);
+
+        var @namespace = !string.IsNullOrWhiteSpace(trigger.Namespace) ? trigger.Namespace : _powertoolsConfigurations.Service;
+        
+        var (segmentName, metadataName) = string.IsNullOrWhiteSpace(trigger.SegmentName) 
+            ? ($"## {name}", name) 
+            : (trigger.SegmentName, trigger.SegmentName);
+        
+        BeginSegment(segmentName, @namespace);
+
+        try
+        {
+            var result = target(args);
+
+            if (result is Task task)
+            {
+                return WrapTask(task, metadataName, trigger.CaptureMode, @namespace);
+            }
+
+            HandleResponse(metadataName, result, trigger.CaptureMode, @namespace);
+            _xRayRecorder.EndSubsegment(); // End segment here for sync methods
+            return result;
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex, metadataName, trigger.CaptureMode, @namespace);
+            _xRayRecorder.EndSubsegment(); // End segment here for sync methods with exceptions
+            throw;
+        }
+    }
+
+    private object WrapTask(Task task, string name, TracingCaptureMode captureMode, string @namespace)
+    {
+        if (task.GetType() == typeof(Task))
+        {
+            return WrapVoidTask(task, name, captureMode, @namespace);
+        }
+
+        // Create an async wrapper task that returns the original task type
+        async Task AsyncWrapper()
+        {
+            try
+            {
+                await task;
+                var result = task.GetType().GetProperty("Result")?.GetValue(task);
+                HandleResponse(name, result, captureMode, @namespace);
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex, name, captureMode, @namespace);
+                throw;
+            }
+            finally
+            {
+                _xRayRecorder.EndSubsegment();
+            }
+        }
+
+        // Start the wrapper and return original task
+        _ = AsyncWrapper();
+        return task;
+    }
+
+    private async Task WrapVoidTask(Task task, string name, TracingCaptureMode captureMode, string @namespace)
+    {
+        try
+        {
+            await task;
+            HandleResponse(name, null, captureMode, @namespace);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex, name, captureMode, @namespace);
+            throw;
+        }
+        finally
+        {
+            _xRayRecorder.EndSubsegment();
+        }
+    }
+
+    private void BeginSegment(string segmentName, string @namespace)
+    {
+        _xRayRecorder.BeginSubsegment(segmentName);
+        _xRayRecorder.SetNamespace(@namespace);
+
+        if (_captureAnnotations)
+        {
+            _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
+
+            _captureAnnotations = false;
+            _isAnnotationsCaptured = true;
+
+            if (_powertoolsConfigurations.IsServiceDefined)
+                _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
+        }
+
+        _isColdStart = false;
+    }
+
+    private void HandleResponse(string segmentName, object result, TracingCaptureMode captureMode, string @namespace)
+    {
+        if (!CaptureResponse(captureMode)) return;
+#if NET8_0_OR_GREATER
+        if (!RuntimeFeatureWrapper.IsDynamicCodeSupported) // is AOT
+        {
+            _xRayRecorder.AddMetadata(
+                @namespace,
+                $"{segmentName} response",
+                Serializers.PowertoolsTracingSerializer.Serialize(result)
+            );
+            return;
+        }
+#endif
+
+        _xRayRecorder.AddMetadata(
+            @namespace,
+            $"{segmentName} response",
+            result
+        );
+    }
+
+    /// <summary>
+    /// When Aspect Handler exits runs this code to end subsegment
+    /// </summary>
+    [Advice(Kind.After)]
+    public void OnExit()
+    {
+        if (TracingDisabled())
+            return;
+
+        if (_isAnnotationsCaptured)
+            _captureAnnotations = true;
+    }
+
+    private bool TracingDisabled()
+    {
+        if (_powertoolsConfigurations.TracingDisabled)
+        {
+            Console.WriteLine("Tracing has been disabled via env var POWERTOOLS_TRACE_DISABLED");
+            return true;
+        }
+
+        if (!_powertoolsConfigurations.IsLambdaEnvironment)
+        {
+            Console.WriteLine("Running outside Lambda environment; disabling Tracing");
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool CaptureResponse(TracingCaptureMode captureMode)
+    {
+        if (TracingDisabled())
+            return false;
+
+        return captureMode switch
+        {
+            TracingCaptureMode.EnvironmentVariable => _powertoolsConfigurations.TracerCaptureResponse,
+            TracingCaptureMode.Response => true,
+            TracingCaptureMode.ResponseAndError => true,
+            _ => false
+        };
+    }
+
+    private bool CaptureError(TracingCaptureMode captureMode)
+    {
+        if (TracingDisabled())
+            return false;
+
+        return captureMode switch
+        {
+            TracingCaptureMode.EnvironmentVariable => _powertoolsConfigurations.TracerCaptureError,
+            TracingCaptureMode.Error => true,
+            TracingCaptureMode.ResponseAndError => true,
+            _ => false
+        };
+    }
+
+    private void HandleException(Exception exception, string name, TracingCaptureMode captureMode, string @namespace)
+    {
+        if (!CaptureError(captureMode)) return;
+
+        var nameSpace = @namespace;
+        var sb = new StringBuilder();
+        sb.AppendLine($"Exception type: {exception.GetType()}");
+        sb.AppendLine($"Exception message: {exception.Message}");
+        sb.AppendLine($"Stack trace: {exception.StackTrace}");
+
+        if (exception.InnerException != null)
+        {
+            sb.AppendLine("---BEGIN InnerException--- ");
+            sb.AppendLine($"Exception type {exception.InnerException.GetType()}");
+            sb.AppendLine($"Exception message: {exception.InnerException.Message}");
+            sb.AppendLine($"Stack trace: {exception.InnerException.StackTrace}");
+            sb.AppendLine("---END Inner Exception");
+        }
+
+        _xRayRecorder.AddMetadata(
+            nameSpace,
+            $"{name} error",
+            sb.ToString()
+        );
+    }
+
+    /// <summary>
+    ///     Resets static variables for test.
+    /// </summary>
+    internal static void ResetForTest()
+    {
+        _isColdStart = true;
+        _captureAnnotations = true;
+    }
+}

@@ -107,6 +107,6 @@ public sealed class HandlerTests : IDisposable
         Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "");
         Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "");
         Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
-        TracingAspectHandler.ResetForTest();
+        TracingAspect.ResetForTest();
     }
 }

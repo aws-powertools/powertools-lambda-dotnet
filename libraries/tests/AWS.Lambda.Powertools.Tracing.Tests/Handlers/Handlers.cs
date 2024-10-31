@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Threading.Tasks;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
