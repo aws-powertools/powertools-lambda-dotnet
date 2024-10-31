@@ -176,6 +176,48 @@ public class PowertoolsTracingSerializerTests
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => PowertoolsTracingSerializer.GetMetadataValue(invalidJsonObject));
     }
+    
+    [Fact]
+    public void GetMetadataValue_WithFalseValue_ReturnsFalse()
+    {
+        // Arrange
+        var testObject = new TestBooleanObject { Value = false };
+
+        // Act
+        var result = PowertoolsTracingSerializer.GetMetadataValue(testObject);
+
+        // Assert
+        Assert.IsType<Dictionary<string, object>>(result);
+        Assert.False((bool)result["Value"]);
+    }
+
+    [Fact]
+    public void GetMetadataValue_WithNullValue_ReturnsNull()
+    {
+        // Arrange
+        var testObject = new TestNullableObject { Value = null };
+
+        // Act
+        var result = PowertoolsTracingSerializer.GetMetadataValue(testObject);
+
+        // Assert
+        Assert.IsType<Dictionary<string, object>>(result);
+        Assert.Null(result["Value"]);
+    }
+
+    [Fact]
+    public void GetMetadataValue_WithArrayValue_ReturnsNull()
+    {
+        // Arrange
+        var testObject = new TestArrayObject { Values = new[] { 1, 2, 3 } };
+
+        // Act
+        var result = PowertoolsTracingSerializer.GetMetadataValue(testObject);
+
+        // Assert
+        Assert.IsType<Dictionary<string, object>>(result);
+        Assert.Null(result["Values"]); // Arrays fall into the default case
+    }
 }
 
 public class TestCircularReference
@@ -190,9 +232,24 @@ public class UnregisteredClass
     public string Value { get; set; }
 }
 
-[JsonSerializable(typeof(JsonTestObject))]
+[JsonSerializable(typeof(JsonTestObject))]     
 public class JsonTestObject
 {
     public double Value { get; set; }
+}
+
+public class TestBooleanObject
+{
+    public bool Value { get; set; }
+}
+
+public class TestNullableObject
+{
+    public string? Value { get; set; }
+}
+
+public class TestArrayObject
+{
+    public int[] Values { get; set; }
 }
 #endif

@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Common.Utils;
@@ -98,7 +99,6 @@ public class TracingAspectTests
     }
 
 #if NET8_0_OR_GREATER
-
     [Fact]
     public void Around_SyncMethod_HandlesResponseAndSegmentCorrectly_AOT()
     {
@@ -107,7 +107,7 @@ public class TracingAspectTests
 
         var context = new TestJsonContext(new JsonSerializerOptions());
         PowertoolsTracingSerializer.AddSerializerContext(context);
-        
+
         var attribute = new TracingAttribute();
         var methodName = "TestMethod";
         var result = "test result";
@@ -126,7 +126,7 @@ public class TracingAspectTests
             PowertoolsTracingSerializer.Serialize(result));
         _mockXRayRecorder.Received(1).EndSubsegment();
     }
-    
+
     [Fact]
     public async Task Around_AsyncMethod_HandlesResponseAndSegmentCorrectly_AOT()
     {
@@ -234,5 +234,167 @@ public class TracingAspectTests
         // Assert
         _mockXRayRecorder.DidNotReceive().BeginSubsegment(Arg.Any<string>());
         _mockXRayRecorder.DidNotReceive().EndSubsegment();
+    }
+
+    [Fact]
+    public void TracingDisabled_WhenTracingDisabledTrue_ReturnsTrue()
+    {
+        // Arrange
+        _mockConfigurations.TracingDisabled.Returns(true);
+
+        // Act
+        var result = _handler.Around(
+            "TestMethod",
+            Array.Empty<object>(),
+            _ => null,
+            new Attribute[] { new TracingAttribute() }
+        );
+
+        // Assert
+        Assert.Null(result);
+        _mockXRayRecorder.DidNotReceive().BeginSubsegment(Arg.Any<string>());
+    }
+
+    [Fact]
+    public void TracingDisabled_WhenNotInLambdaEnvironment_ReturnsTrue()
+    {
+        // Arrange
+        _mockConfigurations.IsLambdaEnvironment.Returns(false);
+
+        // Act
+        var result = _handler.Around(
+            "TestMethod",
+            Array.Empty<object>(),
+            _ => null,
+            new Attribute[] { new TracingAttribute() }
+        );
+
+        // Assert
+        Assert.Null(result);
+        _mockXRayRecorder.DidNotReceive().BeginSubsegment(Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task WrapVoidTask_SuccessfulExecution_HandlesResponseAndEndsSubsegment()
+    {
+        // Arrange
+        var tcs = new TaskCompletionSource();
+        var task = tcs.Task;
+        const string methodName = "TestMethod";
+        const string nameSpace = "TestNamespace";
+
+        // Act
+        var wrappedTask = _handler.Around(
+            methodName,
+            new object[] { task },
+            args => args[0],
+            new Attribute[]
+                { new TracingAttribute { Namespace = nameSpace, CaptureMode = TracingCaptureMode.Response } }
+        ) as Task;
+
+        tcs.SetResult(); // Complete the task
+        await wrappedTask!;
+
+        // Assert
+        _mockXRayRecorder.Received(1).AddMetadata(
+            Arg.Is(nameSpace),
+            Arg.Is($"{methodName} response"),
+            Arg.Any<object>()
+        );
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+
+    [Fact]
+    public async Task WrapVoidTask_WithException_HandlesExceptionAndEndsSubsegment()
+    {
+        // Arrange
+        var tcs = new TaskCompletionSource();
+        var task = tcs.Task;
+        const string methodName = "TestMethod";
+        const string nameSpace = "TestNamespace";
+        var expectedException = new Exception("Test exception");
+
+        // Act
+        var wrappedTask = _handler.Around(
+            methodName,
+            new object[] { task },
+            args => args[0],
+            new Attribute[]
+                { new TracingAttribute { Namespace = nameSpace, CaptureMode = TracingCaptureMode.ResponseAndError } }
+        ) as Task;
+
+        tcs.SetException(expectedException); // Fail the task
+
+        // Assert
+        await Assert.ThrowsAsync<Exception>(() => wrappedTask!);
+
+        _mockXRayRecorder.Received(1).AddMetadata(
+            Arg.Is(nameSpace),
+            Arg.Is($"{methodName} error"),
+            Arg.Is<string>(s => s.Contains("Test exception"))
+        );
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+
+    [Fact]
+    public async Task WrapVoidTask_WithCancellation_EndsSubsegment()
+    {
+        // Arrange
+        TracingAspect.ResetForTest(); // Ensure static state is reset
+
+        // Reinitialize mocks for this specific test
+        var mockXRayRecorder = Substitute.For<IXRayRecorder>();
+        var mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
+
+        // Configure all required behavior
+        mockConfigurations.IsLambdaEnvironment.Returns(true);
+        mockConfigurations.TracingDisabled.Returns(false);
+        mockConfigurations.Service.Returns("TestService");
+        mockConfigurations.IsServiceDefined.Returns(true);
+        mockConfigurations.TracerCaptureResponse.Returns(true);
+        mockConfigurations.TracerCaptureError.Returns(true);
+
+        var handler = new TracingAspect(mockConfigurations, mockXRayRecorder);
+
+        var cts = new CancellationTokenSource();
+        var tcs = new TaskCompletionSource();
+        var task = Task.Run(async () =>
+        {
+            await tcs.Task;
+            await Task.Delay(Timeout.Infinite, cts.Token);
+        });
+
+        const string methodName = "TestMethod";
+        const string nameSpace = "TestNamespace";
+
+        // Act
+        var wrappedTask = handler.Around(
+            methodName,
+            new object[] { task },
+            args => args[0],
+            new Attribute[]
+                { new TracingAttribute { Namespace = nameSpace, CaptureMode = TracingCaptureMode.ResponseAndError } }
+        ) as Task;
+
+        // Ensure the task is running before we cancel
+        tcs.SetResult();
+        await Task.Delay(100); // Give time for the task to start running
+
+        // Cancel the task
+        cts.Cancel();
+
+        // Assert
+        await Assert.ThrowsAsync<TaskCanceledException>(() => wrappedTask!);
+
+        // Add small delay before verification to ensure all async operations complete
+        await Task.Delay(50);
+
+        mockXRayRecorder.Received(1).EndSubsegment();
+
+        // Verify other expected calls
+        mockXRayRecorder.Received(1).BeginSubsegment(Arg.Any<string>());
+        mockXRayRecorder.Received(1).SetNamespace(nameSpace);
+        mockXRayRecorder.Received(1).AddAnnotation("ColdStart", true);
+        mockXRayRecorder.Received(1).AddAnnotation("Service", "TestService");
     }
 }

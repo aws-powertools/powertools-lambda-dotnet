@@ -10,6 +10,9 @@ namespace AWS.Lambda.Powertools.Tracing.Tests.Serializers;
 [JsonSerializable(typeof(TestPerson))]
 [JsonSerializable(typeof(TestComplexObject))]
 [JsonSerializable(typeof(TestResponse))]
+[JsonSerializable(typeof(TestBooleanObject))]
+[JsonSerializable(typeof(TestNullableObject))]
+[JsonSerializable(typeof(TestArrayObject))]
 public partial class TestJsonContext : JsonSerializerContext { }
 
 public class TestPerson
