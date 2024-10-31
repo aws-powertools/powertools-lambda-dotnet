@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Tracing.Internal;
 using NSubstitute;
 using Xunit;
@@ -45,9 +46,7 @@ public class TracingAspectTests
         Func<object[], object> target = _ => result;
 
         // Act
-        _handler.Around(null, methodName, Array.Empty<object>(), 
-            GetType(), GetType().GetMethod(nameof(Around_SyncMethod_HandlesResponseAndSegmentCorrectly)), 
-            typeof(string), target, new Attribute[] { attribute });
+        _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
 
         // Assert
         _mockXRayRecorder.Received(1).BeginSubsegment($"## {methodName}");
@@ -70,9 +69,7 @@ public class TracingAspectTests
         Func<object[], object> target = _ => Task.FromResult<object>(result);
 
         // Act
-        var taskResult = _handler.Around(null, methodName, Array.Empty<object>(), 
-            GetType(), GetType().GetMethod(nameof(Around_AsyncMethod_HandlesResponseAndSegmentCorrectly)), 
-            typeof(Task<TestResponse>), target, new Attribute[] { attribute });
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
 
         // Wait for the async operation to complete
         if (taskResult is Task task)
@@ -102,9 +99,7 @@ public class TracingAspectTests
         Func<object[], object> target = _ => Task.CompletedTask;
 
         // Act
-        var taskResult = _handler.Around(null, methodName, Array.Empty<object>(), 
-            GetType(), GetType().GetMethod(nameof(Around_VoidAsyncMethod_HandlesSegmentCorrectly)), 
-            typeof(Task), target, new Attribute[] { attribute });
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
 
         // Wait for the async operation to complete
         if (taskResult is Task task)
@@ -131,9 +126,7 @@ public class TracingAspectTests
         Func<object[], object> target = _ => Task.FromException(expectedException);
 
         // Act & Assert
-        var taskResult = _handler.Around(null, methodName, Array.Empty<object>(), 
-            GetType(), GetType().GetMethod(nameof(Around_AsyncMethodWithException_HandlesErrorCorrectly)), 
-            typeof(Task), target, new Attribute[] { attribute });
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
 
         // Wait for the async operation to complete
         if (taskResult is Task task)
@@ -162,9 +155,7 @@ public class TracingAspectTests
         Func<object[], object> target = _ => "result";
 
         // Act
-        _handler.Around(null, methodName, Array.Empty<object>(), 
-            GetType(), GetType().GetMethod(nameof(Around_TracingDisabled_DoesNotCreateSegment)), 
-            typeof(string), target, new Attribute[] { attribute });
+        _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
 
         // Assert
         _mockXRayRecorder.DidNotReceive().BeginSubsegment(Arg.Any<string>());
