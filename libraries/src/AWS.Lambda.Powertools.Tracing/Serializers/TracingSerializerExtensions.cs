@@ -48,15 +48,8 @@ public static class TracingSerializerExtensions
         where T : JsonSerializerContext
     {
         var options = DefaultOptionsHelper<T>.GetDefaultOptions();
-        
         var constructor = typeof(T).GetConstructor(new Type[] { typeof(JsonSerializerOptions) });
-        if (constructor == null)
-        {
-            throw new JsonSerializerException(
-                $"The serializer {typeof(T).FullName} is missing a constructor that takes in JsonSerializerOptions object");
-        }
-
-        var jsonSerializerContext = constructor.Invoke(new object[] { options }) as T;
+        var jsonSerializerContext = constructor!.Invoke(new object[] { options }) as T;
         PowertoolsTracingSerializer.AddSerializerContext(jsonSerializerContext);
         
         return serializer;
