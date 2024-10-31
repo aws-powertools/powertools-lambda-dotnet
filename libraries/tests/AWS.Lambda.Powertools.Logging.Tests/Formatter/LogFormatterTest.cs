@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
@@ -42,7 +43,50 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         {
             _testHandler = new TestHandlers();
         }
-        
+
+        [Fact]
+        public void Serialize_ShouldHandleEnumValues()
+        {
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+            var lambdaContext = new TestLambdaContext
+            {
+                FunctionName = "funtionName",
+                FunctionVersion = "version",
+                InvokedFunctionArn = "function::arn",
+                AwsRequestId = "requestId",
+                MemoryLimitInMB = 128
+            };
+
+            var handler = new TestHandlers();
+            handler.TestEnums("fake", lambdaContext);
+
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(i =>
+                i.Contains("\"message\":5")
+            ));
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(i =>
+                i.Contains("\"message\":\"Dog\"")
+            ));
+
+            var json = JsonSerializer.Serialize(Pet.Dog, PowertoolsLoggingSerializer.GetSerializerOptions());
+            Assert.Contains("Dog", json);
+        }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum Pet
+        {
+            Cat = 1,
+            Dog = 3,
+            Lizard = 5
+        }
+
+        public enum Thing
+        {
+            One = 1,
+            Three = 3,
+            Five = 5
+        }
+
         [Fact]
         public void Log_WhenCustomFormatter_LogsCustomFormat()
         {
@@ -204,7 +248,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i.Contains(
-                    "\"correlation_ids\":{\"aws_request_id\":\"requestId\"},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_mb\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\""))
+                        "\"correlation_ids\":{\"aws_request_id\":\"requestId\"},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_mb\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\""))
             );
 #else
             consoleOut.Received(1).WriteLine(
