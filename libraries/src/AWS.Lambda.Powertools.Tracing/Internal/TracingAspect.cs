@@ -66,27 +66,19 @@ public class TracingAspect
         _powertoolsConfigurations = powertoolsConfigurations;
         _xRayRecorder = xRayRecorder;
     }
-    
+
     /// <summary>
     /// Surrounds the specific method with Tracing aspect
     /// </summary>
-    /// <param name="instance"></param>
     /// <param name="name"></param>
     /// <param name="args"></param>
-    /// <param name="hostType"></param>
-    /// <param name="method"></param>
-    /// <param name="returnType"></param>
     /// <param name="target"></param>
     /// <param name="triggers"></param>
     /// <returns></returns>
     [Advice(Kind.Around)]
     public object Around(
-        [Argument(Source.Instance)] object instance,
         [Argument(Source.Name)] string name,
         [Argument(Source.Arguments)] object[] args,
-        [Argument(Source.Type)] Type hostType,
-        [Argument(Source.Metadata)] MethodBase method,
-        [Argument(Source.ReturnType)] Type returnType,
         [Argument(Source.Target)] Func<object[], object> target,
         [Argument(Source.Triggers)] Attribute[] triggers)
     {

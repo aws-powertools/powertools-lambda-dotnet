@@ -85,7 +85,7 @@ public class PowertoolsTracingSerializerTests
         Assert.IsType<Dictionary<string, object>>(result);
         Assert.Equal("test", result["StringValue"]);
         Assert.Equal(42.0, result["NumberValue"]);
-        Assert.Equal(true, result["BoolValue"]);
+        Assert.True((bool)result["BoolValue"]);
         
         var nestedObject = Assert.IsType<Dictionary<string, object>>(result["NestedObject"]);
         Assert.Equal("value", nestedObject["nested"]);
