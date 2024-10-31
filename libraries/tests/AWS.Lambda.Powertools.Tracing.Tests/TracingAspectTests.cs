@@ -1,10 +1,16 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Tracing.Internal;
 using NSubstitute;
 using Xunit;
+
+#if NET8_0_OR_GREATER
+using AWS.Lambda.Powertools.Tracing.Serializers;
+using AWS.Lambda.Powertools.Tracing.Tests.Serializers;
+#endif
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
@@ -20,7 +26,7 @@ public class TracingAspectTests
         // Setup mocks
         _mockXRayRecorder = Substitute.For<IXRayRecorder>();
         _mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
-        
+
         // Configure default behavior
         _mockConfigurations.IsLambdaEnvironment.Returns(true);
         _mockConfigurations.TracingDisabled.Returns(false);
@@ -31,8 +37,9 @@ public class TracingAspectTests
 
         // Setup test handler with mocks
         _handler = new TracingAspect(_mockConfigurations, _mockXRayRecorder);
-        
+
         // Reset static state
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(true);
         TracingAspect.ResetForTest();
     }
 
@@ -79,7 +86,7 @@ public class TracingAspectTests
 
         // Assert with wait
         await Task.Delay(100); // Give time for the continuation to complete
-        
+
         _mockXRayRecorder.Received(1).BeginSubsegment($"## {methodName}");
         _mockXRayRecorder.Received(1).AddAnnotation("ColdStart", true);
         _mockXRayRecorder.Received(1).AddAnnotation("Service", "TestService");
@@ -89,6 +96,73 @@ public class TracingAspectTests
             result);
         _mockXRayRecorder.Received(1).EndSubsegment();
     }
+
+#if NET8_0_OR_GREATER
+
+    [Fact]
+    public void Around_SyncMethod_HandlesResponseAndSegmentCorrectly_AOT()
+    {
+        // Arrange
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+
+        var context = new TestJsonContext(new JsonSerializerOptions());
+        PowertoolsTracingSerializer.AddSerializerContext(context);
+        
+        var attribute = new TracingAttribute();
+        var methodName = "TestMethod";
+        var result = "test result";
+        Func<object[], object> target = _ => result;
+
+        // Act
+        _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
+
+        // Assert
+        _mockXRayRecorder.Received(1).BeginSubsegment($"## {methodName}");
+        _mockXRayRecorder.Received(1).AddAnnotation("ColdStart", true);
+        _mockXRayRecorder.Received(1).AddAnnotation("Service", "TestService");
+        _mockXRayRecorder.Received(1).AddMetadata(
+            Arg.Any<string>(),
+            $"{methodName} response",
+            PowertoolsTracingSerializer.Serialize(result));
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+    
+    [Fact]
+    public async Task Around_AsyncMethod_HandlesResponseAndSegmentCorrectly_AOT()
+    {
+        // Arrange
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+
+        var context = new TestJsonContext(new JsonSerializerOptions());
+        PowertoolsTracingSerializer.AddSerializerContext(context);
+
+        var attribute = new TracingAttribute();
+        var methodName = "TestAsyncMethod";
+        var result = new TestResponse { Message = "test async result" };
+        Func<object[], object> target = _ => Task.FromResult<object>(result);
+
+        // Act
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
+
+        // Wait for the async operation to complete
+        if (taskResult is Task task)
+        {
+            await task;
+        }
+
+        // Assert with wait
+        await Task.Delay(100); // Give time for the continuation to complete
+
+        _mockXRayRecorder.Received(1).BeginSubsegment($"## {methodName}");
+        _mockXRayRecorder.Received(1).AddAnnotation("ColdStart", true);
+        _mockXRayRecorder.Received(1).AddAnnotation("Service", "TestService");
+        _mockXRayRecorder.Received(1).AddMetadata(
+            Arg.Any<string>(),
+            $"{methodName} response",
+            PowertoolsTracingSerializer.Serialize(result));
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+#endif
 
     [Fact]
     public async Task Around_VoidAsyncMethod_HandlesSegmentCorrectly()
@@ -160,10 +234,5 @@ public class TracingAspectTests
         // Assert
         _mockXRayRecorder.DidNotReceive().BeginSubsegment(Arg.Any<string>());
         _mockXRayRecorder.DidNotReceive().EndSubsegment();
-    }
-
-    private class TestResponse
-    {
-        public string Message { get; set; }
     }
 }

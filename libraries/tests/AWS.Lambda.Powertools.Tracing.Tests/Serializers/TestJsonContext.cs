@@ -9,6 +9,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests.Serializers;
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(TestPerson))]
 [JsonSerializable(typeof(TestComplexObject))]
+[JsonSerializable(typeof(TestResponse))]
 public partial class TestJsonContext : JsonSerializerContext { }
 
 public class TestPerson
@@ -26,3 +27,8 @@ public class TestComplexObject
 }
 
 #endif
+
+public class TestResponse
+{
+    public string Message { get; set; }
+}
