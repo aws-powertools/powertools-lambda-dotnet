@@ -238,9 +238,6 @@ public class TracingAspect
 
     private bool CaptureResponse(TracingCaptureMode captureMode)
     {
-        if (TracingDisabled())
-            return false;
-
         return captureMode switch
         {
             TracingCaptureMode.EnvironmentVariable => _powertoolsConfigurations.TracerCaptureResponse,
@@ -252,9 +249,6 @@ public class TracingAspect
 
     private bool CaptureError(TracingCaptureMode captureMode)
     {
-        if (TracingDisabled())
-            return false;
-
         return captureMode switch
         {
             TracingCaptureMode.EnvironmentVariable => _powertoolsConfigurations.TracerCaptureError,
