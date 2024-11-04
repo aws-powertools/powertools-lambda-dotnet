@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -396,5 +411,116 @@ public class TracingAspectTests
         mockXRayRecorder.Received(1).SetNamespace(nameSpace);
         mockXRayRecorder.Received(1).AddAnnotation("ColdStart", true);
         mockXRayRecorder.Received(1).AddAnnotation("Service", "TestService");
+    }
+
+    [Fact]
+    public void CaptureResponse_WhenTracingDisabled_ReturnsFalse()
+    {
+        // Arrange
+        _mockConfigurations.TracingDisabled.Returns(true);
+        var attribute = new TracingAttribute { CaptureMode = TracingCaptureMode.Response };
+        var methodName = "TestMethod";
+        Func<object[], object> target = _ => "result";
+
+        // Act
+        var result = _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
+
+        // Assert
+        _mockXRayRecorder.DidNotReceive().AddMetadata(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<object>());
+    }
+
+    [Theory]
+    [InlineData(TracingCaptureMode.EnvironmentVariable, true)]
+    [InlineData(TracingCaptureMode.Response, true)]
+    [InlineData(TracingCaptureMode.ResponseAndError, true)]
+    [InlineData(TracingCaptureMode.Error, false)]
+    [InlineData(TracingCaptureMode.Disabled, false)]
+    public void CaptureResponse_WithDifferentModes_ReturnsExpectedResult(TracingCaptureMode mode, bool expectedCapture)
+    {
+        // Arrange
+        _mockConfigurations.TracerCaptureResponse.Returns(true);
+        var attribute = new TracingAttribute { CaptureMode = mode };
+        var methodName = "TestMethod";
+        var result = "test result";
+        Func<object[], object> target = _ => result;
+
+        // Act
+        _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
+
+        // Assert
+        if (expectedCapture)
+        {
+            _mockXRayRecorder.Received(1).AddMetadata(
+                Arg.Any<string>(),
+                $"{methodName} response",
+                result);
+        }
+        else
+        {
+            _mockXRayRecorder.DidNotReceive().AddMetadata(
+                Arg.Any<string>(),
+                $"{methodName} response",
+                Arg.Any<object>());
+        }
+    }
+
+    [Fact]
+    public void CaptureError_WhenTracingDisabled_ReturnsFalse()
+    {
+        // Arrange
+        _mockConfigurations.TracingDisabled.Returns(true);
+        var attribute = new TracingAttribute { CaptureMode = TracingCaptureMode.Error };
+        var methodName = "TestMethod";
+        var expectedException = new Exception("Test exception");
+        Func<object[], object> target = _ => throw expectedException;
+
+        // Act & Assert
+        Assert.Throws<Exception>(() =>
+            _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute }));
+
+        // Verify no error metadata was added
+        _mockXRayRecorder.DidNotReceive().AddMetadata(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>());
+    }
+
+    [Theory]
+    [InlineData(TracingCaptureMode.EnvironmentVariable, true)]
+    [InlineData(TracingCaptureMode.Error, true)]
+    [InlineData(TracingCaptureMode.ResponseAndError, true)]
+    [InlineData(TracingCaptureMode.Response, false)]
+    [InlineData(TracingCaptureMode.Disabled, false)]
+    public void CaptureError_WithDifferentModes_ReturnsExpectedResult(TracingCaptureMode mode, bool expectedCapture)
+    {
+        // Arrange
+        _mockConfigurations.TracerCaptureError.Returns(true);
+        var attribute = new TracingAttribute { CaptureMode = mode };
+        var methodName = "TestMethod";
+        var expectedException = new Exception("Test exception");
+        Func<object[], object> target = _ => throw expectedException;
+
+        // Act & Assert
+        Assert.Throws<Exception>(() =>
+            _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute }));
+
+        // Verify error metadata was added or not based on expected capture
+        if (expectedCapture)
+        {
+            _mockXRayRecorder.Received(1).AddMetadata(
+                Arg.Any<string>(),
+                $"{methodName} error",
+                Arg.Is<string>(s => s.Contains(expectedException.Message)));
+        }
+        else
+        {
+            _mockXRayRecorder.DidNotReceive().AddMetadata(
+                Arg.Any<string>(),
+                $"{methodName} error",
+                Arg.Any<string>());
+        }
     }
 }
