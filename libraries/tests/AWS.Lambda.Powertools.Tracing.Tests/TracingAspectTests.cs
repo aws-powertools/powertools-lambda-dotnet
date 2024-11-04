@@ -423,7 +423,7 @@ public class TracingAspectTests
         Func<object[], object> target = _ => "result";
 
         // Act
-        var result = _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
+        _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
 
         // Assert
         _mockXRayRecorder.DidNotReceive().AddMetadata(
@@ -522,5 +522,47 @@ public class TracingAspectTests
                 $"{methodName} error",
                 Arg.Any<string>());
         }
+    }
+    
+    [Fact]
+    public void CaptureResponse_WhenTracingIsDisabled_ReturnsFalseDirectly()
+    {
+        // Arrange
+        _mockConfigurations.TracingDisabled.Returns(true);
+        var methodName = "TestMethod";
+        var result = "test result";
+        Func<object[], object> target = _ => result;
+
+        // Act
+        _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { new TracingAttribute() });
+
+        // Assert - No metadata should be added since we return false immediately
+        _mockXRayRecorder.DidNotReceive().AddMetadata(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<object>());
+    }
+
+    [Fact]
+    public void CaptureError_WhenTracingIsDisabled_ReturnsFalseDirectly()
+    {
+        // Arrange
+        _mockConfigurations.TracingDisabled.Returns(true);
+        var methodName = "TestMethod";
+        var expectedException = new Exception("Test exception");
+        Func<object[], object> target = _ => throw expectedException;
+
+        // Act & Assert
+        Assert.Throws<Exception>(() => _handler.Around(
+            methodName, 
+            Array.Empty<object>(), 
+            target, 
+            new Attribute[] { new TracingAttribute() }));
+
+        // Verify no error metadata was added since we return false immediately
+        _mockXRayRecorder.DidNotReceive().AddMetadata(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>());
     }
 }
