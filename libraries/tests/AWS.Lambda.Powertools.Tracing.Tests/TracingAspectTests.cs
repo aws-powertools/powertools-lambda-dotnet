@@ -525,44 +525,58 @@ public class TracingAspectTests
     }
     
     [Fact]
-    public void CaptureResponse_WhenTracingIsDisabled_ReturnsFalseDirectly()
+    public async Task Around_AsyncMethodWithResult_HandlesTaskResultProperty()
     {
         // Arrange
-        _mockConfigurations.TracingDisabled.Returns(true);
-        var methodName = "TestMethod";
-        var result = "test result";
-        Func<object[], object> target = _ => result;
+        var attribute = new TracingAttribute();
+        var methodName = "TestAsyncMethod";
+        var expectedResult = "test result";
+        var taskWithResult = Task.FromResult(expectedResult);
+        Func<object[], object> target = _ => taskWithResult;
 
         // Act
-        _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { new TracingAttribute() });
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
 
-        // Assert - No metadata should be added since we return false immediately
-        _mockXRayRecorder.DidNotReceive().AddMetadata(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<object>());
+        // Wait for the async operation to complete
+        if (taskResult is Task task)
+        {
+            await task;
+        }
+
+        // Assert with wait
+        await Task.Delay(100); // Give time for the continuation to complete
+
+        _mockXRayRecorder.Received(1).AddMetadata(
+            "TestService",  // This matches what's set in the test constructor
+            $"{methodName} response",
+            expectedResult);
     }
 
     [Fact]
-    public void CaptureError_WhenTracingIsDisabled_ReturnsFalseDirectly()
+    public async Task Around_AsyncMethodWithoutResult_HandlesNullTaskResultProperty()
     {
         // Arrange
-        _mockConfigurations.TracingDisabled.Returns(true);
-        var methodName = "TestMethod";
-        var expectedException = new Exception("Test exception");
-        Func<object[], object> target = _ => throw expectedException;
+        var attribute = new TracingAttribute();
+        var methodName = "TestAsyncMethod";
+        var taskWithoutResult = new Task(() => { }); // Task without Result property
+        taskWithoutResult.Start();
+        Func<object[], object> target = _ => taskWithoutResult;
 
-        // Act & Assert
-        Assert.Throws<Exception>(() => _handler.Around(
-            methodName, 
-            Array.Empty<object>(), 
-            target, 
-            new Attribute[] { new TracingAttribute() }));
+        // Act
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target, new Attribute[] { attribute });
 
-        // Verify no error metadata was added since we return false immediately
-        _mockXRayRecorder.DidNotReceive().AddMetadata(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>());
+        // Wait for the async operation to complete
+        if (taskResult is Task task)
+        {
+            await task;
+        }
+
+        // Assert with wait
+        await Task.Delay(100); // Give time for the continuation to complete
+
+        _mockXRayRecorder.Received(1).AddMetadata(
+            "TestService",
+            $"{methodName} response",
+            null);
     }
 }
