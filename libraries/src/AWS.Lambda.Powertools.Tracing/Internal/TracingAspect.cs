@@ -86,12 +86,14 @@ public class TracingAspect
         if (TracingDisabled())
             return target(args);
 
-        var @namespace = !string.IsNullOrWhiteSpace(trigger.Namespace) ? trigger.Namespace : _powertoolsConfigurations.Service;
-        
-        var (segmentName, metadataName) = string.IsNullOrWhiteSpace(trigger.SegmentName) 
-            ? ($"## {name}", name) 
+        var @namespace = !string.IsNullOrWhiteSpace(trigger.Namespace)
+            ? trigger.Namespace
+            : _powertoolsConfigurations.Service;
+
+        var (segmentName, metadataName) = string.IsNullOrWhiteSpace(trigger.SegmentName)
+            ? ($"## {name}", name)
             : (trigger.SegmentName, trigger.SegmentName);
-        
+
         BeginSegment(segmentName, @namespace);
 
         try
@@ -100,68 +102,29 @@ public class TracingAspect
 
             if (result is Task task)
             {
-                return WrapTask(task, metadataName, trigger.CaptureMode, @namespace);
+                task.GetAwaiter().GetResult();
+                var taskResult = task.GetType().GetProperty("Result")?.GetValue(task);
+                HandleResponse(metadataName, taskResult, trigger.CaptureMode, @namespace);
+
+                _xRayRecorder.EndSubsegment();
+                return task;
             }
 
             HandleResponse(metadataName, result, trigger.CaptureMode, @namespace);
-            _xRayRecorder.EndSubsegment(); // End segment here for sync methods
+
+            _xRayRecorder.EndSubsegment();
             return result;
         }
         catch (Exception ex)
         {
             HandleException(ex, metadataName, trigger.CaptureMode, @namespace);
-            _xRayRecorder.EndSubsegment(); // End segment here for sync methods with exceptions
-            throw;
-        }
-    }
-
-    private object WrapTask(Task task, string name, TracingCaptureMode captureMode, string @namespace)
-    {
-        if (task.GetType() == typeof(Task))
-        {
-            return WrapVoidTask(task, name, captureMode, @namespace);
-        }
-
-        // Create an async wrapper task that returns the original task type
-        async Task AsyncWrapper()
-        {
-            try
-            {
-                await task;
-                var result = task.GetType().GetProperty("Result")?.GetValue(task);
-                HandleResponse(name, result, captureMode, @namespace);
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex, name, captureMode, @namespace);
-                throw;
-            }
-            finally
-            {
-                _xRayRecorder.EndSubsegment();
-            }
-        }
-
-        // Start the wrapper and return original task
-        _ = AsyncWrapper();
-        return task;
-    }
-
-    private async Task WrapVoidTask(Task task, string name, TracingCaptureMode captureMode, string @namespace)
-    {
-        try
-        {
-            await task;
-            HandleResponse(name, null, captureMode, @namespace);
-        }
-        catch (Exception ex)
-        {
-            HandleException(ex, name, captureMode, @namespace);
+            _xRayRecorder.EndSubsegment();
             throw;
         }
         finally
         {
-            _xRayRecorder.EndSubsegment();
+            if (_isAnnotationsCaptured)
+                _captureAnnotations = true;
         }
     }
 
@@ -184,15 +147,16 @@ public class TracingAspect
         _isColdStart = false;
     }
 
-    private void HandleResponse(string segmentName, object result, TracingCaptureMode captureMode, string @namespace)
+    private void HandleResponse(string name, object result, TracingCaptureMode captureMode, string @namespace)
     {
         if (!CaptureResponse(captureMode)) return;
+
 #if NET8_0_OR_GREATER
         if (!RuntimeFeatureWrapper.IsDynamicCodeSupported) // is AOT
         {
             _xRayRecorder.AddMetadata(
                 @namespace,
-                $"{segmentName} response",
+                $"{name} response",
                 Serializers.PowertoolsTracingSerializer.Serialize(result)
             );
             return;
@@ -201,22 +165,34 @@ public class TracingAspect
 
         _xRayRecorder.AddMetadata(
             @namespace,
-            $"{segmentName} response",
+            $"{name} response",
             result
         );
     }
 
-    /// <summary>
-    /// When Aspect Handler exits runs this code to end subsegment
-    /// </summary>
-    [Advice(Kind.After)]
-    public void OnExit()
+    private void HandleException(Exception exception, string name, TracingCaptureMode captureMode, string @namespace)
     {
-        if (TracingDisabled())
-            return;
+        if (!CaptureError(captureMode)) return;
 
-        if (_isAnnotationsCaptured)
-            _captureAnnotations = true;
+        var sb = new StringBuilder();
+        sb.AppendLine($"Exception type: {exception.GetType()}");
+        sb.AppendLine($"Exception message: {exception.Message}");
+        sb.AppendLine($"Stack trace: {exception.StackTrace}");
+
+        if (exception.InnerException != null)
+        {
+            sb.AppendLine("---BEGIN InnerException--- ");
+            sb.AppendLine($"Exception type {exception.InnerException.GetType()}");
+            sb.AppendLine($"Exception message: {exception.InnerException.Message}");
+            sb.AppendLine($"Stack trace: {exception.InnerException.StackTrace}");
+            sb.AppendLine("---END Inner Exception");
+        }
+
+        _xRayRecorder.AddMetadata(
+            @namespace,
+            $"{name} error",
+            sb.ToString()
+        );
     }
 
     private bool TracingDisabled()
@@ -258,35 +234,6 @@ public class TracingAspect
         };
     }
 
-    private void HandleException(Exception exception, string name, TracingCaptureMode captureMode, string @namespace)
-    {
-        if (!CaptureError(captureMode)) return;
-
-        var nameSpace = @namespace;
-        var sb = new StringBuilder();
-        sb.AppendLine($"Exception type: {exception.GetType()}");
-        sb.AppendLine($"Exception message: {exception.Message}");
-        sb.AppendLine($"Stack trace: {exception.StackTrace}");
-
-        if (exception.InnerException != null)
-        {
-            sb.AppendLine("---BEGIN InnerException--- ");
-            sb.AppendLine($"Exception type {exception.InnerException.GetType()}");
-            sb.AppendLine($"Exception message: {exception.InnerException.Message}");
-            sb.AppendLine($"Stack trace: {exception.InnerException.StackTrace}");
-            sb.AppendLine("---END Inner Exception");
-        }
-
-        _xRayRecorder.AddMetadata(
-            nameSpace,
-            $"{name} error",
-            sb.ToString()
-        );
-    }
-
-    /// <summary>
-    ///     Resets static variables for test.
-    /// </summary>
     internal static void ResetForTest()
     {
         _isColdStart = true;
