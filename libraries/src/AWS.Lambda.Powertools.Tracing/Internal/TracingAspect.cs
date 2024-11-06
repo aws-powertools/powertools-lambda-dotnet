@@ -103,43 +103,35 @@ public class TracingAspect
 
             if (result is Task task)
             {
-                if (task.IsFaulted && task.Exception != null)
-                {
-                    var actualException = task.Exception.InnerExceptions.Count == 1
-                        ? task.Exception.InnerExceptions[0]
-                        : task.Exception;
-
-                    // Capture and rethrow the original exception preserving the stack trace
-                    ExceptionDispatchInfo.Capture(actualException).Throw();
-                }
-
+                if (task.IsFaulted)  
+                {  
+                    // Force the exception to be thrown  
+                    task.Exception?.Handle(ex => false);    
+                } 
+                
                 // Only handle response if it's not a void Task
                 if (task.GetType().IsGenericType)
                 {
-                    var taskType = task.GetType();
-                    var resultProperty = taskType.GetProperty("Result");
-
-                    // Handle the response only if task completed successfully
-                    if (task.Status == TaskStatus.RanToCompletion)
-                    {
-                        var taskResult = resultProperty?.GetValue(task);
-                        HandleResponse(metadataName, taskResult, trigger.CaptureMode, @namespace);
-                    }
+                    var taskResult = task.GetType().GetProperty("Result")?.GetValue(task);
+                    HandleResponse(metadataName, taskResult, trigger.CaptureMode, @namespace);
                 }
-
                 _xRayRecorder.EndSubsegment();
                 return task;
             }
 
             HandleResponse(metadataName, result, trigger.CaptureMode, @namespace);
+
             _xRayRecorder.EndSubsegment();
             return result;
         }
         catch (Exception ex)
         {
-            var actualException = ex is AggregateException ae ? ae.InnerException! : ex;
-            HandleException(actualException, metadataName, trigger.CaptureMode, @namespace);
-            _xRayRecorder.EndSubsegment();
+            var actualException = ex is AggregateException ae ? ae.InnerException! : ex;  
+            HandleException(actualException, metadataName, trigger.CaptureMode, @namespace);  
+            _xRayRecorder.EndSubsegment();  
+            
+            // Capture and rethrow the original exception preserving the stack trace
+            ExceptionDispatchInfo.Capture(actualException).Throw();  
             throw;
         }
         finally
@@ -171,7 +163,7 @@ public class TracingAspect
     private void HandleResponse(string name, object result, TracingCaptureMode captureMode, string @namespace)
     {
         if (!CaptureResponse(captureMode)) return;
-        if (result == null) return; // Don't try to serialize null results
+        if (result == null) return;  // Don't try to serialize null results
 
         // Skip if the result is VoidTaskResult
         if (result.GetType().Name == "VoidTaskResult") return;
