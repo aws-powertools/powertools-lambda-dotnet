@@ -295,7 +295,7 @@ public class TracingAspectTests
     }
 
     [Fact]
-    public async Task WrapVoidTask_SuccessfulExecution_HandlesResponseAndEndsSubsegment()
+    public async Task WrapVoidTask_SuccessfulExecution_OnlyEndsSubsegment()
     {
         // Arrange
         var tcs = new TaskCompletionSource();
@@ -318,9 +318,9 @@ public class TracingAspectTests
         await wrappedTask!;
 
         // Assert
-        _mockXRayRecorder.Received(1).AddMetadata(
-            Arg.Is(nameSpace),
-            Arg.Is($"{methodName} response"),
+        _mockXRayRecorder.DidNotReceive().AddMetadata(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<object>()
         );
         _mockXRayRecorder.Received(1).EndSubsegment();
@@ -572,9 +572,210 @@ public class TracingAspectTests
         // Assert with wait
         await Task.Delay(100); // Give time for the continuation to complete
 
+        _mockXRayRecorder.DidNotReceive().AddMetadata(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<object>()
+        );
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+    
+    [Fact]
+    public async Task Around_VoidTask_DoesNotAddResponseMetadata()
+    {
+        // Arrange
+        var tcs = new TaskCompletionSource();
+        const string methodName = "VoidTaskMethod";
+        const string nameSpace = "TestNamespace";
+
+        // Complete the task before passing to Around
+        tcs.SetResult();
+
+        // Act
+        var wrappedTask = _handler.Around(
+            methodName,
+            new object[] { tcs.Task },
+            args => args[0],
+            new Attribute[]
+                { new TracingAttribute { Namespace = nameSpace, CaptureMode = TracingCaptureMode.Response } }
+        ) as Task;
+
+        await wrappedTask!;
+
+        // Assert
+        _mockXRayRecorder.Received(1).BeginSubsegment($"## {methodName}");
+        _mockXRayRecorder.Received(1).EndSubsegment();
+        // Verify that AddMetadata was NOT called with response
+        _mockXRayRecorder.DidNotReceive().AddMetadata(
+            Arg.Any<string>(),
+            Arg.Is<string>(s => s.EndsWith("response")),
+            Arg.Any<object>()
+        );
+    }
+
+    [Fact]
+    public async Task Around_VoidTask_HandlesExceptionCorrectly()
+    {
+        // Arrange
+        var tcs = new TaskCompletionSource();
+        const string methodName = "VoidTaskMethod";
+        const string nameSpace = "TestNamespace";
+        var expectedException = new Exception("Test exception");
+
+        // Fail the task before passing to Around
+        tcs.SetException(expectedException);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(async () =>
+        {
+            var wrappedTask = _handler.Around(
+                methodName,
+                new object[] { tcs.Task },
+                args => args[0],
+                new Attribute[]
+                    { new TracingAttribute { Namespace = nameSpace, CaptureMode = TracingCaptureMode.ResponseAndError } }
+            ) as Task;
+
+            await wrappedTask!;
+        });
+
+        // Assert
+        _mockXRayRecorder.Received(1).BeginSubsegment($"## {methodName}");
         _mockXRayRecorder.Received(1).AddMetadata(
-            "TestService",
-            $"{methodName} response",
-            null);
+            Arg.Is(nameSpace),
+            Arg.Is($"{methodName} error"),
+            Arg.Is<string>(s => s.Contains(expectedException.Message))
+        );
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+
+    [Fact]
+    public async Task Around_VoidTask_WithCancellation_EndsSegmentCorrectly()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource();
+        var tcs = new TaskCompletionSource();
+        const string methodName = "VoidTaskMethod";
+        const string nameSpace = "TestNamespace";
+
+        // Cancel before passing to Around
+        cts.Cancel();
+        tcs.SetCanceled(cts.Token);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+        {
+            var wrappedTask = _handler.Around(
+                methodName,
+                new object[] { tcs.Task },
+                args => args[0],
+                new Attribute[]
+                    { new TracingAttribute { Namespace = nameSpace, CaptureMode = TracingCaptureMode.Response } }
+            ) as Task;
+
+            await wrappedTask!;
+        });
+
+        // Assert
+        _mockXRayRecorder.Received(1).BeginSubsegment($"## {methodName}");
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+
+    [Fact]
+    public async Task Around_TaskWithResult_AddsResponseMetadata()
+    {
+        // Arrange
+        var tcs = new TaskCompletionSource<string>();
+        const string methodName = "TaskWithResultMethod";
+        const string nameSpace = "TestNamespace";
+        const string result = "test result";
+
+        // Complete the task before passing to Around
+        tcs.SetResult(result);
+
+        // Act
+        var wrappedTask = _handler.Around(
+            methodName,
+            new object[] { tcs.Task },
+            args => args[0],
+            new Attribute[]
+                { new TracingAttribute { Namespace = nameSpace, CaptureMode = TracingCaptureMode.Response } }
+        ) as Task<string>;
+
+        await wrappedTask!;
+
+        // Assert
+        _mockXRayRecorder.Received(1).BeginSubsegment($"## {methodName}");
+        _mockXRayRecorder.Received(1).AddMetadata(
+            Arg.Is(nameSpace),
+            Arg.Is($"{methodName} response"),
+            Arg.Is<string>(s => s == result)
+        );
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+
+    [Fact]
+    public async Task Around_NullResult_DoesNotAddResponseMetadata()
+    {
+        // Arrange
+        var tcs = new TaskCompletionSource<string>();
+        const string methodName = "NullResultMethod";
+        const string nameSpace = "TestNamespace";
+
+        // Complete the task with null before passing to Around
+        tcs.SetResult(null!);
+
+        // Act
+        var wrappedTask = _handler.Around(
+            methodName,
+            new object[] { tcs.Task },
+            args => args[0],
+            new Attribute[]
+                { new TracingAttribute { Namespace = nameSpace, CaptureMode = TracingCaptureMode.Response } }
+        ) as Task<string>;
+
+        await wrappedTask!;
+
+        // Assert
+        _mockXRayRecorder.Received(1).BeginSubsegment($"## {methodName}");
+        _mockXRayRecorder.Received(1).EndSubsegment();
+        // Verify that AddMetadata was NOT called with response
+        _mockXRayRecorder.DidNotReceive().AddMetadata(
+            Arg.Any<string>(),
+            Arg.Is<string>(s => s.EndsWith("response")),
+            Arg.Any<object>()
+        );
+    }
+
+    [Fact]
+    public async Task Around_TracingDisabled_DoesNotAddSegments()
+    {
+        // Arrange
+        _mockConfigurations.TracingDisabled.Returns(true);
+        var tcs = new TaskCompletionSource();
+        const string methodName = "DisabledTracingMethod";
+
+        // Complete the task before passing to Around
+        tcs.SetResult();
+
+        // Act
+        var wrappedTask = _handler.Around(
+            methodName,
+            new object[] { tcs.Task },
+            args => args[0],
+            new Attribute[]
+                { new TracingAttribute() }
+        ) as Task;
+
+        await wrappedTask!;
+
+        // Assert
+        _mockXRayRecorder.DidNotReceive().BeginSubsegment(Arg.Any<string>());
+        _mockXRayRecorder.DidNotReceive().EndSubsegment();
+        _mockXRayRecorder.DidNotReceive().AddMetadata(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<object>()
+        );
     }
 }
