@@ -244,7 +244,7 @@ under a subsegment, or you are doing multithreaded programming. Refer examples b
     }
     ```
 
-## Instrumenting SDK clients and HTTP calls
+## Instrumenting SDK clients
 
 You should make sure to instrument the SDK clients explicitly based on the function dependency. You can instrument all of your AWS SDK for .NET clients by calling RegisterForAllServices before you create them.
 
@@ -277,25 +277,98 @@ To instrument clients for some services and not others, call Register instead of
 Tracing.Register<IAmazonDynamoDB>()
 ```
 
-This functionality is a thin wrapper for AWS X-Ray .NET SDK. Refer details on [how to instrument SDK client with Xray](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-sdkclients.html) and [outgoing http calls](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-httpclients.html).
+This functionality is a thin wrapper for AWS X-Ray .NET SDK. Refer details on [how to instrument SDK client with Xray](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-sdkclients.html)
+
+## Instrumenting outgoing HTTP calls 
+
+=== "Function.cs"
+
+    ```c# hl_lines="7"
+    using Amazon.XRay.Recorder.Handlers.System.Net;
+    
+    public class Function
+    {
+        public Function()
+        {
+            var httpClient = new HttpClient(new HttpClientXRayTracingHandler(new HttpClientHandler()));
+            var myIp = await httpClient.GetStringAsync("https://checkip.amazonaws.com/");
+        }
+    }
+    ```
+
+More information about instrumenting [outgoing http calls](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-httpclients.html).
 
 ## AOT Support
 
 Native AOT trims your application code as part of the compilation to ensure that the binary is as small as possible. .NET 8 for Lambda provides improved trimming support compared to previous versions of .NET.
 
-These improvements offer the potential to eliminate build-time trimming warnings, but .NET will never be completely trim safe. This means that parts of libraries that your function relies on may be trimmed out as part of the compilation step. You can manage this by defining TrimmerRootAssemblies as part of your `.csproj` file as shown in the following example.
 
-For the Tracing utility to work correctly and without trim warnings please add the following to your `.csproj` file
+### WithTracing()
 
-```xml
-<ItemGroup>
-    <TrimmerRootAssembly Include="AWSSDK.Core" />
-    <TrimmerRootAssembly Include="AWSXRayRecorder.Core" />
-    <TrimmerRootAssembly Include="AWSXRayRecorder.Handlers.AwsSdk" />
-    <TrimmerRootAssembly Include="Amazon.Lambda.APIGatewayEvents" />
-</ItemGroup>
-```
+To use Tracing utility with AOT support you first need to add `WithTracing()` to the source generator you are using either the default `SourceGeneratorLambdaJsonSerializer`
+or the Powertools Logging utility [source generator](logging.md#aot-support){:target="_blank"} `PowertoolsSourceGeneratorSerializer`.
 
-Note that when you receive a trim warning, adding the class that generates the warning to TrimmerRootAssembly might not resolve the issue. A trim warning indicates that the class is trying to access some other class that can't be determined until runtime. To avoid runtime errors, add this second class to TrimmerRootAssembly.
+Examples:
 
-To learn more about managing trim warnings, see [Introduction to trim warnings](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings) in the Microsoft .NET documentation.
+=== "Without Powertools Logging"
+
+    ```c# hl_lines="8"
+    using AWS.Lambda.Powertools.Tracing;
+    using AWS.Lambda.Powertools.Tracing.Serializers;
+
+    private static async Task Main()
+    {
+        Func<string, ILambdaContext, string> handler = FunctionHandler;
+        await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>()
+        .WithTracing())
+            .Build()
+            .RunAsync();
+    }
+    ```
+
+=== "With Powertools Logging"
+
+    ```c# hl_lines="10 11"
+    using AWS.Lambda.Powertools.Logging;
+    using AWS.Lambda.Powertools.Logging.Serializers;
+    using AWS.Lambda.Powertools.Tracing;
+    using AWS.Lambda.Powertools.Tracing.Serializers;
+
+    private static async Task Main()
+    {
+        Func<string, ILambdaContext, string> handler = FunctionHandler;
+        await LambdaBootstrapBuilder.Create(handler, 
+            new PowertoolsSourceGeneratorSerializer<LambdaFunctionJsonSerializerContext>()
+            .WithTracing())
+                .Build()
+                .RunAsync();
+    }
+    ```
+
+### Publishing
+
+!!! warning "Publishing"
+    Make sure you are publishing your code with `--self-contained true` and that you have `<TrimMode>partial</TrimMode>` in your `.csproj` file 
+
+### Trimming
+
+!!! warning "Trim warnings"
+    ```xml
+    <ItemGroup>
+        <TrimmerRootAssembly Include="AWSSDK.Core" />
+        <TrimmerRootAssembly Include="AWSXRayRecorder.Core" />
+        <TrimmerRootAssembly Include="AWSXRayRecorder.Handlers.AwsSdk" />
+        <TrimmerRootAssembly Include="Amazon.Lambda.APIGatewayEvents" />
+        <TrimmerRootAssembly Include="bootstrap" />
+        <TrimmerRootAssembly Include="Shared" />
+    </ItemGroup>
+    ```
+
+    Note that when you receive a trim warning, adding the class that generates the warning to TrimmerRootAssembly might not resolve the issue. A trim warning indicates that the class is trying to access some other class that can't be determined until runtime. To avoid runtime errors, add this second class to TrimmerRootAssembly. 
+    
+    To learn more about managing trim warnings, see [Introduction to trim warnings](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings) in the Microsoft .NET documentation.
+
+### Not supported
+
+!!! warning "Not supported"
+    Currently instrumenting SDK clients with `Tracing.RegisterForAllServices()` is not supported on AOT mode.
