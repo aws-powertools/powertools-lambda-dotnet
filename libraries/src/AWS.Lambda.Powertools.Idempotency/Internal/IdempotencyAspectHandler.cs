@@ -18,6 +18,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
+using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal;
@@ -184,7 +185,7 @@ internal class IdempotencyAspectHandler<T>
             default:
                 try
                 {
-                    var result = JsonSerializer.Deserialize<T>(record.ResponseData!);
+                    var result = IdempotencySerializer.Deserialize<T>(record.ResponseData!);
                     if (result is null)
                     {
                         throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);

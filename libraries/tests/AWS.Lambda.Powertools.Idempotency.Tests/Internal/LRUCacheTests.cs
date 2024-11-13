@@ -127,7 +127,7 @@ public class LRUCacheTests
             tasks.Add(Task.Run(() => StoreElement(cache, numOfOps)));
         }
 
-        await Task.WhenAll(tasks).ConfigureAwait(false);
+        await Task.WhenAll(tasks);
 
         for (var i = numOfOps - numOfThreads; i < numOfOps; i++)
         {

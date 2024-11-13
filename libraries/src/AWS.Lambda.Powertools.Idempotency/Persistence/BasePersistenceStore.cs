@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
+using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 using AWS.Lambda.Powertools.JMESPath;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
@@ -95,7 +96,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="now">The current date time</param>
     public virtual async Task SaveSuccess(JsonDocument data, object result, DateTimeOffset now)
     {
-        var responseJson = JsonSerializer.Serialize(result);
+        var responseJson = IdempotencySerializer.Serialize(result, typeof(object));
         var record = new DataRecord(
             GetHashedIdempotencyKey(data),
             DataRecord.DataRecordStatus.COMPLETED,
@@ -323,7 +324,13 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <exception cref="ArgumentException"></exception>
     internal string GenerateHash(JsonElement data)
     {
+#if NET8_0_OR_GREATER
+        // starting .NET 8 no option to change hash algorithm
+        using var hashAlgorithm = MD5.Create();
+#else
+
         using var hashAlgorithm = HashAlgorithm.Create(_idempotencyOptions.HashFunction);
+#endif
         if (hashAlgorithm == null)
         {
             throw new ArgumentException("Invalid HashAlgorithm");

@@ -21,6 +21,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
+using AWS.Lambda.Powertools.Idempotency.Tests.Model;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 
@@ -32,6 +33,9 @@ public class IdempotencyFunction
     {
         Idempotency.Configure(builder =>
             builder
+#if NET8_0_OR_GREATER
+                .WithJsonSerializationContext(TestJsonSerializerContext.Default)
+#endif
                 .WithOptions(optionsBuilder =>
                     optionsBuilder
                         .WithEventKeyJmesPath("powertools_json(Body).address")
