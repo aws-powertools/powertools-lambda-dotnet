@@ -39,25 +39,39 @@ public class FunctionHandler
         Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
     }
     
-    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "ServiceName", CaptureColdStart = true)]
     public void AddMultipleDimensions()
     {
-        Metrics.SetDefaultDimensions(new Dictionary<string, string> {
-            { "Default", "Initial" }
-        });
-        Metrics.PushSingleMetric("Lambda Execute", 1, MetricUnit.Count, metricResolution: MetricResolution.High, nameSpace: "ns1",
+        Metrics.PushSingleMetric("SingleMetric1", 1, MetricUnit.Count, metricResolution: MetricResolution.High,
             defaultDimensions: new Dictionary<string, string> {
-                { "Type", "Start" }
+                { "Default1", "SingleMetric1" }
             });
         
-        Metrics.PushSingleMetric("Lambda Execute", 1, MetricUnit.Count, metricResolution: MetricResolution.High,  nameSpace: "ns2",
+        Metrics.PushSingleMetric("SingleMetric2", 1, MetricUnit.Count, metricResolution: MetricResolution.High,  nameSpace: "ns2",
             defaultDimensions: new Dictionary<string, string> {
-                { "Type", "Start" },
-                { "SessionId", "Unset" }
+                { "Default1", "SingleMetric2" },
+                { "Default2", "SingleMetric2" }
             });
-        Metrics.AddMetric("Lambda Execute", 1, MetricUnit.Count, MetricResolution.High);
-        Metrics.AddDimension("SessionId", "MySessionId");
-        Metrics.AddDimension("Type", "Start");
+        Metrics.AddMetric("AddMetric", 1, MetricUnit.Count, MetricResolution.High);
+        Metrics.AddMetric("AddMetric2", 1, MetricUnit.Count, MetricResolution.High);
+    }
+    
+    [Metrics(Namespace = "ExampleApplication")]
+    public void PushSingleMetricWithNamespace()
+    {
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, metricResolution: MetricResolution.High,
+            defaultDimensions: new Dictionary<string, string> {
+                { "Default", "SingleMetric" }
+            });
+    }
+    
+    [Metrics]
+    public void PushSingleMetricWithEnvNamespace()
+    {
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, metricResolution: MetricResolution.High,
+            defaultDimensions: new Dictionary<string, string> {
+                { "Default", "SingleMetric" }
+            });
     }
 
     [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]

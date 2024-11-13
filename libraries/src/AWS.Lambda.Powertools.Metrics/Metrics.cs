@@ -1,12 +1,12 @@
 ﻿/*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -31,7 +31,7 @@ public class Metrics : IMetrics, IDisposable
     ///     The instance
     /// </summary>
     private static IMetrics _instance;
-    
+
     /// <summary>
     ///     The context
     /// </summary>
@@ -46,7 +46,7 @@ public class Metrics : IMetrics, IDisposable
     ///     If true, Powertools for AWS Lambda (.NET) will throw an exception on empty metrics when trying to flush
     /// </summary>
     private readonly bool _raiseOnEmptyMetrics;
-    
+
     /// <summary>
     ///     The capture cold start enabled
     /// </summary>
@@ -76,9 +76,8 @@ public class Metrics : IMetrics, IDisposable
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
         _captureColdStartEnabled = captureColdStartEnabled;
         _context = InitializeContext(nameSpace, service, null);
-        
+
         _powertoolsConfigurations.SetExecutionEnvironment(this);
-        
     }
 
     /// <summary>
@@ -96,9 +95,11 @@ public class Metrics : IMetrics, IDisposable
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(
-                nameof(key), "'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
-        
-        if (value < 0) {
+                nameof(key),
+                "'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+
+        if (value < 0)
+        {
             throw new ArgumentException(
                 "'AddMetric' method requires a valid metrics value. Value must be >= 0.", nameof(value));
         }
@@ -106,8 +107,8 @@ public class Metrics : IMetrics, IDisposable
         lock (_lockObj)
         {
             var metrics = _context.GetMetrics();
-        
-            if (metrics.Count > 0 && 
+
+            if (metrics.Count > 0 &&
                 (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
                  metrics.FirstOrDefault(x => x.Name == key)
                      ?.Values.Count == PowertoolsConfigurations.MaxMetrics))
@@ -134,7 +135,14 @@ public class Metrics : IMetrics, IDisposable
     /// <returns>Namespace identifier</returns>
     string IMetrics.GetNamespace()
     {
-        return _context.GetNamespace();
+        try
+        {
+            return _context.GetNamespace();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -143,7 +151,14 @@ public class Metrics : IMetrics, IDisposable
     /// <returns>System.String.</returns>
     string IMetrics.GetService()
     {
-        return _context.GetService();
+        try
+        {
+            return _context.GetService();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -226,7 +241,7 @@ public class Metrics : IMetrics, IDisposable
         {
             if (!_captureColdStartEnabled)
                 Console.WriteLine(
-                    "##WARNING## Metrics and Metadata have not been specified. No data will be sent to Cloudwatch Metrics.");
+                    "##User-WARNING## No application metrics to publish. The cold-start metric may be published if enabled. If application metrics should never be empty, consider using 'RaiseOnEmptyMetrics = true'");
         }
     }
     
@@ -283,7 +298,7 @@ public class Metrics : IMetrics, IDisposable
         Dispose(true);
         GC.SuppressFinalize(this);
     }
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -356,7 +371,7 @@ public class Metrics : IMetrics, IDisposable
     {
         _instance.SetDefaultDimensions(defaultDimensions);
     }
-    
+
     /// <summary>
     ///     Clears both default dimensions and dimensions lists
     /// </summary>
@@ -389,14 +404,14 @@ public class Metrics : IMetrics, IDisposable
     /// <param name="defaultDimensions">Default dimensions list</param>
     /// <param name="metricResolution">Metrics resolution</param>
     public static void PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace = null,
-        string service = null, Dictionary<string, string> defaultDimensions = null, MetricResolution metricResolution = MetricResolution.Default)
+        string service = null, Dictionary<string, string> defaultDimensions = null,
+        MetricResolution metricResolution = MetricResolution.Default)
     {
         _instance.PushSingleMetric(metricName, value, unit, nameSpace, service, defaultDimensions, metricResolution);
     }
 
     /// <summary>
-    ///     Sets global namespace, service name and default dimensions list. Service name is automatically added as a default
-    ///     dimension
+    ///     Sets global namespace, service name and default dimensions list. 
     /// </summary>
     /// <param name="nameSpace">Metrics namespace</param>
     /// <param name="service">Service Name</param>
@@ -406,19 +421,26 @@ public class Metrics : IMetrics, IDisposable
         Dictionary<string, string> defaultDimensions)
     {
         var context = new MetricsContext();
+        var defaultDimensionsList = DictionaryToList(defaultDimensions);
 
         context.SetNamespace(!string.IsNullOrWhiteSpace(nameSpace)
             ? nameSpace
-            : _powertoolsConfigurations.MetricsNamespace);
+            :  _instance.GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace);
 
-        context.SetService(!string.IsNullOrWhiteSpace(service)
+        // this needs to check if service is set through code or env variables
+        // the default value service_undefined has to be ignored and return null so it is not added as default
+        // TODO: Check if there is a way to get the default dimensions and if it makes sense     
+        var parsedService = !string.IsNullOrWhiteSpace(service)
             ? service
-            : _powertoolsConfigurations.Service);
+            : _powertoolsConfigurations.Service == "service_undefined"
+                ? null
+                : _powertoolsConfigurations.Service;
 
-        var defaultDimensionsList = DictionaryToList(defaultDimensions);
-
-        // Add service as a default dimension
-        defaultDimensionsList.Add(new DimensionSet("Service", context.GetService()));
+        if (parsedService != null)
+        {
+            context.SetService(parsedService);
+            defaultDimensionsList.Add(new DimensionSet("Service", context.GetService()));
+        }
 
         context.SetDefaultDimensions(defaultDimensionsList);
 
