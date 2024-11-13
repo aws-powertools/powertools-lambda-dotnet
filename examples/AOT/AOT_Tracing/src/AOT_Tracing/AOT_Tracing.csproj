@@ -20,6 +20,6 @@
         <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.10.0"/>
         <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0"/>
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3"/>
-        <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.5.1" />
+        <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.6.0" />
     </ItemGroup>
 </Project>
