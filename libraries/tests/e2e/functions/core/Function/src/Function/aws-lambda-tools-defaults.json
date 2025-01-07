@@ -9,6 +9,5 @@
   "region": "",
   "configuration": "Release",
   "function-memory-size": 512,
-  "function-timeout": 30,
-  "function-handler": "LoggingFunction::LoggingFunction.Function::FunctionHandler"
+  "function-timeout": 30
 }

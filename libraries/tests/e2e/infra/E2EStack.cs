@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using Amazon.CDK;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
+using Architecture = Amazon.CDK.AWS.Lambda.Architecture;
 
 namespace E2E
 {
@@ -8,73 +10,72 @@ namespace E2E
     {
         internal E2EStack(Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
-            new FunctionConstruct(this, "lambda_x86_net8", new FunctionConstructProps
+            new FunctionConstruct(this, "lambda_X64_net8", new FunctionConstructProps
             {
                 Runtime = Runtime.DOTNET_8,
                 Architecture = Architecture.X86_64,
-                Name = "E2ETestLambda_X86_NET8",
-                Handler = "LoggingFunction::LoggingFunction.Function::FunctionHandler",
-                SourcePath = "../lambdas/LoggingFunction/src/LoggingFunction",
-                DistPath = "../lambdas/LoggingFunction/dist"
+                Name = "E2ETestLambda_X64_NET8",
+                Handler = "Function::Function.Function::FunctionHandler",
+                SourcePath = "../functions/core/Function/src/Function",
+                DistPath = "../functions/core/Function/dist"
             });
             new FunctionConstruct(this, "lambda_arm_net8", new FunctionConstructProps
             {
                 Runtime = Runtime.DOTNET_8,
                 Architecture = Architecture.ARM_64,
                 Name = "E2ETestLambda_ARM_NET8",
-                Handler = "LoggingFunction::LoggingFunction.Function::FunctionHandler",
-                SourcePath = "../lambdas/LoggingFunction/src/LoggingFunction",
-                DistPath = "../lambdas/LoggingFunction/dist"
+                Handler = "Function::Function.Function::FunctionHandler",
+                SourcePath = "../functions/core/Function/src/Function",
+                DistPath = "../functions/core/Function/dist"
             });
-            new FunctionConstruct(this, "lambda_x86_net6", new FunctionConstructProps
+            new FunctionConstruct(this, "lambda_X64_net6", new FunctionConstructProps
             {
                 Runtime = Runtime.DOTNET_6,
                 Architecture = Architecture.X86_64,
-                Name = "E2ETestLambda_X86_NET6",
-                Handler = "LoggingFunction::LoggingFunction.Function::FunctionHandler",
-                SourcePath = "../lambdas/LoggingFunction/src/LoggingFunction",
-                DistPath = "../lambdas/LoggingFunction/dist"
+                Name = "E2ETestLambda_X64_NET6",
+                Handler = "Function::Function.Function::FunctionHandler",
+                SourcePath = "../functions/core/Function/src/Function",
+                DistPath = "../functions/core/Function/dist"
             });
             new FunctionConstruct(this, "lambda_arm_net6", new FunctionConstructProps
             {
                 Runtime = Runtime.DOTNET_6,
                 Architecture = Architecture.ARM_64,
                 Name = "E2ETestLambda_ARM_NET6",
-                Handler = "LoggingFunction::LoggingFunction.Function::FunctionHandler",
-                SourcePath = "../lambdas/LoggingFunction/src/LoggingFunction",
-                DistPath = "../lambdas/LoggingFunction/dist"
+                Handler = "Function::Function.Function::FunctionHandler",
+                SourcePath = "../functions/core/Function/src/Function",
+                DistPath = "../functions/core/Function/dist"
             });
-            // var lambda = new Function(this, "Lambda", new FunctionProps
-            // {
-            //     Runtime = Runtime.DOTNET_8,
-            //     Architecture = Architecture.X86_64,
-            //     FunctionName = "E2ETestLambda_X86_NET8",
-            //     Handler = "LoggingFunction::LoggingFunction.Function::FunctionHandler",
-            //     Code = Code.FromCustomCommand("../lambdas/LoggingFunction/dist",
-            //         [
-            //             "dotnet-lambda package -pl ../lambdas/LoggingFunction/src/LoggingFunction -o ../lambdas/LoggingFunction/dist"
-            //         ],
-            //         new CustomCommandOptions
-            //         {
-            //             CommandOptions = new Dictionary<string, object> {{"shell", true }}
-            //         })
-            // });
-            //
-            // var lambdaARM = new Function(this, "Lambda", new FunctionProps
-            // {
-            //     Runtime = Runtime.DOTNET_8,
-            //     Architecture = Architecture.ARM_64,
-            //     FunctionName = "E2ETestLambda_ARM_NET8",
-            //     Handler = "LoggingFunction::LoggingFunction.Function::FunctionHandler",
-            //     Code = Code.FromCustomCommand("../lambdas/LoggingFunction/dist",
-            //         [
-            //             "dotnet-lambda package -pl ../lambdas/LoggingFunction/src/LoggingFunction -o ../lambdas/LoggingFunction/dist"
-            //         ],
-            //         new CustomCommandOptions
-            //         {
-            //             CommandOptions = new Dictionary<string, object> {{"shell", true }}
-            //         })
-            // });
+
+            // AOT
+
+            if (RuntimeInformation.OSArchitecture == System.Runtime.InteropServices.Architecture.Arm64)
+            {
+                new FunctionConstruct(this, "lambda_ARM_aot_net8", new FunctionConstructProps
+                {
+                    Runtime = Runtime.DOTNET_8,
+                    Architecture = Architecture.ARM_64,
+                    Name = "E2ETestLambda_ARM_AOT_NET8",
+                    Handler = "AOT-Function",
+                    SourcePath = "../functions/core/AOT-Function/src/AOT-Function",
+                    DistPath = "../functions/core/AOT-Function/dist",
+                    UseContainerForBuild = true
+                });
+            }
+
+            if (RuntimeInformation.OSArchitecture == System.Runtime.InteropServices.Architecture.X64)
+            {
+                new FunctionConstruct(this, "lambda_ARM_X64_net8", new FunctionConstructProps
+                {
+                    Runtime = Runtime.DOTNET_8,
+                    Architecture = Architecture.X86_64,
+                    Name = "E2ETestLambda_X64_AOT_NET8",
+                    Handler = "AOT-Function",
+                    SourcePath = "../functions/core/AOT-Function/src/AOT-Function",
+                    DistPath = "../functions/core/AOT-Function/dist",
+                    UseContainerForBuild = true
+                });
+            }
         }
     }
 }

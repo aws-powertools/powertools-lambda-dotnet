@@ -5,7 +5,7 @@ using Amazon.Lambda.Model;
 using Amazon.Lambda.TestUtilities;
 using Xunit.Abstractions;
 
-namespace LoggingFunction.Tests;
+namespace Function.Tests;
 
 public class FunctionTest
 {
@@ -19,9 +19,9 @@ public class FunctionTest
     }
     
     [Theory]
-    [InlineData("E2ETestLambda_X86_NET6")]
+    [InlineData("E2ETestLambda_X64_NET6")]
     [InlineData("E2ETestLambda_ARM_NET6")]
-    [InlineData("E2ETestLambda_X86_NET8")]
+    [InlineData("E2ETestLambda_X64_NET8")]
     [InlineData("E2ETestLambda_ARM_NET8")]
     public async Task TestToUpperFunction(string functionName)
     {
