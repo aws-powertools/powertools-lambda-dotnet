@@ -48,6 +48,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E2E", "tests\e2e\infra\E2E.csproj", "{AA532674-A61C-41E6-8F9A-ED53D79AF1EC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{AAFA39E9-66A3-4B9A-AFE9-EAF74A85A7F0}"
+	ProjectSection(SolutionItems) = preProject
+		tests\e2e\functions\core\payload.json = tests\e2e\functions\core\payload.json
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Function", "tests\e2e\functions\core\Function\src\Function\Function.csproj", "{325B981A-D675-4502-A24E-63F6B5D2C557}"
 EndProject
@@ -56,6 +59,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AOT-Function", "tests\e2e\functions\core\AOT-Function\src\AOT-Function\AOT-Function.csproj", "{732CDC0A-0661-4080-877B-3149D03269B4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AOT-Function.Tests", "tests\e2e\functions\core\AOT-Function\test\AOT-Function.Tests\AOT-Function.Tests.csproj", "{A633367A-8F14-45CC-B648-7C0651029791}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestUtils", "tests\e2e\functions\TestUtils\TestUtils.csproj", "{3C6162D7-0162-4BC2-BBF5-0554539A81CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -322,6 +327,18 @@ Global
 		{A633367A-8F14-45CC-B648-7C0651029791}.Release|x64.Build.0 = Release|Any CPU
 		{A633367A-8F14-45CC-B648-7C0651029791}.Release|x86.ActiveCfg = Release|Any CPU
 		{A633367A-8F14-45CC-B648-7C0651029791}.Release|x86.Build.0 = Release|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Debug|x64.Build.0 = Debug|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Debug|x86.Build.0 = Debug|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Release|x64.ActiveCfg = Release|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Release|x64.Build.0 = Release|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Release|x86.ActiveCfg = Release|Any CPU
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 
 	GlobalSection(NestedProjects) = preSolution
@@ -350,5 +367,6 @@ Global
 		{6F919866-7E7B-4914-9ED9-520F524150E5} = {AAFA39E9-66A3-4B9A-AFE9-EAF74A85A7F0}
 		{732CDC0A-0661-4080-877B-3149D03269B4} = {AAFA39E9-66A3-4B9A-AFE9-EAF74A85A7F0}
 		{A633367A-8F14-45CC-B648-7C0651029791} = {AAFA39E9-66A3-4B9A-AFE9-EAF74A85A7F0}
+		{3C6162D7-0162-4BC2-BBF5-0554539A81CD} = {CDAE55EB-9438-4F54-B7ED-931D64324D5F}
 	EndGlobalSection
 EndGlobal

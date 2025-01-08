@@ -1,3 +1,4 @@
+using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Logging;
 
@@ -8,15 +9,42 @@ namespace Function;
 
 public class Function
 {
-    /// <summary>
-    /// A simple function that takes a string and does a ToUpper
-    /// </summary>
-    /// <param name="input">The event for the Lambda function handler to process.</param>
-    /// <param name="context">The ILambdaContext that provides methods for logging and describing the Lambda environment.</param>
-    /// <returns></returns>
-    public string FunctionHandler(string input, ILambdaContext context)
+    [Logging(LogEvent = true, LoggerOutputCase = LoggerOutputCase.PascalCase, Service = "TestService", 
+            CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest)]
+    public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigwProxyEvent, ILambdaContext context)
     {
         Logger.LogInformation("Processing request started");
-        return input.ToUpper();
+        
+        var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
+        var lookupInfo = new Dictionary<string, object>()
+        {
+            {"LookupInfo", new Dictionary<string, object>{{ "LookupId", requestContextRequestId }}}
+        };  
+        
+        var customKeys = new Dictionary<string, string>
+        {
+            {"test1", "value1"}, 
+            {"test2", "value2"}
+        };
+        
+        Logger.AppendKeys(lookupInfo);
+        Logger.AppendKeys(customKeys);
+        
+        Logger.LogWarning("Warn with additional keys");
+        
+        Logger.RemoveKeys("test1", "test2");
+        
+        var error = new InvalidOperationException("Parent exception message",
+            new ArgumentNullException(nameof(apigwProxyEvent),
+                new Exception("Very important nested inner exception message")));
+        Logger.LogError(error, "Oops something went wrong");
+        
+        
+        
+        return new APIGatewayProxyResponse()
+        {
+            StatusCode = 200,
+            Body = apigwProxyEvent.Body.ToUpper()
+        };
     }
 }
