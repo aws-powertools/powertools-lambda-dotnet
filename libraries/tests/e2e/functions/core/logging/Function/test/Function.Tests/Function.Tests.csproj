@@ -6,6 +6,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" />
     <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0" />
     <PackageReference Include="Amazon.Lambda.TestUtilities" Version="2.0.0" />
     <PackageReference Include="AWSSDK.Lambda" Version="3.7.411.16" />
@@ -14,6 +15,8 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AOT-Function\AOT-Function.csproj" />
+    <ProjectReference Include="..\..\..\..\..\TestUtils\TestUtils.csproj" />
+    <ProjectReference Include="..\..\..\AOT-Function\src\AOT-Function\AOT-Function.csproj" />
+    <ProjectReference Include="..\..\src\Function\Function.csproj" />
   </ItemGroup>
 </Project>

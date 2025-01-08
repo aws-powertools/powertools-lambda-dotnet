@@ -12,7 +12,7 @@ public class FunctionConstructProps
     public string Handler;
     public string SourcePath;
     public string DistPath;
-    public bool UseContainerForBuild;
+    public bool IsAot;
 }
 
 public class FunctionConstruct : Construct
@@ -29,7 +29,7 @@ public class FunctionConstruct : Construct
             Handler = props.Handler,
             Code = Code.FromCustomCommand(distPath,
                 [
-                    $"dotnet-lambda package -pl {props.SourcePath} -o {distPath} -f {framework} -farch {props.Architecture.Name} {(props.UseContainerForBuild ? "-cifb public.ecr.aws/sam/build-dotnet8" : "")}"
+                    $"dotnet-lambda package -pl {props.SourcePath} -o {distPath} -f {framework} -farch {props.Architecture.Name} {(props.IsAot ? "-cifb public.ecr.aws/sam/build-dotnet8" : "")}"
                 ],
                 new CustomCommandOptions
                 {
