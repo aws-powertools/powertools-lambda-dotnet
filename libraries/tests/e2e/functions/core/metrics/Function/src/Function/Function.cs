@@ -1,6 +1,6 @@
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -9,37 +9,42 @@ namespace Function;
 
 public class Function
 {
-    [Logging(LogEvent = true, LoggerOutputCase = LoggerOutputCase.PascalCase, Service = "TestService", 
-            CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest)]
+    private Dictionary<string, string> _defaultDimensions = new()
+    {
+        {"Environment", "Prod"},
+        {"Another", "One"}
+    }; 
+    
+    [Metrics(Namespace = "Test", Service = "Test", CaptureColdStart = true)]
     public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigwProxyEvent, ILambdaContext context)
     {
-        Logger.LogInformation("Processing request started");
+        Metrics.SetDefaultDimensions(_defaultDimensions);
+        Metrics.AddMetric("Invocation", 1, MetricUnit.Count);
+     
+        Metrics.AddDimension("Memory","MemoryLimitInMB");
+        Metrics.AddMetric("Memory with Environment dimension", context.MemoryLimitInMB, MetricUnit.Megabytes);
         
-        var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
-        var lookupInfo = new Dictionary<string, object>()
-        {
-            {"LookupInfo", new Dictionary<string, object>{{ "LookupId", requestContextRequestId }}}
-        };  
+        // Publish a metric with standard resolution i.e. StorageResolution = 60
+        Metrics.AddMetric("Standard resolution", 1, MetricUnit.Count, MetricResolution.Standard);
+
+        // Publish a metric with high resolution i.e. StorageResolution = 1
+        Metrics.AddMetric("High resolution", 1, MetricUnit.Count, MetricResolution.High);
+
+        // The last parameter (storage resolution) is optional
+        Metrics.AddMetric("Default resolution", 1, MetricUnit.Count);
         
-        var customKeys = new Dictionary<string, string>
-        {
-            {"test1", "value1"}, 
-            {"test2", "value2"}
-        };
+        Metrics.AddMetadata("RequestId", apigwProxyEvent.RequestContext.RequestId);
         
-        Logger.AppendKeys(lookupInfo);
-        Logger.AppendKeys(customKeys);
-        
-        Logger.LogWarning("Warn with additional keys");
-        
-        Logger.RemoveKeys("test1", "test2");
-        
-        var error = new InvalidOperationException("Parent exception message",
-            new ArgumentNullException(nameof(apigwProxyEvent),
-                new Exception("Very important nested inner exception message")));
-        Logger.LogError(error, "Oops something went wrong");
-        
-        
+        Metrics.PushSingleMetric(
+            metricName: "SingleMetric",
+            value: 1,
+            unit: MetricUnit.Count,
+            nameSpace: "Test",
+            service: "Test",
+            defaultDimensions: new Dictionary<string, string>
+            {
+                {"FunctionContext", "$LATEST"}
+            });
         
         return new APIGatewayProxyResponse()
         {

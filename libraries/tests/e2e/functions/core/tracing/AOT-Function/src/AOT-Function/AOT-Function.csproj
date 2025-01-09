@@ -23,6 +23,6 @@
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" />
+      <ProjectReference Include="..\..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Tracing\AWS.Lambda.Powertools.Tracing.csproj" />
     </ItemGroup>
 </Project>

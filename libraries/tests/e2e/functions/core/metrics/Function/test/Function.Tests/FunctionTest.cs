@@ -20,17 +20,18 @@ public class FunctionTest
     }
 
     [Theory]
-    [InlineData("E2ETestLambda_X64_NET6")]
-    [InlineData("E2ETestLambda_ARM_NET6")]
-    [InlineData("E2ETestLambda_X64_NET8")]
-    [InlineData("E2ETestLambda_ARM_NET8")]
-    public async Task TestToUpperFunction(string functionName)
+    [InlineData("E2ETestLambda_X64_NET6_metrics")]
+    [InlineData("E2ETestLambda_ARM_NET6_metrics")]
+    [InlineData("E2ETestLambda_X64_NET8_metrics")]
+    [InlineData("E2ETestLambda_ARM_NET8_metrics")]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics")]
+    public async Task TestFunction(string functionName)
     {
         var request = new InvokeRequest
         {
             FunctionName = functionName,
             InvocationType = InvocationType.RequestResponse,
-            Payload = await File.ReadAllTextAsync("../../../../../../payload.json"),
+            Payload = await File.ReadAllTextAsync("../../../../../../../payload.json"),
             LogType = LogType.Tail
         };
 
@@ -67,189 +68,143 @@ public class FunctionTest
         _testOutputHelper.WriteLine(logResult);
         var output = OutputLogParser.ParseLogSegments(logResult, out var report);
         var isColdStart = report.initDuration != "N/A";
-        
-        // Assert Logging utility
-        AssertEventLog(functionName, isColdStart, output[0]);
-        AssertInformationLog(functionName, isColdStart, output[1]);
-        AssertWarningLog(functionName, isColdStart, output[2]);
-        AssertExceptionLog(functionName, isColdStart, output[3]);
+        var index = 0;
+        if (isColdStart)
+        {
+            AssertColdStart(output[index]);
+            index += 1;
+        }
+
+        AssertSingleMetric(output[index]);
+        AssertMetricsDimensionsMetadata(output[index + 1]);
     }
 
-    private void AssertEventLog(string functionName, bool isColdStart, string output)
+    private void AssertMetricsDimensionsMetadata(string output)
     {
         using JsonDocument doc = JsonDocument.Parse(output);
         JsonElement root = doc.RootElement;
+
+        Assert.True(root.TryGetProperty("_aws", out JsonElement awsElement));
         
-        AssertDefaultLoggingProperties.ArePresent(functionName, isColdStart, output);
-        
-        if (!isColdStart)
-        {
-            Assert.True(root.TryGetProperty("LookupInfo", out JsonElement lookupInfoElement));
-            Assert.True(lookupInfoElement.TryGetProperty("LookupId", out JsonElement lookupIdElement));
-            Assert.Equal("c6af9ac6-7b61-11e6-9a41-93e8deadbeef", lookupIdElement.GetString());
-        }
+        Assert.True(awsElement.TryGetProperty("CloudWatchMetrics", out JsonElement cloudWatchMetricsElement));
+        Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Namespace", out JsonElement namespaceElement));
+        Assert.Equal("Test", namespaceElement.GetString());
 
-        Assert.True(root.TryGetProperty("Level", out JsonElement levelElement));
-        Assert.Equal("Information", levelElement.GetString());
+        Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Metrics", out JsonElement metricsElement));
 
-        Assert.True(root.TryGetProperty("Message", out JsonElement messageElement));
-        Assert.True(messageElement.TryGetProperty("Resource", out JsonElement resourceElement));
-        Assert.Equal("/{proxy+}", resourceElement.GetString());
+        Assert.True(metricsElement[0].TryGetProperty("Name", out JsonElement nameElement));
+        Assert.Equal("Invocation", nameElement.GetString());
+        Assert.True(metricsElement[0].TryGetProperty("Unit", out JsonElement unitElement));
+        Assert.Equal("Count", unitElement.GetString());
 
-        Assert.True(messageElement.TryGetProperty("Path", out JsonElement pathElement));
-        Assert.Equal("/path/to/resource", pathElement.GetString());
+        Assert.True(metricsElement[1].TryGetProperty("Name", out JsonElement nameElement2));
+        Assert.Equal("Memory with Environment dimension", nameElement2.GetString());
+        Assert.True(metricsElement[1].TryGetProperty("Unit", out JsonElement unitElement2));
+        Assert.Equal("Megabytes", unitElement2.GetString());
 
-        Assert.True(messageElement.TryGetProperty("HttpMethod", out JsonElement httpMethodElement));
-        Assert.Equal("POST", httpMethodElement.GetString());
+        Assert.True(metricsElement[2].TryGetProperty("Name", out JsonElement nameElement3));
+        Assert.Equal("Standard resolution", nameElement3.GetString());
+        Assert.True(metricsElement[2].TryGetProperty("Unit", out JsonElement unitElement3));
+        Assert.Equal("Count", unitElement3.GetString());
+        Assert.True(metricsElement[2].TryGetProperty("StorageResolution", out JsonElement storageResolutionElement));
+        Assert.Equal(60, storageResolutionElement.GetInt32());
 
-        Assert.True(messageElement.TryGetProperty("Headers", out JsonElement headersElement));
-        Assert.True(headersElement.TryGetProperty("Accept-Encoding", out JsonElement acceptEncodingElement));
-        Assert.Equal("gzip, deflate, sdch", acceptEncodingElement.GetString());
+        Assert.True(metricsElement[3].TryGetProperty("Name", out JsonElement nameElement4));
+        Assert.Equal("High resolution", nameElement4.GetString());
+        Assert.True(metricsElement[3].TryGetProperty("Unit", out JsonElement unitElement4));
+        Assert.Equal("Count", unitElement4.GetString());
+        Assert.True(metricsElement[3].TryGetProperty("StorageResolution", out JsonElement storageResolutionElement2));
+        Assert.Equal(1, storageResolutionElement2.GetInt32());
 
-        Assert.True(headersElement.TryGetProperty("Accept-Language", out JsonElement acceptLanguageElement));
-        Assert.Equal("en-US,en;q=0.8", acceptLanguageElement.GetString());
+        Assert.True(metricsElement[4].TryGetProperty("Name", out JsonElement nameElement5));
+        Assert.Equal("Default resolution", nameElement5.GetString());
+        Assert.True(metricsElement[4].TryGetProperty("Unit", out JsonElement unitElement5));
+        Assert.Equal("Count", unitElement5.GetString());
 
-        Assert.True(headersElement.TryGetProperty("Cache-Control", out JsonElement cacheControlElement));
-        Assert.Equal("max-age=0", cacheControlElement.GetString());
+        Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Dimensions", out JsonElement dimensionsElement));
+        Assert.Equal("Service", dimensionsElement[0].GetString());
+        Assert.Equal("Environment", dimensionsElement[1].GetString());
+        Assert.Equal("Another", dimensionsElement[2].GetString());
+        Assert.Equal("Memory", dimensionsElement[3].GetString());
 
-        Assert.True(headersElement.TryGetProperty("CloudFront-Forwarded-Proto",
-            out JsonElement cloudFrontForwardedProtoElement));
-        Assert.Equal("https", cloudFrontForwardedProtoElement.GetString());
+        Assert.True(root.TryGetProperty("Service", out JsonElement serviceElement));
+        Assert.Equal("Test", serviceElement.GetString());
 
-        Assert.True(headersElement.TryGetProperty("CloudFront-Viewer-Country",
-            out JsonElement cloudFrontViewerCountryElement));
-        Assert.Equal("US", cloudFrontViewerCountryElement.GetString());
+        Assert.True(root.TryGetProperty("Environment", out JsonElement environmentElement));
+        Assert.Equal("Prod", environmentElement.GetString());
 
-        Assert.True(headersElement.TryGetProperty("Upgrade-Insecure-Requests",
-            out JsonElement upgradeInsecureRequestsElement));
-        Assert.Equal("1", upgradeInsecureRequestsElement.GetString());
+        Assert.True(root.TryGetProperty("Another", out JsonElement anotherElement));
+        Assert.Equal("One", anotherElement.GetString());
 
-        Assert.True(headersElement.TryGetProperty("User-Agent", out JsonElement userAgentElement));
-        Assert.Equal("Custom User Agent String", userAgentElement.GetString());
+        Assert.True(root.TryGetProperty("Memory", out JsonElement memoryElement));
+        Assert.Equal("MemoryLimitInMB", memoryElement.GetString());
 
-        Assert.True(headersElement.TryGetProperty("X-Forwarded-For", out JsonElement xForwardedForElement));
-        Assert.Equal("127.0.0.1, 127.0.0.2", xForwardedForElement.GetString());
+        Assert.True(root.TryGetProperty("Invocation", out JsonElement invocationElement));
+        Assert.Equal(1, invocationElement.GetInt32());
 
-        Assert.True(headersElement.TryGetProperty("X-Forwarded-Port", out JsonElement xForwardedPortElement));
-        Assert.Equal("443", xForwardedPortElement.GetString());
+        Assert.True(root.TryGetProperty("Memory with Environment dimension",
+            out JsonElement memoryWithEnvironmentElement));
+        Assert.Equal(128, memoryWithEnvironmentElement.GetInt32());
 
-        Assert.True(headersElement.TryGetProperty("X-Forwarded-Proto", out JsonElement xForwardedProtoElement));
-        Assert.Equal("https", xForwardedProtoElement.GetString());
+        Assert.True(root.TryGetProperty("Standard resolution", out JsonElement standardResolutionElement));
+        Assert.Equal(1, standardResolutionElement.GetInt32());
 
-        Assert.True(
-            messageElement.TryGetProperty("QueryStringParameters", out JsonElement queryStringParametersElement));
-        Assert.True(queryStringParametersElement.TryGetProperty("Foo", out JsonElement fooElement));
-        Assert.Equal("bar", fooElement.GetString());
+        Assert.True(root.TryGetProperty("High resolution", out JsonElement highResolutionElement));
+        Assert.Equal(1, highResolutionElement.GetInt32());
 
-        Assert.True(messageElement.TryGetProperty("RequestContext", out JsonElement requestContextElement));
-        Assert.True(requestContextElement.TryGetProperty("Path", out JsonElement requestContextPathElement));
-        Assert.Equal("/prod/path/to/resource", requestContextPathElement.GetString());
+        Assert.True(root.TryGetProperty("Default resolution", out JsonElement defaultResolutionElement));
+        Assert.Equal(1, defaultResolutionElement.GetInt32());
 
-        Assert.True(requestContextElement.TryGetProperty("AccountId", out JsonElement accountIdElement));
-        Assert.Equal("123456789012", accountIdElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("ResourceId", out JsonElement resourceIdElement));
-        Assert.Equal("123456", resourceIdElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("Stage", out JsonElement stageElement));
-        Assert.Equal("prod", stageElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("RequestId", out JsonElement requestIdElement));
+        Assert.True(root.TryGetProperty("RequestId", out JsonElement requestIdElement));
         Assert.Equal("c6af9ac6-7b61-11e6-9a41-93e8deadbeef", requestIdElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("ResourcePath", out JsonElement resourcePathElement));
-        Assert.Equal("/{proxy+}", resourcePathElement.GetString());
-
-        Assert.True(
-            requestContextElement.TryGetProperty("HttpMethod", out JsonElement requestContextHttpMethodElement));
-        Assert.Equal("POST", requestContextHttpMethodElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("ApiId", out JsonElement apiIdElement));
-        Assert.Equal("1234567890", apiIdElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("RequestTime", out JsonElement requestTimeElement));
-        Assert.Equal("09/Apr/2015:12:34:56 +0000", requestTimeElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("RequestTimeEpoch", out JsonElement requestTimeEpochElement));
-        Assert.Equal(1428582896000, requestTimeEpochElement.GetInt64());
-
-        Assert.True(messageElement.TryGetProperty("Body", out JsonElement bodyElement));
-        Assert.Equal("hello world", bodyElement.GetString());
-
-        Assert.True(messageElement.TryGetProperty("IsBase64Encoded", out JsonElement isBase64EncodedElement));
-        Assert.False(isBase64EncodedElement.GetBoolean());
     }
 
-    private void AssertInformationLog(string functionName, bool isColdStart, string output)
+    private void AssertSingleMetric(string output)
     {
         using JsonDocument doc = JsonDocument.Parse(output);
         JsonElement root = doc.RootElement;
 
-        AssertDefaultLoggingProperties.ArePresent(functionName, isColdStart, output);
-        
-        if (!isColdStart)
-        {
-            Assert.True(root.TryGetProperty("LookupInfo", out JsonElement lookupInfoElement));
-            Assert.True(lookupInfoElement.TryGetProperty("LookupId", out JsonElement lookupIdElement));
-            Assert.Equal("c6af9ac6-7b61-11e6-9a41-93e8deadbeef", lookupIdElement.GetString());
-        }
+        Assert.True(root.TryGetProperty("_aws", out JsonElement awsElement));
 
-        Assert.True(root.TryGetProperty("Level", out JsonElement levelElement));
-        Assert.Equal("Information", levelElement.GetString());
+        Assert.True(awsElement.TryGetProperty("CloudWatchMetrics", out JsonElement cloudWatchMetricsElement));
+        Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Namespace", out JsonElement namespaceElement));
+        Assert.Equal("Test", namespaceElement.GetString());
 
-        Assert.True(root.TryGetProperty("Message", out JsonElement messageElement));
-        Assert.Equal("Processing request started", messageElement.GetString());
+        Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Metrics", out JsonElement metricsElement));
+        Assert.True(metricsElement[0].TryGetProperty("Name", out JsonElement nameElement));
+        Assert.Equal("SingleMetric", nameElement.GetString());
+        Assert.True(metricsElement[0].TryGetProperty("Unit", out JsonElement unitElement));
+        Assert.Equal("Count", unitElement.GetString());
+
+        Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Dimensions", out JsonElement dimensionsElement));
+        Assert.Equal("FunctionContext", dimensionsElement[0].GetString());
+        Assert.Equal("Service", dimensionsElement[1].GetString());
+
+        Assert.True(root.TryGetProperty("FunctionContext", out JsonElement functionContextElement));
+        Assert.Equal("$LATEST", functionContextElement.GetString());
+
+        Assert.True(root.TryGetProperty("Service", out JsonElement serviceElement));
+        Assert.Equal("Test", serviceElement.GetString());
+
+        Assert.True(root.TryGetProperty("SingleMetric", out JsonElement singleMetricElement));
+        Assert.Equal(1, singleMetricElement.GetInt32());
     }
 
-    private static void AssertWarningLog(string functionName, bool isColdStart, string output)
+    private void AssertColdStart(string output)
     {
         using JsonDocument doc = JsonDocument.Parse(output);
         JsonElement root = doc.RootElement;
-        
-        AssertDefaultLoggingProperties.ArePresent(functionName, isColdStart, output);
 
-        Assert.True(root.TryGetProperty("LookupInfo", out JsonElement lookupInfoElement));
-        Assert.True(lookupInfoElement.TryGetProperty("LookupId", out JsonElement lookupIdElement));
-        Assert.Equal("c6af9ac6-7b61-11e6-9a41-93e8deadbeef", lookupIdElement.GetString());
+        Assert.True(root.TryGetProperty("_aws", out JsonElement awsElement));
+        Assert.True(awsElement.TryGetProperty("CloudWatchMetrics", out JsonElement cloudWatchMetricsElement));
 
-        Assert.True(root.TryGetProperty("Level", out JsonElement levelElement));
-        Assert.Equal("Warning", levelElement.GetString());
+        Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Metrics", out JsonElement metricsElement));
+        Assert.True(metricsElement[0].TryGetProperty("Name", out JsonElement nameElement));
+        Assert.Equal("ColdStart", nameElement.GetString());
+        Assert.True(metricsElement[0].TryGetProperty("Unit", out JsonElement unitElement));
+        Assert.Equal("Count", unitElement.GetString());
 
-        Assert.True(root.TryGetProperty("Test1", out JsonElement test1Element));
-        Assert.Equal("value1", test1Element.GetString());
-        
-        Assert.True(root.TryGetProperty("Test2", out JsonElement test2Element));
-        Assert.Equal("value2", test2Element.GetString());
-        
-        Assert.True(root.TryGetProperty("Message", out JsonElement messageElement));
-        Assert.Equal("Warn with additional keys", messageElement.GetString());
-    }
-
-    private void AssertExceptionLog(string functionName, bool isColdStart, string output)
-    {
-        using JsonDocument doc = JsonDocument.Parse(output);
-        JsonElement root = doc.RootElement;
-        
-        AssertDefaultLoggingProperties.ArePresent(functionName, isColdStart, output);
-
-        Assert.True(root.TryGetProperty("LookupInfo", out JsonElement lookupInfoElement));
-        Assert.True(lookupInfoElement.TryGetProperty("LookupId", out JsonElement lookupIdElement));
-        Assert.Equal("c6af9ac6-7b61-11e6-9a41-93e8deadbeef", lookupIdElement.GetString());
-
-        Assert.True(root.TryGetProperty("Level", out JsonElement levelElement));
-        Assert.Equal("Error", levelElement.GetString());
-
-        Assert.True(root.TryGetProperty("Message", out JsonElement messageElement));
-        Assert.Equal("Oops something went wrong", messageElement.GetString());
-
-        Assert.True(root.TryGetProperty("Exception", out JsonElement exceptionElement));
-        Assert.True(exceptionElement.TryGetProperty("Type", out JsonElement exceptionTypeElement));
-        Assert.Equal("System.InvalidOperationException", exceptionTypeElement.GetString());
-
-        Assert.True(exceptionElement.TryGetProperty("Message", out JsonElement exceptionMessageElement));
-        Assert.Equal("Parent exception message", exceptionMessageElement.GetString());
-        
-        Assert.False(root.TryGetProperty("Test1", out JsonElement _));
-        Assert.False(root.TryGetProperty("Test2", out JsonElement _));
+        Assert.True(root.TryGetProperty("ColdStart", out JsonElement coldStartElement));
+        Assert.Equal(1, coldStartElement.GetInt32());
     }
 }

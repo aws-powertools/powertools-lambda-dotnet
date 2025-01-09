@@ -10,7 +10,8 @@ namespace E2E
         public static void Main(string[] args)
         {
             var app = new App();
-            new E2EStack(app, "E2EStack", new StackProps { });
+            new CoreStack(app, "CoreStack", new StackProps { });
+            new CoreAotStack(app, "CoreAotStack", new StackProps { });
             
             app.Synth();
         }

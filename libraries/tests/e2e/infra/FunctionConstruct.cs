@@ -27,6 +27,7 @@ public class FunctionConstruct : Construct
             Architecture = props.Architecture,
             FunctionName = props.Name,
             Handler = props.Handler,
+            Tracing = Tracing.ACTIVE,
             Code = Code.FromCustomCommand(distPath,
                 [
                     $"dotnet-lambda package -pl {props.SourcePath} -o {distPath} -f {framework} -farch {props.Architecture.Name} {(props.IsAot ? "-cifb public.ecr.aws/sam/build-dotnet8" : "")}"
