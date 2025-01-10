@@ -57,11 +57,11 @@ public class FunctionTest
             Assert.Equal("HELLO WORLD", parsedPayload.Body);
 
             // Assert Output log from Lambda execution
-            AssertOutputLog(functionName, response);
+            AssertOutputLog(response);
         }
     }
 
-    private void AssertOutputLog(string functionName, InvokeResponse response)
+    private void AssertOutputLog(InvokeResponse response)
     {
         // Extract and parse log
         var logResult = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(response.LogResult));

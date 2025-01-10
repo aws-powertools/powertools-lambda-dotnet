@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
 
-namespace Infra;
+namespace InfraAot;
 
 public class FunctionConstructProps
 {
@@ -29,7 +29,7 @@ public class FunctionConstruct : Construct
             Tracing = Tracing.ACTIVE,
             Code = Code.FromCustomCommand(distPath,
                 [
-                    $"dotnet-lambda package -pl {props.SourcePath} -o {distPath} -f {framework} -farch {props.Architecture.Name}"
+                    $"dotnet-lambda package -pl {props.SourcePath} -o {distPath} -f {framework} -farch {props.Architecture.Name} -cifb public.ecr.aws/sam/build-dotnet8"
                 ],
                 new CustomCommandOptions
                 {

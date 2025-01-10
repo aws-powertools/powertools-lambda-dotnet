@@ -1,0 +1,41 @@
+name: Destroy e2e CDK Stacks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  run-tests:
+    uses: ./.github/workflows/e2e-tests.yml
+
+  destroy-stacks:
+    runs-on: aws-powertools_ubuntu-latest_8-core
+    needs: [run-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/YOUR_ROLE_NAME
+          aws-region: us-east-1
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+
+      - name: Destroy Core Stack
+        run: |
+          cd libraries/tests/e2e/infra
+          cdk destroy --force
+
+      - name: Destroy AOT Stack
+        run: |
+          cd libraries/tests/e2e/infra-aot
+          cdk destroy --force

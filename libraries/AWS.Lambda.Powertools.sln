@@ -40,12 +40,15 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.JMESPath.Tests", "tests\AWS.Lambda.Powertools.JMESPath.Tests\AWS.Lambda.Powertools.JMESPath.Tests.csproj", "{B1A91FDB-A843-4CE5-A1AC-2ED48A158AA1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "e2e", "e2e", "{A19E6CBD-8078-49F9-849E-2E484BFAF324}"
+	ProjectSection(SolutionItems) = preProject
+		tests\e2e\Readme.md = tests\e2e\Readme.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infra", "Infra", "{93DEAC72-245F-4FC9-A7B5-DAE7EF7E1AB7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Functions", "Functions", "{CDAE55EB-9438-4F54-B7ED-931D64324D5F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E2E", "tests\e2e\infra\E2E.csproj", "{AA532674-A61C-41E6-8F9A-ED53D79AF1EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infra", "tests\e2e\infra\Infra.csproj", "{AA532674-A61C-41E6-8F9A-ED53D79AF1EC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{AAFA39E9-66A3-4B9A-AFE9-EAF74A85A7F0}"
 	ProjectSection(SolutionItems) = preProject
@@ -77,6 +80,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Function.Tests", "tests\e2e\functions\core\tracing\Function\test\Function.Tests\Function.Tests.csproj", "{8DDAFE37-ED59-4710-9415-8EBA44CC6437}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AOT-Function", "tests\e2e\functions\core\tracing\AOT-Function\src\AOT-Function\AOT-Function.csproj", "{8DDED681-AE8D-45EB-A22E-2FFB88620F9B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfraAot", "tests\e2e\infra-aot\InfraAot.csproj", "{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -415,6 +420,18 @@ Global
 		{8DDED681-AE8D-45EB-A22E-2FFB88620F9B}.Release|x64.Build.0 = Release|Any CPU
 		{8DDED681-AE8D-45EB-A22E-2FFB88620F9B}.Release|x86.ActiveCfg = Release|Any CPU
 		{8DDED681-AE8D-45EB-A22E-2FFB88620F9B}.Release|x86.Build.0 = Release|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Debug|x64.Build.0 = Debug|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Debug|x86.Build.0 = Debug|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Release|x64.ActiveCfg = Release|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Release|x64.Build.0 = Release|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Release|x86.ActiveCfg = Release|Any CPU
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 
 	GlobalSection(NestedProjects) = preSolution
@@ -452,5 +469,6 @@ Global
 		{D22576BE-3D83-47C1-8B35-947C0B6DA8ED} = {3C9FA701-31FF-4747-B324-E0D252EAFD63}
 		{8DDAFE37-ED59-4710-9415-8EBA44CC6437} = {3C9FA701-31FF-4747-B324-E0D252EAFD63}
 		{8DDED681-AE8D-45EB-A22E-2FFB88620F9B} = {3C9FA701-31FF-4747-B324-E0D252EAFD63}
+		{24AC34AD-AEC9-4CFB-BB01-C3C81938AB95} = {93DEAC72-245F-4FC9-A7B5-DAE7EF7E1AB7}
 	EndGlobalSection
 EndGlobal

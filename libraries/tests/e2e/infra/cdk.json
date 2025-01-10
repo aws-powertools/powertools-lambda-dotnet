@@ -1,5 +1,5 @@
 {
-  "app": "dotnet run --project E2E.csproj",
+  "app": "dotnet run --project Infra.csproj",
   "watch": {
     "include": [
       "**"

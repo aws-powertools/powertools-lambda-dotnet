@@ -1,10 +1,9 @@
-using System.Runtime.InteropServices;
 using Amazon.CDK;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
 using Architecture = Amazon.CDK.AWS.Lambda.Architecture;
 
-namespace E2E
+namespace Infra
 {
     public class CoreStack : Stack
     {
@@ -35,8 +34,7 @@ namespace E2E
                 Name = name,
                 Handler = "Function::Function.Function::FunctionHandler",
                 SourcePath = sourcePath,
-                DistPath = distPath,
-                IsAot = false
+                DistPath = distPath
             });
         }
     }

@@ -1,0 +1,35 @@
+name: E2E Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-core-stack:
+    uses: ./.github/workflows/e2e-infra-deploy.yml
+
+  deploy-aot-stack:
+    uses: ./.github/workflows/e2e-infra-deploy.yml
+    
+  run-tests:
+    runs-on: aws-powertools_ubuntu-latest_8-core
+    needs: [deploy-core-stack, deploy-aot-stack]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Run Core Tests
+        run: |
+          cd libraries/tests/e2e/functions/core
+          dotnet test
