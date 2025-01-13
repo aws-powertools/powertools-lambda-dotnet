@@ -17,7 +17,6 @@ on:
       - develop
 
 permissions:
-  id-token: read
   contents: read
 
 jobs:
