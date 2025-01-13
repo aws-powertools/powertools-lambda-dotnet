@@ -2,14 +2,12 @@
 
 namespace TestUtils;
 
-public static class OutputLogParser
+public static partial class OutputLogParser
 {
     public static List<string> ParseLogSegments(string log, out (string duration, string maxMemoryUsed, string initDuration) report)
     {
         var segments = new List<string>();
-        var regex = new Regex(
-            @"(\{(?:[^{}]|(?<open>\{)|(?<-open>\}))*\}(?(open)(?!)))|(REPORT RequestId:.*?)(?=START RequestId:|\z)",
-            RegexOptions.Singleline);
+        var regex = ParseLogRegex();
         var matches = regex.Matches(log);
         report = ("N/A", "N/A", "N/A");
 
@@ -30,9 +28,7 @@ public static class OutputLogParser
 
     public static (string duration, string maxMemoryUsed, string initDuration) ExtractReportMetrics(string report)
     {
-        var regex = new Regex(
-            @"Duration: (?<duration>\d+\.\d+) ms.*?Max Memory Used: (?<maxMemory>\d+) MB(?:.*?Init Duration: (?<initDuration>\d+\.\d+) ms)?",
-            RegexOptions.Singleline);
+        var regex = ExtractMetricsRegex();
         var match = regex.Match(report);
 
         if (!match.Success) return ("N/A", "N/A", "N/A");
@@ -43,4 +39,9 @@ public static class OutputLogParser
 
         return (duration, maxMemoryUsed, initDuration);
     }
+
+    [GeneratedRegex(@"Duration: (?<duration>\d+\.\d+) ms.*?Max Memory Used: (?<maxMemory>\d+) MB(?:.*?Init Duration: (?<initDuration>\d+\.\d+) ms)?", RegexOptions.Singleline)]
+    private static partial Regex ExtractMetricsRegex();
+    [GeneratedRegex(@"(\{(?:[^{}]|(?<open>\{)|(?<-open>\}))*\}(?(open)(?!)))|(REPORT RequestId:.*?)(?=START RequestId:|\z)", RegexOptions.Singleline)]
+    private static partial Regex ParseLogRegex();
 }
