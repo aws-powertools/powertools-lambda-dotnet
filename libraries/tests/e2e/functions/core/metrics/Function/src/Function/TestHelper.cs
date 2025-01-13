@@ -4,7 +4,7 @@ using AWS.Lambda.Powertools.Metrics;
 
 namespace Helpers;
 
-public class TestHelper
+public static class TestHelper
 {
     private static readonly Dictionary<string, string> DefaultDimensions = new()
     {
