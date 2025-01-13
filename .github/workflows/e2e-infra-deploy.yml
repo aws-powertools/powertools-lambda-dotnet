@@ -9,6 +9,9 @@
 
 name: E2E Tests Infra deployment
 
+on:
+  workflow_call: 
+  
 permissions:
   id-token: write
   contents: read
