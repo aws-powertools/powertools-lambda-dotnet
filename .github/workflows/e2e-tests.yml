@@ -91,6 +91,9 @@ jobs:
 
       - name: Install CDK
         run: npm install -g aws-cdk
+        
+      - name: Install AWS Lambda .NET CLI Tools
+        run: dotnet tool install -g Amazon.Lambda.Tools
 
       - name: Destroy Core Stack
         run: |
