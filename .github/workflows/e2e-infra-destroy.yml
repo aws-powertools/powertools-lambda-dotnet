@@ -14,21 +14,17 @@ permissions:
   contents: read
 
 jobs:
-  run-tests:
-    uses: ./.github/workflows/e2e-tests.yml
-
   destroy-stacks:
     runs-on: aws-powertools_ubuntu-latest_8-core
-    needs: [run-tests]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
-          aws-region: us-east-1
+          aws-region: ${{ secrets.E2E_DEPLOY_REGION }}
 
       - name: Install CDK
         run: npm install -g aws-cdk
