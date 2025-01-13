@@ -4,10 +4,10 @@ namespace TestUtils;
 
 public class FunctionConstructProps
 {
-    public Architecture Architecture;
-    public Runtime Runtime;
-    public string Name;
-    public string Handler;
-    public string SourcePath;
-    public string DistPath;
+    public required Architecture Architecture { get; set; }
+    public required Runtime Runtime { get; set; }
+    public required string Name { get; set; }
+    public required string Handler { get; set; }
+    public required string SourcePath { get; set; }
+    public required string DistPath { get; set; }
 }
