@@ -42,6 +42,9 @@ jobs:
       - name: Install CDK
         run: npm install -g aws-cdk
 
+      - name: Install AWS Lambda .NET CLI Tools
+        run: dotnet tool install -g Amazon.Lambda.Tools
+
       - name: Deploy Core Stack
         run: |
           cd libraries/tests/e2e/infra
@@ -58,9 +61,6 @@ jobs:
         uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
         with:
           dotnet-version: '8.x'
-
-      - name: Install AWS Lambda .NET CLI Tools
-        run: dotnet tool install -g Amazon.Lambda.Tools
 
       - name: Run Core Tests
         run: |
