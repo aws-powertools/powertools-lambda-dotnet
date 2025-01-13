@@ -1,0 +1,70 @@
+# PROCESS
+#
+# 1. Deploy the core stack using AWS CDK.
+# 2. Deploy the AOT stack using AWS CDK.
+
+# USAGE
+#
+# This workflow is used by the E2E Tests workflow to deploy the necessary infrastructure.
+
+name: E2E Tests Infra deployment
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-core-stack:
+    runs-on: aws-powertools_ubuntu-latest_8-core
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
+        with:
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
+          aws-region: ${{ secrets.E2E_DEPLOY_REGION }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
+        with:
+          dotnet-version: '8.x'
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+
+      - name: Deploy Core Stack
+        run: |
+          cd libraries/tests/e2e/infra
+          cdk deploy --require-approval never
+  
+  deploy-aot-stack:
+    runs-on: aws-powertools_ubuntu-latest_8-core
+    strategy:
+      matrix:
+        architecture: [ x86_64, arm64 ]
+    container:
+      image: public.ecr.aws/sam/build-dotnet8:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
+        with:
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
+          aws-region: ${{ secrets.E2E_DEPLOY_REGION }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
+        with:
+          dotnet-version: '8.x'
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+
+      - name: Deploy AOT Stack
+        run: |
+          cd libraries/tests/e2e/infra-aot
+          cdk deploy --require-approval never
