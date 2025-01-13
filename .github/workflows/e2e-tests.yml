@@ -22,21 +22,18 @@ permissions:
 
 jobs:
 
-  deploy-core-stack:
-    permissions:
-      id-token: write
-      contents: read
-    uses: ./.github/workflows/e2e-infra-deploy.yml
-
-
   run-tests:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
   #    needs: [deploy-core-stack, deploy-aot-stack]
-    needs: [deploy-core-stack]
+#    needs: [deploy-core-stack]
     steps:
+
+     - name: Deploy Stack
+       uses: ./.github/workflows/e2e-infra-deploy.yml
+        
      - name: Checkout code
        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
     
@@ -53,7 +50,7 @@ jobs:
          cd libraries/tests/e2e/functions/core
          dotnet test
     
-     - name: Destroy Core Stack
+     - name: Destroy Stack
        if: always()
        uses: ./.github/workflows/e2e-infra-destroy.yml
       
