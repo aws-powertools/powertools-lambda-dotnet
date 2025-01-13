@@ -1,10 +1,13 @@
-name: Destroy e2e CDK Stacks
+# PROCESS
+#
+# 1. Destroy the core stack using AWS CDK.
+# 2. Destroy the AOT stack using AWS CDK.
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - develop
+# USAGE
+#
+# This workflow is used by the E2E Tests workflow to destroy the infrastructure after tests are completed.
+
+name: Destroy e2e CDK Stacks
 
 permissions:
   id-token: write
@@ -24,7 +27,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/YOUR_ROLE_NAME
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
 
       - name: Install CDK

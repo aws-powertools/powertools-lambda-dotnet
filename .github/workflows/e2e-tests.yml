@@ -1,3 +1,13 @@
+# PROCESS
+#
+# 1. Deploy the core and AOT stacks using the infra deployment workflow.
+# 2. Run the E2E tests after the infrastructure is deployed.
+# 3. Destroy the CDK stacks after the tests are completed.
+
+# USAGE
+#
+# This workflow is triggered on push to the develop branch or manually via workflow_dispatch.
+
 name: E2E Tests
 
 on:
@@ -16,10 +26,11 @@ jobs:
 
   deploy-aot-stack:
     uses: ./.github/workflows/e2e-infra-deploy.yml
-    
+
   run-tests:
     runs-on: aws-powertools_ubuntu-latest_8-core
-    needs: [deploy-core-stack, deploy-aot-stack]
+#    needs: [deploy-core-stack, deploy-aot-stack]
+    needs: [deploy-core-stack]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

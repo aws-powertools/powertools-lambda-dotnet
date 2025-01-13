@@ -30,7 +30,7 @@ jobs:
       - name: Test Examples
         run: dotnet test ../examples/
       - name: Test & Code Coverage
-        run: dotnet test --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity normal
+        run: dotnet test --filter "Category!=E2E" --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity normal
       - name: Codecov
         uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # 4.5.0
         with:

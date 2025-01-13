@@ -1,10 +1,13 @@
-name: E2E Tests Infra deployment
+# PROCESS
+#
+# 1. Deploy the core stack using AWS CDK.
+# 2. Deploy the AOT stack using AWS CDK.
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - develop
+# USAGE
+#
+# This workflow is used by the E2E Tests workflow to deploy the necessary infrastructure.
+
+name: E2E Tests Infra deployment
 
 permissions:
   id-token: write
@@ -13,9 +16,6 @@ permissions:
 jobs:
   deploy-core-stack:
     runs-on: aws-powertools_ubuntu-latest_8-core
-    strategy:
-      matrix:
-        dotnet-version: [ 6.x, 8.x ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,13 +23,13 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/YOUR_ROLE_NAME
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+          dotnet-version: '8.x'
 
       - name: Install CDK
         run: npm install -g aws-cdk
@@ -38,7 +38,7 @@ jobs:
         run: |
           cd libraries/tests/e2e/infra
           cdk deploy --require-approval never
-          
+  
   deploy-aot-stack:
     runs-on: aws-powertools_ubuntu-latest_8-core
     strategy:
@@ -53,7 +53,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/YOUR_ROLE_NAME
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
 
       - name: Set up .NET

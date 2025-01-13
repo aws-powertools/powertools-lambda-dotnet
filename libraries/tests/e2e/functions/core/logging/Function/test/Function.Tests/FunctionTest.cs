@@ -8,6 +8,7 @@ using Xunit.Abstractions;
 
 namespace Function.Tests;
 
+[Trait("Category", "E2E")]
 public class FunctionTest
 {
     private readonly ITestOutputHelper _testOutputHelper;
