@@ -30,7 +30,7 @@ jobs:
 
 
   run-tests:
-    runs-on: aws-powertools_ubuntu-latest_8-core
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
