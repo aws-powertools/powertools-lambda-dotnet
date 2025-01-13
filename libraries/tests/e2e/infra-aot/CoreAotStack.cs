@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using Amazon.CDK;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
+using TestUtils;
 using Architecture = Amazon.CDK.AWS.Lambda.Architecture;
 
 namespace InfraAot;
