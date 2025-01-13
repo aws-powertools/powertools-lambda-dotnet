@@ -11,30 +11,38 @@ name: E2E Tests Infra deployment
 
 on:
   workflow_call: 
-    
-
+  
 permissions:
-  id-token: write
+  id-token: read
   contents: read
 
 jobs:
   deploy-core-stack:
     runs-on: aws-powertools_ubuntu-latest_8-core
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
-          aws-region: ${{ secrets.E2E_DEPLOY_REGION }}
+          aws-region: us-east-1
+          mask-aws-account-id: true
 
       - name: Set up .NET
         uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
         with:
           dotnet-version: '8.x'
-
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: "20.10.0"
+      
       - name: Install CDK
         run: npm install -g aws-cdk
 
@@ -43,32 +51,32 @@ jobs:
           cd libraries/tests/e2e/infra
           cdk deploy --require-approval never
   
-  deploy-aot-stack:
-    runs-on: aws-powertools_ubuntu-latest_8-core
-    strategy:
-      matrix:
-        architecture: [ x86_64, arm64 ]
-    container:
-      image: public.ecr.aws/sam/build-dotnet8:latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+  # deploy-aot-stack:
+  #   runs-on: aws-powertools_ubuntu-latest_8-core
+  #   strategy:
+  #     matrix:
+  #       architecture: [ x86_64, arm64 ]
+  #   container:
+  #     image: public.ecr.aws/sam/build-dotnet8:latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
-        with:
-          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
-          aws-region: ${{ secrets.E2E_DEPLOY_REGION }}
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
+  #       with:
+  #         role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
+  #         aws-region: us-east-1
 
-      - name: Set up .NET
-        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
-        with:
-          dotnet-version: '8.x'
+  #     - name: Set up .NET
+  #       uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
+  #       with:
+  #         dotnet-version: '8.x'
 
-      - name: Install CDK
-        run: npm install -g aws-cdk
+  #     - name: Install CDK
+  #       run: npm install -g aws-cdk
 
-      - name: Deploy AOT Stack
-        run: |
-          cd libraries/tests/e2e/infra-aot
-          cdk deploy --require-approval never
+  #     - name: Deploy AOT Stack
+  #       run: |
+  #         cd libraries/tests/e2e/infra-aot
+  #         cdk deploy --require-approval never

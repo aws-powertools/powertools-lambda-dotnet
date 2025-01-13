@@ -10,15 +10,18 @@
 name: Destroy e2e CDK Stacks
 
 on:
-  workflow_call:
-    
+  workflow_call: 
+  
 permissions:
-  id-token: write
+  id-token: read
   contents: read
 
 jobs:
   destroy-stacks:
     runs-on: aws-powertools_ubuntu-latest_8-core
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
@@ -27,8 +30,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
-          aws-region: ${{ secrets.E2E_DEPLOY_REGION }}
-
+          aws-region: us-east-1
+          
       - name: Install CDK
         run: npm install -g aws-cdk
 
