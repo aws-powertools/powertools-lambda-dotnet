@@ -40,5 +40,6 @@ internal static class ExceptionPropertyExtractor
         yield return new KeyValuePair<string, object>(nameof(Exception.Message), ex.Message);
         yield return new KeyValuePair<string, object>(nameof(Exception.Source), ex.Source);
         yield return new KeyValuePair<string, object>(nameof(Exception.StackTrace), ex.StackTrace);
+        yield return new KeyValuePair<string, object>(nameof(Exception.InnerException), ex.InnerException);
     }
 }
