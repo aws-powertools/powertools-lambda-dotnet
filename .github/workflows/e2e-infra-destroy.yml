@@ -9,6 +9,9 @@
 
 name: Destroy e2e CDK Stacks
 
+on:
+  workflow_call: 
+  
 permissions:
   id-token: write
   contents: read
