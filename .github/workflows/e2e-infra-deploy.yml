@@ -13,12 +13,14 @@ on:
   workflow_call: 
   
 permissions:
-  id-token: write
   contents: read
 
 jobs:
   deploy-core-stack:
     runs-on: aws-powertools_ubuntu-latest_8-core
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
