@@ -7,9 +7,9 @@ using AWS.Lambda.Powertools.Metrics;
 
 namespace AOT_Function;
 
-public class Function
+public static class Function
 {
-    private static Dictionary<string, string> _defaultDimensions = new()
+    private static readonly Dictionary<string, string> DefaultDimensions = new()
     {
         {"Environment", "Prod"},
         {"Another", "One"}
@@ -27,7 +27,7 @@ public class Function
     [Metrics(Namespace = "Test", Service = "Test", CaptureColdStart = true)]
     public static APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigwProxyEvent, ILambdaContext context)
     {
-        Metrics.SetDefaultDimensions(_defaultDimensions);
+        Metrics.SetDefaultDimensions(DefaultDimensions);
         Metrics.AddMetric("Invocation", 1, MetricUnit.Count);
      
         Metrics.AddDimension("Memory","MemoryLimitInMB");

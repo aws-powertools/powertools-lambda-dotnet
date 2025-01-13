@@ -17,23 +17,23 @@ public class CoreAotStack : Stack
 
     private void CreateFunctionConstructs(string utility)
     {
-        string baseAotPath = $"../functions/core/{utility}/AOT-Function/src/AOT-Function";
-        string distAotPath = $"../functions/core/{utility}/AOT-Function/dist";
+        var baseAotPath = $"../functions/core/{utility}/AOT-Function/src/AOT-Function";
+        var distAotPath = $"../functions/core/{utility}/AOT-Function/dist";
 
-        if (RuntimeInformation.OSArchitecture == System.Runtime.InteropServices.Architecture.Arm64)
+        switch (RuntimeInformation.OSArchitecture)
         {
-            CreateFunctionConstruct(this, $"{utility}_ARM_aot_net8", Runtime.DOTNET_8, Architecture.ARM_64, $"E2ETestLambda_ARM_AOT_NET8_{utility}", baseAotPath, distAotPath);
-        }
-
-        if (RuntimeInformation.OSArchitecture == System.Runtime.InteropServices.Architecture.X64)
-        {
-            CreateFunctionConstruct(this, $"{utility}_X64_aot_net8", Runtime.DOTNET_8, Architecture.X86_64, $"E2ETestLambda_X64_AOT_NET8_{utility}", baseAotPath, distAotPath);
+            case System.Runtime.InteropServices.Architecture.Arm64:
+                CreateFunctionConstruct(this, $"{utility}_ARM_aot_net8", Runtime.DOTNET_8, Architecture.ARM_64, $"E2ETestLambda_ARM_AOT_NET8_{utility}", baseAotPath, distAotPath);
+                break;
+            case System.Runtime.InteropServices.Architecture.X64:
+                CreateFunctionConstruct(this, $"{utility}_X64_aot_net8", Runtime.DOTNET_8, Architecture.X86_64, $"E2ETestLambda_X64_AOT_NET8_{utility}", baseAotPath, distAotPath);
+                break;
         }
     }
 
     private void CreateFunctionConstruct(Construct scope, string id, Runtime runtime, Architecture architecture, string name, string sourcePath, string distPath)
     {
-        new FunctionConstruct(scope, id, new FunctionConstructProps
+        _ = new FunctionConstruct(scope, id, new FunctionConstructProps
         {
             Runtime = runtime,
             Architecture = architecture,

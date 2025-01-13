@@ -8,7 +8,7 @@ using AWS.Lambda.Powertools.Logging.Serializers;
 
 namespace AOT_Function;
 
-public class Function
+public static class Function
 {
     private static async Task Main()
     {

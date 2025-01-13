@@ -58,6 +58,7 @@ public class Function
     [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
     private void NestedBusinessLogic2()
     {
+        // Some business logic
     }
 
     class MetadataObject

@@ -8,7 +8,7 @@ using AWS.Lambda.Powertools.Tracing;
 
 namespace AOT_Function;
 
-public class Function
+public static class Function
 {
     private static async Task Main()
     {
@@ -69,11 +69,13 @@ public class Function
     }
     private static void NestedBusinessLogic2()
     {
+        // Some business logic
     }
 
     [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
     private static void NestedBusinessLogic3()
     {
+        // Some business logic
     }
     
 }
