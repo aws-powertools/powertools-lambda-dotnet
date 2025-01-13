@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Amazon.CDK.Lib" Version="2.174.0" />
       <PackageReference Include="xunit.assert" Version="2.9.2" />
     </ItemGroup>
 

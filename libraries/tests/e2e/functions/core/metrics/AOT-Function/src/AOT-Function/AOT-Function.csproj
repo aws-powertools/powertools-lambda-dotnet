@@ -25,4 +25,9 @@
     <ItemGroup>
       <ProjectReference Include="..\..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Include="..\..\..\Function\src\Function\TestHelper.cs">
+        <Link>TestHelper.cs</Link>
+      </Compile>
+    </ItemGroup>
 </Project>

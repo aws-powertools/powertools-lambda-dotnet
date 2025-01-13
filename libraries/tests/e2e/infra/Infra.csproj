@@ -15,4 +15,8 @@
     <PackageReference Include="Amazon.Jsii.Analyzers" Version="*" PrivateAssets="all" />
     -->
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\functions\TestUtils\TestUtils.csproj" />
+  </ItemGroup>
 </Project>

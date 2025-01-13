@@ -1,18 +1,9 @@
 using System.Collections.Generic;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
+using TestUtils;
 
 namespace Infra;
-
-public class FunctionConstructProps
-{
-    public Architecture Architecture;
-    public Runtime Runtime;
-    public string Name;
-    public string Handler;
-    public string SourcePath;
-    public string DistPath;
-}
 
 public class FunctionConstruct : Construct
 {
@@ -20,7 +11,7 @@ public class FunctionConstruct : Construct
     {
         var framework = props.Runtime == Runtime.DOTNET_6 ? "net6.0" : "net8.0";
         var distPath = $"{props.DistPath}/deploy_{props.Architecture.Name}_{props.Runtime.Name}.zip";
-        var lambda = new Function(this, id, new FunctionProps
+        _ = new Function(this, id, new FunctionProps
         {
             Runtime = props.Runtime,
             Architecture = props.Architecture,
