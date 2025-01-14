@@ -53,6 +53,7 @@ jobs:
   deploy-aot-stack:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         architecture: [ x86_64, arm64 ]
     steps:
@@ -76,8 +77,8 @@ jobs:
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
         
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a
 
       - name: Deploy AOT Stack
         run: |
