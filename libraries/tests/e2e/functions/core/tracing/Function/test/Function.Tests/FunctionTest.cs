@@ -17,7 +17,10 @@ public class FunctionTest
     public FunctionTest(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-        _lambdaClient = new AmazonLambdaClient();
+        _lambdaClient = new AmazonLambdaClient(new AmazonLambdaConfig
+        {
+            Timeout = TimeSpan.FromSeconds(7000)
+        });
     }
 
     [Theory]

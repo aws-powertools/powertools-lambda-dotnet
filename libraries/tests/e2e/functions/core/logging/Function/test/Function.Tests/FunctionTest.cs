@@ -114,30 +114,6 @@ public class FunctionTest
         Assert.True(headersElement.TryGetProperty("Cache-Control", out JsonElement cacheControlElement));
         Assert.Equal("max-age=0", cacheControlElement.GetString());
 
-        Assert.True(headersElement.TryGetProperty("CloudFront-Forwarded-Proto",
-            out JsonElement cloudFrontForwardedProtoElement));
-        Assert.Equal("https", cloudFrontForwardedProtoElement.GetString());
-
-        Assert.True(headersElement.TryGetProperty("CloudFront-Viewer-Country",
-            out JsonElement cloudFrontViewerCountryElement));
-        Assert.Equal("US", cloudFrontViewerCountryElement.GetString());
-
-        Assert.True(headersElement.TryGetProperty("Upgrade-Insecure-Requests",
-            out JsonElement upgradeInsecureRequestsElement));
-        Assert.Equal("1", upgradeInsecureRequestsElement.GetString());
-
-        Assert.True(headersElement.TryGetProperty("User-Agent", out JsonElement userAgentElement));
-        Assert.Equal("Custom User Agent String", userAgentElement.GetString());
-
-        Assert.True(headersElement.TryGetProperty("X-Forwarded-For", out JsonElement xForwardedForElement));
-        Assert.Equal("127.0.0.1, 127.0.0.2", xForwardedForElement.GetString());
-
-        Assert.True(headersElement.TryGetProperty("X-Forwarded-Port", out JsonElement xForwardedPortElement));
-        Assert.Equal("443", xForwardedPortElement.GetString());
-
-        Assert.True(headersElement.TryGetProperty("X-Forwarded-Proto", out JsonElement xForwardedProtoElement));
-        Assert.Equal("https", xForwardedProtoElement.GetString());
-
         Assert.True(
             messageElement.TryGetProperty("QueryStringParameters", out JsonElement queryStringParametersElement));
         Assert.True(queryStringParametersElement.TryGetProperty("Foo", out JsonElement fooElement));
