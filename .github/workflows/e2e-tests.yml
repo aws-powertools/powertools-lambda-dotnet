@@ -50,6 +50,40 @@ jobs:
           cd libraries/tests/e2e/infra
           cdk deploy --require-approval never
 
+  deploy-aot-stack:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [ x86_64, arm64 ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        with:
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
+          aws-region: us-east-1
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
+        with:
+          dotnet-version: '8.x'
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+        
+      - name: Install AWS Lambda .NET CLI Tools
+        run: dotnet tool install -g Amazon.Lambda.Tools
+        
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a
+
+      - name: Deploy AOT Stack
+        run: |
+          cd libraries/tests/e2e/infra-aot
+          cdk deploy --require-approval never
+
   run-tests:
     runs-on: ubuntu-latest
     needs: deploy-stack
@@ -98,4 +132,9 @@ jobs:
       - name: Destroy Core Stack
         run: |
           cd libraries/tests/e2e/infra
+          cdk destroy --force
+          
+      - name: Destroy Core AOT Stack
+        run: |
+          cd libraries/tests/e2e/infra-aot
           cdk destroy --force
