@@ -76,13 +76,13 @@ jobs:
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
         
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a
 
       - name: Deploy AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          cdk deploy --require-approval never
+          cdk deploy -c architecture=${{ matrix.architecture }} --require-approval never
 
   run-tests:
     runs-on: ubuntu-latest

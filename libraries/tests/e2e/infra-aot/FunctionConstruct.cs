@@ -21,7 +21,7 @@ public class FunctionConstruct : Construct
             Timeout = Duration.Seconds(10),
             Code = Code.FromCustomCommand(distPath,
                 [
-                    $"dotnet-lambda package -pl {props.SourcePath} -o {distPath} -f net8.0 -farch {props.Architecture.Name} -cifb public.ecr.aws/sam/build-dotnet8"
+                    $"dotnet-lambda package -pl {props.SourcePath} -cmd ../../../ -o {distPath} -f net8.0 -farch {props.Architecture.Name} -cifb public.ecr.aws/sam/build-dotnet8"
                 ],
                 new CustomCommandOptions
                 {

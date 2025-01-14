@@ -23,11 +23,11 @@
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" />
-    </ItemGroup>
-    <ItemGroup>
       <Compile Include="..\..\..\Function\src\Function\TestHelper.cs">
         <Link>TestHelper.cs</Link>
       </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" />
     </ItemGroup>
 </Project>
