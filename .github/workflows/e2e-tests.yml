@@ -80,6 +80,14 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          platforms: ${{ matrix.architecture }}
+
       - name: Deploy AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
@@ -138,4 +146,5 @@ jobs:
       - name: Destroy Core AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          cdk destroy --force
+          cdk destroy -c architecture=arm64 --force
+          cdk destroy -c architecture=x86_64 --force
