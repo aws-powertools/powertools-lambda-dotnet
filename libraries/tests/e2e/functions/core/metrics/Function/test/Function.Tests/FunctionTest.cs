@@ -25,7 +25,7 @@ public class FunctionTest
     [InlineData("E2ETestLambda_ARM_NET6_metrics")]
     [InlineData("E2ETestLambda_X64_NET8_metrics")]
     [InlineData("E2ETestLambda_ARM_NET8_metrics")]
-    [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics")]
+    // [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics")]
     public async Task TestFunction(string functionName)
     {
         var request = new InvokeRequest

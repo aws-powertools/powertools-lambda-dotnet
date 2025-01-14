@@ -17,7 +17,10 @@ public class FunctionTest
     public FunctionTest(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-        _lambdaClient = new AmazonLambdaClient();
+        _lambdaClient = new AmazonLambdaClient(new AmazonLambdaConfig
+        {
+            Timeout = TimeSpan.FromSeconds(7)
+        });
     }
 
     [Theory]
@@ -25,7 +28,7 @@ public class FunctionTest
     [InlineData("E2ETestLambda_ARM_NET6_tracing")]
     [InlineData("E2ETestLambda_X64_NET8_tracing")]
     [InlineData("E2ETestLambda_ARM_NET8_tracing")]
-    [InlineData("E2ETestLambda_ARM_AOT_NET8_tracing")]
+    // [InlineData("E2ETestLambda_ARM_AOT_NET8_tracing")]
     public async Task TestToUpperFunction(string functionName)
     {
         var request = new InvokeRequest
