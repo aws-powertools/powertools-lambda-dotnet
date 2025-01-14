@@ -57,7 +57,7 @@ jobs:
         include:
           - os: ubuntu-latest
             arch: x86_64
-          - os: ubuntu-22.04-arm
+          - os: macos-latest
             arch: arm64
     steps:
       - name: Checkout code
