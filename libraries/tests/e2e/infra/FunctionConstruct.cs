@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Amazon.CDK;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
 using TestUtils;
@@ -18,6 +19,7 @@ public class FunctionConstruct : Construct
             FunctionName = props.Name,
             Handler = props.Handler,
             Tracing = Tracing.ACTIVE,
+            Timeout = Duration.Seconds(10),
             Code = Code.FromCustomCommand(distPath,
                 [
                     $"dotnet-lambda package -pl {props.SourcePath} -o {distPath} -f {framework} -farch {props.Architecture.Name}"

@@ -19,7 +19,7 @@ public class FunctionTest
         _testOutputHelper = testOutputHelper;
         _lambdaClient = new AmazonLambdaClient(new AmazonLambdaConfig
         {
-            Timeout = TimeSpan.FromSeconds(7000)
+            Timeout = TimeSpan.FromSeconds(7)
         });
     }
 
