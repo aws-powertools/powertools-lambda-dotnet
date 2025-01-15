@@ -51,14 +51,7 @@ jobs:
           cdk deploy --require-approval never
 
   deploy-aot-stack:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            arch: x86_64
-          - os: macos-latest
-            arch: arm64
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
@@ -69,6 +62,11 @@ jobs:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a
+        with:
+          platforms: arm64
+            
       - name: Set up .NET
         uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
         with:
@@ -80,23 +78,18 @@ jobs:
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
 
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a
-#        with:
-#          platforms: ${{ matrix.arch }}
-#
-#      - name: Set up Docker Buildx
-#        id: builder
-#        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
-#        with:
-#          install: true
-#          driver: docker
-#          platforms: linux/amd64,linux/arm64
+      - name: Set up Docker Buildx
+        id: builder
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
+        with:
+          install: true
+          driver: docker
+          platforms: linux/arm64
 
       - name: Deploy AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          cdk deploy -c architecture=${{ matrix.arch }} --require-approval never
+          cdk deploy -c architecture=arm64 --require-approval never
 
   run-tests:
     runs-on: ubuntu-latest
