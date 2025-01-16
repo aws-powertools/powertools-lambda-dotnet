@@ -9,12 +9,12 @@ using Xunit.Abstractions;
 namespace Function.Tests;
 
 [Trait("Category", "E2E")]
-public class FunctionTest
+public class FunctionTests
 {
     private readonly ITestOutputHelper _testOutputHelper;
     private readonly AmazonLambdaClient _lambdaClient;
 
-    public FunctionTest(ITestOutputHelper testOutputHelper)
+    public FunctionTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
         _lambdaClient = new AmazonLambdaClient(new AmazonLambdaConfig
@@ -22,14 +22,27 @@ public class FunctionTest
             Timeout = TimeSpan.FromSeconds(7)
         });
     }
+    
+    [Trait("Category", "AOT")]
+    [Theory]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_tracing")]
+    // [InlineData("E2ETestLambda_ARM_AOT_NET8_tracing")]
+    public async Task AotFunctionTest(string functionName)
+    {
+        await TestFunction(functionName);
+    }
 
     [Theory]
     [InlineData("E2ETestLambda_X64_NET6_tracing")]
     [InlineData("E2ETestLambda_ARM_NET6_tracing")]
     [InlineData("E2ETestLambda_X64_NET8_tracing")]
     [InlineData("E2ETestLambda_ARM_NET8_tracing")]
-    // [InlineData("E2ETestLambda_ARM_AOT_NET8_tracing")]
-    public async Task TestToUpperFunction(string functionName)
+    public async Task FunctionTest(string functionName)
+    {
+        await TestFunction(functionName);
+    }
+
+    internal async Task TestFunction(string functionName)
     {
         var request = new InvokeRequest
         {
