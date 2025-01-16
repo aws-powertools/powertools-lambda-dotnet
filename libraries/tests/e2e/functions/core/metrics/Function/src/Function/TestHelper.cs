@@ -39,7 +39,7 @@ public static class TestHelper
             service: "Test",
             defaultDimensions: new Dictionary<string, string>
             {
-                {"FunctionContext", "$LATEST"}
+                {"FunctionName", context.FunctionName}
             });
     }
 }

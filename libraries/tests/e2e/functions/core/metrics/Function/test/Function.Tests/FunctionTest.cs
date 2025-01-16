@@ -1,4 +1,6 @@
 using System.Text.Json;
+using Amazon.CloudWatch;
+using Amazon.CloudWatch.Model;
 using Amazon.Lambda;
 using Amazon.Lambda.APIGatewayEvents;
 using Xunit;
@@ -13,6 +15,7 @@ public class FunctionTest
 {
     private readonly ITestOutputHelper _testOutputHelper;
     private readonly AmazonLambdaClient _lambdaClient;
+    private string _functionName;
 
     public FunctionTest(ITestOutputHelper testOutputHelper)
     {
@@ -28,6 +31,7 @@ public class FunctionTest
     // [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics")]
     public async Task TestFunction(string functionName)
     {
+        _functionName = functionName;
         var request = new InvokeRequest
         {
             FunctionName = functionName,
@@ -59,6 +63,43 @@ public class FunctionTest
 
             // Assert Output log from Lambda execution
             AssertOutputLog(response);
+        }
+        
+        // Assert cloudwatch
+        await AssertCloudWatch();
+    }
+    
+    private async Task AssertCloudWatch()
+    {
+        using var cloudWatchClient = new AmazonCloudWatchClient();
+        var request = new ListMetricsRequest
+        {
+            Namespace = "Test",
+            Dimensions =
+            [
+                new DimensionFilter
+                {
+                    Name = "Service",
+                    Value = "Test"
+                },
+
+                new DimensionFilter
+                {
+                    Name = "FunctionName",
+                    Value = _functionName
+                }
+            ]
+        };
+        
+        var response = await cloudWatchClient.ListMetricsAsync(request);
+
+        foreach (var metric in response.Metrics)
+        {
+            _testOutputHelper.WriteLine($"Namespace: {metric.Namespace}, MetricName: {metric.MetricName}");
+            foreach (var dimension in metric.Dimensions)
+            {
+                _testOutputHelper.WriteLine($"  Dimension: {dimension.Name} = {dimension.Value}");
+            }
         }
     }
 
@@ -123,10 +164,10 @@ public class FunctionTest
         Assert.Equal("Count", unitElement5.GetString());
 
         Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Dimensions", out JsonElement dimensionsElement));
-        Assert.Equal("Service", dimensionsElement[0].GetString());
-        Assert.Equal("Environment", dimensionsElement[1].GetString());
-        Assert.Equal("Another", dimensionsElement[2].GetString());
-        Assert.Equal("Memory", dimensionsElement[3].GetString());
+        Assert.Equal("Service", dimensionsElement[0][0].GetString());
+        Assert.Equal("Environment", dimensionsElement[0][1].GetString());
+        Assert.Equal("Another", dimensionsElement[0][2].GetString());
+        Assert.Equal("Memory", dimensionsElement[0][3].GetString());
 
         Assert.True(root.TryGetProperty("Service", out JsonElement serviceElement));
         Assert.Equal("Test", serviceElement.GetString());
@@ -178,11 +219,11 @@ public class FunctionTest
         Assert.Equal("Count", unitElement.GetString());
 
         Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Dimensions", out JsonElement dimensionsElement));
-        Assert.Equal("FunctionContext", dimensionsElement[0].GetString());
-        Assert.Equal("Service", dimensionsElement[1].GetString());
+        Assert.Equal("FunctionName", dimensionsElement[0][0].GetString());
+        Assert.Equal("Service", dimensionsElement[0][1].GetString());
 
-        Assert.True(root.TryGetProperty("FunctionContext", out JsonElement functionContextElement));
-        Assert.Equal("$LATEST", functionContextElement.GetString());
+        Assert.True(root.TryGetProperty("FunctionName", out JsonElement functionNameElement));
+        Assert.Equal(_functionName, functionNameElement.GetString());
 
         Assert.True(root.TryGetProperty("Service", out JsonElement serviceElement));
         Assert.Equal("Test", serviceElement.GetString());
