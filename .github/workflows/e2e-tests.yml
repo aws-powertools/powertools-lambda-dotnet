@@ -51,7 +51,15 @@ jobs:
           cdk deploy --require-approval never
 
   deploy-aot-stack:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-24.04-arm, ubuntu-latest]
+        include:
+          - os: ubuntu-24.04-arm
+            arch: arm64
+          - os: ubuntu-latest
+            arch: x86_64
+    runs-on: ${{ matrix.arch }}
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
@@ -73,10 +81,10 @@ jobs:
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
 
-      - name: Deploy AOT Stack x86_64
+      - name: Deploy AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          cdk deploy -c architecture=x86_64 --require-approval never
+          cdk deploy -c architecture={{ matrix.arch }} --require-approval never
 
   run-tests:
     runs-on: ubuntu-latest
