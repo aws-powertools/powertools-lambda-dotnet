@@ -19,7 +19,13 @@ namespace InfraAot
                 throw new System.ArgumentException("architecture context must be either arm64 or x86_64");
             }
 
-            _ = new CoreAotStack(app, $"CoreAotStack-{architecture}", new AotStackProps
+            var id = "CoreAotStack";
+            if(architecture == "arm64")
+            {
+                id = $"CoreAotStack-{architecture}";
+            }
+
+            _ = new CoreAotStack(app, id, new AotStackProps
             {
                 Architecture = architecture
             });
