@@ -84,7 +84,7 @@ jobs:
       - name: Deploy AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          cdk deploy -c architecture={{ matrix.arch }} --require-approval never
+          cdk deploy -c architecture=${{ matrix.arch }} --require-approval never
 
   run-tests:
     runs-on: ubuntu-latest
