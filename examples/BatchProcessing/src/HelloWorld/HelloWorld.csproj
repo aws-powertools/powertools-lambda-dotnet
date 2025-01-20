@@ -8,7 +8,7 @@
         <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3" />
         <PackageReference Include="AWS.Lambda.Powertools.BatchProcessing" Version="1.1.2" />
-        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.6.0" />
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.6.3" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     </ItemGroup>
 </Project>
