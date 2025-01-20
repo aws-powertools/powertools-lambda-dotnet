@@ -141,7 +141,13 @@ jobs:
           cd libraries/tests/e2e/infra
           cdk destroy --force
           
-      - name: Destroy AOT Core Stack
+      - name: Destroy x86_64 AOT Core Stack
         run: |
           cd libraries/tests/e2e/infra-aot
           cdk destroy -c architecture=x86_64 --force
+
+      - name: Destroy arm64 AOT Core Stack
+        run: |
+          cd libraries/tests/e2e/infra-aot
+          cdk destroy -c architecture=arm64 --force
+      
