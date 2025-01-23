@@ -35,7 +35,7 @@ jobs:
           mask-aws-account-id: true
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
+        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852
         with:
           dotnet-version: '8.x'
 
@@ -71,7 +71,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
+        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852
         with:
           dotnet-version: '8.x'
 
@@ -101,7 +101,7 @@ jobs:
           mask-aws-account-id: true
           
       - name: Set up .NET
-        uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3
+        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852
         with:
           dotnet-version: '8.x'
 
