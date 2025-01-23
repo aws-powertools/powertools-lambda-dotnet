@@ -28,14 +28,14 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
           mask-aws-account-id: true
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852
+        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852 # 4.2.0
         with:
           dotnet-version: '8.x'
 
@@ -65,13 +65,14 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
+          mask-aws-account-id: true
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852
+        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852 # 4.2.0
         with:
           dotnet-version: '8.x'
 
@@ -94,14 +95,14 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
           mask-aws-account-id: true
           
       - name: Set up .NET
-        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852
+        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852 # 4.2.0
         with:
           dotnet-version: '8.x'
 
@@ -124,7 +125,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
@@ -158,7 +159,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1

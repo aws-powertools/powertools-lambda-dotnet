@@ -55,7 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
       - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852
+        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852 # 4.2.0
         with:
           dotnet-version: 6.0.405
 
