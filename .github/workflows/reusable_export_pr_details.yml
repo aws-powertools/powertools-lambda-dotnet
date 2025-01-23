@@ -55,7 +55,7 @@ jobs:
       - name: Checkout repository # in case caller workflow doesn't checkout thus failing with file not found
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
       - name: "Download previously saved PR"
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         env:
           WORKFLOW_ID: ${{ inputs.record_pr_workflow_id }}
         # For security, we only download artifacts tied to the successful PR recording workflow
