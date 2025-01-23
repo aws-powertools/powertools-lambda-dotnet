@@ -2,8 +2,12 @@ name: Build .NET
 
 on:
   push:
+    paths:
+      - "libraries/**"
     branches: [develop, main]
   pull_request:
+    paths:
+      - "libraries/**"
     branches: [develop, main]
 
 defaults:
