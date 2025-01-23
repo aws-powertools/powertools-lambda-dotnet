@@ -471,10 +471,72 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                 Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"test\"}"))
             );
         }
+        
+        public void Dispose()
+        {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "");
+            LoggingAspect.ResetForTest();
+            PowertoolsLoggingSerializer.ClearOptions();
+        }
+    }
+    
+    [Collection("A Sequential")]
+    public class ServiceTests : IDisposable
+    {
+        private readonly TestServiceHandler _testHandler;
+        
+        public ServiceTests()
+        {
+            _testHandler = new TestServiceHandler();
+        }
+        
+        [Fact]
+        public void When_Setting_Service_Should_Override_Env()
+        {
+            // Arrange
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+
+            // Act
+            _testHandler.LogWithEnv();
+            _testHandler.Handler();
+        
+            // Assert
+        
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"Environment Service\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Service: Environment Service\""))
+            );
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"Attribute Service\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Service: Attribute Service\""))
+            );            
+        }
+        
+        [Fact]
+        public void When_Setting_Service_Should_Override_Env_And_Empty()
+        {
+            // Arrange
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+
+            // Act
+            _testHandler.LogWithAndWithoutEnv();
+            _testHandler.Handler();
+        
+            // Assert
+            
+            consoleOut.Received(2).WriteLine(
+                Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Service: service_undefined\""))
+            );
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"Attribute Service\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Service: Attribute Service\""))
+            );            
+        }
 
         public void Dispose()
         {
             Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "");
             LoggingAspect.ResetForTest();
             PowertoolsLoggingSerializer.ClearOptions();
         }

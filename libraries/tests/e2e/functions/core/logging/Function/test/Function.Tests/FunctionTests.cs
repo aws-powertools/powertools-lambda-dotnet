@@ -23,7 +23,7 @@ public class FunctionTests
     [Trait("Category", "AOT")]
     [Theory]
     [InlineData("E2ETestLambda_X64_AOT_NET8_logging")]
-    // [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics")]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_logging")]
     public async Task AotFunctionTest(string functionName)
     {
         await TestFunction(functionName);
