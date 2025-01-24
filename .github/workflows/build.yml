@@ -36,7 +36,7 @@ jobs:
       - name: Test & Code Coverage
         run: dotnet test --filter "Category!=E2E" --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity normal
       - name: Codecov
-        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # 4.5.0
+        uses: codecov/codecov-action@0da7aa657d958d32c117fc47e1f977e7524753c7 # 5.3.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
