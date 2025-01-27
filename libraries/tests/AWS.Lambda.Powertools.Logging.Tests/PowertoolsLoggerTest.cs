@@ -29,7 +29,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests
 {
-    [Collection("Sequential")]
+    [Collection("X Sequential")]
     public class PowertoolsLoggerTest : IDisposable
     {
         public PowertoolsLoggerTest()
@@ -1337,6 +1337,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         [Fact]
         public void Log_Set_Execution_Environment_Context()
         {
+            var _originalValue = Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME");
+            
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
             var assemblyName = "AWS.Lambda.Powertools.Logger";
@@ -1707,6 +1709,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         public void Dispose()
         {
             PowertoolsLoggingSerializer.ClearOptions();
+            LoggingAspect.ResetForTest();
         }
     }
 }
