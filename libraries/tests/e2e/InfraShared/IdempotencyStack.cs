@@ -1,5 +1,6 @@
 ﻿using Amazon.CDK;
 using Amazon.CDK.AWS.DynamoDB;
+using Amazon.CDK.AWS.IAM;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
 using Attribute = Amazon.CDK.AWS.DynamoDB.Attribute;
@@ -16,12 +17,13 @@ public class IdempotencyStack : Stack
         {
             PartitionKey = new Attribute
             {
-                Name = "Id",
+                Name = "id",
                 Type = AttributeType.STRING
             },
             TableName = "IdempotencyTable",
             BillingMode = BillingMode.PAY_PER_REQUEST,
-            TimeToLiveAttribute = "expiration"
+            TimeToLiveAttribute = "expiration",
+            DeletionProtection = false
         });
         
         var utility = "idempotency";
@@ -51,11 +53,12 @@ public class IdempotencyStack : Stack
             DistPath = distPath,
             Environment = new Dictionary<string, string>
             {
-                { "TABLE_NAME", Table.TableName }
+                { "IDEMPOTENCY_TABLE_NAME", Table.TableName }
             },
             IsAot = props.IsAot
         });
         
+        // Grant the Lambda function permissions to perform all actions on the DynamoDB table
         Table.GrantReadWriteData(lambdaFunction.Function);
     }
 }
