@@ -138,7 +138,7 @@ public class LoggingAspect
             _correlationIdPath = trigger.CorrelationIdPath;
             _clearState = trigger.ClearState;
 
-            Logger.LoggerProvider ??= new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
+            Logger.LoggerProvider = new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
 
             if (!_initializeContext)
                 return;
