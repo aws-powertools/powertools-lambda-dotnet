@@ -53,7 +53,7 @@ jobs:
       - name: Deploy Core Stack
         run: |
           cd libraries/tests/e2e/infra
-          cdk deploy --require-approval never
+          cdk deploy --all --require-approval never
 
   deploy-aot-stack:
     strategy:
@@ -90,7 +90,7 @@ jobs:
       - name: Deploy AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          cdk deploy -c architecture=${{ matrix.arch }} --require-approval never
+          cdk deploy --all -c architecture=${{ matrix.arch }} --require-approval never
 
   run-tests:
     runs-on: ubuntu-latest
@@ -145,7 +145,7 @@ jobs:
       - name: Destroy Core Stack
         run: |
           cd libraries/tests/e2e/infra
-          cdk destroy --force
+          cdk destroy --all --force
 
   destroy-aot-stack:
     strategy:
@@ -179,5 +179,5 @@ jobs:
       - name: Destroy arm64 AOT Core Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          cdk destroy -c architecture=${{ matrix.arch }} --force
+          cdk destroy --all -c architecture=${{ matrix.arch }} --force
       
