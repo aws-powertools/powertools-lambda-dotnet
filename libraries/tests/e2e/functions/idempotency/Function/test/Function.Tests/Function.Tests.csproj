@@ -16,7 +16,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\TestUtils\TestUtils.csproj" />
+    <ProjectReference Include="..\..\..\..\TestUtils\TestUtils.csproj" />
     <ProjectReference Include="..\..\..\AOT-Function\src\AOT-Function\AOT-Function.csproj" />
     <ProjectReference Include="..\..\src\Function\Function.csproj" />
   </ItemGroup>

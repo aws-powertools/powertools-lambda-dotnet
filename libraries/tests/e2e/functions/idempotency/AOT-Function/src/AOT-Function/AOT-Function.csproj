@@ -28,6 +28,6 @@
       </Compile>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
+      <ProjectReference Include="..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
     </ItemGroup>
 </Project>

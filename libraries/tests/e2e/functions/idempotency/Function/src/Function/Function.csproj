@@ -16,6 +16,6 @@
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4"/>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
+      <ProjectReference Include="..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
     </ItemGroup>
 </Project>

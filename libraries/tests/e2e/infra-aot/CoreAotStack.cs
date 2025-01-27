@@ -10,9 +10,9 @@ public class CoreAotStack : Stack
 {
     private readonly Architecture _architecture;
 
-    internal CoreAotStack(Construct scope, string id, AotStackProps props = null) : base(scope, id, props)
+    internal CoreAotStack(Construct scope, string id, PowertoolsDefaultStackProps props = null) : base(scope, id, props)
     {
-        if (props != null) _architecture = props.Architecture == "arm64" ? Architecture.ARM_64 : Architecture.X86_64;
+        if (props != null) _architecture = props.ArchitectureString == "arm64" ? Architecture.ARM_64 : Architecture.X86_64;
 
         CreateFunctionConstructs("logging");
         CreateFunctionConstructs("metrics");
