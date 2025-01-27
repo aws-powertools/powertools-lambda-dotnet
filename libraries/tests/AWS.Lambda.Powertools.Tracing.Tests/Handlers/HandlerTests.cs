@@ -1,4 +1,20 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.TestUtilities;
@@ -60,8 +76,9 @@ public sealed class HandlerTests : IDisposable
         };
 
         // Act
+        var facadeSegment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
         await handler.Handle("Hello World", context);
-        var handleSegment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+        var handleSegment = facadeSegment.Subsegments[0];
         
         // Assert
         Assert.True(handleSegment.IsAnnotationsAdded);
@@ -99,6 +116,118 @@ public sealed class HandlerTests : IDisposable
         Assert.False(getSomethingSubsegment.IsSubsegmentsAdded);
         Assert.False(getSomethingSubsegment.IsInProgress);
         Assert.Equal("value", getSomethingSubsegment.Annotations["getsomething"]);
+    }
+    
+    [Fact]
+    public async Task Full_Example_Async()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+        
+        var context = new TestLambdaContext
+        {
+            FunctionName = "FullExampleLambda",
+            FunctionVersion = "1",
+            MemoryLimitInMB = 215,
+            AwsRequestId = Guid.NewGuid().ToString("D")
+        };
+
+        // Act
+        var facadeSegment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+        await FullExampleHandler2.FunctionHandler("Hello World", context);
+        var handleSegment = facadeSegment.Subsegments[0];
+        
+        // Assert
+        Assert.True(handleSegment.IsAnnotationsAdded);
+        Assert.True(handleSegment.IsSubsegmentsAdded);
+        
+        Assert.Equal("POWERTOOLS", handleSegment.Annotations["Service"]);
+        Assert.True((bool)handleSegment.Annotations["ColdStart"]);
+        Assert.Equal("## FunctionHandler", handleSegment.Name);
+        Assert.Equal(2, handleSegment.Subsegments.Count);
+
+        var firstCallSubsegment = handleSegment.Subsegments[0];
+        
+        Assert.Equal("Get Ip Address", firstCallSubsegment.Name);
+        Assert.False(firstCallSubsegment.IsInProgress);
+        var metadata1 = firstCallSubsegment.Metadata["POWERTOOLS"];
+        Assert.Contains("Get Ip Address response", metadata1.Keys.Cast<string>());
+        Assert.Contains("127.0.0.1", metadata1.Values.Cast<string>());
+        
+        var businessLogicSubsegment = handleSegment.Subsegments[1];
+        
+        Assert.Equal("Call DynamoDB", businessLogicSubsegment.Name);
+        
+        Assert.False(businessLogicSubsegment.IsInProgress);
+        Assert.Single(businessLogicSubsegment.Metadata);
+        var metadata = businessLogicSubsegment.Metadata["POWERTOOLS"];
+        Assert.Contains("Call DynamoDB response", metadata.Keys.Cast<string>());
+        Assert.Contains(["HELLO", "WORLD", "127.0.0.1"], metadata.Values.Cast<List<string>>());
+        Assert.True(businessLogicSubsegment.IsSubsegmentsAdded);
+        
+        var getSomethingSubsegment = businessLogicSubsegment.Subsegments[0];
+        
+        Assert.Equal("To Upper", getSomethingSubsegment.Name);
+       
+        Assert.False(getSomethingSubsegment.IsSubsegmentsAdded);
+        Assert.False(getSomethingSubsegment.IsInProgress);
+    }
+    
+    [Fact]
+    public async Task Full_Example_Sync()
+    {
+        // Arrange
+        Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+        
+        var context = new TestLambdaContext
+        {
+            FunctionName = "FullExampleLambda",
+            FunctionVersion = "1",
+            MemoryLimitInMB = 215,
+            AwsRequestId = Guid.NewGuid().ToString("D")
+        };
+
+        // Act
+        var facadeSegment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+        await FullExampleHandler3.FunctionHandler("Hello World", context);
+        var handleSegment = facadeSegment.Subsegments[0];
+        
+        // Assert
+        Assert.True(handleSegment.IsAnnotationsAdded);
+        Assert.True(handleSegment.IsSubsegmentsAdded);
+        
+        Assert.Equal("POWERTOOLS", handleSegment.Annotations["Service"]);
+        Assert.True((bool)handleSegment.Annotations["ColdStart"]);
+        Assert.Equal("## FunctionHandler", handleSegment.Name);
+        Assert.Equal(2, handleSegment.Subsegments.Count);
+
+        var firstCallSubsegment = handleSegment.Subsegments[0];
+        
+        Assert.Equal("Get Ip Address", firstCallSubsegment.Name);
+        Assert.False(firstCallSubsegment.IsInProgress);
+        var metadata1 = firstCallSubsegment.Metadata["POWERTOOLS"];
+        Assert.Contains("Get Ip Address response", metadata1.Keys.Cast<string>());
+        Assert.Contains("127.0.0.1", metadata1.Values.Cast<string>());
+        
+        var businessLogicSubsegment = handleSegment.Subsegments[1];
+        
+        Assert.Equal("Call DynamoDB", businessLogicSubsegment.Name);
+        
+        Assert.False(businessLogicSubsegment.IsInProgress);
+        Assert.Single(businessLogicSubsegment.Metadata);
+        var metadata = businessLogicSubsegment.Metadata["POWERTOOLS"];
+        Assert.Contains("Call DynamoDB response", metadata.Keys.Cast<string>());
+        Assert.Contains(["HELLO", "WORLD", "127.0.0.1"], metadata.Values.Cast<List<string>>());
+        Assert.True(businessLogicSubsegment.IsSubsegmentsAdded);
+        
+        var getSomethingSubsegment = businessLogicSubsegment.Subsegments[0];
+        
+        Assert.Equal("To Upper", getSomethingSubsegment.Name);
+       
+        Assert.False(getSomethingSubsegment.IsSubsegmentsAdded);
+        Assert.False(getSomethingSubsegment.IsInProgress);
     }
 
     public void Dispose()

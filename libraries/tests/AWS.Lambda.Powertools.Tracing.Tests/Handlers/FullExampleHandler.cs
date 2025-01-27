@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 
@@ -21,14 +23,28 @@ namespace AWS.Lambda.Powertools.Tracing.Tests.Handlers;
 public class FullExampleHandler
 {
     [Tracing(Namespace = "ns", CaptureMode = TracingCaptureMode.ResponseAndError)]
-    public Task<string> Handle(string text, ILambdaContext context)
+    public async Task<string> Handle(string text, ILambdaContext context)
     {
         Tracing.AddAnnotation("annotation", "value");
-        BusinessLogic1().GetAwaiter().GetResult();
+        await BusinessLogic1();
+
+        var response = DoAction(text);
         
-        return Task.FromResult(text.ToUpper());
+        return await Task.FromResult(response);
     }
-    
+
+    [Tracing(SegmentName = "Do Action")]
+    private string DoAction(string text)
+    {
+        return ToUpper(text);
+    }
+
+    [Tracing(SegmentName = "To Upper")]
+    private string ToUpper(string text)
+    {
+        return text.ToUpper();
+    }
+
     [Tracing(SegmentName = "First Call")]
     private async Task BusinessLogic1()
     {
@@ -50,5 +66,83 @@ public class FullExampleHandler
     private void GetSomething()
     {
         Tracing.AddAnnotation("getsomething", "value");
+    }
+}
+
+public class FullExampleHandler2
+{
+    [Tracing]
+    public static async Task<string> FunctionHandler(string request, ILambdaContext context)
+    {
+        string myIp = await GetIp();
+
+        var response = CallDynamo(myIp);
+
+        return "hello";
+    }
+
+    [Tracing(SegmentName = "Call DynamoDB")]
+    private static List<string> CallDynamo(string myIp)
+    {
+        var newList = ToUpper(myIp, new List<string>() { "Hello", "World" });
+        return newList;
+    }
+
+    [Tracing(SegmentName = "To Upper")]
+    private static List<string> ToUpper(string myIp, List<string> response)
+    {
+        var newList = new List<string>();
+        foreach (var item in response)
+        {
+            newList.Add(item.ToUpper());
+        }
+
+        newList.Add(myIp);
+        return newList;
+    }
+
+    [Tracing(SegmentName = "Get Ip Address")]
+    private static async Task<string> GetIp()
+    {
+        return await Task.FromResult("127.0.0.1");
+    }
+}
+
+public class FullExampleHandler3
+{
+    [Tracing]
+    public static async Task<string> FunctionHandler(string request, ILambdaContext context)
+    {
+        string myIp = GetIp();
+
+        var response = CallDynamo(myIp);
+
+        return "hello";
+    }
+
+    [Tracing(SegmentName = "Call DynamoDB")]
+    private static List<string> CallDynamo(string myIp)
+    {
+        var newList = ToUpper(myIp, new List<string>() { "Hello", "World" });
+        return newList;
+    }
+
+    [Tracing(SegmentName = "To Upper")]
+    private static List<string> ToUpper(string myIp, List<string> response)
+    {
+        var newList = new List<string>();
+        foreach (var item in response)
+        {
+            newList.Add(item.ToUpper());
+        }
+
+        newList.Add(myIp);
+        return newList;
+    }
+
+    [Tracing(SegmentName = "Get Ip Address")]
+    private static string GetIp()
+    {
+        return "127.0.0.1";
     }
 }

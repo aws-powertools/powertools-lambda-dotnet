@@ -17,16 +17,18 @@ using System;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using System.Threading.Tasks;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Utils;
 
 namespace AWS.Lambda.Powertools.Tracing.Internal;
 
 /// <summary>
-///     This aspect will automatically trace all function handlers.
+///     Tracing Aspect
 ///     Scope.Global is singleton
 /// </summary>
-[Aspect(Scope.Global)]
+[Aspect(Scope.Global, Factory = typeof(TracingAspectFactory))]
 public class TracingAspect
 {
     /// <summary>
@@ -55,28 +57,18 @@ public class TracingAspect
     private bool _isAnnotationsCaptured;
 
     /// <summary>
-    ///     Tracing namespace
+    /// Aspect constructor
     /// </summary>
-    private string _namespace;
-
-    /// <summary>
-    ///     The capture mode
-    /// </summary>
-    private TracingCaptureMode _captureMode;
-
-    /// <summary>
-    /// Initializes a new instance
-    /// </summary>
-    public TracingAspect()
+    /// <param name="powertoolsConfigurations"></param>
+    /// <param name="xRayRecorder"></param>
+    public TracingAspect(IPowertoolsConfigurations powertoolsConfigurations, IXRayRecorder xRayRecorder)
     {
-        _xRayRecorder = XRayRecorder.Instance;
-        _powertoolsConfigurations = PowertoolsConfigurations.Instance;
+        _powertoolsConfigurations = powertoolsConfigurations;
+        _xRayRecorder = xRayRecorder;
     }
 
     /// <summary>
-    /// the code is executed instead of the target method.
-    /// The call to original method is wrapped around the following code
-    /// the original code is called with var result = target(args);
+    /// Surrounds the specific method with Tracing aspect
     /// </summary>
     /// <param name="name"></param>
     /// <param name="args"></param>
@@ -90,128 +82,136 @@ public class TracingAspect
         [Argument(Source.Target)] Func<object[], object> target,
         [Argument(Source.Triggers)] Attribute[] triggers)
     {
-        // Before running Function
-
         var trigger = triggers.OfType<TracingAttribute>().First();
+
+        if (TracingDisabled())
+            return target(args);
+
+        var @namespace = !string.IsNullOrWhiteSpace(trigger.Namespace)
+            ? trigger.Namespace
+            : _powertoolsConfigurations.Service;
+
+        var (segmentName, metadataName) = string.IsNullOrWhiteSpace(trigger.SegmentName)
+            ? ($"## {name}", name)
+            : (trigger.SegmentName, trigger.SegmentName);
+
+        BeginSegment(segmentName, @namespace);
+
         try
         {
-            if (TracingDisabled())
-                return target(args);
-
-            _namespace = trigger.Namespace;
-
-            var segmentName = !string.IsNullOrWhiteSpace(trigger.SegmentName) ? trigger.SegmentName : $"## {name}";
-            var nameSpace = GetNamespace();
-
-            _xRayRecorder.BeginSubsegment(segmentName);
-            _xRayRecorder.SetNamespace(nameSpace);
-
-            if (_captureAnnotations)
-            {
-                _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
-
-                _captureAnnotations = false;
-                _isAnnotationsCaptured = true;
-
-                if (_powertoolsConfigurations.IsServiceDefined)
-                    _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
-            }
-
-            _isColdStart = false;
-
-            // return of the handler
             var result = target(args);
 
-            // must get capture after all subsegments run
-            _captureMode = trigger.CaptureMode;
-
-            if (CaptureResponse())
+            if (result is Task task)
             {
-                _xRayRecorder.AddMetadata
-                (
-                    nameSpace,
-                    $"{name} response",
-                    result
-                );
+                if (task.IsFaulted)  
+                {  
+                    // Force the exception to be thrown  
+                    task.Exception?.Handle(ex => false);    
+                } 
+                
+                // Only handle response if it's not a void Task
+                if (task.GetType().IsGenericType)
+                {
+                    var taskResult = task.GetType().GetProperty("Result")?.GetValue(task);
+                    HandleResponse(metadataName, taskResult, trigger.CaptureMode, @namespace);
+                }
+                _xRayRecorder.EndSubsegment();
+                return task;
             }
 
-            // after 
+            HandleResponse(metadataName, result, trigger.CaptureMode, @namespace);
+
+            _xRayRecorder.EndSubsegment();
             return result;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            _captureMode = trigger.CaptureMode;
-            HandleException(e, name);
+            var actualException = ex is AggregateException ae ? ae.InnerException! : ex;  
+            HandleException(actualException, metadataName, trigger.CaptureMode, @namespace);  
+            _xRayRecorder.EndSubsegment();  
+            
+            // Capture and rethrow the original exception preserving the stack trace
+            ExceptionDispatchInfo.Capture(actualException).Throw();  
             throw;
         }
-    }
-
-    /// <summary>
-    /// the code is injected after the method ends.
-    /// </summary>
-    [Advice(Kind.After)]
-    public void OnExit()
-    {
-        if (TracingDisabled())
-            return;
-
-        if (_isAnnotationsCaptured)
-            _captureAnnotations = true;
-
-        _xRayRecorder.EndSubsegment();
-    }
-
-    /// <summary>
-    /// Code that handles when exceptions occur in the client method
-    /// </summary>
-    /// <param name="exception"></param>
-    /// <param name="name"></param>
-    private void HandleException(Exception exception, string name)
-    {
-        if (CaptureError())
+        finally
         {
-            var nameSpace = GetNamespace();
+            if (_isAnnotationsCaptured)
+                _captureAnnotations = true;
+        }
+    }
 
-            var sb = new StringBuilder();
-            sb.AppendLine($"Exception type: {exception.GetType()}");
-            sb.AppendLine($"Exception message: {exception.Message}");
-            sb.AppendLine($"Stack trace: {exception.StackTrace}");
+    private void BeginSegment(string segmentName, string @namespace)
+    {
+        _xRayRecorder.BeginSubsegment(segmentName);
+        _xRayRecorder.SetNamespace(@namespace);
 
-            if (exception.InnerException != null)
-            {
-                sb.AppendLine("---BEGIN InnerException--- ");
-                sb.AppendLine($"Exception type {exception.InnerException.GetType()}");
-                sb.AppendLine($"Exception message: {exception.InnerException.Message}");
-                sb.AppendLine($"Stack trace: {exception.InnerException.StackTrace}");
-                sb.AppendLine("---END Inner Exception");
-            }
+        if (_captureAnnotations)
+        {
+            _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
 
-            _xRayRecorder.AddMetadata
-            (
-                nameSpace,
-                $"{name} error",
-                sb.ToString()
-            );
+            _captureAnnotations = false;
+            _isAnnotationsCaptured = true;
+
+            if (_powertoolsConfigurations.IsServiceDefined)
+                _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
         }
 
-        // // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
-        // // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
-        ExceptionDispatchInfo.Capture(exception).Throw();
+        _isColdStart = false;
     }
 
-    /// <summary>
-    ///     Gets the namespace.
-    /// </summary>
-    /// <returns>System.String.</returns>
-    private string GetNamespace()
+    private void HandleResponse(string name, object result, TracingCaptureMode captureMode, string @namespace)
     {
-        return !string.IsNullOrWhiteSpace(_namespace) ? _namespace : _powertoolsConfigurations.Service;
+        if (!CaptureResponse(captureMode)) return;
+        if (result == null) return;  // Don't try to serialize null results
+
+        // Skip if the result is VoidTaskResult
+        if (result.GetType().Name == "VoidTaskResult") return;
+
+#if NET8_0_OR_GREATER
+        if (!RuntimeFeatureWrapper.IsDynamicCodeSupported) // is AOT
+        {
+            _xRayRecorder.AddMetadata(
+                @namespace,
+                $"{name} response",
+                Serializers.PowertoolsTracingSerializer.Serialize(result)
+            );
+            return;
+        }
+#endif
+
+        _xRayRecorder.AddMetadata(
+            @namespace,
+            $"{name} response",
+            result
+        );
     }
 
-    /// <summary>
-    /// Method that checks if tracing is disabled
-    /// </summary>
-    /// <returns></returns>
+    private void HandleException(Exception exception, string name, TracingCaptureMode captureMode, string @namespace)
+    {
+        if (!CaptureError(captureMode)) return;
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"Exception type: {exception.GetType()}");
+        sb.AppendLine($"Exception message: {exception.Message}");
+        sb.AppendLine($"Stack trace: {exception.StackTrace}");
+
+        if (exception.InnerException != null)
+        {
+            sb.AppendLine("---BEGIN InnerException--- ");
+            sb.AppendLine($"Exception type {exception.InnerException.GetType()}");
+            sb.AppendLine($"Exception message: {exception.InnerException.Message}");
+            sb.AppendLine($"Stack trace: {exception.InnerException.StackTrace}");
+            sb.AppendLine("---END Inner Exception");
+        }
+
+        _xRayRecorder.AddMetadata(
+            @namespace,
+            $"{name} error",
+            sb.ToString()
+        );
+    }
+
     private bool TracingDisabled()
     {
         if (_powertoolsConfigurations.TracingDisabled)
@@ -229,52 +229,28 @@ public class TracingAspect
         return false;
     }
 
-    /// <summary>
-    ///     Captures the response.
-    /// </summary>
-    /// <returns><c>true</c> if tracing should capture responses, <c>false</c> otherwise.</returns>
-    private bool CaptureResponse()
+    private bool CaptureResponse(TracingCaptureMode captureMode)
     {
-        switch (_captureMode)
+        return captureMode switch
         {
-            case TracingCaptureMode.EnvironmentVariable:
-                return _powertoolsConfigurations.TracerCaptureResponse;
-            case TracingCaptureMode.Response:
-            case TracingCaptureMode.ResponseAndError:
-                return true;
-            case TracingCaptureMode.Error:
-            case TracingCaptureMode.Disabled:
-            default:
-                return false;
-        }
+            TracingCaptureMode.EnvironmentVariable => _powertoolsConfigurations.TracerCaptureResponse,
+            TracingCaptureMode.Response => true,
+            TracingCaptureMode.ResponseAndError => true,
+            _ => false
+        };
     }
 
-    /// <summary>
-    ///     Captures the error.
-    /// </summary>
-    /// <returns><c>true</c> if tracing should capture errors, <c>false</c> otherwise.</returns>
-    private bool CaptureError()
+    private bool CaptureError(TracingCaptureMode captureMode)
     {
-        if (TracingDisabled())
-            return false;
-
-        switch (_captureMode)
+        return captureMode switch
         {
-            case TracingCaptureMode.EnvironmentVariable:
-                return _powertoolsConfigurations.TracerCaptureError;
-            case TracingCaptureMode.Error:
-            case TracingCaptureMode.ResponseAndError:
-                return true;
-            case TracingCaptureMode.Response:
-            case TracingCaptureMode.Disabled:
-            default:
-                return false;
-        }
+            TracingCaptureMode.EnvironmentVariable => _powertoolsConfigurations.TracerCaptureError,
+            TracingCaptureMode.Error => true,
+            TracingCaptureMode.ResponseAndError => true,
+            _ => false
+        };
     }
 
-    /// <summary>
-    ///     Resets static variables for test.
-    /// </summary>
     internal static void ResetForTest()
     {
         _isColdStart = true;

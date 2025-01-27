@@ -38,6 +38,27 @@ public class FunctionHandler
         Metrics.AddDimension("functionVersion", "$LATEST");
         Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
     }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    public void AddMultipleDimensions()
+    {
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> {
+            { "Default", "Initial" }
+        });
+        Metrics.PushSingleMetric("Lambda Execute", 1, MetricUnit.Count, metricResolution: MetricResolution.High, nameSpace: "ns1",
+            defaultDimensions: new Dictionary<string, string> {
+                { "Type", "Start" }
+            });
+        
+        Metrics.PushSingleMetric("Lambda Execute", 1, MetricUnit.Count, metricResolution: MetricResolution.High,  nameSpace: "ns2",
+            defaultDimensions: new Dictionary<string, string> {
+                { "Type", "Start" },
+                { "SessionId", "Unset" }
+            });
+        Metrics.AddMetric("Lambda Execute", 1, MetricUnit.Count, MetricResolution.High);
+        Metrics.AddDimension("SessionId", "MySessionId");
+        Metrics.AddDimension("Type", "Start");
+    }
 
     [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
     public void ClearDimensions()
