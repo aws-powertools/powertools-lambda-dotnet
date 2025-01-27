@@ -19,3 +19,8 @@ public class PowertoolsDefaultStackProps : StackProps
     public string? ArchitectureString { get; set; }
     public Dictionary<string,string>? Environment { get; set; }
 }
+
+public class IdempotencyStackProps : PowertoolsDefaultStackProps
+{
+    public required string TableName { get; set; }
+}

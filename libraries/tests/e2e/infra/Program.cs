@@ -11,7 +11,7 @@ namespace Infra
 
             _ = new CoreStack(app, "CoreStack", new StackProps { });
 
-            _ = new IdempotencyStack(app, "IdempotencyStack", new PowertoolsDefaultStackProps { });
+            _ = new IdempotencyStack(app, "IdempotencyStack", new IdempotencyStackProps { TableName = "IdempotencyTable" });
             
             app.Synth();
         }

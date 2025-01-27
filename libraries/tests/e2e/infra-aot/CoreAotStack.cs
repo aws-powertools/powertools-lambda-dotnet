@@ -25,7 +25,7 @@ public class CoreAotStack : Stack
         var distAotPath = $"../functions/core/{utility}/AOT-Function/dist";
         var arch = _architecture == Architecture.X86_64 ? "X64" : "ARM";
 
-        CreateFunctionConstruct(this, $"{utility}_ARM_aot_net8", Runtime.DOTNET_8, _architecture,
+        CreateFunctionConstruct(this, $"{utility}_{arch}_aot_net8", Runtime.DOTNET_8, _architecture,
             $"E2ETestLambda_{arch}_AOT_NET8_{utility}", baseAotPath, distAotPath);
     }
 

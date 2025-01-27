@@ -33,7 +33,7 @@ namespace InfraAot
             });
 
             _ = new IdempotencyStack(app, $"IdempotencyStack-AOT-{architecture}",
-                new PowertoolsDefaultStackProps { IsAot = true, ArchitectureString = architecture });
+                new IdempotencyStackProps { IsAot = true, ArchitectureString = architecture, TableName = $"IdempotencyTable-AOT-{architecture}" });
 
             app.Synth();
         }
