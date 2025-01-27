@@ -1,6 +1,6 @@
 using Amazon.CDK.AWS.Lambda;
 
-namespace TestUtils;
+namespace InfraShared;
 
 public class FunctionConstructProps
 {
@@ -10,4 +10,5 @@ public class FunctionConstructProps
     public required string Handler { get; set; }
     public required string SourcePath { get; set; }
     public required string DistPath { get; set; }
+    public bool IsAot { get; set; } = false;
 }

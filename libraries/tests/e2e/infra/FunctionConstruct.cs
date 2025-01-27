@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Amazon.CDK;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
-using TestUtils;
+using InfraShared;
 
 namespace Infra;
 

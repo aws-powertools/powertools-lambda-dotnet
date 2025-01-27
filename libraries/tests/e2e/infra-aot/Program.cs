@@ -1,4 +1,5 @@
 ﻿using Amazon.CDK;
+using InfraShared;
 
 namespace InfraAot
 {
@@ -29,6 +30,9 @@ namespace InfraAot
             {
                 Architecture = architecture
             });
+            
+            _ = new IdempotencyStack(app, "IdempotencyStack-AOT", new StackProps { });
+            
             app.Synth();
         }
     }
