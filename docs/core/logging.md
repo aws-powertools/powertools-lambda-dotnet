@@ -36,6 +36,14 @@ Setting | Description | Environment variable | Attribute parameter
 **Service** | Sets **Service** key that will be present across all log statements | `POWERTOOLS_SERVICE_NAME` | `Service`
 **Logging level** | Sets how verbose Logger should be (Information, by default) |  `POWERTOOLS_LOG_LEVEL` | `LogLevel`
 
+### Service Property Priority Resolution
+
+The root level Service property now correctly follows this priority order:
+
+1. LoggingAttribute.Service (property value set in the decorator)
+2. POWERTOOLS_SERVICE_NAME (environment variable)
+
+
 ### Example using AWS Serverless Application Model (AWS SAM)
 
 You can override log level by setting **`POWERTOOLS_LOG_LEVEL`** environment variable in the AWS SAM template.
