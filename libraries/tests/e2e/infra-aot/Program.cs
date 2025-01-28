@@ -22,9 +22,11 @@ namespace InfraAot
             }
 
             var id = "CoreAotStack";
+            var idempotencystackAotId = "IdempotencyStack-AOT";
             if (architecture == "arm64")
             {
                 id = $"CoreAotStack-{architecture}";
+                idempotencystackAotId = $"IdempotencyStack-AOT-{architecture}";
             }
 
             _ = new CoreAotStack(app, id, new PowertoolsDefaultStackProps
@@ -32,7 +34,7 @@ namespace InfraAot
                 ArchitectureString = architecture
             });
 
-            _ = new IdempotencyStack(app, $"IdempotencyStack-AOT-{architecture}",
+            _ = new IdempotencyStack(app, idempotencystackAotId,
                 new IdempotencyStackProps { IsAot = true, ArchitectureString = architecture, TableName = $"IdempotencyTable-AOT-{architecture}" });
 
             app.Synth();
