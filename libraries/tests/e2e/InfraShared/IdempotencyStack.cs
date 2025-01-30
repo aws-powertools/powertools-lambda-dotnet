@@ -31,30 +31,32 @@ public class IdempotencyStack : Stack
         {
             var baseAotPath = $"../functions/{utility}/AOT-Function/src/AOT-Function";
             var distAotPath = $"../functions/{utility}/AOT-Function/dist";
+            var path = new Path(baseAotPath, distAotPath);
             
             var architecture = props.ArchitectureString == "arm64" ? Architecture.ARM_64 : Architecture.X86_64;
             var arch = architecture == Architecture.X86_64 ? "X64" : "ARM";
             CreateFunctionConstruct(this, $"{utility}_{arch}_aot_net8", Runtime.DOTNET_8, architecture,
-                $"E2ETestLambda_{arch}_AOT_NET8_{utility}", baseAotPath, distAotPath, props);
+                $"E2ETestLambda_{arch}_AOT_NET8_{utility}", path, props);
         }
         else
         {
             var basePath = $"../functions/{utility}/Function/src/Function";
             var distPath = $"../functions/{utility}/Function/dist";
+            var path = new Path(basePath, distPath);
             
             CreateFunctionConstruct(this, $"{utility}_X64_net8", Runtime.DOTNET_8, Architecture.X86_64,
-                $"E2ETestLambda_X64_NET8_{utility}", basePath, distPath, props);
+                $"E2ETestLambda_X64_NET8_{utility}", path, props);
             CreateFunctionConstruct(this, $"{utility}_arm_net8", Runtime.DOTNET_8, Architecture.ARM_64,
-                $"E2ETestLambda_ARM_NET8_{utility}", basePath, distPath, props);
+                $"E2ETestLambda_ARM_NET8_{utility}", path, props);
             CreateFunctionConstruct(this, $"{utility}_X64_net6", Runtime.DOTNET_6, Architecture.X86_64,
-                $"E2ETestLambda_X64_NET6_{utility}", basePath, distPath, props);
+                $"E2ETestLambda_X64_NET6_{utility}", path, props);
             CreateFunctionConstruct(this, $"{utility}_arm_net6", Runtime.DOTNET_6, Architecture.ARM_64,
-                $"E2ETestLambda_ARM_NET6_{utility}", basePath, distPath, props);
+                $"E2ETestLambda_ARM_NET6_{utility}", path, props);
         }
     }
 
     private void CreateFunctionConstruct(Construct scope, string id, Runtime runtime, Architecture architecture,
-        string name, string sourcePath, string distPath, PowertoolsDefaultStackProps props)
+        string name,Path path, PowertoolsDefaultStackProps props)
     {
         var lambdaFunction = new FunctionConstruct(scope, id, new FunctionConstructProps
         {
@@ -62,8 +64,8 @@ public class IdempotencyStack : Stack
             Architecture = architecture,
             Name = name,
             Handler = props.IsAot ? "AOT-Function" : "Function::Function.Function::FunctionHandler",
-            SourcePath = sourcePath,
-            DistPath = distPath,
+            SourcePath = path.SourcePath,
+            DistPath = path.DistPath,
             Environment = new Dictionary<string, string>
             {
                 { "IDEMPOTENCY_TABLE_NAME", Table.TableName }
@@ -75,3 +77,5 @@ public class IdempotencyStack : Stack
         Table.GrantReadWriteData(lambdaFunction.Function);
     }
 }
+
+public record Path(string SourcePath, string DistPath);
