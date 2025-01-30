@@ -40,7 +40,7 @@ jobs:
           mask-aws-account-id: true
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852 # 4.2.0
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
         with:
           dotnet-version: '8.x'
 
@@ -77,7 +77,7 @@ jobs:
           mask-aws-account-id: true
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852 # 4.2.0
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
         with:
           dotnet-version: '8.x'
 
@@ -107,7 +107,7 @@ jobs:
           mask-aws-account-id: true
           
       - name: Set up .NET
-        uses: actions/setup-dotnet@87b7050bc53ea08284295505d98d2aa94301e852 # 4.2.0
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
         with:
           dotnet-version: '8.x'
 
