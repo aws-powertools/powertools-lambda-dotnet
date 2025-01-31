@@ -78,7 +78,9 @@ internal class XRayRecorder : IXRayRecorder
     public void BeginSubsegment(string name)
     {
         if (_isLambda)
-            _awsxRayRecorder.BeginSubsegment(name);
+        {
+            _awsxRayRecorder.BeginSubsegment(Helpers.SanitizeString(name));
+        }
     }
 
     /// <summary>
