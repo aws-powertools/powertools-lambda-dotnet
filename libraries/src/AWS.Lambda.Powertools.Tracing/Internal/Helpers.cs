@@ -1,3 +1,4 @@
+using System;
 using System.Text.RegularExpressions;
 
 namespace AWS.Lambda.Powertools.Tracing.Internal;
@@ -17,7 +18,7 @@ public static class Helpers
         // Define a regular expression pattern to match allowed characters
         var pattern = @"[^a-zA-Z0-9\s_\.\:/%&#=+\-@]";
 
-        // Replace any character that does not match the pattern with an empty string
-        return Regex.Replace(input, pattern, string.Empty);
+        // Replace any character that does not match the pattern with an empty string, with a timeout
+        return Regex.Replace(input, pattern, string.Empty, RegexOptions.None, TimeSpan.FromMilliseconds(100));
     }
 }
