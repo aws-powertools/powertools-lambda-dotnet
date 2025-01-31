@@ -1,7 +1,7 @@
 using Amazon.CDK;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
-using TestUtils;
+using InfraShared;
 using Architecture = Amazon.CDK.AWS.Lambda.Architecture;
 
 namespace InfraAot;
@@ -10,9 +10,9 @@ public class CoreAotStack : Stack
 {
     private readonly Architecture _architecture;
 
-    internal CoreAotStack(Construct scope, string id, AotStackProps props = null) : base(scope, id, props)
+    internal CoreAotStack(Construct scope, string id, PowertoolsDefaultStackProps props = null) : base(scope, id, props)
     {
-        if (props != null) _architecture = props.Architecture == "arm64" ? Architecture.ARM_64 : Architecture.X86_64;
+        if (props != null) _architecture = props.ArchitectureString == "arm64" ? Architecture.ARM_64 : Architecture.X86_64;
 
         CreateFunctionConstructs("logging");
         CreateFunctionConstructs("metrics");
@@ -25,7 +25,7 @@ public class CoreAotStack : Stack
         var distAotPath = $"../functions/core/{utility}/AOT-Function/dist";
         var arch = _architecture == Architecture.X86_64 ? "X64" : "ARM";
 
-        CreateFunctionConstruct(this, $"{utility}_ARM_aot_net8", Runtime.DOTNET_8, _architecture,
+        CreateFunctionConstruct(this, $"{utility}_{arch}_aot_net8", Runtime.DOTNET_8, _architecture,
             $"E2ETestLambda_{arch}_AOT_NET8_{utility}", baseAotPath, distAotPath);
     }
 
@@ -39,7 +39,8 @@ public class CoreAotStack : Stack
             Name = name,
             Handler = "AOT-Function",
             SourcePath = sourcePath,
-            DistPath = distPath
+            DistPath = distPath,
+            IsAot = true
         });
     }
 }

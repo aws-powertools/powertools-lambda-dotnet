@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Function", "Function", "{FE3A26C9-5A8D-4DD3-A87B-2D7FC5BC15A8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{28C61FF3-B4F5-44AC-9375-A4C6FC8579C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Function.Tests", "Function\test\Function.Tests\Function.Tests.csproj", "{8959B0AC-3B85-4E30-9C48-CAD5F72AD5BB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8959B0AC-3B85-4E30-9C48-CAD5F72AD5BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8959B0AC-3B85-4E30-9C48-CAD5F72AD5BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8959B0AC-3B85-4E30-9C48-CAD5F72AD5BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8959B0AC-3B85-4E30-9C48-CAD5F72AD5BB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{28C61FF3-B4F5-44AC-9375-A4C6FC8579C8} = {FE3A26C9-5A8D-4DD3-A87B-2D7FC5BC15A8}
+		{8959B0AC-3B85-4E30-9C48-CAD5F72AD5BB} = {28C61FF3-B4F5-44AC-9375-A4C6FC8579C8}
+	EndGlobalSection
+EndGlobal
