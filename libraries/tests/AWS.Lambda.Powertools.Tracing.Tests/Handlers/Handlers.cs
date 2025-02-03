@@ -31,6 +31,18 @@ public class HandlerFunctions
         
     }
     
+    [Tracing(SegmentName = "## <<Main>$>g__Handler|0_0")]
+    public void HandleWithInvalidSegmentName()
+    {
+        MethodWithInvalidSegmentName();
+    }
+    
+    [Tracing(SegmentName = "Inval$#id | <Segment>")]
+    private void MethodWithInvalidSegmentName()
+    {
+        
+    }
+    
     [Tracing(Namespace = "Namespace Defined")]
     public void HandleWithNamespace()
     {
