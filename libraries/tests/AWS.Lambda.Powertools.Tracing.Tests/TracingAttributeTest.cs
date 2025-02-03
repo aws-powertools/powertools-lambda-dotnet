@@ -115,7 +115,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
-            TracingAspectHandler.ResetForTest();
+            TracingAspect.ResetForTest();
         }
     }
 
@@ -171,7 +171,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
-            TracingAspectHandler.ResetForTest();
+            TracingAspect.ResetForTest();
         }
     }
 
@@ -256,6 +256,28 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Assert.Single(segment.Subsegments);
             Assert.Equal("SegmentName", subSegment.Name);
         }
+        
+        [Fact]
+        public void OnEntry_WhenSegmentName_Is_Unsupported()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+
+            // Act
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.HandleWithInvalidSegmentName();
+            var subSegment = segment.Subsegments[0];
+            var childSegment = subSegment.Subsegments[0];
+            
+            // Assert
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.True(subSegment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.Single(subSegment.Subsegments);
+            Assert.Equal("## Maing__Handler0_0", subSegment.Name);
+            Assert.Equal("Inval#id  Segment", childSegment.Name);
+        }
 
         [Fact]
         public void OnEntry_WhenNamespaceIsNull_SetNamespaceWithService()
@@ -298,6 +320,32 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
 
         #region OnSuccess Tests
 
+        
+        [Fact]
+        public void OnSuccess_When_NotSet_Defaults_CapturesResponse()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+            
+            // Act
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.Handle();
+            var subSegment = segment.Subsegments[0];
+
+            // Assert
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.True(subSegment.IsMetadataAdded);
+            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+
+            var metadata = subSegment.Metadata["POWERTOOLS"];
+            Assert.Equal("Handle response", metadata.Keys.Cast<string>().First());
+            var handlerResponse = metadata.Values.Cast<string[]>().First();
+            Assert.Equal("A", handlerResponse[0]);
+            Assert.Equal("B", handlerResponse[1]);
+        }
+        
         [Fact]
         public void OnSuccess_WhenTracerCaptureResponseEnvironmentVariableIsTrue_CapturesResponse()
         {
@@ -757,7 +805,7 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_RESPONSE", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACER_CAPTURE_ERROR", "");
             Environment.SetEnvironmentVariable("POWERTOOLS_TRACE_DISABLED", "");
-            TracingAspectHandler.ResetForTest();
+            TracingAspect.ResetForTest();
         }
     }
 }

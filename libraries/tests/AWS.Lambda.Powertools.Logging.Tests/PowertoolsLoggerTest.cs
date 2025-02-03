@@ -29,7 +29,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests
 {
-    [Collection("Sequential")]
+    [Collection("X Sequential")]
     public class PowertoolsLoggerTest : IDisposable
     {
         public PowertoolsLoggerTest()
@@ -1090,6 +1090,90 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 s.Contains("\"exception\":{\"type\":\"System.InvalidOperationException\",\"message\":\"TestError\",\"source\":\"AWS.Lambda.Powertools.Logging.Tests\",\"stack_trace\":\"   at AWS.Lambda.Powertools.Logging.Tests.PowertoolsLoggerTest.Log_WhenException_LogsExceptionDetails()")
             ));
         }
+        
+        [Fact]
+        public void Log_Inner_Exception()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var error = new InvalidOperationException("Parent exception message",
+                new ArgumentNullException(nameof(service), "Very important inner exception message"));
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            configurations.Service.Returns(service);
+            configurations.LogLevel.Returns(logLevel.ToString());
+
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+            systemWrapper.GetRandom().Returns(randomSampleRate);
+
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = LogLevel.None
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
+
+            logger.LogError(
+                error, 
+                "Something went wrong and we logged an exception itself with an inner exception. This is a param {arg}",
+                12345);
+
+            // Assert
+            systemWrapper.Received(1).LogLine(Arg.Is<string>(s =>
+                s.Contains("\"exception\":{\"type\":\"" + error.GetType().FullName + "\",\"message\":\"" +
+                           error.Message + "\"")
+            ));
+            
+            systemWrapper.Received(1).LogLine(Arg.Is<string>(s =>
+                s.Contains("\"level\":\"Error\",\"service\":\"" + service+ "\",\"name\":\"" + loggerName + "\",\"message\":\"Something went wrong and we logged an exception itself with an inner exception. This is a param 12345\",\"exception\":{\"type\":\"System.InvalidOperationException\",\"message\":\"Parent exception message\",\"inner_exception\":{\"type\":\"System.ArgumentNullException\",\"message\":\"Very important inner exception message (Parameter 'service')\"}}}")
+            ));
+        }
+        
+        [Fact]
+        public void Log_Nested_Inner_Exception()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var error = new InvalidOperationException("Parent exception message",
+                new ArgumentNullException(nameof(service),
+                    new Exception("Very important nested inner exception message")));
+            
+            var logLevel = LogLevel.Information;
+            var randomSampleRate = 0.5;
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            configurations.Service.Returns(service);
+            configurations.LogLevel.Returns(logLevel.ToString());
+
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+            systemWrapper.GetRandom().Returns(randomSampleRate);
+
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = null,
+                MinimumLevel = LogLevel.None
+            };
+            
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
+            var logger = provider.CreateLogger(loggerName);
+            
+
+            logger.LogError(
+                error, 
+                "Something went wrong and we logged an exception itself with an inner exception. This is a param {arg}",
+                12345);
+
+            // Assert
+            systemWrapper.Received(1).LogLine(Arg.Is<string>(s =>
+                s.Contains("\"message\":\"Something went wrong and we logged an exception itself with an inner exception. This is a param 12345\",\"exception\":{\"type\":\"System.InvalidOperationException\",\"message\":\"Parent exception message\",\"inner_exception\":{\"type\":\"System.ArgumentNullException\",\"message\":\"service\",\"inner_exception\":{\"type\":\"System.Exception\",\"message\":\"Very important nested inner exception message\"}}}}")
+            ));
+        }
 
         [Fact]
         public void Log_WhenNestedException_LogsExceptionDetails()
@@ -1253,6 +1337,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         [Fact]
         public void Log_Set_Execution_Environment_Context()
         {
+            var _originalValue = Environment.GetEnvironmentVariable("POWERTOOLS_SERVICE_NAME");
+            
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
             var assemblyName = "AWS.Lambda.Powertools.Logger";
@@ -1623,6 +1709,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         public void Dispose()
         {
             PowertoolsLoggingSerializer.ClearOptions();
+            LoggingAspect.ResetForTest();
         }
     }
 }

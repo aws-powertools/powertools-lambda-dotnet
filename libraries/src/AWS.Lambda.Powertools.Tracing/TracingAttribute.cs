@@ -14,7 +14,7 @@
  */
 
 using System;
-using AWS.Lambda.Powertools.Common;
+using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Tracing.Internal;
 
 namespace AWS.Lambda.Powertools.Tracing;
@@ -106,14 +106,17 @@ namespace AWS.Lambda.Powertools.Tracing;
 ///         }
 ///     </code>
 /// </example>
+[Injection(typeof(TracingAspect))]
 [AttributeUsage(AttributeTargets.Method)]
-public class TracingAttribute : MethodAspectAttribute
+public class TracingAttribute : Attribute
 {
     /// <summary>
     ///     Set custom segment name for the operation.
     ///     The default is '## {MethodName}'.
+    ///
+    ///     The logical name of the service that handled the request, up to 200 characters. 
+    ///     Names can contain Unicode letters, numbers, and whitespace, and the following symbols: \_, ., :, /, %, &amp;, #, =, +, \\, -, @
     /// </summary>
-    /// <value>The name of the segment.</value>
     public string SegmentName { get; set; } = "";
 
     /// <summary>
@@ -130,20 +133,4 @@ public class TracingAttribute : MethodAspectAttribute
     /// </summary>
     /// <value>The capture mode.</value>
     public TracingCaptureMode CaptureMode { get; set; } = TracingCaptureMode.EnvironmentVariable;
-
-    /// <summary>
-    ///     Creates the handler.
-    /// </summary>
-    /// <returns>IMethodAspectHandler.</returns>
-    protected override IMethodAspectHandler CreateHandler()
-    {
-        return new TracingAspectHandler
-        (
-            SegmentName,
-            Namespace,
-            CaptureMode,
-            PowertoolsConfigurations.Instance,
-            XRayRecorder.Instance
-        );
-    }
 }

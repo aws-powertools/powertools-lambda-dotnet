@@ -57,39 +57,50 @@ internal class ExceptionConverter : JsonConverter<Exception>
     /// <param name="options">The JsonSerializer options.</param>
     public override void Write(Utf8JsonWriter writer, Exception value, JsonSerializerOptions options)
     {
-        var exceptionType = value.GetType();
-        var properties = ExceptionPropertyExtractor.ExtractProperties(value);
-
-        if (options.DefaultIgnoreCondition == JsonIgnoreCondition.WhenWritingNull)
-            properties = properties.Where(prop => prop.Value != null);
-
-        var props = properties.ToArray();
-        if (props.Length == 0)
-            return;
-
-        writer.WriteStartObject();
-        writer.WriteString(ApplyPropertyNamingPolicy("Type", options), exceptionType.FullName);
-        
-        foreach (var prop in props)
+        void WriteException(Utf8JsonWriter w, Exception ex)
         {
-            switch (prop.Value)
+            var exceptionType = ex.GetType();
+            var properties = ExceptionPropertyExtractor.ExtractProperties(ex);
+
+            if (options.DefaultIgnoreCondition == JsonIgnoreCondition.WhenWritingNull)
+                properties = properties.Where(prop => prop.Value != null);
+
+            var props = properties.ToArray();
+            if (props.Length == 0)
+                return;
+
+            w.WriteStartObject();
+            w.WriteString(ApplyPropertyNamingPolicy("Type", options), exceptionType.FullName);
+
+            foreach (var prop in props)
             {
-                case IntPtr intPtr:
-                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Key, options), intPtr.ToInt64());
-                    break;
-                case UIntPtr uIntPtr:
-                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Key, options), uIntPtr.ToUInt64());
-                    break;
-                case Type propType:
-                    writer.WriteString(ApplyPropertyNamingPolicy(prop.Key, options), propType.FullName);
-                    break;
-                case string propString:
-                    writer.WriteString(ApplyPropertyNamingPolicy(prop.Key, options), propString);
-                    break;
+                switch (prop.Value)
+                {
+                    case IntPtr intPtr:
+                        w.WriteNumber(ApplyPropertyNamingPolicy(prop.Key, options), intPtr.ToInt64());
+                        break;
+                    case UIntPtr uIntPtr:
+                        w.WriteNumber(ApplyPropertyNamingPolicy(prop.Key, options), uIntPtr.ToUInt64());
+                        break;
+                    case Type propType:
+                        w.WriteString(ApplyPropertyNamingPolicy(prop.Key, options), propType.FullName);
+                        break;
+                    case string propString:
+                        w.WriteString(ApplyPropertyNamingPolicy(prop.Key, options), propString);
+                        break;
+                }
             }
+
+            if (ex.InnerException != null)
+            {
+                w.WritePropertyName(ApplyPropertyNamingPolicy("InnerException", options));
+                WriteException(w, ex.InnerException);
+            }
+
+            w.WriteEndObject();
         }
 
-        writer.WriteEndObject();
+        WriteException(writer, value);
     }
 
     /// <summary>
