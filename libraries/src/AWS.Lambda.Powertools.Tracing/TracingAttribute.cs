@@ -15,7 +15,6 @@
 
 using System;
 using AspectInjector.Broker;
-using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Tracing.Internal;
 
 namespace AWS.Lambda.Powertools.Tracing;
@@ -114,8 +113,10 @@ public class TracingAttribute : Attribute
     /// <summary>
     ///     Set custom segment name for the operation.
     ///     The default is '## {MethodName}'.
+    ///
+    ///     The logical name of the service that handled the request, up to 200 characters. 
+    ///     Names can contain Unicode letters, numbers, and whitespace, and the following symbols: \_, ., :, /, %, &amp;, #, =, +, \\, -, @
     /// </summary>
-    /// <value>The name of the segment.</value>
     public string SegmentName { get; set; } = "";
 
     /// <summary>
