@@ -36,223 +36,103 @@ public class FunctionTests
 
     [Theory]
     [MemberData(nameof(TestData.Inline), MemberType = typeof(TestData))]
-    public async Task IdempotencyHandlerTest(string functionName, string tableName)
+    public async Task IdempotencyPayloadSubsetTest(string functionName, string tableName)
     {
         _tableName = tableName;
-        await TestIdempotencyHandler(functionName);
-    }
+        await UpdateFunctionHandler(functionName, "Function::IdempotencyPayloadSubsetTest.Function::FunctionHandler");
+
+        // First unique request
+        var firstProductId = Guid.NewGuid().ToString();
+        var (firstResponse1, firstGuid1) = await ExecutePayloadSubsetRequest(functionName, "xyz", firstProductId);
+        var (firstResponse2, firstGuid2) = await ExecutePayloadSubsetRequest(functionName, "xyz", firstProductId);
     
+        // Assert first request pair
+        Assert.Equal(200, firstResponse1.StatusCode);
+        Assert.Equal(200, firstResponse2.StatusCode);
+        Assert.Equal(firstGuid1, firstGuid2); // Idempotency check
+        await AssertDynamoDbData(
+            $"{functionName}.FunctionHandler#{Helpers.HashRequest($"[\"xyz\",\"{firstProductId}\"]")}", 
+            firstGuid1);
+
+        // Second unique request
+        var secondProductId = Guid.NewGuid().ToString();
+        var (secondResponse1, secondGuid1) = await ExecutePayloadSubsetRequest(functionName, "xyz", secondProductId);
+        var (secondResponse2, secondGuid2) = await ExecutePayloadSubsetRequest(functionName, "xyz", secondProductId);
+
+        // Assert second request pair
+        Assert.Equal(200, secondResponse1.StatusCode);
+        Assert.Equal(200, secondResponse2.StatusCode);
+        Assert.Equal(secondGuid1, secondGuid2); // Idempotency check
+        Assert.NotEqual(firstGuid1, secondGuid1); // Different requests should have different GUIDs
+        await AssertDynamoDbData(
+            $"{functionName}.FunctionHandler#{Helpers.HashRequest($"[\"xyz\",\"{secondProductId}\"]")}", 
+            secondGuid1);
+    }
+
     [Theory]
     [MemberData(nameof(TestData.Inline), MemberType = typeof(TestData))]
     public async Task IdempotencyAttributeTest(string functionName, string tableName)
     {
         _tableName = tableName;
-        await TestIdempotencyAttribute(functionName);
-    }
-    
-    [Theory]
-    [MemberData(nameof(TestData.Inline), MemberType = typeof(TestData))]
-    public async Task IdempotencyPayloadSubsetTest(string functionName, string tableName)
-    {
-        _tableName = tableName;
-        await TestIdempotencyPayloadSubset(functionName);
-    }
-
-    private async Task TestIdempotencyPayloadSubset(string functionName)
-    {
-        await UpdateFunctionHandler(functionName, "Function::IdempotencyPayloadSubsetTest.Function::FunctionHandler");
-
-        var initialGuid = string.Empty;
-        
-        for (int i = 0; i < 2; i++)
-        {
-            var productId = Guid.NewGuid().ToString();
-            var apiGatewayRequest = new APIGatewayProxyRequest
-            {
-                Body = $"{{\"user_id\":\"xyz\",\"product_id\":\"{productId}\"}}"
-            };
-
-            var payload = JsonSerializer.Serialize(apiGatewayRequest);
-
-            var request = new InvokeRequest
-            {
-                FunctionName = functionName,
-                InvocationType = InvocationType.RequestResponse,
-                Payload = payload,
-                LogType = LogType.Tail,
-            };
-
-            // run two times with the same request
-            for (int j = 0; j < 2; j++)
-            {
-                var response = await _lambdaClient.InvokeAsync(request);
-
-                if (string.IsNullOrEmpty(response.LogResult))
-                {
-                    Assert.Fail("No LogResult field returned in the response of Lambda invocation.");
-                }
-
-                var responsePayload = System.Text.Encoding.UTF8.GetString(response.Payload.ToArray());
-                var parsedPayload = JsonSerializer.Deserialize<APIGatewayProxyResponse>(responsePayload);
-
-                if (parsedPayload == null)
-                {
-                    Assert.Fail("Failed to parse payload.");
-                }
-
-                Assert.Equal(200, parsedPayload.StatusCode);
-                
-                var parsedResponse = JsonSerializer.Deserialize<Response>(parsedPayload.Body);
-
-                if (parsedResponse == null)
-                {
-                    Assert.Fail("Failed to parse response.");
-                }
-
-                if (j == 0)
-                {
-                    // first call should return a new guid
-                    if (parsedResponse.Guid == initialGuid)
-                    {
-                        Assert.Fail("Idempotency failed to clear cache.");
-                    }
-                    
-                    initialGuid = parsedResponse.Guid;
-                }
-
-                Assert.Equal(initialGuid, parsedResponse.Guid);
-
-                // Query DynamoDB and assert results
-                var hashRequest = Helpers.HashRequest($"[\"xyz\",\"{productId}\"]");
-                
-                var id = $"{functionName}.FunctionHandler#{hashRequest}";
-                await AssertDynamoDbData(id, initialGuid);
-            }
-        }
-    }
-
-    private async Task TestIdempotencyAttribute(string functionName)
-    {
         await UpdateFunctionHandler(functionName, "Function::IdempotencyAttributeTest.Function::FunctionHandler");
 
-        var initialGuid = string.Empty;
+        // First unique request
+        var requestId1 = Guid.NewGuid().ToString();
+        var (firstResponse1, firstGuid1) = await ExecuteAttributeRequest(functionName, requestId1);
+        var (firstResponse2, firstGuid2) = await ExecuteAttributeRequest(functionName, requestId1);
 
-        for (int i = 0; i < 2; i++)
-        {
-            var requestId = Guid.NewGuid().ToString();
-            var apiGatewayRequest = new APIGatewayProxyRequest
-            {
-                Body = "{\"user_id\":\"xyz\",\"product_id\":\"123456789\"}",
-                RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
-                {
-                    AccountId = "123456789012",
-                    RequestId = requestId, // requestId is used to invalidate the cache
-                }
-            };
+        // Assert first request pair
+        Assert.Equal(200, firstResponse1.StatusCode);
+        Assert.Equal(200, firstResponse2.StatusCode);
+        Assert.Equal(firstGuid1, firstGuid2); // Idempotency check
+        await AssertDynamoDbData(
+            $"{functionName}.MyInternalMethod#{Helpers.HashRequest(requestId1)}", 
+            firstGuid1, 
+            true);
 
-            var payload = JsonSerializer.Serialize(apiGatewayRequest);
+        // Second unique request
+        var requestId2 = Guid.NewGuid().ToString();
+        var (secondResponse1, secondGuid1) = await ExecuteAttributeRequest(functionName, requestId2);
+        var (secondResponse2, secondGuid2) = await ExecuteAttributeRequest(functionName, requestId2);
 
-            var request = new InvokeRequest
-            {
-                FunctionName = functionName,
-                InvocationType = InvocationType.RequestResponse,
-                Payload = payload,
-                LogType = LogType.Tail,
-            };
-
-            // run two times with the same request
-            for (int j = 0; j < 2; j++)
-            {
-                var response = await _lambdaClient.InvokeAsync(request);
-
-                if (string.IsNullOrEmpty(response.LogResult))
-                {
-                    Assert.Fail("No LogResult field returned in the response of Lambda invocation.");
-                }
-
-                var responsePayload = System.Text.Encoding.UTF8.GetString(response.Payload.ToArray());
-                var parsedPayload = JsonSerializer.Deserialize<APIGatewayProxyResponse>(responsePayload);
-
-                if (parsedPayload == null)
-                {
-                    Assert.Fail("Failed to parse payload.");
-                }
-
-                Assert.Equal(200, parsedPayload.StatusCode);
-
-                if (j == 0)
-                {
-                    // first call should return a new guid
-                    if (parsedPayload.Body == initialGuid)
-                    {
-                        Assert.Fail("Idempotency failed to clear cache.");
-                    }
-
-                    initialGuid = parsedPayload.Body;
-                }
-
-                Assert.Equal(initialGuid, parsedPayload.Body);
-
-                // Query DynamoDB and assert results
-                var hashRequestId = Helpers.HashRequest(requestId);
-                var id = $"{functionName}.MyInternalMethod#{hashRequestId}";
-                await AssertDynamoDbData(id, initialGuid, true);
-            }
-        }
+        // Assert second request pair
+        Assert.Equal(200, secondResponse1.StatusCode);
+        Assert.Equal(200, secondResponse2.StatusCode);
+        Assert.Equal(secondGuid1, secondGuid2); // Idempotency check
+        Assert.NotEqual(firstGuid1, secondGuid1); // Different requests should have different GUIDs
+        await AssertDynamoDbData(
+            $"{functionName}.MyInternalMethod#{Helpers.HashRequest(requestId2)}", 
+            secondGuid1, 
+            true);
     }
 
-    internal async Task TestIdempotencyHandler(string functionName)
+    [Theory]
+    [MemberData(nameof(TestData.Inline), MemberType = typeof(TestData))]
+    public async Task IdempotencyHandlerTest(string functionName, string tableName)
     {
+        _tableName = tableName;
         await UpdateFunctionHandler(functionName, "Function::Function.Function::FunctionHandler");
 
-        var request = new InvokeRequest
-        {
-            FunctionName = functionName,
-            InvocationType = InvocationType.RequestResponse,
-            Payload = await File.ReadAllTextAsync("../../../../../../../payload.json"),
-            LogType = LogType.Tail,
-        };
+        var payload = await File.ReadAllTextAsync("../../../../../../../payload.json");
+        
+        // Execute three identical requests
+        var (response1, guid1) = await ExecuteHandlerRequest(functionName, payload);
+        var (response2, guid2) = await ExecuteHandlerRequest(functionName, payload);
+        var (response3, guid3) = await ExecuteHandlerRequest(functionName, payload);
 
-        var initialGuid = string.Empty;
+        // Assert all responses
+        Assert.Equal(200, response1.StatusCode);
+        Assert.Equal(200, response2.StatusCode);
+        Assert.Equal(200, response3.StatusCode);
 
-        // run three times to test idempotency
-        for (int i = 0; i < 3; i++)
-        {
-            var response = await _lambdaClient.InvokeAsync(request);
+        // Assert idempotency
+        Assert.Equal(guid1, guid2);
+        Assert.Equal(guid2, guid3);
 
-            if (string.IsNullOrEmpty(response.LogResult))
-            {
-                Assert.Fail("No LogResult field returned in the response of Lambda invocation.");
-            }
-
-            var payload = System.Text.Encoding.UTF8.GetString(response.Payload.ToArray());
-            var parsedPayload = JsonSerializer.Deserialize<APIGatewayProxyResponse>(payload);
-
-            if (parsedPayload == null)
-            {
-                Assert.Fail("Failed to parse payload.");
-            }
-
-            Assert.Equal(200, parsedPayload.StatusCode);
-
-            var parsedResponse = JsonSerializer.Deserialize<Response>(parsedPayload.Body);
-
-            if (parsedResponse == null)
-            {
-                Assert.Fail("Failed to parse response.");
-            }
-
-            if (i == 0)
-            {
-                initialGuid = parsedResponse.Guid;
-            }
-
-            Assert.Equal(initialGuid, parsedResponse.Guid);
-        }
-
-        // Query DynamoDB and assert results
-        var id = $"{functionName}.FunctionHandler#35973cf447e6cc11008d603c791a232f";
-        await AssertDynamoDbData(id, initialGuid);
+        // Assert DynamoDB
+        await AssertDynamoDbData(
+            $"{functionName}.FunctionHandler#35973cf447e6cc11008d603c791a232f", 
+            guid1);
     }
 
     private async Task UpdateFunctionHandler(string functionName, string handler)
@@ -333,6 +213,87 @@ public class FunctionTests
                 Assert.Equal(requestId, data.Trim('"'));
             }
         }
+    }
+    
+    // Helper methods for executing requests
+    private async Task<(APIGatewayProxyResponse Response, string Guid)> ExecutePayloadSubsetRequest(
+        string functionName, string userId, string productId)
+    {
+        var request = new InvokeRequest
+        {
+            FunctionName = functionName,
+            InvocationType = InvocationType.RequestResponse,
+            Payload = JsonSerializer.Serialize(new APIGatewayProxyRequest
+            {
+                Body = $"{{\"user_id\":\"{userId}\",\"product_id\":\"{productId}\"}}"
+            }),
+            LogType = LogType.Tail
+        };
+
+        return await ExecuteRequest(request);
+    }
+
+    private async Task<(APIGatewayProxyResponse Response, string Guid)> ExecuteAttributeRequest(
+        string functionName, string requestId)
+    {
+        var request = new InvokeRequest
+        {
+            FunctionName = functionName,
+            InvocationType = InvocationType.RequestResponse,
+            Payload = JsonSerializer.Serialize(new APIGatewayProxyRequest
+            {
+                Body = "{\"user_id\":\"***\",\"product_id\":\"123456789\"}",
+                RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
+                {
+                    AccountId = "123456789012",
+                    RequestId = requestId
+                }
+            }),
+            LogType = LogType.Tail
+        };
+
+        return await ExecuteRequest(request);
+    }
+
+    private async Task<(APIGatewayProxyResponse Response, string Guid)> ExecuteHandlerRequest(
+        string functionName, string payload)
+    {
+        var request = new InvokeRequest
+        {
+            FunctionName = functionName,
+            InvocationType = InvocationType.RequestResponse,
+            Payload = payload,
+            LogType = LogType.Tail
+        };
+
+        return await ExecuteRequest(request);
+    }
+
+    private async Task<(APIGatewayProxyResponse Response, string Guid)> ExecuteRequest(InvokeRequest request)
+    {
+        var response = await _lambdaClient.InvokeAsync(request);
+    
+        if (string.IsNullOrEmpty(response.LogResult))
+            Assert.Fail("No LogResult field returned in the response of Lambda invocation.");
+
+        var responsePayload = System.Text.Encoding.UTF8.GetString(response.Payload.ToArray());
+        var parsedResponse = JsonSerializer.Deserialize<APIGatewayProxyResponse>(responsePayload) 
+                             ?? throw new Exception("Failed to parse payload.");
+
+        string guid;
+        try
+        {
+            // The GUID is inside the Response object
+            var parsedBody = JsonSerializer.Deserialize<Response>(parsedResponse.Body);
+            guid = parsedBody?.Guid ?? parsedResponse.Body;
+        }
+        catch (JsonException)
+        {
+            // For scenarios where the Body is already the GUID
+            guid = parsedResponse.Body;
+        }
+
+        return (parsedResponse, guid);
     }
 }
 
