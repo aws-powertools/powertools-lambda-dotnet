@@ -1,7 +1,7 @@
 using Amazon.CDK;
 using Amazon.CDK.AWS.Lambda;
 using Constructs;
-using TestUtils;
+using InfraShared;
 using Architecture = Amazon.CDK.AWS.Lambda.Architecture;
 
 namespace Infra
@@ -40,7 +40,7 @@ namespace Infra
                 Name = name,
                 Handler = "Function::Function.Function::FunctionHandler",
                 SourcePath = sourcePath,
-                DistPath = distPath
+                DistPath = distPath,
             });
         }
     }
