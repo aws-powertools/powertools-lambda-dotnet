@@ -83,6 +83,11 @@ internal static class IdempotencySerializer
 
         return typeInfo;
     }
+    
+    internal static void SetJsonOptions(JsonSerializerOptions options)
+    {
+        _jsonOptions = options;
+    }
 #endif
 
     /// <summary>
@@ -98,10 +103,18 @@ internal static class IdempotencySerializer
 #else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
-            return JsonSerializer.Serialize(value, _jsonOptions.GetTypeInfo(inputType));
+#pragma warning disable
+            return JsonSerializer.Serialize(value, _jsonOptions);
+        }
+        
+        var typeInfo = GetTypeInfo(inputType);
+        if (typeInfo == null)
+        {
+            throw new SerializationException(
+                $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.");
         }
 
-        return JsonSerializer.Serialize(value, GetTypeInfo(inputType));
+        return JsonSerializer.Serialize(value, typeInfo);
 #endif
     }
 
