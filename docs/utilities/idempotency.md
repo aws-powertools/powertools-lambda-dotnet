@@ -14,6 +14,7 @@ The idempotency utility provides a simple solution to convert your Lambda functi
 * Select a subset of the event as the idempotency key using [JMESPath](https://jmespath.org/) expressions
 * Set a time window in which records with the same payload should be considered duplicates
 * Expires in-progress executions if the Lambda function times out halfway through
+* Ahead-of-Time compilation to native code support [AOT](https://docs.aws.amazon.com/lambda/latest/dg/dotnet-native-aot.html) from version 1.3.0
 
 ## Terminology
 
@@ -821,9 +822,75 @@ Data would then be stored in DynamoDB like this:
 | idempotency#MyLambdaFunction | 2b2cdb5f86361e97b4383087c1ffdf27 | 1636549571 | COMPLETED   | {"id": 527212, "message": "success"} |
 | idempotency#MyLambdaFunction | f091d2527ad1c78f05d54cc3f363be80 | 1636549585 | IN_PROGRESS |                                      |
 
+
+## AOT Support
+
+Native AOT trims your application code as part of the compilation to ensure that the binary is as small as possible. .NET 8 for Lambda provides improved trimming support compared to previous versions of .NET.
+
+### WithJsonSerializationContext()
+
+To use Idempotency utility with AOT support you first need to add `WithJsonSerializationContext()` to your `Idempotency` configuration.
+
+This ensures that when serializing your payload, the utility uses the correct serialization context.
+
+In the example below, we use the default `LambdaFunctionJsonSerializerContext`:
+
+```csharp
+Idempotency.Configure(builder =>
+builder.WithJsonSerializationContext(LambdaFunctionJsonSerializerContext.Default)));
+
+```
+
+Full example:
+
+```csharp hl_lines="8"
+public static class Function
+{
+    private static async Task Main()
+    {
+        var tableName = Environment.GetEnvironmentVariable("IDEMPOTENCY_TABLE_NAME");
+        Idempotency.Configure(builder =>
+            builder
+                .WithJsonSerializationContext(LambdaFunctionJsonSerializerContext.Default)
+                .WithOptions(optionsBuilder => optionsBuilder
+                    .WithExpiration(TimeSpan.FromHours(1)))
+                .UseDynamoDb(storeBuilder => storeBuilder
+                    .WithTableName(tableName)
+                ));
+
+        Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler = FunctionHandler;
+        await LambdaBootstrapBuilder.Create(handler,
+                new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>())
+            .Build()
+            .RunAsync();
+    }
+
+    [Idempotent]
+    public static APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
+        ILambdaContext context)
+    {
+        return new APIGatewayProxyResponse
+            {
+                Body = JsonSerializer.Serialize(response, typeof(Response), LambdaFunctionJsonSerializerContext.Default),
+                StatusCode = 200,
+                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+            };
+    }
+}
+
+[JsonSerializable(typeof(APIGatewayProxyRequest))]
+[JsonSerializable(typeof(APIGatewayProxyResponse))]
+[JsonSerializable(typeof(Response))]
+public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
+{
+}
+```
+
 ## Testing your code
 
 The idempotency utility provides several routes to test your code.
+
+You can check our Integration tests which use [TestContainers](https://testcontainers.com/modules/dynamodb/){:target="_blank"} with a local DynamoDB instance to test the idempotency utility. Or our end-to-end tests which use the AWS SDK to interact with a real DynamoDB table.
 
 ### Disabling the idempotency utility
 When testing your code, you may wish to disable the idempotency logic altogether and focus on testing your business logic. To do this, you can set the environment variable `POWERTOOLS_IDEMPOTENCY_DISABLED` to true. 

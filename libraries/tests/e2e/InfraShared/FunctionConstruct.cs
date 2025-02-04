@@ -23,7 +23,7 @@ public class FunctionConstruct : Construct
             Runtime = props.Runtime,
             Architecture = props.Architecture,
             FunctionName = props.Name,
-            Handler = props.Handler,
+            Handler = props.Handler!,
             Tracing = Tracing.ACTIVE,
             Timeout = Duration.Seconds(10),
             Environment = props.Environment,

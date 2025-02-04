@@ -15,6 +15,7 @@
         <!-- TrimMode partial will only trim assemblies marked as trimmable. To reduce package size make all assemblies trimmable and set TrimMode to full.
         If there are trim warnings during build, you can hit errors at runtime.-->
         <TrimMode>partial</TrimMode>
+        <RootNamespace>AOT-Function</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.12.0"/>
@@ -23,11 +24,11 @@
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Include="..\..\..\Function\src\Function\TestHelper.cs">
-        <Link>TestHelper.cs</Link>
-      </Compile>
+      <ProjectReference Include="..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\..\..\..\..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
+      <Compile Include="..\AOT-FunctionPayloadSubsetTest\TestHelperAOT.cs">
+        <Link>TestHelperAOT.cs</Link>
+      </Compile>
     </ItemGroup>
 </Project>
