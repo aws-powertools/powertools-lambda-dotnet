@@ -37,7 +37,7 @@ public class FunctionTests
     [Trait("Category", "AOT")]
     [Theory]
     [InlineData("E2ETestLambda_ARM_AOT_NET8_idempotency_MethodAttributeTest", "IdempotencyTable-AOT-arm64")]
-    [InlineData("E2ETestLambda_X64_AOT_NET8_idempotency_MethodTest", "IdempotencyTable-AOT-x86_64")]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_idempotency_MethodAttributeTest", "IdempotencyTable-AOT-x86_64")]
     public async Task IdempotencyAttributeAotTest(string functionName, string tableName)
     {
         _tableName = tableName;
