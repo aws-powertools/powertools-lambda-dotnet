@@ -45,7 +45,7 @@ public class FunctionTests
         {
             FunctionName = functionName,
             InvocationType = InvocationType.RequestResponse,
-            Payload = await File.ReadAllTextAsync("../../../../../../../payload.json"),
+            Payload = await File.ReadAllTextAsync("../../../../../../../../payload.json"),
             LogType = LogType.Tail
         };
 

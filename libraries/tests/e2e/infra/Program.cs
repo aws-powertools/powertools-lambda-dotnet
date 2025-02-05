@@ -1,4 +1,5 @@
 ﻿using Amazon.CDK;
+using InfraShared;
 
 namespace Infra
 {
@@ -10,6 +11,8 @@ namespace Infra
 
             _ = new CoreStack(app, "CoreStack", new StackProps { });
 
+            _ = new IdempotencyStack(app, "IdempotencyStack", new IdempotencyStackProps { TableName = "IdempotencyTable" });
+            
             app.Synth();
         }
     }
