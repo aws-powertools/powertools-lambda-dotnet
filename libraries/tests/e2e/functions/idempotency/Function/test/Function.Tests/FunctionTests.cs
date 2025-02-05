@@ -16,7 +16,6 @@ public class FunctionTests
     private readonly AmazonLambdaClient _lambdaClient;
     private readonly AmazonDynamoDBClient _dynamoDbClient;
     private string _tableName = null!;
-    private string _handler;
 
     public FunctionTests(ITestOutputHelper testOutputHelper)
     {
@@ -25,22 +24,74 @@ public class FunctionTests
         _dynamoDbClient = new AmazonDynamoDBClient();
     }
 
-    // [Trait("Category", "AOT")]
-    // [Theory]
-    // [MemberData(nameof(TestDataAot.Inline), MemberType = typeof(TestDataAot))]
-    // public async Task IdempotencyHandlerAotTest(string functionName, string tableName)
-    // {
-    //     _tableName = tableName;
-    //     await TestIdempotencyHandler(functionName);
-    // }
-
+    [Trait("Category", "AOT")]
     [Theory]
-    [MemberData(nameof(TestData.Inline), MemberType = typeof(TestData))]
-    public async Task IdempotencyPayloadSubsetTest(string functionName, string tableName)
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_idempotency_HandlerTest", "IdempotencyTable-AOT-arm64")]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_idempotency_HandlerTest", "IdempotencyTable-AOT-x86_64")]
+    public async Task IdempotencyHandlerAotTest(string functionName, string tableName)
     {
         _tableName = tableName;
-        await UpdateFunctionHandler(functionName, "Function::IdempotencyPayloadSubsetTest.Function::FunctionHandler");
+        await IdempotencyHandler(functionName);
+    }
+    
+    [Trait("Category", "AOT")]
+    [Theory]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_idempotency_MethodAttributeTest", "IdempotencyTable-AOT-arm64")]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_idempotency_MethodAttributeTest", "IdempotencyTable-AOT-x86_64")]
+    public async Task IdempotencyAttributeAotTest(string functionName, string tableName)
+    {
+        _tableName = tableName;
+        await IdempotencyAttribute(functionName);
+    }
+    
+    [Trait("Category", "AOT")]
+    [Theory]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_idempotency_PayloadSubsetTest", "IdempotencyTable-AOT-arm64")]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_idempotency_PayloadSubsetTest", "IdempotencyTable-AOT-x86_64")]
+    public async Task IdempotencyPayloadSubsetAotTest(string functionName, string tableName)
+    {
+        _tableName = tableName;
+        await IdempotencyPayloadSubset(functionName);
+    }
 
+    [Theory]
+    [InlineData("E2ETestLambda_X64_NET8_idempotency")]
+    [InlineData("E2ETestLambda_ARM_NET8_idempotency")]
+    [InlineData("E2ETestLambda_X64_NET6_idempotency")]
+    [InlineData("E2ETestLambda_ARM_NET6_idempotency")]
+    public async Task IdempotencyPayloadSubsetTest(string functionName)
+    {
+        _tableName = "IdempotencyTable";
+        await UpdateFunctionHandler(functionName, "Function::IdempotencyPayloadSubsetTest.Function::FunctionHandler");
+        await IdempotencyPayloadSubset(functionName);
+    }
+    
+    [Theory]
+    [InlineData("E2ETestLambda_X64_NET8_idempotency")]
+    [InlineData("E2ETestLambda_ARM_NET8_idempotency")]
+    [InlineData("E2ETestLambda_X64_NET6_idempotency")]
+    [InlineData("E2ETestLambda_ARM_NET6_idempotency")]
+    public async Task IdempotencyAttributeTest(string functionName)
+    {
+        _tableName = "IdempotencyTable";
+        await UpdateFunctionHandler(functionName, "Function::IdempotencyAttributeTest.Function::FunctionHandler");
+        await IdempotencyAttribute(functionName);
+    }
+    
+    [Theory]
+    [InlineData("E2ETestLambda_X64_NET8_idempotency")]
+    [InlineData("E2ETestLambda_ARM_NET8_idempotency")]
+    [InlineData("E2ETestLambda_X64_NET6_idempotency")]
+    [InlineData("E2ETestLambda_ARM_NET6_idempotency")]
+    public async Task IdempotencyHandlerTest(string functionName)
+    {
+        _tableName = "IdempotencyTable";
+        await UpdateFunctionHandler(functionName, "Function::Function.Function::FunctionHandler");
+        await IdempotencyHandler(functionName);
+    }
+
+    private async Task IdempotencyPayloadSubset(string functionName)
+    {
         // First unique request
         var firstProductId = Guid.NewGuid().ToString();
         var (firstResponse1, firstGuid1) = await ExecutePayloadSubsetRequest(functionName, "xyz", firstProductId);
@@ -69,13 +120,8 @@ public class FunctionTests
             secondGuid1);
     }
 
-    [Theory]
-    [MemberData(nameof(TestData.Inline), MemberType = typeof(TestData))]
-    public async Task IdempotencyAttributeTest(string functionName, string tableName)
+    private async Task IdempotencyAttribute(string functionName)
     {
-        _tableName = tableName;
-        await UpdateFunctionHandler(functionName, "Function::IdempotencyAttributeTest.Function::FunctionHandler");
-
         // First unique request
         var requestId1 = Guid.NewGuid().ToString();
         var (firstResponse1, firstGuid1) = await ExecuteAttributeRequest(functionName, requestId1);
@@ -106,13 +152,8 @@ public class FunctionTests
             true);
     }
 
-    [Theory]
-    [MemberData(nameof(TestData.Inline), MemberType = typeof(TestData))]
-    public async Task IdempotencyHandlerTest(string functionName, string tableName)
+    private async Task IdempotencyHandler(string functionName)
     {
-        _tableName = tableName;
-        await UpdateFunctionHandler(functionName, "Function::Function.Function::FunctionHandler");
-
         var payload = await File.ReadAllTextAsync("../../../../../../../payload.json");
         
         // Execute three identical requests

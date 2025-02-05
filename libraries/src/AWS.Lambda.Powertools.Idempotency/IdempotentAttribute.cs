@@ -23,6 +23,7 @@ using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
+using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 
 namespace AWS.Lambda.Powertools.Idempotency;
 
@@ -151,7 +152,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         // Use the first argument if IdempotentAttribute placed on handler or number of arguments is 1
         if (isPlacedOnRequestHandler || args.Count == 1)
         {
-            payload = args is not null && args.Any() ? JsonDocument.Parse(JsonSerializer.Serialize(args[0])) : null;
+            payload = args is not null && args.Any() ? JsonDocument.Parse(IdempotencySerializer.Serialize(args[0], typeof(object))) : null;
         }
         else
         {
@@ -160,7 +161,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
             if (parameter != null)
             {
                 // set payload to the value of the parameter
-                payload = JsonDocument.Parse(JsonSerializer.Serialize(args[Array.IndexOf(eventArgsMethod.GetParameters(), parameter)]));
+                payload = JsonDocument.Parse(IdempotencySerializer.Serialize(args[Array.IndexOf(eventArgsMethod.GetParameters(), parameter)], typeof(object)));
             }
         }
 

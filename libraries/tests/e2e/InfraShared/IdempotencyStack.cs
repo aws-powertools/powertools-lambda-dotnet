@@ -29,21 +29,28 @@ public class IdempotencyStack : Stack
 
         if (props.IsAot)
         {
-            var baseAotPath = $"../functions/{utility}/AOT-Function/src/AOT-Function";
-            var distAotPath = $"../functions/{utility}/AOT-Function/dist";
-            var path = new Path(baseAotPath, distAotPath);
-            
-            var architecture = props.ArchitectureString == "arm64" ? Architecture.ARM_64 : Architecture.X86_64;
-            var arch = architecture == Architecture.X86_64 ? "X64" : "ARM";
-            CreateFunctionConstruct(this, $"{utility}_{arch}_aot_net8", Runtime.DOTNET_8, architecture,
-                $"E2ETestLambda_{arch}_AOT_NET8_{utility}", path, props);
+            var tests = new[] { "HandlerTest", "PayloadSubsetTest", "MethodAttributeTest" };
+
+            foreach (var test in tests)
+            {
+                var baseAotPath = $"../functions/{utility}/AOT-Function/src/AOT-Function{test}";
+                var distAotPath = $"../functions/{utility}/AOT-Function/dist/AOT-Function{test}";
+                var path = new Path(baseAotPath, distAotPath);
+                props.Handler = $"AOT-Function{test}";
+
+                var architecture = props.ArchitectureString == "arm64" ? Architecture.ARM_64 : Architecture.X86_64;
+                var arch = architecture == Architecture.X86_64 ? "X64" : "ARM";
+                CreateFunctionConstruct(this, $"{utility}_{arch}_aot_net8__{test}", Runtime.DOTNET_8, architecture,
+                    $"E2ETestLambda_{arch}_AOT_NET8_{utility}_{test}", path, props);
+            }
         }
         else
         {
             var basePath = $"../functions/{utility}/Function/src/Function";
             var distPath = $"../functions/{utility}/Function/dist";
             var path = new Path(basePath, distPath);
-            
+            props.Handler = "Function::Function.Function::FunctionHandler";
+
             CreateFunctionConstruct(this, $"{utility}_X64_net8", Runtime.DOTNET_8, Architecture.X86_64,
                 $"E2ETestLambda_X64_NET8_{utility}", path, props);
             CreateFunctionConstruct(this, $"{utility}_arm_net8", Runtime.DOTNET_8, Architecture.ARM_64,
@@ -56,14 +63,14 @@ public class IdempotencyStack : Stack
     }
 
     private void CreateFunctionConstruct(Construct scope, string id, Runtime runtime, Architecture architecture,
-        string name,Path path, PowertoolsDefaultStackProps props)
+        string name, Path path, PowertoolsDefaultStackProps props)
     {
         var lambdaFunction = new FunctionConstruct(scope, id, new FunctionConstructProps
         {
             Runtime = runtime,
             Architecture = architecture,
             Name = name,
-            Handler = props.IsAot ? "AOT-Function" : "Function::Function.Function::FunctionHandler",
+            Handler = props.Handler!,
             SourcePath = path.SourcePath,
             DistPath = path.DistPath,
             Environment = new Dictionary<string, string>
@@ -72,7 +79,7 @@ public class IdempotencyStack : Stack
             },
             IsAot = props.IsAot
         });
-        
+
         // Grant the Lambda function permissions to perform all actions on the DynamoDB table
         Table.GrantReadWriteData(lambdaFunction.Function);
     }
