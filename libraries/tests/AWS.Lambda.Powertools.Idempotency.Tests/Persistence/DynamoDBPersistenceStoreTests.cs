@@ -42,7 +42,7 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
             .WithTableName(_tableName)
             .WithDynamoDBClient(_client)
             .Build();
-        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null);
+        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null, keyPrefix: null);
     }
     
     //putRecord
@@ -281,7 +281,7 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
         });
         // enable payload validation
         _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().WithPayloadValidationJmesPath("path").Build(),
-            null);
+            null, null);
 
         // Act
         expiry = now.AddSeconds(3600).ToUnixTimeSeconds();
@@ -367,7 +367,7 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
                 .WithStatusAttr("state")
                 .WithValidationAttr("valid")
                 .Build();
-            persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null);
+            persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null, keyPrefix: null);
 
             var now = DateTimeOffset.UtcNow;
             var record = new DataRecord(

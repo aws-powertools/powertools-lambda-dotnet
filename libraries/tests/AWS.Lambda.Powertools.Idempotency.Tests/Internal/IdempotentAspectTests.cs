@@ -353,7 +353,7 @@ public class IdempotentAspectTests : IDisposable
     }
 
     [Fact]
-    public void Handle_WhenIdempotencyOnSubMethodAnnotated_AndKeyJMESPath_ShouldPutInStoreWithKey()
+    public async Task Handle_WhenIdempotencyOnSubMethodAnnotated_AndKeyJMESPath_ShouldPutInStoreWithKey()
     {
         // Arrange
         var store = new InMemoryPersistenceStore();
@@ -373,7 +373,46 @@ public class IdempotentAspectTests : IDisposable
 
         // Assert
         // a1d0c6e83f027327d8461063f4ac58a6 = MD5(42)
-        store.GetRecord("testFunction.createBasket#a1d0c6e83f027327d8461063f4ac58a6").Should().NotBeNull();
+        var record = await store.GetRecord("testFunction.CreateBasket#a1d0c6e83f027327d8461063f4ac58a6");
+        Assert.NotNull(record);
+    }
+    
+    [Fact]
+    public async Task WhenIdempotency_Custom_Prefix_Key_Handler()
+    {
+        // Arrange
+        var store = new InMemoryPersistenceStore();
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store));
+
+        // Act
+        var function = new IdempotencyHandlerWithCustomKeyPrefix();
+        function.HandleRequest("42", new TestLambdaContext());
+
+        // Assert
+        // a1d0c6e83f027327d8461063f4ac58a6 = MD5(42)
+        var record = await store.GetRecord("MyHandler#a1d0c6e83f027327d8461063f4ac58a6");
+        Assert.NotNull(record);
+    }
+    
+    [Fact]
+    public async Task WhenIdempotency_Custom_Prefix_Key_Method()
+    {
+        // Arrange
+        var store = new InMemoryPersistenceStore();
+        Idempotency.Configure(builder =>
+            builder
+                .WithPersistenceStore(store));
+
+        // Act
+        var function = new IdempotencyAttributeWithCustomKeyPrefix();
+        function.HandleRequest("42", new TestLambdaContext());
+
+        // Assert
+        // a1d0c6e83f027327d8461063f4ac58a6 = MD5(42)
+        var record = await store.GetRecord("MyMethod#a1d0c6e83f027327d8461063f4ac58a6");
+        Assert.NotNull(record);
     }
 
     [Fact]

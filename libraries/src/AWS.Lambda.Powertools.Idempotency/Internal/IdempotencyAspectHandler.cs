@@ -50,11 +50,13 @@ internal class IdempotencyAspectHandler<T>
     /// </summary>
     /// <param name="target"></param>
     /// <param name="functionName"></param>
+    /// <param name="keyPrefix"></param>
     /// <param name="payload"></param>
     /// <param name="lambdaContext"></param>
     public IdempotencyAspectHandler(
         Func<Task<T>> target,
         string functionName,
+        string keyPrefix,
         JsonDocument payload,
         ILambdaContext lambdaContext)
     {
@@ -62,7 +64,7 @@ internal class IdempotencyAspectHandler<T>
         _data = payload;
         _lambdaContext = lambdaContext;
         _persistenceStore = Idempotency.Instance.PersistenceStore;
-        _persistenceStore.Configure(Idempotency.Instance.IdempotencyOptions, functionName);
+        _persistenceStore.Configure(Idempotency.Instance.IdempotencyOptions, functionName, keyPrefix);
     }
 
     /// <summary>
