@@ -64,6 +64,11 @@ namespace AWS.Lambda.Powertools.Idempotency;
 public class IdempotentAttribute : UniversalWrapperAttribute
 {
     /// <summary>
+    /// Custom prefix for idempotency key: key_prefix#hash
+    /// </summary>
+    public string KeyPrefix { get; set; }
+    
+    /// <summary>
     ///     Wraps as a synchronous operation, simply throws IdempotencyConfigurationException
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -90,7 +95,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
 
         Task<T> ResultDelegate() => Task.FromResult(target(args));
 
-        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload,GetContext(eventArgs));
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, KeyPrefix, payload,GetContext(eventArgs));
         if (idempotencyHandler == null)
         {
             throw new Exception("Failed to create an instance of IdempotencyAspectHandler");
@@ -128,7 +133,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         
         Task<T> ResultDelegate() => target(args);
         
-        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload, GetContext(eventArgs));
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, KeyPrefix, payload, GetContext(eventArgs));
         if (idempotencyHandler == null)
         {
             throw new Exception("Failed to create an instance of IdempotencyAspectHandler");

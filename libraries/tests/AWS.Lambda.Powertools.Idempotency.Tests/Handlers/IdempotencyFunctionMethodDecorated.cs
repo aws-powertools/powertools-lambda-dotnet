@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -22,7 +21,6 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.Idempotency.Tests.Model;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 
@@ -34,9 +32,6 @@ public class IdempotencyFunctionMethodDecorated
     {
         Idempotency.Configure(builder =>
             builder
-#if NET8_0_OR_GREATER
-                .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .UseDynamoDb(storeBuilder =>
                     storeBuilder
                         .WithTableName("idempotency_table")

@@ -78,7 +78,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
 
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
 
         var now = DateTimeOffset.UtcNow;
 
@@ -102,7 +102,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
 
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
 
         var now = DateTimeOffset.UtcNow;
         var lambdaTimeoutMs = 30000;
@@ -130,7 +130,7 @@ public class BasePersistenceStoreTests
 
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithEventKeyJmesPath("powertools_json(Body).id")
-            .Build(), "myfunc");
+            .Build(), "myfunc", null);
 
         var now = DateTimeOffset.UtcNow;
 
@@ -157,7 +157,7 @@ public class BasePersistenceStoreTests
 
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithEventKeyJmesPath("powertools_json(Body).[id, message]") //[43876123454654,"Lambda rocks"]
-            .Build(), "myfunc");
+            .Build(), "myfunc", null);
 
         var now = DateTimeOffset.UtcNow;
 
@@ -185,7 +185,7 @@ public class BasePersistenceStoreTests
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithEventKeyJmesPath("unavailable")
             .WithThrowOnNoIdempotencyKey(true) // should throw
-            .Build(), "");
+            .Build(), "", null);
         var now = DateTimeOffset.UtcNow;
 
         // Act
@@ -209,7 +209,7 @@ public class BasePersistenceStoreTests
 
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithEventKeyJmesPath("unavailable")
-            .Build(), "");
+            .Build(), "", null);
 
         var now = DateTimeOffset.UtcNow;
 
@@ -233,7 +233,7 @@ public class BasePersistenceStoreTests
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
             .WithUseLocalCache(true)
             .WithEventKeyJmesPath("powertools_json(Body).id")
-            .Build(), null, cache);
+            .Build(), null, null, cache);
 
         var now = DateTimeOffset.UtcNow;
         cache.Set("testFunction#2fef178cc82be5ce3da6c5e0466a6182",
@@ -266,7 +266,7 @@ public class BasePersistenceStoreTests
             .WithEventKeyJmesPath("powertools_json(Body).id")
             .WithUseLocalCache(true)
             .WithExpiration(TimeSpan.FromSeconds(2))
-            .Build(), null, cache);
+            .Build(), null, null, cache);
 
         var now = DateTimeOffset.UtcNow;
         cache.Set("testFunction#2fef178cc82be5ce3da6c5e0466a6182",
@@ -296,7 +296,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new(2);
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, cache);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null, cache);
 
         var product = new Product(34543, "product", 42);
 
@@ -325,7 +325,7 @@ public class BasePersistenceStoreTests
         LRUCache<string, DataRecord> cache = new(2);
 
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
-            .WithUseLocalCache(true).Build(), null, cache);
+            .WithUseLocalCache(true).Build(), null, null, cache);
 
         var product = new Product(34543, "product", 42);
         var now = DateTimeOffset.UtcNow;
@@ -355,7 +355,7 @@ public class BasePersistenceStoreTests
         var request = LoadApiGatewayProxyRequest();
 
         LRUCache<string, DataRecord> cache = new(2);
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "myfunc", cache);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "myfunc", null, cache);
 
         var now = DateTimeOffset.UtcNow;
 
@@ -378,7 +378,7 @@ public class BasePersistenceStoreTests
         LRUCache<string, DataRecord> cache = new(2);
 
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
-            .WithUseLocalCache(true).Build(), "myfunc", cache);
+            .WithUseLocalCache(true).Build(), "myfunc", null, cache);
 
         var now = DateTimeOffset.UtcNow;
         var dr = new DataRecord(
@@ -407,7 +407,7 @@ public class BasePersistenceStoreTests
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new(2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
-            .WithUseLocalCache(true).Build(), "myfunc", cache);
+            .WithUseLocalCache(true).Build(), "myfunc", null, cache);
 
         var now = DateTimeOffset.UtcNow;
         var dr = new DataRecord(
@@ -440,7 +440,7 @@ public class BasePersistenceStoreTests
                 .WithEventKeyJmesPath("powertools_json(Body).id")
                 .WithPayloadValidationJmesPath("powertools_json(Body).message")
                 .Build(),
-            "myfunc");
+            "myfunc", null);
 
         var now = DateTimeOffset.UtcNow;
 
@@ -459,7 +459,7 @@ public class BasePersistenceStoreTests
         var persistenceStore = new InMemoryPersistenceStore();
         var request = LoadApiGatewayProxyRequest();
 
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
 
         // Act
         await persistenceStore.DeleteRecord(JsonSerializer.SerializeToDocument(request)!, new ArithmeticException());
@@ -476,7 +476,7 @@ public class BasePersistenceStoreTests
         var request = LoadApiGatewayProxyRequest();
         LRUCache<string, DataRecord> cache = new(2);
         persistenceStore.Configure(new IdempotencyOptionsBuilder()
-            .WithUseLocalCache(true).Build(), null, cache);
+            .WithUseLocalCache(true).Build(), null, null, cache);
 
         cache.Set("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6",
             new DataRecord("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6",
@@ -497,7 +497,7 @@ public class BasePersistenceStoreTests
     {
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
         var expectedHash = "70c24d88041893f7fbab4105b76fd9e1"; // MD5(Lambda rocks)
 
         // Act
@@ -513,7 +513,7 @@ public class BasePersistenceStoreTests
     {
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
         var product = new Product(42, "Product", 12);
         var expectedHash = "c83e720b399b3b4898c8734af177c53a"; // MD5({"Id":42,"Name":"Product","Price":12})
 
@@ -530,7 +530,7 @@ public class BasePersistenceStoreTests
     {
         // Arrange
         var persistenceStore = new InMemoryPersistenceStore();
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null);
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
         var expectedHash = "bb84c94278119c8838649706df4db42b"; // MD5(256.42)
 
         // Act
@@ -538,6 +538,27 @@ public class BasePersistenceStoreTests
 
         // Assert
         generatedHash.Should().Be(expectedHash);
+    }
+    
+    [Fact]
+    public async Task When_Key_Prefix_Set_Should_Create_With_Prefix()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithEventKeyJmesPath("powertools_json(Body).id")
+            .Build(), "myfunc", "MyCustomPrefixKey");
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().Be("MyCustomPrefixKey#2fef178cc82be5ce3da6c5e0466a6182");
     }
 
     private static APIGatewayProxyRequest LoadApiGatewayProxyRequest()

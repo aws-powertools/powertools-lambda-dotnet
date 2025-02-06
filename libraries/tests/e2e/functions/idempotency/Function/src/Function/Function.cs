@@ -71,3 +71,21 @@ namespace IdempotencyPayloadSubsetTest
         }
     }
 }
+
+namespace CustomKeyPrefixTest
+{
+    public class Function
+    {
+        public Function()
+        {
+            var tableName = Environment.GetEnvironmentVariable("IDEMPOTENCY_TABLE_NAME");
+            Idempotency.Configure(builder => builder.UseDynamoDb(tableName));
+        }
+    
+        [Idempotent(KeyPrefix = "MyCustomKeyPrefix")]
+        public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigwProxyEvent, ILambdaContext context)
+        {
+            return TestHelper.TestMethod(apigwProxyEvent);
+        }
+    }
+}
