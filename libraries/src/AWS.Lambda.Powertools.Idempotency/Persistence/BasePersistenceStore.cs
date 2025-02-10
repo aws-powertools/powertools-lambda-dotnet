@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
+using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 using AWS.Lambda.Powertools.JMESPath;
 
 namespace AWS.Lambda.Powertools.Idempotency.Persistence;
@@ -36,16 +37,17 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// Idempotency Options
     /// </summary>
     private IdempotencyOptions _idempotencyOptions = null!;
-    
+
     /// <summary>
     /// Function name
     /// </summary>
     private string _functionName;
+
     /// <summary>
     /// Boolean to indicate whether or not payload validation is enabled
     /// </summary>
     protected bool PayloadValidationEnabled;
-    
+
     /// <summary>
     /// LRUCache
     /// </summary>
@@ -56,34 +58,45 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     /// <param name="idempotencyOptions">Idempotency configuration settings</param>
     /// <param name="functionName">The name of the function being decorated</param>
-    public void Configure(IdempotencyOptions idempotencyOptions, string functionName)
+    /// <param name="keyPrefix"></param>
+    public void Configure(IdempotencyOptions idempotencyOptions, string functionName, string keyPrefix)
     {
-        var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
-        _functionName = funcEnv ?? "testFunction";
-        if (!string.IsNullOrWhiteSpace(functionName))
+        if (!string.IsNullOrEmpty(keyPrefix))
         {
-            _functionName += "." + functionName;
+            _functionName = keyPrefix;
         }
+        else
+        {
+            var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
+
+            _functionName = funcEnv ?? "testFunction";
+            if (!string.IsNullOrWhiteSpace(functionName))
+            {
+                _functionName += "." + functionName;
+            }
+        }
+
         _idempotencyOptions = idempotencyOptions;
-        
+
         if (!string.IsNullOrWhiteSpace(_idempotencyOptions.PayloadValidationJmesPath))
         {
             PayloadValidationEnabled = true;
         }
-        
+
         var useLocalCache = _idempotencyOptions.UseLocalCache;
         if (useLocalCache)
         {
             _cache = new LRUCache<string, DataRecord>(_idempotencyOptions.LocalCacheMaxItems);
         }
     }
-    
+
     /// <summary>
     /// For test purpose only (adding a cache to mock)
     /// </summary>
-    internal void Configure(IdempotencyOptions options, string functionName, LRUCache<string, DataRecord> cache)
+    internal void Configure(IdempotencyOptions options, string functionName, string keyPrefix,
+        LRUCache<string, DataRecord> cache)
     {
-        Configure(options, functionName);
+        Configure(options, functionName, keyPrefix);
         _cache = cache;
     }
 
@@ -95,7 +108,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <param name="now">The current date time</param>
     public virtual async Task SaveSuccess(JsonDocument data, object result, DateTimeOffset now)
     {
-        var responseJson = JsonSerializer.Serialize(result);
+        var responseJson = IdempotencySerializer.Serialize(result, typeof(object));
         var record = new DataRecord(
             GetHashedIdempotencyKey(data),
             DataRecord.DataRecordStatus.COMPLETED,
@@ -117,12 +130,12 @@ public abstract class BasePersistenceStore : IPersistenceStore
     public virtual async Task SaveInProgress(JsonDocument data, DateTimeOffset now, double? remainingTimeInMs)
     {
         var idempotencyKey = GetHashedIdempotencyKey(data);
-        
+
         if (RetrieveFromCache(idempotencyKey, now) != null)
         {
             throw new IdempotencyItemAlreadyExistsException();
         }
-        
+
         long? inProgressExpirationMsTimestamp = null;
         if (remainingTimeInMs.HasValue)
         {
@@ -136,11 +149,10 @@ public abstract class BasePersistenceStore : IPersistenceStore
             null,
             GetHashedPayload(data),
             inProgressExpirationMsTimestamp
-            
         );
         await PutRecord(record, now);
     }
-    
+
     /// <summary>
     /// Delete record from the persistence store
     /// </summary>
@@ -151,14 +163,14 @@ public abstract class BasePersistenceStore : IPersistenceStore
         var idemPotencyKey = GetHashedIdempotencyKey(data);
 
         Console.WriteLine("Function raised an exception {0}. " +
-                  "Clearing in progress record in persistence store for idempotency key: {1}",
+                          "Clearing in progress record in persistence store for idempotency key: {1}",
             throwable.GetType().Name,
             idemPotencyKey);
 
         await DeleteRecord(idemPotencyKey);
         DeleteFromCache(idemPotencyKey);
     }
-    
+
     /// <summary>
     /// Retrieve idempotency key for data provided, fetch from persistence store, and convert to DataRecord.
     /// </summary>
@@ -181,7 +193,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         ValidatePayload(data, record);
         return record;
     }
-    
+
     /// <summary>
     /// Save data_record to local cache except when status is "INPROGRESS"
     /// NOTE: We can't cache "INPROGRESS" records as we have no way to reflect updates that can happen outside of the
@@ -197,7 +209,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
 
         _cache.Set(dataRecord.IdempotencyKey, dataRecord);
     }
-    
+
     /// <summary>
     /// Validate that the hashed payload matches data provided and stored data record
     /// </summary>
@@ -214,7 +226,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
             throw new IdempotencyValidationException("Payload does not match stored record for this event key");
         }
     }
-    
+
     /// <summary>
     /// Retrieve data record from cache
     /// </summary>
@@ -227,14 +239,15 @@ public abstract class BasePersistenceStore : IPersistenceStore
             return null;
 
         if (!_cache.TryGet(idempotencyKey, out var record) || record == null) return null;
-        if (!record.IsExpired(now)) 
+        if (!record.IsExpired(now))
         {
             return record;
         }
+
         DeleteFromCache(idempotencyKey);
         return null;
     }
-    
+
     /// <summary>
     /// Deletes item from cache
     /// </summary>
@@ -243,10 +256,10 @@ public abstract class BasePersistenceStore : IPersistenceStore
     {
         if (!_idempotencyOptions.UseLocalCache)
             return;
-        
+
         _cache.Delete(idempotencyKey);
     }
-    
+
     /// <summary>
     /// Extract payload using validation key jmespath and return a hashed representation
     /// </summary>
@@ -258,12 +271,12 @@ public abstract class BasePersistenceStore : IPersistenceStore
         {
             return "";
         }
-        
+
         var transformer = JsonTransformer.Parse(_idempotencyOptions.PayloadValidationJmesPath);
         var result = transformer.Transform(data.RootElement);
         return GenerateHash(result.RootElement);
     }
-    
+
     /// <summary>
     /// Calculate unix timestamp of expiry date for idempotency record
     /// </summary>
@@ -284,7 +297,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
     {
         var node = data.RootElement;
         var eventKeyJmesPath = _idempotencyOptions.EventKeyJmesPath;
-        if (eventKeyJmesPath != null) 
+        if (eventKeyJmesPath != null)
         {
             var transformer = JsonTransformer.Parse(eventKeyJmesPath);
             var result = transformer.Transform(node);
@@ -297,7 +310,9 @@ public abstract class BasePersistenceStore : IPersistenceStore
             {
                 throw new IdempotencyKeyException("No data found to create a hashed idempotency key");
             }
-            Console.WriteLine("No data found to create a hashed idempotency key. JMESPath: {0}", _idempotencyOptions.EventKeyJmesPath ?? string.Empty);
+
+            Console.WriteLine("No data found to create a hashed idempotency key. JMESPath: {0}",
+                _idempotencyOptions.EventKeyJmesPath ?? string.Empty);
         }
 
         var hash = GenerateHash(node);
@@ -312,9 +327,10 @@ public abstract class BasePersistenceStore : IPersistenceStore
     private static bool IsMissingIdempotencyKey(JsonElement data)
     {
         return data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined
-            || (data.ValueKind == JsonValueKind.String && data.ToString() == string.Empty);
+                                                    || (data.ValueKind == JsonValueKind.String &&
+                                                        data.ToString() == string.Empty);
     }
-    
+
     /// <summary>
     /// Generate a hash value from the provided data
     /// </summary>
@@ -323,14 +339,20 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <exception cref="ArgumentException"></exception>
     internal string GenerateHash(JsonElement data)
     {
+#if NET8_0_OR_GREATER
+        // starting .NET 8 no option to change hash algorithm
+        using var hashAlgorithm = MD5.Create();
+#else
         using var hashAlgorithm = HashAlgorithm.Create(_idempotencyOptions.HashFunction);
+#endif
         if (hashAlgorithm == null)
         {
             throw new ArgumentException("Invalid HashAlgorithm");
         }
+
         var stringToHash = data.ToString();
         var hash = GetHash(hashAlgorithm, stringToHash);
-        
+
         return hash;
     }
 
@@ -344,18 +366,18 @@ public abstract class BasePersistenceStore : IPersistenceStore
     {
         // Convert the input string to a byte array and compute the hash.
         var data = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
-        
+
         // Create a new Stringbuilder to collect the bytes
         // and create a string.
         var sBuilder = new StringBuilder();
-        
+
         // Loop through each byte of the hashed data
         // and format each one as a hexadecimal string.
         for (var i = 0; i < data.Length; i++)
         {
             sBuilder.Append(data[i].ToString("x2"));
         }
-        
+
         // Return the hexadecimal string.
         return sBuilder.ToString();
     }

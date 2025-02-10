@@ -18,5 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\functions\TestUtils\TestUtils.csproj" />
+    <ProjectReference Include="..\InfraShared\InfraShared.csproj" />
   </ItemGroup>
 </Project>
