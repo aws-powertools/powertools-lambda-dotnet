@@ -1,19 +1,20 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
 
-using AWS.Lambda.Powertools.Common;
+using System;
+using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Tracing.Internal;
 
 namespace AWS.Lambda.Powertools.Tracing;
@@ -105,13 +106,17 @@ namespace AWS.Lambda.Powertools.Tracing;
 ///         }
 ///     </code>
 /// </example>
-public class TracingAttribute : MethodAspectAttribute
+[Injection(typeof(TracingAspect))]
+[AttributeUsage(AttributeTargets.Method)]
+public class TracingAttribute : Attribute
 {
     /// <summary>
     ///     Set custom segment name for the operation.
     ///     The default is '## {MethodName}'.
+    ///
+    ///     The logical name of the service that handled the request, up to 200 characters. 
+    ///     Names can contain Unicode letters, numbers, and whitespace, and the following symbols: \_, ., :, /, %, &amp;, #, =, +, \\, -, @
     /// </summary>
-    /// <value>The name of the segment.</value>
     public string SegmentName { get; set; } = "";
 
     /// <summary>
@@ -128,20 +133,4 @@ public class TracingAttribute : MethodAspectAttribute
     /// </summary>
     /// <value>The capture mode.</value>
     public TracingCaptureMode CaptureMode { get; set; } = TracingCaptureMode.EnvironmentVariable;
-
-    /// <summary>
-    ///     Creates the handler.
-    /// </summary>
-    /// <returns>IMethodAspectHandler.</returns>
-    protected override IMethodAspectHandler CreateHandler()
-    {
-        return new TracingAspectHandler
-        (
-            SegmentName,
-            Namespace,
-            CaptureMode,
-            PowertoolsConfigurations.Instance,
-            XRayRecorder.Instance
-        );
-    }
 }

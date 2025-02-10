@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using System.Globalization;
+
 namespace AWS.Lambda.Powertools.Common;
 
 /// <summary>
@@ -84,6 +86,18 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     ///     Gets the environment variable or default.
     /// </summary>
     /// <param name="variable">The variable.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>System.Int32.</returns>
+    public int GetEnvironmentVariableOrDefault(string variable, int defaultValue)
+    {
+        var result = _systemWrapper.GetEnvironmentVariable(variable);
+        return int.TryParse(result, out var parsedValue) ? parsedValue : defaultValue;
+    }
+
+    /// <summary>
+    ///     Gets the environment variable or default.
+    /// </summary>
+    /// <param name="variable">The variable.</param>
     /// <param name="defaultValue">if set to <c>true</c> [default value].</param>
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     public bool GetEnvironmentVariableOrDefault(string variable, bool defaultValue)
@@ -135,21 +149,20 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     public string MetricsNamespace =>
         GetEnvironmentVariable(Constants.MetricsNamespaceEnv);
 
-    /// <summary>
-    ///     Gets the log level.
-    /// </summary>
-    /// <value>The log level.</value>
-    public string LogLevel =>
-        GetEnvironmentVariable(Constants.LogLevelNameEnv);
+    /// <inheritdoc />
+    public string LogLevel => GetEnvironmentVariable(Constants.LogLevelNameEnv);
+
+    /// <inheritdoc />
+    public string AWSLambdaLogLevel => GetEnvironmentVariable(Constants.AWSLambdaLogLevelNameEnv);
 
     /// <summary>
     ///     Gets the logger sample rate.
     /// </summary>
     /// <value>The logger sample rate.</value>
-    public double? LoggerSampleRate =>
-        double.TryParse(_systemWrapper.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv), out var result)
+    public double LoggerSampleRate =>
+        double.TryParse(_systemWrapper.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture,  out var result)
             ? result
-            : null;
+            : 0;
 
     /// <summary>
     ///     Gets a value indicating whether [logger log event].
@@ -194,4 +207,16 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <inheritdoc />
     public bool IdempotencyDisabled =>
         GetEnvironmentVariableOrDefault(Constants.IdempotencyDisabledEnv, false);
+
+    /// <inheritdoc />
+    public string BatchProcessingErrorHandlingPolicy => GetEnvironmentVariableOrDefault(Constants.BatchErrorHandlingPolicyEnv, "DeriveFromEvent");
+
+    /// <inheritdoc />
+    public bool BatchParallelProcessingEnabled => GetEnvironmentVariableOrDefault(Constants.BatchParallelProcessingEnabled, false);
+
+    /// <inheritdoc />
+    public int BatchProcessingMaxDegreeOfParallelism => GetEnvironmentVariableOrDefault(Constants.BatchMaxDegreeOfParallelismEnv, 1);
+
+    /// <inheritdoc />
+    public bool BatchThrowOnFullBatchFailureEnabled => GetEnvironmentVariableOrDefault(Constants.BatchThrowOnFullBatchFailureEnv, true);
 }

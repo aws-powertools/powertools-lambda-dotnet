@@ -16,7 +16,9 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
+using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal;
@@ -35,6 +37,9 @@ internal class IdempotencyAspectHandler<T>
     /// Request payload
     /// </summary>
     private readonly JsonDocument _data;
+
+    private readonly ILambdaContext _lambdaContext;
+
     /// <summary>
     /// Persistence store
     /// </summary>
@@ -45,16 +50,21 @@ internal class IdempotencyAspectHandler<T>
     /// </summary>
     /// <param name="target"></param>
     /// <param name="functionName"></param>
+    /// <param name="keyPrefix"></param>
     /// <param name="payload"></param>
+    /// <param name="lambdaContext"></param>
     public IdempotencyAspectHandler(
         Func<Task<T>> target,
         string functionName,
-        JsonDocument payload)
+        string keyPrefix,
+        JsonDocument payload,
+        ILambdaContext lambdaContext)
     {
         _target = target;
         _data = payload;
+        _lambdaContext = lambdaContext;
         _persistenceStore = Idempotency.Instance.PersistenceStore;
-        _persistenceStore.Configure(Idempotency.Instance.IdempotencyOptions, functionName);
+        _persistenceStore.Configure(Idempotency.Instance.IdempotencyOptions, functionName, keyPrefix);
     }
 
     /// <summary>
@@ -94,7 +104,7 @@ internal class IdempotencyAspectHandler<T>
         {
             // We call saveInProgress first as an optimization for the most common case where no idempotent record
             // already exists. If it succeeds, there's no need to call getRecord.
-            await _persistenceStore.SaveInProgress(_data, DateTimeOffset.UtcNow);
+            await _persistenceStore.SaveInProgress(_data, DateTimeOffset.UtcNow, GetRemainingTimeInMillis());
         }
         catch (IdempotencyItemAlreadyExistsException)
         {
@@ -167,13 +177,17 @@ internal class IdempotencyAspectHandler<T>
             case DataRecord.DataRecordStatus.EXPIRED:
                 throw new IdempotencyInconsistentStateException("saveInProgress and getRecord return inconsistent results");
             case DataRecord.DataRecordStatus.INPROGRESS:
+                if (record.InProgressExpiryTimestamp.HasValue && record.InProgressExpiryTimestamp.Value < DateTimeOffset.Now.ToUnixTimeMilliseconds())
+                {
+                    throw new IdempotencyInconsistentStateException("Item should have been expired in-progress because it already time-outed.");
+                }
                 throw new IdempotencyAlreadyInProgressException("Execution already in progress with idempotency key: " +
                                                                 record.IdempotencyKey);
             case DataRecord.DataRecordStatus.COMPLETED:
             default:
                 try
                 {
-                    var result = JsonSerializer.Deserialize<T>(record.ResponseData!);
+                    var result = IdempotencySerializer.Deserialize<T>(record.ResponseData!);
                     if (result is null)
                     {
                         throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);
@@ -233,5 +247,18 @@ internal class IdempotencyAspectHandler<T>
         }
 
         return response;
+    }
+    
+    /// <summary>
+    /// Tries to determine the remaining time available for the current lambda invocation.
+    /// Currently, it only works if the idempotent handler decorator is used or using {Idempotency#registerLambdaContext(Context)}
+    /// </summary>
+    /// <returns>the remaining time in milliseconds or empty if the context was not provided/found</returns>
+    private double? GetRemainingTimeInMillis() {
+        if (_lambdaContext != null) {
+            // why TotalMilliseconds? Because it must be the complete duration of the timespan expressed in milliseconds
+            return _lambdaContext.RemainingTime.TotalMilliseconds;
+        }
+        return null;
     }
 }

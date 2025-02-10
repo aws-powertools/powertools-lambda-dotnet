@@ -1,0 +1,187 @@
+# PROCESS
+#
+# 1. Deploy the E2E stacks using the infra deployment workflow for non-aot and aot.
+# 2. Run the E2E tests after the infrastructure is deployed.
+# 3. Destroy the CDK stacks after the tests are completed.
+
+# USAGE
+#
+# This workflow is triggered on push to the develop branch or manually via workflow_dispatch.
+
+name: E2E Tests
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "libraries/**"
+    branches:
+      - develop
+      
+concurrency:
+  group: e2e
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-stack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # v4.0.3
+        with:
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
+          aws-region: us-east-1
+          mask-aws-account-id: true
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
+        with:
+          dotnet-version: '8.x'
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+
+      - name: Install AWS Lambda .NET CLI Tools
+        run: dotnet tool install -g Amazon.Lambda.Tools
+
+      - name: Deploy Stack
+        run: |
+          cd libraries/tests/e2e/infra
+          cdk deploy --all --require-approval never
+
+  deploy-aot-stack:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04-arm, ubuntu-latest]
+        include:
+          - os: ubuntu-24.04-arm
+            arch: arm64
+          - os: ubuntu-latest
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # v4.0.3
+        with:
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
+          aws-region: us-east-1
+          mask-aws-account-id: true
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
+        with:
+          dotnet-version: '8.x'
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+
+      - name: Install AWS Lambda .NET CLI Tools
+        run: dotnet tool install -g Amazon.Lambda.Tools
+
+      - name: Deploy AOT Stack
+        run: |
+          cd libraries/tests/e2e/infra-aot
+          cdk deploy --all -c architecture=${{ matrix.arch }} --require-approval never
+
+  run-tests:
+    strategy:
+      matrix:
+        utility: [core, idempotency]
+    runs-on: ubuntu-latest
+    needs: [deploy-stack,deploy-aot-stack]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # v4.0.3
+        with:
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
+          aws-region: us-east-1
+          mask-aws-account-id: true
+          
+      - name: Set up .NET
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
+        with:
+          dotnet-version: '8.x'
+
+      - name: Run Tests
+        run: |
+          cd libraries/tests/e2e/functions/${{ matrix.utility }}
+          dotnet test --filter Category!=AOT
+          
+      - name: Run AOT Tests
+        run: |
+          cd libraries/tests/e2e/functions/${{ matrix.utility }}
+          dotnet test --filter Category=AOT
+
+  destroy-stack:
+    runs-on: ubuntu-latest
+    needs: run-tests
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # v4.0.3
+        with:
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
+          aws-region: us-east-1
+          mask-aws-account-id: true
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+        
+      - name: Install AWS Lambda .NET CLI Tools
+        run: dotnet tool install -g Amazon.Lambda.Tools
+
+      - name: Destroy Stack
+        run: |
+          cd libraries/tests/e2e/infra
+          cdk destroy --all --force
+
+  destroy-aot-stack:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04-arm, ubuntu-latest]
+        include:
+          - os: ubuntu-24.04-arm
+            arch: arm64
+          - os: ubuntu-latest
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    needs: run-tests
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # v4.0.3
+        with:
+          role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
+          aws-region: us-east-1
+          mask-aws-account-id: true
+
+      - name: Install CDK
+        run: npm install -g aws-cdk
+        
+      - name: Install AWS Lambda .NET CLI Tools
+        run: dotnet tool install -g Amazon.Lambda.Tools
+
+      - name: Destroy arm64 AOT Stack
+        run: |
+          cd libraries/tests/e2e/infra-aot
+          cdk destroy --all -c architecture=${{ matrix.arch }} --force
+      

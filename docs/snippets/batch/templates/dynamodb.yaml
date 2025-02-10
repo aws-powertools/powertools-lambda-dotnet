@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Example project demoing DynamoDB Streams processing using the Batch Processing Utility in Powertools for AWS Lambda (.NET)
+
+Globals:
+  Function:
+    Timeout: 20
+    Runtime: dotnet8
+    MemorySize: 1024
+    Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: powertools-dotnet-sample-batch-ddb
+        POWERTOOLS_LOG_LEVEL: Debug
+        POWERTOOLS_LOGGER_CASE: PascalCase
+        POWERTOOLS_BATCH_ERROR_HANDLING_POLICY: DeriveFromEvent
+        POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM: 1
+        POWERTOOLS_BATCH_PARALLEL_ENABLED : false
+        POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE: true
+
+Resources:
+
+  # --------------
+  # KMS key for encrypted messages / records
+  CustomerKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS key for encrypted queues
+      Enabled: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          - Sid: Allow AWS Lambda to use the key
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey
+            Resource: "*"
+
+  CustomerKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${AWS::StackName}-kms-key
+      TargetKeyId: !Ref CustomerKey
+
+  # --------------
+  # Batch Processing for DynamoDb (DDB) Stream
+  DdbStreamDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      KmsMasterKeyId: !Ref CustomerKey
+
+  DdbTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  DdbStreamBatchProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/HelloWorld/
+      Handler: HelloWorld::HelloWorld.Function::DynamoDbStreamHandlerUsingAttribute
+      Policies:
+        - AWSLambdaDynamoDBExecutionRole
+        - Statement:
+            - Sid: DlqPermissions
+              Effect: Allow
+              Action:
+                - sqs:SendMessage
+                - sqs:SendMessageBatch
+              Resource: !GetAtt DdbStreamDeadLetterQueue.Arn
+            - Sid: KmsKeyPermissions
+              Effect: Allow
+              Action:
+                - kms:GenerateDataKey
+              Resource: !GetAtt CustomerKey.Arn
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            BatchSize: 5
+            BisectBatchOnFunctionError: true
+            DestinationConfig:
+              OnFailure:
+                Destination: !GetAtt DdbStreamDeadLetterQueue.Arn
+            Enabled: true
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+            MaximumRetryAttempts: 2
+            ParallelizationFactor: 1
+            StartingPosition: LATEST
+            Stream: !GetAtt DdbTable.StreamArn
+
+  DdbStreamBatchProcessorFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${DdbStreamBatchProcessorFunction}"
+      RetentionInDays: 7
+
+Outputs:
+  DdbTableName:
+    Description: "DynamoDB Table Name"
+    Value: !Ref DdbTable

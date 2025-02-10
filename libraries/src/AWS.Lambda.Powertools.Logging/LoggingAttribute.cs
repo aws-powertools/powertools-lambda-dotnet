@@ -14,7 +14,7 @@
  */
 
 using System;
-using AWS.Lambda.Powertools.Common;
+using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 
@@ -116,28 +116,9 @@ namespace AWS.Lambda.Powertools.Logging;
 ///     </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Method)]
-public class LoggingAttribute : MethodAspectAttribute
+[Injection(typeof(LoggingAspect))]
+public class LoggingAttribute : Attribute
 {
-    /// <summary>
-    ///     The log event
-    /// </summary>
-    private bool? _logEvent;
-
-    /// <summary>
-    ///     The log level
-    /// </summary>
-    private LogLevel? _logLevel;
-    
-    /// <summary>
-    ///     The logger output case
-    /// </summary>
-    private LoggerOutputCase? _loggerOutputCase;
-
-    /// <summary>
-    ///     The sampling rate
-    /// </summary>
-    private double? _samplingRate;
-
     /// <summary>
     ///     Service name is used for logging.
     ///     This can be also set using the environment variable <c>POWERTOOLS_SERVICE_NAME</c>.
@@ -150,22 +131,14 @@ public class LoggingAttribute : MethodAspectAttribute
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOG_LEVEL</c>.
     /// </summary>
     /// <value>The log level.</value>
-    public LogLevel LogLevel
-    {
-        get => _logLevel ?? LoggingConstants.DefaultLogLevel;
-        set => _logLevel = value;
-    }
+    public LogLevel LogLevel{ get; set; } = LogLevel.None;
 
     /// <summary>
     ///     Dynamically set a percentage of logs to DEBUG level.
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_SAMPLE_RATE</c>.
     /// </summary>
     /// <value>The sampling rate.</value>
-    public double SamplingRate
-    {
-        get => _samplingRate.GetValueOrDefault();
-        set => _samplingRate = value;
-    }
+    public double SamplingRate { get; set; }
 
     /// <summary>
     ///     Explicitly log any incoming event, The first handler parameter is the input to the handler,
@@ -173,11 +146,7 @@ public class LoggingAttribute : MethodAspectAttribute
     ///     such as a string or any custom data object.
     /// </summary>
     /// <value><c>true</c> if [log event]; otherwise, <c>false</c>.</value>
-    public bool LogEvent
-    {
-        get => _logEvent.GetValueOrDefault();
-        set => _logEvent = value;
-    }
+    public bool LogEvent { get; set; }
 
     /// <summary>
     ///     Pointer path to extract correlation id from input parameter.
@@ -195,35 +164,11 @@ public class LoggingAttribute : MethodAspectAttribute
     /// </summary>
     /// <value><c>true</c> if [clear state]; otherwise, <c>false</c>.</value>
     public bool ClearState { get; set; } = false;
-    
+
     /// <summary>
     ///     Specify output case for logging (SnakeCase, by default).
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
     /// </summary>
     /// <value>The log level.</value>
-    public LoggerOutputCase LoggerOutputCase
-    {
-        get => _loggerOutputCase ?? LoggingConstants.DefaultLoggerOutputCase;
-        set => _loggerOutputCase = value;
-    }
-
-    /// <summary>
-    ///     Creates the handler.
-    /// </summary>
-    /// <returns>IMethodAspectHandler.</returns>
-    protected override IMethodAspectHandler CreateHandler()
-    {
-        return new LoggingAspectHandler
-        (
-            Service,
-            _logLevel,
-            _loggerOutputCase,
-            _samplingRate,
-            _logEvent,
-            CorrelationIdPath,
-            ClearState,
-            PowertoolsConfigurations.Instance,
-            SystemWrapper.Instance
-        );
-    }
+    public LoggerOutputCase LoggerOutputCase  { get; set; } = LoggerOutputCase.Default;
 }

@@ -15,6 +15,7 @@
 
 using System;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Tracing.Internal;
 
@@ -238,5 +239,21 @@ public static class Tracing
             return nameSpace;
 
         return PowertoolsConfigurations.Instance.Service;
+    }
+    
+    /// <summary>
+    ///     Registers X-Ray for all instances of <see cref="Amazon.Runtime.AmazonServiceClient"/>.
+    /// </summary>
+    public static void RegisterForAllServices()
+    {
+        AWSSDKHandler.RegisterXRayForAllServices();
+    }
+
+    /// <summary>
+    ///     Registers X-Ray for the given type of <see cref="Amazon.Runtime.AmazonServiceClient"/>.
+    /// </summary>
+    public static void Register<T>()
+    {
+        AWSSDKHandler.RegisterXRay<T>();
     }
 }

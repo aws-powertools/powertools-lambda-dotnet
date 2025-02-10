@@ -24,7 +24,7 @@ using AWS.Lambda.Powertools.Parameters.SecretsManager;
 using Xunit;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 using AWS.Lambda.Powertools.Parameters.Transform;
-using Moq;
+using NSubstitute;
 
 namespace HelloWorld.Tests
 {
@@ -40,7 +40,7 @@ namespace HelloWorld.Tests
         private readonly IParameterProvider _parameterProvider;
 
         public MockParameterProviderConfigurationBuilder(IParameterProvider parameterProvider) : base(
-            (new Mock<ParameterProvider>()).Object)
+            Substitute.For<ParameterProvider>())
         {
             _parameterProvider = parameterProvider;
         }
@@ -67,26 +67,25 @@ namespace HelloWorld.Tests
             var parameterName = Guid.NewGuid().ToString("D");
             var parameterValue = Guid.NewGuid().ToString("D");
 
-            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SsmSingleParameterNameVariableName, parameterName);
+            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SsmSingleParameterNameVariableName,
+                parameterName);
 
-            var provider = new Mock<ISsmProvider>();
-            provider.Setup(c =>
-                c.GetAsync(parameterName)
-            ).ReturnsAsync(parameterValue);
+            var provider = Substitute.For<ISsmProvider>();
+            provider.GetAsync(parameterName).Returns(parameterValue);
 
             // Act
-            var helper = new ParameterLookupHelper(provider.Object, parameterProviderType);
-            var result = await helper.GetSingleParameterWithSsmProvider().ConfigureAwait(false);
-            
+            var helper = new ParameterLookupHelper(provider, parameterProviderType);
+            var result = await helper.GetSingleParameterWithSsmProvider();
+
             // Assert
-            provider.Verify(v => v.GetAsync(parameterName), Times.Once);
+            await provider.Received(1).GetAsync(parameterName);
             Assert.NotNull(result);
             Assert.Equal(parameterProviderType, result.Provider);
             Assert.Equal(parameterLookupMethod, result.Method);
             Assert.Equal(parameterName, result.Key);
             Assert.Equal(parameterValue, result.Value);
         }
-        
+
         [Fact]
         public async Task TestGetMultipleParametersWithSsmProvider()
         {
@@ -100,24 +99,23 @@ namespace HelloWorld.Tests
                 { Guid.NewGuid().ToString("D"), Guid.NewGuid().ToString("D") }
             };
 
-            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SsmMultipleParametersPathPrefixVariableName, parameterPathPrefix);
+            Environment.SetEnvironmentVariable(EnvironmentVariableNames.SsmMultipleParametersPathPrefixVariableName,
+                parameterPathPrefix);
 
-            var provider = new Mock<ISsmProvider>();
-            provider.Setup(c =>
-                c.GetMultipleAsync(parameterPathPrefix)
-            ).ReturnsAsync(parameterValues);
+            var provider = Substitute.For<ISsmProvider>();
+            provider.GetMultipleAsync(parameterPathPrefix).Returns(parameterValues);
 
             // Act
-            var helper = new ParameterLookupHelper(provider.Object, parameterProviderType);
-            var result = await helper.GetMultipleParametersWithSsmProvider().ConfigureAwait(false);
-            
+            var helper = new ParameterLookupHelper(provider, parameterProviderType);
+            var result = await helper.GetMultipleParametersWithSsmProvider();
+
             // Assert
-            provider.Verify(v => v.GetMultipleAsync(parameterPathPrefix), Times.Once);
+            await provider.Received(1).GetMultipleAsync(parameterPathPrefix);
             Assert.NotNull(result);
             Assert.Equal(parameterProviderType, result.Provider);
             Assert.Equal(parameterLookupMethod, result.Method);
             Assert.Equal(parameterPathPrefix, result.Key);
-            
+
             var values = result.Value as IDictionary<string, string>;
             Assert.NotNull(values);
             Assert.Equal(parameterValues.Count, values.Count);
@@ -126,7 +124,7 @@ namespace HelloWorld.Tests
             Assert.Equal(parameterValues.Last().Key, values.Last().Key);
             Assert.Equal(parameterValues.Last().Value, values.Last().Value);
         }
-        
+
         [Fact]
         public async Task TestGetSingleSecretWithSecretsProvider()
         {
@@ -142,33 +140,30 @@ namespace HelloWorld.Tests
 
             Environment.SetEnvironmentVariable(EnvironmentVariableNames.SecretsManagerSecretName, secretName);
 
-            var provider = new Mock<ISecretsProvider>();
-            provider.Setup(c =>
-                c.GetAsync<SecretRecord>(secretName)
-            ).ReturnsAsync(secretValue);
-            provider.Setup(c =>
-                c.WithTransformation(Transformation.Json)
-            ).Returns(new MockParameterProviderConfigurationBuilder(provider.Object));
+            var provider = Substitute.For<ISecretsProvider>();
+            var configBuilder = new MockParameterProviderConfigurationBuilder(provider);
+            provider.GetAsync<SecretRecord>(secretName).Returns(secretValue);
+            provider.WithTransformation(Transformation.Json).Returns(configBuilder);
 
             // Act
-            var helper = new ParameterLookupHelper(provider.Object, parameterProviderType);
-            var result = await helper.GetSingleSecretWithSecretsProvider().ConfigureAwait(false);
-            
+            var helper = new ParameterLookupHelper(provider, parameterProviderType);
+            var result = await helper.GetSingleSecretWithSecretsProvider();
+
             // Assert
-            provider.Verify(v => v.GetAsync<SecretRecord>(secretName), Times.Once);
-            provider.Verify(v => v.WithTransformation(Transformation.Json), Times.Once);
+            await provider.Received(1).GetAsync<SecretRecord>(secretName);
+            provider.Received(1).WithTransformation(Transformation.Json);
             Assert.NotNull(result);
             Assert.Equal(parameterProviderType, result.Provider);
             Assert.Equal(parameterLookupMethod, result.Method);
             Assert.Equal(secretName, result.Key);
             Assert.Equal(secretName, result.Key);
-            
+
             var value = result.Value as SecretRecord;
             Assert.NotNull(value);
             Assert.Equal(secretValue.Username, value.Username);
             Assert.Equal(secretValue.Password, value.Password);
         }
-        
+
         [Fact]
         public async Task TestGetSingleParameterWithDynamoDBProvider()
         {
@@ -179,31 +174,28 @@ namespace HelloWorld.Tests
             var dynamoDbHashKey = Guid.NewGuid().ToString("D");
             var parameterValue = Guid.NewGuid().ToString("D");
 
-            Environment.SetEnvironmentVariable(EnvironmentVariableNames.DynamoDBSingleParameterTableName, dynamoDbTableName);
+            Environment.SetEnvironmentVariable(EnvironmentVariableNames.DynamoDBSingleParameterTableName,
+                dynamoDbTableName);
             Environment.SetEnvironmentVariable(EnvironmentVariableNames.DynamoDBSingleParameterId, dynamoDbHashKey);
 
-            var provider = new Mock<IDynamoDBProvider>();
-            provider.Setup(c =>
-                c.GetAsync(dynamoDbHashKey)
-            ).ReturnsAsync(parameterValue);
-            provider.Setup(c =>
-                c.UseTable(dynamoDbTableName)
-            ).Returns(provider.Object);
-            
+            var provider = Substitute.For<IDynamoDBProvider>();
+            provider.GetAsync(dynamoDbHashKey).Returns(parameterValue);
+            provider.UseTable(dynamoDbTableName).Returns(provider);
+
             // Act
-            var helper = new ParameterLookupHelper(provider.Object, parameterProviderType);
-            var result = await helper.GetSingleParameterWithDynamoDBProvider().ConfigureAwait(false);
-            
+            var helper = new ParameterLookupHelper(provider, parameterProviderType);
+            var result = await helper.GetSingleParameterWithDynamoDBProvider();
+
             // Assert
-            provider.Verify(v => v.GetAsync(dynamoDbHashKey), Times.Once);
-            provider.Verify(v => v.UseTable(dynamoDbTableName), Times.Once);
+            await provider.Received(1).GetAsync(dynamoDbHashKey);
+            provider.Received(1).UseTable(dynamoDbTableName);
             Assert.NotNull(result);
             Assert.Equal(parameterProviderType, result.Provider);
             Assert.Equal(parameterLookupMethod, result.Method);
             Assert.Equal(dynamoDbHashKey, result.Key);
             Assert.Equal(parameterValue, result.Value);
         }
-        
+
         [Fact]
         public async Task TestGetMultipleParametersWithDynamoDBProvider()
         {
@@ -218,29 +210,27 @@ namespace HelloWorld.Tests
                 { Guid.NewGuid().ToString("D"), Guid.NewGuid().ToString("D") }
             };
 
-            Environment.SetEnvironmentVariable(EnvironmentVariableNames.DynamoDBMultipleParametersTableName, dynamoDbTableName);
-            Environment.SetEnvironmentVariable(EnvironmentVariableNames.DynamoDBMultipleParametersParameterId, dynamoDbHashKey);
+            Environment.SetEnvironmentVariable(EnvironmentVariableNames.DynamoDBMultipleParametersTableName,
+                dynamoDbTableName);
+            Environment.SetEnvironmentVariable(EnvironmentVariableNames.DynamoDBMultipleParametersParameterId,
+                dynamoDbHashKey);
 
-            var provider = new Mock<IDynamoDBProvider>();
-            provider.Setup(c =>
-                c.GetMultipleAsync(dynamoDbHashKey)
-            ).ReturnsAsync(parameterValues);
-            provider.Setup(c =>
-                c.UseTable(dynamoDbTableName)
-            ).Returns(provider.Object);
-            
+            var provider = Substitute.For<IDynamoDBProvider>();
+            provider.GetMultipleAsync(dynamoDbHashKey).Returns(parameterValues);
+            provider.UseTable(dynamoDbTableName).Returns(provider);
+
             // Act
-            var helper = new ParameterLookupHelper(provider.Object, parameterProviderType);
-            var result = await helper.GetMultipleParametersWithDynamoDBProvider().ConfigureAwait(false);
-            
+            var helper = new ParameterLookupHelper(provider, parameterProviderType);
+            var result = await helper.GetMultipleParametersWithDynamoDBProvider();
+
             // Assert
-            provider.Verify(v => v.GetMultipleAsync(dynamoDbHashKey), Times.Once);
-            provider.Verify(v => v.UseTable(dynamoDbTableName), Times.Once);
+            await provider.Received(1).GetMultipleAsync(dynamoDbHashKey);
+            provider.Received(1).UseTable(dynamoDbTableName);
             Assert.NotNull(result);
             Assert.Equal(parameterProviderType, result.Provider);
             Assert.Equal(parameterLookupMethod, result.Method);
             Assert.Equal(dynamoDbHashKey, result.Key);
-            
+
             var values = result.Value as IDictionary<string, string>;
             Assert.NotNull(values);
             Assert.Equal(parameterValues.Count, values.Count);

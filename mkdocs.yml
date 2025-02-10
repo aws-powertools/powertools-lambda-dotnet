@@ -11,6 +11,7 @@ nav:
   - Roadmap: roadmap.md
   - API Reference: api/" target="_blank
   - We Made This (Community): we_made_this.md
+  - Workshop 🆕: https://s12d.com/powertools-for-aws-lambda-workshop" target="_blank
   - Core utilities:
       - core/logging.md
       - core/metrics.md
@@ -18,6 +19,8 @@ nav:
   - Utilities:
       - utilities/parameters.md
       - utilities/idempotency.md
+      - utilities/batch-processing.md
+      - utilities/jmespath-functions.md
 
 theme:
   name: material
@@ -26,13 +29,13 @@ theme:
   palette:  
     - scheme: default
       primary: blue
-      accent: deep orange
+      accent: deep blue
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to dark mode
     - scheme: slate
       primary: blue
-      accent: orange
+      accent: deep blue
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
@@ -46,7 +49,6 @@ theme:
     - navigation.tracking
     - content.code.annotate
     - toc.follow
-    - toc.integrate
     - announce.dismiss
   icon:
     repo: fontawesome/brands/github
@@ -69,13 +71,21 @@ markdown_extensions:
       permalink: true
       toc_depth: 4
   - attr_list
-  - pymdownx.emoji
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
   - pymdownx.inlinehilite
-  - pymdownx.superfences
-
-copyright: Copyright &copy; 2023 Amazon Web Services
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - md_in_html
+  
+copyright: Copyright &copy; 2024 Amazon Web Services
 
 plugins:
+  - privacy
   - git-revision-date
   - search
 
@@ -84,7 +94,14 @@ extra_css:
 extra_javascript:
   - javascript/aws-amplify.min.js
   - javascript/extra.js
+  - https://docs.powertools.aws.dev/shared/mermaid.min.js
 
 extra:
   version:
     provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/aws-powertools/powertools-lambda-dotnet
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/B8zZKbbyET
+      name: Join our Discord Server!

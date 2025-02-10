@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AWS.Lambda.Powertools.Logging.Serializers;
 
 namespace AWS.Lambda.Powertools.Logging.Internal.Converters;
 
@@ -56,42 +57,50 @@ internal class ExceptionConverter : JsonConverter<Exception>
     /// <param name="options">The JsonSerializer options.</param>
     public override void Write(Utf8JsonWriter writer, Exception value, JsonSerializerOptions options)
     {
-        var exceptionType = value.GetType();
-        var properties = exceptionType.GetProperties()
-            .Where(prop => prop.Name != nameof(Exception.TargetSite))
-            .Select(prop => new { prop.Name, Value = prop.GetValue(value) });
-
-        if (options.DefaultIgnoreCondition == JsonIgnoreCondition.WhenWritingNull)
-            properties = properties.Where(prop => prop.Value != null);
-
-        var props = properties.ToArray();
-        if (!props.Any())
-            return;
-
-        writer.WriteStartObject();
-        writer.WriteString(ApplyPropertyNamingPolicy("Type", options), exceptionType.FullName);
-        
-        foreach (var prop in props)
+        void WriteException(Utf8JsonWriter w, Exception ex)
         {
-            switch (prop.Value)
+            var exceptionType = ex.GetType();
+            var properties = ExceptionPropertyExtractor.ExtractProperties(ex);
+
+            if (options.DefaultIgnoreCondition == JsonIgnoreCondition.WhenWritingNull)
+                properties = properties.Where(prop => prop.Value != null);
+
+            var props = properties.ToArray();
+            if (props.Length == 0)
+                return;
+
+            w.WriteStartObject();
+            w.WriteString(ApplyPropertyNamingPolicy("Type", options), exceptionType.FullName);
+
+            foreach (var prop in props)
             {
-                case IntPtr intPtr:
-                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Name, options), intPtr.ToInt64());
-                    break;
-                case UIntPtr uIntPtr:
-                    writer.WriteNumber(ApplyPropertyNamingPolicy(prop.Name, options), uIntPtr.ToUInt64());
-                    break;
-                case Type propType:
-                    writer.WriteString(ApplyPropertyNamingPolicy(prop.Name, options), propType.FullName);
-                    break;
-                default:
-                    writer.WritePropertyName(ApplyPropertyNamingPolicy(prop.Name, options));
-                    JsonSerializer.Serialize(writer, prop.Value, options);
-                    break;
+                switch (prop.Value)
+                {
+                    case IntPtr intPtr:
+                        w.WriteNumber(ApplyPropertyNamingPolicy(prop.Key, options), intPtr.ToInt64());
+                        break;
+                    case UIntPtr uIntPtr:
+                        w.WriteNumber(ApplyPropertyNamingPolicy(prop.Key, options), uIntPtr.ToUInt64());
+                        break;
+                    case Type propType:
+                        w.WriteString(ApplyPropertyNamingPolicy(prop.Key, options), propType.FullName);
+                        break;
+                    case string propString:
+                        w.WriteString(ApplyPropertyNamingPolicy(prop.Key, options), propString);
+                        break;
+                }
             }
+
+            if (ex.InnerException != null)
+            {
+                w.WritePropertyName(ApplyPropertyNamingPolicy("InnerException", options));
+                WriteException(w, ex.InnerException);
+            }
+
+            w.WriteEndObject();
         }
 
-        writer.WriteEndObject();
+        WriteException(writer, value);
     }
 
     /// <summary>

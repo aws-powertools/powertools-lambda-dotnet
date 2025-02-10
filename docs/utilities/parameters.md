@@ -3,11 +3,8 @@ title: Parameters
 description: Utility
 ---
 
-???+ warning
-	**This utility is currently in developer preview** and is intended strictly for feedback and testing purposes **and not for production workloads**. The version and all future versions tagged with the `-preview` suffix should be treated as not stable. Until this utility is [General Availability](https://github.com/aws-powertools/powertools-lambda-dotnet/milestone/2) we may introduce significant breaking changes and improvements in response to customers feedback.
-
 <!-- markdownlint-disable MD013 -->
-The Parameters utility provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
+The Parameters utility provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}, or [AWS AppConfig](https://docs.aws.amazon.com/appconfig/latest/userguide/what-is-appconfig.html){target="_blank"}. We also provide extensibility to bring your own providers.
 
 ## Key features
 
@@ -36,6 +33,7 @@ This utility requires additional permissions to work as expected. See the table 
 | Secrets Manager     | `SecretsProvider.Get(string)` `SecretsProvider.Get<T>(string)`                   | `secretsmanager:GetSecretValue`                         |
 | DynamoDB            | `DynamoDBProvider.Get(string)` `DynamoDBProvider.Get<T>(string)`                 | `dynamodb:GetItem`                                      |
 | DynamoDB            | `DynamoDBProvider.GetMultiple(string)` `DynamoDBProvider.GetMultiple<T>(string)` | `dynamodb:Query`                                        |
+| App Config          | `AppConfigProvider.Get()`       | `appconfig:StartConfigurationSession` `appconfig:GetLatestConfiguration`                      |
 
 ## SSM Parameter Store
 
@@ -344,6 +342,7 @@ You can retrieve multiple parameters sharing the same `id` by having a sort key 
 		"param-b": "my-value-b",
 		"param-c": "my-value-c"
 	}
+    ```
 
 **Customizing DynamoDBProvider**
 
@@ -376,6 +375,106 @@ DynamoDB provider can be customized at initialization to match your table struct
                     sortKeyAttribute: "sk",    // Sort Key attribute name, optional, default is 'sk'
                     valueAttribute: "value"    // Value attribute name, optional, default is 'value'
                 );
+        }
+    }
+    ```
+
+## App Configurations
+
+For application configurations in AWS AppConfig, use `AppConfigProvider`.
+
+Alternatively, you can retrieve the instance of provider and configure its underlying SDK client,
+in order to get data from other regions or use specific credentials.
+
+=== "AppConfigProvider"
+
+    ```c# hl_lines="10-13 16-18"
+    using AWS.Lambda.Powertools.Parameters;
+    using AWS.Lambda.Powertools.Parameters.AppConfig;
+
+    public class Function
+    {
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            // Get AppConfig Provider instance
+            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
+                .DefaultApplication("MyApplicationId")
+                .DefaultEnvironment("MyEnvironmentId")
+                .DefaultConfigProfile("MyConfigProfileId");
+                
+            // Retrieve a single configuration, latest version
+            IDictionary<string, string?> value = await appConfigProvider
+                .GetAsync()
+                .ConfigureAwait(false);
+        }
+    }
+    ```
+
+=== "AppConfigProvider with an explicit region"
+
+    ```c# hl_lines="10-14"
+    using AWS.Lambda.Powertools.Parameters;
+    using AWS.Lambda.Powertools.Parameters.AppConfig;
+
+    public class Function
+    {
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            // Get AppConfig Provider instance
+            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
+                .ConfigureClient(RegionEndpoint.EUCentral1)
+                .DefaultApplication("MyApplicationId")
+                .DefaultEnvironment("MyEnvironmentId")
+                .DefaultConfigProfile("MyConfigProfileId");
+                
+            // Retrieve a single configuration, latest version
+            IDictionary<string, string?> value = await appConfigProvider
+                .GetAsync()
+                .ConfigureAwait(false);
+        }
+    }
+    ```
+
+**Using AWS AppConfig Feature Flags**
+
+Feature flagging is a powerful tool that allows safely pushing out new features in a measured and usually gradual way. AppConfig provider offers helper methods to make it easier to work with feature flags.
+
+=== "AppConfigProvider"
+
+    ```c# hl_lines="10-13 16-18 23-25"
+    using AWS.Lambda.Powertools.Parameters;
+    using AWS.Lambda.Powertools.Parameters.AppConfig;
+
+    public class Function
+    {
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            // Get AppConfig Provider instance
+            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
+                .DefaultApplication("MyApplicationId")
+                .DefaultEnvironment("MyEnvironmentId")
+                .DefaultConfigProfile("MyConfigProfileId");
+                
+            // Check if feature flag is enabled
+            var isFeatureFlagEnabled = await appConfigProvider
+                .IsFeatureFlagEnabledAsync("MyFeatureFlag")
+                .ConfigureAwait(false);
+            
+            if (isFeatureFlagEnabled)
+            {
+                // Retrieve an attribute value of the feature flag
+                var strAttValue = await appConfigProvider
+                    .GetFeatureFlagAttributeValueAsync<string>("MyFeatureFlag", "StringAttribute")
+                    .ConfigureAwait(false);
+                
+                // Retrieve another attribute value of the feature flag
+                var numberAttValue = await appConfigProvider
+                    .GetFeatureFlagAttributeValueAsync<int>("MyFeatureFlag", "NumberAttribute")
+                    .ConfigureAwait(false);
+            }
         }
     }
     ```

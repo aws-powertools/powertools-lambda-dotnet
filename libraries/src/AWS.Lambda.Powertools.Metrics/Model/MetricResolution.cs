@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.Metrics;
@@ -6,7 +5,7 @@ namespace AWS.Lambda.Powertools.Metrics;
 /// <summary>
 /// Enum MetricResolution
 /// </summary>
-// [JsonConverter(typeof(StringEnumConverter))]
+[JsonConverter(typeof(MetricResolutionJsonConverter))]
 public enum MetricResolution
 {
     /// <summary>

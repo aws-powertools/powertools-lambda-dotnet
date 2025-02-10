@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
@@ -12,9 +12,9 @@
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="8.1.0" />
-    <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.1.0" />
-    <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.2.0" />
-    <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.1.0" />
+    <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="9.0.0" />
+    <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.6.3" />
+    <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.7.1" />
+    <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.6.0" />
   </ItemGroup>
 </Project>

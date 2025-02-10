@@ -23,6 +23,7 @@ using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
 using AWS.Lambda.Powertools.Idempotency.Internal;
+using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 
 namespace AWS.Lambda.Powertools.Idempotency;
 
@@ -63,6 +64,11 @@ namespace AWS.Lambda.Powertools.Idempotency;
 public class IdempotentAttribute : UniversalWrapperAttribute
 {
     /// <summary>
+    /// Custom prefix for idempotency key: key_prefix#hash
+    /// </summary>
+    public string KeyPrefix { get; set; }
+    
+    /// <summary>
     ///     Wraps as a synchronous operation, simply throws IdempotencyConfigurationException
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -89,7 +95,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
 
         Task<T> ResultDelegate() => Task.FromResult(target(args));
 
-        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload);
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, KeyPrefix, payload,GetContext(eventArgs));
         if (idempotencyHandler == null)
         {
             throw new Exception("Failed to create an instance of IdempotencyAspectHandler");
@@ -127,7 +133,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         
         Task<T> ResultDelegate() => target(args);
         
-        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, payload);
+        var idempotencyHandler = new IdempotencyAspectHandler<T>(ResultDelegate, eventArgs.Method.Name, KeyPrefix, payload, GetContext(eventArgs));
         if (idempotencyHandler == null)
         {
             throw new Exception("Failed to create an instance of IdempotencyAspectHandler");
@@ -151,7 +157,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
         // Use the first argument if IdempotentAttribute placed on handler or number of arguments is 1
         if (isPlacedOnRequestHandler || args.Count == 1)
         {
-            payload = args is not null && args.Any() ? JsonDocument.Parse(JsonSerializer.Serialize(args[0])) : null;
+            payload = args is not null && args.Any() ? JsonDocument.Parse(IdempotencySerializer.Serialize(args[0], typeof(object))) : null;
         }
         else
         {
@@ -160,7 +166,7 @@ public class IdempotentAttribute : UniversalWrapperAttribute
             if (parameter != null)
             {
                 // set payload to the value of the parameter
-                payload = JsonDocument.Parse(JsonSerializer.Serialize(args[Array.IndexOf(eventArgsMethod.GetParameters(), parameter)]));
+                payload = JsonDocument.Parse(IdempotencySerializer.Serialize(args[Array.IndexOf(eventArgsMethod.GetParameters(), parameter)], typeof(object)));
             }
         }
 
@@ -171,5 +177,15 @@ public class IdempotentAttribute : UniversalWrapperAttribute
     {
         //Check if method has two arguments and the second one is of type ILambdaContext
         return method.GetParameters().Length == 2 && method.GetParameters()[1].ParameterType == typeof(ILambdaContext);
+    }
+    
+    private static ILambdaContext GetContext(AspectEventArgs args)
+    {
+        if (IsPlacedOnRequestHandler(args.Method))
+        {
+            return (ILambdaContext)args.Args[1];
+        }
+        
+        return Idempotency.Instance.LambdaContext;
     }
 }

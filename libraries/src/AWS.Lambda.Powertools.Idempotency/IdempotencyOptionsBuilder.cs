@@ -11,26 +11,32 @@ public class IdempotencyOptionsBuilder
     /// Default maximum number of items in the local cache.
     /// </summary>
     private readonly int _localCacheMaxItems = 256;
+
     /// <summary>
     /// Local cache enabled
     /// </summary>
     private bool _useLocalCache;
+
     /// <summary>
     /// Default expiration in seconds.
     /// </summary>
     private long _expirationInSeconds = 60 * 60; // 1 hour
+
     /// <summary>
     /// Event key JMESPath expression.
     /// </summary>
     private string _eventKeyJmesPath;
+
     /// <summary>
     /// Payload validation JMESPath expression.
     /// </summary>
     private string _payloadValidationJmesPath;
+
     /// <summary>
     /// Throw exception if no idempotency key is found.
     /// </summary>
     private bool _throwOnNoIdempotencyKey;
+
     /// <summary>
     /// Default Hash function
     /// </summary>
@@ -107,7 +113,7 @@ public class IdempotencyOptionsBuilder
     /// <returns>the instance of the builder (to chain operations)</returns>
     public IdempotencyOptionsBuilder WithExpiration(TimeSpan duration)
     {
-        _expirationInSeconds = (long) duration.TotalSeconds;
+        _expirationInSeconds = (long)duration.TotalSeconds;
         return this;
     }
 
@@ -116,9 +122,15 @@ public class IdempotencyOptionsBuilder
     /// </summary>
     /// <param name="hashFunction">Can be any algorithm supported by HashAlgorithm.Create</param>
     /// <returns>the instance of the builder (to chain operations)</returns>
+#if NET8_0_OR_GREATER
+    [Obsolete("Idempotency uses MD5 and does not support other hash algorithms.")]
+#endif
     public IdempotencyOptionsBuilder WithHashFunction(string hashFunction)
     {
+#if NET6_0
+        // for backward compability keep this code in .net 6
         _hashFunction = hashFunction;
+#endif
         return this;
     }
 }

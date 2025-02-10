@@ -105,12 +105,12 @@ public class TransformerTest
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(key1, result?.First().Key);
-        Assert.Equal(key2, result?.Last().Key);
-        Assert.Equal(value1.First(), result?.First().Value.First());
-        Assert.Equal(value1.Last(), result?.First().Value.Last());
-        Assert.Equal(value2.First(), result?.Last().Value.First());
-        Assert.Equal(value2.Last(), result?.Last().Value.Last());
+        Assert.Equal(key1, result.First().Key);
+        Assert.Equal(key2, result.Last().Key);
+        Assert.Equal(value1.First(), result.First().Value.First());
+        Assert.Equal(value1.Last(), result.First().Value.Last());
+        Assert.Equal(value2.First(), result.Last().Value.First());
+        Assert.Equal(value2.Last(), result.Last().Value.Last());
     }
 
     [Fact]

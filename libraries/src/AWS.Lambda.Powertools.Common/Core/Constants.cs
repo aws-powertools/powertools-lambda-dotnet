@@ -54,6 +54,11 @@ internal static class Constants
     ///     Constant for POWERTOOLS_LOG_LEVEL environment variable
     /// </summary>
     internal const string LogLevelNameEnv = "POWERTOOLS_LOG_LEVEL";
+    
+    /// <summary>
+    ///     Constant for POWERTOOLS_LOG_LEVEL environment variable
+    /// </summary>
+    internal const string AWSLambdaLogLevelNameEnv = "AWS_LAMBDA_LOG_LEVEL";
 
     /// <summary>
     ///     Constant for POWERTOOLS_LOGGER_SAMPLE_RATE environment variable
@@ -105,4 +110,24 @@ internal static class Constants
     /// Constant for LAMBDA_FUNCTION_NAME_ENV environment variable
     /// </summary>
     internal const string LambdaFunctionNameEnv = "AWS_LAMBDA_FUNCTION_NAME";
+
+    /// <summary>
+    /// Constant for POWERTOOLS_BATCH_ERROR_HANDLING_POLICY environment variable
+    /// </summary>
+    internal const string BatchErrorHandlingPolicyEnv = "POWERTOOLS_BATCH_ERROR_HANDLING_POLICY";
+
+    /// <summary>
+    /// Constant for POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM environment variable
+    /// </summary>
+    internal const string BatchMaxDegreeOfParallelismEnv = "POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM";
+
+    /// <summary>
+    /// Constant for POWERTOOLS_BATCH_PARALLEL_ENABLED environment variable
+    /// </summary>
+    internal const string BatchParallelProcessingEnabled = "POWERTOOLS_BATCH_PARALLEL_ENABLED";
+
+    /// <summary>
+    /// Constant for POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE environment variable
+    /// </summary>
+    internal const string BatchThrowOnFullBatchFailureEnv = "POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE";
 }

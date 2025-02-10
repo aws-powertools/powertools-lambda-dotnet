@@ -7,7 +7,10 @@ description: Powertools for AWS Lambda (.NET)
 
 # Powertools for AWS Lambda (.NET)
 
-Powertools for AWS Lambda (.NET) (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more. Please note, **Powertools for AWS Lambda (.NET) is optimized for .NET 6+**.
+Powertools for AWS Lambda (.NET) (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more.
+
+!!! info
+    **Supports .NET 6 and .NET 8 runtimes**
 
 ???+ tip
     Powertools is also available for [Python](https://docs.powertools.aws.dev/lambda/python/){target="_blank"}, [Java](https://docs.powertools.aws.dev/lambda/java/){target="_blank"}, and [TypeScript](https://docs.powertools.aws.dev/lambda/typescript/latest/){target="_blank"}.
@@ -29,8 +32,9 @@ Core utilities such as Tracing, Logging, and Metrics will be available across al
 [Tracing](./core/tracing.md) | Decorators and utilities to trace Lambda function handlers, and both synchronous and asynchronous functions
 [Logger](./core/logging.md) | Structured logging made easier, and decorator to enrich structured logging with key Lambda context details
 [Metrics](./core/metrics.md) | Custom AWS metrics created asynchronously via CloudWatch Embedded Metric Format (EMF)
-[Parameters (developer preview)](./utilities/parameters/) | provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
-[Idempotency (developer preview)](./utilities/idempotency/) | The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
+[Parameters](./utilities/parameters/) | provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html){target="_blank"}, [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/){target="_blank"}, or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/){target="_blank"}. We also provide extensibility to bring your own providers.
+[Idempotency](./utilities/idempotency/) | The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
+[Batch Processing](./utilities/batch-processing/) | The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
 
 ## Install
 
@@ -55,6 +59,10 @@ Powertools for AWS Lambda (.NET) is available as NuGet packages. You can install
 * [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Idempotency):
 
     `dotnet add package AWS.Lambda.Powertools.Idempotency`
+
+* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.BatchProcessing):
+
+    `dotnet add package AWS.Lambda.Powertools.BatchProcessing`
 
 ### Using SAM CLI template
 
@@ -104,14 +112,61 @@ We have provided a few examples that should you how to use the each of the core 
 * [Tracing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Tracing){target="_blank"}
 * [Logging](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Logging/){target="_blank"}
 * [Metrics](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Metrics/){target="_blank"}
-* [Serverless API example](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/ServerlessApi/){target="_blank"}
+* [Serverless API](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/ServerlessApi/){target="_blank"}
 * [Parameters](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Parameters/){target="_blank"}
 * [Idempotency](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Idempotency/){target="_blank"}
+* [Batch Processing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/BatchProcessing/){target="_blank"}
 
 ## Connect
 
 * **Powertools for AWS Lambda (.NET) on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET){target="_blank"}**
-* **Email**: aws-lambda-powertools-feedback@amazon.com
+* **Email**: aws-powertools-maintainers@amazon.com
+
+## Support Powertools for AWS Lambda (.NET)
+
+There are many ways you can help us gain future investments to improve everyone's experience:
+
+<div class="grid cards" markdown>
+
+- :heart:{ .lg .middle } __Become a public reference__
+
+    ---
+
+    Add your company name and logo on our [landing page](https://powertools.aws.dev).
+
+    [:octicons-arrow-right-24: GitHub Issue template](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=customer-reference&template=support_powertools.yml&title=%5BSupport+Lambda+Powertools%5D%3A+%3Cyour+organization+name%3E){target="_blank"}
+
+- :mega:{ .lg .middle } __Share your work__
+
+    ---
+
+    Blog posts, video, and sample projects about Powertools for AWS Lambda.
+
+    [:octicons-arrow-right-24: GitHub Issue template](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=customer-reference&template=support_powertools.yml&title=%5BSupport+Lambda+Powertools%5D%3A+%3Cyour+organization+name%3E){target="_blank"}
+
+- :partying_face:{ .lg .middle } __Join the community__
+
+    ---
+
+    Connect, ask questions, and share what features you use.
+
+    [:octicons-arrow-right-24: Discord invite](https://discord.gg/B8zZKbbyET){target="blank"}
+
+</div>
+
+### Becoming a reference customer
+
+Knowing which companies are using this library is important to help prioritize the project internally. The following companies, among others, use Powertools:
+
+<div class="grid" style="text-align:center;" markdown>
+
+[**Caylent**](https://caylent.com/){target="_blank" rel="nofollow"}
+{ .card }
+
+[**Pushpay**](https://pushpay.com/){target="_blank" rel="nofollow"}
+{ .card }
+
+</div>
 
 ## Tenets
 

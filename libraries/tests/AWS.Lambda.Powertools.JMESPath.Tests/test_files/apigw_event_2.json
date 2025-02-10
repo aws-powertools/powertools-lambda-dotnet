@@ -1,0 +1,54 @@
+[
+  {
+    "given": {
+      "version": "2.0",
+      "routeKey": "ANY /createpayment",
+      "rawPath": "/createpayment",
+      "rawQueryString": "",
+      "headers": {
+        "Header1": "value1",
+        "Header2": "value2"
+      },
+      "requestContext": {
+        "accountId": "123456789012",
+        "apiId": "api-id",
+        "domainName": "id.execute-api.us-east-1.amazonaws.com",
+        "domainPrefix": "id",
+        "http": {
+          "method": "POST",
+          "path": "/createpayment",
+          "protocol": "HTTP/1.1",
+          "sourceIp": "ip",
+          "userAgent": "agent"
+        },
+        "requestId": "id",
+        "routeKey": "ANY /createpayment",
+        "stage": "$default",
+        "time": "10/Feb/2021:13:40:43 +0000",
+        "timeEpoch": 1612964443723
+      },
+      "body": {"user_id":"xyz","product_id":"123456789"},
+      "body64": "eyJ1c2VyX2lkIjoieHl6IiwicHJvZHVjdF9pZCI6IjEyMzQ1Njc4OSJ9",
+      "bodygzip": "H4sIAAAAAAAAA6tWKi1OLYrPTFGyUqqorFLSUSooyk8pTS6BCBkaGZuYmplbWCrVAgApzA/LKgAAAA==",
+      "isBase64Encoded": false
+    },
+    "cases": [
+      {
+        "expression": "body.[user_id,product_id]",
+        "result": ["xyz",123456789]
+      },
+      {
+        "expression": "powertools_json(body).[user_id,product_id]",
+        "result": ["xyz",123456789]
+      },
+      {
+        "expression": "powertools_base64(body64).[user_id,product_id]",
+        "result": ["xyz",123456789]
+      },
+      {
+        "expression": "powertools_base64_gzip(bodygzip).[user_id,product_id]",
+        "result": ["xyz",123456789]
+      }
+    ]
+  }
+]

@@ -14,22 +14,11 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.Model;
 using Xunit;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.TestUtilities;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Containers;
-using Moq;
-using Moq.Protected;
 using Xunit.Abstractions;
 
 namespace HelloWorld.Tests

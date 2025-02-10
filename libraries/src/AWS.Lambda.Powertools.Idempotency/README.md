@@ -18,9 +18,15 @@ times with the same parameters**. This makes idempotent operations safe to retry
 
 * Prevent Lambda handler function from executing more than once on the same event payload during a time window
 * Ensure Lambda handler returns the same result when called with the same payload
-* Select a subset of the event as the idempotency key using JMESPath expressions
+* Select a subset of the event as the idempotency key using [JMESPath](https://jmespath.org/) expressions
 * Set a time window in which records with the same payload should be considered duplicates
+* Expires in-progress executions if the Lambda function times out halfway through
 
+## Read the docs
+
+For a full list of features go to [docs.powertools.aws.dev/lambda/dotnet/utilities/idempotency/](https://docs.powertools.aws.dev/lambda/dotnet/utilities/idempotency/)
+
+GitHub: https://github.com/aws-powertools/powertools-lambda-dotnet/
 
 ## Installation
 You should install with NuGet:
@@ -35,5 +41,20 @@ Or via the .NET Core command line interface:
 dotnet add package Amazon.Lambda.PowerTools.Idempotency
 ```
 
-## Acknowledgment
-This project has been ported from the Java Idempotency PowerTool Utility
+## Sample Function
+
+```csharp
+public class Function
+{
+    public Function()
+    {
+        Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
+    }
+
+    [Idempotent]
+    public Task<string> FunctionHandler(string input, ILambdaContext context)
+    {
+        return Task.FromResult(input.ToUpper());
+    }
+}
+```

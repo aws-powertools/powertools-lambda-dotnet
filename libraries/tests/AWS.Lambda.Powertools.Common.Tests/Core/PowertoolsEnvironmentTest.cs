@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using Moq;
+using System.IO;
+using System.Linq;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Common.Tests;
@@ -60,6 +62,25 @@ public class PowertoolsEnvironmentTest : IDisposable
 
         // Assert
         Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0", systemWrapper.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+    }
+    
+    [Fact]
+    public void Should_Use_Aspect_Injector_281()
+    {
+        // This test must be present until Issue: https://github.com/pamidur/aspect-injector/issues/220 is fixed
+        
+        var directory = Path.GetFullPath("../../../../../src/Directory.Packages.props");
+        var doc = XDocument.Load(directory);
+
+        var packageReference = doc.XPathSelectElements("//PackageVersion")
+            .Select(pr => new
+            {
+                Include = pr.Attribute("Include")!.Value,
+                Version = new Version(pr.Attribute("Version")!.Value)
+            }).FirstOrDefault(x => x.Include == "AspectInjector");
+
+        Assert.NotNull(packageReference);
+        Assert.Equal("2.8.1", packageReference.Version.ToString());
     }
     
     public void Dispose()

@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
         <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
         <Nullable>enable</Nullable>
         <RootNamespace>HelloWorld.Cfn</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
-        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.0" />
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.103.1" />
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
+        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\src\HelloWorld\HelloWorld.csproj" />

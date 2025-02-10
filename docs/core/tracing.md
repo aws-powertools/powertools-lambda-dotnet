@@ -15,6 +15,8 @@ a provides functionality to reduce the overhead of performing common tracing tas
 * Capture function responses and full exceptions as metadata.
 * Better experience when developing with multiple threads.
 * Auto-patch supported modules by AWS X-Ray
+* Auto-disable when not running in AWS Lambda environment
+* Ahead-of-Time compilation to native code support [AOT](https://docs.aws.amazon.com/lambda/latest/dg/dotnet-native-aot.html) from version 1.5.0
 
 ## Installation
 
@@ -242,7 +244,131 @@ under a subsegment, or you are doing multithreaded programming. Refer examples b
     }
     ```
 
-## Instrumenting SDK clients and HTTP calls
+## Instrumenting SDK clients
 
-User should make sure to instrument the SDK clients explicitly based on the function dependency. Refer details on
-[how to instrument SDK client with Xray](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-sdkclients.html) and [outgoing http calls](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-httpclients.html).
+You should make sure to instrument the SDK clients explicitly based on the function dependency. You can instrument all of your AWS SDK for .NET clients by calling RegisterForAllServices before you create them.
+
+=== "Function.cs"
+
+    ```c# hl_lines="14"
+    using Amazon.DynamoDBv2;
+    using Amazon.DynamoDBv2.Model;
+    using AWS.Lambda.Powertools.Tracing;
+    
+    public class Function
+    {
+        private static IAmazonDynamoDB _dynamoDb;
+
+        /// <summary>
+        /// Function constructor
+        /// </summary>
+        public Function()
+        {
+            Tracing.RegisterForAllServices();
+            
+            _dynamoDb = new AmazonDynamoDBClient();
+        }
+    }
+    ```
+
+To instrument clients for some services and not others, call Register instead of RegisterForAllServices. Replace the highlighted text with the name of the service's client interface.
+
+```c#
+Tracing.Register<IAmazonDynamoDB>()
+```
+
+This functionality is a thin wrapper for AWS X-Ray .NET SDK. Refer details on [how to instrument SDK client with Xray](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-sdkclients.html)
+
+## Instrumenting outgoing HTTP calls 
+
+=== "Function.cs"
+
+    ```c# hl_lines="7"
+    using Amazon.XRay.Recorder.Handlers.System.Net;
+    
+    public class Function
+    {
+        public Function()
+        {
+            var httpClient = new HttpClient(new HttpClientXRayTracingHandler(new HttpClientHandler()));
+            var myIp = await httpClient.GetStringAsync("https://checkip.amazonaws.com/");
+        }
+    }
+    ```
+
+More information about instrumenting [outgoing http calls](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-httpclients.html).
+
+## AOT Support
+
+Native AOT trims your application code as part of the compilation to ensure that the binary is as small as possible. .NET 8 for Lambda provides improved trimming support compared to previous versions of .NET.
+
+
+### WithTracing()
+
+To use Tracing utility with AOT support you first need to add `WithTracing()` to the source generator you are using either the default `SourceGeneratorLambdaJsonSerializer`
+or the Powertools Logging utility [source generator](logging.md#aot-support){:target="_blank"} `PowertoolsSourceGeneratorSerializer`.
+
+Examples:
+
+=== "Without Powertools Logging"
+
+    ```c# hl_lines="8"
+    using AWS.Lambda.Powertools.Tracing;
+    using AWS.Lambda.Powertools.Tracing.Serializers;
+
+    private static async Task Main()
+    {
+        Func<string, ILambdaContext, string> handler = FunctionHandler;
+        await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>()
+        .WithTracing())
+            .Build()
+            .RunAsync();
+    }
+    ```
+
+=== "With Powertools Logging"
+
+    ```c# hl_lines="10 11"
+    using AWS.Lambda.Powertools.Logging;
+    using AWS.Lambda.Powertools.Logging.Serializers;
+    using AWS.Lambda.Powertools.Tracing;
+    using AWS.Lambda.Powertools.Tracing.Serializers;
+
+    private static async Task Main()
+    {
+        Func<string, ILambdaContext, string> handler = FunctionHandler;
+        await LambdaBootstrapBuilder.Create(handler, 
+            new PowertoolsSourceGeneratorSerializer<LambdaFunctionJsonSerializerContext>()
+            .WithTracing())
+                .Build()
+                .RunAsync();
+    }
+    ```
+
+### Publishing
+
+!!! warning "Publishing"
+    Make sure you are publishing your code with `--self-contained true` and that you have `<TrimMode>partial</TrimMode>` in your `.csproj` file 
+
+### Trimming
+
+!!! warning "Trim warnings"
+    ```xml
+    <ItemGroup>
+        <TrimmerRootAssembly Include="AWSSDK.Core" />
+        <TrimmerRootAssembly Include="AWSXRayRecorder.Core" />
+        <TrimmerRootAssembly Include="AWSXRayRecorder.Handlers.AwsSdk" />
+        <TrimmerRootAssembly Include="Amazon.Lambda.APIGatewayEvents" />
+        <TrimmerRootAssembly Include="bootstrap" />
+        <TrimmerRootAssembly Include="Shared" />
+    </ItemGroup>
+    ```
+
+    Note that when you receive a trim warning, adding the class that generates the warning to TrimmerRootAssembly might not resolve the issue. A trim warning indicates that the class is trying to access some other class that can't be determined until runtime. To avoid runtime errors, add this second class to TrimmerRootAssembly. 
+    
+    To learn more about managing trim warnings, see [Introduction to trim warnings](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings) in the Microsoft .NET documentation.
+
+### Not supported
+
+!!! warning "Not supported"
+    Currently instrumenting SDK clients with `Tracing.RegisterForAllServices()` is not supported on AOT mode.

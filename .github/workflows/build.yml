@@ -2,36 +2,45 @@ name: Build .NET
 
 on:
   push:
+    paths:
+      - "libraries/**"
     branches: [develop, main]
   pull_request:
+    paths:
+      - "libraries/**"
     branches: [develop, main]
 
 defaults:
   run:
     working-directory: ./libraries
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Setup .NET 6.0 &  8.0
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
         with:
-          dotnet-version: 6.0.405
-      - name: Install solution dependencies
-        run: dotnet restore
+          dotnet-version: |
+            6.0.405
+            8.0.101
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --configuration Release
+      - name: Test Examples
+        run: dotnet test ../examples/
       - name: Test & Code Coverage
-        run: dotnet test --collect:"XPlat Code Coverage" -r ./codecov --no-restore --verbosity normal
+        run: dotnet test --filter "Category!=E2E" --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity normal
       - name: Codecov
-        uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # 3.1.0
+        uses: codecov/codecov-action@13ce06bfc6bbe3ecf90edbbf1bc32fe5978ca1d3 # 5.3.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           name: codecov-lambda-powertools-dotnet
           verbose: true
           directory: ./libraries/codecov

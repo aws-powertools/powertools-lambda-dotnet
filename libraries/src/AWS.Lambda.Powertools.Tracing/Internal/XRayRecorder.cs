@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -41,7 +41,8 @@ internal class XRayRecorder : IXRayRecorder
     ///     Gets the instance.
     /// </summary>
     /// <value>The instance.</value>
-    public static IXRayRecorder Instance => _instance ??= new XRayRecorder(AWSXRayRecorder.Instance, PowertoolsConfigurations.Instance);
+    public static IXRayRecorder Instance =>
+        _instance ??= new XRayRecorder(AWSXRayRecorder.Instance, PowertoolsConfigurations.Instance);
 
     public XRayRecorder(IAWSXRayRecorder awsxRayRecorder, IPowertoolsConfigurations powertoolsConfigurations)
     {
@@ -56,7 +57,7 @@ internal class XRayRecorder : IXRayRecorder
     ///     Checks whether current execution is in AWS Lambda.
     /// </summary>
     /// <returns>Returns true if current execution is in AWS Lambda.</returns>
-    private static bool _isLambda; 
+    private static bool _isLambda;
 
     /// <summary>
     ///     Gets the emitter.
@@ -77,7 +78,9 @@ internal class XRayRecorder : IXRayRecorder
     public void BeginSubsegment(string name)
     {
         if (_isLambda)
-            _awsxRayRecorder.BeginSubsegment(name);
+        {
+            _awsxRayRecorder.BeginSubsegment(Helpers.SanitizeString(name));
+        }
     }
 
     /// <summary>
@@ -112,14 +115,30 @@ internal class XRayRecorder : IXRayRecorder
         if (_isLambda)
             _awsxRayRecorder.AddMetadata(nameSpace, key, value);
     }
-
+    
     /// <summary>
     ///     Ends the subsegment.
     /// </summary>
     public void EndSubsegment()
     {
-        if (_isLambda)
+        if (!_isLambda) return;
+        try
+        {
             _awsxRayRecorder.EndSubsegment();
+        }
+        catch (Exception e)
+        {
+            // if it fails at this stage the data is lost
+            // so lets create a new subsegment with the error
+
+            Console.WriteLine("Error in Tracing utility - see Exceptions tab in Cloudwatch Traces");
+
+            _awsxRayRecorder.TraceContext.ClearEntity();
+            _awsxRayRecorder.BeginSubsegment("Error in Tracing utility - see Exceptions tab");
+            _awsxRayRecorder.AddException(e);
+            _awsxRayRecorder.MarkError();
+            _awsxRayRecorder.EndSubsegment();
+        }
     }
 
     /// <summary>

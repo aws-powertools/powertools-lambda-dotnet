@@ -11,6 +11,7 @@ The logging utility provides a Lambda optimized logger with output structured as
 * Log Lambda event when instructed (disabled by default)
 * Log sampling enables DEBUG log level for a percentage of requests (disabled by default)
 * Append additional keys to structured log at any point in time
+* Ahead-of-Time compilation to native code support [AOT](https://docs.aws.amazon.com/lambda/latest/dg/dotnet-native-aot.html) from version 1.6.0
 
 ## Installation
 
@@ -22,12 +23,26 @@ Powertools for AWS Lambda (.NET) are available as NuGet packages. You can instal
 
 ## Getting started
 
+!!! info
+    
+    AOT Support
+    If loooking for AOT specific configurations navigate to the [AOT section](#aot-support)    
+
+
 Logging requires two settings:
 
 Setting | Description | Environment variable | Attribute parameter
 ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------
 **Service** | Sets **Service** key that will be present across all log statements | `POWERTOOLS_SERVICE_NAME` | `Service`
 **Logging level** | Sets how verbose Logger should be (Information, by default) |  `POWERTOOLS_LOG_LEVEL` | `LogLevel`
+
+### Service Property Priority Resolution
+
+The root level Service property now correctly follows this priority order:
+
+1. LoggingAttribute.Service (property value set in the decorator)
+2. POWERTOOLS_SERVICE_NAME (environment variable)
+
 
 ### Example using AWS Serverless Application Model (AWS SAM)
 
@@ -68,6 +83,55 @@ Here is an example using the AWS SAM [Globals section](https://docs.aws.amazon.c
 | **POWERTOOLS_LOGGER_CASE** | Override the default casing for log keys | `SnakeCase` |
 | **POWERTOOLS_LOGGER_LOG_EVENT** | Logs incoming event |  `false` |
 | **POWERTOOLS_LOGGER_SAMPLE_RATE** | Debug log sampling |  `0` |
+
+
+### Using AWS Lambda Advanced Logging Controls (ALC)
+
+!!! question "When is it useful?"
+    When you want to set a logging policy to drop informational or verbose logs for one or all AWS Lambda functions, regardless of runtime and logger used.
+
+With [AWS Lambda Advanced Logging Controls (ALC)](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced){target="_blank"}, you can enforce a minimum log level that Lambda will accept from your application code.
+
+When enabled, you should keep `Logger` and ALC log level in sync to avoid data loss.
+
+!!! warning "When using AWS Lambda Advanced Logging Controls (ALC)"
+    - When Powertools Logger output is set to `PascalCase` **`Level`**  property name will be replaced by **`LogLevel`** as a property name.
+    - ALC takes precedence over **`POWERTOOLS_LOG_LEVEL`** and when setting it in code using **`[Logging(LogLevel = )]`**
+
+Here's a sequence diagram to demonstrate how ALC will drop both `Information` and `Debug` logs emitted from `Logger`, when ALC log level is stricter than `Logger`.
+
+```mermaid
+sequenceDiagram
+    title Lambda ALC allows WARN logs only
+    participant Lambda service
+    participant Lambda function
+    participant Application Logger
+    
+    Note over Lambda service: AWS_LAMBDA_LOG_LEVEL="WARN"
+    Note over Application Logger: POWERTOOLS_LOG_LEVEL="DEBUG"
+    Lambda service->>Lambda function: Invoke (event)
+    Lambda function->>Lambda function: Calls handler
+    Lambda function->>Application Logger: Logger.Warning("Something happened")
+    Lambda function-->>Application Logger: Logger.Debug("Something happened")
+    Lambda function-->>Application Logger: Logger.Information("Something happened")
+    
+    Lambda service->>Lambda service: DROP INFO and DEBUG logs
+
+    Lambda service->>CloudWatch Logs: Ingest error logs
+```
+
+**Priority of log level settings in Powertools for AWS Lambda**
+
+We prioritise log level settings in this order:
+
+1. AWS_LAMBDA_LOG_LEVEL environment variable
+2. Setting the log level in code using `[Logging(LogLevel = )]`
+3. POWERTOOLS_LOG_LEVEL environment variable
+
+If you set `Logger` level lower than ALC, we will emit a warning informing you that your messages will be discarded by Lambda.
+
+> **NOTE**
+> With ALC enabled, we are unable to increase the minimum log level below the `AWS_LAMBDA_LOG_LEVEL` environment variable value, see [AWS Lambda service documentation](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-log-level){target="_blank"} for more details.
 
 ## Standard structured keys
 
@@ -116,6 +180,10 @@ When debugging in non-production environments, you can instruct Logger to log th
 ## Setting a Correlation ID
 
 You can set a Correlation ID using `CorrelationIdPath` parameter by passing a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}.
+
+!!! Attention
+    The JSON Pointer expression is `case sensitive`. In the bellow example `/headers/my_request_id_header` would work but `/Headers/my_request_id_header` would not find the element.
+
 
 === "Function.cs"
 
@@ -174,7 +242,7 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
      */
     public class Function
     {
-        [Logging(CorrelationIdPath = CorrelationIdPaths.API_GATEWAY_REST)]
+        [Logging(CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest)]
         public async Task<APIGatewayProxyResponse> FunctionHandler
             (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
@@ -515,3 +583,217 @@ Below are some output examples for different casing.
         "function_request_id": "52fdfc07-2182-154f-163f-5f0f9a621d72"
     }
     ```
+
+## Custom Log formatter (Bring Your Own Formatter)
+
+You can customize the structure (keys and values) of your log entries by implementing a custom log formatter and override default log formatter using ``Logger.UseFormatter`` method. You can implement a custom log formatter by inheriting the ``ILogFormatter`` class and implementing the ``object FormatLogEntry(LogEntry logEntry)`` method.
+
+=== "Function.cs"
+
+    ```c# hl_lines="11"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        /// <summary>
+        /// Function constructor
+        /// </summary>
+        public Function()
+        {
+            Logger.UseFormatter(new CustomLogFormatter());
+        }
+
+        [Logging(CorrelationIdPath = "/headers/my_request_id_header", SamplingRate = 0.7)]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            ...
+        }
+    }
+    ```
+=== "CustomLogFormatter.cs"
+
+    ```c#
+    public class CustomLogFormatter : ILogFormatter
+    {
+        public object FormatLogEntry(LogEntry logEntry)
+        {
+            return new
+            {
+                Message = logEntry.Message,
+                Service = logEntry.Service,
+                CorrelationIds = new 
+                {
+                    AwsRequestId = logEntry.LambdaContext?.AwsRequestId,
+                    XRayTraceId = logEntry.XRayTraceId,
+                    CorrelationId = logEntry.CorrelationId
+                },
+                LambdaFunction = new
+                {
+                    Name = logEntry.LambdaContext?.FunctionName,
+                    Arn = logEntry.LambdaContext?.InvokedFunctionArn,
+                    MemoryLimitInMB = logEntry.LambdaContext?.MemoryLimitInMB,
+                    Version = logEntry.LambdaContext?.FunctionVersion,
+                    ColdStart = logEntry.ColdStart,
+                },
+                Level = logEntry.Level.ToString(),
+                Timestamp = logEntry.Timestamp.ToString("o"),
+                Logger = new
+                {
+                    Name = logEntry.Name,
+                    SampleRate = logEntry.SamplingRate
+                },
+            };
+        }
+    }
+    ```
+
+=== "Example CloudWatch Logs excerpt"
+
+    ```json
+    {
+        "Message": "Test Message",
+        "Service": "lambda-example",
+        "CorrelationIds": {
+            "AwsRequestId": "52fdfc07-2182-154f-163f-5f0f9a621d72",
+            "XRayTraceId": "1-61b7add4-66532bb81441e1b060389429",
+            "CorrelationId": "correlation_id_value"
+        },
+        "LambdaFunction": {
+            "Name": "test",
+            "Arn": "arn:aws:lambda:eu-west-1:12345678910:function:test",
+            "MemorySize": 128,
+            "Version": "$LATEST",
+            "ColdStart": true
+        },
+        "Level": "Information",
+        "Timestamp": "2021-12-13T20:32:22.5774262Z",
+        "Logger": {
+            "Name": "AWS.Lambda.Powertools.Logging.Logger",
+            "SampleRate": 0.7
+        }
+    }
+    ```
+
+## AOT Support
+
+!!! info
+    
+    If you want to use the `LogEvent`, `Custom Log Formatter` features, or serialize your own types when Logging events, you need to make changes in your Lambda `Main` method.
+
+!!! info
+
+    Starting from version 1.6.0, it is required to update the Amazon.Lambda.Serialization.SystemTextJson NuGet package to version 2.4.3 in your csproj.
+
+### Configure
+
+Replace `SourceGeneratorLambdaJsonSerializer` with `PowertoolsSourceGeneratorSerializer`.
+
+This change enables Powertools to construct an instance of `JsonSerializerOptions` used to customize the serialization and deserialization of Lambda JSON events and your own types.
+
+=== "Before"
+
+    ```csharp
+     Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
+     await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<MyCustomJsonSerializerContext>())
+         .Build()
+         .RunAsync();
+    ```
+
+=== "After"
+
+    ```csharp hl_lines="2"
+    Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
+    await LambdaBootstrapBuilder.Create(handler, new PowertoolsSourceGeneratorSerializer<MyCustomJsonSerializerContext>())
+        .Build()
+        .RunAsync();
+    ```
+
+For example when you have your own Demo type 
+
+```csharp
+public class Demo
+{
+    public string Name { get; set; }
+    public Headers Headers { get; set; }
+}
+```
+
+To be able to serialize it in AOT you have to have your own `JsonSerializerContext`
+
+```csharp
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
+[JsonSerializable(typeof(Demo))]
+public partial class MyCustomJsonSerializerContext : JsonSerializerContext
+{
+}
+```
+
+When you update your code to use `PowertoolsSourceGeneratorSerializer<MyCustomJsonSerializerContext>`, we combine your `JsonSerializerContext` with Powertools' `JsonSerializerContext`. This allows Powertools to serialize your types and Lambda events.
+
+### Custom Log Formatter
+
+To use a custom log formatter with AOT, pass an instance of `ILogFormatter` to `PowertoolsSourceGeneratorSerializer` instead of using the static `Logger.UseFormatter` in the Function constructor as you do in non-AOT Lambdas.
+
+=== "Function Main method"
+
+    ```csharp hl_lines="5"
+
+    Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
+    await LambdaBootstrapBuilder.Create(handler, 
+        new PowertoolsSourceGeneratorSerializer<LambdaFunctionJsonSerializerContext>
+        ( 
+            new CustomLogFormatter()
+        )
+    )
+    .Build()
+    .RunAsync();
+    
+    ```
+
+=== "CustomLogFormatter.cs"
+
+    ```csharp
+    public class CustomLogFormatter : ILogFormatter
+    {
+        public object FormatLogEntry(LogEntry logEntry)
+        {
+            return new
+            {
+                Message = logEntry.Message,
+                Service = logEntry.Service,
+                CorrelationIds = new
+                {
+                    AwsRequestId = logEntry.LambdaContext?.AwsRequestId,
+                    XRayTraceId = logEntry.XRayTraceId,
+                    CorrelationId = logEntry.CorrelationId
+                },
+                LambdaFunction = new
+                {
+                    Name = logEntry.LambdaContext?.FunctionName,
+                    Arn = logEntry.LambdaContext?.InvokedFunctionArn,
+                    MemoryLimitInMB = logEntry.LambdaContext?.MemoryLimitInMB,
+                    Version = logEntry.LambdaContext?.FunctionVersion,
+                    ColdStart = logEntry.ColdStart,
+                },
+                Level = logEntry.Level.ToString(),
+                Timestamp = logEntry.Timestamp.ToString("o"),
+                Logger = new
+                {
+                Name = logEntry.Name,
+                SampleRate = logEntry.SamplingRate
+                },
+            };
+        }
+    }
+    ```
+
+### Anonymous types
+
+!!! note
+
+    While we support anonymous type serialization by converting to a `Dictionary<string, object>`, this is **not** a best practice and is **not recommended** when using native AOT. 
+    
+    We recommend using concrete classes and adding them to your `JsonSerializerContext`.

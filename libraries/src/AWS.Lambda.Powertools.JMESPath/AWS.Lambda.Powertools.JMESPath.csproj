@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <!--  Remaining properties are defined in Directory.Build.props  -->
+        <PackageId>AWS.Lambda.Powertools.JMESPath</PackageId>
+        <Description>Powertools for AWS Lambda (.NET) - JMESPath package.</Description>
+        <AssemblyName>AWS.Lambda.Powertools.JMESPath</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.JMESPath</RootNamespace>
+    </PropertyGroup>
+
+</Project>

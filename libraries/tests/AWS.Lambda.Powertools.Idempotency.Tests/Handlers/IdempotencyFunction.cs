@@ -21,6 +21,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
+using AWS.Lambda.Powertools.Idempotency.Tests.Model;
 
 namespace AWS.Lambda.Powertools.Idempotency.Tests.Handlers;
 
