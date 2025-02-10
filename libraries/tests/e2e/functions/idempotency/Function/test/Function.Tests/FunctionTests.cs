@@ -89,6 +89,18 @@ public class FunctionTests
         await UpdateFunctionHandler(functionName, "Function::Function.Function::FunctionHandler");
         await IdempotencyHandler(functionName);
     }
+    
+    [Theory]
+    [InlineData("E2ETestLambda_X64_NET8_idempotency")]
+    [InlineData("E2ETestLambda_ARM_NET8_idempotency")]
+    [InlineData("E2ETestLambda_X64_NET6_idempotency")]
+    [InlineData("E2ETestLambda_ARM_NET6_idempotency")]
+    public async Task IdempotencyHandlerCustomKey(string functionName)
+    {
+        _tableName = "IdempotencyTable";
+        await UpdateFunctionHandler(functionName, "Function::CustomKeyPrefixTest.Function::FunctionHandler");
+        await IdempotencyHandler(functionName, "MyCustomKeyPrefix");
+    }
 
     private async Task IdempotencyPayloadSubset(string functionName)
     {
@@ -152,7 +164,7 @@ public class FunctionTests
             true);
     }
 
-    private async Task IdempotencyHandler(string functionName)
+    private async Task IdempotencyHandler(string functionName, string? keyPrefix = null)
     {
         var payload = await File.ReadAllTextAsync("../../../../../../../payload.json");
         
@@ -170,9 +182,11 @@ public class FunctionTests
         Assert.Equal(guid1, guid2);
         Assert.Equal(guid2, guid3);
 
+        var key = keyPrefix ?? $"{functionName}.FunctionHandler";
+        
         // Assert DynamoDB
         await AssertDynamoDbData(
-            $"{functionName}.FunctionHandler#35973cf447e6cc11008d603c791a232f", 
+            $"{key}#35973cf447e6cc11008d603c791a232f", 
             guid1);
     }
 
