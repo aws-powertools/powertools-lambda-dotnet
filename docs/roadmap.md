@@ -1,20 +1,49 @@
+---
+title: Roadmap
+description: Public roadmap for Powertools for AWS Lambda (.NET)
+---
+
+<!-- markdownlint-disable MD043 -->
+
 ## Overview
 
-This is our public roadmap that outlines the high level direction we are working towards, namely [Themes](#themes). We update this document when our priorities change: security and stability is our top priority.
+Our public roadmap outlines the high level direction we are working towards. We update this document when our priorities change: security and stability are our top priority.
 
-[See our latest list of activities »](https://github.com/orgs/aws-powertools/projects/6/views/4?query=is%3Aopen+sort%3Aupdated-desc){target="_blank"}
+!!! info "For most up-to-date information, see our [board of activities](https://github.com/orgs/aws-powertools/projects/6/views/14?query=is%3Aopen+sort%3Aupdated-desc){target="_blank"}."
 
-## Themes
+### Key areas
 
-!!! info "Operational Excellence is priority number 1."
+Security and operational excellence take precedence above all else. This means bug fixing, stability, customer's support, and internal compliance may delay one or more key areas below.
+**Missing something or want us to prioritize an existing area?**
+You can help us prioritize by [upvoting existing feature requests](https://github.com/aws-powertools/powertools-lambda-dotnet/issues?q=is%3Aissue%20state%3Aopen%20label%3Afeature-request){target="_blank"}, leaving a comment on what use cases it could unblock for you, and by joining our discussions on Discord.
 
-Themes are key activities maintainers are focusing on, besides bug reports. These are updated periodically and you can get an idea of the overall progress in the [Milestones section](https://github.com/aws-powertools/powertools-lambda-dotnet/milestones){target="_blank"}.
+[![Join our Discord](https://dcbadge.vercel.app/api/server/B8zZKbbyET)](https://discord.gg/B8zZKbbyET){target="_blank"}
 
-### New utilities
+#### Logging v2 (P0)
 
-After going GA, we want to start working on new utilities, specifically but not limited to the most commonly asked: **(1)** [Idempotency](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/164), **(2)** [Parameters](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/160) and **(3)** [Batch](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/168).
 
-### Improve operational excellence
+#### Metrics v2 (P0)
+
+
+#### Security and Production Readiness (P1)
+
+- .NET 10 support
+- .NET 6 deprecation
+- OpenSSF Scorecard
+
+#### Feature Parity (P2)
+
+Feature parity with Powertools for AWS Lambda (Python):
+- Data masking
+- Feature Flags
+- Streeaming from S3
+
+#### Support for ASP.NET
+
+Support AspNetCoreServer.Hosting this allows customers to deploy ASP.NET core applicaiton to Lambda, [more details](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/360){target="_blank"}
+
+
+#### Improve operational excellence
 
 We continue to work on increasing operational excellence to remove as much undifferentiated heavylifting for maintainers, so that we can focus on delivering features that help you.
 
