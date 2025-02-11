@@ -1,20 +1,77 @@
+---
+title: Roadmap
+description: Public roadmap for Powertools for AWS Lambda (.NET)
+---
+
+<!-- markdownlint-disable MD043 -->
+
 ## Overview
 
-This is our public roadmap that outlines the high level direction we are working towards, namely [Themes](#themes). We update this document when our priorities change: security and stability is our top priority.
+Our public roadmap outlines the high level direction we are working towards. We update this document when our priorities change: security and stability are our top priority.
 
-[See our latest list of activities »](https://github.com/orgs/aws-powertools/projects/6/views/4?query=is%3Aopen+sort%3Aupdated-desc){target="_blank"}
+!!! info "For most up-to-date information, see our [board of activities](https://github.com/orgs/aws-powertools/projects/6/views/14?query=is%3Aopen+sort%3Aupdated-desc){target="_blank"}."
 
-## Themes
+### Key areas
 
-!!! info "Operational Excellence is priority number 1."
+Security and operational excellence take precedence above all else. This means bug fixing, stability, customer's support, and internal compliance may delay one or more key areas below.
 
-Themes are key activities maintainers are focusing on, besides bug reports. These are updated periodically and you can get an idea of the overall progress in the [Milestones section](https://github.com/aws-powertools/powertools-lambda-dotnet/milestones){target="_blank"}.
+**Missing something or want us to prioritize an existing area?**
 
-### New utilities
+You can help us prioritize by [upvoting existing feature requests](https://github.com/aws-powertools/powertools-lambda-dotnet/issues?q=is%3Aissue%20state%3Aopen%20label%3Afeature-request){target="_blank"}, leaving a comment on what use cases it could unblock for you, and by joining our discussions on Discord.
 
-After going GA, we want to start working on new utilities, specifically but not limited to the most commonly asked: **(1)** [Idempotency](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/164), **(2)** [Parameters](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/160) and **(3)** [Batch](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/168).
+[![Join our Discord](https://dcbadge.vercel.app/api/server/B8zZKbbyET)](https://discord.gg/B8zZKbbyET){target="_blank"}
 
-### Improve operational excellence
+### Core Utilities (P0)
+
+#### Logging V2
+
+Modernizing our logging capabilities to align with .NET practices and improve developer experience.
+
+- [ ] Logger buffer implementation
+- [ ] New .NET-friendly API design (Serilog-like patterns)
+- [ ] Filtering and JMESPath expression support
+- [ ] Documentation for SDK context.Logger vs Powertools Logger differences
+
+#### Metrics V2
+
+Updating metrics implementation to support latest EMF specifications and improve performance.
+
+- [ ] Update to latest EMF specifications
+- [ ] Breaking changes implementation for multiple dimensions
+- [ ] Add support for default dimensions on ColdStart metric
+- [ ] API updates - missing functionality that is present in Python implementation (ie: flush_metrics)
+
+### Security and Production Readiness (P1)
+
+Ensuring enterprise-grade security and compatibility with latest .NET developments.
+
+- [ ] .NET 10 support from day one
+- [ ] Deprecation path for .NET 6
+- [ ] Scorecard implementation
+- [ ] Security compliance checks on our pipeline
+- [ ] All utilities with end-to-end tests in our pipeline
+
+### Feature Parity and ASP.NET Support (P2)
+
+#### Feature Parity
+
+Implementing key features to achieve parity with other Powertools implementations.
+
+- [ ] Data masking
+- [ ] Feature Flags
+- [ ] S3 Streaming support
+
+#### ASP.NET Support
+
+Adding first-class support for ASP.NET Core in Lambda with performance considerations.
+
+- [ ] AspNetCoreServer.Hosting - [Tracking issue](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/360){target="_blank"}
+- [ ] Minimal APIs support
+- [ ] ASP.NET Core integration
+- [ ] Documentation for cold start impacts
+- [ ] Clear guidance on Middleware vs. Decorators usage
+
+#### Improve operational excellence
 
 We continue to work on increasing operational excellence to remove as much undifferentiated heavylifting for maintainers, so that we can focus on delivering features that help you.
 
@@ -61,9 +118,9 @@ graph LR
 Our end-to-end mechanism follows four major steps:
 
 * **Feature Request**. Ideas start with a [feature request](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=feature-request%2Ctriage&projects=&template=feature_request.yml&title=Feature+request%3A+TITLE){target="_blank"} to outline their use case at a high level. For complex use cases, maintainers might ask for/write a RFC.
-    * Maintainers review requests based on [project tenets](index.md#tenets){target="_blank"}, customers reaction (👍), and use cases.
+  * Maintainers review requests based on [project tenets](index.md#tenets){target="_blank"}, customers reaction (👍), and use cases.
 * **Request-for-comments (RFC)**. Design proposals use our [RFC issue template](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=RFC%2Ctriage&projects=&template=rfc.yml&title=RFC%3A+TITLE){target="_blank"} to describe its implementation, challenges, developer experience, dependencies, and alternative solutions.
-    * This helps refine the initial idea with community feedback before a decision is made.
+  * This helps refine the initial idea with community feedback before a decision is made.
 * **Decision**. After carefully reviewing and discussing them, maintainers make a final decision on whether to start implementation, defer or reject it, and update everyone with the next steps.
 * **Implementation**. For approved features, maintainers give priority to the original authors for implementation unless it is a sensitive task that is best handled by maintainers.
 

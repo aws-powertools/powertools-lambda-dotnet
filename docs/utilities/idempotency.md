@@ -253,6 +253,29 @@ If we were to treat the entire request as our idempotency key, a simple HTTP hea
     }
     ```
 
+### Custom key prefix
+
+By default, the idempotency key is prefixed with `[ClassName].[DecoratedMethodName]#[PayloadHash]`.
+
+You can customize this prefix by setting the `KeyPrefix` property in the Idempotency decorator:
+
+```csharp hl_lines="9"
+public class Function
+{
+    public Function()
+    {
+        var tableName = Environment.GetEnvironmentVariable("IDEMPOTENCY_TABLE_NAME");
+        Idempotency.Configure(builder => builder.UseDynamoDb(tableName));
+    }
+
+    [Idempotent(KeyPrefix = "MyCustomKeyPrefix")]
+    public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigwProxyEvent, ILambdaContext context)
+    {
+        return TestHelper.TestMethod(apigwProxyEvent);
+    }
+}
+```
+
 ### Lambda timeouts
 
 ???+ note
