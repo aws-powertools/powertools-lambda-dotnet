@@ -27,18 +27,17 @@ Modernizing our logging capabilities to align with .NET practices and improve de
 
 - [ ] Logger buffer implementation
 - [ ] New .NET-friendly API design (Serilog-like patterns)
-- [ ] Correlation ID support via decorator/middleware
-- [ ] JMESPath expression support
-- [ ] RFC: Documentation for SDK context.Logger vs Powertools Logger differences
+- [ ] Filtering and JMESPath expression support
+- [ ] Documentation for SDK context.Logger vs Powertools Logger differences
 
 #### Metrics V2
 
 Updating metrics implementation to support latest EMF specifications and improve performance.
 
 - [ ] Update to latest EMF specifications
-- [ ] Breaking changes implementation
-- [ ] Performance optimizations
-- [ ] API updates
+- [ ] Breaking changes implementation for multiple dimensions
+- [ ] Add support for default dimensions on ColdStart metric
+- [ ] API updates - missing functionality that is present in Python implementation (ie: flush_metrics)
 
 ### Security and Production Readiness (P1)
 
@@ -46,9 +45,9 @@ Ensuring enterprise-grade security and compatibility with latest .NET developmen
 
 - [ ] .NET 10 support from day one
 - [ ] Deprecation path for .NET 6
-- [ ] Security and best practices
 - [ ] Scorecard implementation
-- [ ] Security compliance checks
+- [ ] Security compliance checks on our pipeline
+- [ ] All utilities with end-to-end tests in our pipeline
 
 ### Feature Parity and ASP.NET Support (P2)
 
