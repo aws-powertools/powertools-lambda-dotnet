@@ -14,7 +14,9 @@ Our public roadmap outlines the high level direction we are working towards. We 
 ### Key areas
 
 Security and operational excellence take precedence above all else. This means bug fixing, stability, customer's support, and internal compliance may delay one or more key areas below.
+
 **Missing something or want us to prioritize an existing area?**
+
 You can help us prioritize by [upvoting existing feature requests](https://github.com/aws-powertools/powertools-lambda-dotnet/issues?q=is%3Aissue%20state%3Aopen%20label%3Afeature-request){target="_blank"}, leaving a comment on what use cases it could unblock for you, and by joining our discussions on Discord.
 
 [![Join our Discord](https://dcbadge.vercel.app/api/server/B8zZKbbyET)](https://discord.gg/B8zZKbbyET){target="_blank"}
