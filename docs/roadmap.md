@@ -19,29 +19,56 @@ You can help us prioritize by [upvoting existing feature requests](https://githu
 
 [![Join our Discord](https://dcbadge.vercel.app/api/server/B8zZKbbyET)](https://discord.gg/B8zZKbbyET){target="_blank"}
 
-#### Logging v2 (P0)
+### Core Utilities (P0)
 
+#### Logging V2
 
-#### Metrics v2 (P0)
+Modernizing our logging capabilities to align with .NET practices and improve developer experience.
 
+- [ ] Logger buffer implementation
+- [ ] New .NET-friendly API design (Serilog-like patterns)
+- [ ] Correlation ID support via decorator/middleware
+- [ ] JMESPath expression support
+- [ ] RFC: Documentation for SDK context.Logger vs Powertools Logger differences
 
-#### Security and Production Readiness (P1)
+#### Metrics V2
 
-- .NET 10 support
-- .NET 6 deprecation
-- OpenSSF Scorecard
+Updating metrics implementation to support latest EMF specifications and improve performance.
 
-#### Feature Parity (P2)
+- [ ] Update to latest EMF specifications
+- [ ] Breaking changes implementation
+- [ ] Performance optimizations
+- [ ] API updates
 
-Feature parity with Powertools for AWS Lambda (Python):
-- Data masking
-- Feature Flags
-- Streeaming from S3
+### Security and Production Readiness (P1)
 
-#### Support for ASP.NET
+Ensuring enterprise-grade security and compatibility with latest .NET developments.
 
-Support AspNetCoreServer.Hosting this allows customers to deploy ASP.NET core applicaiton to Lambda, [more details](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/360){target="_blank"}
+- [ ] .NET 10 support from day one
+- [ ] Deprecation path for .NET 6
+- [ ] Security and best practices
+- [ ] Scorecard implementation
+- [ ] Security compliance checks
 
+### Feature Parity and ASP.NET Support (P2)
+
+#### Feature Parity
+
+Implementing key features to achieve parity with other Powertools implementations.
+
+- [ ] Data masking
+- [ ] Feature Flags
+- [ ] S3 Streaming support
+
+#### ASP.NET Support
+
+Adding first-class support for ASP.NET Core in Lambda with performance considerations.
+
+- [ ] AspNetCoreServer.Hosting - [Tracking issue](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/360){target="_blank"}
+- [ ] Minimal APIs support
+- [ ] ASP.NET Core integration
+- [ ] Documentation for cold start impacts
+- [ ] Clear guidance on Middleware vs. Decorators usage
 
 #### Improve operational excellence
 
@@ -90,9 +117,9 @@ graph LR
 Our end-to-end mechanism follows four major steps:
 
 * **Feature Request**. Ideas start with a [feature request](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=feature-request%2Ctriage&projects=&template=feature_request.yml&title=Feature+request%3A+TITLE){target="_blank"} to outline their use case at a high level. For complex use cases, maintainers might ask for/write a RFC.
-    * Maintainers review requests based on [project tenets](index.md#tenets){target="_blank"}, customers reaction (👍), and use cases.
+  * Maintainers review requests based on [project tenets](index.md#tenets){target="_blank"}, customers reaction (👍), and use cases.
 * **Request-for-comments (RFC)**. Design proposals use our [RFC issue template](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=RFC%2Ctriage&projects=&template=rfc.yml&title=RFC%3A+TITLE){target="_blank"} to describe its implementation, challenges, developer experience, dependencies, and alternative solutions.
-    * This helps refine the initial idea with community feedback before a decision is made.
+  * This helps refine the initial idea with community feedback before a decision is made.
 * **Decision**. After carefully reviewing and discussing them, maintainers make a final decision on whether to start implementation, defer or reject it, and update everyone with the next steps.
 * **Implementation**. For approved features, maintainers give priority to the original authors for implementation unless it is a sensitive task that is best handled by maintainers.
 
