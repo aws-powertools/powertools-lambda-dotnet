@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AWS.Lambda.Powertools.JMESPath.Expressions;
+using AWS.Lambda.Powertools.JMESPath.Serializers;
 
 namespace AWS.Lambda.Powertools.JMESPath.Values;
 
@@ -203,13 +204,22 @@ internal readonly struct JsonElementValue : IValue
     public bool TryGetProperty(string propertyName, out IValue property)
     {
         var r = _element.TryGetProperty(propertyName, out var prop);
-
-        property = prop.ValueKind == JsonValueKind.String && IsJsonValid(prop.GetString())
-            ? new JsonElementValue(JsonNode.Parse(prop.GetString() ?? string.Empty).Deserialize<JsonElement>())
-            : new JsonElementValue(prop);
-
+        property = CreateJsonElementValue(prop);
         return r;
     }
+    
+    JsonElementValue CreateJsonElementValue(JsonElement prop)
+    {
+        if (prop.ValueKind == JsonValueKind.String && IsJsonValid(prop.GetString()))
+        {
+            var jsonString = prop.GetString() ?? string.Empty;
+            var jsonElement = JmesPathSerializer.Deserialize<JsonElement>(jsonString);
+            return new JsonElementValue(jsonElement);
+        }
+    
+        return new JsonElementValue(prop);
+    }
+
 
     private static bool IsJsonValid(string json)
     {
@@ -244,7 +254,6 @@ internal readonly struct JsonElementValue : IValue
 
     public override string ToString()
     {
-        var s = JsonSerializer.Serialize(_element);
-        return s;
+        return JmesPathSerializer.Serialize(_element, typeof(JsonElement));
     }
 }

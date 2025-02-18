@@ -18,6 +18,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
+using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal;
@@ -49,11 +50,13 @@ internal class IdempotencyAspectHandler<T>
     /// </summary>
     /// <param name="target"></param>
     /// <param name="functionName"></param>
+    /// <param name="keyPrefix"></param>
     /// <param name="payload"></param>
     /// <param name="lambdaContext"></param>
     public IdempotencyAspectHandler(
         Func<Task<T>> target,
         string functionName,
+        string keyPrefix,
         JsonDocument payload,
         ILambdaContext lambdaContext)
     {
@@ -61,7 +64,7 @@ internal class IdempotencyAspectHandler<T>
         _data = payload;
         _lambdaContext = lambdaContext;
         _persistenceStore = Idempotency.Instance.PersistenceStore;
-        _persistenceStore.Configure(Idempotency.Instance.IdempotencyOptions, functionName);
+        _persistenceStore.Configure(Idempotency.Instance.IdempotencyOptions, functionName, keyPrefix);
     }
 
     /// <summary>
@@ -184,7 +187,7 @@ internal class IdempotencyAspectHandler<T>
             default:
                 try
                 {
-                    var result = JsonSerializer.Deserialize<T>(record.ResponseData!);
+                    var result = IdempotencySerializer.Deserialize<T>(record.ResponseData!);
                     if (result is null)
                     {
                         throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);

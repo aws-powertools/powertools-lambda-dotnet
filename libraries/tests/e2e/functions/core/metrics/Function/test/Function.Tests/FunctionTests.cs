@@ -26,7 +26,7 @@ public class FunctionTests
     [Trait("Category", "AOT")]
     [Theory]
     [InlineData("E2ETestLambda_X64_AOT_NET8_metrics")]
-    // [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics")]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics")]
     public async Task AotFunctionTest(string functionName)
     {
         await TestFunction(functionName);
@@ -49,7 +49,7 @@ public class FunctionTests
         {
             FunctionName = functionName,
             InvocationType = InvocationType.RequestResponse,
-            Payload = await File.ReadAllTextAsync("../../../../../../../payload.json"),
+            Payload = await File.ReadAllTextAsync("../../../../../../../../payload.json"),
             LogType = LogType.Tail
         };
 

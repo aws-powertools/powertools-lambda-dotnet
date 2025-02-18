@@ -256,6 +256,28 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Assert.Single(segment.Subsegments);
             Assert.Equal("SegmentName", subSegment.Name);
         }
+        
+        [Fact]
+        public void OnEntry_WhenSegmentName_Is_Unsupported()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
+
+            // Act
+            var segment = AWSXRayRecorder.Instance.TraceContext.GetEntity();
+            _handler.HandleWithInvalidSegmentName();
+            var subSegment = segment.Subsegments[0];
+            var childSegment = subSegment.Subsegments[0];
+            
+            // Assert
+            Assert.True(segment.IsSubsegmentsAdded);
+            Assert.True(subSegment.IsSubsegmentsAdded);
+            Assert.Single(segment.Subsegments);
+            Assert.Single(subSegment.Subsegments);
+            Assert.Equal("## Maing__Handler0_0", subSegment.Name);
+            Assert.Equal("Inval#id  Segment", childSegment.Name);
+        }
 
         [Fact]
         public void OnEntry_WhenNamespaceIsNull_SetNamespaceWithService()
