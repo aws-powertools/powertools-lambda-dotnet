@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Amazon.CDK.AWS.CodeDeploy;
 using Amazon.CloudWatch;
 using Amazon.CloudWatch.Model;
 using Amazon.Lambda;
@@ -7,6 +8,7 @@ using Xunit;
 using Amazon.Lambda.Model;
 using TestUtils;
 using Xunit.Abstractions;
+using Environment = Amazon.Lambda.Model.Environment;
 
 namespace Function.Tests;
 
@@ -15,7 +17,7 @@ public class FunctionTests
 {
     private readonly ITestOutputHelper _testOutputHelper;
     private readonly AmazonLambdaClient _lambdaClient;
-    private string _functionName;
+    private string? _functionName;
 
     public FunctionTests(ITestOutputHelper testOutputHelper)
     {
@@ -29,7 +31,9 @@ public class FunctionTests
     [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics")]
     public async Task AotFunctionTest(string functionName)
     {
-        await TestFunction(functionName);
+        _functionName = functionName;
+        await ForceColdStart();
+        await TestFunction();
     }
 
     [Theory]
@@ -39,15 +43,16 @@ public class FunctionTests
     [InlineData("E2ETestLambda_ARM_NET8_metrics")]
     public async Task FunctionTest(string functionName)
     {
-        await TestFunction(functionName);
+        _functionName = functionName;
+        await ForceColdStart();
+        await TestFunction();
     }
 
-    internal async Task TestFunction(string functionName)
+    internal async Task TestFunction()
     {
-        _functionName = functionName;
         var request = new InvokeRequest
         {
-            FunctionName = functionName,
+            FunctionName = _functionName,
             InvocationType = InvocationType.RequestResponse,
             Payload = await File.ReadAllTextAsync("../../../../../../../../payload.json"),
             LogType = LogType.Tail
@@ -86,7 +91,7 @@ public class FunctionTests
         // Assert Output log from Lambda execution
         AssertOutputLog(response, isColdStart);
     }
-    
+
     private void AssertOutputLog(InvokeResponse response, bool expectedColdStart)
     {
         var logResult = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(response.LogResult));
@@ -108,7 +113,7 @@ public class FunctionTests
             AssertMetricsDimensionsMetadata(output[1]);
         }
     }
-    
+
     private async Task AssertCloudWatch()
     {
         using var cloudWatchClient = new AmazonCloudWatchClient();
@@ -130,15 +135,35 @@ public class FunctionTests
                 }
             ]
         };
-        
+
         var response = await cloudWatchClient.ListMetricsAsync(request);
+
+        Assert.Equal(7, response.Metrics.Count);
 
         foreach (var metric in response.Metrics)
         {
-            _testOutputHelper.WriteLine($"Namespace: {metric.Namespace}, MetricName: {metric.MetricName}");
-            foreach (var dimension in metric.Dimensions)
+            Assert.Equal("Test", metric.Namespace);
+            
+            switch (metric.MetricName)
             {
-                _testOutputHelper.WriteLine($"  Dimension: {dimension.Name} = {dimension.Value}");
+                case "ColdStart":
+                case "SingleMetric":
+                    Assert.Equal(2, metric.Dimensions.Count);
+                    Assert.Contains(metric.Dimensions, d => d.Name == "Service" && d.Value == "Test");
+                    Assert.Contains(metric.Dimensions, d => d.Name == "FunctionName" && d.Value == _functionName);
+                    break;
+                case "Invocation":
+                case "Memory with Environment dimension":
+                case "Standard resolution":
+                case "High resolution":
+                case "Default resolution":
+                    Assert.Equal(5, metric.Dimensions.Count);
+                    Assert.Contains(metric.Dimensions, d => d.Name == "Service" && d.Value == "Test");
+                    Assert.Contains(metric.Dimensions, d => d.Name == "FunctionName" && d.Value == _functionName);
+                    Assert.Contains(metric.Dimensions, d => d.Name == "Memory" && d.Value == "MemoryLimitInMB");
+                    Assert.Contains(metric.Dimensions, d => d.Name == "Environment" && d.Value == "Prod");
+                    Assert.Contains(metric.Dimensions, d => d.Name == "Another" && d.Value == "One");
+                    break;
             }
         }
     }
@@ -189,7 +214,8 @@ public class FunctionTests
         Assert.Equal("Service", dimensionsElement[0][0].GetString());
         Assert.Equal("Environment", dimensionsElement[0][1].GetString());
         Assert.Equal("Another", dimensionsElement[0][2].GetString());
-        Assert.Equal("Memory", dimensionsElement[0][3].GetString());
+        Assert.Equal("FunctionName", dimensionsElement[0][3].GetString());
+        Assert.Equal("Memory", dimensionsElement[0][4].GetString());
 
         Assert.True(root.TryGetProperty("Service", out JsonElement serviceElement));
         Assert.Equal("Test", serviceElement.GetString());
@@ -199,6 +225,9 @@ public class FunctionTests
 
         Assert.True(root.TryGetProperty("Another", out JsonElement anotherElement));
         Assert.Equal("One", anotherElement.GetString());
+
+        Assert.True(root.TryGetProperty("FunctionName", out JsonElement functionNameElement));
+        Assert.Equal(_functionName, functionNameElement.GetString());
 
         Assert.True(root.TryGetProperty("Memory", out JsonElement memoryElement));
         Assert.Equal("MemoryLimitInMB", memoryElement.GetString());
@@ -270,5 +299,24 @@ public class FunctionTests
 
         Assert.True(root.TryGetProperty("ColdStart", out JsonElement coldStartElement));
         Assert.Equal(1, coldStartElement.GetInt32());
+    }
+
+    private async Task ForceColdStart()
+    {
+        var updateRequest = new UpdateFunctionConfigurationRequest
+        {
+            FunctionName = _functionName,
+            Environment = new Environment
+            {
+                Variables = new Dictionary<string, string>
+                {
+                    { "ForceColdStart", Guid.NewGuid().ToString() }
+                }
+            }
+        };
+
+        _ = await _lambdaClient.UpdateFunctionConfigurationAsync(updateRequest);
+
+        await Task.Delay(2000);
     }
 }
