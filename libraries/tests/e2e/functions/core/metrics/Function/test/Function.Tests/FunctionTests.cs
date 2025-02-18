@@ -53,33 +53,60 @@ public class FunctionTests
             LogType = LogType.Tail
         };
 
-        // run twice for cold and warm start
-        for (int i = 0; i < 2; i++)
-        {
-            var response = await _lambdaClient.InvokeAsync(request);
+        // Test cold start
+        var coldStartResponse = await _lambdaClient.InvokeAsync(request);
+        ValidateResponse(coldStartResponse, true);
 
-            if (string.IsNullOrEmpty(response.LogResult))
-            {
-                Assert.Fail("No LogResult field returned in the response of Lambda invocation.");
-            }
+        // Test warm start
+        var warmStartResponse = await _lambdaClient.InvokeAsync(request);
+        ValidateResponse(warmStartResponse, false);
 
-            var payload = System.Text.Encoding.UTF8.GetString(response.Payload.ToArray());
-            var parsedPayload = JsonSerializer.Deserialize<APIGatewayProxyResponse>(payload);
-
-            if (parsedPayload == null)
-            {
-                Assert.Fail("Failed to parse payload.");
-            }
-
-            Assert.Equal(200, parsedPayload.StatusCode);
-            Assert.Equal("HELLO WORLD", parsedPayload.Body);
-
-            // Assert Output log from Lambda execution
-            AssertOutputLog(response);
-        }
-        
         // Assert cloudwatch
         await AssertCloudWatch();
+    }
+
+    private void ValidateResponse(InvokeResponse response, bool isColdStart)
+    {
+        if (string.IsNullOrEmpty(response.LogResult))
+        {
+            Assert.Fail("No LogResult field returned in the response of Lambda invocation.");
+        }
+
+        var payload = System.Text.Encoding.UTF8.GetString(response.Payload.ToArray());
+        var parsedPayload = JsonSerializer.Deserialize<APIGatewayProxyResponse>(payload);
+
+        if (parsedPayload == null)
+        {
+            Assert.Fail("Failed to parse payload.");
+        }
+
+        Assert.Equal(200, parsedPayload.StatusCode);
+        Assert.Equal("HELLO WORLD", parsedPayload.Body);
+
+        // Assert Output log from Lambda execution
+        AssertOutputLog(response, isColdStart);
+    }
+    
+    private void AssertOutputLog(InvokeResponse response, bool expectedColdStart)
+    {
+        var logResult = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(response.LogResult));
+        _testOutputHelper.WriteLine(logResult);
+        var output = OutputLogParser.ParseLogSegments(logResult, out var report);
+        var isColdStart = report.initDuration != "N/A";
+
+        Assert.Equal(expectedColdStart, isColdStart);
+
+        if (isColdStart)
+        {
+            AssertColdStart(output[0]);
+            AssertSingleMetric(output[1]);
+            AssertMetricsDimensionsMetadata(output[2]);
+        }
+        else
+        {
+            AssertSingleMetric(output[0]);
+            AssertMetricsDimensionsMetadata(output[1]);
+        }
     }
     
     private async Task AssertCloudWatch()
@@ -114,24 +141,6 @@ public class FunctionTests
                 _testOutputHelper.WriteLine($"  Dimension: {dimension.Name} = {dimension.Value}");
             }
         }
-    }
-
-    private void AssertOutputLog(InvokeResponse response)
-    {
-        // Extract and parse log
-        var logResult = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(response.LogResult));
-        _testOutputHelper.WriteLine(logResult);
-        var output = OutputLogParser.ParseLogSegments(logResult, out var report);
-        var isColdStart = report.initDuration != "N/A";
-        var index = 0;
-        if (isColdStart)
-        {
-            AssertColdStart(output[index]);
-            index += 1;
-        }
-
-        AssertSingleMetric(output[index]);
-        AssertMetricsDimensionsMetadata(output[index + 1]);
     }
 
     private void AssertMetricsDimensionsMetadata(string output)
