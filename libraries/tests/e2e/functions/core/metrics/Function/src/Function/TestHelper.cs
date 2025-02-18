@@ -17,6 +17,7 @@ public static class TestHelper
         Metrics.SetDefaultDimensions(DefaultDimensions);
         Metrics.AddMetric("Invocation", 1, MetricUnit.Count);
      
+        Metrics.AddDimension("FunctionName", context.FunctionName);
         Metrics.AddDimension("Memory","MemoryLimitInMB");
         Metrics.AddMetric("Memory with Environment dimension", context.MemoryLimitInMB, MetricUnit.Megabytes);
         
@@ -39,7 +40,7 @@ public static class TestHelper
             service: "Test",
             defaultDimensions: new Dictionary<string, string>
             {
-                {"FunctionContext", "$LATEST"}
+                {"FunctionName", context.FunctionName}
             });
     }
 }
