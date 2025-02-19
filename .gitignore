@@ -19,6 +19,7 @@ AWS.Lambda.Powertools.sln.DotSettings.user
 [Oo]bj/**
 [Bb]in/**
 .DS_Store
+.cache
 
 dist/
 site/
