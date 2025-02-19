@@ -7,11 +7,24 @@ public class DefaultDimensionsHandler
 {
     public DefaultDimensionsHandler()
     {
-        Metrics.SetDefaultDimensions(new Dictionary<string, string>
-        {
-            {"Environment", "Prod"},
-            {"Another", "One"}
+        
+        Metrics.Configure(options => {
+            // options.Namespace = "my-namespace";
+            // options.Service = "my-service";
+            // options.CaptureColdStart = true;
+            // options.RaiseOnEmptyMetrics = true;
+            options.DefaultDimensions = new Dictionary<string, string>
+            {
+                {"Environment", "Prod"},
+                {"Another", "One"}
+            };
         });
+        
+        // Metrics.SetDefaultDimensions(new Dictionary<string, string>
+        // {
+        //     {"Environment", "Prod"},
+        //     {"Another", "One"}
+        // });
         // Metrics.SetNamespace("dotnet-powertools-test");
         // Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count);
     }

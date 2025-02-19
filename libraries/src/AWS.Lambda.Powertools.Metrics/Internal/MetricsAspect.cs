@@ -14,7 +14,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Amazon.Lambda.Core;
@@ -70,11 +69,12 @@ public class MetricsAspect
 
         var trigger = triggers.OfType<MetricsAttribute>().First();
 
-        _metricsInstance ??= Metrics.Instance;
-        _metricsInstance.SetService(trigger.Service);
-        _metricsInstance.SetNamespace(trigger.Namespace);
-        _metricsInstance.SetRaiseOnEmptyMetrics(trigger.RaiseOnEmptyMetrics);
-        _metricsInstance.SetCaptureColdStart(trigger.CaptureColdStart);
+        _metricsInstance ??= Metrics.Configure(options => {
+            options.Namespace = trigger.Namespace;
+            options.Service = trigger.Service;
+            options.RaiseOnEmptyMetrics = trigger.RaiseOnEmptyMetrics;
+            options.CaptureColdStart = trigger.CaptureColdStart;
+        });
 
         var defaultDimensions = _metricsInstance.GetDefaultDimensions();
 
@@ -93,9 +93,6 @@ public class MetricsAspect
         {
             _isColdStart = false;
 
-            var nameSpace = _metricsInstance.GetNamespace();
-            var service = _metricsInstance.GetService();
-
             var context = GetContext(eventArgs);
 
             if (context is not null)
@@ -108,8 +105,8 @@ public class MetricsAspect
                 "ColdStart",
                 1.0,
                 MetricUnit.Count,
-                nameSpace,
-                service,
+                _metricsInstance.GetNamespace(),
+                _metricsInstance.GetService(),
                 defaultDimensions
             );
         }

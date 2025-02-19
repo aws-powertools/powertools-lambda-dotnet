@@ -65,6 +65,32 @@ public class Metrics : IMetrics, IDisposable
     // </summary>
     private readonly object _lockObj = new();
 
+
+    /// <summary>
+    ///    Initializes a new instance of the <see cref="Metrics" /> class.
+    /// </summary>
+    /// <param name="configure"></param>
+    /// <returns></returns>
+    public static IMetrics Configure(Action<MetricsOptions> configure)
+    {
+        var options = new MetricsOptions();
+        configure(options);
+
+        if (!string.IsNullOrEmpty(options.Namespace))
+            SetNamespace(options.Namespace);
+
+        if (!string.IsNullOrEmpty(options.Service))
+            Instance.SetService(options.Service);
+
+        Instance.SetRaiseOnEmptyMetrics(options.RaiseOnEmptyMetrics);
+        Instance.SetCaptureColdStart(options.CaptureColdStart);
+
+        if (options.DefaultDimensions != null)
+            SetDefaultDimensions(options.DefaultDimensions);
+
+        return Instance;
+    }
+
     /// <summary>
     ///     Creates a Metrics object that provides features to send metrics to Amazon Cloudwatch using the Embedded metric
     ///     format (EMF). See
@@ -157,7 +183,7 @@ public class Metrics : IMetrics, IDisposable
     {
         try
         {
-            return _context.GetNamespace();
+            return _context.GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace;
         }
         catch
         {
@@ -342,7 +368,7 @@ public class Metrics : IMetrics, IDisposable
                 "'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
 
         var context = new MetricsContext();
-        context.SetNamespace(nameSpace ?? _context.GetNamespace());
+        context.SetNamespace(nameSpace ?? GetNamespace());
         context.SetService(service ?? _context.GetService());
 
         if (defaultDimensions != null)
