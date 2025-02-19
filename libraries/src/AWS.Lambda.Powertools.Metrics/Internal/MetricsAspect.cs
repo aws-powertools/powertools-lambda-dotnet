@@ -70,13 +70,13 @@ public class MetricsAspect
 
         var trigger = triggers.OfType<MetricsAttribute>().First();
 
-        _metricsInstance ??= new Metrics(
-            PowertoolsConfigurations.Instance,
-            trigger.Namespace,
-            trigger.Service,
-            trigger.RaiseOnEmptyMetrics,
-            trigger.CaptureColdStart
-        );
+        _metricsInstance ??= Metrics.Instance;
+        _metricsInstance.SetService(trigger.Service);
+        _metricsInstance.SetNamespace(trigger.Namespace);
+        _metricsInstance.SetRaiseOnEmptyMetrics(trigger.RaiseOnEmptyMetrics);
+        _metricsInstance.SetCaptureColdStart(trigger.CaptureColdStart);
+
+        var defaultDimensions = _metricsInstance.GetDefaultDimensions();
 
         var eventArgs = new AspectEventArgs
         {
@@ -95,16 +95,13 @@ public class MetricsAspect
 
             var nameSpace = _metricsInstance.GetNamespace();
             var service = _metricsInstance.GetService();
-            Dictionary<string, string> dimensions = null;
-            
+
             var context = GetContext(eventArgs);
-            
+
             if (context is not null)
             {
-                dimensions = new Dictionary<string, string>
-                {
-                    { "FunctionName", context.FunctionName }
-                };
+                defaultDimensions.Add("FunctionName", context.FunctionName);
+                _metricsInstance.SetDefaultDimensions(defaultDimensions);
             }
 
             _metricsInstance.PushSingleMetric(
@@ -113,7 +110,7 @@ public class MetricsAspect
                 MetricUnit.Count,
                 nameSpace,
                 service,
-                dimensions
+                defaultDimensions
             );
         }
     }
@@ -137,7 +134,7 @@ public class MetricsAspect
         _isColdStart = true;
         Metrics.ResetForTest();
     }
-    
+
     /// <summary>
     /// Gets the Lambda context
     /// </summary>

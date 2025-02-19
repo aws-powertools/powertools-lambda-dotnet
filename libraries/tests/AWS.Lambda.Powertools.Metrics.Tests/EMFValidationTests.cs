@@ -393,6 +393,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
         public void Dispose()
         {
             // need to reset instance after each test
+            Metrics.ResetForTest();
             MetricsAspect.ResetForTest();
             Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", null);
         }

@@ -170,4 +170,12 @@ public class MetricsContext : IDisposable
     {
         _rootNode.AWS.ClearDefaultDimensions();
     }
+    
+    /// <summary>
+    ///     Retrieves default dimensions list
+    /// </summary>
+    internal List<DimensionSet> GetDefaultDimensions()
+    {
+        return _rootNode.AWS.GetDefaultDimensions();
+    }
 }

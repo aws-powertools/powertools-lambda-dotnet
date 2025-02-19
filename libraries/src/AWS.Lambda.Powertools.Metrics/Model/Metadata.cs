@@ -184,4 +184,12 @@ public class Metadata
     {
         _metricDirective.ClearDefaultDimensions();
     }
+    
+    /// <summary>
+    ///     Retrieves default dimensions list
+    /// </summary>
+    internal List<DimensionSet> GetDefaultDimensions()
+    {
+        return _metricDirective.DefaultDimensions;
+    }
 }

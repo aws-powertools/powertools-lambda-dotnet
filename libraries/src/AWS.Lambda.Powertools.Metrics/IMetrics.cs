@@ -66,7 +66,7 @@ public interface IMetrics
     /// <param name="metricResolution">Metrics resolution</param>
     void PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace = null,
         string service = null, Dictionary<string, string> defaultDimensions = null, MetricResolution metricResolution = MetricResolution.Default);
-
+    
     /// <summary>
     ///     Sets the namespace
     /// </summary>
@@ -101,4 +101,27 @@ public interface IMetrics
     ///     Clears both default dimensions and dimensions lists
     /// </summary>
     void ClearDefaultDimensions();
+
+    /// <summary>
+    ///    Sets the service
+    /// </summary>
+    /// <param name="triggerService"></param>
+    void SetService(string triggerService);
+    
+    /// <summary>
+    ///   Sets the raise on empty metrics
+    /// </summary>
+    /// <param name="triggerRaiseOnEmptyMetrics"></param>
+    void SetRaiseOnEmptyMetrics(bool triggerRaiseOnEmptyMetrics);
+    
+    /// <summary>
+    ///    Sets the capture cold start
+    /// </summary>
+    void SetCaptureColdStart(bool captureColdStart);
+
+    /// <summary>
+    ///    Gets the default dimensions
+    /// </summary>
+    Dictionary<string, string> GetDefaultDimensions();
+
 }
