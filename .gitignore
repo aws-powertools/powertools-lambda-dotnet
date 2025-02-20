@@ -12,6 +12,8 @@ deploy/**
 .vs/
 .aws-sam
 
+node_modules/*
+
 examples/SimpleLambda/.aws-sam
 examples/SimpleLambda/samconfig.toml
 
