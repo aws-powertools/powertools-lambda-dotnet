@@ -29,6 +29,9 @@ namespace AWS.Lambda.Powertools.Metrics;
 /// <seealso cref="IMetrics" />
 public class Metrics : IMetrics, IDisposable
 {
+    /// <summary>
+    ///    Gets or sets the instance.
+    /// </summary>
     public static IMetrics Instance
     {
         get => Current.Value ?? new Metrics(PowertoolsConfigurations.Instance);
