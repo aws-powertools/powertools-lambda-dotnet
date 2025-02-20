@@ -46,7 +46,7 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Install CDK
-        run: npm install -g aws-cdk
+        run: npm install
 
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -54,7 +54,7 @@ jobs:
       - name: Deploy Stack
         run: |
           cd libraries/tests/e2e/infra
-          cdk deploy --all --require-approval never
+          npx cdk deploy --all --require-approval never
 
   deploy-aot-stack:
     permissions:
@@ -85,7 +85,7 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Install CDK
-        run: npm install -g aws-cdk
+        run: npm install
 
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -93,7 +93,7 @@ jobs:
       - name: Deploy AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          cdk deploy --all -c architecture=${{ matrix.arch }} --require-approval never
+          npx cdk deploy --all -c architecture=${{ matrix.arch }} --require-approval never
 
   run-tests:
     permissions:
@@ -148,7 +148,7 @@ jobs:
           mask-aws-account-id: true
 
       - name: Install CDK
-        run: npm install -g aws-cdk
+        run: npm install
         
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -156,7 +156,7 @@ jobs:
       - name: Destroy Stack
         run: |
           cd libraries/tests/e2e/infra
-          cdk destroy --all --force
+          npx cdk destroy --all --force
 
   destroy-aot-stack:
     permissions:
@@ -184,7 +184,7 @@ jobs:
           mask-aws-account-id: true
 
       - name: Install CDK
-        run: npm install -g aws-cdk
+        run: npm install
         
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -192,5 +192,5 @@ jobs:
       - name: Destroy arm64 AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          cdk destroy --all -c architecture=${{ matrix.arch }} --force
+          npox cdk destroy --all -c architecture=${{ matrix.arch }} --force
       
