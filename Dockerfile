@@ -19,7 +19,7 @@ WORKDIR $FUNCTION_DIR/examples/SimpleLambda/src/HelloWorld/
 RUN if [ "$SAM_BUILD_MODE" = "debug" ]; then dotnet lambda package --configuration Debug; else dotnet lambda package --configuration Release; fi
 RUN if [ "$SAM_BUILD_MODE" = "debug" ]; then cp -r /bin/Debug/net6.0/publish/* /build/build_artifacts; else cp -r bin/Release/net6.0/publish/* /build/build_artifacts; fi
 
-FROM public.ecr.aws/lambda/dotnet:6
+FROM public.ecr.aws/lambda/dotnet@sha256:ec61a7f638e2a0c86d75204117cc7710bcdc70222ffc777e3fc1458287b09834
 
 COPY --from=build-image /build/build_artifacts/ /var/task/
 # Command can be overwritten by providing a different command in the template directly.
