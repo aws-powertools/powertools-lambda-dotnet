@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics;
@@ -28,17 +29,27 @@ namespace AWS.Lambda.Powertools.Metrics;
 /// <seealso cref="IMetrics" />
 public class Metrics : IMetrics, IDisposable
 {
-    static Metrics()
+    public static IMetrics Instance
     {
-        _instance = new Metrics(PowertoolsConfigurations.Instance);
+        get => Current.Value ?? new Metrics(PowertoolsConfigurations.Instance);
+        private set => Current.Value = value;
     }
 
-    internal static IMetrics Instance => _instance ?? new Metrics(PowertoolsConfigurations.Instance);
+    /// <inheritdoc />
+    public MetricsOptions Options =>
+        new()
+        {
+            CaptureColdStart = _captureColdStartEnabled,
+            Namespace = GetNamespace(),
+            Service = GetService(),
+            RaiseOnEmptyMetrics = _raiseOnEmptyMetrics,
+            DefaultDimensions = GetDefaultDimensions()
+        };
 
     /// <summary>
     ///     The instance
     /// </summary>
-    private static IMetrics _instance;
+    private static readonly AsyncLocal<IMetrics> Current = new();
 
     /// <summary>
     ///     The context
@@ -82,8 +93,10 @@ public class Metrics : IMetrics, IDisposable
         if (!string.IsNullOrEmpty(options.Service))
             Instance.SetService(options.Service);
 
-        Instance.SetRaiseOnEmptyMetrics(options.RaiseOnEmptyMetrics);
-        Instance.SetCaptureColdStart(options.CaptureColdStart);
+        if (options.RaiseOnEmptyMetrics.HasValue)
+            Instance.SetRaiseOnEmptyMetrics(options.RaiseOnEmptyMetrics.Value);
+        if (options.CaptureColdStart.HasValue)
+            Instance.SetCaptureColdStart(options.CaptureColdStart.Value);
 
         if (options.DefaultDimensions != null)
             SetDefaultDimensions(options.DefaultDimensions);
@@ -104,29 +117,19 @@ public class Metrics : IMetrics, IDisposable
     internal Metrics(IPowertoolsConfigurations powertoolsConfigurations, string nameSpace = null, string service = null,
         bool raiseOnEmptyMetrics = false, bool captureColdStartEnabled = false)
     {
-        if (_instance == null)
-        {
-            _instance = this;
-            _powertoolsConfigurations = powertoolsConfigurations;
-            _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
-            _captureColdStartEnabled = captureColdStartEnabled;
-            _context = new MetricsContext();
+        _powertoolsConfigurations = powertoolsConfigurations;
+        _context = new MetricsContext();
+        _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
+        _captureColdStartEnabled = captureColdStartEnabled;
 
-            _powertoolsConfigurations.SetExecutionEnvironment(this);
-        }
+        Instance = this;
+        _powertoolsConfigurations.SetExecutionEnvironment(this);
+
+        if (!string.IsNullOrEmpty(nameSpace)) SetNamespace(nameSpace);
+        if (!string.IsNullOrEmpty(service)) SetService(service);
     }
 
-    /// <summary>
-    ///     Implements interface that adds new metric to memory.
-    /// </summary>
-    /// <param name="key">Metric Key</param>
-    /// <param name="value">Metric Value</param>
-    /// <param name="unit">Metric Unit</param>
-    /// <param name="metricResolution">Metric resolution</param>
-    /// <exception cref="System.ArgumentNullException">
-    ///     'AddMetric' method requires a valid metrics key. 'Null' or empty values
-    ///     are not allowed.
-    /// </exception>
+    /// <inheritdoc />
     void IMetrics.AddMetric(string key, double value, MetricUnit unit, MetricResolution metricResolution)
     {
         if (Instance != null)
@@ -164,38 +167,20 @@ public class Metrics : IMetrics, IDisposable
         }
     }
 
-    /// <summary>
-    ///     Implements interface that sets metrics namespace identifier.
-    /// </summary>
-    /// <param name="nameSpace">Metrics Namespace Identifier</param>
+    /// <inheritdoc />
     void IMetrics.SetNamespace(string nameSpace)
     {
         _context.SetNamespace(!string.IsNullOrWhiteSpace(nameSpace)
             ? nameSpace
-            : Instance.GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace);
+            : GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace);
     }
 
-    /// <summary>
-    ///     Implements interface that allows retrieval of namespace identifier.
-    /// </summary>
-    /// <returns>Namespace identifier</returns>
-    string IMetrics.GetNamespace()
-    {
-        try
-        {
-            return _context.GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace;
-        }
-        catch
-        {
-            return null;
-        }
-    }
 
     /// <summary>
     ///     Implements interface to get service name
     /// </summary>
     /// <returns>System.String.</returns>
-    string IMetrics.GetService()
+    private string GetService()
     {
         try
         {
@@ -207,15 +192,7 @@ public class Metrics : IMetrics, IDisposable
         }
     }
 
-    /// <summary>
-    ///     Implements interface that adds a dimension.
-    /// </summary>
-    /// <param name="key">Dimension key. Must not be null, empty or whitespace</param>
-    /// <param name="value">Dimension value</param>
-    /// <exception cref="System.ArgumentNullException">
-    ///     'AddDimension' method requires a valid dimension key. 'Null' or empty
-    ///     values are not allowed.
-    /// </exception>
+    /// <inheritdoc />
     void IMetrics.AddDimension(string key, string value)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -225,15 +202,7 @@ public class Metrics : IMetrics, IDisposable
         _context.AddDimension(key, value);
     }
 
-    /// <summary>
-    ///     Implements interface that adds metadata.
-    /// </summary>
-    /// <param name="key">Metadata key. Must not be null, empty or whitespace</param>
-    /// <param name="value">Metadata value</param>
-    /// <exception cref="System.ArgumentNullException">
-    ///     'AddMetadata' method requires a valid metadata key. 'Null' or empty
-    ///     values are not allowed.
-    /// </exception>
+    /// <inheritdoc />
     void IMetrics.AddMetadata(string key, object value)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -243,14 +212,7 @@ public class Metrics : IMetrics, IDisposable
         _context.AddMetadata(key, value);
     }
 
-    /// <summary>
-    ///     Implements interface that sets default dimension list
-    /// </summary>
-    /// <param name="defaultDimension">Default Dimension List</param>
-    /// <exception cref="System.ArgumentNullException">
-    ///     'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty
-    ///     values are not allowed.
-    /// </exception>
+    /// <inheritdoc />
     void IMetrics.SetDefaultDimensions(Dictionary<string, string> defaultDimension)
     {
         foreach (var item in defaultDimension)
@@ -261,12 +223,7 @@ public class Metrics : IMetrics, IDisposable
         _context.SetDefaultDimensions(DictionaryToList(defaultDimension));
     }
 
-    /// <summary>
-    ///     Flushes metrics in Embedded Metric Format (EMF) to Standard Output. In Lambda, this output is collected
-    ///     automatically and sent to Cloudwatch.
-    /// </summary>
-    /// <param name="metricsOverflow">If enabled, non-default dimensions are cleared after flushing metrics</param>
-    /// <exception cref="SchemaValidationException">true</exception>
+    /// <inheritdoc />
     void IMetrics.Flush(bool metricsOverflow)
     {
         if (_context.GetMetrics().Count == 0
@@ -291,9 +248,7 @@ public class Metrics : IMetrics, IDisposable
         }
     }
 
-    /// <summary>
-    ///     Clears both default dimensions and dimensions lists
-    /// </summary>
+    /// <inheritdoc />
     void IMetrics.ClearDefaultDimensions()
     {
         _context.ClearDefaultDimensions();
@@ -314,7 +269,7 @@ public class Metrics : IMetrics, IDisposable
         {
             _context.SetService(parsedService);
             _context.SetDefaultDimensions(new List<DimensionSet>(new[]
-                { new DimensionSet("Service", _context.GetService()) }));
+                { new DimensionSet("Service", GetService()) }));
         }
     }
 
@@ -330,36 +285,12 @@ public class Metrics : IMetrics, IDisposable
         _captureColdStartEnabled = captureColdStart;
     }
 
-    /// <inheritdoc />
-    public Dictionary<string, string> GetDefaultDimensions()
+    private Dictionary<string, string> GetDefaultDimensions()
     {
         return ListToDictionary(_context.GetDefaultDimensions());
     }
 
-    /// <summary>
-    ///     Serialize global context object
-    /// </summary>
-    /// <returns>Serialized global context object</returns>
-    public string Serialize()
-    {
-        return _context.Serialize();
-    }
-
-    /// <summary>
-    ///     Implements the interface that pushes single metric to CloudWatch using Embedded Metric Format. This can be used to
-    ///     push metrics with a different context.
-    /// </summary>
-    /// <param name="metricName">Metric Name. Metric key cannot be null, empty or whitespace</param>
-    /// <param name="value">Metric Value</param>
-    /// <param name="unit">Metric Unit</param>
-    /// <param name="nameSpace">Metric Namespace</param>
-    /// <param name="service">Service Name</param>
-    /// <param name="defaultDimensions">Default dimensions list</param>
-    /// <param name="metricResolution">Metrics resolution</param>
-    /// <exception cref="System.ArgumentNullException">
-    ///     'PushSingleMetric' method requires a valid metrics key. 'Null' or empty
-    ///     values are not allowed.
-    /// </exception>
+    /// <inheritdoc />
     void IMetrics.PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace,
         string service, Dictionary<string, string> defaultDimensions, MetricResolution metricResolution)
     {
@@ -431,9 +362,16 @@ public class Metrics : IMetrics, IDisposable
     ///     Retrieves namespace identifier.
     /// </summary>
     /// <returns>Namespace identifier</returns>
-    public static string GetNamespace()
+    public string GetNamespace()
     {
-        return Instance.GetNamespace();
+        try
+        {
+            return _context.GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -462,15 +400,7 @@ public class Metrics : IMetrics, IDisposable
     /// <param name="defaultDimensions">Default Dimension List</param>
     public static void SetDefaultDimensions(Dictionary<string, string> defaultDimensions)
     {
-        if (Instance != null)
-        {
-            Instance.SetDefaultDimensions(defaultDimensions);
-            // MetricsDefaults.SetDefaultDimensions(defaultDimensions);
-        }
-        else
-        {
-            // MetricsDefaults.SetDefaultDimensions(defaultDimensions);
-        }
+        Instance?.SetDefaultDimensions(defaultDimensions);
     }
 
     /// <summary>
@@ -564,6 +494,15 @@ public class Metrics : IMetrics, IDisposable
     /// </summary>
     internal static void ResetForTest()
     {
-        _instance = null;
+        Instance = null;
+    }
+
+    /// <summary>
+    /// For testing purposes, resets the Instance to the provided metrics instance.
+    /// </summary>
+    /// <param name="metricsInstance"></param>
+    public static void UseMetricsForTests(IMetrics metricsInstance)
+    {
+        Instance = metricsInstance;
     }
 }

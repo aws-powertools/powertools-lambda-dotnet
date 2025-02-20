@@ -201,7 +201,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             var metricsOutput = _consoleOut.ToString();
 
-            var result = Metrics.GetNamespace();
+            var result = Metrics.Instance.Options.Namespace;
 
             // Assert
             Assert.Equal("dotnet-powertools-test", result);

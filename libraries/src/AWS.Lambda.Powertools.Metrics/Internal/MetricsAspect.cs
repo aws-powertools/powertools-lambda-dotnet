@@ -72,11 +72,9 @@ public class MetricsAspect
         _metricsInstance ??= Metrics.Configure(options => {
             options.Namespace = trigger.Namespace;
             options.Service = trigger.Service;
-            options.RaiseOnEmptyMetrics = trigger.RaiseOnEmptyMetrics;
-            options.CaptureColdStart = trigger.CaptureColdStart;
+            options.RaiseOnEmptyMetrics = trigger.IsRaiseOnEmptyMetricsSet ? trigger.RaiseOnEmptyMetrics : null;
+            options.CaptureColdStart = trigger.IsCaptureColdStartSet ? trigger.CaptureColdStart : null;
         });
-
-        var defaultDimensions = _metricsInstance.GetDefaultDimensions();
 
         var eventArgs = new AspectEventArgs
         {
@@ -89,15 +87,16 @@ public class MetricsAspect
             Triggers = triggers
         };
 
-        if (trigger.CaptureColdStart && _isColdStart)
+        if (_metricsInstance.Options.CaptureColdStart != null && _metricsInstance.Options.CaptureColdStart.Value && _isColdStart)
         {
+            var defaultDimensions = _metricsInstance.Options?.DefaultDimensions;
             _isColdStart = false;
 
             var context = GetContext(eventArgs);
-
+    
             if (context is not null)
             {
-                defaultDimensions.Add("FunctionName", context.FunctionName);
+                defaultDimensions?.Add("FunctionName", context.FunctionName);
                 _metricsInstance.SetDefaultDimensions(defaultDimensions);
             }
 
@@ -105,8 +104,8 @@ public class MetricsAspect
                 "ColdStart",
                 1.0,
                 MetricUnit.Count,
-                _metricsInstance.GetNamespace(),
-                _metricsInstance.GetService(),
+                _metricsInstance.Options?.Namespace ?? "",
+                _metricsInstance.Options?.Service ?? "",
                 defaultDimensions
             );
         }

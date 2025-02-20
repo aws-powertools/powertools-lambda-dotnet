@@ -20,12 +20,12 @@ public class MetricsOptions
     /// <summary>
     /// Gets or sets whether to throw an exception when no metrics are emitted.
     /// </summary>
-    public bool RaiseOnEmptyMetrics { get; set; }
+    public bool? RaiseOnEmptyMetrics { get; set; }
 
     /// <summary>
     /// Gets or sets whether to capture cold start metrics.
     /// </summary>
-    public bool CaptureColdStart { get; set; }
+    public bool? CaptureColdStart { get; set; }
 
     /// <summary>
     /// Gets or sets the default dimensions to be added to all metrics.
