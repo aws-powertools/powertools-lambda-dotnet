@@ -1,4 +1,5 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim AS build-image
+# 6.0-bullseye-slim
+FROM mcr.microsoft.com/dotnet/sdk@sha256:fc71510497ce2ec3575359068b9c7b1b9f449cfdb0371b5c71a939963a2fedfd AS build-image
 
 ARG FUNCTION_DIR="/build"
 ARG SAM_BUILD_MODE="run"
