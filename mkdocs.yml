@@ -15,6 +15,7 @@ nav:
   - Core utilities:
       - core/logging.md
       - core/metrics.md
+      - core/metrics-v2.md
       - core/tracing.md
   - Utilities:
       - utilities/parameters.md

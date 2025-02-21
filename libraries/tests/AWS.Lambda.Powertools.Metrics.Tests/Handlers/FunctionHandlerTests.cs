@@ -145,11 +145,11 @@ public class FunctionHandlerTests : IDisposable
 
         // Assert cold start
         Assert.Contains(
-            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Environment\",\"Another\",\"Service\"]]}]},\"Environment\":\"Prod\",\"Another\":\"One\",\"Service\":\"testService\",\"ColdStart\":1}",
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod\",\"Another\":\"One\",\"ColdStart\":1}",
             metricsOutput);
         // Assert successful booking metrics
         Assert.Contains(
-            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Environment\",\"Another\",\"Service\"]]}]},\"Environment\":\"Prod\",\"Another\":\"One\",\"Service\":\"testService\",\"SuccessfulBooking\":1}",
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod\",\"Another\":\"One\",\"SuccessfulBooking\":1}",
             metricsOutput);
     }
 
@@ -170,11 +170,11 @@ public class FunctionHandlerTests : IDisposable
 
         // Assert cold start
         Assert.Contains(
-            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Environment\",\"Another\",\"Service\",\"FunctionName\"]]}]},\"Environment\":\"Prod\",\"Another\":\"One\",\"Service\":\"testService\",\"FunctionName\":\"My_Function_Name\",\"ColdStart\":1}",
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\",\"FunctionName\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod\",\"Another\":\"One\",\"FunctionName\":\"My_Function_Name\",\"ColdStart\":1}",
             metricsOutput);
         // Assert successful Memory metrics
         Assert.Contains(
-            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Memory\",\"Unit\":\"Megabytes\"}],\"Dimensions\":[[\"Environment\",\"Another\",\"Service\",\"FunctionName\"]]}]},\"Environment\":\"Prod\",\"Another\":\"One\",\"Service\":\"testService\",\"FunctionName\":\"My_Function_Name\",\"Memory\":10}",
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Memory\",\"Unit\":\"Megabytes\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\",\"FunctionName\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod\",\"Another\":\"One\",\"FunctionName\":\"My_Function_Name\",\"Memory\":10}",
             metricsOutput);
     }
 

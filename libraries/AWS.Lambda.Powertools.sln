@@ -97,6 +97,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AOT-FunctionHandlerTest", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AOT-FunctionMethodAttributeTest", "tests\e2e\functions\idempotency\AOT-Function\src\AOT-FunctionMethodAttributeTest\AOT-FunctionMethodAttributeTest.csproj", "{CC8CFF43-DC72-464C-A42D-55E023DE8500}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Metrics.AspNetCore", "src\AWS.Lambda.Powertools.Metrics.AspNetCore\AWS.Lambda.Powertools.Metrics.AspNetCore.csproj", "{A2AD98B1-2BED-4864-B573-77BE7B52FED2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Metrics.AspNetCore.Tests", "tests\AWS.Lambda.Powertools.Metrics.AspNetCore.Tests\AWS.Lambda.Powertools.Metrics.AspNetCore.Tests.csproj", "{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -518,6 +522,30 @@ Global
 		{CC8CFF43-DC72-464C-A42D-55E023DE8500}.Release|x64.Build.0 = Release|Any CPU
 		{CC8CFF43-DC72-464C-A42D-55E023DE8500}.Release|x86.ActiveCfg = Release|Any CPU
 		{CC8CFF43-DC72-464C-A42D-55E023DE8500}.Release|x86.Build.0 = Release|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Debug|x64.Build.0 = Debug|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Debug|x86.Build.0 = Debug|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Release|x64.ActiveCfg = Release|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Release|x64.Build.0 = Release|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Release|x86.ActiveCfg = Release|Any CPU
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2}.Release|x86.Build.0 = Release|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Debug|x64.Build.0 = Debug|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Debug|x86.Build.0 = Debug|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Release|x64.ActiveCfg = Release|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Release|x64.Build.0 = Release|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Release|x86.ActiveCfg = Release|Any CPU
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 
 	GlobalSection(NestedProjects) = preSolution
@@ -563,5 +591,7 @@ Global
 		{ACA789EA-BD38-490B-A7F8-6A3A86985025} = {FB2C7DA3-6FCE-429D-86F9-5775D0231EC6}
 		{E71C48D2-AD56-4177-BBD7-6BB859A40C92} = {FB2C7DA3-6FCE-429D-86F9-5775D0231EC6}
 		{CC8CFF43-DC72-464C-A42D-55E023DE8500} = {FB2C7DA3-6FCE-429D-86F9-5775D0231EC6}
+		{A2AD98B1-2BED-4864-B573-77BE7B52FED2} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
+		{F8F80477-1EAD-4C5C-A329-CBC0A60C7CAB} = {1CFF5568-8486-475F-81F6-06105C437528}
 	EndGlobalSection
 EndGlobal
