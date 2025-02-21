@@ -12,6 +12,7 @@ permissions:
 jobs:
   get_pr_details:
     permissions:
+      contents: read
       id-token: write
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     uses: ./.github/workflows/reusable_export_pr_details.yml
@@ -22,6 +23,7 @@ jobs:
       token: ${{ secrets.GITHUB_TOKEN }}
   release_label_on_merge:
     permissions:
+      contents: read
       id-token: write
     needs: get_pr_details
     runs-on: ubuntu-latest
