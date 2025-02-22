@@ -26,8 +26,10 @@ jobs:
         include:
           - dotnet-version: '6.0.x'
             framework: 'net6.0'
+            build-props: '/p:TargetFramework=net6.0'
           - dotnet-version: '8.0.x'
             framework: 'net8.0'
+            build-props: '/p:TargetFramework=net8.0'
       fail-fast: false
             
     steps:
@@ -39,16 +41,16 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
             
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore ${{ matrix.build-props }}
         
       - name: Build
-        run: dotnet build --configuration Release --no-restore -f ${{ matrix.framework }}
+        run: dotnet build --configuration Release --no-restore ${{ matrix.build-props }}
       
       - name: Test Examples
-        run: dotnet test ../examples/
+        run: dotnet test ../examples/ ${{ matrix.build-props }} --verbosity quiet
       
       - name: Test & Code Coverage
-        run: dotnet test --no-restore -f ${{ matrix.framework }} --filter "Category!=E2E" --collect:"XPlat Code Coverage" --results-directory ./codecov/${{ matrix.framework }} --verbosity quiet
+        run: dotnet test --no-restore ${{ matrix.build-props }} --filter "Category!=E2E" --collect:"XPlat Code Coverage" --results-directory ./codecov/${{ matrix.framework }} --verbosity quiet
       
       - name: Codecov
         uses: codecov/codecov-action@13ce06bfc6bbe3ecf90edbbf1bc32fe5978ca1d3 # 5.3.1
