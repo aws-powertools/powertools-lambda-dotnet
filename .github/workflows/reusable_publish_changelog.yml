@@ -4,13 +4,15 @@ on:
   workflow_call:
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   BRANCH: develop
 
 jobs:
   publish_changelog:
+    permissions:
+      contents: write
     # Force Github action to run only a single job at a time (based on the group name)
     # This is to prevent race-condition and inconsistencies with changelog push
     concurrency:
