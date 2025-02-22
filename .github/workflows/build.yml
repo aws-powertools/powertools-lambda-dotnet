@@ -26,10 +26,10 @@ jobs:
         include:
           - dotnet-version: '6.0.x'
             framework: 'net6.0'
-            build-props: '/p:TargetFramework=net6.0'
+            build-props: '/p:TargetFramework=net6.0 /p:SkipInvalidProjects=true'
           - dotnet-version: '8.0.x'
             framework: 'net8.0'
-            build-props: '/p:TargetFramework=net8.0'
+            build-props: '/p:TargetFramework=net8.0 /p:SkipInvalidProjects=true'
       fail-fast: false
             
     steps:
