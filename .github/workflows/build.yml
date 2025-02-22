@@ -39,7 +39,7 @@ jobs:
           dotnet-version: ${{ matrix.dotnet-version }}
             
       - name: Install dependencies
-        run: dotnet restore -f ${{ matrix.framework }}
+        run: dotnet restore
         
       - name: Build
         run: dotnet build --configuration Release --no-restore -f ${{ matrix.framework }}
