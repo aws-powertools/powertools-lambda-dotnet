@@ -36,8 +36,13 @@ on:
         description: "Whether PR is merged"
         value: ${{ jobs.export_pr_details.outputs.prIsMerged }}
 
+permissions:
+  contents: read
+
 jobs:
   export_pr_details:
+    permissions:
+      id-token: write
     # see https://github.com/aws-powertools/powertools-lambda-python/issues/1349
     if: inputs.workflow_origin == 'aws-powertools/powertools-lambda-dotnet'
     runs-on: ubuntu-latest
