@@ -138,6 +138,7 @@ public class MetricsAspect
     /// <returns></returns>
     private static ILambdaContext GetContext(AspectEventArgs args)
     {
+        if (args == null || args.Method == null) return null;
         var index = Array.FindIndex(args.Method.GetParameters(), p => p.ParameterType == typeof(ILambdaContext));
         if (index >= 0)
         {
