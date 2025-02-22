@@ -119,15 +119,41 @@ public class MetricsAttribute : Attribute
     /// <value>The service.</value>
     public string Service { get; set; }
 
+    private bool _captureColdStartSet;
+    private bool _captureColdStart;
+    
     /// <summary>
     ///     Captures cold start during Lambda execution
     /// </summary>
     /// <value><c>true</c> if [capture cold start]; otherwise, <c>false</c>.</value>
-    public bool CaptureColdStart { get; set; }
+    public bool CaptureColdStart
+    {
+        get => _captureColdStart;
+        set
+        {
+            _captureColdStart = value;
+            _captureColdStartSet = true;
+        }
+    }
+    
+    internal bool IsCaptureColdStartSet => _captureColdStartSet;
+
+    private bool _raiseOnEmptyMetricsSet;
+    private bool _raiseOnEmptyMetrics;
 
     /// <summary>
     ///     Instructs metrics validation to throw exception if no metrics are provided.
     /// </summary>
     /// <value><c>true</c> if [raise on empty metrics]; otherwise, <c>false</c>.</value>
-    public bool RaiseOnEmptyMetrics { get; set; }
+    public bool RaiseOnEmptyMetrics
+    {
+        get => _raiseOnEmptyMetrics;
+        set
+        {
+            _raiseOnEmptyMetrics = value;
+            _raiseOnEmptyMetricsSet = true;
+        }
+    }
+
+    internal bool IsRaiseOnEmptyMetricsSet => _raiseOnEmptyMetricsSet;
 }
