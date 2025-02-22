@@ -1,9 +1,10 @@
+<!--suppress MsbuildTargetFrameworkTagInspection -->
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <AssemblyName>AWS.Lambda.Powertools.Metrics.AspNetCore.Tests</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Metrics.AspNetCore.Tests</RootNamespace>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFrameworks>net8.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
@@ -26,8 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics.AspNetCore\AWS.Lambda.Powertools.Metrics.AspNetCore.csproj"
-                        Condition="'$(TargetFramework)' == 'net8.0'"/>
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics.AspNetCore\AWS.Lambda.Powertools.Metrics.AspNetCore.csproj"/>
     </ItemGroup>
 
 </Project>

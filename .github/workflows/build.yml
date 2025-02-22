@@ -37,7 +37,10 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test & Code Coverage
-        run: dotnet test --no-restore --filter "Category!=E2E" --collect:"XPlat Code Coverage" --results-directory ./codecov --logger "console;verbosity=quiet"
+        run: dotnet test --no-restore --filter "Category!=E2E" --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity quiet
+
+      - name: Test Examples
+        run: dotnet test ../examples/ --verbosity quiet
 
       - name: Codecov
         uses: codecov/codecov-action@13ce06bfc6bbe3ecf90edbbf1bc32fe5978ca1d3 # 5.3.1
