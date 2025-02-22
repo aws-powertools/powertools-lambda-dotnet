@@ -26,7 +26,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics.AspNetCore\AWS.Lambda.Powertools.Metrics.AspNetCore.csproj" />
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics.AspNetCore\AWS.Lambda.Powertools.Metrics.AspNetCore.csproj"
+                        Condition="'$(TargetFramework)' == 'net8.0'"/>
     </ItemGroup>
 
 </Project>
