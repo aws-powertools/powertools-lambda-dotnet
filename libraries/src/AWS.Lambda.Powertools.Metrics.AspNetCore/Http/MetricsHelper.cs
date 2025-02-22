@@ -47,7 +47,10 @@ public class MetricsHelper
             return Task.CompletedTask;
 
         var defaultDimensions = _metrics.Options.DefaultDimensions;
-        _isColdStart = false;
+        lock (_metrics)
+        {
+            _isColdStart = false;
+        }
 
         if (context.Items["LambdaContext"] is ILambdaContext lambdaContext)
         {
