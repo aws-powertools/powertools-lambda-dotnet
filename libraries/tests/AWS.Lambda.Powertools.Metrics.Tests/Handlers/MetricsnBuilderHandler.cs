@@ -26,4 +26,14 @@ public class MetricsnBuilderHandler
     {
         _metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
+    
+    public void HandlerSingleMetric()
+    {
+        _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count);
+    }
+    
+    public void HandlerSingleMetricDimensions()
+    {
+        _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count, defaultDimensions: _metrics.Options.DefaultDimensions);
+    }
 }

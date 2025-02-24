@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using AWS.Lambda.Powertools.Common;
 
@@ -32,11 +33,26 @@ public class Metrics : IMetrics, IDisposable
     /// <summary>
     ///    Gets or sets the instance.
     /// </summary>
-    public static IMetrics Instance
+    internal static IMetrics Instance
     {
         get => Current.Value ?? new Metrics(PowertoolsConfigurations.Instance);
         private set => Current.Value = value;
     }
+
+    /// <summary>
+    /// Gets DefaultDimensions
+    /// </summary>
+    public static Dictionary<string, string> DefaultDimensions => Instance.Options.DefaultDimensions;
+    
+    /// <summary>
+    /// Gets Namespace
+    /// </summary>
+    public static string Namespace => Instance.Options.Namespace;
+    
+    /// <summary>
+    /// Gets Service 
+    /// </summary>
+    public static string Service => Instance.Options.Service;
 
     /// <inheritdoc />
     public MetricsOptions Options =>

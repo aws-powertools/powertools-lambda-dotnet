@@ -65,6 +65,22 @@ public class FunctionHandler
             });
     }
     
+    [Metrics(Namespace = "ExampleApplication")]
+    public void PushSingleMetricNoDefaultDimensions()
+    {
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count);
+    }
+    
+    [Metrics(Namespace = "ExampleApplication")]
+    public void PushSingleMetricDefaultDimensions()
+    {
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
+        {
+            { "Default", "SingleMetric" }
+        });
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, defaultDimensions: Metrics.DefaultDimensions );
+    }
+    
     [Metrics]
     public void PushSingleMetricWithEnvNamespace()
     {

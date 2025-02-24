@@ -178,6 +178,32 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
         
         [Trait("Category", "SchemaValidation")]
         [Fact]
+        public void When_PushSingleMetric_With_No_DefaultDimensions()
+        {
+            // Act
+            _handler.PushSingleMetricNoDefaultDimensions();
+
+            var metricsOutput = _consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"ExampleApplication\",\"Metrics\":[{\"Name\":\"SingleMetric\",\"Unit\":\"Count\"}],\"Dimensions\":[[]]}]},\"SingleMetric\":1}", metricsOutput);
+        }
+        
+        [Trait("Category", "SchemaValidation")]
+        [Fact]
+        public void When_PushSingleMetric_With_DefaultDimensions()
+        {
+            // Act
+            _handler.PushSingleMetricDefaultDimensions();
+
+            var metricsOutput = _consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"ExampleApplication\",\"Metrics\":[{\"Name\":\"SingleMetric\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Default\"]]}]},\"Default\":\"SingleMetric\",\"SingleMetric\":1}", metricsOutput);
+        }
+        
+        [Trait("Category", "SchemaValidation")]
+        [Fact]
         public void When_PushSingleMetric_With_Env_Namespace()
         {
             // Arrange

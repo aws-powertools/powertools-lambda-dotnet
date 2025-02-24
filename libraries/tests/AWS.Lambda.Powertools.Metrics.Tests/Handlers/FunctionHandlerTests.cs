@@ -266,6 +266,40 @@ public class FunctionHandlerTests : IDisposable
             service: "testService", Arg.Any<Dictionary<string, string>>());
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
+    
+    [Fact]
+    public void Handler_With_Builder_Push_Single_Metric_No_Dimensions()
+    {
+        // Arrange
+        var handler = new MetricsnBuilderHandler();
+
+        // Act
+        handler.HandlerSingleMetric();
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[]]}]},\"SuccessfulBooking\":1}",
+            metricsOutput);
+    }
+    
+    [Fact]
+    public void Handler_With_Builder_Push_Single_Metric_Dimensions()
+    {
+        // Arrange
+        var handler = new MetricsnBuilderHandler();
+
+        // Act
+        handler.HandlerSingleMetricDimensions();
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod1\",\"Another\":\"One\",\"SuccessfulBooking\":1}",
+            metricsOutput);
+    }
 
     public void Dispose()
     {
