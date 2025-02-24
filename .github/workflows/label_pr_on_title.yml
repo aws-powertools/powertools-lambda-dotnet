@@ -21,7 +21,6 @@ jobs:
       token: ${{ secrets.GITHUB_TOKEN }}
   label_pr:
     permissions:
-      contents: read
       id-token: write
     needs: get_pr_details
     runs-on: ubuntu-latest
