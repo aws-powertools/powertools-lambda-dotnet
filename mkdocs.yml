@@ -3,6 +3,7 @@ site_description: Powertools for AWS Lambda (.NET)
 site_author: Amazon Web Services
 repo_url: https://github.com/aws-powertools/powertools-lambda-dotnet
 edit_uri: edit/develop/docs
+site_url: https://docs.powertools.aws.dev/lambda/dotnet/
 
 nav:
   - Homepage: index.md
