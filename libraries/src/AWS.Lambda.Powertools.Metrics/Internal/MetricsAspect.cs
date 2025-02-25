@@ -91,14 +91,14 @@ public class MetricsAspect
 
         if (_metricsInstance.Options.CaptureColdStart != null && _metricsInstance.Options.CaptureColdStart.Value && _isColdStart)
         {
-            var defaultDimensions = _metricsInstance.Options?.DefaultDimensions;
+            var dimensions = _metricsInstance.Options?.DefaultDimensions;
             _isColdStart = false;
 
             var context = GetContext(eventArgs);
     
             if (context is not null)
             {
-                defaultDimensions?.Add("FunctionName", context.FunctionName);
+                dimensions?.Add("FunctionName", context.FunctionName);
             }
 
             _metricsInstance.PushSingleMetric(
@@ -107,7 +107,7 @@ public class MetricsAspect
                 MetricUnit.Count,
                 _metricsInstance.Options?.Namespace ?? "",
                 _metricsInstance.Options?.Service ?? "",
-                defaultDimensions
+                dimensions
             );
         }
     }
