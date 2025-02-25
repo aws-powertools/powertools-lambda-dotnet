@@ -174,7 +174,7 @@ public class FunctionHandlerTests : IDisposable
             metricsOutput);
         // Assert successful Memory metrics
         Assert.Contains(
-            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Memory\",\"Unit\":\"Megabytes\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\",\"FunctionName\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod\",\"Another\":\"One\",\"FunctionName\":\"My_Function_Name\",\"Memory\":10}",
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Memory\",\"Unit\":\"Megabytes\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod\",\"Another\":\"One\",\"Memory\":10}",
             metricsOutput);
     }
 
@@ -231,7 +231,7 @@ public class FunctionHandlerTests : IDisposable
             metricsOutput);
         // Assert successful Memory metrics
         Assert.Contains(
-            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\",\"FunctionName\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod1\",\"Another\":\"One\",\"FunctionName\":\"My_Function_Name\",\"SuccessfulBooking\":1}",
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod1\",\"Another\":\"One\",\"SuccessfulBooking\":1}",
             metricsOutput);
     }
     
@@ -298,6 +298,32 @@ public class FunctionHandlerTests : IDisposable
 
         Assert.Contains(
             "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod1\",\"Another\":\"One\",\"SuccessfulBooking\":1}",
+            metricsOutput);
+    }
+    
+    [Fact]
+    public void Dimension_Only_Set_In_Cold_Start()
+    {
+        // Arrange
+        var handler = new FunctionHandler();
+
+        // Act
+        handler.HandleOnlyDimensionsInColdStart(new TestLambdaContext
+        {
+            FunctionName = "My_Function_Name"
+        });
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+        
+        // Assert cold start
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"FunctionName\"]]}]},\"Service\":\"svc\",\"FunctionName\":\"My_Function_Name\",\"ColdStart\":1}",
+            metricsOutput);
+        
+        // Assert successful add metric without dimensions
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"MyMetric\",\"Unit\":\"None\"}],\"Dimensions\":[[\"Service\"]]}]},\"Service\":\"svc\",\"MyMetric\":1}",
             metricsOutput);
     }
 

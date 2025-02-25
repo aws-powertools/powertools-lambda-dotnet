@@ -230,4 +230,10 @@ public class FunctionHandler
     {
         
     }
+    
+    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
+    public void HandleOnlyDimensionsInColdStart(ILambdaContext context)
+    {
+        Metrics.AddMetric("MyMetric", 1);
+    }
 }

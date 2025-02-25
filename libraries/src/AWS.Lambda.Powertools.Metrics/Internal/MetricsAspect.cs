@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Amazon.Lambda.Core;
@@ -69,11 +70,13 @@ public class MetricsAspect
 
         var trigger = triggers.OfType<MetricsAttribute>().First();
 
-        _metricsInstance ??= Metrics.Configure(options => {
+        _metricsInstance ??= Metrics.Configure(options =>
+        {
             options.Namespace = trigger.Namespace;
             options.Service = trigger.Service;
             options.RaiseOnEmptyMetrics = trigger.IsRaiseOnEmptyMetricsSet ? trigger.RaiseOnEmptyMetrics : null;
             options.CaptureColdStart = trigger.IsCaptureColdStartSet ? trigger.CaptureColdStart : null;
+            options.FunctionName = trigger.FunctionName;
         });
 
         var eventArgs = new AspectEventArgs
@@ -87,17 +90,22 @@ public class MetricsAspect
             Triggers = triggers
         };
 
-        if (_metricsInstance.Options.CaptureColdStart != null && _metricsInstance.Options.CaptureColdStart.Value && _isColdStart)
+        if (_metricsInstance.Options.CaptureColdStart != null && _metricsInstance.Options.CaptureColdStart.Value &&
+            _isColdStart)
         {
-            var defaultDimensions = _metricsInstance.Options?.DefaultDimensions;
             _isColdStart = false;
 
-            var context = GetContext(eventArgs);
-    
-            if (context is not null)
+            var functionName = _metricsInstance.Options?.FunctionName;
+            var defaultDimensions = _metricsInstance.Options?.DefaultDimensions;
+
+            if (string.IsNullOrWhiteSpace(functionName))
             {
-                defaultDimensions?.Add("FunctionName", context.FunctionName);
-                _metricsInstance.SetDefaultDimensions(defaultDimensions);
+                functionName = GetContext(eventArgs)?.FunctionName ?? "";
+            }
+
+            if (!string.IsNullOrWhiteSpace(functionName))
+            {
+                defaultDimensions?.Add("FunctionName", functionName);
             }
 
             _metricsInstance.PushSingleMetric(
