@@ -25,7 +25,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      issues: read
+      issues: write
       pull-requests: write
     needs: get_pr_details
     runs-on: ubuntu-latest
