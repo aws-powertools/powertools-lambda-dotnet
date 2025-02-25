@@ -33,7 +33,7 @@ public static class TestHelper
         Metrics.AddMetadata("RequestId", apigwProxyEvent.RequestContext.RequestId);
         
         Metrics.PushSingleMetric(
-            metricName: "SingleMetric",
+            name: "SingleMetric",
             value: 1,
             unit: MetricUnit.Count,
             nameSpace: "Test",
