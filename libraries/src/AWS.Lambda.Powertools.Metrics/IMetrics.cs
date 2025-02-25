@@ -1,104 +1,109 @@
 ﻿/*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
 /// <summary>
-///     Interface IMetrics
-///     Implements the <see cref="System.IDisposable" />
+///     Interface for metrics operations.
 /// </summary>
 /// <seealso cref="System.IDisposable" />
-public interface IMetrics 
+public interface IMetrics
 {
     /// <summary>
-    ///     Adds metric
+    ///     Adds a metric to the collection.
     /// </summary>
-    /// <param name="key">Metric key</param>
-    /// <param name="value">Metric value</param>
-    /// <param name="unit">Metric unit</param>
-    /// <param name="metricResolution"></param>
-    void AddMetric(string key, double value, MetricUnit unit, MetricResolution metricResolution);
+    /// <param name="key">The metric key.</param>
+    /// <param name="value">The metric value.</param>
+    /// <param name="unit">The metric unit.</param>
+    /// <param name="resolution">The metric resolution.</param>
+    void AddMetric(string key, double value, MetricUnit unit = MetricUnit.None,
+        MetricResolution resolution = MetricResolution.Default);
 
     /// <summary>
-    ///     Adds a dimension
+    ///     Adds a dimension to the collection.
     /// </summary>
-    /// <param name="key">Dimension key</param>
-    /// <param name="value">Dimension value</param>
+    /// <param name="key">The dimension key.</param>
+    /// <param name="value">The dimension value.</param>
     void AddDimension(string key, string value);
 
     /// <summary>
-    ///     Sets the default dimensions
+    ///     Adds metadata to the collection.
     /// </summary>
-    /// <param name="defaultDimension">Default dimensions</param>
-    void SetDefaultDimensions(Dictionary<string, string> defaultDimension);
-
-    /// <summary>
-    ///     Adds metadata 
-    /// </summary>
-    /// <param name="key">Metadata key</param>
-    /// <param name="value">Metadata value</param>
+    /// <param name="key">The metadata key.</param>
+    /// <param name="value">The metadata value.</param>
     void AddMetadata(string key, object value);
 
     /// <summary>
-    ///     Pushes a single metric with custom namespace, service and dimensions.
+    ///     Sets the default dimensions.
     /// </summary>
-    /// <param name="metricName">Name of the metric</param>
-    /// <param name="value">Metric value</param>
-    /// <param name="unit">Metric unit</param>
-    /// <param name="nameSpace">Metric namespace</param>
-    /// <param name="service">Metric service</param>
-    /// <param name="defaultDimensions">Metric default dimensions</param>
-    /// <param name="metricResolution">Metrics resolution</param>
-    void PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace = null,
-        string service = null, Dictionary<string, string> defaultDimensions = null, MetricResolution metricResolution = MetricResolution.Default);
+    /// <param name="defaultDimensions">The default dimensions.</param>
+    void SetDefaultDimensions(Dictionary<string, string> defaultDimensions);
 
     /// <summary>
-    ///     Sets the namespace
+    ///     Sets the namespace for the metrics.
     /// </summary>
-    /// <param name="nameSpace">Metrics namespace</param>
+    /// <param name="nameSpace">The namespace.</param>
     void SetNamespace(string nameSpace);
 
     /// <summary>
-    ///     Gets the namespace
+    ///     Sets the service name for the metrics.
     /// </summary>
-    /// <returns>System.String.</returns>
-    string GetNamespace();
+    /// <param name="service">The service name.</param>
+    void SetService(string service);
 
     /// <summary>
-    ///     Gets the service
+    ///     Sets whether to raise an event on empty metrics.
     /// </summary>
-    /// <returns>System.String.</returns>
-    string GetService();
+    /// <param name="raiseOnEmptyMetrics">If set to <c>true</c>, raises an event on empty metrics.</param>
+    void SetRaiseOnEmptyMetrics(bool raiseOnEmptyMetrics);
 
     /// <summary>
-    ///     Serializes metrics instance
+    ///     Sets whether to capture cold start metrics.
     /// </summary>
-    /// <returns>System.String.</returns>
-    string Serialize();
+    /// <param name="captureColdStart">If set to <c>true</c>, captures cold start metrics.</param>
+    void SetCaptureColdStart(bool captureColdStart);
 
     /// <summary>
-    ///     Flushes metrics to CloudWatch
+    ///     Pushes a single metric to the collection.
     /// </summary>
-    /// <param name="metricsOverflow">if set to <c>true</c> [metrics overflow].</param>
-    void Flush(bool metricsOverflow = false);
-    
+    /// <param name="name">The metric name.</param>
+    /// <param name="value">The metric value.</param>
+    /// <param name="unit">The metric unit.</param>
+    /// <param name="nameSpace">The namespace.</param>
+    /// <param name="service">The service name.</param>
+    /// <param name="defaultDimensions">The default dimensions.</param>
+    /// <param name="resolution">The metric resolution.</param>
+    void PushSingleMetric(string name, double value, MetricUnit unit, string nameSpace = null, string service = null,
+        Dictionary<string, string> defaultDimensions = null, MetricResolution resolution = MetricResolution.Default);
+
     /// <summary>
-    ///     Clears both default dimensions and dimensions lists
+    ///     Clears the default dimensions.
     /// </summary>
     void ClearDefaultDimensions();
+
+    /// <summary>
+    ///     Flushes the metrics.
+    /// </summary>
+    /// <param name="metricsOverflow">If set to <c>true</c>, indicates a metrics overflow.</param>
+    void Flush(bool metricsOverflow = false);
+
+    /// <summary>
+    ///     Gets the metrics options.
+    /// </summary>
+    /// <value>The metrics options.</value>
+    public MetricsOptions Options { get; }
 }
