@@ -76,7 +76,6 @@ public class MetricsAspect
             options.Service = trigger.Service;
             options.RaiseOnEmptyMetrics = trigger.IsRaiseOnEmptyMetricsSet ? trigger.RaiseOnEmptyMetrics : null;
             options.CaptureColdStart = trigger.IsCaptureColdStartSet ? trigger.CaptureColdStart : null;
-            options.FunctionName = trigger.FunctionName;
         });
 
         var eventArgs = new AspectEventArgs
@@ -90,22 +89,16 @@ public class MetricsAspect
             Triggers = triggers
         };
 
-        if (_metricsInstance.Options.CaptureColdStart != null && _metricsInstance.Options.CaptureColdStart.Value &&
-            _isColdStart)
+        if (_metricsInstance.Options.CaptureColdStart != null && _metricsInstance.Options.CaptureColdStart.Value && _isColdStart)
         {
+            var defaultDimensions = _metricsInstance.Options?.DefaultDimensions;
             _isColdStart = false;
 
-            var functionName = _metricsInstance.Options?.FunctionName;
-            var defaultDimensions = _metricsInstance.Options?.DefaultDimensions;
-
-            if (string.IsNullOrWhiteSpace(functionName))
+            var context = GetContext(eventArgs);
+    
+            if (context is not null)
             {
-                functionName = GetContext(eventArgs)?.FunctionName ?? "";
-            }
-
-            if (!string.IsNullOrWhiteSpace(functionName))
-            {
-                defaultDimensions?.Add("FunctionName", functionName);
+                defaultDimensions?.Add("FunctionName", context.FunctionName);
             }
 
             _metricsInstance.PushSingleMetric(
