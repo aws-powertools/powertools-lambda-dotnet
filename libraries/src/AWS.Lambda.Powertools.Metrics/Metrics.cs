@@ -133,7 +133,7 @@ public class Metrics : IMetrics, IDisposable
     }
 
     /// <inheritdoc />
-    void IMetrics.AddMetric(string key, double value, MetricUnit unit, MetricResolution metricResolution)
+    void IMetrics.AddMetric(string key, double value, MetricUnit unit, MetricResolution resolution)
     {
         if (Instance != null)
         {
@@ -160,7 +160,7 @@ public class Metrics : IMetrics, IDisposable
                     Instance.Flush(true);
                 }
 
-                _context.AddMetric(key, value, unit, metricResolution);
+                _context.AddMetric(key, value, unit, resolution);
             }
         }
         else
@@ -216,14 +216,14 @@ public class Metrics : IMetrics, IDisposable
     }
 
     /// <inheritdoc />
-    void IMetrics.SetDefaultDimensions(Dictionary<string, string> defaultDimension)
+    void IMetrics.SetDefaultDimensions(Dictionary<string, string> defaultDimensions)
     {
-        foreach (var item in defaultDimension)
+        foreach (var item in defaultDimensions)
             if (string.IsNullOrWhiteSpace(item.Key) || string.IsNullOrWhiteSpace(item.Value))
                 throw new ArgumentNullException(nameof(item.Key),
                     "'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty values are not allowed.");
 
-        _context.SetDefaultDimensions(DictionaryToList(defaultDimension));
+        _context.SetDefaultDimensions(DictionaryToList(defaultDimensions));
     }
 
     /// <inheritdoc />
@@ -294,11 +294,11 @@ public class Metrics : IMetrics, IDisposable
     }
 
     /// <inheritdoc />
-    void IMetrics.PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace,
-        string service, Dictionary<string, string> defaultDimensions, MetricResolution metricResolution)
+    void IMetrics.PushSingleMetric(string name, double value, MetricUnit unit, string nameSpace,
+        string service, Dictionary<string, string> defaultDimensions, MetricResolution resolution)
     {
-        if (string.IsNullOrWhiteSpace(metricName))
-            throw new ArgumentNullException(nameof(metricName),
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentNullException(nameof(name),
                 "'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
 
         var context = new MetricsContext();
@@ -311,7 +311,7 @@ public class Metrics : IMetrics, IDisposable
             context.SetDefaultDimensions(defaultDimensionsList);
         }
 
-        context.AddMetric(metricName, value, unit, metricResolution);
+        context.AddMetric(name, value, unit, resolution);
 
         Flush(context);
     }
@@ -345,11 +345,11 @@ public class Metrics : IMetrics, IDisposable
     /// <param name="key">Metric Key. Must not be null, empty or whitespace</param>
     /// <param name="value">Metric Value</param>
     /// <param name="unit">Metric Unit</param>
-    /// <param name="metricResolution"></param>
+    /// <param name="resolution"></param>
     public static void AddMetric(string key, double value, MetricUnit unit = MetricUnit.None,
-        MetricResolution metricResolution = MetricResolution.Default)
+        MetricResolution resolution = MetricResolution.Default)
     {
-        Instance.AddMetric(key, value, unit, metricResolution);
+        Instance.AddMetric(key, value, unit, resolution);
     }
 
     /// <summary>
@@ -438,21 +438,21 @@ public class Metrics : IMetrics, IDisposable
     ///     Pushes single metric to CloudWatch using Embedded Metric Format. This can be used to push metrics with a different
     ///     context.
     /// </summary>
-    /// <param name="metricName">Metric Name. Metric key cannot be null, empty or whitespace</param>
+    /// <param name="name">Metric Name. Metric key cannot be null, empty or whitespace</param>
     /// <param name="value">Metric Value</param>
     /// <param name="unit">Metric Unit</param>
     /// <param name="nameSpace">Metric Namespace</param>
     /// <param name="service">Service Name</param>
     /// <param name="defaultDimensions">Default dimensions list</param>
-    /// <param name="metricResolution">Metrics resolution</param>
-    public static void PushSingleMetric(string metricName, double value, MetricUnit unit, string nameSpace = null,
+    /// <param name="resolution">Metrics resolution</param>
+    public static void PushSingleMetric(string name, double value, MetricUnit unit, string nameSpace = null,
         string service = null, Dictionary<string, string> defaultDimensions = null,
-        MetricResolution metricResolution = MetricResolution.Default)
+        MetricResolution resolution = MetricResolution.Default)
     {
         if (Instance != null)
         {
-            Instance.PushSingleMetric(metricName, value, unit, nameSpace, service, defaultDimensions,
-                metricResolution);
+            Instance.PushSingleMetric(name, value, unit, nameSpace, service, defaultDimensions,
+                resolution);
         }
         else
         {
