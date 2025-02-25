@@ -25,6 +25,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      issues: read
+      pull-requests: write
     needs: get_pr_details
     runs-on: ubuntu-latest
     if: needs.get_pr_details.outputs.prIsMerged == 'true'
