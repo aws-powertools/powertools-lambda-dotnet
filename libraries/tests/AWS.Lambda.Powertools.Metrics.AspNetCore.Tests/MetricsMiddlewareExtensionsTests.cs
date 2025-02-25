@@ -7,16 +7,19 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.AspNetCore.Tests;
 
+[Collection("Sequential")]
 public class MetricsMiddlewareExtensionsTests : IDisposable
 {
     public MetricsMiddlewareExtensionsTests()
     {
         MetricsHelper.ResetColdStart();
+        MetricsAspect.ResetForTest();
     }
 
     public void Dispose()
     {
         MetricsHelper.ResetColdStart();
+        MetricsAspect.ResetForTest();
     }
 
     [Fact]

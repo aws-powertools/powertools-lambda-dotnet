@@ -6,8 +6,15 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.AspNetCore.Tests;
 
-public class MetricsFilterTests
+[Collection("Sequential")]
+public class MetricsFilterTests : IDisposable
 {
+    public void Dispose()
+    {
+        MetricsHelper.ResetColdStart();
+        MetricsAspect.ResetForTest();
+    }
+    
     private readonly IMetrics _metrics;
     private readonly EndpointFilterInvocationContext _context;
     private readonly ILambdaContext _lambdaContext;

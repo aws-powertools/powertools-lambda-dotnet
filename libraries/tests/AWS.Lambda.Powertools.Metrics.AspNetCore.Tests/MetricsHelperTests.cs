@@ -8,8 +8,15 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.AspNetCore.Tests;
 
-public class MetricsHelperTests
+[Collection("Sequential")]
+public class MetricsHelperTests : IDisposable
 {
+    public void Dispose()
+    {
+        MetricsHelper.ResetColdStart();
+        MetricsAspect.ResetForTest();
+    }
+    
     [Fact]
     public async Task CaptureColdStartMetrics_WhenEnabled_ShouldPushMetric()
     {
