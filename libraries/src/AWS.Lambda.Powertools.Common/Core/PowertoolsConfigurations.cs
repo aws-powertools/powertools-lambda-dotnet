@@ -219,4 +219,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
 
     /// <inheritdoc />
     public bool BatchThrowOnFullBatchFailureEnabled => GetEnvironmentVariableOrDefault(Constants.BatchThrowOnFullBatchFailureEnv, true);
+
+    /// <inheritdoc />
+    public bool MetricsDisabled => GetEnvironmentVariableOrDefault(Constants.PowertoolsMetricsDisabledEnv, false);
 }
