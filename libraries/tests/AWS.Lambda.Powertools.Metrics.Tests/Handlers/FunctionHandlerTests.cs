@@ -282,6 +282,89 @@ public class FunctionHandlerTests : IDisposable
         var exception = Assert.Throws<SchemaValidationException>(() => handler.HandlerEmpty());
         Assert.Equal("No metrics have been provided.", exception.Message);
     }
+    
+    [Fact]
+    public void When_ColdStart_Should_Use_DefaultDimensions_From_Options()
+    {
+        // Arrange
+        var metricsMock = Substitute.For<IMetrics>();
+        var expectedDimensions = new Dictionary<string, string>
+        {
+            { "Environment", "Test" },
+            { "Region", "us-east-1" }
+        };
+
+        metricsMock.Options.Returns(new MetricsOptions
+        {
+            Namespace = "dotnet-powertools-test",
+            Service = "testService",
+            CaptureColdStart = true,
+            DefaultDimensions = expectedDimensions
+        });
+
+        Metrics.UseMetricsForTests(metricsMock);
+
+        var context = new TestLambdaContext
+        {
+            FunctionName = "TestFunction"
+        };
+
+        // Act
+        _handler.HandleWithLambdaContext(context);
+
+        // Assert
+        metricsMock.Received(1).PushSingleMetric(
+            "ColdStart",
+            1.0,
+            MetricUnit.Count,
+            "dotnet-powertools-test",
+            "testService",
+            Arg.Is<Dictionary<string, string>>(d => 
+                d.ContainsKey("Environment") && d["Environment"] == "Test" &&
+                d.ContainsKey("Region") && d["Region"] == "us-east-1" &&
+                d.ContainsKey("FunctionName") && d["FunctionName"] == "TestFunction"
+            )
+        );
+    }
+    
+    [Fact]
+    public void When_ColdStart_And_DefaultDimensions_Is_Null_Should_Only_Add_Service_And_FunctionName()
+    {
+        // Arrange
+        var metricsMock = Substitute.For<IMetrics>();
+
+        metricsMock.Options.Returns(new MetricsOptions
+        {
+            Namespace = "dotnet-powertools-test",
+            Service = "testService",
+            CaptureColdStart = true,
+            DefaultDimensions = null
+        });
+
+        Metrics.UseMetricsForTests(metricsMock);
+
+        var context = new TestLambdaContext
+        {
+            FunctionName = "TestFunction"
+        };
+
+        // Act
+        _handler.HandleWithLambdaContext(context);
+
+        // Assert
+        metricsMock.Received(1).PushSingleMetric(
+            "ColdStart",
+            1.0,
+            MetricUnit.Count,
+            "dotnet-powertools-test",
+            "testService",
+            Arg.Is<Dictionary<string, string>>(d =>
+                d.Count == 1 &&
+                d.ContainsKey("FunctionName") &&
+                d["FunctionName"] == "TestFunction"
+            )
+        );
+    }
 
     public void Dispose()
     {

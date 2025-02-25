@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Amazon.Lambda.Core;
@@ -96,7 +97,8 @@ public class MetricsAspect
     
             if (context is not null)
             {
-                defaultDimensions?.Add("FunctionName", context.FunctionName);
+                defaultDimensions ??= new Dictionary<string, string>();
+                defaultDimensions.Add("FunctionName", context.FunctionName);
                 _metricsInstance.SetDefaultDimensions(defaultDimensions);
             }
 
