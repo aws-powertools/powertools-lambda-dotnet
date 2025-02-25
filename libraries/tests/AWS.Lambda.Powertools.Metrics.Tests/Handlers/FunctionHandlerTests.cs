@@ -14,9 +14,11 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
@@ -26,38 +28,35 @@ public class FunctionHandlerTests : IDisposable
 {
     private readonly FunctionHandler _handler;
     private readonly CustomConsoleWriter _consoleOut;
-    
+
     public FunctionHandlerTests()
     {
         _handler = new FunctionHandler();
         _consoleOut = new CustomConsoleWriter();
         SystemWrapper.Instance.SetOut(_consoleOut);
     }
-    
+
     [Fact]
     public async Task When_Metrics_Add_Metadata_Same_Key_Should_Ignore_Metadata()
     {
-        // Arrange
-        
-        
         // Act
-        var exception = await Record.ExceptionAsync( () => _handler.HandleSameKey("whatever"));
-        
+        var exception = await Record.ExceptionAsync(() => _handler.HandleSameKey("whatever"));
+
         // Assert
         Assert.Null(exception);
     }
-    
+
     [Fact]
     public async Task When_Metrics_Add_Metadata_Second_Invocation_Should_Not_Throw_Exception()
     {
         // Act
-        var exception = await Record.ExceptionAsync( () => _handler.HandleTestSecondCall("whatever"));
+        var exception = await Record.ExceptionAsync(() => _handler.HandleTestSecondCall("whatever"));
         Assert.Null(exception);
-        
-        exception = await Record.ExceptionAsync( () => _handler.HandleTestSecondCall("whatever"));
+
+        exception = await Record.ExceptionAsync(() => _handler.HandleTestSecondCall("whatever"));
         Assert.Null(exception);
     }
-    
+
     [Fact]
     public async Task When_Metrics_Add_Metadata_FromMultipleThread_Should_Not_Throw_Exception()
     {
@@ -65,7 +64,7 @@ public class FunctionHandlerTests : IDisposable
         var exception = await Record.ExceptionAsync(() => _handler.HandleMultipleThreads("whatever"));
         Assert.Null(exception);
     }
-    
+
     [Fact]
     public void When_LambdaContext_Should_Add_FunctioName_Dimension_CaptureColdStart()
     {
@@ -74,21 +73,21 @@ public class FunctionHandlerTests : IDisposable
         {
             FunctionName = "My Function with context"
         };
-        
+
         // Act
         _handler.HandleWithLambdaContext(context);
         var metricsOutput = _consoleOut.ToString();
-        
+
         // Assert
         Assert.Contains(
             "\"FunctionName\":\"My Function with context\"",
             metricsOutput);
-        
+
         Assert.Contains(
-            "\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"FunctionName\",\"Service\"]]}]}",
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"FunctionName\"]]}]},\"Service\":\"svc\",\"FunctionName\":\"My Function with context\",\"ColdStart\":1}",
             metricsOutput);
     }
-    
+
     [Fact]
     public void When_LambdaContext_And_Parameter_Should_Add_FunctioName_Dimension_CaptureColdStart()
     {
@@ -97,36 +96,274 @@ public class FunctionHandlerTests : IDisposable
         {
             FunctionName = "My Function with context"
         };
-        
+
         // Act
-        _handler.HandleWithParamAndLambdaContext("Hello",context);
+        _handler.HandleWithParamAndLambdaContext("Hello", context);
         var metricsOutput = _consoleOut.ToString();
-        
+
         // Assert
         Assert.Contains(
             "\"FunctionName\":\"My Function with context\"",
             metricsOutput);
-        
+
         Assert.Contains(
-            "\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"FunctionName\",\"Service\"]]}]}",
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"FunctionName\"]]}]},\"Service\":\"svc\",\"FunctionName\":\"My Function with context\",\"ColdStart\":1}",
             metricsOutput);
     }
-    
+
     [Fact]
     public void When_No_LambdaContext_Should_Not_Add_FunctioName_Dimension_CaptureColdStart()
     {
         // Act
         _handler.HandleColdStartNoContext();
         var metricsOutput = _consoleOut.ToString();
-        
+
         // Assert
         Assert.DoesNotContain(
             "\"FunctionName\"",
             metricsOutput);
-        
+
         Assert.Contains(
             "\"Metrics\":[{\"Name\":\"MyMetric\",\"Unit\":\"None\"}],\"Dimensions\":[[\"Service\"]]}]},\"Service\":\"svc\",\"MyMetric\":1}",
             metricsOutput);
+    }
+
+    [Fact]
+    public void DefaultDimensions_AreAppliedCorrectly()
+    {
+        // Arrange
+        var handler = new DefaultDimensionsHandler();
+
+        // Act
+        handler.Handler();
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+
+        // Assert cold start
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Environment\",\"Another\",\"Service\"]]}]},\"Environment\":\"Prod\",\"Another\":\"One\",\"Service\":\"testService\",\"ColdStart\":1}",
+            metricsOutput);
+        // Assert successful booking metrics
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Environment\",\"Another\",\"Service\"]]}]},\"Environment\":\"Prod\",\"Another\":\"One\",\"Service\":\"testService\",\"SuccessfulBooking\":1}",
+            metricsOutput);
+    }
+
+    [Fact]
+    public void DefaultDimensions_AreAppliedCorrectly_WithContext_FunctionName()
+    {
+        // Arrange
+        var handler = new DefaultDimensionsHandler();
+
+        // Act
+        handler.HandlerWithContext(new TestLambdaContext
+        {
+            FunctionName = "My_Function_Name"
+        });
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+
+        // Assert cold start
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Environment\",\"Another\",\"Service\",\"FunctionName\"]]}]},\"Environment\":\"Prod\",\"Another\":\"One\",\"Service\":\"testService\",\"FunctionName\":\"My_Function_Name\",\"ColdStart\":1}",
+            metricsOutput);
+        // Assert successful Memory metrics
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Memory\",\"Unit\":\"Megabytes\"}],\"Dimensions\":[[\"Environment\",\"Another\",\"Service\",\"FunctionName\"]]}]},\"Environment\":\"Prod\",\"Another\":\"One\",\"Service\":\"testService\",\"FunctionName\":\"My_Function_Name\",\"Memory\":10}",
+            metricsOutput);
+    }
+
+    [Fact]
+    public void Handler_WithMockedMetrics_ShouldCallAddMetric()
+    {
+        // Arrange
+        var metricsMock = Substitute.For<IMetrics>();
+
+        metricsMock.Options.Returns(new MetricsOptions
+        {
+            CaptureColdStart = true,
+            Namespace = "dotnet-powertools-test",
+            Service = "testService",
+            DefaultDimensions = new Dictionary<string, string>
+            {
+                { "Environment", "Prod" },
+                { "Another", "One" }
+            }
+        });
+
+        Metrics.UseMetricsForTests(metricsMock);
+
+
+        var sut = new MetricsDependencyInjectionOptionsHandler(metricsMock);
+
+        // Act
+        sut.Handler();
+
+        // Assert
+        metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
+            service: "testService", Arg.Any<Dictionary<string, string>>());
+        metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+    }
+
+    [Fact]
+    public void Handler_With_Builder_Should_Configure_In_Constructor()
+    {
+        // Arrange
+        var handler = new MetricsnBuilderHandler();
+
+        // Act
+        handler.Handler(new TestLambdaContext
+        {
+            FunctionName = "My_Function_Name"
+        });
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+
+        // Assert cold start
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\",\"FunctionName\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod1\",\"Another\":\"One\",\"FunctionName\":\"My_Function_Name\",\"ColdStart\":1}",
+            metricsOutput);
+        // Assert successful Memory metrics
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\",\"FunctionName\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod1\",\"Another\":\"One\",\"FunctionName\":\"My_Function_Name\",\"SuccessfulBooking\":1}",
+            metricsOutput);
+    }
+    
+    [Fact]
+    public void Handler_With_Builder_Should_Configure_In_Constructor_Mock()
+    {
+        var metricsMock = Substitute.For<IMetrics>();
+
+        metricsMock.Options.Returns(new MetricsOptions
+        {
+            CaptureColdStart = true,
+            Namespace = "dotnet-powertools-test",
+            Service = "testService",
+            DefaultDimensions = new Dictionary<string, string>
+            {
+                { "Environment", "Prod" },
+                { "Another", "One" }
+            }
+        });
+
+        Metrics.UseMetricsForTests(metricsMock);
+        
+        var sut = new MetricsnBuilderHandler(metricsMock);
+
+        // Act
+        sut.Handler(new TestLambdaContext
+        {
+            FunctionName = "My_Function_Name"
+        });
+
+        metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
+            service: "testService", Arg.Any<Dictionary<string, string>>());
+        metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+    }
+    
+    [Fact]
+    public void When_RaiseOnEmptyMetrics_And_NoMetrics_Should_ThrowException()
+    {
+        // Act & Assert
+        var exception = Assert.Throws<SchemaValidationException>(() => _handler.HandlerRaiseOnEmptyMetrics());
+        Assert.Equal("No metrics have been provided.", exception.Message);
+    }
+    
+    [Fact]
+    public void Handler_With_Builder_Should_Raise_Empty_Metrics()
+    {
+        // Arrange
+        var handler = new MetricsnBuilderHandler();
+
+        // Act & Assert
+        var exception = Assert.Throws<SchemaValidationException>(() => handler.HandlerEmpty());
+        Assert.Equal("No metrics have been provided.", exception.Message);
+    }
+    
+    [Fact]
+    public void When_ColdStart_Should_Use_DefaultDimensions_From_Options()
+    {
+        // Arrange
+        var metricsMock = Substitute.For<IMetrics>();
+        var expectedDimensions = new Dictionary<string, string>
+        {
+            { "Environment", "Test" },
+            { "Region", "us-east-1" }
+        };
+
+        metricsMock.Options.Returns(new MetricsOptions
+        {
+            Namespace = "dotnet-powertools-test",
+            Service = "testService",
+            CaptureColdStart = true,
+            DefaultDimensions = expectedDimensions
+        });
+
+        Metrics.UseMetricsForTests(metricsMock);
+
+        var context = new TestLambdaContext
+        {
+            FunctionName = "TestFunction"
+        };
+
+        // Act
+        _handler.HandleWithLambdaContext(context);
+
+        // Assert
+        metricsMock.Received(1).PushSingleMetric(
+            "ColdStart",
+            1.0,
+            MetricUnit.Count,
+            "dotnet-powertools-test",
+            "testService",
+            Arg.Is<Dictionary<string, string>>(d => 
+                d.ContainsKey("Environment") && d["Environment"] == "Test" &&
+                d.ContainsKey("Region") && d["Region"] == "us-east-1" &&
+                d.ContainsKey("FunctionName") && d["FunctionName"] == "TestFunction"
+            )
+        );
+    }
+    
+    [Fact]
+    public void When_ColdStart_And_DefaultDimensions_Is_Null_Should_Only_Add_Service_And_FunctionName()
+    {
+        // Arrange
+        var metricsMock = Substitute.For<IMetrics>();
+
+        metricsMock.Options.Returns(new MetricsOptions
+        {
+            Namespace = "dotnet-powertools-test",
+            Service = "testService",
+            CaptureColdStart = true,
+            DefaultDimensions = null
+        });
+
+        Metrics.UseMetricsForTests(metricsMock);
+
+        var context = new TestLambdaContext
+        {
+            FunctionName = "TestFunction"
+        };
+
+        // Act
+        _handler.HandleWithLambdaContext(context);
+
+        // Assert
+        metricsMock.Received(1).PushSingleMetric(
+            "ColdStart",
+            1.0,
+            MetricUnit.Count,
+            "dotnet-powertools-test",
+            "testService",
+            Arg.Is<Dictionary<string, string>>(d =>
+                d.Count == 1 &&
+                d.ContainsKey("FunctionName") &&
+                d["FunctionName"] == "TestFunction"
+            )
+        );
     }
 
     public void Dispose()

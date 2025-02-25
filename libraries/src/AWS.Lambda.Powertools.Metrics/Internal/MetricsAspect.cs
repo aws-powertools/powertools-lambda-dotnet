@@ -70,13 +70,12 @@ public class MetricsAspect
 
         var trigger = triggers.OfType<MetricsAttribute>().First();
 
-        _metricsInstance ??= new Metrics(
-            PowertoolsConfigurations.Instance,
-            trigger.Namespace,
-            trigger.Service,
-            trigger.RaiseOnEmptyMetrics,
-            trigger.CaptureColdStart
-        );
+        _metricsInstance ??= Metrics.Configure(options => {
+            options.Namespace = trigger.Namespace;
+            options.Service = trigger.Service;
+            options.RaiseOnEmptyMetrics = trigger.IsRaiseOnEmptyMetricsSet ? trigger.RaiseOnEmptyMetrics : null;
+            options.CaptureColdStart = trigger.IsCaptureColdStartSet ? trigger.CaptureColdStart : null;
+        });
 
         var eventArgs = new AspectEventArgs
         {
@@ -89,31 +88,27 @@ public class MetricsAspect
             Triggers = triggers
         };
 
-        if (trigger.CaptureColdStart && _isColdStart)
+        if (_metricsInstance.Options.CaptureColdStart != null && _metricsInstance.Options.CaptureColdStart.Value && _isColdStart)
         {
+            var defaultDimensions = _metricsInstance.Options?.DefaultDimensions;
             _isColdStart = false;
 
-            var nameSpace = _metricsInstance.GetNamespace();
-            var service = _metricsInstance.GetService();
-            Dictionary<string, string> dimensions = null;
-            
             var context = GetContext(eventArgs);
-            
+    
             if (context is not null)
             {
-                dimensions = new Dictionary<string, string>
-                {
-                    { "FunctionName", context.FunctionName }
-                };
+                defaultDimensions ??= new Dictionary<string, string>();
+                defaultDimensions.Add("FunctionName", context.FunctionName);
+                _metricsInstance.SetDefaultDimensions(defaultDimensions);
             }
 
             _metricsInstance.PushSingleMetric(
                 "ColdStart",
                 1.0,
                 MetricUnit.Count,
-                nameSpace,
-                service,
-                dimensions
+                _metricsInstance.Options?.Namespace ?? "",
+                _metricsInstance.Options?.Service ?? "",
+                defaultDimensions
             );
         }
     }
@@ -137,7 +132,7 @@ public class MetricsAspect
         _isColdStart = true;
         Metrics.ResetForTest();
     }
-    
+
     /// <summary>
     /// Gets the Lambda context
     /// </summary>

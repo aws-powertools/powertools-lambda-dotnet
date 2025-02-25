@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using AWS.Lambda.Powertools.Common;
 using NSubstitute;
 using Xunit;
@@ -29,5 +31,123 @@ public class MetricsTests
         );
 
         env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
+    }
+    
+    [Fact]
+    public void When_Constructor_With_Namespace_And_Service_Should_Set_Both()
+    {
+        // Arrange
+        var metricsMock = Substitute.For<IMetrics>();
+        var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
+
+        // Act
+        var metrics = new Metrics(powertoolsConfigMock, "TestNamespace", "TestService");
+
+        // Assert
+        Assert.Equal("TestNamespace", metrics.GetNamespace());
+        Assert.Equal("TestService", metrics.Options.Service);
+    }
+
+    [Fact]
+    public void When_Constructor_With_Null_Namespace_And_Service_Should_Not_Set()
+    {
+        // Arrange
+        var metricsMock = Substitute.For<IMetrics>();
+        var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
+        powertoolsConfigMock.MetricsNamespace.Returns((string)null);
+        powertoolsConfigMock.Service.Returns("service_undefined");
+
+        // Act
+        var metrics = new Metrics(powertoolsConfigMock, null, null);
+
+        // Assert
+        Assert.Null(metrics.GetNamespace());
+        Assert.Null(metrics.Options.Service);
+    }
+    
+    [Fact]
+    public void When_AddMetric_With_EmptyKey_Should_ThrowArgumentNullException()
+    {
+        // Arrange
+        var metricsMock = Substitute.For<IMetrics>();
+        var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
+        IMetrics metrics = new Metrics(powertoolsConfigMock);
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() => metrics.AddMetric("", 1.0));
+        Assert.Equal("key", exception.ParamName);
+        Assert.Contains("'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void When_AddMetric_With_InvalidKey_Should_ThrowArgumentNullException(string key)
+    {
+        // Arrange
+        // var metricsMock = Substitute.For<IMetrics>();
+        var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
+        IMetrics metrics = new Metrics(powertoolsConfigMock);
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() => metrics.AddMetric(key, 1.0));
+        Assert.Equal("key", exception.ParamName);
+        Assert.Contains("'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.", exception.Message);
+    }
+    
+    [Fact]
+    public void When_SetDefaultDimensions_With_InvalidKeyOrValue_Should_ThrowArgumentNullException()
+    {
+        // Arrange
+        var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
+        IMetrics metrics = new Metrics(powertoolsConfigMock);
+    
+        var invalidDimensions = new Dictionary<string, string>
+        {
+            { "", "value" }, // empty key
+            { "key", "" },  // empty value
+            { " ", "value" }, // whitespace key
+            { "key1", " " }, // whitespace value
+            { "key2", null }  // null value
+        };
+
+        // Act & Assert
+        foreach (var dimension in invalidDimensions)
+        {
+            var dimensions = new Dictionary<string, string> { { dimension.Key, dimension.Value } };
+            var exception = Assert.Throws<ArgumentNullException>(() => metrics.SetDefaultDimensions(dimensions));
+            Assert.Equal("Key", exception.ParamName);
+            Assert.Contains("'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty values are not allowed.", exception.Message);
+        }
+    }
+    
+    [Fact]
+    public void When_PushSingleMetric_With_EmptyName_Should_ThrowArgumentNullException()
+    {
+        // Arrange
+        var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
+        IMetrics metrics = new Metrics(powertoolsConfigMock);
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() => metrics.PushSingleMetric("", 1.0, MetricUnit.Count));
+        Assert.Equal("name", exception.ParamName);
+        Assert.Contains("'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void When_PushSingleMetric_With_InvalidName_Should_ThrowArgumentNullException(string name)
+    {
+        // Arrange
+        var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
+        IMetrics metrics = new Metrics(powertoolsConfigMock);
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() => metrics.PushSingleMetric(name, 1.0, MetricUnit.Count));
+        Assert.Equal("name", exception.ParamName);
+        Assert.Contains("'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.", exception.Message);
     }
 }
