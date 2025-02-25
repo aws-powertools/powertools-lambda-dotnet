@@ -198,7 +198,6 @@ public class FunctionHandlerTests : IDisposable
 
         Metrics.UseMetricsForTests(metricsMock);
 
-
         var sut = new MetricsDependencyInjectionOptionsHandler(metricsMock);
 
         // Act
@@ -206,7 +205,11 @@ public class FunctionHandlerTests : IDisposable
 
         // Assert
         metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
-            service: "testService", Arg.Any<Dictionary<string, string>>());
+            service: "testService", 
+            Arg.Is<Dictionary<string, string>>(x => 
+              x.ContainsKey("Environment") && x["Environment"] == "Prod"
+              && x.ContainsKey("Another") && x["Another"] == "One"));
+        
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
 
@@ -263,7 +266,50 @@ public class FunctionHandlerTests : IDisposable
         });
 
         metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
-            service: "testService", Arg.Any<Dictionary<string, string>>());
+            service: "testService", 
+            Arg.Is<Dictionary<string, string>>(x => 
+                x.ContainsKey("FunctionName") && x["FunctionName"] == "My_Function_Name" 
+                && x.ContainsKey("Environment") && x["Environment"] == "Prod"
+                && x.ContainsKey("Another") && x["Another"] == "One"));
+        
+        metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+    }
+    
+    [Fact]
+    public void Handler_With_Builder_Should_Configure_FunctionName_In_Constructor_Mock()
+    {
+        var metricsMock = Substitute.For<IMetrics>();
+
+        metricsMock.Options.Returns(new MetricsOptions
+        {
+            CaptureColdStart = true,
+            Namespace = "dotnet-powertools-test",
+            Service = "testService",
+            FunctionName = "My_Function_Custome_Name",
+            DefaultDimensions = new Dictionary<string, string>
+            {
+                { "Environment", "Prod" },
+                { "Another", "One" }
+            }
+        });
+
+        Metrics.UseMetricsForTests(metricsMock);
+        
+        var sut = new MetricsnBuilderHandler(metricsMock);
+
+        // Act
+        sut.Handler(new TestLambdaContext
+        {
+            FunctionName = "This_Will_Be_Overwritten"
+        });
+
+        metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
+            service: "testService", 
+            Arg.Is<Dictionary<string, string>>(x => 
+                x.ContainsKey("FunctionName") && x["FunctionName"] == "My_Function_Custome_Name" 
+                                              && x.ContainsKey("Environment") && x["Environment"] == "Prod"
+                                              && x.ContainsKey("Another") && x["Another"] == "One"));
+        
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
     
@@ -324,6 +370,45 @@ public class FunctionHandlerTests : IDisposable
         // Assert successful add metric without dimensions
         Assert.Contains(
             "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"MyMetric\",\"Unit\":\"None\"}],\"Dimensions\":[[\"Service\"]]}]},\"Service\":\"svc\",\"MyMetric\":1}",
+            metricsOutput);
+    }
+    
+    [Fact]
+    public void When_Function_Name_Is_Set()
+    {
+        // Arrange
+        var handler = new FunctionHandler();
+
+        // Act
+        handler.HandleFunctionNameWithContext(new TestLambdaContext
+        {
+            FunctionName = "This_Will_Be_Overwritten"
+        });
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+        
+        // Assert cold start function name is set MyFunction
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"FunctionName\"]]}]},\"Service\":\"svc\",\"FunctionName\":\"MyFunction\",\"ColdStart\":1}",
+            metricsOutput);
+    }
+    
+    [Fact]
+    public void When_Function_Name_Is_Set_No_Context()
+    {
+        // Arrange
+        var handler = new FunctionHandler();
+
+        // Act
+        handler.HandleFunctionNameNoContext();
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+        
+        // Assert cold start function name is set MyFunction
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"FunctionName\"]]}]},\"Service\":\"svc\",\"FunctionName\":\"MyFunction\",\"ColdStart\":1}",
             metricsOutput);
     }
 

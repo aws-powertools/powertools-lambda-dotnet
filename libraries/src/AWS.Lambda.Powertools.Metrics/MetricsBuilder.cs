@@ -80,6 +80,17 @@ public class MetricsBuilder
     }
     
     /// <summary>
+    /// Sets the function name for the metrics dimension.
+    /// </summary>
+    /// <param name="functionName"></param>
+    /// <returns></returns>
+    public MetricsBuilder WithFunctionName(string functionName)
+    {
+        _options.FunctionName = functionName;
+        return this;
+    }
+    
+    /// <summary>
     /// Builds and configures the metrics instance.
     /// </summary>
     /// <returns>An instance of <see cref="IMetrics"/>.</returns>
@@ -92,6 +103,7 @@ public class MetricsBuilder
             opt.RaiseOnEmptyMetrics = _options.RaiseOnEmptyMetrics;
             opt.CaptureColdStart = _options.CaptureColdStart;
             opt.DefaultDimensions = _options.DefaultDimensions;
+            opt.FunctionName = _options.FunctionName;
         });
     }
 }

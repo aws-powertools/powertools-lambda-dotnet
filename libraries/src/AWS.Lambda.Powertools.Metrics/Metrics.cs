@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using AWS.Lambda.Powertools.Common;
 
@@ -62,7 +61,8 @@ public class Metrics : IMetrics, IDisposable
             Namespace = GetNamespace(),
             Service = GetService(),
             RaiseOnEmptyMetrics = _raiseOnEmptyMetrics,
-            DefaultDimensions = GetDefaultDimensions()
+            DefaultDimensions = GetDefaultDimensions(),
+            FunctionName = _functionName
         };
 
     /// <summary>
@@ -94,7 +94,11 @@ public class Metrics : IMetrics, IDisposable
     // Shared synchronization object
     // </summary>
     private readonly object _lockObj = new();
-
+    
+    /// <summary>
+    /// Function name is used for metric dimension across all metrics.
+    /// </summary>
+    private string _functionName;
 
     /// <summary>
     ///    Initializes a new instance of the <see cref="Metrics" /> class.
@@ -120,7 +124,19 @@ public class Metrics : IMetrics, IDisposable
         if (options.DefaultDimensions != null)
             SetDefaultDimensions(options.DefaultDimensions);
 
+        if (!string.IsNullOrEmpty(options.FunctionName))
+            Instance.SetFunctionName(options.FunctionName);
+        
         return Instance;
+    }
+
+    /// <summary>
+    ///    Sets the function name.
+    /// </summary>
+    /// <param name="functionName"></param>
+    void IMetrics.SetFunctionName(string functionName)
+    {
+        _functionName = functionName;
     }
 
     /// <summary>
@@ -140,7 +156,7 @@ public class Metrics : IMetrics, IDisposable
         _context = new MetricsContext();
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
         _captureColdStartEnabled = captureColdStartEnabled;
-
+        
         Instance = this;
         _powertoolsConfigurations.SetExecutionEnvironment(this);
 
@@ -329,7 +345,9 @@ public class Metrics : IMetrics, IDisposable
 
         context.AddMetric(name, value, unit, resolution);
 
-        Flush(context);
+        var emfPayload = context.Serialize();
+
+        Console.WriteLine(emfPayload);
     }
 
 
@@ -436,18 +454,6 @@ public class Metrics : IMetrics, IDisposable
             Debug.WriteLine(
                 $"##WARNING##: Metrics should be initialized in Handler method before calling {nameof(ClearDefaultDimensions)} method.");
         }
-    }
-
-    /// <summary>
-    ///     Flushes metrics in Embedded Metric Format (EMF) to Standard Output. In Lambda, this output is collected
-    ///     automatically and sent to Cloudwatch.
-    /// </summary>
-    /// <param name="context">If context is provided it is serialized instead of the global context object</param>
-    private void Flush(MetricsContext context)
-    {
-        var emfPayload = context.Serialize();
-
-        Console.WriteLine(emfPayload);
     }
 
     /// <summary>

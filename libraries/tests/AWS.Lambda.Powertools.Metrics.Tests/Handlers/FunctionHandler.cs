@@ -236,4 +236,16 @@ public class FunctionHandler
     {
         Metrics.AddMetric("MyMetric", 1);
     }
+    
+    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true, FunctionName = "MyFunction")]
+    public void HandleFunctionNameWithContext(ILambdaContext context)
+    {
+        
+    }
+    
+    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true, FunctionName = "MyFunction")]
+    public void HandleFunctionNameNoContext()
+    {
+        
+    }
 }

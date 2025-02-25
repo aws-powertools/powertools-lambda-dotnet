@@ -106,4 +106,10 @@ public interface IMetrics
     /// </summary>
     /// <value>The metrics options.</value>
     public MetricsOptions Options { get; }
+
+    /// <summary>
+    ///    Sets the function name.
+    /// </summary>
+    /// <param name="functionName"></param>
+    void SetFunctionName(string functionName);
 }
