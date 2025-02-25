@@ -271,6 +271,17 @@ public class FunctionHandlerTests : IDisposable
         var exception = Assert.Throws<SchemaValidationException>(() => _handler.HandlerRaiseOnEmptyMetrics());
         Assert.Equal("No metrics have been provided.", exception.Message);
     }
+    
+    [Fact]
+    public void Handler_With_Builder_Should_Raise_Empty_Metrics()
+    {
+        // Arrange
+        var handler = new MetricsnBuilderHandler();
+
+        // Act & Assert
+        var exception = Assert.Throws<SchemaValidationException>(() => handler.HandlerEmpty());
+        Assert.Equal("No metrics have been provided.", exception.Message);
+    }
 
     public void Dispose()
     {
