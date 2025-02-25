@@ -52,12 +52,16 @@ Visit the AWS documentation for a complete explanation for [Amazon CloudWatch co
 
 **`Metrics`** is implemented as a Singleton to keep track of your aggregate metrics in memory and make them accessible anywhere in your code. To guarantee that metrics are flushed properly the **`MetricsAttribute`** must be added on the lambda handler.
 
-Metrics has two global settings that will be used across all metrics emitted. Use your application or main service as the metric namespace to easily group all metrics:
+Metrics has three global settings that will be used across all metrics emitted. Use your application or main service as the metric namespace to easily group all metrics:
 
-Setting | Description | Environment variable | Constructor parameter
-------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------
-**Service** | Optionally, sets **service** metric dimension across all metrics e.g. `payment` | `POWERTOOLS_SERVICE_NAME` | `Service`
-**Metric namespace** | Logical container where all metrics will be placed e.g. `MyCompanyEcommerce` |  `POWERTOOLS_METRICS_NAMESPACE` | `Namespace`
+ Setting                       | Description                                                                     | Environment variable | Decorator parameter 
+-------------------------------|---------------------------------------------------------------------------------| ------------------------------------------------- |-----------------------
+ **Metric namespace**          | Logical container where all metrics will be placed e.g. `MyCompanyEcommerce`    |  `POWERTOOLS_METRICS_NAMESPACE` | `Namespace`           
+ **Service**                   | Optionally, sets **Service** metric dimension across all metrics e.g. `payment` | `POWERTOOLS_SERVICE_NAME` | `Service`             
+**Disable Powertools Metrics** | Optionally, disables all Powertools metrics                                     |`POWERTOOLS_METRICS_DISABLED`                           | N/A                   |
+
+???+ info
+    `POWERTOOLS_METRICS_DISABLED` will not disable default metrics created by AWS services.
 
 !!! info "Autocomplete Metric Units"
     All parameters in **`Metrics Attribute`** are optional. Following rules apply:
@@ -66,13 +70,6 @@ Setting | Description | Environment variable | Constructor parameter
       - **Service:** **`service_undefined`** by default. You can either specify it in code or environment variable.
       - **CaptureColdStart:** **`false`** by default. 
       - **RaiseOnEmptyMetrics:** **`false`** by default.
-
-### Full list of environment variables
-
-| Environment variable | Description | Default |
-| ------------------------------------------------- | --------------------------------------------------------------------------------- |  ------------------------------------------------- |
-| **POWERTOOLS_SERVICE_NAME** | Sets service name used for tracing namespace, metrics dimension and structured logging | `"service_undefined"` |
-| **POWERTOOLS_METRICS_NAMESPACE** | Sets namespace used for metrics | `None` |
 
 ### Metrics object
 

@@ -101,6 +101,11 @@ public class Metrics : IMetrics, IDisposable
     private string _functionName;
 
     /// <summary>
+    ///   Gets a value indicating whether metrics are disabled.
+    /// </summary>
+    private bool _disabled;
+
+    /// <summary>
     ///    Initializes a new instance of the <see cref="Metrics" /> class.
     /// </summary>
     /// <param name="configure"></param>
@@ -156,6 +161,7 @@ public class Metrics : IMetrics, IDisposable
         _context = new MetricsContext();
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
         _captureColdStartEnabled = captureColdStartEnabled;
+        _disabled = _powertoolsConfigurations.MetricsDisabled;
         
         Instance = this;
         _powertoolsConfigurations.SetExecutionEnvironment(this);
@@ -167,7 +173,7 @@ public class Metrics : IMetrics, IDisposable
     /// <inheritdoc />
     void IMetrics.AddMetric(string key, double value, MetricUnit unit, MetricResolution resolution)
     {
-        if (Instance != null)
+        if (Instance != null && !_disabled)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException(
@@ -261,6 +267,9 @@ public class Metrics : IMetrics, IDisposable
     /// <inheritdoc />
     void IMetrics.Flush(bool metricsOverflow)
     {
+        if(_disabled)
+            return;
+        
         if (_context.GetMetrics().Count == 0
             && _raiseOnEmptyMetrics)
             throw new SchemaValidationException(true);
@@ -329,6 +338,9 @@ public class Metrics : IMetrics, IDisposable
     void IMetrics.PushSingleMetric(string name, double value, MetricUnit unit, string nameSpace,
         string service, Dictionary<string, string> defaultDimensions, MetricResolution resolution)
     {
+        if(_disabled)
+            return;
+        
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentNullException(nameof(name),
                 "'PushSingleMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
