@@ -214,4 +214,10 @@ public class FunctionHandler
     {
         
     }
+    
+    [Metrics(Namespace = "ns", Service = "svc", RaiseOnEmptyMetrics = true)]
+    public void HandlerRaiseOnEmptyMetrics()
+    {
+        
+    }
 }

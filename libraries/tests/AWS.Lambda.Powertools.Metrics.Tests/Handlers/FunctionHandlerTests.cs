@@ -39,9 +39,6 @@ public class FunctionHandlerTests : IDisposable
     [Fact]
     public async Task When_Metrics_Add_Metadata_Same_Key_Should_Ignore_Metadata()
     {
-        // Arrange
-
-
         // Act
         var exception = await Record.ExceptionAsync(() => _handler.HandleSameKey("whatever"));
 
@@ -265,6 +262,14 @@ public class FunctionHandlerTests : IDisposable
         metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
             service: "testService", Arg.Any<Dictionary<string, string>>());
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+    }
+    
+    [Fact]
+    public void When_RaiseOnEmptyMetrics_And_NoMetrics_Should_ThrowException()
+    {
+        // Act & Assert
+        var exception = Assert.Throws<SchemaValidationException>(() => _handler.HandlerRaiseOnEmptyMetrics());
+        Assert.Equal("No metrics have been provided.", exception.Message);
     }
 
     public void Dispose()
