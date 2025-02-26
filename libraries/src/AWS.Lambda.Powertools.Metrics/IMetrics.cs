@@ -14,6 +14,7 @@
  */
 
 using System.Collections.Generic;
+using Amazon.Lambda.Core;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
@@ -106,4 +107,10 @@ public interface IMetrics
     /// </summary>
     /// <value>The metrics options.</value>
     public MetricsOptions Options { get; }
+    
+    /// <summary>
+    ///    Captures the cold start metric.
+    /// </summary>
+    /// <param name="context"></param>
+    void CaptureColdStartMetric(ILambdaContext context);
 }

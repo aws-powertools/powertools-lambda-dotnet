@@ -15,9 +15,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
+using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Metrics;
@@ -34,12 +33,12 @@ public class Metrics : IMetrics, IDisposable
     /// </summary>
     public static IMetrics Instance
     {
-        get => Current.Value ?? new Metrics(PowertoolsConfigurations.Instance);
-        private set => Current.Value = value;
+        get => _instance ?? new Metrics(PowertoolsConfigurations.Instance, consoleWrapper: new ConsoleWrapper());
+        private set => _instance = value;
     }
 
     /// <inheritdoc />
-    public MetricsOptions Options =>
+    public MetricsOptions Options => _options ??
         new()
         {
             CaptureColdStart = _captureColdStartEnabled,
@@ -52,7 +51,7 @@ public class Metrics : IMetrics, IDisposable
     /// <summary>
     ///     The instance
     /// </summary>
-    private static readonly AsyncLocal<IMetrics> Current = new();
+    private static IMetrics _instance;
 
     /// <summary>
     ///     The context
@@ -74,11 +73,20 @@ public class Metrics : IMetrics, IDisposable
     /// </summary>
     private bool _captureColdStartEnabled;
 
-    // <summary>
-    // Shared synchronization object
-    // </summary>
+    /// <summary>
+    /// Shared synchronization object
+    /// </summary>
     private readonly object _lockObj = new();
 
+    /// <summary>
+    ///   The options
+    /// </summary>
+    private readonly MetricsOptions _options;
+
+    /// <summary>
+    ///    The console wrapper for console output
+    /// </summary>
+    private readonly IConsoleWrapper _consoleWrapper;
 
     /// <summary>
     ///    Initializes a new instance of the <see cref="Metrics" /> class.
@@ -117,13 +125,17 @@ public class Metrics : IMetrics, IDisposable
     /// <param name="service">Metrics Service Name</param>
     /// <param name="raiseOnEmptyMetrics">Instructs metrics validation to throw exception if no metrics are provided</param>
     /// <param name="captureColdStartEnabled">Instructs metrics capturing the ColdStart is enabled</param>
+    /// <param name="consoleWrapper">For console output</param>
+    /// <param name="options">MetricsOptions</param>
     internal Metrics(IPowertoolsConfigurations powertoolsConfigurations, string nameSpace = null, string service = null,
-        bool raiseOnEmptyMetrics = false, bool captureColdStartEnabled = false)
+        bool raiseOnEmptyMetrics = false, bool captureColdStartEnabled = false, IConsoleWrapper consoleWrapper = null, MetricsOptions options = null)
     {
         _powertoolsConfigurations = powertoolsConfigurations;
+        _consoleWrapper = consoleWrapper;
         _context = new MetricsContext();
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
         _captureColdStartEnabled = captureColdStartEnabled;
+        _options = options;
 
         Instance = this;
         _powertoolsConfigurations.SetExecutionEnvironment(this);
@@ -165,7 +177,7 @@ public class Metrics : IMetrics, IDisposable
         }
         else
         {
-            Debug.WriteLine(
+            _consoleWrapper.Debug(
                 $"##WARNING##: Metrics should be initialized in Handler method before calling {nameof(AddMetric)} method.");
         }
     }
@@ -237,7 +249,7 @@ public class Metrics : IMetrics, IDisposable
         {
             var emfPayload = _context.Serialize();
 
-            Console.WriteLine(emfPayload);
+            _consoleWrapper.WriteLine(emfPayload);
 
             _context.ClearMetrics();
 
@@ -246,7 +258,7 @@ public class Metrics : IMetrics, IDisposable
         else
         {
             if (!_captureColdStartEnabled)
-                Console.WriteLine(
+                _consoleWrapper.WriteLine(
                     "##User-WARNING## No application metrics to publish. The cold-start metric may be published if enabled. If application metrics should never be empty, consider using 'RaiseOnEmptyMetrics = true'");
         }
     }
@@ -411,15 +423,7 @@ public class Metrics : IMetrics, IDisposable
     /// </summary>
     public static void ClearDefaultDimensions()
     {
-        if (Instance != null)
-        {
-            Instance.ClearDefaultDimensions();
-        }
-        else
-        {
-            Debug.WriteLine(
-                $"##WARNING##: Metrics should be initialized in Handler method before calling {nameof(ClearDefaultDimensions)} method.");
-        }
+        Instance.ClearDefaultDimensions();
     }
 
     /// <summary>
@@ -431,7 +435,7 @@ public class Metrics : IMetrics, IDisposable
     {
         var emfPayload = context.Serialize();
 
-        Console.WriteLine(emfPayload);
+        _consoleWrapper.WriteLine(emfPayload);
     }
 
     /// <summary>
@@ -449,16 +453,8 @@ public class Metrics : IMetrics, IDisposable
         string service = null, Dictionary<string, string> defaultDimensions = null,
         MetricResolution resolution = MetricResolution.Default)
     {
-        if (Instance != null)
-        {
-            Instance.PushSingleMetric(name, value, unit, nameSpace, service, defaultDimensions,
-                resolution);
-        }
-        else
-        {
-            Debug.WriteLine(
-                $"##WARNING##: Metrics should be initialized in Handler method before calling {nameof(PushSingleMetric)} method.");
-        }
+        Instance.PushSingleMetric(name, value, unit, nameSpace, service, defaultDimensions,
+            resolution);
     }
 
     /// <summary>
@@ -487,9 +483,36 @@ public class Metrics : IMetrics, IDisposable
         }
         catch (Exception e)
         {
-            Debug.WriteLine("Error converting list to dictionary: " + e.Message);
+            _consoleWrapper.Debug("Error converting list to dictionary: " + e.Message);
             return dictionary;
         }
+    }
+    
+    /// <summary>
+    ///     Captures the cold start metric.
+    /// </summary>
+    /// <param name="context">The ILambdaContext.</param>
+    void IMetrics.CaptureColdStartMetric(ILambdaContext context)
+    {
+        if (Options.CaptureColdStart == null || !Options.CaptureColdStart.Value) return;
+        
+        // bring default dimensions if exist
+        var dimensions = Options?.DefaultDimensions;
+
+        if (context is not null)
+        {
+            dimensions ??= new Dictionary<string, string>();
+            dimensions.Add("FunctionName", context.FunctionName);
+        }
+
+        PushSingleMetric(
+            "ColdStart",
+            1.0,
+            MetricUnit.Count,
+            Options?.Namespace ?? "",
+            Options?.Service ?? "",
+            dimensions
+        );
     }
 
     /// <summary>

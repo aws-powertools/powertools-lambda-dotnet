@@ -43,29 +43,16 @@ public class MetricsHelper
     /// <returns>A task that represents the asynchronous operation.</returns>
     public Task CaptureColdStartMetrics(HttpContext context)
     {
-        if (_metrics.Options.CaptureColdStart == null || !_metrics.Options.CaptureColdStart.Value || !_isColdStart)
+        if (!_isColdStart)
             return Task.CompletedTask;
 
-        var defaultDimensions = _metrics.Options.DefaultDimensions;
         lock (_metrics)
         {
             _isColdStart = false;
         }
 
-        if (context.Items["LambdaContext"] is ILambdaContext lambdaContext)
-        {
-            defaultDimensions?.Add("FunctionName", lambdaContext.FunctionName);
-            _metrics.SetDefaultDimensions(defaultDimensions);
-        }
-
-        _metrics.PushSingleMetric(
-            "ColdStart",
-            1.0,
-            MetricUnit.Count,
-            _metrics.Options.Namespace,
-            _metrics.Options.Service,
-            defaultDimensions
-        );
+        _metrics.CaptureColdStartMetric(context.Items["LambdaContext"] as ILambdaContext);
+        
         return Task.CompletedTask;
     }
 

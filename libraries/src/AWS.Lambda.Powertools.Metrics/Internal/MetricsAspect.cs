@@ -88,28 +88,10 @@ public class MetricsAspect
             Triggers = triggers
         };
 
-        if (_metricsInstance.Options.CaptureColdStart != null && _metricsInstance.Options.CaptureColdStart.Value && _isColdStart)
+        if (_isColdStart)
         {
-            var defaultDimensions = _metricsInstance.Options?.DefaultDimensions;
+            _metricsInstance.CaptureColdStartMetric(GetContext(eventArgs));
             _isColdStart = false;
-
-            var context = GetContext(eventArgs);
-    
-            if (context is not null)
-            {
-                defaultDimensions ??= new Dictionary<string, string>();
-                defaultDimensions.Add("FunctionName", context.FunctionName);
-                _metricsInstance.SetDefaultDimensions(defaultDimensions);
-            }
-
-            _metricsInstance.PushSingleMetric(
-                "ColdStart",
-                1.0,
-                MetricUnit.Count,
-                _metricsInstance.Options?.Namespace ?? "",
-                _metricsInstance.Options?.Service ?? "",
-                defaultDimensions
-            );
         }
     }
 
