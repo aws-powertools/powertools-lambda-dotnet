@@ -57,7 +57,7 @@ public class LambdaContextTest
      }
      
      [Fact]
-     public void Extract_Extract_When_LambdaContext_Is_Null_But_Not_FIrst_Parameter_Returns_False()
+     public void Extract_Extract_When_LambdaContext_Is_Null_But_Not_First_Parameter_Returns_False()
      {
          // Arrange
          ILambdaContext lambdaContext = null;
