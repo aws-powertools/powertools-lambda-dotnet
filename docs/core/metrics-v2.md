@@ -16,6 +16,11 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://aws.
 * Ahead-of-Time compilation to native code support [AOT](https://docs.aws.amazon.com/lambda/latest/dg/dotnet-native-aot.html) from version 1.7.0
 * Support for AspNetCore middleware and filters to capture metrics for HTTP requests
 
+## Breaking changes from V1
+
+* **`Dimensions`** outputs as an array of arrays instead of an array of objects. Example: `Dimensions: [["service", "Environment"]]` instead of `Dimensions: ["service", "Environment"]`
+* **`FunctionName`** is not added as default dimension and only to cold start metric.
+
 <br />
 
 <figure>
