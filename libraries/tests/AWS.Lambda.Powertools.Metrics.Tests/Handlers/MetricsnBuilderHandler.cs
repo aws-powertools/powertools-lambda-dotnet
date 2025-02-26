@@ -14,6 +14,7 @@ public class MetricsnBuilderHandler
             .WithCaptureColdStart(true)
             .WithService("testService")
             .WithNamespace("dotnet-powertools-test")
+            .WithRaiseOnEmptyMetrics(true)
             .WithDefaultDimensions(new Dictionary<string, string>
             {
                 { "Environment", "Prod1" },
@@ -25,5 +26,10 @@ public class MetricsnBuilderHandler
     public void Handler(ILambdaContext context)
     {
         _metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+    }
+    
+    [Metrics]
+    public void HandlerEmpty()
+    {
     }
 }
