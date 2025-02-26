@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
-using System;
-using System.Collections.Generic;
 using AWS.Lambda.Powertools.Common;
 using NSubstitute;
 using Xunit;
@@ -27,7 +25,7 @@ public class MetricsTests
 
         var conf = new PowertoolsConfigurations(new SystemWrapper(env));
 
-        var metrics = new Metrics(conf);
+        _ = new Metrics(conf);
 
         // Assert
         env.Received(1).SetEnvironmentVariable(
@@ -59,11 +57,11 @@ public class MetricsTests
         metricsAspect.Before(
             this,
             "TestMethod",
-            new object[] { new TestLambdaContext() },
+            [new TestLambdaContext()],
             typeof(MetricsTests),
             method,
             typeof(void),
-            new Attribute[] { trigger }
+            [trigger]
         );
 
         // Assert
@@ -72,8 +70,7 @@ public class MetricsTests
             1.0,
             MetricUnit.Count,
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            null
+            Arg.Any<string>()
         );
     }
 
@@ -152,7 +149,7 @@ public class MetricsTests
     public void When_Constructor_With_Namespace_And_Service_Should_Set_Both()
     {
         // Arrange
-        var metricsMock = Substitute.For<IMetrics>();
+        Substitute.For<IMetrics>();
         var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
 
         // Act
@@ -167,13 +164,13 @@ public class MetricsTests
     public void When_Constructor_With_Null_Namespace_And_Service_Should_Not_Set()
     {
         // Arrange
-        var metricsMock = Substitute.For<IMetrics>();
+        Substitute.For<IMetrics>();
         var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
         powertoolsConfigMock.MetricsNamespace.Returns((string)null);
         powertoolsConfigMock.Service.Returns("service_undefined");
 
         // Act
-        var metrics = new Metrics(powertoolsConfigMock, null, null);
+        var metrics = new Metrics(powertoolsConfigMock);
 
         // Assert
         Assert.Null(metrics.GetNamespace());
@@ -184,7 +181,7 @@ public class MetricsTests
     public void When_AddMetric_With_EmptyKey_Should_ThrowArgumentNullException()
     {
         // Arrange
-        var metricsMock = Substitute.For<IMetrics>();
+        Substitute.For<IMetrics>();
         var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
         IMetrics metrics = new Metrics(powertoolsConfigMock);
 
