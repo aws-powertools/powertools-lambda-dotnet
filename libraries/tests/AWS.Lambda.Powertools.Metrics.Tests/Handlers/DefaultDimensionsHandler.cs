@@ -9,6 +9,9 @@ public class DefaultDimensionsHandler
     {
         Metrics.Configure(options =>
         {
+            options.Namespace = "dotnet-powertools-test";
+            options.Service = "testService";
+            options.CaptureColdStart = true;
             options.DefaultDimensions = new Dictionary<string, string>
             {
                 { "Environment", "Prod" },
@@ -17,14 +20,14 @@ public class DefaultDimensionsHandler
         });
     }
 
-    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    [Metrics]
     public void Handler()
     {
         // Default dimensions are already set
         Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
 
-    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    [Metrics]
     public void HandlerWithContext(ILambdaContext context)
     {
         // Default dimensions are already set and adds FunctionName dimension

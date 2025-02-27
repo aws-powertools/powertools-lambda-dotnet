@@ -1,0 +1,25 @@
+﻿<!--suppress MsbuildTargetFrameworkTagInspection -->
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <!--  Remaining properties are defined in Directory.Build.props  -->
+        <PackageId>AWS.Lambda.Powertools.Metrics.AspNetCore</PackageId>
+        <Description>Powertools for AWS Lambda (.NET) - Metrics AspNetCore package.</Description>
+        <AssemblyName>AWS.Lambda.Powertools.Metrics.AspNetCore</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Metrics.AspNetCore</RootNamespace>
+        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetMultiFramework>false</TargetMultiFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Http" />
+      <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />
+    </ItemGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+</Project>
