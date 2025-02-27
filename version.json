@@ -2,7 +2,8 @@
 	"Core": {
 		"Logging": "1.6.4",
 		"Metrics": "1.8.0",
-		"Tracing": "1.6.1"
+		"Tracing": "1.6.1",
+		"Metrics.AspNetCore": "0.1.0",
 	},
 	"Utilities": {
 		"Parameters": "1.3.0",
