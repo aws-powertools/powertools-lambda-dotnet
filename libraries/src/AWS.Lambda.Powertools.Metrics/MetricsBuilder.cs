@@ -86,7 +86,7 @@ public class MetricsBuilder
     /// <returns></returns>
     public MetricsBuilder WithFunctionName(string functionName)
     {
-        _options.FunctionName = functionName;
+        _options.FunctionName = !string.IsNullOrWhiteSpace(functionName) ? functionName : null;
         return this;
     }
     
