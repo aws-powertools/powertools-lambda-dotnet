@@ -10,6 +10,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.AspNetCore.Tests;
 
+[Collection("Metrics")]
 public class MetricsMiddlewareExtensionsTests : IDisposable
 {
     [Fact]
@@ -63,7 +64,7 @@ public class MetricsMiddlewareExtensionsTests : IDisposable
         
         var conf = Substitute.For<IPowertoolsConfigurations>();
         var consoleWrapper = Substitute.For<IConsoleWrapper>();
-        var metrics = new Metrics(conf, consoleWrapper: consoleWrapper, options: options);
+        var metrics = new Metrics(conf, consoleWrapper:consoleWrapper, options: options);
 
         var builder = WebApplication.CreateBuilder();
         builder.Services.AddSingleton<IMetrics>(metrics);
@@ -99,6 +100,6 @@ public class MetricsMiddlewareExtensionsTests : IDisposable
 
     public void Dispose()
     {
-        MetricsHelper.ResetColdStart();
+        ColdStartTracker.ResetColdStart();
     }
 }

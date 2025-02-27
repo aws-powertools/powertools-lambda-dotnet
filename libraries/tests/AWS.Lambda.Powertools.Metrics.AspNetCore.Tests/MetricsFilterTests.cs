@@ -6,21 +6,21 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.AspNetCore.Tests;
 
+[Collection("Metrics")]
 public class MetricsFilterTests : IDisposable
 {
     private readonly IMetrics _metrics;
     private readonly EndpointFilterInvocationContext _context;
-    private readonly ILambdaContext _lambdaContext;
 
     public MetricsFilterTests()
     {
-        MetricsHelper.ResetColdStart(); // Reset before each test
+        ColdStartTracker.ResetColdStart(); // Reset before each test
         _metrics = Substitute.For<IMetrics>();
         _context = Substitute.For<EndpointFilterInvocationContext>();
-        _lambdaContext = Substitute.For<ILambdaContext>();
+        var lambdaContext = Substitute.For<ILambdaContext>();
 
         var httpContext = new DefaultHttpContext();
-        httpContext.Items["LambdaContext"] = _lambdaContext;
+        httpContext.Items["LambdaContext"] = lambdaContext;
         _context.HttpContext.Returns(httpContext);
     }
 
@@ -71,6 +71,6 @@ public class MetricsFilterTests : IDisposable
 
     public void Dispose()
     {
-        MetricsHelper.ResetColdStart();
+        ColdStartTracker.ResetColdStart();
     }
 }

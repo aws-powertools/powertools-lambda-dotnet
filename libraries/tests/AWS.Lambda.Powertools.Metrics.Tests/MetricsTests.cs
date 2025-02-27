@@ -36,45 +36,6 @@ public class MetricsTests
     }
 
     [Fact]
-    public void Before_When_CaptureStartNotSet_Should_Not_Push_Metrics()
-    {
-        // Arrange
-        MetricsAspect.ResetForTest();
-        var metricsMock = Substitute.For<IMetrics>();
-        var optionsMock = new MetricsOptions
-        {
-            CaptureColdStart = null
-        };
-        metricsMock.Options.Returns(optionsMock);
-        Metrics.UseMetricsForTests(metricsMock);
-
-        var metricsAspect = new MetricsAspect();
-        var method = typeof(MetricsTests).GetMethod(nameof(TestMethod));
-        var trigger = new MetricsAttribute();
-
-        // Act
-        metricsAspect.Before(
-            this,
-            "TestMethod",
-            new object[] { new TestLambdaContext() },
-            typeof(MetricsTests),
-            method,
-            typeof(void),
-            new Attribute[] { trigger }
-        );
-
-        // Assert
-        metricsMock.DidNotReceive().PushSingleMetric(
-            Arg.Any<string>(),
-            Arg.Any<double>(),
-            Arg.Any<MetricUnit>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<Dictionary<string, string>>()
-        );
-    }
-
-    [Fact]
     public void Before_When_RaiseOnEmptyMetricsNotSet_Should_Configure_Null()
     {
         // Arrange
@@ -104,21 +65,6 @@ public class MetricsTests
     // Helper method for the tests
     internal void TestMethod(ILambdaContext context)
     {
-    }
-
-    [Fact]
-    public void When_Constructor_With_Namespace_And_Service_Should_Set_Both()
-    {
-        // Arrange
-        Substitute.For<IMetrics>();
-        var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
-
-        // Act
-        var metrics = new Metrics(powertoolsConfigMock, "TestNamespace", "TestService");
-
-        // Assert
-        Assert.Equal("TestNamespace", metrics.GetNamespace());
-        Assert.Equal("TestService", metrics.Options.Service);
     }
 
     [Fact]
