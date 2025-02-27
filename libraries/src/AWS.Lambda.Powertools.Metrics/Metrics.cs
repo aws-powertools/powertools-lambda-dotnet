@@ -531,11 +531,12 @@ public class Metrics : IMetrics, IDisposable
         
         // bring default dimensions if exist
         var dimensions = Options?.DefaultDimensions;
-
-        if (context is not null)
+        
+        var functionName = Options?.FunctionName ?? context?.FunctionName ?? "";
+        if (!string.IsNullOrWhiteSpace(functionName))
         {
             dimensions ??= new Dictionary<string, string>();
-            dimensions.Add("FunctionName", context.FunctionName);
+            dimensions.Add("FunctionName", functionName);
         }
 
         PushSingleMetric(
