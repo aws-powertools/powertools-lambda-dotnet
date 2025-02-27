@@ -162,4 +162,9 @@ public interface IPowertoolsConfigurations
     /// </summary>
     /// <value>Defaults to true</value>
     bool BatchThrowOnFullBatchFailureEnabled { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether Metrics are disabled.
+    /// </summary>
+    bool MetricsDisabled { get; }
 }

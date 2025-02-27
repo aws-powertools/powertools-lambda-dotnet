@@ -31,6 +31,7 @@ public class ConsoleWrapperTests
 
         // Act
         consoleWrapper.Error("error message");
+        writer.Flush();
 
         // Assert
         Assert.Equal($"error message{Environment.NewLine}", writer.ToString());
