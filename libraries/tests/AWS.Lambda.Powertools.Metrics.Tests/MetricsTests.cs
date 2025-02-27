@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
@@ -60,6 +61,51 @@ public class MetricsTests
         var metrics = Metrics.Instance;
         Assert.False(trigger.IsRaiseOnEmptyMetricsSet);
         Assert.False(metrics.Options.RaiseOnEmptyMetrics);
+    }
+
+    [Fact]
+    public void When_MetricsDisabled_Should_Not_AddMetric()
+    {
+        // Arrange
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        conf.MetricsDisabled.Returns(true);
+
+        IMetrics metrics = new Metrics(conf);
+        var stringWriter = new StringWriter();
+        Console.SetOut(stringWriter);
+
+        // Act
+        metrics.AddMetric("test", 1.0);
+        metrics.Flush();
+
+        // Assert
+        Assert.Empty(stringWriter.ToString());
+
+        // Cleanup
+        stringWriter.Dispose();
+        Console.SetOut(new StreamWriter(Console.OpenStandardOutput()));
+    }
+
+    [Fact]
+    public void When_MetricsDisabled_Should_Not_PushSingleMetric()
+    {
+        // Arrange
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        conf.MetricsDisabled.Returns(true);
+
+        IMetrics metrics = new Metrics(conf);
+        var stringWriter = new StringWriter();
+        Console.SetOut(stringWriter);
+
+        // Act
+        metrics.PushSingleMetric("test", 1.0, MetricUnit.Count);
+
+        // Assert
+        Assert.Empty(stringWriter.ToString());
+
+        // Cleanup
+        stringWriter.Dispose();
+        Console.SetOut(new StreamWriter(Console.OpenStandardOutput()));
     }
 
     // Helper method for the tests
