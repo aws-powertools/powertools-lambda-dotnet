@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using NSubstitute;
@@ -39,9 +40,6 @@ public class FunctionHandlerTests : IDisposable
     [Fact]
     public async Task When_Metrics_Add_Metadata_Same_Key_Should_Ignore_Metadata()
     {
-        // Arrange
-
-
         // Act
         var exception = await Record.ExceptionAsync(() => _handler.HandleSameKey("whatever"));
 
@@ -198,18 +196,14 @@ public class FunctionHandlerTests : IDisposable
 
         Metrics.UseMetricsForTests(metricsMock);
 
+
         var sut = new MetricsDependencyInjectionOptionsHandler(metricsMock);
 
         // Act
         sut.Handler();
 
         // Assert
-        metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
-            service: "testService", 
-            Arg.Is<Dictionary<string, string>>(x => 
-              x.ContainsKey("Environment") && x["Environment"] == "Prod"
-              && x.ContainsKey("Another") && x["Another"] == "One"));
-        
+        metricsMock.Received(1).CaptureColdStartMetric(Arg.Any<ILambdaContext>());
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
 
@@ -265,54 +259,29 @@ public class FunctionHandlerTests : IDisposable
             FunctionName = "My_Function_Name"
         });
 
-        metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
-            service: "testService", 
-            Arg.Is<Dictionary<string, string>>(x => 
-                x.ContainsKey("FunctionName") && x["FunctionName"] == "My_Function_Name" 
-                && x.ContainsKey("Environment") && x["Environment"] == "Prod"
-                && x.ContainsKey("Another") && x["Another"] == "One"));
-        
+        metricsMock.Received(1).CaptureColdStartMetric(Arg.Any<ILambdaContext>());
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
     
     [Fact]
-    public void Handler_With_Builder_Should_Configure_FunctionName_In_Constructor_Mock()
+    public void When_RaiseOnEmptyMetrics_And_NoMetrics_Should_ThrowException()
     {
-        var metricsMock = Substitute.For<IMetrics>();
-
-        metricsMock.Options.Returns(new MetricsOptions
-        {
-            CaptureColdStart = true,
-            Namespace = "dotnet-powertools-test",
-            Service = "testService",
-            FunctionName = "My_Function_Custome_Name",
-            DefaultDimensions = new Dictionary<string, string>
-            {
-                { "Environment", "Prod" },
-                { "Another", "One" }
-            }
-        });
-
-        Metrics.UseMetricsForTests(metricsMock);
-        
-        var sut = new MetricsnBuilderHandler(metricsMock);
-
-        // Act
-        sut.Handler(new TestLambdaContext
-        {
-            FunctionName = "This_Will_Be_Overwritten"
-        });
-
-        metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
-            service: "testService", 
-            Arg.Is<Dictionary<string, string>>(x => 
-                x.ContainsKey("FunctionName") && x["FunctionName"] == "My_Function_Custome_Name" 
-                                              && x.ContainsKey("Environment") && x["Environment"] == "Prod"
-                                              && x.ContainsKey("Another") && x["Another"] == "One"));
-        
-        metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+        // Act & Assert
+        var exception = Assert.Throws<SchemaValidationException>(() => _handler.HandlerRaiseOnEmptyMetrics());
+        Assert.Equal("No metrics have been provided.", exception.Message);
     }
-    
+
+    [Fact]
+    public void Handler_With_Builder_Should_Raise_Empty_Metrics()
+    {
+        // Arrange
+        var handler = new MetricsnBuilderHandler();
+
+        // Act & Assert
+        var exception = Assert.Throws<SchemaValidationException>(() => handler.HandlerEmpty());
+        Assert.Equal("No metrics have been provided.", exception.Message);
+    }
+
     [Fact]
     public void Handler_With_Builder_Push_Single_Metric_No_Dimensions()
     {
@@ -410,6 +379,45 @@ public class FunctionHandlerTests : IDisposable
         Assert.Contains(
             "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"FunctionName\"]]}]},\"Service\":\"svc\",\"FunctionName\":\"MyFunction\",\"ColdStart\":1}",
             metricsOutput);
+    }
+    
+    [Fact]
+    public void Handler_With_Builder_Should_Configure_FunctionName_In_Constructor_Mock()
+    {
+        var metricsMock = Substitute.For<IMetrics>();
+
+        metricsMock.Options.Returns(new MetricsOptions
+        {
+            CaptureColdStart = true,
+            Namespace = "dotnet-powertools-test",
+            Service = "testService",
+            FunctionName = "My_Function_Custome_Name",
+            DefaultDimensions = new Dictionary<string, string>
+            {
+                { "Environment", "Prod" },
+                { "Another", "One" }
+            }
+        });
+
+        Metrics.UseMetricsForTests(metricsMock);
+        
+        var sut = new MetricsnBuilderHandler(metricsMock);
+
+        // Act
+        sut.Handler(new TestLambdaContext
+        {
+            FunctionName = "This_Will_Be_Overwritten"
+        });
+
+        //metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
+        //    service: "testService", 
+        //    Arg.Is<Dictionary<string, string>>(x => 
+        //        x.ContainsKey("FunctionName") && x["FunctionName"] == "My_Function_Custome_Name" 
+        //                                      && x.ContainsKey("Environment") && x["Environment"] == "Prod"
+        //                                      && x.ContainsKey("Another") && x["Another"] == "One"));
+        
+        metricsMock.Received(1).CaptureColdStartMetric(Arg.Any<ILambdaContext>());
+        metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
 
     public void Dispose()

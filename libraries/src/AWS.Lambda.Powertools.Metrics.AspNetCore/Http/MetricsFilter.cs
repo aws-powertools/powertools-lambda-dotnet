@@ -20,17 +20,22 @@ namespace AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
 /// <summary>
 /// Represents a filter that captures and records metrics for HTTP endpoints.
 /// </summary>
-public class MetricsFilter : IEndpointFilter
+/// <remarks>
+/// This filter is responsible for tracking cold starts and capturing metrics during HTTP request processing.
+/// It integrates with the ASP.NET Core endpoint routing system to inject metrics collection at the endpoint level.
+/// </remarks>
+/// <inheritdoc cref="IEndpointFilter"/>
+/// <inheritdoc cref="IDisposable"/>
+public class MetricsFilter : IEndpointFilter, IDisposable
 {
-    private readonly MetricsHelper _metricsHelper;
+    private readonly ColdStartTracker _coldStartTracker;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MetricsFilter"/> class.
     /// </summary>
-    /// <param name="metrics">The metrics instance to use for recording metrics.</param>
     public MetricsFilter(IMetrics metrics)
     {
-        _metricsHelper = new MetricsHelper(metrics);
+        _coldStartTracker = new ColdStartTracker(metrics);
     }
 
     /// <summary>
@@ -41,17 +46,23 @@ public class MetricsFilter : IEndpointFilter
     /// <returns>A task that represents the asynchronous operation, containing the result of the endpoint invocation.</returns>
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        var result = await next(context);
-
         try
         {
-            await _metricsHelper.CaptureColdStartMetrics(context.HttpContext);
-            return result;
+            _coldStartTracker.TrackColdStart(context.HttpContext);
         }
         catch
         {
             // ignored
-            return result;
         }
+
+        return await next(context);
+    }
+
+    /// <summary>
+    /// Disposes of the resources used by the filter.
+    /// </summary>
+    public void Dispose()
+    {
+        _coldStartTracker.Dispose();
     }
 }

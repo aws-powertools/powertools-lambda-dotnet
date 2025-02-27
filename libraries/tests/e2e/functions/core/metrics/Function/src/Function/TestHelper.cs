@@ -38,7 +38,7 @@ public static class TestHelper
             unit: MetricUnit.Count,
             nameSpace: "Test",
             service: "Test",
-            defaultDimensions: new Dictionary<string, string>
+            dimensions: new Dictionary<string, string>
             {
                 {"FunctionName", context.FunctionName}
             });
