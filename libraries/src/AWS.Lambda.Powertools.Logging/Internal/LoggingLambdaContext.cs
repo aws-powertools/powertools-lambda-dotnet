@@ -74,24 +74,21 @@ public class LoggingLambdaContext
             return false;
         
         var index = Array.FindIndex(args.Method.GetParameters(), p => p.ParameterType == typeof(ILambdaContext));
-        if (index >= 0)
+        if (index < 0 || args.Args[index] == null || args.Args[index] is not ILambdaContext) return false;
+        
+        var x = (ILambdaContext)args.Args[index];
+
+        Instance = new LoggingLambdaContext
         {
-            var x = (ILambdaContext)args.Args[index];
-
-            Instance = new LoggingLambdaContext
-            {
-                AwsRequestId = x.AwsRequestId,
-                FunctionName = x.FunctionName,
-                FunctionVersion = x.FunctionVersion,
-                InvokedFunctionArn = x.InvokedFunctionArn,
-                LogGroupName = x.LogGroupName,
-                LogStreamName = x.LogStreamName,
-                MemoryLimitInMB = x.MemoryLimitInMB
-            };
-            return true;
-        }
-
-        return false;
+            AwsRequestId = x.AwsRequestId,
+            FunctionName = x.FunctionName,
+            FunctionVersion = x.FunctionVersion,
+            InvokedFunctionArn = x.InvokedFunctionArn,
+            LogGroupName = x.LogGroupName,
+            LogStreamName = x.LogStreamName,
+            MemoryLimitInMB = x.MemoryLimitInMB
+        };
+        return true;
     }
 
     /// <summary>
