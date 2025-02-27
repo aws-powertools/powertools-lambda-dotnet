@@ -619,7 +619,7 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
         ...
     ```
 
-By default it will skip all previously defined dimensions including default dimensions. Use default_dimensions keyword argument if you want to reuse default dimensions or specify custom dimensions from a dictionary.
+By default it will skip all previously defined dimensions including default dimensions. Use `dimensions` argument if you want to reuse default dimensions or specify custom dimensions from a dictionary.
 
 - `Metrics.DefaultDimensions`: Reuse default dimensions when using static Metrics
 - `Options.DefaultDimensions`: Reuse default dimensions when using Builder or Configure patterns
@@ -660,7 +660,7 @@ By default it will skip all previously defined dimensions including default dime
         {
             { "Default", "SingleMetric" }
         });
-        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, defaultDimensions: Metrics.DefaultDimensions );
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, dimensions: Metrics.DefaultDimensions );
         ...
     ```
 === "Default Dimensions Options / Builder patterns .cs"
@@ -683,7 +683,7 @@ By default it will skip all previously defined dimensions including default dime
     
     public void HandlerSingleMetricDimensions()
     {
-        _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count, defaultDimensions: _metrics.Options.DefaultDimensions);
+        _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count, dimensions: _metrics.Options.DefaultDimensions);
     }
         ...
     ```
