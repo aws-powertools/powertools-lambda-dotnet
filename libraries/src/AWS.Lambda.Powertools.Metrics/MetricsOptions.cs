@@ -31,4 +31,9 @@ public class MetricsOptions
     /// Gets or sets the default dimensions to be added to all metrics.
     /// </summary>
     public Dictionary<string, string> DefaultDimensions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the function name to be used as a metric dimension.
+    /// </summary>
+    public string FunctionName { get; set; }
 }

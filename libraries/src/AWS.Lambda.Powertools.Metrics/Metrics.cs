@@ -60,7 +60,8 @@ public class Metrics : IMetrics, IDisposable
             Namespace = GetNamespace(),
             Service = GetService(),
             RaiseOnEmptyMetrics = _raiseOnEmptyMetrics,
-            DefaultDimensions = GetDefaultDimensions()
+            DefaultDimensions = GetDefaultDimensions(),
+            FunctionName = _functionName
         };
 
     /// <summary>
@@ -92,6 +93,11 @@ public class Metrics : IMetrics, IDisposable
     /// Shared synchronization object
     /// </summary>
     private readonly object _lockObj = new();
+    
+    /// <summary>
+    /// Function name is used for metric dimension across all metrics.
+    /// </summary>
+    private string _functionName;
 
     /// <summary>
     ///   The options
@@ -127,7 +133,19 @@ public class Metrics : IMetrics, IDisposable
         if (options.DefaultDimensions != null)
             SetDefaultDimensions(options.DefaultDimensions);
 
+        if (!string.IsNullOrEmpty(options.FunctionName))
+            Instance.SetFunctionName(options.FunctionName);
+        
         return Instance;
+    }
+
+    /// <summary>
+    ///    Sets the function name.
+    /// </summary>
+    /// <param name="functionName"></param>
+    void IMetrics.SetFunctionName(string functionName)
+    {
+        _functionName = functionName;
     }
 
     /// <summary>
@@ -513,11 +531,12 @@ public class Metrics : IMetrics, IDisposable
         
         // bring default dimensions if exist
         var dimensions = Options?.DefaultDimensions;
-
-        if (context is not null)
+        
+        var functionName = Options?.FunctionName ?? context?.FunctionName ?? "";
+        if (!string.IsNullOrWhiteSpace(functionName))
         {
             dimensions ??= new Dictionary<string, string>();
-            dimensions.Add("FunctionName", context.FunctionName);
+            dimensions.Add("FunctionName", functionName);
         }
 
         PushSingleMetric(

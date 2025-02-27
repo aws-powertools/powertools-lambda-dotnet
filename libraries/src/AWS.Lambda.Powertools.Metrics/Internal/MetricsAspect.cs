@@ -75,6 +75,7 @@ public class MetricsAspect
             options.Service = trigger.Service;
             options.RaiseOnEmptyMetrics = trigger.IsRaiseOnEmptyMetricsSet ? trigger.RaiseOnEmptyMetrics : null;
             options.CaptureColdStart = trigger.IsCaptureColdStartSet ? trigger.CaptureColdStart : null;
+            options.FunctionName = trigger.FunctionName;
         });
 
         var eventArgs = new AspectEventArgs

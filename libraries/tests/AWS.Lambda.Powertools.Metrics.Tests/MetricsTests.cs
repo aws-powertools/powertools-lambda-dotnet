@@ -321,4 +321,55 @@ public class MetricsTests
         // Assert
         Assert.Null(result);
     }
+    
+    [Fact]
+    public void WithFunctionName_Should_Set_FunctionName_In_Options()
+    {
+        // Arrange
+        var builder = new MetricsBuilder();
+        var expectedFunctionName = "TestFunction";
+
+        // Act
+        var result = builder.WithFunctionName(expectedFunctionName);
+        var metrics = result.Build();
+
+        // Assert
+        Assert.Equal(expectedFunctionName, metrics.Options.FunctionName);
+        Assert.Same(builder, result);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void WithFunctionName_Should_Allow_NullOrEmpty_FunctionName(string functionName)
+    {
+        // Arrange
+        var builder = new MetricsBuilder();
+
+        // Act
+        var result = builder.WithFunctionName(functionName);
+        var metrics = result.Build();
+
+        // Assert
+        // Assert
+        Assert.Null(metrics.Options.FunctionName); // All invalid values should result in null
+        Assert.Same(builder, result);
+    }
+
+    [Fact]
+    public void Build_Should_Preserve_FunctionName_When_Set_Through_Builder()
+    {
+        // Arrange
+        var builder = new MetricsBuilder()
+            .WithNamespace("TestNamespace")
+            .WithService("TestService")
+            .WithFunctionName("TestFunction");
+
+        // Act
+        var metrics = builder.Build();
+
+        // Assert
+        Assert.Equal("TestFunction", metrics.Options.FunctionName);
+    }
 }
