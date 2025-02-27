@@ -270,7 +270,7 @@ public class FunctionHandlerTests : IDisposable
         var exception = Assert.Throws<SchemaValidationException>(() => _handler.HandlerRaiseOnEmptyMetrics());
         Assert.Equal("No metrics have been provided.", exception.Message);
     }
-    
+
     [Fact]
     public void Handler_With_Builder_Should_Raise_Empty_Metrics()
     {
@@ -280,6 +280,66 @@ public class FunctionHandlerTests : IDisposable
         // Act & Assert
         var exception = Assert.Throws<SchemaValidationException>(() => handler.HandlerEmpty());
         Assert.Equal("No metrics have been provided.", exception.Message);
+    }
+
+    [Fact]
+    public void Handler_With_Builder_Push_Single_Metric_No_Dimensions()
+    {
+        // Arrange
+        var handler = new MetricsnBuilderHandler();
+
+        // Act
+        handler.HandlerSingleMetric();
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[]]}]},\"SuccessfulBooking\":1}",
+            metricsOutput);
+    }
+    
+    [Fact]
+    public void Handler_With_Builder_Push_Single_Metric_Dimensions()
+    {
+        // Arrange
+        var handler = new MetricsnBuilderHandler();
+
+        // Act
+        handler.HandlerSingleMetricDimensions();
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod1\",\"Another\":\"One\",\"SuccessfulBooking\":1}",
+            metricsOutput);
+    }
+    
+    [Fact]
+    public void Dimension_Only_Set_In_Cold_Start()
+    {
+        // Arrange
+        var handler = new FunctionHandler();
+
+        // Act
+        handler.HandleOnlyDimensionsInColdStart(new TestLambdaContext
+        {
+            FunctionName = "My_Function_Name"
+        });
+
+        // Get the output and parse it
+        var metricsOutput = _consoleOut.ToString();
+        
+        // Assert cold start
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"FunctionName\"]]}]},\"Service\":\"svc\",\"FunctionName\":\"My_Function_Name\",\"ColdStart\":1}",
+            metricsOutput);
+        
+        // Assert successful add metric without dimensions
+        Assert.Contains(
+            "\"CloudWatchMetrics\":[{\"Namespace\":\"ns\",\"Metrics\":[{\"Name\":\"MyMetric\",\"Unit\":\"None\"}],\"Dimensions\":[[\"Service\"]]}]},\"Service\":\"svc\",\"MyMetric\":1}",
+            metricsOutput);
     }
 
     public void Dispose()

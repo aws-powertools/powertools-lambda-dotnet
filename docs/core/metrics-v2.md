@@ -602,6 +602,30 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
 
 === "Function.cs"
 
+    ```csharp hl_lines="8-13"
+    using AWS.Lambda.Powertools.Metrics;
+    
+    public class Function {
+      
+      [Metrics(Namespace = ExampleApplication, Service = "Booking")]
+      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+      {
+        Metrics.PushSingleMetric(
+                    metricName: "ColdStart",
+                    value: 1,
+                    unit: MetricUnit.Count,
+                    nameSpace: "ExampleApplication",
+                    service: "Booking");
+        ...
+    ```
+
+By default it will skip all previously defined dimensions including default dimensions. Use `dimensions` argument if you want to reuse default dimensions or specify custom dimensions from a dictionary.
+
+- `Metrics.DefaultDimensions`: Reuse default dimensions when using static Metrics
+- `Options.DefaultDimensions`: Reuse default dimensions when using Builder or Configure patterns
+
+=== "New Default Dimensions.cs"
+
     ```csharp hl_lines="8-17"
     using AWS.Lambda.Powertools.Metrics;
     
@@ -620,6 +644,47 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
                     {
                         {"FunctionContext", "$LATEST"}
                     });
+        ...
+    ```
+=== "Default Dimensions static.cs"
+
+    ```csharp hl_lines="8-12"
+    using AWS.Lambda.Powertools.Metrics;
+    
+    public class Function {
+      
+      [Metrics(Namespace = ExampleApplication, Service = "Booking")]
+      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+      {
+         Metrics.SetDefaultDimensions(new Dictionary<string, string> 
+        {
+            { "Default", "SingleMetric" }
+        });
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, dimensions: Metrics.DefaultDimensions );
+        ...
+    ```
+=== "Default Dimensions Options / Builder patterns .cs"
+
+    ```csharp hl_lines="9-13 18"
+    using AWS.Lambda.Powertools.Metrics;
+    
+    public MetricsnBuilderHandler(IMetrics metrics = null)
+    {
+        _metrics = metrics ?? new MetricsBuilder()
+            .WithCaptureColdStart(true)
+            .WithService("testService")
+            .WithNamespace("dotnet-powertools-test")
+            .WithDefaultDimensions(new Dictionary<string, string>
+            {
+                { "Environment", "Prod1" },
+                { "Another", "One" }
+            }).Build();
+    }
+    
+    public void HandlerSingleMetricDimensions()
+    {
+        _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count, dimensions: _metrics.Options.DefaultDimensions);
+    }
         ...
     ```
 

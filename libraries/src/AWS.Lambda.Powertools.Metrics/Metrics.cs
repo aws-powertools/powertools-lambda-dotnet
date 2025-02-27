@@ -36,6 +36,21 @@ public class Metrics : IMetrics, IDisposable
         get => _instance ?? new Metrics(PowertoolsConfigurations.Instance, consoleWrapper: new ConsoleWrapper());
         private set => _instance = value;
     }
+    
+    /// <summary>
+    /// Gets DefaultDimensions
+    /// </summary>
+    public static Dictionary<string, string> DefaultDimensions => Instance.Options.DefaultDimensions;
+    
+    /// <summary>
+    /// Gets Namespace
+    /// </summary>
+    public static string Namespace => Instance.Options.Namespace;
+    
+    /// <summary>
+    /// Gets Service 
+    /// </summary>
+    public static string Service => Instance.Options.Service;
 
     /// <inheritdoc />
     public MetricsOptions Options => _options ??

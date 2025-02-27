@@ -243,4 +243,82 @@ public class MetricsTests
             Arg.Is<string>(s => s.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"FunctionName\"]]}]},\"FunctionName\":\"TestFunction\",\"ColdStart\":1}"))
         );
     }
+    
+    [Fact]
+    public void Namespace_Should_Return_OptionsNamespace()
+    {
+        // Arrange
+        Metrics.ResetForTest();
+        var metricsMock = Substitute.For<IMetrics>();
+        var optionsMock = new MetricsOptions
+        {
+            Namespace = "TestNamespace"
+        };
+    
+        metricsMock.Options.Returns(optionsMock);
+        Metrics.UseMetricsForTests(metricsMock);
+
+        // Act
+        var result = Metrics.Namespace;
+
+        // Assert
+        Assert.Equal("TestNamespace", result);
+    }
+
+    [Fact]
+    public void Service_Should_Return_OptionsService()
+    {
+        // Arrange
+        Metrics.ResetForTest();
+        var metricsMock = Substitute.For<IMetrics>();
+        var optionsMock = new MetricsOptions
+        {
+            Service = "TestService"
+        };
+    
+        metricsMock.Options.Returns(optionsMock);
+        Metrics.UseMetricsForTests(metricsMock);
+
+        // Act
+        var result = Metrics.Service;
+
+        // Assert
+        Assert.Equal("TestService", result);
+    }
+
+    [Fact]
+    public void Namespace_Should_Return_Null_When_Not_Set()
+    {
+        // Arrange
+        Metrics.ResetForTest();
+        var metricsMock = Substitute.For<IMetrics>();
+        var optionsMock = new MetricsOptions();
+    
+        metricsMock.Options.Returns(optionsMock);
+        Metrics.UseMetricsForTests(metricsMock);
+
+        // Act
+        var result = Metrics.Namespace;
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void Service_Should_Return_Null_When_Not_Set()
+    {
+        // Arrange
+        Metrics.ResetForTest();
+        var metricsMock = Substitute.For<IMetrics>();
+        var optionsMock = new MetricsOptions();
+    
+        metricsMock.Options.Returns(optionsMock);
+        Metrics.UseMetricsForTests(metricsMock);
+
+        // Act
+        var result = Metrics.Service;
+
+        // Assert
+        Assert.Null(result);
+    }
 }
