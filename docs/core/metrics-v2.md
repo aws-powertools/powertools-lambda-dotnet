@@ -663,7 +663,7 @@ By default it will skip all previously defined dimensions including default dime
         Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, dimensions: Metrics.DefaultDimensions );
         ...
     ```
-=== "Default Dimensions Options / Builder patterns .cs"
+=== "Default Dimensions Options / Builder patterns"
 
     ```csharp hl_lines="9-13 18"
     using AWS.Lambda.Powertools.Metrics;
@@ -686,6 +686,54 @@ By default it will skip all previously defined dimensions including default dime
         _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count, dimensions: _metrics.Options.DefaultDimensions);
     }
         ...
+    ```
+
+### Cold start Function Name dimension
+
+In cases where you want to customize the `FunctionName` dimension in Cold Start metrics.
+
+This is useful where you want to maintain the same name in case of auto generated handler names (cdk, top-level statement functions, etc.)
+
+Example:
+
+=== "In decorator"
+    
+    ```csharp hl_lines="5"
+    using AWS.Lambda.Powertools.Metrics;
+    
+    public class Function {
+      
+      [Metrics(FunctionName = "MyFunctionName", Namespace = "ExampleApplication", Service = "Booking")]
+      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+      {
+        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+        ...
+      }
+    ```
+=== "Configure / Builder patterns"
+
+    ```csharp hl_lines="12"
+    using AWS.Lambda.Powertools.Metrics;
+    
+    public class Function {
+      
+      public Function()
+      {
+        Metrics.Configure(options =>
+        {
+            options.Namespace = "dotnet-powertools-test";
+            options.Service = "testService";
+            options.CaptureColdStart = true;
+            options.FunctionName = "MyFunctionName";
+        });
+      }
+
+      [Metrics]
+      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+      {
+        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+        ...
+      }
     ```
 
 ## AspNetCore

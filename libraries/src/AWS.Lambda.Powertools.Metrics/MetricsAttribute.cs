@@ -113,6 +113,13 @@ public class MetricsAttribute : Attribute
     public string Namespace { get; set; }
 
     /// <summary>
+    ///    Function name is used for metric dimension across all metrics.
+    ///    This can be also set using the environment variable <c>LAMBDA_FUNCTION_NAME</c>.
+    ///    If not set, the function name will be automatically set to the Lambda function name.
+    /// </summary>
+    public string FunctionName { get; set; }
+
+    /// <summary>
     ///     Service name is used for metric dimension across all metrics.
     ///     This can be also set using the environment variable <c>POWERTOOLS_SERVICE_NAME</c>.
     /// </summary>
