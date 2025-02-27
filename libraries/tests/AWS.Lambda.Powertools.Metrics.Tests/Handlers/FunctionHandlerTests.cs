@@ -409,13 +409,6 @@ public class FunctionHandlerTests : IDisposable
             FunctionName = "This_Will_Be_Overwritten"
         });
 
-        //metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
-        //    service: "testService", 
-        //    Arg.Is<Dictionary<string, string>>(x => 
-        //        x.ContainsKey("FunctionName") && x["FunctionName"] == "My_Function_Custome_Name" 
-        //                                      && x.ContainsKey("Environment") && x["Environment"] == "Prod"
-        //                                      && x.ContainsKey("Another") && x["Another"] == "One"));
-        
         metricsMock.Received(1).CaptureColdStartMetric(Arg.Any<ILambdaContext>());
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
