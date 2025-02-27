@@ -41,12 +41,12 @@ public class FunctionHandler
     public void AddMultipleDimensions()
     {
         Metrics.PushSingleMetric("SingleMetric1", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            defaultDimensions: new Dictionary<string, string> {
+            dimensions: new Dictionary<string, string> {
                 { "Default1", "SingleMetric1" }
             });
         
         Metrics.PushSingleMetric("SingleMetric2", 1, MetricUnit.Count, resolution: MetricResolution.High,  nameSpace: "ns2",
-            defaultDimensions: new Dictionary<string, string> {
+            dimensions: new Dictionary<string, string> {
                 { "Default1", "SingleMetric2" },
                 { "Default2", "SingleMetric2" }
             });
@@ -58,7 +58,7 @@ public class FunctionHandler
     public void PushSingleMetricWithNamespace()
     {
         Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            defaultDimensions: new Dictionary<string, string> {
+            dimensions: new Dictionary<string, string> {
                 { "Default", "SingleMetric" }
             });
     }
@@ -67,7 +67,7 @@ public class FunctionHandler
     public void PushSingleMetricWithEnvNamespace()
     {
         Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            defaultDimensions: new Dictionary<string, string> {
+            dimensions: new Dictionary<string, string> {
                 { "Default", "SingleMetric" }
             });
     }

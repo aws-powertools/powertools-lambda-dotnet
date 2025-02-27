@@ -136,6 +136,18 @@ public class MetricsContext : IDisposable
     }
 
     /// <summary>
+    ///     Adds new dimensions to memory
+    /// </summary>
+    /// <param name="dimensions">List of dimensions</param>
+    public void AddDimensions(List<DimensionSet> dimensions)
+    {
+        foreach (var dimension in dimensions)
+        {
+            _rootNode.AWS.AddDimensionSet(dimension);
+        }
+    }
+
+    /// <summary>
     ///     Sets default dimensions list
     /// </summary>
     /// <param name="defaultDimensions">Default dimensions list</param>

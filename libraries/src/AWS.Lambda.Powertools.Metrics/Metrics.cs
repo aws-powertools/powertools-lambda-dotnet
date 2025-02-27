@@ -307,7 +307,7 @@ public class Metrics : IMetrics, IDisposable
 
     /// <inheritdoc />
     void IMetrics.PushSingleMetric(string name, double value, MetricUnit unit, string nameSpace,
-        string service, Dictionary<string, string> defaultDimensions, MetricResolution resolution)
+        string service, Dictionary<string, string> dimensions, MetricResolution resolution)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentNullException(nameof(name),
@@ -317,10 +317,10 @@ public class Metrics : IMetrics, IDisposable
         context.SetNamespace(nameSpace ?? GetNamespace());
         context.SetService(service ?? _context.GetService());
 
-        if (defaultDimensions != null)
+        if (dimensions != null)
         {
-            var defaultDimensionsList = DictionaryToList(defaultDimensions);
-            context.SetDefaultDimensions(defaultDimensionsList);
+            var dimensionsList = DictionaryToList(dimensions);
+            context.AddDimensions(dimensionsList);
         }
 
         context.AddMetric(name, value, unit, resolution);
@@ -415,7 +415,7 @@ public class Metrics : IMetrics, IDisposable
     /// <param name="defaultDimensions">Default Dimension List</param>
     public static void SetDefaultDimensions(Dictionary<string, string> defaultDimensions)
     {
-        Instance?.SetDefaultDimensions(defaultDimensions);
+        Instance.SetDefaultDimensions(defaultDimensions);
     }
 
     /// <summary>
@@ -447,13 +447,13 @@ public class Metrics : IMetrics, IDisposable
     /// <param name="unit">Metric Unit</param>
     /// <param name="nameSpace">Metric Namespace</param>
     /// <param name="service">Service Name</param>
-    /// <param name="defaultDimensions">Default dimensions list</param>
+    /// <param name="dimensions">Default dimensions list</param>
     /// <param name="resolution">Metrics resolution</param>
     public static void PushSingleMetric(string name, double value, MetricUnit unit, string nameSpace = null,
-        string service = null, Dictionary<string, string> defaultDimensions = null,
+        string service = null, Dictionary<string, string> dimensions = null,
         MetricResolution resolution = MetricResolution.Default)
     {
-        Instance.PushSingleMetric(name, value, unit, nameSpace, service, defaultDimensions,
+        Instance.PushSingleMetric(name, value, unit, nameSpace, service, dimensions,
             resolution);
     }
 
@@ -464,12 +464,12 @@ public class Metrics : IMetrics, IDisposable
     /// <returns>Default dimensions list</returns>
     private List<DimensionSet> DictionaryToList(Dictionary<string, string> defaultDimensions)
     {
-        var defaultDimensionsList = new List<DimensionSet>();
+        var dimensionsList = new List<DimensionSet>();
         if (defaultDimensions != null)
             foreach (var item in defaultDimensions)
-                defaultDimensionsList.Add(new DimensionSet(item.Key, item.Value));
+                dimensionsList.Add(new DimensionSet(item.Key, item.Value));
 
-        return defaultDimensionsList;
+        return dimensionsList;
     }
 
     private Dictionary<string, string> ListToDictionary(List<DimensionSet> dimensions)

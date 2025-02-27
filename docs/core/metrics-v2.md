@@ -20,6 +20,7 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://aws.
 
 * **`Dimensions`** outputs as an array of arrays instead of an array of objects. Example: `Dimensions: [["service", "Environment"]]` instead of `Dimensions: ["service", "Environment"]`
 * **`FunctionName`** is not added as default dimension and only to cold start metric.
+* **`Default Dimensions`** can now be included in Cold Start metrics, this is a potential breaking change if you were relying on the absence of default dimensions in Cold Start metrics when searching.
 
 <br />
 
@@ -440,7 +441,7 @@ During metrics validation, if no metrics are provided then a warning will be log
 !!! tip "Metric validation"
     If metrics are provided, and any of the following criteria are not met, **`SchemaValidationException`** will be raised:
 
-    * Maximum of 9 dimensions
+    * Maximum of 30 dimensions
     * Namespace is set
     * Metric units must be [supported by CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricDatum.html)
 
@@ -615,7 +616,7 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
                     unit: MetricUnit.Count,
                     nameSpace: "ExampleApplication",
                     service: "Booking",
-                    defaultDimensions: new Dictionary<string, string>
+                    dimensions: new Dictionary<string, string>
                     {
                         {"FunctionContext", "$LATEST"}
                     });
