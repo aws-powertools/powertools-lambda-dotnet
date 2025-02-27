@@ -70,8 +70,7 @@ public class MetricsAspect
 
         var trigger = triggers.OfType<MetricsAttribute>().First();
 
-        _metricsInstance ??= Metrics.Configure(options =>
-        {
+        _metricsInstance ??= Metrics.Configure(options => {
             options.Namespace = trigger.Namespace;
             options.Service = trigger.Service;
             options.RaiseOnEmptyMetrics = trigger.IsRaiseOnEmptyMetricsSet ? trigger.RaiseOnEmptyMetrics : null;
@@ -90,32 +89,10 @@ public class MetricsAspect
             Triggers = triggers
         };
 
-        if (_metricsInstance.Options.CaptureColdStart != null && _metricsInstance.Options.CaptureColdStart.Value &&
-            _isColdStart)
+        if (_isColdStart)
         {
+            _metricsInstance.CaptureColdStartMetric(GetContext(eventArgs));
             _isColdStart = false;
-
-            var functionName = _metricsInstance.Options?.FunctionName;
-            var defaultDimensions = _metricsInstance.Options?.DefaultDimensions;
-
-            if (string.IsNullOrWhiteSpace(functionName))
-            {
-                functionName = GetContext(eventArgs)?.FunctionName ?? "";
-            }
-
-            if (!string.IsNullOrWhiteSpace(functionName))
-            {
-                defaultDimensions?.Add("FunctionName", functionName);
-            }
-
-            _metricsInstance.PushSingleMetric(
-                "ColdStart",
-                1.0,
-                MetricUnit.Count,
-                _metricsInstance.Options?.Namespace ?? "",
-                _metricsInstance.Options?.Service ?? "",
-                defaultDimensions
-            );
         }
     }
 

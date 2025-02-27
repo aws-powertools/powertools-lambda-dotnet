@@ -12,6 +12,7 @@ permissions:
 jobs:
   get_pr_details:
     permissions:
+      contents: read
       id-token: write
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/reusable_export_pr_details.yml

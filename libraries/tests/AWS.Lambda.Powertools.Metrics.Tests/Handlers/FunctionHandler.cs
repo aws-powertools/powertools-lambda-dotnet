@@ -14,13 +14,11 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.TestUtilities;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
 
@@ -43,12 +41,12 @@ public class FunctionHandler
     public void AddMultipleDimensions()
     {
         Metrics.PushSingleMetric("SingleMetric1", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            defaultDimensions: new Dictionary<string, string> {
+            dimensions: new Dictionary<string, string> {
                 { "Default1", "SingleMetric1" }
             });
         
         Metrics.PushSingleMetric("SingleMetric2", 1, MetricUnit.Count, resolution: MetricResolution.High,  nameSpace: "ns2",
-            defaultDimensions: new Dictionary<string, string> {
+            dimensions: new Dictionary<string, string> {
                 { "Default1", "SingleMetric2" },
                 { "Default2", "SingleMetric2" }
             });
@@ -60,7 +58,7 @@ public class FunctionHandler
     public void PushSingleMetricWithNamespace()
     {
         Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            defaultDimensions: new Dictionary<string, string> {
+            dimensions: new Dictionary<string, string> {
                 { "Default", "SingleMetric" }
             });
     }
@@ -78,14 +76,14 @@ public class FunctionHandler
         {
             { "Default", "SingleMetric" }
         });
-        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, defaultDimensions: Metrics.DefaultDimensions );
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, dimensions: Metrics.DefaultDimensions );
     }
     
     [Metrics]
     public void PushSingleMetricWithEnvNamespace()
     {
         Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            defaultDimensions: new Dictionary<string, string> {
+            dimensions: new Dictionary<string, string> {
                 { "Default", "SingleMetric" }
             });
     }
@@ -227,6 +225,12 @@ public class FunctionHandler
     
     [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
     public void HandleWithParamAndLambdaContext(string input, ILambdaContext context)
+    {
+        
+    }
+    
+    [Metrics(Namespace = "ns", Service = "svc", RaiseOnEmptyMetrics = true)]
+    public void HandlerRaiseOnEmptyMetrics()
     {
         
     }

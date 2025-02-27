@@ -6,59 +6,26 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Metrics.AspNetCore.Tests;
 
-public class MetricsFilterTests
+[Collection("Metrics")]
+public class MetricsFilterTests : IDisposable
 {
     private readonly IMetrics _metrics;
     private readonly EndpointFilterInvocationContext _context;
-    private readonly ILambdaContext _lambdaContext;
 
     public MetricsFilterTests()
     {
-        MetricsHelper.ResetColdStart(); // Reset before each test
+        ColdStartTracker.ResetColdStart(); // Reset before each test
         _metrics = Substitute.For<IMetrics>();
         _context = Substitute.For<EndpointFilterInvocationContext>();
-        _lambdaContext = Substitute.For<ILambdaContext>();
+        var lambdaContext = Substitute.For<ILambdaContext>();
 
         var httpContext = new DefaultHttpContext();
-        httpContext.Items["LambdaContext"] = _lambdaContext;
+        httpContext.Items["LambdaContext"] = lambdaContext;
         _context.HttpContext.Returns(httpContext);
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenColdStartEnabled_RecordsColdStartMetric()
-    {
-        // Arrange
-        var options = new MetricsOptions
-        {
-            CaptureColdStart = true,
-            Namespace = "TestNamespace",
-            Service = "TestService",
-            DefaultDimensions = new Dictionary<string, string>()
-        };
-
-        _metrics.Options.Returns(options);
-        _lambdaContext.FunctionName.Returns("TestFunction");
-
-        var filter = new MetricsFilter(_metrics);
-        var next = new EndpointFilterDelegate(_ => ValueTask.FromResult<object?>("result"));
-
-        // Act
-        var result = await filter.InvokeAsync(_context, next);
-
-        // Assert
-        _metrics.Received(1).PushSingleMetric(
-            "ColdStart",
-            1.0,
-            MetricUnit.Count,
-            "TestNamespace",
-            "TestService",
-            Arg.Any<Dictionary<string, string>>()
-        );
-        Assert.Equal("result", result);
-    }
-
-    [Fact]
-    public async Task InvokeAsync_WhenColdStartDisabled_DoesNotRecordMetric()
+    public async Task InvokeAsync_Second_Call_DoesNotRecord_ColdStart_Metric()
     {
         // Arrange
         var options = new MetricsOptions { CaptureColdStart = false };
@@ -68,17 +35,11 @@ public class MetricsFilterTests
         var next = new EndpointFilterDelegate(_ => ValueTask.FromResult<object?>("result"));
 
         // Act
+        _ = await filter.InvokeAsync(_context, next);
         var result = await filter.InvokeAsync(_context, next);
 
         // Assert
-        _metrics.DidNotReceive().PushSingleMetric(
-            Arg.Any<string>(),
-            Arg.Any<double>(),
-            Arg.Any<MetricUnit>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<Dictionary<string, string>>()
-        );
+        _metrics.Received(1).CaptureColdStartMetric(Arg.Any<ILambdaContext>() );
         Assert.Equal("result", result);
     }
 
@@ -106,5 +67,10 @@ public class MetricsFilterTests
         // Assert
         Assert.True(called);
         Assert.Equal("result", result);
+    }
+
+    public void Dispose()
+    {
+        ColdStartTracker.ResetColdStart();
     }
 }
