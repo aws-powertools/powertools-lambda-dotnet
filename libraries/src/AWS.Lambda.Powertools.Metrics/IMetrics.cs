@@ -14,6 +14,7 @@
  */
 
 using System.Collections.Generic;
+using Amazon.Lambda.Core;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
@@ -85,10 +86,10 @@ public interface IMetrics
     /// <param name="unit">The metric unit.</param>
     /// <param name="nameSpace">The namespace.</param>
     /// <param name="service">The service name.</param>
-    /// <param name="defaultDimensions">The default dimensions.</param>
+    /// <param name="dimensions">The default dimensions.</param>
     /// <param name="resolution">The metric resolution.</param>
     void PushSingleMetric(string name, double value, MetricUnit unit, string nameSpace = null, string service = null,
-        Dictionary<string, string> defaultDimensions = null, MetricResolution resolution = MetricResolution.Default);
+        Dictionary<string, string> dimensions = null, MetricResolution resolution = MetricResolution.Default);
 
     /// <summary>
     ///     Clears the default dimensions.
@@ -106,4 +107,10 @@ public interface IMetrics
     /// </summary>
     /// <value>The metrics options.</value>
     public MetricsOptions Options { get; }
+    
+    /// <summary>
+    ///    Captures the cold start metric.
+    /// </summary>
+    /// <param name="context"></param>
+    void CaptureColdStartMetric(ILambdaContext context);
 }

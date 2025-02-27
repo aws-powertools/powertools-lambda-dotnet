@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using NSubstitute;
@@ -39,9 +40,6 @@ public class FunctionHandlerTests : IDisposable
     [Fact]
     public async Task When_Metrics_Add_Metadata_Same_Key_Should_Ignore_Metadata()
     {
-        // Arrange
-
-
         // Act
         var exception = await Record.ExceptionAsync(() => _handler.HandleSameKey("whatever"));
 
@@ -205,8 +203,7 @@ public class FunctionHandlerTests : IDisposable
         sut.Handler();
 
         // Assert
-        metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
-            service: "testService", Arg.Any<Dictionary<string, string>>());
+        metricsMock.Received(1).CaptureColdStartMetric(Arg.Any<ILambdaContext>());
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
 
@@ -262,11 +259,29 @@ public class FunctionHandlerTests : IDisposable
             FunctionName = "My_Function_Name"
         });
 
-        metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
-            service: "testService", Arg.Any<Dictionary<string, string>>());
+        metricsMock.Received(1).CaptureColdStartMetric(Arg.Any<ILambdaContext>());
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
     
+    [Fact]
+    public void When_RaiseOnEmptyMetrics_And_NoMetrics_Should_ThrowException()
+    {
+        // Act & Assert
+        var exception = Assert.Throws<SchemaValidationException>(() => _handler.HandlerRaiseOnEmptyMetrics());
+        Assert.Equal("No metrics have been provided.", exception.Message);
+    }
+
+    [Fact]
+    public void Handler_With_Builder_Should_Raise_Empty_Metrics()
+    {
+        // Arrange
+        var handler = new MetricsnBuilderHandler();
+
+        // Act & Assert
+        var exception = Assert.Throws<SchemaValidationException>(() => handler.HandlerEmpty());
+        Assert.Equal("No metrics have been provided.", exception.Message);
+    }
+
     [Fact]
     public void Handler_With_Builder_Push_Single_Metric_No_Dimensions()
     {

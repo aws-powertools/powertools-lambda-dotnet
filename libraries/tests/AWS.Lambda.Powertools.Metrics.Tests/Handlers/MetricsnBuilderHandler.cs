@@ -14,6 +14,7 @@ public class MetricsnBuilderHandler
             .WithCaptureColdStart(true)
             .WithService("testService")
             .WithNamespace("dotnet-powertools-test")
+            .WithRaiseOnEmptyMetrics(true)
             .WithDefaultDimensions(new Dictionary<string, string>
             {
                 { "Environment", "Prod1" },
@@ -27,6 +28,11 @@ public class MetricsnBuilderHandler
         _metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
     
+    [Metrics]
+    public void HandlerEmpty()
+    {
+    }
+    
     public void HandlerSingleMetric()
     {
         _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count);
@@ -34,6 +40,6 @@ public class MetricsnBuilderHandler
     
     public void HandlerSingleMetricDimensions()
     {
-        _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count, defaultDimensions: _metrics.Options.DefaultDimensions);
+        _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count, dimensions: _metrics.Options.DefaultDimensions);
     }
 }
