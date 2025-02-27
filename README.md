@@ -35,27 +35,31 @@ Powertools for AWS Lambda (.NET) provides three core utilities:
 
 The Powertools for AWS Lambda (.NET) utilities (.NET 6 and .NET 8) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*) or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
 
-* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
+* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages/AWS.Lambda.Powertools.Logging):
 
     `dotnet add package AWS.Lambda.Powertools.Logging`
 
-* [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Metrics):
+* [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics):
 
     `dotnet add package AWS.Lambda.Powertools.Metrics`
 
-* [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
+* [AWS.Lambda.Powertools.Metrics.AspNetCore](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics.AspNetCore):
+
+    `dotnet add package AWS.Lambda.Powertools.Metrics.AspNetCore`
+
+* [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages/AWS.Lambda.Powertools.Tracing):
 
     `dotnet add package AWS.Lambda.Powertools.Tracing`
 
-* [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Parameters):
+* [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages/AWS.Lambda.Powertools.Parameters):
 
     `dotnet add package AWS.Lambda.Powertools.Parameters`
 
-* [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Idempotency):
+* [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages/AWS.Lambda.Powertools.Idempotency):
 
     `dotnet add package AWS.Lambda.Powertools.Idempotency`
 
-* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.BatchProcessing):
+* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages/AWS.Lambda.Powertools.BatchProcessing):
 
     `dotnet add package AWS.Lambda.Powertools.BatchProcessing`
 
