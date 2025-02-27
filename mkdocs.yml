@@ -15,7 +15,9 @@ nav:
   - Workshop 🆕: https://s12d.com/powertools-for-aws-lambda-workshop" target="_blank
   - Core utilities:
       - core/logging.md
-      - core/metrics.md
+      - Metrics:
+          - core/metrics.md
+          - core/metrics-v2.md
       - core/tracing.md
   - Utilities:
       - utilities/parameters.md

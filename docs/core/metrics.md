@@ -109,7 +109,7 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
 
 === "Metrics"
 
-    ```csharp hl_lines="8"
+    ```csharp hl_lines="5 8"
     using AWS.Lambda.Powertools.Metrics;
 
     public class Function {
