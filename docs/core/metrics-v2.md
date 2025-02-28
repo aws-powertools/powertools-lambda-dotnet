@@ -35,7 +35,7 @@ Powertools for AWS Lambda (.NET) are available as NuGet packages. You can instal
 
 * [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Metrics):
 
-    `dotnet nuget add AWS.Lambda.Powertools.Metrics`
+    `dotnet add package AWS.Lambda.Powertools.Metrics`
 
 ## Terminologies
 
@@ -608,7 +608,7 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
         Metrics.PushSingleMetric(
-                    metricName: "ColdStart",
+                    name: "ColdStart",
                     value: 1,
                     unit: MetricUnit.Count,
                     nameSpace: "ExampleApplication",
@@ -632,7 +632,7 @@ By default it will skip all previously defined dimensions including default dime
       public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
       {
         Metrics.PushSingleMetric(
-                    metricName: "ColdStart",
+                    name: "ColdStart",
                     value: 1,
                     unit: MetricUnit.Count,
                     nameSpace: "ExampleApplication",

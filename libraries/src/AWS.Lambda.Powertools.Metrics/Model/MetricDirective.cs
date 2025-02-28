@@ -204,7 +204,7 @@ public class MetricDirective
         else
         {
             throw new ArgumentOutOfRangeException(nameof(Dimensions),
-                "Cannot add more than 9 dimensions at the same time.");
+                $"Cannot add more than {PowertoolsConfigurations.MaxDimensions} dimensions at the same time.");
         }
     }
 

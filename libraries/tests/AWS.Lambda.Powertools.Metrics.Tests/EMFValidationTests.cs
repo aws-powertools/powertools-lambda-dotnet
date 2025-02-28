@@ -113,7 +113,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
         public void WhenMoreThan9DimensionsAdded_ThrowArgumentOutOfRangeException()
         {
             // Act
-            var act = () => { _handler.MaxDimensions(9); };
+            var act = () => { _handler.MaxDimensions(29); };
 
             // Assert
             Assert.Throws<ArgumentOutOfRangeException>(act);
