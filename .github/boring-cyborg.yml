@@ -21,6 +21,9 @@ labelPRBasedOnFilePath:
   area/batch:
     - libraries/src/AWS.Lambda.Powertools.Batch/*
     - libraries/src/AWS.Lambda.Powertools.Batch/**/*
+  area/metrics-aspnetcore:
+    - libraries/src/AWS.Lambda.Powertools.Metrics.AspNetCore/*
+    - libraries/src/AWS.Lambda.Powertools.Metrics.AspNetCore/**/*
 
   documentation:
     - docs/*

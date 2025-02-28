@@ -4,11 +4,11 @@ on:
   push:
     paths:
       - "libraries/**"
-    branches: [develop, main]
+    branches: [develop]
   pull_request:
     paths:
       - "libraries/**"
-    branches: [develop, main]
+    branches: [develop]
 
 defaults:
   run:
