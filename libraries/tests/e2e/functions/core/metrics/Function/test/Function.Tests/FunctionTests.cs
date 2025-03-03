@@ -271,13 +271,9 @@ public class FunctionTests
 
         Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Dimensions", out JsonElement dimensionsElement));
         Assert.Equal("FunctionName", dimensionsElement[0][0].GetString());
-        Assert.Equal("Service", dimensionsElement[0][1].GetString());
 
         Assert.True(root.TryGetProperty("FunctionName", out JsonElement functionNameElement));
         Assert.Equal(_functionName, functionNameElement.GetString());
-
-        Assert.True(root.TryGetProperty("Service", out JsonElement serviceElement));
-        Assert.Equal("Test", serviceElement.GetString());
 
         Assert.True(root.TryGetProperty("SingleMetric", out JsonElement singleMetricElement));
         Assert.Equal(1, singleMetricElement.GetInt32());

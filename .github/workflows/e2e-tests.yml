@@ -212,5 +212,5 @@ jobs:
       - name: Destroy arm64 AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          npox cdk destroy --all -c architecture=${{ matrix.arch }} --force
+          npx cdk destroy --all -c architecture=${{ matrix.arch }} --force
       
