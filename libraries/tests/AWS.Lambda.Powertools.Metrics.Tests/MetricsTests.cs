@@ -234,7 +234,6 @@ public class MetricsTests
         {
             CaptureColdStart = true,
             Namespace = "dotnet-powertools-test",
-            Service = "testService",
             DefaultDimensions = new Dictionary<string, string>
             {
                 { "Environment", "Test" },
@@ -268,7 +267,6 @@ public class MetricsTests
         {
             CaptureColdStart = true,
             Namespace = "dotnet-powertools-test",
-            Service = "testService",
             DefaultDimensions = null
         };
 

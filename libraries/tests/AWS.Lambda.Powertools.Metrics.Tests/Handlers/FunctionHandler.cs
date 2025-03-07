@@ -86,6 +86,18 @@ public class FunctionHandler
             dimensions: new Dictionary<string, string> {
                 { "Default", "SingleMetric" }
             });
+        
+        Metrics.PushSingleMetric("SingleMetric2", 1, MetricUnit.Count, resolution: MetricResolution.High,
+            service: "service1",
+            dimensions: new Dictionary<string, string> {
+                { "Default", "SingleMetric" }
+            });
+
+        Metrics.PushSingleMetric("SingleMetric3", 1, MetricUnit.Count, resolution: MetricResolution.High,
+            service: "service2",
+            dimensions: new Dictionary<string, string> {
+                { "Default", "SingleMetric" }
+            });
     }
 
     [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
