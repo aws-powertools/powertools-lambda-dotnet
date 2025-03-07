@@ -3,7 +3,7 @@
         <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
         <LangVersion>default</LangVersion>
         <!-- Version is generated when packaging the individual csproj -->
-        <Version>0.0.1</Version>
+        <Version>$(Version)</Version>
         <Authors>Amazon Web Services</Authors>
         <Company>Amazon.com, Inc</Company>
         <Title>Powertools for AWS Lambda (.NET)</Title>
@@ -16,6 +16,7 @@
         <PackageIcon>AWSLogo128x128.png</PackageIcon>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <VersionSuffix>$(VersionSuffix)</VersionSuffix>
 
     </PropertyGroup>
 
