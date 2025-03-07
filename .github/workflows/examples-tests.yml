@@ -1,18 +1,18 @@
-name: Build .NET
+name: Examples Tests
 
 on:
   push:
     paths:
-      - "libraries/**"
+      - "examples/**"
     branches: [develop]
   pull_request:
     paths:
-      - "libraries/**"
+      - "examples/**"
     branches: [develop]
 
 defaults:
   run:
-    working-directory: ./libraries
+    working-directory: ./examples
 
 permissions:
   contents: read
@@ -36,14 +36,5 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore /tl
 
-      - name: Test & Code Coverage
-        run: dotnet test --no-restore --filter "Category!=E2E" --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity normal
-
-      - name: Codecov
-        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # 5.4.0
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-          name: codecov-lambda-powertools-dotnet
-          verbose: true
-          directory: ./libraries/codecov
+      - name: Test Examples
+        run: dotnet test --no-restore --verbosity normal
