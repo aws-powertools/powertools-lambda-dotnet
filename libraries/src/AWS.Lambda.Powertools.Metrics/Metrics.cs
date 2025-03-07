@@ -372,7 +372,6 @@ public class Metrics : IMetrics, IDisposable
                 ? null
                 : _powertoolsConfigurations.Service;
         
-        // var serviceTodAdd = parsedService ?? _context.GetService();
         if (!string.IsNullOrWhiteSpace(parsedService))
         {
             context.SetService(parsedService);
