@@ -180,8 +180,9 @@ public class Metrics : IMetrics, IDisposable
         Instance = this;
         _powertoolsConfigurations.SetExecutionEnvironment(this);
 
-        if (!string.IsNullOrEmpty(nameSpace)) SetNamespace(nameSpace);
-        if (!string.IsNullOrEmpty(service)) SetService(service);
+        // set namespace and service always
+        SetNamespace(nameSpace);
+        SetService(service);
     }
 
     /// <inheritdoc />
@@ -364,7 +365,19 @@ public class Metrics : IMetrics, IDisposable
 
         var context = new MetricsContext();
         context.SetNamespace(nameSpace ?? GetNamespace());
-        context.SetService(service ?? _context.GetService());
+        
+        var parsedService = !string.IsNullOrWhiteSpace(service)
+            ? service
+            : _powertoolsConfigurations.Service == "service_undefined"
+                ? null
+                : _powertoolsConfigurations.Service;
+        
+        // var serviceTodAdd = parsedService ?? _context.GetService();
+        if (!string.IsNullOrWhiteSpace(parsedService))
+        {
+            context.SetService(parsedService);
+            context.AddDimension("Service", parsedService);
+        }
 
         if (dimensions != null)
         {
