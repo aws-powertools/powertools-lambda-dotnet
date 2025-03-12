@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-image
+FROM mcr.microsoft.com/dotnet/sdk@sha256:c8fdd06e430de9f4ddd066b475ea350d771f341b77dd5ff4c2fafa748e3f2ef2 AS build-image
 
 ARG FUNCTION_DIR="/build"
 ARG SAM_BUILD_MODE="run"
@@ -16,7 +16,7 @@ RUN mkdir -p build_artifacts
 RUN if [ "$SAM_BUILD_MODE" = "debug" ]; then dotnet lambda package --configuration Debug; else dotnet lambda package --configuration Release; fi
 RUN if [ "$SAM_BUILD_MODE" = "debug" ]; then cp -r /build/bin/Debug/net6.0/publish/* /build/build_artifacts; else cp -r /build/bin/Release/net6.0/publish/* /build/build_artifacts; fi
 
-FROM public.ecr.aws/lambda/dotnet:6
+FROM public.ecr.aws/lambda/dotnet@sha256:ec61a7f638e2a0c86d75204117cc7710bcdc70222ffc777e3fc1458287b09834
 
 COPY --from=build-image /build/build_artifacts/ /var/task/
 # Command can be overwritten by providing a different command in the template directly.

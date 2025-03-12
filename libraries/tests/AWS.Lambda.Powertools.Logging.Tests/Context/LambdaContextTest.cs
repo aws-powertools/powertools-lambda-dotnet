@@ -57,6 +57,33 @@ public class LambdaContextTest
      }
      
      [Fact]
+     public void Extract_When_LambdaContext_Is_Null_But_Not_First_Parameter_Returns_False()
+     {
+         // Arrange
+         ILambdaContext lambdaContext = null;
+         var args = Substitute.For<AspectEventArgs>();
+         var method = Substitute.For<MethodInfo>();
+         var parameter1 = Substitute.For<ParameterInfo>();
+         var parameter2 = Substitute.For<ParameterInfo>();
+         
+         // Setup parameters
+         parameter1.ParameterType.Returns(typeof(string));
+         parameter2.ParameterType.Returns(typeof(ILambdaContext));
+
+         // Setup method
+         method.GetParameters().Returns(new[] { parameter1, parameter2 });
+
+         // Setup args
+         args.Method = method;
+         args.Args = new object[] { "requestContext", lambdaContext }; 
+         
+         // Act && Assert
+         LoggingLambdaContext.Clear();
+         Assert.Null(LoggingLambdaContext.Instance);
+         Assert.False(LoggingLambdaContext.Extract(args));
+     }
+     
+     [Fact]
      public void Extract_When_Args_Null_Returns_False()
      {
          // Arrange

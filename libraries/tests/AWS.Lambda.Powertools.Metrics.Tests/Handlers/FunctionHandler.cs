@@ -14,13 +14,11 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.TestUtilities;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
 
@@ -39,25 +37,67 @@ public class FunctionHandler
         Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
     }
     
-    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "ServiceName", CaptureColdStart = true)]
     public void AddMultipleDimensions()
     {
-        Metrics.SetDefaultDimensions(new Dictionary<string, string> {
-            { "Default", "Initial" }
-        });
-        Metrics.PushSingleMetric("Lambda Execute", 1, MetricUnit.Count, metricResolution: MetricResolution.High, nameSpace: "ns1",
-            defaultDimensions: new Dictionary<string, string> {
-                { "Type", "Start" }
+        Metrics.PushSingleMetric("SingleMetric1", 1, MetricUnit.Count, resolution: MetricResolution.High,
+            dimensions: new Dictionary<string, string> {
+                { "Default1", "SingleMetric1" }
             });
         
-        Metrics.PushSingleMetric("Lambda Execute", 1, MetricUnit.Count, metricResolution: MetricResolution.High,  nameSpace: "ns2",
-            defaultDimensions: new Dictionary<string, string> {
-                { "Type", "Start" },
-                { "SessionId", "Unset" }
+        Metrics.PushSingleMetric("SingleMetric2", 1, MetricUnit.Count, resolution: MetricResolution.High,  nameSpace: "ns2",
+            dimensions: new Dictionary<string, string> {
+                { "Default1", "SingleMetric2" },
+                { "Default2", "SingleMetric2" }
             });
-        Metrics.AddMetric("Lambda Execute", 1, MetricUnit.Count, MetricResolution.High);
-        Metrics.AddDimension("SessionId", "MySessionId");
-        Metrics.AddDimension("Type", "Start");
+        Metrics.AddMetric("AddMetric", 1, MetricUnit.Count, MetricResolution.High);
+        Metrics.AddMetric("AddMetric2", 1, MetricUnit.Count, MetricResolution.High);
+    }
+    
+    [Metrics(Namespace = "ExampleApplication")]
+    public void PushSingleMetricWithNamespace()
+    {
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, resolution: MetricResolution.High,
+            dimensions: new Dictionary<string, string> {
+                { "Default", "SingleMetric" }
+            });
+    }
+    
+    [Metrics(Namespace = "ExampleApplication")]
+    public void PushSingleMetricNoDefaultDimensions()
+    {
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count);
+    }
+    
+    [Metrics(Namespace = "ExampleApplication")]
+    public void PushSingleMetricDefaultDimensions()
+    {
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
+        {
+            { "Default", "SingleMetric" }
+        });
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, dimensions: Metrics.DefaultDimensions );
+    }
+    
+    [Metrics]
+    public void PushSingleMetricWithEnvNamespace()
+    {
+        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, resolution: MetricResolution.High,
+            dimensions: new Dictionary<string, string> {
+                { "Default", "SingleMetric" }
+            });
+        
+        Metrics.PushSingleMetric("SingleMetric2", 1, MetricUnit.Count, resolution: MetricResolution.High,
+            service: "service1",
+            dimensions: new Dictionary<string, string> {
+                { "Default", "SingleMetric" }
+            });
+
+        Metrics.PushSingleMetric("SingleMetric3", 1, MetricUnit.Count, resolution: MetricResolution.High,
+            service: "service2",
+            dimensions: new Dictionary<string, string> {
+                { "Default", "SingleMetric" }
+            });
     }
 
     [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
@@ -197,6 +237,30 @@ public class FunctionHandler
     
     [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
     public void HandleWithParamAndLambdaContext(string input, ILambdaContext context)
+    {
+        
+    }
+    
+    [Metrics(Namespace = "ns", Service = "svc", RaiseOnEmptyMetrics = true)]
+    public void HandlerRaiseOnEmptyMetrics()
+    {
+        
+    }
+    
+    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
+    public void HandleOnlyDimensionsInColdStart(ILambdaContext context)
+    {
+        Metrics.AddMetric("MyMetric", 1);
+    }
+    
+    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true, FunctionName = "MyFunction")]
+    public void HandleFunctionNameWithContext(ILambdaContext context)
+    {
+        
+    }
+    
+    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true, FunctionName = "MyFunction")]
+    public void HandleFunctionNameNoContext()
     {
         
     }

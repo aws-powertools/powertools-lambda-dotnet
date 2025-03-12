@@ -130,4 +130,9 @@ internal static class Constants
     /// Constant for POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE environment variable
     /// </summary>
     internal const string BatchThrowOnFullBatchFailureEnv = "POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE";
+    
+    /// <summary>
+    /// Constant for POWERTOOLS_METRICS_DISABLED environment variable
+    /// </summary>
+    internal const string PowertoolsMetricsDisabledEnv = "POWERTOOLS_METRICS_DISABLED";
 }

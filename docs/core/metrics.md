@@ -28,7 +28,7 @@ Powertools for AWS Lambda (.NET) are available as NuGet packages. You can instal
 
 * [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Metrics):
 
-    `dotnet nuget add AWS.Lambda.Powertools.Metrics`
+    `dotnet add package AWS.Lambda.Powertools.Metrics -v 1.7.1`
 
 ## Terminologies
 
@@ -109,7 +109,7 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
 
 === "Metrics"
 
-    ```csharp hl_lines="8"
+    ```csharp hl_lines="5 8"
     using AWS.Lambda.Powertools.Metrics;
 
     public class Function {

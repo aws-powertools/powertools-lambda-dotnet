@@ -4,6 +4,9 @@ name: Build changelog
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   changelog:
     uses: ./.github/workflows/reusable_publish_changelog.yml

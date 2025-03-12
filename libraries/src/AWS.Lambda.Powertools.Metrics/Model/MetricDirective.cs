@@ -105,7 +105,7 @@ public class MetricDirective
     /// </summary>
     /// <value>All dimension keys.</value>
     [JsonPropertyName("Dimensions")]
-    public List<string> AllDimensionKeys
+    public List<List<string>> AllDimensionKeys
     {
         get
         {
@@ -123,7 +123,8 @@ public class MetricDirective
 
             if (defaultKeys.Count == 0) defaultKeys = new List<string>();
 
-            return defaultKeys;
+            // Wrap the list of strings in another list
+            return new List<List<string>> { defaultKeys };
         }
     }
     
@@ -203,7 +204,7 @@ public class MetricDirective
         else
         {
             throw new ArgumentOutOfRangeException(nameof(Dimensions),
-                "Cannot add more than 9 dimensions at the same time.");
+                $"Cannot add more than {PowertoolsConfigurations.MaxDimensions} dimensions at the same time.");
         }
     }
 

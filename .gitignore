@@ -12,6 +12,8 @@ deploy/**
 .vs/
 .aws-sam
 
+node_modules/*
+
 examples/SimpleLambda/.aws-sam
 examples/SimpleLambda/samconfig.toml
 
@@ -19,6 +21,7 @@ AWS.Lambda.Powertools.sln.DotSettings.user
 [Oo]bj/**
 [Bb]in/**
 .DS_Store
+.cache
 
 dist/
 site/

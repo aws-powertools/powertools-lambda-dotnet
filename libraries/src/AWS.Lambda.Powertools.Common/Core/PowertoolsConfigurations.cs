@@ -27,7 +27,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <summary>
     ///     The maximum dimensions
     /// </summary>
-    public const int MaxDimensions = 9;
+    public const int MaxDimensions = 29;
 
     /// <summary>
     ///     The maximum metrics
@@ -219,4 +219,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
 
     /// <inheritdoc />
     public bool BatchThrowOnFullBatchFailureEnabled => GetEnvironmentVariableOrDefault(Constants.BatchThrowOnFullBatchFailureEnv, true);
+
+    /// <inheritdoc />
+    public bool MetricsDisabled => GetEnvironmentVariableOrDefault(Constants.PowertoolsMetricsDisabledEnv, false);
 }

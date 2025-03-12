@@ -1,0 +1,40 @@
+name: Examples Tests
+
+on:
+  push:
+    paths:
+      - "examples/**"
+    branches: [develop]
+  pull_request:
+    paths:
+      - "examples/**"
+    branches: [develop]
+
+defaults:
+  run:
+    working-directory: ./examples
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
+        with:
+          dotnet-version: |
+            6.0.x
+            8.0.x
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore /tl
+
+      - name: Test Examples
+        run: dotnet test --no-restore --verbosity normal

@@ -4,7 +4,7 @@
 [![Build](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml)
 [![codecov.io](https://codecov.io/github/aws-powertools/powertools-lambda-dotnet/branch/develop/graphs/badge.svg)](https://app.codecov.io/gh/aws-powertools/powertools-lambda-dotnet)
 [![dotnet support](https://img.shields.io/static/v1?label=dotnet&message=%20NET6.0|NET8.0&color=blue?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/AWS.Lambda.Powertools.Logging.svg)](https://www.nuget.org/packages?q=AWS.Lambda.Powertools)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/AWS.Lambda.Powertools.Logging.svg)](https://www.nuget.org/packages?q=AWS.Lambda.Powertools) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/aws-powertools/powertools-lambda-dotnet/badge)](https://scorecard.dev/viewer/?uri=github.com/aws-powertools/powertools-lambda-dotnet)
 [![Join our Discord](https://dcbadge.vercel.app/api/server/B8zZKbbyET?style=flat-square)](https://discord.gg/B8zZKbbyET)
 
 Powertools for AWS Lambda (.NET) is a developer toolkit to implement Serverless [best practices and increase developer velocity](https://docs.powertools.aws.dev/lambda-dotnet/#features).
@@ -35,27 +35,31 @@ Powertools for AWS Lambda (.NET) provides three core utilities:
 
 The Powertools for AWS Lambda (.NET) utilities (.NET 6 and .NET 8) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*) or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
 
-* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
+* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages/AWS.Lambda.Powertools.Logging):
 
     `dotnet add package AWS.Lambda.Powertools.Logging`
 
-* [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Metrics):
+* [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics):
 
     `dotnet add package AWS.Lambda.Powertools.Metrics`
 
-* [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
+* [AWS.Lambda.Powertools.Metrics.AspNetCore](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics.AspNetCore):
+
+    `dotnet add package AWS.Lambda.Powertools.Metrics.AspNetCore`
+
+* [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages/AWS.Lambda.Powertools.Tracing):
 
     `dotnet add package AWS.Lambda.Powertools.Tracing`
 
-* [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Parameters):
+* [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages/AWS.Lambda.Powertools.Parameters):
 
     `dotnet add package AWS.Lambda.Powertools.Parameters`
 
-* [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Idempotency):
+* [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages/AWS.Lambda.Powertools.Idempotency):
 
     `dotnet add package AWS.Lambda.Powertools.Idempotency`
 
-* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.BatchProcessing):
+* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages/AWS.Lambda.Powertools.BatchProcessing):
 
     `dotnet add package AWS.Lambda.Powertools.BatchProcessing`
 

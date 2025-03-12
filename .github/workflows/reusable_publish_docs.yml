@@ -22,12 +22,13 @@ on:
         type: boolean
 
 permissions:
-  id-token: write
-  contents: write
-  pages: write
+  contents: read
 
 jobs:
   publish_docs:
+    permissions:
+      id-token: write
+      contents: write
     # Force Github action to run only a single job at a time (based on the group name)
     # This is to prevent "race-condition" in publishing a new version of doc to `gh-pages`
     concurrency:
@@ -80,6 +81,9 @@ jobs:
 
 
   apidocs:
+    permissions:
+      id-token: write
+      contents: write
     # Force Github action to run only a single job at a time (based on the group name)
     # This is to prevent "race-condition" in publishing a new version of doc to `gh-pages`
     concurrency:

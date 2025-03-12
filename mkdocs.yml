@@ -3,6 +3,7 @@ site_description: Powertools for AWS Lambda (.NET)
 site_author: Amazon Web Services
 repo_url: https://github.com/aws-powertools/powertools-lambda-dotnet
 edit_uri: edit/develop/docs
+site_url: https://docs.powertools.aws.dev/lambda/dotnet/
 
 nav:
   - Homepage: index.md
@@ -14,7 +15,9 @@ nav:
   - Workshop 🆕: https://s12d.com/powertools-for-aws-lambda-workshop" target="_blank
   - Core utilities:
       - core/logging.md
-      - core/metrics.md
+      - Metrics:
+          - core/metrics.md
+          - core/metrics-v2.md
       - core/tracing.md
   - Utilities:
       - utilities/parameters.md
