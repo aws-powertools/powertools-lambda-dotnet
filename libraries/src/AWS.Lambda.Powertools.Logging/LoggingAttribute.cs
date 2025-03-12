@@ -14,6 +14,8 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
@@ -93,6 +95,10 @@ namespace AWS.Lambda.Powertools.Logging;
 ///             <description>string, pointer path to extract correlation id from input parameter</description>
 ///         </item>
 ///         <item>
+///             <term>ExtractedKeyPaths</term>
+///             <description>IEnumerable of pairs of pointer path to extract a value from input parameter, and the name of the key to store it in</description>
+///         </item>
+///         <item>
 ///             <term>ClearState</term>
 ///             <description>bool, clear all custom keys on each request, by default false</description>
 ///         </item>
@@ -106,7 +112,8 @@ namespace AWS.Lambda.Powertools.Logging;
 ///             ClearState = true,
 ///             LogLevel = LogLevel.Debug,
 ///             LoggerOutputCase = LoggerOutputCase.SnakeCase,
-///             CorrelationIdPath = "/headers/my_request_id_header")
+///             CorrelationIdPath = "/headers/my_request_id_header"),
+///             ExtractedKeyPaths = [("/headers/my_request_id", device_id"), ("/headers/user_id", "user_id")]
 ///         ]
 ///         public async Task&lt;APIGatewayProxyResponse&gt; FunctionHandler
 ///              (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
@@ -156,6 +163,18 @@ public class LoggingAttribute : Attribute
     /// </summary>
     /// <value>The correlation identifier path.</value>
     public string CorrelationIdPath { get; set; }
+    
+    /// <summary>
+    ///     Pointer paths to extract other information from input parameter and the name of the key store it in.
+    ///     For example ("/headers/device_id", "DeviceId") will extract the value from that path and add the value to
+    ///     the key named "DeviceId".
+    ///     The first handler parameter is the input to the handler, which can be
+    ///     event data (published by an event source) or custom input that you provide
+    ///     such as a string or any custom data object.
+    ///     Use the same path naming convention as CorrelationIdPath.
+    /// </summary>
+    /// <value>IEnumerable of pairs of the Path to the data, and the name of the key to store it in.</value>
+    public IEnumerable<(string Path, string KeyName)> ExtractedKeyPaths { get; set; }
 
     /// <summary>
     ///     Logger is commonly initialized in the global scope.

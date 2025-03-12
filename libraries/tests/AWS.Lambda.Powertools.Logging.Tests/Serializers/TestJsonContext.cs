@@ -26,4 +26,6 @@ internal class TestObject
 internal class Header
 {
     public string MyRequestIdHeader { get; set; }
+    public string MySecondRequestIdHeader { get; set; }
+    public string MyThirdRequestIdHeader { get; set; }
 }

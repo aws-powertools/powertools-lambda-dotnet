@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -53,6 +54,11 @@ public class LoggingAspect
     ///     The correlation identifier path
     /// </summary>
     private string _correlationIdPath;
+    
+    /// <summary>
+    ///     Paths to arbitrary values to extract from the input object and the names of the keys to store them in 
+    /// </summary>
+    private IEnumerable<(string Path, string KeyName)> _extractedKeyPaths;
 
     /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations
@@ -136,6 +142,7 @@ public class LoggingAspect
 
             var logEvent = trigger.LogEvent;
             _correlationIdPath = trigger.CorrelationIdPath;
+            _extractedKeyPaths = trigger.ExtractedKeyPaths;
             _clearState = trigger.ClearState;
 
             Logger.LoggerProvider = new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
@@ -153,6 +160,7 @@ public class LoggingAspect
             CaptureXrayTraceId();
             CaptureLambdaContext(eventArgs);
             CaptureCorrelationId(eventObject);
+            CaptureExtractedKeyPaths(eventObject);
             if (logEvent || _powertoolsConfigurations.LoggerLogEvent)
                 LogEvent(eventObject);
         }
@@ -224,48 +232,73 @@ public class LoggingAspect
     /// <param name="eventArg">The event argument.</param>
     private void CaptureCorrelationId(object eventArg)
     {
-        if (string.IsNullOrWhiteSpace(_correlationIdPath))
+        CaptureKeyFromPath(eventArg, _correlationIdPath, LoggingConstants.KeyCorrelationId);
+    }
+
+    /// <summary>
+    ///     Captures the extracted key paths.
+    /// </summary>
+    /// <param name="eventArg">The event argument.</param>
+    private void CaptureExtractedKeyPaths(object eventArg)
+    {
+        if (!_extractedKeyPaths?.Any() ?? true)
+            return;
+        foreach (var (path, keyName) in _extractedKeyPaths)
+        {
+            CaptureKeyFromPath(eventArg, path, keyName);
+        }
+    }
+
+    /// <summary>
+    /// Captures an arbitrary value from the path and stores it in a key
+    /// </summary>
+    /// <param name="eventArg">The event argument.</param>
+    /// <param name="path">The path to the input data.</param>
+    /// <param name="keyName">The name of the key to store the data in.</param>
+    private void CaptureKeyFromPath(object eventArg, string path, string keyName)
+    {
+        if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(keyName))
             return;
 
-        var correlationIdPaths = _correlationIdPath
+        var paths = path
             .Split(CorrelationIdPaths.Separator, StringSplitOptions.RemoveEmptyEntries);
 
-        if (!correlationIdPaths.Any())
+        if (!paths.Any())
             return;
 
         if (eventArg is null)
         {
             if (IsDebug())
                 _systemWrapper.LogLine(
-                    "Skipping CorrelationId capture because event parameter not found.");
+                    $"Skipping {keyName} capture because event parameter not found.");
             return;
         }
 
         try
         {
-            var correlationId = string.Empty;
+            var keyValue = string.Empty;
 
             var jsonDoc =
                 JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg, eventArg.GetType()));
 
             var element = jsonDoc.RootElement;
 
-            for (var i = 0; i < correlationIdPaths.Length; i++)
+            for (var i = 0; i < paths.Length; i++)
             {
                 // For casing parsing to be removed from Logging v2 when we get rid of outputcase
                 // without this CorrelationIdPaths.ApiGatewayRest would not work
                 var pathWithOutputCase =
-                    _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
+                    _powertoolsConfigurations.ConvertToOutputCase(paths[i], _config.LoggerOutputCase);
                 if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
                     break;
 
                 element = childElement;
-                if (i == correlationIdPaths.Length - 1)
-                    correlationId = element.ToString();
+                if (i == paths.Length - 1)
+                    keyValue = element.ToString();
             }
 
-            if (!string.IsNullOrWhiteSpace(correlationId))
-                Logger.AppendKey(LoggingConstants.KeyCorrelationId, correlationId);
+            if (!string.IsNullOrWhiteSpace(keyValue))
+                Logger.AppendKey(keyName, keyValue);
         }
         catch (Exception e)
         {

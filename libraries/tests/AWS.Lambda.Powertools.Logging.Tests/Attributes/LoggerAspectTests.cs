@@ -263,7 +263,17 @@ public class LoggerAspectTests : IDisposable
         var name = "TestMethod";
         var args = new object[]
         {
-            new TestObject { FullName = "Powertools", Age = 20, Headers = new Header { MyRequestIdHeader = "test" } }
+            new TestObject
+            {
+                FullName = "Powertools", 
+                Age = 20, 
+                Headers = new Header
+                {
+                    MyRequestIdHeader = "test", 
+                    MySecondRequestIdHeader = "test2", 
+                    MyThirdRequestIdHeader = "test3"
+                }
+            }
         };
         var hostType = typeof(string);
         var method = typeof(TestHandlers).GetMethod("TestMethod");
@@ -275,7 +285,9 @@ public class LoggerAspectTests : IDisposable
                 Service = "TestService",
                 LoggerOutputCase = LoggerOutputCase.PascalCase,
                 LogEvent = true,
-                CorrelationIdPath = "/Headers/MyRequestIdHeader"
+                CorrelationIdPath = "/Headers/MyRequestIdHeader",
+                ExtractedKeyPaths = [("/Headers/MySecondRequestIdHeader", "second"), 
+                    ("/Headers/MyThirdRequestIdHeader", "third")]
             }
         };
 
@@ -298,8 +310,10 @@ public class LoggerAspectTests : IDisposable
 
         _mockSystemWrapper.Received(1).LogLine(Arg.Is<string>(s =>
             s.Contains("\"CorrelationId\":\"test\"") &&
+            s.Contains("\"Second\":\"test2\"") &&
+            s.Contains("\"Third\":\"test3\"") &&
             s.Contains(
-                "\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":{\"MyRequestIdHeader\":\"test\"}")
+                "\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":{\"MyRequestIdHeader\":\"test\",\"MySecondRequestIdHeader\":\"test2\",\"MyThirdRequestIdHeader\":\"test3\"}")
         ));
     }
 
