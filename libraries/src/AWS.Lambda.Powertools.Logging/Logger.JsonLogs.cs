@@ -18,7 +18,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
 
-public partial class Logger
+public static partial class Logger
 {
     #region JSON Logger Methods
 

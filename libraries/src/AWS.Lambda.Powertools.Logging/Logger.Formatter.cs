@@ -18,8 +18,10 @@ using AWS.Lambda.Powertools.Logging.Internal;
 
 namespace AWS.Lambda.Powertools.Logging;
 
-public partial class Logger
+public static partial class Logger
 {
+    private static ILogFormatter _logFormatter;
+
     #region Custom Log Formatter
 
     /// <summary>

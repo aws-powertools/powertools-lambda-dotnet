@@ -34,17 +34,18 @@ internal sealed class PowertoolsLogger : ILogger
     /// <summary>
     ///     The name
     /// </summary>
-    private readonly string _name;
+    private readonly string _categoryName;
 
     /// <summary>
     ///     The current configuration
     /// </summary>
-    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
+    private readonly PowertoolsLoggerConfiguration _currentConfig;
 
     /// <summary>
     ///     The system wrapper
     /// </summary>
     private readonly ISystemWrapper _systemWrapper;
+
 
     /// <summary>
     ///     The current scope
@@ -54,32 +55,20 @@ internal sealed class PowertoolsLogger : ILogger
     /// <summary>
     ///     Private constructor - Is initialized on CreateLogger
     /// </summary>
-    /// <param name="name">The name.</param>
+    /// <param name="categoryName">The name.</param>
     /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
     /// <param name="systemWrapper">The system wrapper.</param>
-    private PowertoolsLogger(
-        string name,
-        IPowertoolsConfigurations powertoolsConfigurations,
+    public PowertoolsLogger(
+        string categoryName,
+        Func<PowertoolsLoggerConfiguration> getCurrentConfig,
         ISystemWrapper systemWrapper)
     {
-        _name = name;
-        _powertoolsConfigurations = powertoolsConfigurations;
+        _categoryName = categoryName;
+        _currentConfig = getCurrentConfig();
         _systemWrapper = systemWrapper;
 
-        _powertoolsConfigurations.SetExecutionEnvironment(this);
-    }
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="PowertoolsLogger" /> class.
-    /// </summary>
-    /// <param name="name">The name.</param>
-    /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
-    /// <param name="systemWrapper">The system wrapper.</param>
-    internal static PowertoolsLogger CreateLogger(string name,
-        IPowertoolsConfigurations powertoolsConfigurations,
-        ISystemWrapper systemWrapper)
-    {
-        return new PowertoolsLogger(name, powertoolsConfigurations, systemWrapper);
+        // TODO: Fix
+        // _powertoolsConfigurations.SetExecutionEnvironment(this);
     }
 
     /// <summary>
@@ -108,7 +97,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="logLevel">The log level.</param>
     /// <returns>bool.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsEnabled(LogLevel logLevel) => _powertoolsConfigurations.IsLogLevelEnabled(logLevel);
+    public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None && logLevel >= _currentConfig.MinimumLevel;
 
     /// <summary>
     ///     Writes a log entry.
@@ -175,15 +164,13 @@ internal sealed class PowertoolsLogger : ILogger
             }
         }
 
-        var keyLogLevel = GetLogLevelKey();
-
         logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString("o"));
-        logEntry.TryAdd(keyLogLevel, logLevel.ToString());
-        logEntry.TryAdd(LoggingConstants.KeyService, _powertoolsConfigurations.CurrentConfig().Service);
-        logEntry.TryAdd(LoggingConstants.KeyLoggerName, _name);
+        logEntry.TryAdd(_currentConfig.LogLevelKey, logLevel.ToString());
+        logEntry.TryAdd(LoggingConstants.KeyService, _currentConfig.Service);
+        logEntry.TryAdd(LoggingConstants.KeyLoggerName, _categoryName);
         logEntry.TryAdd(LoggingConstants.KeyMessage, message);
-        if (_powertoolsConfigurations.CurrentConfig().SamplingRate > 0)
-            logEntry.TryAdd(LoggingConstants.KeySamplingRate, _powertoolsConfigurations.CurrentConfig().SamplingRate);
+        if (_currentConfig.SamplingRate > 0)
+            logEntry.TryAdd(LoggingConstants.KeySamplingRate, _currentConfig.SamplingRate);
         if (exception != null)
             logEntry.TryAdd(LoggingConstants.KeyException, exception);
 
@@ -208,11 +195,11 @@ internal sealed class PowertoolsLogger : ILogger
         {
             Timestamp = timestamp,
             Level = logLevel,
-            Service = _powertoolsConfigurations.CurrentConfig().Service,
-            Name = _name,
+            Service = _currentConfig.Service,
+            Name = _categoryName,
             Message = message,
             Exception = exception,
-            SamplingRate = _powertoolsConfigurations.CurrentConfig().SamplingRate,
+            SamplingRate = _currentConfig.SamplingRate,
         };
 
         var extraKeys = new Dictionary<string, object>();
@@ -309,19 +296,6 @@ internal sealed class PowertoolsLogger : ILogger
         message = stateKeys.First(k => k.Key != "{OriginalFormat}").Value;
 
         return true;
-    }
-
-    /// <summary>
-    ///     Gets the log level key.
-    /// </summary>
-    /// <returns>System.String.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private string GetLogLevelKey()
-    {
-        return _powertoolsConfigurations.LambdaLogLevelEnabled() &&
-               _powertoolsConfigurations.CurrentConfig().LoggerOutputCase == LoggerOutputCase.PascalCase
-            ? "LogLevel"
-            : LoggingConstants.KeyLogLevel;
     }
 
     /// <summary>

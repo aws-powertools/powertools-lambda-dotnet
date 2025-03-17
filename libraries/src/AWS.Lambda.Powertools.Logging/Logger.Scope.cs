@@ -20,9 +20,13 @@ using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 
 namespace AWS.Lambda.Powertools.Logging;
 
-public partial class Logger
+public static partial class Logger
 {
-    #region Scope Variables
+    /// <summary>
+    ///     Gets the scope.
+    /// </summary>
+    /// <value>The scope.</value>
+    private static IDictionary<string, object> Scope { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
 
     /// <summary>
     ///     Appending additional key to the log context.
@@ -68,7 +72,7 @@ public partial class Logger
     ///     Remove additional keys from the log context.
     /// </summary>
     /// <param name="keys">The list of keys.</param>
-    public static void RemoveKeys(params string[] keys)
+        public static void RemoveKeys(params string[] keys)
     {
         if (keys == null) return;
         foreach (var key in keys)
@@ -92,6 +96,4 @@ public partial class Logger
     {
         Scope.Clear();
     }
-
-    #endregion
 }

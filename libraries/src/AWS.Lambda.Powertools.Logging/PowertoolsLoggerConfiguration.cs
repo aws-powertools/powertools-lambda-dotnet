@@ -24,14 +24,14 @@ namespace AWS.Lambda.Powertools.Logging;
 ///     <see cref="T:Microsoft.Extensions.Options.IOptions{LoggerConfiguration}" />
 /// </summary>
 /// <seealso cref="T:Microsoft.Extensions.Options.IOptions{LoggerConfiguration}" />
-public class LoggerConfiguration : IOptions<LoggerConfiguration>
+public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfiguration>
 {
     /// <summary>
     ///     Service name is used for logging.
     ///     This can be also set using the environment variable <c>POWERTOOLS_SERVICE_NAME</c>.
     /// </summary>
     /// <value>The service.</value>
-    public string Service { get; set; }
+    public string? Service { get; set; } = null;
 
     /// <summary>
     ///     Specify the minimum log level for logging (Information, by default).
@@ -51,7 +51,7 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     ///     The default configured options instance
     /// </summary>
     /// <value>The value.</value>
-    LoggerConfiguration IOptions<LoggerConfiguration>.Value => this;
+    PowertoolsLoggerConfiguration IOptions<PowertoolsLoggerConfiguration>.Value => this;
 
     /// <summary>
     ///     The logger output case.
@@ -59,4 +59,8 @@ public class LoggerConfiguration : IOptions<LoggerConfiguration>
     /// </summary>
     /// <value>The logger output case.</value>
     public LoggerOutputCase LoggerOutputCase { get; set; } = LoggerOutputCase.Default;
+
+    internal string LogLevelKey { get; set; }
+    
+    
 }

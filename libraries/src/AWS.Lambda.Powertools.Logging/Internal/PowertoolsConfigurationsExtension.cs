@@ -29,7 +29,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 internal static class PowertoolsConfigurationsExtension
 {
     private static readonly object _lock = new object();
-    private static LoggerConfiguration _config;
+    private static PowertoolsLoggerConfiguration _config;
 
     /// <summary>
     ///     Maps AWS log level to .NET log level
@@ -95,37 +95,37 @@ internal static class PowertoolsConfigurationsExtension
     ///     Gets the current configuration.
     /// </summary>
     /// <returns>AWS.Lambda.Powertools.Logging.LoggerConfiguration.</returns>
-    internal static void SetCurrentConfig(this IPowertoolsConfigurations powertoolsConfigurations, LoggerConfiguration config, ISystemWrapper systemWrapper)
-    {
-        lock (_lock)
-        {
-            _config = config ?? new LoggerConfiguration();
-
-            var logLevel = powertoolsConfigurations.GetLogLevel(_config.MinimumLevel);
-            var lambdaLogLevel = powertoolsConfigurations.GetLambdaLogLevel();
-            var lambdaLogLevelEnabled = powertoolsConfigurations.LambdaLogLevelEnabled();
-
-            if (lambdaLogLevelEnabled && logLevel < lambdaLogLevel)
-            {
-                systemWrapper.LogLine($"Current log level ({logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
-            }
-
-            // Set service
-            _config.Service = _config.Service ?? powertoolsConfigurations.Service;
-
-            // Set output case
-            var loggerOutputCase = powertoolsConfigurations.GetLoggerOutputCase(_config.LoggerOutputCase);
-            _config.LoggerOutputCase = loggerOutputCase;
-            PowertoolsLoggingSerializer.ConfigureNamingPolicy(loggerOutputCase);
-
-            // Set log level
-            var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
-            _config.MinimumLevel = minLogLevel;
-
-            // Set sampling rate
-            SetSamplingRate(powertoolsConfigurations, systemWrapper, minLogLevel);
-        }
-    }
+    // internal static void SetCurrentConfig(this IPowertoolsConfigurations powertoolsConfigurations, LoggerConfiguration config, ISystemWrapper systemWrapper)
+    // {
+    //     lock (_lock)
+    //     {
+    //         _config = config ?? new LoggerConfiguration();
+    //
+    //         var logLevel = powertoolsConfigurations.GetLogLevel(_config.MinimumLevel);
+    //         var lambdaLogLevel = powertoolsConfigurations.GetLambdaLogLevel();
+    //         var lambdaLogLevelEnabled = powertoolsConfigurations.LambdaLogLevelEnabled();
+    //
+    //         if (lambdaLogLevelEnabled && logLevel < lambdaLogLevel)
+    //         {
+    //             systemWrapper.LogLine($"Current log level ({logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
+    //         }
+    //
+    //         // Set service
+    //         _config.Service = _config.Service ?? powertoolsConfigurations.Service;
+    //
+    //         // Set output case
+    //         var loggerOutputCase = powertoolsConfigurations.GetLoggerOutputCase(_config.LoggerOutputCase);
+    //         _config.LoggerOutputCase = loggerOutputCase;
+    //         PowertoolsLoggingSerializer.ConfigureNamingPolicy(loggerOutputCase);
+    //
+    //         // Set log level
+    //         var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
+    //         _config.MinimumLevel = minLogLevel;
+    //
+    //         // Set sampling rate
+    //         SetSamplingRate(powertoolsConfigurations, systemWrapper, minLogLevel);
+    //     }
+    // }
 
     /// <summary>
     /// Set sampling rate
@@ -134,24 +134,24 @@ internal static class PowertoolsConfigurationsExtension
     /// <param name="systemWrapper"></param>
     /// <param name="minLogLevel"></param>
     /// <returns></returns>
-    private static void SetSamplingRate(IPowertoolsConfigurations powertoolsConfigurations, ISystemWrapper systemWrapper, LogLevel minLogLevel)
-    {
-        var samplingRate = _config.SamplingRate > 0 ? _config.SamplingRate : powertoolsConfigurations.LoggerSampleRate;
-        samplingRate = ValidateSamplingRate(samplingRate, minLogLevel, systemWrapper);
-
-        _config.SamplingRate = samplingRate;
-
-        if (samplingRate > 0)
-        {
-            double sample = systemWrapper.GetRandom();
-
-            if (sample <= samplingRate)
-            {
-                systemWrapper.LogLine($"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
-                _config.MinimumLevel = LogLevel.Debug;
-            }
-        }
-    }
+    // private static void SetSamplingRate(IPowertoolsConfigurations powertoolsConfigurations, ISystemWrapper systemWrapper, LogLevel minLogLevel)
+    // {
+    //     var samplingRate = _config.SamplingRate > 0 ? _config.SamplingRate : powertoolsConfigurations.LoggerSampleRate;
+    //     samplingRate = ValidateSamplingRate(samplingRate, minLogLevel, systemWrapper);
+    //
+    //     _config.SamplingRate = samplingRate;
+    //
+    //     if (samplingRate > 0)
+    //     {
+    //         double sample = systemWrapper.GetRandom();
+    //
+    //         if (sample <= samplingRate)
+    //         {
+    //             systemWrapper.LogLine($"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
+    //             _config.MinimumLevel = LogLevel.Debug;
+    //         }
+    //     }
+    // }
     
     /// <summary>
     /// Validate Sampling rate
@@ -309,23 +309,4 @@ internal static class PowertoolsConfigurationsExtension
         return char.ToLowerInvariant(pascalCase[0]) + pascalCase.Substring(1);
     }
     
-    /// <summary>
-    ///     Determines whether [is log level enabled].
-    /// </summary>
-    /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
-    /// <param name="logLevel">The log level.</param>
-    /// <returns><c>true</c> if [is log level enabled]; otherwise, <c>false</c>.</returns>
-    internal static bool IsLogLevelEnabled(this IPowertoolsConfigurations powertoolsConfigurations, LogLevel logLevel)
-    {
-        return logLevel != LogLevel.None && logLevel >= _config.MinimumLevel;
-    }
-    
-    /// <summary>
-    ///     Gets the current configuration.
-    /// </summary>
-    /// <returns>AWS.Lambda.Powertools.Logging.LoggerConfiguration.</returns>
-    internal static LoggerConfiguration CurrentConfig(this IPowertoolsConfigurations powertoolsConfigurations)
-    {
-        return _config;
-    }
 }

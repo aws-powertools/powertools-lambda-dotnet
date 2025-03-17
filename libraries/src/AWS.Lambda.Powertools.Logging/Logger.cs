@@ -14,10 +14,10 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 using AWS.Lambda.Powertools.Logging.Internal;
-using AWS.Lambda.Powertools.Logging.Internal.Helpers;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -25,108 +25,118 @@ namespace AWS.Lambda.Powertools.Logging;
 /// <summary>
 ///     Class Logger.
 /// </summary>
-public partial class Logger : ILogger
+public static partial class Logger
 {
-    /// <summary>
-    ///     The logger instance
-    /// </summary>
-    private static ILogger _loggerInstance;
+    // Use Lazy<T> for thread-safe initialization
+    private static Lazy<ILoggerFactory> _factoryLazy;
+    private static Lazy<ILogger> _defaultLoggerLazy;
+
+    // Static constructor to ensure initialization 
+    // static Logger()
+    // {
+    //     // Create default configuration with sensible defaults
+    //     var defaultConfig = new PowertoolsLoggerConfiguration
+    //     {
+    //         MinimumLevel = LogLevel.Information, // Default to Information level
+    //         Service = "LambdaFunction",          // Default service name
+    //         LoggerOutputCase = LoggerOutputCase.SnakeCase,  // Default case
+    //         SamplingRate = 1.0                  // Default to log everything
+    //     };
+    //     
+    //     // Initialize with default factory
+    //     _factoryLazy = new Lazy<ILoggerFactory>(() => 
+    //         LoggerFactory.Create(builder => 
+    //             builder.AddPowertoolsLogger(config => 
+    //             {
+    //                 config.MinimumLevel = defaultConfig.MinimumLevel;
+    //                 config.Service = defaultConfig.Service;
+    //                 config.LoggerOutputCase = defaultConfig.LoggerOutputCase;
+    //                 config.SamplingRate = defaultConfig.SamplingRate;
+    //             })),
+    //         LazyThreadSafetyMode.ExecutionAndPublication);
+    //     
+    //     _defaultLoggerLazy = new Lazy<ILogger>(() => 
+    //         _factoryLazy.Value.CreateLogger("PowertoolsLogger"));
+    //         
+    //     // Not yet explicitly configured
+    //     _isConfigured = false;
+    // }
+
+    // Flag to track if custom configuration has been applied
+    private static bool _isConfigured;
+
+    // Properties to access the lazy-initialized instances
+    private static ILoggerFactory Factory => _factoryLazy.Value;
+    private static ILogger LoggerInstance => _defaultLoggerLazy.Value;
 
     /// <summary>
-    ///     Gets the logger instance.
+    /// Indicates whether the Logger has been configured with custom settings
     /// </summary>
-    /// <value>The logger instance.</value>
-    private static ILogger LoggerInstance => _loggerInstance ??= Create<Logger>();
+    public static bool IsConfigured => _isConfigured;
 
-    /// <summary>
-    ///     Gets or sets the logger provider.
-    /// </summary>
-    /// <value>The logger provider.</value>
-    internal static ILoggerProvider LoggerProvider { get; set; }
 
-    /// <summary>
-    ///     The logger formatter instance
-    /// </summary>
-    private static ILogFormatter _logFormatter;
-
-    /// <summary>
-    ///     Gets the scope.
-    /// </summary>
-    /// <value>The scope.</value>
-    private static IDictionary<string, object> Scope { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
-
-    /// <summary>
-    ///     Creates a new <see cref="T:Microsoft.Extensions.Logging.ILogger" /> instance.
-    /// </summary>
-    /// <param name="categoryName">The category name for messages produced by the logger.</param>
-    /// <returns>The instance of <see cref="T:Microsoft.Extensions.Logging.ILogger" /> that was created.</returns>
-    /// <exception cref="System.ArgumentNullException">categoryName</exception>
-    public static ILogger Create(string categoryName)
+    // Allow manual configuration using options
+    public static void Configure(Action<PowertoolsLoggerConfiguration> configureOptions)
     {
-        if (string.IsNullOrWhiteSpace(categoryName))
-            throw new ArgumentNullException(nameof(categoryName));
+        var options = new PowertoolsLoggerConfiguration();
+        configureOptions(options);
+        Configure(options);
+    }
+    
+    // Configure with existing factory
+    public static void Configure(ILoggerFactory loggerFactory)
+    {
+        Interlocked.Exchange(ref _factoryLazy,
+            new Lazy<ILoggerFactory>(() => loggerFactory));
 
-        // Needed for when using Logger directly with decorator
-        LoggerProvider ??= new LoggerProvider(null);
+        Interlocked.Exchange(ref _defaultLoggerLazy,
+            new Lazy<ILogger>(() => Factory.CreateLogger("PowertoolsLogger")));
 
-        return LoggerProvider.CreateLogger(categoryName);
+        _isConfigured = true;
     }
 
-    /// <summary>
-    ///     Creates a new <see cref="T:Microsoft.Extensions.Logging.ILogger" /> instance.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <returns>The instance of <see cref="T:Microsoft.Extensions.Logging.ILogger" /> that was created.</returns>
-    public static ILogger Create<T>()
+    // Directly configure from a PowertoolsLoggerConfiguration
+    internal static void Configure(PowertoolsLoggerConfiguration options)
     {
-        return Create(typeof(T).FullName);
+        if (options == null) throw new ArgumentNullException(nameof(options));
+
+        // Create a factory with our provider
+        var factory = LoggerFactory.Create(builder => 
+        {
+            // Use AddPowertoolsLogger but with fromLoggerConfigure=true to prevent recursion
+            builder.AddPowertoolsLogger(config => 
+            {
+                config.Service = options.Service;
+                config.MinimumLevel = options.MinimumLevel;
+                config.LoggerOutputCase = options.LoggerOutputCase;
+                config.SamplingRate = options.SamplingRate;
+                // Copy other properties as needed
+            }, true);
+        });
+
+        // Update factory and logger
+        Interlocked.Exchange(ref _factoryLazy,
+            new Lazy<ILoggerFactory>(() => factory));
+
+        Interlocked.Exchange(ref _defaultLoggerLazy,
+            new Lazy<ILogger>(() => Factory.CreateLogger("PowertoolsLogger")));
+
+        _isConfigured = true;
     }
 
-    internal static void ClearLoggerInstance()
-    {
-        _loggerInstance = null;
-    }
 
-    #region ILogger Interface Implementation
+    // Get a logger for a specific category
+    public static ILogger GetLogger<T>() => GetLogger(typeof(T).Name);
 
-    /// <summary>
-    /// Begins a logical operation scope.
-    /// </summary>
-    /// <typeparam name="TState">The type of state to begin scope for.</typeparam>
-    /// <param name="state">The identifier for the scope.</param>
-    /// <returns>An <see cref="IDisposable"/> that ends the logical operation scope on dispose.</returns>
-    public IDisposable BeginScope<TState>(TState state)
-    {
-        return LoggerInstance.BeginScope(state);
-    }
-
-    /// <summary>
-    /// Checks if the given <paramref name="logLevel"/> is enabled.
-    /// </summary>
-    /// <param name="logLevel">Level to be checked.</param>
-    /// <returns><c>true</c> if enabled.</returns>
-    public bool IsEnabled(LogLevel logLevel)
-    {
-        return LoggerInstance.IsEnabled(logLevel);
-    }
-
-    /// <summary>
-    /// Writes a log entry.
-    /// </summary>
-    /// <typeparam name="TState">The type of the object to be written.</typeparam>
-    /// <param name="logLevel">Entry will be written on this level.</param>
-    /// <param name="eventId">Id of the event.</param>
-    /// <param name="state">The entry to be written. Can be also an object.</param>
-    /// <param name="exception">The exception related to this entry.</param>
-    /// <param name="formatter">
-    ///     Function to create a <see cref="T:System.String" /> message of the <paramref name="state" />
-    ///     and <paramref name="exception" />.
-    /// </param>
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
-        Func<TState, Exception, string> formatter)
-    {
-        LoggerInstance.Log(logLevel, eventId, state, exception, formatter);
-    }
-
-    #endregion
+    public static ILogger GetLogger(string category) => Factory.CreateLogger(category);
+    
+    // For testing purposes
+    // internal static void Reset()
+    // {
+    //     Interlocked.Exchange(ref _factoryLazy, 
+    //         new Lazy<PowertoolsLoggerFactory>(() => new PowertoolsLoggerFactory()));
+        
+    //     Interlocked.Exchange(ref _defaultLoggerLazy,
+    //         new Lazy<ILogger>(() => Factory.CreateLogger<PowertoolsLogger>()));
+    // }
 }

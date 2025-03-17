@@ -30,6 +30,6 @@ internal static class LoggingAspectFactory
     /// <returns>An instance of the LoggingAspect class.</returns>
     public static object GetInstance(Type type)
     {
-        return new LoggingAspect(PowertoolsConfigurations.Instance, SystemWrapper.Instance);
+        return new LoggingAspect(PowertoolsConfigurations.Instance);
     }
 }

@@ -18,12 +18,8 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
 
-public partial class Logger
+public static partial class Logger
 {
-    #region Core Logger Methods
-
-    #region Debug
-
     /// <summary>
     ///     Formats and writes a debug log message.
     /// </summary>
@@ -83,10 +79,6 @@ public partial class Logger
     {
         LoggerInstance.LogDebug(message, args);
     }
-
-    #endregion
-
-    #region Trace
 
     /// <summary>
     ///     Formats and writes a trace log message.
@@ -148,10 +140,6 @@ public partial class Logger
         LoggerInstance.LogTrace(message, args);
     }
 
-    #endregion
-
-    #region Information
-
     /// <summary>
     ///     Formats and writes an informational log message.
     /// </summary>
@@ -211,10 +199,6 @@ public partial class Logger
     {
         LoggerInstance.LogInformation(message, args);
     }
-
-    #endregion
-
-    #region Warning
 
     /// <summary>
     ///     Formats and writes a warning log message.
@@ -276,10 +260,6 @@ public partial class Logger
         LoggerInstance.LogWarning(message, args);
     }
 
-    #endregion
-
-    #region Error
-
     /// <summary>
     ///     Formats and writes an error log message.
     /// </summary>
@@ -339,10 +319,6 @@ public partial class Logger
     {
         LoggerInstance.LogError(message, args);
     }
-
-    #endregion
-
-    #region Critical
 
     /// <summary>
     ///     Formats and writes a critical log message.
@@ -404,10 +380,6 @@ public partial class Logger
         LoggerInstance.LogCritical(message, args);
     }
 
-    #endregion
-
-    #region Log
-
     /// <summary>
     ///     Formats and writes a log message at the specified log level.
     /// </summary>
@@ -457,7 +429,4 @@ public partial class Logger
         LoggerInstance.Log(logLevel, eventId, exception, message, args);
     }
 
-    #endregion
-
-    #endregion
 }

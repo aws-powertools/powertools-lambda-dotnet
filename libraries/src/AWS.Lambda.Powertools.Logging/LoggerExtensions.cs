@@ -652,4 +652,19 @@ public static class LoggerExtensions
     #endregion
 
     #endregion
+    
+    public static void AppendKey(this ILogger logger, string key, object value)
+    {
+        Logger.AppendKey(key, value);
+    }
+    
+    internal static void RemoveAllKeys(this ILogger logger)
+    {
+        Logger.RemoveAllKeys();
+    }
+    
+    public static void RemoveKeys(this ILogger logger, params string[] keys)
+    {
+        Logger.RemoveKeys(keys);
+    }
 }

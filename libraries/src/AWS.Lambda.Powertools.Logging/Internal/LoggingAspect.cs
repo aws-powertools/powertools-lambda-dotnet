@@ -14,6 +14,8 @@
  */
 
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -50,21 +52,6 @@ public class LoggingAspect
     private bool _clearState;
 
     /// <summary>
-    ///     The correlation identifier path
-    /// </summary>
-    private string _correlationIdPath;
-
-    /// <summary>
-    ///     The Powertools for AWS Lambda (.NET) configurations
-    /// </summary>
-    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
-
-    /// <summary>
-    ///     The system wrapper
-    /// </summary>
-    private readonly ISystemWrapper _systemWrapper;
-
-    /// <summary>
     ///     The is context initialized
     /// </summary>
     private bool _isContextInitialized;
@@ -73,21 +60,50 @@ public class LoggingAspect
     ///     Specify to clear Lambda Context on exit
     /// </summary>
     private bool _clearLambdaContext;
+    
+    private ILogger _logger;
+    private readonly bool _LogEventEnv;
+    private readonly string _xRayTraceId;
+    private bool _isDebug;
 
-    /// <summary>
-    ///     The configuration
-    /// </summary>
-    private LoggerConfiguration _config;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LoggingAspect" /> class.
     /// </summary>
     /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
-    /// <param name="systemWrapper">The system wrapper.</param>
-    public LoggingAspect(IPowertoolsConfigurations powertoolsConfigurations, ISystemWrapper systemWrapper)
+    public LoggingAspect(IPowertoolsConfigurations powertoolsConfigurations)
     {
-        _powertoolsConfigurations = powertoolsConfigurations;
-        _systemWrapper = systemWrapper;
+        _LogEventEnv = powertoolsConfigurations.LoggerLogEvent;
+        _xRayTraceId = powertoolsConfigurations.XRayTraceId;
+    }
+    
+    private void InitializeLogger(LoggingAttribute trigger)
+    {        
+        // Always configure when we have explicit trigger settings
+        bool hasExplicitSettings = (trigger.LogLevel != LogLevel.None || 
+                                   !string.IsNullOrEmpty(trigger.Service) ||
+                                   trigger.LoggerOutputCase != default ||
+                                   trigger.SamplingRate > 0);
+        
+        // Configure logger if not configured or we have explicit settings
+        if (!Logger.IsConfigured || hasExplicitSettings)
+        {
+            // Create configuration with default values when not explicitly specified
+            Logger.Configure(new PowertoolsLoggerConfiguration
+            {
+                // Use sensible defaults if not specified in the attribute
+                MinimumLevel = trigger.LogLevel != LogLevel.None ? trigger.LogLevel : LogLevel.Information,
+                Service = !string.IsNullOrEmpty(trigger.Service) ? trigger.Service : "service_undefined",
+                LoggerOutputCase = trigger.LoggerOutputCase != default ? trigger.LoggerOutputCase : LoggerOutputCase.SnakeCase,
+                SamplingRate = trigger.SamplingRate > 0 ? trigger.SamplingRate : 1.0
+            });
+        }
+        
+        // Get logger after configuration
+        _logger = Logger.GetLogger<LoggingAspect>();
+        
+        // TODO: Fix this
+        // _isDebug = config.MinimumLevel <= LogLevel.Debug;
     }
 
     /// <summary>
@@ -126,24 +142,18 @@ public class LoggingAspect
                 Triggers = triggers
             };
 
-            _config = new LoggerConfiguration
-            {
-                Service = trigger.Service,
-                LoggerOutputCase = trigger.LoggerOutputCase,
-                SamplingRate = trigger.SamplingRate,
-                MinimumLevel = trigger.LogLevel
-            };
 
             var logEvent = trigger.LogEvent;
-            _correlationIdPath = trigger.CorrelationIdPath;
             _clearState = trigger.ClearState;
 
-            Logger.LoggerProvider = new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
+            InitializeLogger(trigger);
 
             if (!_initializeContext)
                 return;
+            
+            _isDebug = LogLevel.Debug >= trigger.LogLevel;
 
-            Logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
+            _logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
 
             _isColdStart = false;
             _initializeContext = false;
@@ -152,8 +162,8 @@ public class LoggingAspect
             var eventObject = eventArgs.Args.FirstOrDefault();
             CaptureXrayTraceId();
             CaptureLambdaContext(eventArgs);
-            CaptureCorrelationId(eventObject);
-            if (logEvent || _powertoolsConfigurations.LoggerLogEvent)
+            CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
+            if (logEvent || _LogEventEnv)
                 LogEvent(eventObject);
         }
         catch (Exception exception)
@@ -175,17 +185,8 @@ public class LoggingAspect
         if (_clearLambdaContext)
             LoggingLambdaContext.Clear();
         if (_clearState)
-            Logger.RemoveAllKeys();
+            _logger.RemoveAllKeys();
         _initializeContext = true;
-    }
-
-    /// <summary>
-    ///     Determines whether this instance is debug.
-    /// </summary>
-    /// <returns><c>true</c> if this instance is debug; otherwise, <c>false</c>.</returns>
-    private bool IsDebug()
-    {
-        return LogLevel.Debug >= _powertoolsConfigurations.GetLogLevel(_config.MinimumLevel);
     }
 
     /// <summary>
@@ -193,14 +194,9 @@ public class LoggingAspect
     /// </summary>
     private void CaptureXrayTraceId()
     {
-        var xRayTraceId = _powertoolsConfigurations.XRayTraceId;
-        if (string.IsNullOrWhiteSpace(xRayTraceId))
+        if (string.IsNullOrWhiteSpace(_xRayTraceId))
             return;
-
-        xRayTraceId = xRayTraceId
-            .Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", "");
-
-        Logger.AppendKey(LoggingConstants.KeyXRayTraceId, xRayTraceId);
+        _logger.AppendKey(LoggingConstants.KeyXRayTraceId, _xRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
     }
 
     /// <summary>
@@ -213,8 +209,8 @@ public class LoggingAspect
     private void CaptureLambdaContext(AspectEventArgs eventArgs)
     {
         _clearLambdaContext = LoggingLambdaContext.Extract(eventArgs);
-        if (LoggingLambdaContext.Instance is null && IsDebug())
-            _systemWrapper.LogLine(
+        if (LoggingLambdaContext.Instance is null && _isDebug)
+            Debug.WriteLine(
                 "Skipping Lambda Context injection because ILambdaContext context parameter not found.");
     }
 
@@ -222,12 +218,12 @@ public class LoggingAspect
     ///     Captures the correlation identifier.
     /// </summary>
     /// <param name="eventArg">The event argument.</param>
-    private void CaptureCorrelationId(object eventArg)
+    private void CaptureCorrelationId(object eventArg, string correlationIdPath)
     {
-        if (string.IsNullOrWhiteSpace(_correlationIdPath))
+        if (string.IsNullOrWhiteSpace(correlationIdPath))
             return;
 
-        var correlationIdPaths = _correlationIdPath
+        var correlationIdPaths = correlationIdPath
             .Split(CorrelationIdPaths.Separator, StringSplitOptions.RemoveEmptyEntries);
 
         if (!correlationIdPaths.Any())
@@ -235,8 +231,8 @@ public class LoggingAspect
 
         if (eventArg is null)
         {
-            if (IsDebug())
-                _systemWrapper.LogLine(
+            if (_isDebug)
+                Debug.WriteLine(
                     "Skipping CorrelationId capture because event parameter not found.");
             return;
         }
@@ -254,23 +250,25 @@ public class LoggingAspect
             {
                 // For casing parsing to be removed from Logging v2 when we get rid of outputcase
                 // without this CorrelationIdPaths.ApiGatewayRest would not work
-                var pathWithOutputCase =
-                    _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
-                if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
-                    break;
-
-                element = childElement;
+                
+                // TODO: fix this
+                // var pathWithOutputCase =
+                //     _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
+                // if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
+                //     break;
+                //
+                // element = childElement;
                 if (i == correlationIdPaths.Length - 1)
                     correlationId = element.ToString();
             }
 
             if (!string.IsNullOrWhiteSpace(correlationId))
-                Logger.AppendKey(LoggingConstants.KeyCorrelationId, correlationId);
+                _logger.AppendKey(LoggingConstants.KeyCorrelationId, correlationId);
         }
         catch (Exception e)
         {
-            if (IsDebug())
-                _systemWrapper.LogLine(
+            if (_isDebug)
+                Debug.WriteLine(
                     $"Skipping CorrelationId capture because of error caused while parsing the event object {e.Message}.");
         }
     }
@@ -285,30 +283,30 @@ public class LoggingAspect
         {
             case null:
             {
-                if (IsDebug())
-                    _systemWrapper.LogLine(
+                if (_isDebug)
+                    Debug.WriteLine(
                         "Skipping Event Log because event parameter not found.");
                 break;
             }
             case Stream:
                 try
                 {
-                    Logger.LogInformation(eventArg);
+                    _logger.LogInformation(eventArg);
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e, "Failed to log event from supplied input stream.");
+                    _logger.LogError(e, "Failed to log event from supplied input stream.");
                 }
 
                 break;
             default:
                 try
                 {
-                    Logger.LogInformation(eventArg);
+                    _logger.LogInformation(eventArg);
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e, "Failed to log event from supplied input object.");
+                    _logger.LogError(e, "Failed to log event from supplied input object.");
                 }
 
                 break;
@@ -321,8 +319,6 @@ public class LoggingAspect
     internal static void ResetForTest()
     {
         LoggingLambdaContext.Clear();
-        Logger.LoggerProvider = null;
-        Logger.RemoveAllKeys();
-        Logger.ClearLoggerInstance();
+        // _logger.RemoveAllKeys();
     }
 }
