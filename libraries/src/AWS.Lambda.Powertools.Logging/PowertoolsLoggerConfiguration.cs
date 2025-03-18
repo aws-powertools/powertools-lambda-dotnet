@@ -69,6 +69,12 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     internal string LogLevelKey { get; set; } = "level";
 
     /// <summary>
+    /// Custom output logger to use instead of Console
+    /// </summary>
+    public ISystemWrapper? LoggerOutput { get; set; }
+
+
+    /// <summary>
     /// JSON serializer options to use for log serialization
     /// </summary>
     private JsonSerializerOptions? _jsonOptions;
@@ -266,6 +272,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
             SamplingRate = SamplingRate,
             SamplingEnabled = SamplingEnabled, // Copy the sampling decision
             LoggerOutputCase = LoggerOutputCase,
+            LoggerOutput = LoggerOutput,
             LogLevelKey = LogLevelKey,
             JsonOptions = JsonOptions
         };

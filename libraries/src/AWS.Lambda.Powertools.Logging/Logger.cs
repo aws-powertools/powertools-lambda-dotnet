@@ -15,6 +15,7 @@
 
 using System;
 using System.Threading;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -74,25 +75,33 @@ public static partial class Logger
 
         // Store the configuration
         _currentConfig = options.Clone();
+        
+        // Create a system wrapper if needed
+        var systemWrapper = options.LoggerOutput ?? new SystemWrapper();
 
-        // Create a factory with our provider - CRITICAL PART
+        // Create a factory with our provider
         var factory = LoggerFactory.Create(builder => 
         {
-            // IMPORTANT - Set the minimum level directly on the logging builder!
-            // This ensures it's respected by the logging infrastructure
-            if (_currentConfig.MinimumLevel != LogLevel.None)
+            // Set minimum level directly on builder
+            if (options.MinimumLevel != LogLevel.None)
             {
-                builder.SetMinimumLevel(_currentConfig.MinimumLevel);
+                builder.SetMinimumLevel(options.MinimumLevel);
             }
-
-            // Add PowertoolsLogger with the same configuration
+            
+            // Add our provider - the config's OutputLogger will be used
+            builder.Services.AddSingleton<ISystemWrapper>(systemWrapper);
+            
             builder.AddPowertoolsLogger(config => 
             {
-                // Transfer all settings
                 config.Service = _currentConfig.Service;
                 config.MinimumLevel = _currentConfig.MinimumLevel;
                 config.LoggerOutputCase = _currentConfig.LoggerOutputCase;
                 config.SamplingRate = _currentConfig.SamplingRate;
+                config.LoggerOutput = _currentConfig.LoggerOutput;
+                config.JsonOptions = _currentConfig.JsonOptions;
+#if NET8_0_OR_GREATER
+                config.JsonContext = _currentConfig.JsonContext;
+#endif
             }, true);
         });
 

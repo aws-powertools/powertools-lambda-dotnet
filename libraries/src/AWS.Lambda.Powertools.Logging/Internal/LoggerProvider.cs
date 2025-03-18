@@ -56,25 +56,17 @@ internal sealed class LoggerProvider : ILoggerProvider
     /// <param name="systemWrapper"></param>
     public LoggerProvider(IOptionsMonitor<PowertoolsLoggerConfiguration> config,
         IPowertoolsConfigurations powertoolsConfigurations,
-        ISystemWrapper systemWrapper)
+        ISystemWrapper? systemWrapper = null)
     {
-        _currentConfig = config.CurrentValue;
+        // Use custom system wrapper if provided through config
+        var currentConfig = config.CurrentValue;
+        _systemWrapper = currentConfig.LoggerOutput ?? systemWrapper ?? new SystemWrapper();
+        
         _powertoolsConfigurations = powertoolsConfigurations;
-        _systemWrapper = systemWrapper;
+        _currentConfig = currentConfig;
+
         _onChangeToken = config.OnChange(updatedConfig => _currentConfig = updatedConfig);
-
-        // TODO: FIx this
-        // It was moved bellow
-        // _powertoolsConfigurations.SetCurrentConfig(_currentConfig, systemWrapper);
-    }
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="LoggerProvider" /> class.
-    /// </summary>
-    /// <param name="config">The configuration.</param>
-    public LoggerProvider(IOptionsMonitor<PowertoolsLoggerConfiguration> config)
-        : this(config, PowertoolsConfigurations.Instance, SystemWrapper.Instance)
-    {
+        ApplyPowertoolsConfig(_currentConfig);
     }
 
     /// <summary>
@@ -85,7 +77,7 @@ internal sealed class LoggerProvider : ILoggerProvider
     public ILogger CreateLogger(string categoryName)
     {
         return _loggers.GetOrAdd(categoryName, name => new PowertoolsLogger(name,
-            GetCurrentConfig,
+            () => _currentConfig,
             _systemWrapper));
     }
 

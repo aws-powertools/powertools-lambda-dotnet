@@ -24,6 +24,8 @@ namespace AWS.Lambda.Powertools.Common;
 /// <seealso cref="IPowertoolsConfigurations" />
 public class PowertoolsConfigurations : IPowertoolsConfigurations
 {
+    private readonly IPowertoolsEnvironment _powertoolsEnvironment;
+
     /// <summary>
     ///     The maximum dimensions
     /// </summary>
@@ -40,17 +42,12 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     private static IPowertoolsConfigurations _instance;
 
     /// <summary>
-    ///     The system wrapper
-    /// </summary>
-    private readonly ISystemWrapper _systemWrapper;
-
-    /// <summary>
     ///     Initializes a new instance of the <see cref="PowertoolsConfigurations" /> class.
     /// </summary>
     /// <param name="systemWrapper">The system wrapper.</param>
-    internal PowertoolsConfigurations(ISystemWrapper systemWrapper)
+    internal PowertoolsConfigurations(IPowertoolsEnvironment powertoolsEnvironment)
     {
-        _systemWrapper = systemWrapper;
+        _powertoolsEnvironment = powertoolsEnvironment;
     }
 
     /// <summary>
@@ -58,7 +55,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// </summary>
     /// <value>The instance.</value>
     public static IPowertoolsConfigurations Instance =>
-        _instance ??= new PowertoolsConfigurations(SystemWrapper.Instance);
+        _instance ??= new PowertoolsConfigurations(PowertoolsEnvironment.Instance);
 
     /// <summary>
     ///     Gets the environment variable.
@@ -67,7 +64,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <returns>System.String.</returns>
     public string GetEnvironmentVariable(string variable)
     {
-        return _systemWrapper.GetEnvironmentVariable(variable);
+        return _powertoolsEnvironment.GetEnvironmentVariable(variable);
     }
 
     /// <summary>
@@ -78,7 +75,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <returns>System.String.</returns>
     public string GetEnvironmentVariableOrDefault(string variable, string defaultValue)
     {
-        var result = _systemWrapper.GetEnvironmentVariable(variable);
+        var result = _powertoolsEnvironment.GetEnvironmentVariable(variable);
         return string.IsNullOrWhiteSpace(result) ? defaultValue : result;
     }
 
@@ -90,7 +87,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <returns>System.Int32.</returns>
     public int GetEnvironmentVariableOrDefault(string variable, int defaultValue)
     {
-        var result = _systemWrapper.GetEnvironmentVariable(variable);
+        var result = _powertoolsEnvironment.GetEnvironmentVariable(variable);
         return int.TryParse(result, out var parsedValue) ? parsedValue : defaultValue;
     }
 
@@ -102,7 +99,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     public bool GetEnvironmentVariableOrDefault(string variable, bool defaultValue)
     {
-        return bool.TryParse(_systemWrapper.GetEnvironmentVariable(variable), out var result)
+        return bool.TryParse(_powertoolsEnvironment.GetEnvironmentVariable(variable), out var result)
             ? result
             : defaultValue;
     }
@@ -160,7 +157,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// </summary>
     /// <value>The logger sample rate.</value>
     public double LoggerSampleRate =>
-        double.TryParse(_systemWrapper.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture,  out var result)
+        double.TryParse(_powertoolsEnvironment.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture,  out var result)
             ? result
             : 0;
 
@@ -201,7 +198,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <inheritdoc />
     public void SetExecutionEnvironment<T>(T type)
     {
-        _systemWrapper.SetExecutionEnvironment(type);
+        _powertoolsEnvironment.SetExecutionEnvironment(type);
     }
 
     /// <inheritdoc />

@@ -80,7 +80,7 @@ public static class BuilderExtensions
         
         // Register IPowertoolsConfigurations with all its dependencies
         builder.Services.TryAddSingleton<IPowertoolsConfigurations>(sp => 
-            new PowertoolsConfigurations(sp.GetRequiredService<ISystemWrapper>()));
+            new PowertoolsConfigurations(sp.GetRequiredService<IPowertoolsEnvironment>()));
 
         // Register the provider
         builder.Services.TryAddEnumerable(
