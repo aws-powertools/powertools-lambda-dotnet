@@ -56,7 +56,7 @@ internal sealed class PowertoolsLogger : ILogger
     ///     Private constructor - Is initialized on CreateLogger
     /// </summary>
     /// <param name="categoryName">The name.</param>
-    /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
+    /// <param name="getCurrentConfig"></param>
     /// <param name="systemWrapper">The system wrapper.</param>
     public PowertoolsLogger(
         string categoryName,
@@ -97,7 +97,22 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="logLevel">The log level.</param>
     /// <returns>bool.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None && logLevel >= _currentConfig.MinimumLevel;
+    public bool IsEnabled(LogLevel logLevel)
+    {
+        // If we have no explicit minimum level, use the default
+        var effectiveMinLevel = _currentConfig.MinimumLevel != LogLevel.None
+            ? _currentConfig.MinimumLevel
+            : LoggingConstants.DefaultLogLevel;
+        
+        // Log diagnostic info for Debug/Trace levels
+        if (logLevel <= LogLevel.Debug)
+        {
+            return logLevel >= effectiveMinLevel;
+        }
+        
+        // Standard check
+        return logLevel >= effectiveMinLevel;
+    }
 
     /// <summary>
     ///     Writes a log entry.
@@ -111,11 +126,13 @@ internal sealed class PowertoolsLogger : ILogger
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
         Func<TState, Exception, string> formatter)
     {
+        if (!IsEnabled(logLevel))
+        {
+            return;
+        }
+
         if (formatter is null)
             throw new ArgumentNullException(nameof(formatter));
-
-        if (!IsEnabled(logLevel))
-            return;
 
         var timestamp = DateTime.UtcNow;
         var message = CustomFormatter(state, exception, out var customMessage) && customMessage is not null
