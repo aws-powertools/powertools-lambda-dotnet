@@ -79,7 +79,7 @@ public class LoggingAspect
     
     private void InitializeLogger(LoggingAttribute trigger)
     {        
-        // Always configure when we have explicit trigger settings
+        // Always check for explicit settings 
         bool hasExplicitSettings = (trigger.LogLevel != LogLevel.None || 
                                    !string.IsNullOrEmpty(trigger.Service) ||
                                    trigger.LoggerOutputCase != default ||
@@ -89,21 +89,24 @@ public class LoggingAspect
         if (!Logger.IsConfigured || hasExplicitSettings)
         {
             // Create configuration with default values when not explicitly specified
-            Logger.Configure(new PowertoolsLoggerConfiguration
+            var config = new PowertoolsLoggerConfiguration
             {
                 // Use sensible defaults if not specified in the attribute
                 MinimumLevel = trigger.LogLevel != LogLevel.None ? trigger.LogLevel : LogLevel.Information,
                 Service = !string.IsNullOrEmpty(trigger.Service) ? trigger.Service : "service_undefined",
                 LoggerOutputCase = trigger.LoggerOutputCase != default ? trigger.LoggerOutputCase : LoggerOutputCase.SnakeCase,
                 SamplingRate = trigger.SamplingRate > 0 ? trigger.SamplingRate : 1.0
-            });
+            };
+            
+            // Configure the logger with our configuration
+            Logger.Configure(config);
         }
         
         // Get logger after configuration
         _logger = Logger.GetLogger<LoggingAspect>();
         
-        // TODO: Fix this
-        // _isDebug = config.MinimumLevel <= LogLevel.Debug;
+        // Set debug flag based on the minimum level from Logger
+        _isDebug = Logger.GetConfiguration().MinimumLevel <= LogLevel.Debug;
     }
 
     /// <summary>
@@ -150,8 +153,6 @@ public class LoggingAspect
 
             if (!_initializeContext)
                 return;
-            
-            _isDebug = LogLevel.Debug >= trigger.LogLevel;
 
             _logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
 
@@ -210,7 +211,7 @@ public class LoggingAspect
     {
         _clearLambdaContext = LoggingLambdaContext.Extract(eventArgs);
         if (LoggingLambdaContext.Instance is null && _isDebug)
-            Debug.WriteLine(
+            _logger.LogDebug(
                 "Skipping Lambda Context injection because ILambdaContext context parameter not found.");
     }
 
@@ -232,7 +233,7 @@ public class LoggingAspect
         if (eventArg is null)
         {
             if (_isDebug)
-                Debug.WriteLine(
+                _logger.LogDebug(
                     "Skipping CorrelationId capture because event parameter not found.");
             return;
         }
@@ -268,7 +269,7 @@ public class LoggingAspect
         catch (Exception e)
         {
             if (_isDebug)
-                Debug.WriteLine(
+                _logger.LogDebug(
                     $"Skipping CorrelationId capture because of error caused while parsing the event object {e.Message}.");
         }
     }
@@ -284,7 +285,7 @@ public class LoggingAspect
             case null:
             {
                 if (_isDebug)
-                    Debug.WriteLine(
+                    _logger.LogDebug(
                         "Skipping Event Log because event parameter not found.");
                 break;
             }

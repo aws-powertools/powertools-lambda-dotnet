@@ -100,59 +100,78 @@ internal sealed class LoggerProvider : ILoggerProvider
 
     private void ApplyPowertoolsConfig(PowertoolsLoggerConfiguration config)
     {
-        var logLevel = _powertoolsConfigurations.GetLogLevel(config.MinimumLevel);
+        var logLevel = _powertoolsConfigurations.GetLogLevel(LogLevel.None);
         var lambdaLogLevel = _powertoolsConfigurations.GetLambdaLogLevel();
         var lambdaLogLevelEnabled = _powertoolsConfigurations.LambdaLogLevelEnabled();
 
-        if (lambdaLogLevelEnabled && logLevel < lambdaLogLevel)
+        // Check for explicit config
+        bool hasExplicitLevel = config.MinimumLevel != LogLevel.None;
+
+        // Warn if Lambda log level doesn't match
+        if (lambdaLogLevelEnabled && hasExplicitLevel && config.MinimumLevel < lambdaLogLevel)
         {
             _systemWrapper.LogLine(
-                $"Current log level ({logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
+                $"Current log level ({config.MinimumLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
         }
 
-        // // Set service
-        config.Service ??= _powertoolsConfigurations.Service;
+        // Set service from environment if not explicitly set
+        if (string.IsNullOrEmpty(config.Service))
+        {
+            config.Service = _powertoolsConfigurations.Service;
+        }
 
-
-        // // Set output case
+        // Set output case from environment if not explicitly set
         if (config.LoggerOutputCase == LoggerOutputCase.Default)
         {
             var loggerOutputCase = _powertoolsConfigurations.GetLoggerOutputCase(config.LoggerOutputCase);
             config.LoggerOutputCase = loggerOutputCase;
-            // TODO: Fix this
         }
 
+        // Set log level from environment ONLY if not explicitly set
+        if (!hasExplicitLevel)
+        {
+            var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
+            config.MinimumLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
+        }
+        
+        // Always configure the serializer with the output case
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase);
 
-        //
-
-        //
-        // // Set log level
-        // var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
-        // config.MinimumLevel = minLogLevel;
-
+        // Configure the log level key based on output case
         config.LogLevelKey = _powertoolsConfigurations.LambdaLogLevelEnabled() &&
-                             config.LoggerOutputCase == LoggerOutputCase.PascalCase
+                              config.LoggerOutputCase == LoggerOutputCase.PascalCase
             ? "LogLevel"
             : LoggingConstants.KeyLogLevel;
+            
+        // Handle sampling rate - BUT DON'T MODIFY MINIMUM LEVEL
+        ProcessSamplingRate(config);
+    }
 
-        // Set sampling rate
-        // var samplingRate = config.SamplingRate > 0 ? config.SamplingRate : _powertoolsConfigurations.LoggerSampleRate;
-        // samplingRate = ValidateSamplingRate(samplingRate, minLogLevel, _systemWrapper);
-        //
-        // config.SamplingRate = samplingRate;
-        //
-        // if (samplingRate > 0)
-        // {
-        //     double sample = _systemWrapper.GetRandom();
-        //
-        //     if (sample <= samplingRate)
-        //     {
-        //         _systemWrapper.LogLine(
-        //             $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
-        //         config.MinimumLevel = LogLevel.Debug;
-        //     }
-        // }
+    private void ProcessSamplingRate(PowertoolsLoggerConfiguration config)
+    {
+        var samplingRate = config.SamplingRate > 0 
+            ? config.SamplingRate 
+            : _powertoolsConfigurations.LoggerSampleRate;
+            
+        samplingRate = ValidateSamplingRate(samplingRate, config.MinimumLevel, _systemWrapper);
+        config.SamplingRate = samplingRate;
+
+        // Only notify if sampling is configured
+        if (samplingRate > 0)
+        {
+            double sample = _systemWrapper.GetRandom();
+            
+            // Instead of changing log level, just indicate sampling status
+            if (sample <= samplingRate)
+            {
+                _systemWrapper.LogLine(
+                    $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
+                config.MinimumLevel = LogLevel.Debug;
+                
+                // Store sampling decision in config without changing log level
+                config.SamplingEnabled = true;
+            }
+        }
     }
 
     private static double ValidateSamplingRate(double samplingRate, LogLevel minLogLevel, ISystemWrapper systemWrapper)

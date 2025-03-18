@@ -70,4 +70,15 @@ public interface ISystemWrapper
     /// </summary>
     /// <param name="writeTo">The TextWriter instance where to write to</param>
     void SetOut(TextWriter writeTo);
+
+    /// <summary>
+    /// Sets console error output
+    /// Useful for testing and checking the console error output
+    /// <code>
+    /// var consoleError = new StringWriter();
+    /// SystemWrapper.Instance.SetError(consoleError);
+    /// </code>
+    /// </summary>
+    /// <returns></returns>
+    string GetLogOutput();
 }

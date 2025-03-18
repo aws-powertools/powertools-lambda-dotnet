@@ -1,6 +1,7 @@
 using System;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -23,22 +24,28 @@ public static class BuilderExtensions
         // Add configuration
         builder.AddConfiguration();
 
-        // Register the provider
-        builder.Services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<ILoggerProvider, LoggerProvider>());
-
-        LoggerProviderOptions.RegisterProviderOptions
-            <PowertoolsLoggerConfiguration, LoggerProvider>(builder.Services);
-
         // Apply configuration if provided
         if (configure != null)
         {
-            // Create and apply configuration
+            // Create initial configuration
             var options = new PowertoolsLoggerConfiguration();
             configure(options);
             
+            
+            // IMPORTANT: Set the minimum level directly on the builder
+            if (options.MinimumLevel != LogLevel.None) 
+            {
+                builder.SetMinimumLevel(options.MinimumLevel);
+            }
+            
             // Configure options for DI
             builder.Services.Configure(configure);
+
+            // Register services
+            RegisterServices(builder);
+
+            // Apply the output case configuration
+            PowertoolsLoggingSerializer.ConfigureNamingPolicy(options.LoggerOutputCase);
 
             // Configure static Logger (if not already in a configuration cycle)
             if (!fromLoggerConfigure && !_configuring)
@@ -54,7 +61,32 @@ public static class BuilderExtensions
                 }
             }
         }
+        else
+        {
+            // Register services even if no configuration was provided
+            RegisterServices(builder);
+        }
 
         return builder;
+    }
+
+    private static void RegisterServices(ILoggingBuilder builder)
+    {
+        // Register ISystemWrapper if not already registered
+        builder.Services.TryAddSingleton<ISystemWrapper, SystemWrapper>();
+        
+        // Register IPowertoolsEnvironment if it exists
+        builder.Services.TryAddSingleton<IPowertoolsEnvironment, PowertoolsEnvironment>();
+        
+        // Register IPowertoolsConfigurations with all its dependencies
+        builder.Services.TryAddSingleton<IPowertoolsConfigurations>(sp => 
+            new PowertoolsConfigurations(sp.GetRequiredService<ISystemWrapper>()));
+
+        // Register the provider
+        builder.Services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<ILoggerProvider, LoggerProvider>());
+
+        LoggerProviderOptions.RegisterProviderOptions
+            <PowertoolsLoggerConfiguration, LoggerProvider>(builder.Services);
     }
 }

@@ -31,49 +31,21 @@ public static partial class Logger
     private static Lazy<ILoggerFactory> _factoryLazy;
     private static Lazy<ILogger> _defaultLoggerLazy;
 
-    // Static constructor to ensure initialization 
-    // static Logger()
-    // {
-    //     // Create default configuration with sensible defaults
-    //     var defaultConfig = new PowertoolsLoggerConfiguration
-    //     {
-    //         MinimumLevel = LogLevel.Information, // Default to Information level
-    //         Service = "LambdaFunction",          // Default service name
-    //         LoggerOutputCase = LoggerOutputCase.SnakeCase,  // Default case
-    //         SamplingRate = 1.0                  // Default to log everything
-    //     };
-    //     
-    //     // Initialize with default factory
-    //     _factoryLazy = new Lazy<ILoggerFactory>(() => 
-    //         LoggerFactory.Create(builder => 
-    //             builder.AddPowertoolsLogger(config => 
-    //             {
-    //                 config.MinimumLevel = defaultConfig.MinimumLevel;
-    //                 config.Service = defaultConfig.Service;
-    //                 config.LoggerOutputCase = defaultConfig.LoggerOutputCase;
-    //                 config.SamplingRate = defaultConfig.SamplingRate;
-    //             })),
-    //         LazyThreadSafetyMode.ExecutionAndPublication);
-    //     
-    //     _defaultLoggerLazy = new Lazy<ILogger>(() => 
-    //         _factoryLazy.Value.CreateLogger("PowertoolsLogger"));
-    //         
-    //     // Not yet explicitly configured
-    //     _isConfigured = false;
-    // }
-
-    // Flag to track if custom configuration has been applied
-    private static bool _isConfigured;
+    // Add a backing field
+    private static bool _isConfigured = false;
 
     // Properties to access the lazy-initialized instances
     private static ILoggerFactory Factory => _factoryLazy.Value;
     private static ILogger LoggerInstance => _defaultLoggerLazy.Value;
 
     /// <summary>
-    /// Indicates whether the Logger has been configured with custom settings
+    /// Gets a value indicating whether the logger is configured.
     /// </summary>
+    /// <value><c>true</c> if the logger is configured; otherwise, <c>false</c>.</value>
     public static bool IsConfigured => _isConfigured;
 
+    // Add this field to the Logger class
+    private static PowertoolsLoggerConfiguration _currentConfig;
 
     // Allow manual configuration using options
     public static void Configure(Action<PowertoolsLoggerConfiguration> configureOptions)
@@ -100,17 +72,27 @@ public static partial class Logger
     {
         if (options == null) throw new ArgumentNullException(nameof(options));
 
-        // Create a factory with our provider
+        // Store the configuration
+        _currentConfig = options.Clone();
+
+        // Create a factory with our provider - CRITICAL PART
         var factory = LoggerFactory.Create(builder => 
         {
-            // Use AddPowertoolsLogger but with fromLoggerConfigure=true to prevent recursion
+            // IMPORTANT - Set the minimum level directly on the logging builder!
+            // This ensures it's respected by the logging infrastructure
+            if (_currentConfig.MinimumLevel != LogLevel.None)
+            {
+                builder.SetMinimumLevel(_currentConfig.MinimumLevel);
+            }
+
+            // Add PowertoolsLogger with the same configuration
             builder.AddPowertoolsLogger(config => 
             {
-                config.Service = options.Service;
-                config.MinimumLevel = options.MinimumLevel;
-                config.LoggerOutputCase = options.LoggerOutputCase;
-                config.SamplingRate = options.SamplingRate;
-                // Copy other properties as needed
+                // Transfer all settings
+                config.Service = _currentConfig.Service;
+                config.MinimumLevel = _currentConfig.MinimumLevel;
+                config.LoggerOutputCase = _currentConfig.LoggerOutputCase;
+                config.SamplingRate = _currentConfig.SamplingRate;
             }, true);
         });
 
@@ -124,6 +106,21 @@ public static partial class Logger
         _isConfigured = true;
     }
 
+    // Add this method to the Logger class
+    // Get the current configuration
+    public static PowertoolsLoggerConfiguration GetConfiguration()
+    {
+        // Ensure logger is initialized
+        _ = LoggerInstance;
+        
+        // Create a new configuration with current settings
+        if (_currentConfig == null)
+        {
+            _currentConfig = new PowertoolsLoggerConfiguration();
+        }
+        
+        return _currentConfig;
+    }
 
     // Get a logger for a specific category
     public static ILogger GetLogger<T>() => GetLogger(typeof(T).Name);

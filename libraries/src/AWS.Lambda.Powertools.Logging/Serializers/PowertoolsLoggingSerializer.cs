@@ -36,6 +36,7 @@ internal static class PowertoolsLoggingSerializer
 {
     private static LoggerOutputCase _currentOutputCase;
     private static JsonSerializerOptions _jsonOptions;
+    private static readonly object _lock = new object();
 
     private static readonly ConcurrentBag<JsonSerializerContext> AdditionalContexts =
         new ConcurrentBag<JsonSerializerContext>();
@@ -45,7 +46,19 @@ internal static class PowertoolsLoggingSerializer
     /// </summary>
     internal static JsonSerializerOptions GetSerializerOptions()
     {
-        return _jsonOptions ?? BuildJsonSerializerOptions();
+        // Double-checked locking pattern for thread safety while ensuring we only build once
+        if (_jsonOptions == null)
+        {
+            lock (_lock)
+            {
+                if (_jsonOptions == null)
+                {
+                    BuildJsonSerializerOptions();
+                }
+            }
+        }
+        
+        return _jsonOptions;
     }
 
     /// <summary>
@@ -54,7 +67,19 @@ internal static class PowertoolsLoggingSerializer
     /// <param name="loggerOutputCase">The case to use for serialization.</param>
     internal static void ConfigureNamingPolicy(LoggerOutputCase loggerOutputCase)
     {
-        _currentOutputCase = loggerOutputCase;
+        if (_currentOutputCase != loggerOutputCase)
+        {
+            lock (_lock)
+            {
+                _currentOutputCase = loggerOutputCase;
+                
+                // Only rebuild options if they already exist
+                if (_jsonOptions != null)
+                {
+                    BuildJsonSerializerOptions();
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -120,8 +145,9 @@ internal static class PowertoolsLoggingSerializer
     /// Builds and configures the JsonSerializerOptions.
     /// </summary>
     /// <returns>A configured JsonSerializerOptions instance.</returns>
-    private static JsonSerializerOptions BuildJsonSerializerOptions()
+    private static void BuildJsonSerializerOptions()
     {
+        // This should already be in a lock when called
         _jsonOptions = new JsonSerializerOptions();
 
         switch (_currentOutputCase)
@@ -173,7 +199,6 @@ internal static class PowertoolsLoggingSerializer
             }
         }
 #endif
-        return _jsonOptions;
     }
 
 #if NET8_0_OR_GREATER
@@ -194,5 +219,55 @@ internal static class PowertoolsLoggingSerializer
     internal static void ClearOptions()
     {
         _jsonOptions = null;
+    }
+
+    /// <summary>
+    /// Sets the default JSON context to use
+    /// </summary>
+    internal static void SetDefaultContext(JsonSerializerContext context)
+    {
+        lock (_lock)
+        {
+            // Reset options to ensure they're rebuilt with the new context
+            _jsonOptions = null;
+        }
+    }
+
+    /// <summary>
+    /// Configure the serializer with specific JSON options
+    /// </summary>
+    internal static void ConfigureJsonOptions(JsonSerializerOptions options)
+    {
+        if (options == null) return;
+        
+        lock (_lock)
+        {
+            _jsonOptions = options;
+            
+            // Add required converters if they're not already present
+            var converters = new[]
+            {
+                typeof(ByteArrayConverter),
+                typeof(ExceptionConverter),
+                typeof(MemoryStreamConverter),
+                typeof(ConstantClassConverter),
+                typeof(DateOnlyConverter),
+                typeof(TimeOnlyConverter),
+                typeof(LogLevelJsonConverter),
+            };
+
+            foreach (var converterType in converters)
+            {
+                if (!_jsonOptions.Converters.Any(c => c.GetType() == converterType))
+                {
+                    // Add the converter through reflection to avoid direct instantiation
+                    var converter = Activator.CreateInstance(converterType) as JsonConverter;
+                    if (converter != null)
+                    {
+                        _jsonOptions.Converters.Add(converter);
+                    }
+                }
+            }
+        }
     }
 }
