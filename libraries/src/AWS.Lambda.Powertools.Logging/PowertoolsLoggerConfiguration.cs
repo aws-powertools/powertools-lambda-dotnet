@@ -22,6 +22,7 @@ using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Logging.Serializers;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -106,6 +107,13 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
         { 
             _jsonContext = value;
             ApplyJsonContext();
+            
+            // If we have existing JSON options, update their type resolver
+            if (_jsonOptions != null && !RuntimeFeatureWrapper.IsDynamicCodeSupported)
+            {
+                // Reset the type resolver chain to rebuild it
+                _jsonOptions.TypeInfoResolver = GetCompositeResolver();
+            }
         }
     }
 
@@ -114,10 +122,21 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// </summary>
     public void AddJsonContext(JsonSerializerContext context)
     {
-        if (context != null && !_additionalContexts.Contains(context))
+        if (context == null)
+            return;
+        
+        // Don't add duplicates
+        if (!_additionalContexts.Contains(context))
         {
             _additionalContexts.Add(context);
             ApplyAdditionalJsonContext(context);
+            
+            // If we have existing JSON options, update their type resolver
+            if (_jsonOptions != null && !RuntimeFeatureWrapper.IsDynamicCodeSupported)
+            {
+                // Reset the type resolver chain to rebuild it
+                _jsonOptions.TypeInfoResolver = GetCompositeResolver();
+            }
         }
     }
 
@@ -139,11 +158,17 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     {
         if (options == null) return;
 
-        // Check for TypeInfoResolver
+        // Check for TypeInfoResolver and ensure it's not lost
         if (options.TypeInfoResolver != null && 
             options.TypeInfoResolver != GetCompositeResolver())
         {
             _customTypeInfoResolver = options.TypeInfoResolver;
+            
+            // If it's a JsonSerializerContext, also add it to our contexts
+            if (_customTypeInfoResolver is JsonSerializerContext jsonContext)
+            {
+                AddJsonContext(jsonContext);
+            }
         }
 
         // Check for TypeInfoResolverChain

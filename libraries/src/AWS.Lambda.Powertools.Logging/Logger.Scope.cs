@@ -96,4 +96,13 @@ public static partial class Logger
     {
         Scope.Clear();
     }
+    
+    /// <summary>
+    ///     Removes a key from the log context.
+    /// </summary>
+    public static void RemoveKey(string key)
+    {
+        if (Scope.ContainsKey(key))
+            Scope.Remove(key);
+    }
 }

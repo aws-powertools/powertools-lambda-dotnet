@@ -97,19 +97,42 @@ internal static class PowertoolsLoggingSerializer
 #else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
-            var options = GetSerializerOptions();
+            var jsonSerializerOptions = GetSerializerOptions();
 #pragma warning disable
-            return JsonSerializer.Serialize(value, options);
+            return JsonSerializer.Serialize(value, jsonSerializerOptions);
         }
-
-        var typeInfo = GetTypeInfo(inputType);
-        if (typeInfo == null)
+        
+        var options = GetSerializerOptions();
+        
+        // Try to serialize using the configured TypeInfoResolver
+        try 
+        {
+            var typeInfo = GetTypeInfo(inputType);
+            if (typeInfo != null)
+            {
+                return JsonSerializer.Serialize(value, typeInfo);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Failed to get typeinfo, will fall back to trying the serializer directly
+        }
+        
+        // Fall back to direct serialization which may work if the resolver chain can handle it
+        try
+        {
+            return JsonSerializer.Serialize(value, inputType, options);
+        }
+        catch (JsonException ex)
         {
             throw new JsonSerializerException(
-                $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.");
+                $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.", ex);
         }
-
-        return JsonSerializer.Serialize(value, typeInfo);
+        catch (InvalidOperationException ex)
+        {
+            throw new JsonSerializerException(
+                $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.", ex);
+        }
 #endif
     }
 
@@ -138,6 +161,26 @@ internal static class PowertoolsLoggingSerializer
     {
         var options = GetSerializerOptions();
         return options.TypeInfoResolver?.GetTypeInfo(type, options);
+    }
+
+    /// <summary>
+    /// Checks if a type is supported by any of the configured type resolvers
+    /// </summary>
+    internal static bool IsTypeSupportedByAnyResolver(Type type)
+    {
+        var options = GetSerializerOptions();
+        if (options.TypeInfoResolver == null)
+            return false;
+    
+        try
+        {
+            var typeInfo = options.TypeInfoResolver.GetTypeInfo(type, options);
+            return typeInfo != null;
+        }
+        catch
+        {
+            return false;
+        }
     }
 #endif
 
@@ -192,7 +235,10 @@ internal static class PowertoolsLoggingSerializer
         // Only add TypeInfoResolver if AOT mode
         if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
+            // Always ensure our default context is in the chain first
             _jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
+            
+            // Add all registered contexts
             foreach (var context in AdditionalContexts)
             {
                 _jsonOptions.TypeInfoResolverChain.Add(context);

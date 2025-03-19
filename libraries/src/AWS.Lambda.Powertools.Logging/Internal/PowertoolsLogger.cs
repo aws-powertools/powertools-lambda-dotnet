@@ -136,34 +136,37 @@ internal sealed class PowertoolsLogger : ILogger
 
         var timestamp = DateTime.UtcNow;
         
-        // Extract structured logging parameters
-        var structuredParameters = ExtractStructuredParameters(state, out string messageTemplate);
+        // Check if state is a direct object (not structured logging)
+        bool isDirectObjectLog = state != null && 
+                             !(state is IEnumerable<KeyValuePair<string, object>>) && 
+                             !(state is string);
         
-        // Format the message using the provided formatter
-        var message = CustomFormatter(state, exception, out var customMessage) && customMessage is not null
-            ? customMessage
-            : formatter(state, exception);
-            
-        // // For better object representation in messages
-        // if (message != null && message.ToString().Contains(".") && 
-        //     message.ToString().EndsWith("Class") &&
-        //     structuredParameters.Count > 0)
-        // {
-        //     // This might be a ToString() of an object class - let's try to use a better representation
-        //     var objName = message.ToString().Split('.').Last();
-        //     if (structuredParameters.Count == 1)
-        //     {
-        //         // If we have a single parameter, try to represent it nicely in the log
-        //         var param = structuredParameters.First();
-        //         message = $"{param.Key}: {(param.Value != null ? "[object]" : "null")}";
-        //     }
-        // }
+        // Extract structured parameters for template-style logging
+        var structuredParameters = isDirectObjectLog 
+            ? new Dictionary<string, object>() 
+            : ExtractStructuredParameters(state, out string messageTemplate);
+        
+        // Format the message
+        object message;
+        if (isDirectObjectLog)
+        {
+            // For direct object logging, use the object itself
+            message = state;
+        }
+        else
+        {
+            // For structured logging or regular string messages
+            message = CustomFormatter(state, exception, out var customMessage) && customMessage is not null
+                ? customMessage
+                : formatter(state, exception);
+        }
 
+        // Get log entry
         var logFormatter = Logger.GetFormatter();
         var logEntry = logFormatter is null
             ? GetLogEntry(logLevel, timestamp, message, exception, structuredParameters)
             : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter, structuredParameters);
-
+        
         _systemWrapper.LogLine(PowertoolsLoggingSerializer.Serialize(logEntry, typeof(object)));
     }
 
@@ -182,7 +185,10 @@ internal sealed class PowertoolsLogger : ILogger
         // Add Custom Keys
         foreach (var (key, value) in Logger.GetAllKeys())
         {
-            logEntry.TryAdd(key, value);
+            if (key != "json") // Skip the json key
+            {
+                logEntry.TryAdd(key, value);
+            }
         }
 
         // Add Lambda Context Keys
@@ -196,18 +202,22 @@ internal sealed class PowertoolsLogger : ILogger
         {
             foreach (var (key, value) in CurrentScope.ExtraKeys)
             {
-                if (!string.IsNullOrWhiteSpace(key))
+                if (!string.IsNullOrWhiteSpace(key) && key != "json")
+                {
                     logEntry.TryAdd(key, value);
+                }
             }
         }
 
         // Add structured parameters
-        if (structuredParameters != null)
+        if (structuredParameters != null && structuredParameters.Count > 0)
         {
             foreach (var (key, value) in structuredParameters)
             {
-                if (!string.IsNullOrWhiteSpace(key))
+                if (!string.IsNullOrWhiteSpace(key) && key != "json")
+                {
                     logEntry.TryAdd(key, value);
+                }
             }
         }
 
@@ -236,6 +246,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="message">The message to be written. Can be also an object.</param>
     /// <param name="exception">The exception related to this entry.</param>
     /// <param name="logFormatter">The custom log entry formatter.</param>
+    /// <param name="structuredParameters">The structured parameters.</param>
     private object GetFormattedLogEntry(LogLevel logLevel, DateTime timestamp, object message,
         Exception exception, ILogFormatter logFormatter, Dictionary<string, object> structuredParameters)
     {
@@ -258,6 +269,8 @@ internal sealed class PowertoolsLogger : ILogger
         // Add Custom Keys
         foreach (var (key, value) in Logger.GetAllKeys())
         {
+            if (key == "json") continue; // Skip json key
+            
             switch (key)
             {
                 case LoggingConstants.KeyColdStart:
@@ -280,18 +293,22 @@ internal sealed class PowertoolsLogger : ILogger
         {
             foreach (var (key, value) in CurrentScope.ExtraKeys)
             {
-                if (!string.IsNullOrWhiteSpace(key))
+                if (!string.IsNullOrWhiteSpace(key) && key != "json")
+                {
                     extraKeys.TryAdd(key, value);
+                }
             }
         }
         
         // Add structured parameters
-        if (structuredParameters != null)
+        if (structuredParameters != null && structuredParameters.Count > 0)
         {
             foreach (var (key, value) in structuredParameters)
             {
-                if (!string.IsNullOrWhiteSpace(key))
+                if (!string.IsNullOrWhiteSpace(key) && key != "json")
+                {
                     extraKeys.TryAdd(key, value);
+                }
             }
         }
         
@@ -322,6 +339,7 @@ internal sealed class PowertoolsLogger : ILogger
             var logObject = logFormatter.FormatLogEntry(logEntry);
             if (logObject is null)
                 throw new LogFormatException($"{logFormatter.GetType().FullName} returned Null value.");
+                
 #if NET8_0_OR_GREATER
             return PowertoolsLoggerHelpers.ObjectToDictionary(logObject);
 #else
@@ -455,6 +473,15 @@ internal sealed class PowertoolsLogger : ILogger
     {
         messageTemplate = string.Empty;
         var parameters = new Dictionary<string, object>();
+        
+        // Handle direct object logging - when an object is passed directly without a message template
+        if (state != null && 
+            !(state is IEnumerable<KeyValuePair<string, object>>) &&
+            !(state is string))
+        {
+            // No structured parameters for direct object logging
+            return parameters;
+        }
         
         if (state is IEnumerable<KeyValuePair<string, object>> stateProps)
         {

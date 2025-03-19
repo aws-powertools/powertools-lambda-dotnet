@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 
@@ -652,19 +653,73 @@ public static class LoggerExtensions
     #endregion
 
     #endregion
-    
+
+
+    /// <summary>
+    ///     Appending additional key to the log context.
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="keys">The list of keys.</param>
+    public static void AppendKeys(this ILogger logger,IEnumerable<KeyValuePair<string, object>> keys)
+    {
+        Logger.AppendKeys(keys);
+    }
+
+    /// <summary>
+    ///     Appending additional key to the log context.
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="keys">The list of keys.</param>
+    public static void AppendKeys(this ILogger logger,IEnumerable<KeyValuePair<string, string>> keys)
+    {
+        Logger.AppendKeys(keys);
+    }
+
+    /// <summary>
+    ///     Appending additional key to the log context.
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="key">The key.</param>
+    /// <param name="value">The value.</param>
+    /// <exception cref="System.ArgumentNullException">key</exception>
+    /// <exception cref="System.ArgumentNullException">value</exception>
     public static void AppendKey(this ILogger logger, string key, object value)
     {
         Logger.AppendKey(key, value);
     }
     
+    /// <summary>
+    ///     Returns all additional keys added to the log context.
+    /// </summary>
+    /// <returns>IEnumerable&lt;KeyValuePair&lt;System.String, System.Object&gt;&gt;.</returns>
+    public static IEnumerable<KeyValuePair<string, object>> GetAllKeys(this ILogger logger)
+    {
+        return Logger.GetAllKeys();
+    }
+    
+    /// <summary>
+    ///     Removes all additional keys from the log context.
+    /// </summary>
     internal static void RemoveAllKeys(this ILogger logger)
     {
         Logger.RemoveAllKeys();
     }
-    
+
+    /// <summary>
+    ///     Remove additional keys from the log context.
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="keys">The list of keys.</param>
     public static void RemoveKeys(this ILogger logger, params string[] keys)
     {
         Logger.RemoveKeys(keys);
+    }
+    
+    /// <summary>
+    ///     Removes a key from the log context.
+    /// </summary>
+    public static void RemoveKey(this ILogger logger, string key)
+    {
+        Logger.RemoveKey(key);
     }
 }
