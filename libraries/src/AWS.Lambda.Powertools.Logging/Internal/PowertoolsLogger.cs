@@ -66,9 +66,6 @@ internal sealed class PowertoolsLogger : ILogger
         _categoryName = categoryName;
         _currentConfig = getCurrentConfig();
         _systemWrapper = systemWrapper;
-
-        // TODO: Fix
-        // _powertoolsConfigurations.SetExecutionEnvironment(this);
     }
 
     /// <summary>
@@ -100,8 +97,8 @@ internal sealed class PowertoolsLogger : ILogger
     public bool IsEnabled(LogLevel logLevel)
     {
         // If we have no explicit minimum level, use the default
-        var effectiveMinLevel = _currentConfig.MinimumLevel != LogLevel.None
-            ? _currentConfig.MinimumLevel
+        var effectiveMinLevel = _currentConfig.MinimumLogLevel != LogLevel.None
+            ? _currentConfig.MinimumLogLevel
             : LoggingConstants.DefaultLogLevel;
         
         // Log diagnostic info for Debug/Trace levels
@@ -136,30 +133,13 @@ internal sealed class PowertoolsLogger : ILogger
 
         var timestamp = DateTime.UtcNow;
         
-        // Check if state is a direct object (not structured logging)
-        bool isDirectObjectLog = state != null && 
-                             !(state is IEnumerable<KeyValuePair<string, object>>) && 
-                             !(state is string);
-        
         // Extract structured parameters for template-style logging
-        var structuredParameters = isDirectObjectLog 
-            ? new Dictionary<string, object>() 
-            : ExtractStructuredParameters(state, out string messageTemplate);
+        var structuredParameters = ExtractStructuredParameters(state, out string messageTemplate);
         
         // Format the message
-        object message;
-        if (isDirectObjectLog)
-        {
-            // For direct object logging, use the object itself
-            message = state;
-        }
-        else
-        {
-            // For structured logging or regular string messages
-            message = CustomFormatter(state, exception, out var customMessage) && customMessage is not null
-                ? customMessage
-                : formatter(state, exception);
-        }
+        var message = CustomFormatter(state, exception, out var customMessage) && customMessage is not null
+            ? customMessage
+            : formatter(state, exception);
 
         // Get log entry
         var logFormatter = Logger.GetFormatter();
@@ -185,10 +165,7 @@ internal sealed class PowertoolsLogger : ILogger
         // Add Custom Keys
         foreach (var (key, value) in Logger.GetAllKeys())
         {
-            if (key != "json") // Skip the json key
-            {
-                logEntry.TryAdd(key, value);
-            }
+            logEntry.TryAdd(key, value);
         }
 
         // Add Lambda Context Keys
@@ -202,7 +179,7 @@ internal sealed class PowertoolsLogger : ILogger
         {
             foreach (var (key, value) in CurrentScope.ExtraKeys)
             {
-                if (!string.IsNullOrWhiteSpace(key) && key != "json")
+                if (!string.IsNullOrWhiteSpace(key))
                 {
                     logEntry.TryAdd(key, value);
                 }
@@ -269,8 +246,6 @@ internal sealed class PowertoolsLogger : ILogger
         // Add Custom Keys
         foreach (var (key, value) in Logger.GetAllKeys())
         {
-            if (key == "json") continue; // Skip json key
-            
             switch (key)
             {
                 case LoggingConstants.KeyColdStart:
@@ -293,7 +268,7 @@ internal sealed class PowertoolsLogger : ILogger
         {
             foreach (var (key, value) in CurrentScope.ExtraKeys)
             {
-                if (!string.IsNullOrWhiteSpace(key) && key != "json")
+                if (!string.IsNullOrWhiteSpace(key))
                 {
                     extraKeys.TryAdd(key, value);
                 }
@@ -473,15 +448,6 @@ internal sealed class PowertoolsLogger : ILogger
     {
         messageTemplate = string.Empty;
         var parameters = new Dictionary<string, object>();
-        
-        // Handle direct object logging - when an object is passed directly without a message template
-        if (state != null && 
-            !(state is IEnumerable<KeyValuePair<string, object>>) &&
-            !(state is string))
-        {
-            // No structured parameters for direct object logging
-            return parameters;
-        }
         
         if (state is IEnumerable<KeyValuePair<string, object>> stateProps)
         {

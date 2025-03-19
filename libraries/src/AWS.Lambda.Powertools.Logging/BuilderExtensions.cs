@@ -33,9 +33,9 @@ public static class BuilderExtensions
             
             
             // IMPORTANT: Set the minimum level directly on the builder
-            if (options.MinimumLevel != LogLevel.None) 
+            if (options.MinimumLogLevel != LogLevel.None) 
             {
-                builder.SetMinimumLevel(options.MinimumLevel);
+                builder.SetMinimumLevel(options.MinimumLogLevel);
             }
             
             // Configure options for DI

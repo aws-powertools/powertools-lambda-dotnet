@@ -76,6 +76,8 @@ internal sealed class LoggerProvider : ILoggerProvider
     /// <returns>The instance of <see cref="T:Microsoft.Extensions.Logging.ILogger" /> that was created.</returns>
     public ILogger CreateLogger(string categoryName)
     {
+        _powertoolsConfigurations.SetExecutionEnvironment(typeof(PowertoolsLogger));
+        
         return _loggers.GetOrAdd(categoryName, name => new PowertoolsLogger(name,
             () => _currentConfig,
             _systemWrapper));
@@ -97,13 +99,13 @@ internal sealed class LoggerProvider : ILoggerProvider
         var lambdaLogLevelEnabled = _powertoolsConfigurations.LambdaLogLevelEnabled();
 
         // Check for explicit config
-        bool hasExplicitLevel = config.MinimumLevel != LogLevel.None;
+        bool hasExplicitLevel = config.MinimumLogLevel != LogLevel.None;
 
         // Warn if Lambda log level doesn't match
-        if (lambdaLogLevelEnabled && hasExplicitLevel && config.MinimumLevel < lambdaLogLevel)
+        if (lambdaLogLevelEnabled && hasExplicitLevel && config.MinimumLogLevel < lambdaLogLevel)
         {
             _systemWrapper.LogLine(
-                $"Current log level ({config.MinimumLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
+                $"Current log level ({config.MinimumLogLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
         }
 
         // Set service from environment if not explicitly set
@@ -123,7 +125,7 @@ internal sealed class LoggerProvider : ILoggerProvider
         if (!hasExplicitLevel)
         {
             var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
-            config.MinimumLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
+            config.MinimumLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
         }
         
         // Always configure the serializer with the output case
@@ -145,7 +147,7 @@ internal sealed class LoggerProvider : ILoggerProvider
             ? config.SamplingRate 
             : _powertoolsConfigurations.LoggerSampleRate;
             
-        samplingRate = ValidateSamplingRate(samplingRate, config.MinimumLevel, _systemWrapper);
+        samplingRate = ValidateSamplingRate(samplingRate, config.MinimumLogLevel, _systemWrapper);
         config.SamplingRate = samplingRate;
 
         // Only notify if sampling is configured
@@ -158,7 +160,7 @@ internal sealed class LoggerProvider : ILoggerProvider
             {
                 _systemWrapper.LogLine(
                     $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
-                config.MinimumLevel = LogLevel.Debug;
+                config.MinimumLogLevel = LogLevel.Debug;
             }
         }
     }

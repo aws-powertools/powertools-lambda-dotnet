@@ -57,13 +57,13 @@ public static partial class Logger
     }
     
     // Configure with existing factory
-    public static void Configure(ILoggerFactory loggerFactory)
+    internal static void Configure(ILoggerFactory loggerFactory)
     {
         Interlocked.Exchange(ref _factoryLazy,
             new Lazy<ILoggerFactory>(() => loggerFactory));
 
         Interlocked.Exchange(ref _defaultLoggerLazy,
-            new Lazy<ILogger>(() => Factory.CreateLogger("PowertoolsLogger")));
+            new Lazy<ILogger>(() => Factory.CreatePowertoolsLogger()));
 
         _isConfigured = true;
     }
@@ -83,9 +83,9 @@ public static partial class Logger
         var factory = LoggerFactory.Create(builder => 
         {
             // Set minimum level directly on builder
-            if (options.MinimumLevel != LogLevel.None)
+            if (options.MinimumLogLevel != LogLevel.None)
             {
-                builder.SetMinimumLevel(options.MinimumLevel);
+                builder.SetMinimumLevel(options.MinimumLogLevel);
             }
             
             // Add our provider - the config's OutputLogger will be used
@@ -94,14 +94,12 @@ public static partial class Logger
             builder.AddPowertoolsLogger(config => 
             {
                 config.Service = _currentConfig.Service;
-                config.MinimumLevel = _currentConfig.MinimumLevel;
+                config.MinimumLogLevel = _currentConfig.MinimumLogLevel;
                 config.LoggerOutputCase = _currentConfig.LoggerOutputCase;
                 config.SamplingRate = _currentConfig.SamplingRate;
                 config.LoggerOutput = _currentConfig.LoggerOutput;
                 config.JsonOptions = _currentConfig.JsonOptions;
-#if NET8_0_OR_GREATER
-                config.JsonContext = _currentConfig.JsonContext;
-#endif
+
             }, true);
         });
 
@@ -110,14 +108,13 @@ public static partial class Logger
             new Lazy<ILoggerFactory>(() => factory));
 
         Interlocked.Exchange(ref _defaultLoggerLazy,
-            new Lazy<ILogger>(() => Factory.CreateLogger("PowertoolsLogger")));
+            new Lazy<ILogger>(() => Factory.CreatePowertoolsLogger()));
 
         _isConfigured = true;
     }
 
-    // Add this method to the Logger class
     // Get the current configuration
-    public static PowertoolsLoggerConfiguration GetConfiguration()
+    internal static PowertoolsLoggerConfiguration GetConfiguration()
     {
         // Ensure logger is initialized
         _ = LoggerInstance;
@@ -135,6 +132,8 @@ public static partial class Logger
     public static ILogger GetLogger<T>() => GetLogger(typeof(T).Name);
 
     public static ILogger GetLogger(string category) => Factory.CreateLogger(category);
+    
+    public static ILogger GetPowertoolsLogger() => Factory.CreatePowertoolsLogger();
     
     // For testing purposes
     // internal static void Reset()

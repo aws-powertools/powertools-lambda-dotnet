@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
 
-public sealed class PowertoolsLoggerFactory : IDisposable
+internal sealed class PowertoolsLoggerFactory : IDisposable
 {
     private readonly ILoggerFactory _factory;
 
@@ -31,7 +31,7 @@ public sealed class PowertoolsLoggerFactory : IDisposable
             {
                 // Copy basic properties
                 config.Service = options.Service;
-                config.MinimumLevel = options.MinimumLevel;
+                config.MinimumLogLevel = options.MinimumLogLevel;
                 config.LoggerOutputCase = options.LoggerOutputCase;
                 config.SamplingRate = options.SamplingRate;
         
@@ -41,11 +41,6 @@ public sealed class PowertoolsLoggerFactory : IDisposable
                 //     config.AddJsonContext(ctx);
                 // }
                 //
-                // // Copy log level colors
-                // foreach (var kvp in options.LogLevelToColorMap)
-                // {
-                //     config.LogLevelToColorMap[kvp.Key] = kvp.Value;
-                // }
             });
         });
         
@@ -54,9 +49,9 @@ public sealed class PowertoolsLoggerFactory : IDisposable
     }
 
     // Add builder pattern support
-    public static PowertoolsLoggerFactoryBuilder CreateBuilder()
+    public static PowertoolsLoggerBuilder CreateBuilder()
     {
-        return new PowertoolsLoggerFactoryBuilder();
+        return new PowertoolsLoggerBuilder();
     }
     
     public ILogger CreateLogger<T>() => CreateLogger(typeof(T).FullName ?? typeof(T).Name);
@@ -64,6 +59,11 @@ public sealed class PowertoolsLoggerFactory : IDisposable
     public ILogger CreateLogger(string category)
     {
         return _factory.CreateLogger(category);
+    }
+    
+    public ILogger CreatePowertoolsLogger()
+    {
+        return _factory.CreatePowertoolsLogger();
     }
     
     public void Dispose()

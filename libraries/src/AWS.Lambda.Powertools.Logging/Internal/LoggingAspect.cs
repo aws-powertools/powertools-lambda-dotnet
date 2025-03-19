@@ -92,7 +92,7 @@ public class LoggingAspect
             var config = new PowertoolsLoggerConfiguration
             {
                 // Use sensible defaults if not specified in the attribute
-                MinimumLevel = trigger.LogLevel != LogLevel.None ? trigger.LogLevel : LogLevel.Information,
+                MinimumLogLevel = trigger.LogLevel != LogLevel.None ? trigger.LogLevel : LogLevel.Information,
                 Service = !string.IsNullOrEmpty(trigger.Service) ? trigger.Service : "service_undefined",
                 LoggerOutputCase = trigger.LoggerOutputCase != default ? trigger.LoggerOutputCase : LoggerOutputCase.SnakeCase,
                 SamplingRate = trigger.SamplingRate > 0 ? trigger.SamplingRate : 1.0
@@ -103,10 +103,10 @@ public class LoggingAspect
         }
         
         // Get logger after configuration
-        _logger = Logger.GetLogger<LoggingAspect>();
+        _logger = Logger.GetPowertoolsLogger();
         
         // Set debug flag based on the minimum level from Logger
-        _isDebug = Logger.GetConfiguration().MinimumLevel <= LogLevel.Debug;
+        _isDebug = Logger.GetConfiguration().MinimumLogLevel <= LogLevel.Debug;
     }
 
     /// <summary>

@@ -33,7 +33,7 @@ namespace AWS.Lambda.Powertools.Logging;
 /// </summary>
 public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfiguration>
 {
-    public const string ConfigurationSectionName = "PowertoolsLogger";
+    public const string ConfigurationSectionName = "AWS.Lambda.Powertools.Logging.Logger";
 
     /// <summary>
     ///     Service name is used for logging.
@@ -45,7 +45,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     ///     Specify the minimum log level for logging (Information, by default).
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOG_LEVEL</c>.
     /// </summary>
-    public LogLevel MinimumLevel { get; set; } = LogLevel.None;
+    public LogLevel MinimumLogLevel { get; set; } = LogLevel.None;
 
     /// <summary>
     ///     Dynamically set a percentage of logs to DEBUG level.
@@ -68,7 +68,6 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// Custom output logger to use instead of Console
     /// </summary>
     public ISystemWrapper? LoggerOutput { get; set; }
-
 
     /// <summary>
     /// JSON serializer options to use for log serialization
@@ -98,29 +97,9 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     private readonly List<JsonSerializerContext> _additionalContexts = new();
 
     /// <summary>
-    /// Main JSON context to use for serialization
-    /// </summary>
-    public JsonSerializerContext? JsonContext
-    {
-        get => _jsonContext;
-        set 
-        { 
-            _jsonContext = value;
-            ApplyJsonContext();
-            
-            // If we have existing JSON options, update their type resolver
-            if (_jsonOptions != null && !RuntimeFeatureWrapper.IsDynamicCodeSupported)
-            {
-                // Reset the type resolver chain to rebuild it
-                _jsonOptions.TypeInfoResolver = GetCompositeResolver();
-            }
-        }
-    }
-
-    /// <summary>
     /// Add additional JsonSerializerContext for client types
     /// </summary>
-    public void AddJsonContext(JsonSerializerContext context)
+    internal void AddJsonContext(JsonSerializerContext context)
     {
         if (context == null)
             return;
@@ -143,7 +122,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// <summary>
     /// Get all additional contexts
     /// </summary>
-    public IReadOnlyList<JsonSerializerContext> GetAdditionalContexts()
+    internal IReadOnlyList<JsonSerializerContext> GetAdditionalContexts()
     {
         return _additionalContexts.AsReadOnly();
     }
@@ -154,7 +133,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// <summary>
     /// Process JSON options type resolver information
     /// </summary>
-    public void HandleJsonOptionsTypeResolver(JsonSerializerOptions options)
+    internal void HandleJsonOptionsTypeResolver(JsonSerializerOptions options)
     {
         if (options == null) return;
 
@@ -207,7 +186,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// <summary>
     /// Get a composite resolver that includes all configured resolvers
     /// </summary>
-    public IJsonTypeInfoResolver GetCompositeResolver()
+    internal IJsonTypeInfoResolver GetCompositeResolver()
     {
         var resolvers = new List<IJsonTypeInfoResolver>();
 
@@ -242,17 +221,6 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     }
 
     /// <summary>
-    /// Apply JSON context to serializer
-    /// </summary>
-    private void ApplyJsonContext()
-    {
-        if (_jsonContext != null)
-        {
-            PowertoolsLoggingSerializer.SetDefaultContext(_jsonContext);
-        }
-    }
-
-    /// <summary>
     /// Apply additional JSON context to serializer
     /// </summary>
     private void ApplyAdditionalJsonContext(JsonSerializerContext context)
@@ -275,7 +243,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// <summary>
     /// Apply output case configuration
     /// </summary>
-    public void ApplyOutputCase()
+    internal void ApplyOutputCase()
     {
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase);
     }
@@ -283,12 +251,12 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// <summary>
     /// Clone this configuration
     /// </summary>
-    public PowertoolsLoggerConfiguration Clone()
+    internal PowertoolsLoggerConfiguration Clone()
     {
         var clone = new PowertoolsLoggerConfiguration
         {
             Service = Service,
-            MinimumLevel = MinimumLevel,
+            MinimumLogLevel = MinimumLogLevel,
             SamplingRate = SamplingRate,
             LoggerOutputCase = LoggerOutputCase,
             LoggerOutput = LoggerOutput,
@@ -316,4 +284,5 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
 
     // IOptions implementation
     PowertoolsLoggerConfiguration IOptions<PowertoolsLoggerConfiguration>.Value => this;
+    public string TimestampFormat { get; set; }
 }
