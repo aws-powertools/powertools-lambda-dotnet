@@ -159,9 +159,6 @@ internal sealed class LoggerProvider : ILoggerProvider
                 _systemWrapper.LogLine(
                     $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
                 config.MinimumLevel = LogLevel.Debug;
-                
-                // Store sampling decision in config without changing log level
-                config.SamplingEnabled = true;
             }
         }
     }

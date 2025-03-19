@@ -135,14 +135,34 @@ internal sealed class PowertoolsLogger : ILogger
             throw new ArgumentNullException(nameof(formatter));
 
         var timestamp = DateTime.UtcNow;
+        
+        // Extract structured logging parameters
+        var structuredParameters = ExtractStructuredParameters(state, out string messageTemplate);
+        
+        // Format the message using the provided formatter
         var message = CustomFormatter(state, exception, out var customMessage) && customMessage is not null
             ? customMessage
             : formatter(state, exception);
+            
+        // // For better object representation in messages
+        // if (message != null && message.ToString().Contains(".") && 
+        //     message.ToString().EndsWith("Class") &&
+        //     structuredParameters.Count > 0)
+        // {
+        //     // This might be a ToString() of an object class - let's try to use a better representation
+        //     var objName = message.ToString().Split('.').Last();
+        //     if (structuredParameters.Count == 1)
+        //     {
+        //         // If we have a single parameter, try to represent it nicely in the log
+        //         var param = structuredParameters.First();
+        //         message = $"{param.Key}: {(param.Value != null ? "[object]" : "null")}";
+        //     }
+        // }
 
         var logFormatter = Logger.GetFormatter();
         var logEntry = logFormatter is null
-            ? GetLogEntry(logLevel, timestamp, message, exception)
-            : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter);
+            ? GetLogEntry(logLevel, timestamp, message, exception, structuredParameters)
+            : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter, structuredParameters);
 
         _systemWrapper.LogLine(PowertoolsLoggingSerializer.Serialize(logEntry, typeof(object)));
     }
@@ -155,7 +175,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="message">The message to be written. Can be also an object.</param>
     /// <param name="exception">The exception related to this entry.</param>
     private Dictionary<string, object> GetLogEntry(LogLevel logLevel, DateTime timestamp, object message,
-        Exception exception)
+        Exception exception, Dictionary<string, object> structuredParameters = null)
     {
         var logEntry = new Dictionary<string, object>();
 
@@ -181,6 +201,16 @@ internal sealed class PowertoolsLogger : ILogger
             }
         }
 
+        // Add structured parameters
+        if (structuredParameters != null)
+        {
+            foreach (var (key, value) in structuredParameters)
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                    logEntry.TryAdd(key, value);
+            }
+        }
+
         logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString("o"));
         logEntry.TryAdd(_currentConfig.LogLevelKey, logLevel.ToString());
         logEntry.TryAdd(LoggingConstants.KeyService, _currentConfig.Service);
@@ -188,8 +218,12 @@ internal sealed class PowertoolsLogger : ILogger
         logEntry.TryAdd(LoggingConstants.KeyMessage, message);
         if (_currentConfig.SamplingRate > 0)
             logEntry.TryAdd(LoggingConstants.KeySamplingRate, _currentConfig.SamplingRate);
+        
+        // Use the AddExceptionDetails method instead of adding exception directly
         if (exception != null)
-            logEntry.TryAdd(LoggingConstants.KeyException, exception);
+        {
+            AddExceptionDetails(logEntry, exception);
+        }
 
         return logEntry;
     }
@@ -203,7 +237,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="exception">The exception related to this entry.</param>
     /// <param name="logFormatter">The custom log entry formatter.</param>
     private object GetFormattedLogEntry(LogLevel logLevel, DateTime timestamp, object message,
-        Exception exception, ILogFormatter logFormatter)
+        Exception exception, ILogFormatter logFormatter, Dictionary<string, object> structuredParameters)
     {
         if (logFormatter is null)
             return null;
@@ -215,7 +249,7 @@ internal sealed class PowertoolsLogger : ILogger
             Service = _currentConfig.Service,
             Name = _categoryName,
             Message = message,
-            Exception = exception,
+            Exception = exception,  // Keep this to maintain compatibility
             SamplingRate = _currentConfig.SamplingRate,
         };
 
@@ -248,6 +282,29 @@ internal sealed class PowertoolsLogger : ILogger
             {
                 if (!string.IsNullOrWhiteSpace(key))
                     extraKeys.TryAdd(key, value);
+            }
+        }
+        
+        // Add structured parameters
+        if (structuredParameters != null)
+        {
+            foreach (var (key, value) in structuredParameters)
+            {
+                if (!string.IsNullOrWhiteSpace(key))
+                    extraKeys.TryAdd(key, value);
+            }
+        }
+        
+        // Add detailed exception information
+        if (exception != null)
+        {
+            var exceptionDetails = new Dictionary<string, object>();
+            AddExceptionDetails(exceptionDetails, exception);
+            
+            // Add exception details to extra keys
+            foreach (var (key, value) in exceptionDetails)
+            {
+                extraKeys.TryAdd(key, value);
             }
         }
 
@@ -389,5 +446,133 @@ internal sealed class PowertoolsLogger : ILogger
         }
 
         return keys;
+    }
+
+    /// <summary>
+    /// Extracts structured parameter key-value pairs from the log state
+    /// </summary>
+    private Dictionary<string, object> ExtractStructuredParameters<TState>(TState state, out string messageTemplate)
+    {
+        messageTemplate = string.Empty;
+        var parameters = new Dictionary<string, object>();
+        
+        if (state is IEnumerable<KeyValuePair<string, object>> stateProps)
+        {
+            // Dictionary to store format specifiers for each parameter
+            var formatSpecifiers = new Dictionary<string, string>();
+            
+            // First pass - extract template and identify format specifiers
+            foreach (var prop in stateProps)
+            {
+                // The original message template is stored with key "{OriginalFormat}"
+                if (prop.Key == "{OriginalFormat}" && prop.Value is string template)
+                {
+                    messageTemplate = template;
+                    
+                    // Extract format specifiers from the template
+                    var matches = System.Text.RegularExpressions.Regex.Matches(
+                        template, 
+                        @"{([@\w]+)(?::([^{}]+))?}");
+                    
+                    foreach (System.Text.RegularExpressions.Match match in matches)
+                    {
+                        string paramName = match.Groups[1].Value;
+                        if (match.Groups.Count > 2 && match.Groups[2].Success)
+                        {
+                            formatSpecifiers[paramName] = match.Groups[2].Value;
+                        }
+                    }
+                    
+                    continue;
+                }
+            }
+            
+            // Second pass - process values with extracted format specifiers
+            foreach (var prop in stateProps)
+            {
+                if (prop.Key == "{OriginalFormat}")
+                    continue;
+                
+                // Extract parameter name without braces
+                string paramName = ExtractParameterName(prop.Key);
+                if (string.IsNullOrEmpty(paramName))
+                    continue;
+                
+                // Handle special serialization designators (like @)
+                bool useStructuredSerialization = paramName.StartsWith("@");
+                string actualParamName = useStructuredSerialization ? paramName.Substring(1) : paramName;
+                
+                // Apply formatting if a format specifier exists and the value can be formatted
+                if (!useStructuredSerialization && 
+                    formatSpecifiers.TryGetValue(paramName, out string format) && 
+                    prop.Value is IFormattable formattable)
+                {
+                    // Format the value using the specified format
+                    string formattedValue = formattable.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
+                    
+                    // Try to preserve the numeric type if possible
+                    if (double.TryParse(formattedValue, out double numericValue))
+                    {
+                        parameters[actualParamName] = numericValue;
+                    }
+                    else
+                    {
+                        parameters[actualParamName] = formattedValue;
+                    }
+                }
+                else if (useStructuredSerialization)
+                {
+                    // Serialize the entire object
+                    parameters[actualParamName] = prop.Value;
+                }
+                else
+                {
+                    // For regular objects, use the value directly
+                    parameters[actualParamName] = prop.Value;
+                }
+            }
+        }
+        
+        return parameters;
+    }
+
+    /// <summary>
+    /// Extracts the parameter name from a template placeholder (e.g. "{paramName}" or "{paramName:format}")
+    /// </summary>
+    private string ExtractParameterName(string key)
+    {
+        // If it's already a proper parameter name without braces, return it
+        if (!key.StartsWith("{") || !key.EndsWith("}"))
+            return key;
+            
+        // Remove the braces
+        var nameWithPossibleFormat = key.Substring(1, key.Length - 2);
+        
+        // If there's a format specifier, remove it
+        var colonIndex = nameWithPossibleFormat.IndexOf(':');
+        return colonIndex > 0 
+            ? nameWithPossibleFormat.Substring(0, colonIndex) 
+            : nameWithPossibleFormat;
+    }
+
+    private void AddExceptionDetails(Dictionary<string, object> logEntry, Exception exception)
+    {
+        if (exception == null)
+            return;
+        
+        logEntry.TryAdd("errorType", exception.GetType().FullName);
+        logEntry.TryAdd("errorMessage", exception.Message);
+    
+        // Add stack trace as array of strings for better readability
+        var stackFrames = exception.StackTrace?.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+        if (stackFrames?.Length > 0)
+        {
+            var cleanedStackTrace = new List<string>
+            {
+                $"{exception.GetType().FullName}: {exception.Message}"
+            };
+            cleanedStackTrace.AddRange(stackFrames);
+            logEntry.TryAdd("stackTrace", cleanedStackTrace);
+        }
     }
 }

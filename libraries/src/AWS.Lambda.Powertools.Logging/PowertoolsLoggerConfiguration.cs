@@ -53,11 +53,6 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     public double SamplingRate { get; set; }
 
     /// <summary>
-    /// Whether sampling was enabled for the current request
-    /// </summary>
-    public bool SamplingEnabled { get; set; }
-
-    /// <summary>
     ///     The logger output case.
     ///     This can be also set using the environment variable <c>POWERTOOLS_LOGGER_CASE</c>.
     /// </summary>
@@ -270,7 +265,6 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
             Service = Service,
             MinimumLevel = MinimumLevel,
             SamplingRate = SamplingRate,
-            SamplingEnabled = SamplingEnabled, // Copy the sampling decision
             LoggerOutputCase = LoggerOutputCase,
             LoggerOutput = LoggerOutput,
             LogLevelKey = LogLevelKey,
