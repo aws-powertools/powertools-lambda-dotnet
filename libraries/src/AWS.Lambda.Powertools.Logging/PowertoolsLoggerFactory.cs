@@ -1,5 +1,6 @@
 using System;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -25,27 +26,24 @@ internal sealed class PowertoolsLoggerFactory : IDisposable
         var options = new PowertoolsLoggerConfiguration();
         configureOptions(options);
 
+        var factory = Create(options);
+        
+        Logger.Configure(factory);
+        return new PowertoolsLoggerFactory(factory);
+    }
+    
+    public static ILoggerFactory Create(PowertoolsLoggerConfiguration options)
+    {
         var factory = LoggerFactory.Create(builder =>
         {
             builder.AddPowertoolsLogger(config =>
             {
-                // Copy basic properties
-                config.Service = options.Service;
-                config.MinimumLogLevel = options.MinimumLogLevel;
-                config.LoggerOutputCase = options.LoggerOutputCase;
-                config.SamplingRate = options.SamplingRate;
-        
-                // // Copy additional contexts using the public API
-                // foreach (var ctx in options.GetAdditionalContexts())
-                // {
-                //     config.AddJsonContext(ctx);
-                // }
-                //
+                config.CopyFrom(options);
             });
         });
         
         Logger.Configure(factory);
-        return new PowertoolsLoggerFactory(factory);
+        return factory;
     }
 
     // Add builder pattern support

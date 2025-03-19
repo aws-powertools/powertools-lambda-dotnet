@@ -188,32 +188,59 @@ internal static class PowertoolsLoggingSerializer
     /// Builds and configures the JsonSerializerOptions.
     /// </summary>
     /// <returns>A configured JsonSerializerOptions instance.</returns>
-    private static void BuildJsonSerializerOptions()
+    internal static void BuildJsonSerializerOptions(JsonSerializerOptions options = null)
     {
-        // This should already be in a lock when called
-        _jsonOptions = new JsonSerializerOptions();
-
-        switch (_currentOutputCase)
+        lock (_lock)
         {
-            case LoggerOutputCase.CamelCase:
-                _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-                break;
-            case LoggerOutputCase.PascalCase:
-                _jsonOptions.PropertyNamingPolicy = PascalCaseNamingPolicy.Instance;
-                _jsonOptions.DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance;
-                break;
-            default: // Snake case
+            // This should already be in a lock when called
+            _jsonOptions = options ?? new JsonSerializerOptions();
+
+            switch (_currentOutputCase)
+            {
+                case LoggerOutputCase.CamelCase:
+                    _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+                    break;
+                case LoggerOutputCase.PascalCase:
+                    _jsonOptions.PropertyNamingPolicy = PascalCaseNamingPolicy.Instance;
+                    _jsonOptions.DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance;
+                    break;
+                default: // Snake case
 #if NET8_0_OR_GREATER
-                _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-                _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
+                    _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+                    _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
 #else
                 _jsonOptions.PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance;
                 _jsonOptions.DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance;
 #endif
-                break;
-        }
+                    break;
+            }
 
+            AddConverters();
+
+            _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+            _jsonOptions.PropertyNameCaseInsensitive = true;
+
+#if NET8_0_OR_GREATER
+
+            // Only add TypeInfoResolver if AOT mode
+            if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
+            {
+                // Always ensure our default context is in the chain first
+                _jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
+
+                // Add all registered contexts
+                foreach (var context in AdditionalContexts)
+                {
+                    _jsonOptions.TypeInfoResolverChain.Add(context);
+                }
+            }
+#endif
+        }
+    }
+
+    private static void AddConverters()
+    {
         _jsonOptions.Converters.Add(new ByteArrayConverter());
         _jsonOptions.Converters.Add(new ExceptionConverter());
         _jsonOptions.Converters.Add(new MemoryStreamConverter());
@@ -225,25 +252,6 @@ internal static class PowertoolsLoggingSerializer
         _jsonOptions.Converters.Add(new LogLevelJsonConverter());
 #elif NET6_0
         _jsonOptions.Converters.Add(new LogLevelJsonConverter());
-#endif
-
-        _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-        _jsonOptions.PropertyNameCaseInsensitive = true;
-
-#if NET8_0_OR_GREATER
-
-        // Only add TypeInfoResolver if AOT mode
-        if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
-        {
-            // Always ensure our default context is in the chain first
-            _jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
-            
-            // Add all registered contexts
-            foreach (var context in AdditionalContexts)
-            {
-                _jsonOptions.TypeInfoResolverChain.Add(context);
-            }
-        }
 #endif
     }
 
@@ -265,55 +273,5 @@ internal static class PowertoolsLoggingSerializer
     internal static void ClearOptions()
     {
         _jsonOptions = null;
-    }
-
-    /// <summary>
-    /// Sets the default JSON context to use
-    /// </summary>
-    internal static void SetDefaultContext(JsonSerializerContext context)
-    {
-        lock (_lock)
-        {
-            // Reset options to ensure they're rebuilt with the new context
-            _jsonOptions = null;
-        }
-    }
-
-    /// <summary>
-    /// Configure the serializer with specific JSON options
-    /// </summary>
-    internal static void ConfigureJsonOptions(JsonSerializerOptions options)
-    {
-        if (options == null) return;
-        
-        lock (_lock)
-        {
-            _jsonOptions = options;
-            
-            // Add required converters if they're not already present
-            var converters = new[]
-            {
-                typeof(ByteArrayConverter),
-                typeof(ExceptionConverter),
-                typeof(MemoryStreamConverter),
-                typeof(ConstantClassConverter),
-                typeof(DateOnlyConverter),
-                typeof(TimeOnlyConverter),
-                typeof(LogLevelJsonConverter),
-            };
-
-            foreach (var converterType in converters)
-            {
-                if (!_jsonOptions.Converters.Any(c => c.GetType() == converterType))
-                {
-                    // Add the converter through reflection to avoid direct instantiation
-                    var converter = Activator.CreateInstance(converterType) as JsonConverter;
-                    if (converter != null)
-                    {
-                        _jsonOptions.Converters.Add(converter);
-                    }
-                }
-            }
-        }
     }
 }

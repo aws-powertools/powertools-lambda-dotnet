@@ -198,7 +198,7 @@ internal sealed class PowertoolsLogger : ILogger
             }
         }
 
-        logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString("o"));
+        logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString( _currentConfig.TimestampFormat ?? "o"));
         logEntry.TryAdd(_currentConfig.LogLevelKey, logLevel.ToString());
         logEntry.TryAdd(LoggingConstants.KeyService, _currentConfig.Service);
         logEntry.TryAdd(LoggingConstants.KeyLoggerName, _categoryName);

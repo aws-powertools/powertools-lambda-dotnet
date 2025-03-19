@@ -73,39 +73,9 @@ public static partial class Logger
     {
         if (options == null) throw new ArgumentNullException(nameof(options));
 
-        // Store the configuration
-        _currentConfig = options.Clone();
-        
-        // Create a system wrapper if needed
-        var systemWrapper = options.LoggerOutput ?? new SystemWrapper();
-
-        // Create a factory with our provider
-        var factory = LoggerFactory.Create(builder => 
-        {
-            // Set minimum level directly on builder
-            if (options.MinimumLogLevel != LogLevel.None)
-            {
-                builder.SetMinimumLevel(options.MinimumLogLevel);
-            }
-            
-            // Add our provider - the config's OutputLogger will be used
-            builder.Services.AddSingleton<ISystemWrapper>(systemWrapper);
-            
-            builder.AddPowertoolsLogger(config => 
-            {
-                config.Service = _currentConfig.Service;
-                config.MinimumLogLevel = _currentConfig.MinimumLogLevel;
-                config.LoggerOutputCase = _currentConfig.LoggerOutputCase;
-                config.SamplingRate = _currentConfig.SamplingRate;
-                config.LoggerOutput = _currentConfig.LoggerOutput;
-                config.JsonOptions = _currentConfig.JsonOptions;
-
-            }, true);
-        });
-
         // Update factory and logger
         Interlocked.Exchange(ref _factoryLazy,
-            new Lazy<ILoggerFactory>(() => factory));
+            new Lazy<ILoggerFactory>(() => PowertoolsLoggerFactory.Create(options)));
 
         Interlocked.Exchange(ref _defaultLoggerLazy,
             new Lazy<ILogger>(() => Factory.CreatePowertoolsLogger()));

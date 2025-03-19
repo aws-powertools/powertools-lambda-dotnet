@@ -40,6 +40,11 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     ///     This can be also set using the environment variable <c>POWERTOOLS_SERVICE_NAME</c>.
     /// </summary>
     public string? Service { get; set; } = null;
+    
+    /// <summary>
+    ///     Timestamp format for logging.
+    /// </summary>
+    public string? TimestampFormat { get; set; }
 
     /// <summary>
     ///     Specify the minimum log level for logging (Information, by default).
@@ -149,38 +154,6 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
                 AddJsonContext(jsonContext);
             }
         }
-
-        // Check for TypeInfoResolverChain
-        if (options.TypeInfoResolverChain != null && options.TypeInfoResolverChain.Count > 0)
-        {
-            foreach (var resolver in options.TypeInfoResolverChain)
-            {
-                // If it's a JsonSerializerContext, add it to our additional contexts
-                if (resolver is JsonSerializerContext context)
-                {
-                    AddJsonContext(context);
-                }
-                // Otherwise store it as a custom resolver
-                else if (resolver is IJsonTypeInfoResolver customResolver &&
-                         customResolver != GetCompositeResolver() &&
-                         _customTypeInfoResolver != customResolver)
-                {
-                    // If we already have a different custom resolver, we need to store multiple
-                    if (_customTypeInfoResolver != null)
-                    {
-                        _customTypeInfoResolvers ??= new List<IJsonTypeInfoResolver>();
-                        if (!_customTypeInfoResolvers.Contains(customResolver))
-                        {
-                            _customTypeInfoResolvers.Add(customResolver);
-                        }
-                    }
-                    else
-                    {
-                        _customTypeInfoResolver = customResolver;
-                    }
-                }
-            }
-        }
     }
 
     /// <summary>
@@ -236,7 +209,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     {
         if (_jsonOptions != null)
         {
-            PowertoolsLoggingSerializer.ConfigureJsonOptions(_jsonOptions);
+            PowertoolsLoggingSerializer.BuildJsonSerializerOptions(_jsonOptions);
         }
     }
 
@@ -248,41 +221,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase);
     }
 
-    /// <summary>
-    /// Clone this configuration
-    /// </summary>
-    internal PowertoolsLoggerConfiguration Clone()
-    {
-        var clone = new PowertoolsLoggerConfiguration
-        {
-            Service = Service,
-            MinimumLogLevel = MinimumLogLevel,
-            SamplingRate = SamplingRate,
-            LoggerOutputCase = LoggerOutputCase,
-            LoggerOutput = LoggerOutput,
-            LogLevelKey = LogLevelKey,
-            JsonOptions = JsonOptions
-        };
-
-#if NET8_0_OR_GREATER
-        clone._jsonContext = _jsonContext;
-        foreach (var context in _additionalContexts)
-        {
-            clone._additionalContexts.Add(context);
-        }
-        
-        clone._customTypeInfoResolver = _customTypeInfoResolver;
-        
-        if (_customTypeInfoResolvers != null)
-        {
-            clone._customTypeInfoResolvers = new List<IJsonTypeInfoResolver>(_customTypeInfoResolvers);
-        }
-#endif
-
-        return clone;
-    }
 
     // IOptions implementation
     PowertoolsLoggerConfiguration IOptions<PowertoolsLoggerConfiguration>.Value => this;
-    public string TimestampFormat { get; set; }
 }

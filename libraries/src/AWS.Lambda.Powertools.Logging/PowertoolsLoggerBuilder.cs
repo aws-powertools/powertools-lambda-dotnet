@@ -2,6 +2,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -58,21 +59,10 @@ public class PowertoolsLoggerBuilder
         {
             builder.AddPowertoolsLogger(config =>
             {
-                config.Service = _configuration.Service;
-                config.SamplingRate = _configuration.SamplingRate;
-                config.MinimumLogLevel = _configuration.MinimumLogLevel;
-                config.LoggerOutputCase = _configuration.LoggerOutputCase;
-                config.LoggerOutput = _configuration.LoggerOutput; 
-                config.JsonOptions = _configuration.JsonOptions;
-                config.TimestampFormat = _configuration.TimestampFormat; // Add this line
-                
-                // foreach (var context in _configuration.GetAdditionalContexts())
-                // {
-                //     config.AddJsonContext(context);
-                // }
+                config.CopyFrom(_configuration);
             });
         });
-    
+
         Logger.Configure(factory); // Configure the static logger
         return factory.CreatePowertoolsLogger();
     }

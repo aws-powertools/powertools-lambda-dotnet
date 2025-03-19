@@ -18,8 +18,7 @@ public static class BuilderExtensions
     // Single base method that all other overloads call
     public static ILoggingBuilder AddPowertoolsLogger(
         this ILoggingBuilder builder,
-        Action<PowertoolsLoggerConfiguration>? configure = null,
-        bool fromLoggerConfigure = false)
+        Action<PowertoolsLoggerConfiguration>? configure = null)
     {
         // Add configuration
         builder.AddConfiguration();
@@ -30,14 +29,15 @@ public static class BuilderExtensions
             // Create initial configuration
             var options = new PowertoolsLoggerConfiguration();
             configure(options);
-            
-            
+
             // IMPORTANT: Set the minimum level directly on the builder
-            if (options.MinimumLogLevel != LogLevel.None) 
+            if (options.MinimumLogLevel != LogLevel.None)
             {
                 builder.SetMinimumLevel(options.MinimumLogLevel);
             }
             
+            // Add filters here
+
             // Configure options for DI
             builder.Services.Configure(configure);
 
@@ -48,7 +48,7 @@ public static class BuilderExtensions
             PowertoolsLoggingSerializer.ConfigureNamingPolicy(options.LoggerOutputCase);
 
             // Configure static Logger (if not already in a configuration cycle)
-            if (!fromLoggerConfigure && !_configuring)
+            if (!_configuring)
             {
                 try
                 {
@@ -74,12 +74,12 @@ public static class BuilderExtensions
     {
         // Register ISystemWrapper if not already registered
         builder.Services.TryAddSingleton<ISystemWrapper, SystemWrapper>();
-        
+
         // Register IPowertoolsEnvironment if it exists
         builder.Services.TryAddSingleton<IPowertoolsEnvironment, PowertoolsEnvironment>();
-        
+
         // Register IPowertoolsConfigurations with all its dependencies
-        builder.Services.TryAddSingleton<IPowertoolsConfigurations>(sp => 
+        builder.Services.TryAddSingleton<IPowertoolsConfigurations>(sp =>
             new PowertoolsConfigurations(sp.GetRequiredService<IPowertoolsEnvironment>()));
 
         // Register the provider
