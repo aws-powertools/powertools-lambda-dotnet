@@ -75,6 +75,11 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     public ISystemWrapper? LoggerOutput { get; set; }
 
     /// <summary>
+    /// Custom log formatter to use for formatting log entries
+    /// </summary>
+    public ILogFormatter? LogFormatter { get; set; }
+
+    /// <summary>
     /// JSON serializer options to use for log serialization
     /// </summary>
     private JsonSerializerOptions? _jsonOptions;

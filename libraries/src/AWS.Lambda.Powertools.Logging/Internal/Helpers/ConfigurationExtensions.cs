@@ -23,6 +23,7 @@ internal static class ConfigurationExtensions
         destination.LoggerOutput = source.LoggerOutput;
         destination.JsonOptions = source.JsonOptions;
         destination.TimestampFormat = source.TimestampFormat;
+        destination.LogFormatter = source.LogFormatter;
         
         return destination;
     }

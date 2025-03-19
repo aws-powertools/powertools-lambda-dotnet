@@ -52,18 +52,16 @@ public class PowertoolsLoggerBuilder
         _configuration.LoggerOutput = output;
         return this;
     }
+
+    public PowertoolsLoggerBuilder WithFormatter(ILogFormatter formatter)
+    {
+        _configuration.LogFormatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+        return this;
+    }
     
     public ILogger Build()
     {
-        var factory = LoggerFactory.Create(builder =>
-        {
-            builder.AddPowertoolsLogger(config =>
-            {
-                config.CopyFrom(_configuration);
-            });
-        });
-
-        Logger.Configure(factory); // Configure the static logger
+        var factory = LoggerFactoryHelper.CreateAndConfigureFactory(_configuration);
         return factory.CreatePowertoolsLogger();
     }
 }

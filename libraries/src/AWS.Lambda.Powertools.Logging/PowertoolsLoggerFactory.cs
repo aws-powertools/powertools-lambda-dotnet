@@ -34,16 +34,7 @@ internal sealed class PowertoolsLoggerFactory : IDisposable
     
     public static ILoggerFactory Create(PowertoolsLoggerConfiguration options)
     {
-        var factory = LoggerFactory.Create(builder =>
-        {
-            builder.AddPowertoolsLogger(config =>
-            {
-                config.CopyFrom(options);
-            });
-        });
-        
-        Logger.Configure(factory);
-        return factory;
+        return LoggerFactoryHelper.CreateAndConfigureFactory(options);
     }
 
     // Add builder pattern support
