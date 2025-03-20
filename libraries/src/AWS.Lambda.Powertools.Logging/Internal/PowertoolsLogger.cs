@@ -46,7 +46,6 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     private readonly ISystemWrapper _systemWrapper;
 
-
     /// <summary>
     ///     The current scope
     /// </summary>
@@ -127,12 +126,27 @@ internal sealed class PowertoolsLogger : ILogger
         {
             return;
         }
+        
+        _systemWrapper.LogLine(LogEntryString(logLevel, state, exception, formatter));
+    }
+    
+    internal void LogLine(string message)
+    {
+        _systemWrapper.LogLine(message);
+    }
+
+    internal string LogEntryString<TState>(LogLevel logLevel, TState state, Exception exception, Func<TState, Exception, string> formatter)
+    {
+        var logEntry = LogEntry(logLevel, state, exception, formatter);
+        return PowertoolsLoggingSerializer.Serialize(logEntry, typeof(object));
+    }
+    internal object LogEntry<TState>(LogLevel logLevel, TState state, Exception exception, Func<TState, Exception, string> formatter)
+    {
+        var timestamp = DateTime.UtcNow;
 
         if (formatter is null)
             throw new ArgumentNullException(nameof(formatter));
 
-        var timestamp = DateTime.UtcNow;
-        
         // Extract structured parameters for template-style logging
         var structuredParameters = ExtractStructuredParameters(state, out string messageTemplate);
         
@@ -146,8 +160,7 @@ internal sealed class PowertoolsLogger : ILogger
         var logEntry = logFormatter is null
             ? GetLogEntry(logLevel, timestamp, message, exception, structuredParameters)
             : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter, structuredParameters);
-        
-        _systemWrapper.LogLine(PowertoolsLoggingSerializer.Serialize(logEntry, typeof(object)));
+        return logEntry;
     }
 
     /// <summary>

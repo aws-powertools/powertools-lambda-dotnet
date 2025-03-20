@@ -169,6 +169,7 @@ public class LoggingAspect
         }
         catch (Exception exception)
         {
+            _logger.FlushBuffer();
             // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
             // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
             ExceptionDispatchInfo.Capture(exception).Throw();

@@ -58,6 +58,24 @@ public class PowertoolsLoggerBuilder
         _configuration.LogFormatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
         return this;
     }
+
+    /// <summary>
+    /// Enable log buffering with default options
+    /// </summary>
+    public PowertoolsLoggerBuilder WithLogBuffering(bool enabled = true)
+    {
+        _configuration.LogBufferingOptions.Enabled = enabled;
+        return this;
+    }
+
+    /// <summary>
+    /// Configure log buffering options
+    /// </summary>
+    public PowertoolsLoggerBuilder WithLogBuffering(Action<LogBufferingOptions> configure)
+    {
+        configure?.Invoke(_configuration.LogBufferingOptions);
+        return this;
+    }
     
     public ILogger Build()
     {

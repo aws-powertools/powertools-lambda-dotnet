@@ -722,4 +722,24 @@ public static class LoggerExtensions
     {
         Logger.RemoveKey(key);
     }
+
+    // Replace the buffer methods with direct calls to the manager
+
+    /// <summary>
+    /// Flush any buffered logs
+    /// </summary>
+    public static void FlushBuffer(this ILogger logger)
+    {
+        // Direct call to the buffer manager to avoid any recursion
+        LogBufferManager.FlushAllBuffers();
+    }
+
+    /// <summary>
+    /// Clear any buffered logs without writing them
+    /// </summary>
+    internal static void ClearBuffer(this ILogger logger)
+    {
+        // Direct call to the buffer manager to avoid any recursion
+        LogBufferManager.ClearAllBuffers();
+    }
 }

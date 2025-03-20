@@ -99,6 +99,11 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
         }
     }
 
+    /// <summary>
+    /// Options for log buffering
+    /// </summary>
+    public LogBufferingOptions LogBufferingOptions { get; set; } = new LogBufferingOptions();
+
 #if NET8_0_OR_GREATER
     /// <summary>
     /// Default JSON serializer context
