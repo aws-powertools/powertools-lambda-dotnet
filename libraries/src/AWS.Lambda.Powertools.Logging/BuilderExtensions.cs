@@ -84,9 +84,9 @@ public static class BuilderExtensions
 
         // Register the provider
         builder.Services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<ILoggerProvider, LoggerProvider>());
+            ServiceDescriptor.Singleton<ILoggerProvider, PowertoolsLoggerProvider>());
 
         LoggerProviderOptions.RegisterProviderOptions
-            <PowertoolsLoggerConfiguration, LoggerProvider>(builder.Services);
+            <PowertoolsLoggerConfiguration, PowertoolsLoggerProvider>(builder.Services);
     }
 }
