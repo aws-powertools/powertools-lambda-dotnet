@@ -105,6 +105,17 @@ public static partial class Logger
     
     public static ILogger GetPowertoolsLogger() => Factory.CreatePowertoolsLogger();
     
+    // Update configuration settings
+    internal static void UpdateConfiguration(Action<PowertoolsLoggerConfiguration> configureAction)
+    {
+        if (configureAction == null) return;
+        
+        // Apply updates to current configuration
+        configureAction(_currentConfig);
+        
+        // Apply any output case changes
+        _currentConfig.ApplyOutputCase();
+    }
     // For testing purposes
     // internal static void Reset()
     // {
