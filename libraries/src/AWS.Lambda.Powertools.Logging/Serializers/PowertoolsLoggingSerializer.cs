@@ -76,7 +76,7 @@ internal static class PowertoolsLoggingSerializer
                 // Only rebuild options if they already exist
                 if (_jsonOptions != null)
                 {
-                    BuildJsonSerializerOptions();
+                    SetOutputCase();
                 }
             }
         }
@@ -194,27 +194,8 @@ internal static class PowertoolsLoggingSerializer
         {
             // This should already be in a lock when called
             _jsonOptions = options ?? new JsonSerializerOptions();
-
-            switch (_currentOutputCase)
-            {
-                case LoggerOutputCase.CamelCase:
-                    _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                    _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-                    break;
-                case LoggerOutputCase.PascalCase:
-                    _jsonOptions.PropertyNamingPolicy = PascalCaseNamingPolicy.Instance;
-                    _jsonOptions.DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance;
-                    break;
-                default: // Snake case
-#if NET8_0_OR_GREATER
-                    _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-                    _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
-#else
-                _jsonOptions.PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance;
-                _jsonOptions.DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance;
-#endif
-                    break;
-            }
+            
+            SetOutputCase();
 
             AddConverters();
 
@@ -236,6 +217,37 @@ internal static class PowertoolsLoggingSerializer
                 }
             }
 #endif
+        }
+    }
+
+    private static void SetOutputCase()
+    {
+        switch (_currentOutputCase)
+        {
+            case LoggerOutputCase.CamelCase:
+                _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+                break;
+            case LoggerOutputCase.PascalCase:
+                _jsonOptions.PropertyNamingPolicy = PascalCaseNamingPolicy.Instance;
+                _jsonOptions.DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance;
+                break;
+            default: // Snake case
+#if NET8_0_OR_GREATER
+                // If is default (Not Set) and JsonOptions provided with DictionaryKeyPolicy or PropertyNamingPolicy, use it
+                if (_jsonOptions.DictionaryKeyPolicy != null || _jsonOptions.PropertyNamingPolicy != null)
+                {
+                    _jsonOptions.DictionaryKeyPolicy = _jsonOptions.DictionaryKeyPolicy;
+                    _jsonOptions.PropertyNamingPolicy = _jsonOptions.PropertyNamingPolicy;
+                }else{
+                    _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+                    _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;    
+                }
+#else
+                _jsonOptions.PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance;
+                _jsonOptions.DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance;
+#endif
+                break;
         }
     }
 

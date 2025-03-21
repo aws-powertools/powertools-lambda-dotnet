@@ -6,7 +6,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal.Helpers;
 /// <summary>
 /// Extension methods for handling configuration copying between PowertoolsLogger configurations
 /// </summary>
-internal static class ConfigurationExtensions
+internal static class PowertoolsLoggerConfigurationExtensions
 {
     /// <summary>
     /// Copies configuration values from source to destination configuration

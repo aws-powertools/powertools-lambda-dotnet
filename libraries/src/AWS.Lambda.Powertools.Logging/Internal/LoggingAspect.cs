@@ -74,39 +74,60 @@ public class LoggingAspect
     {
         _logEventEnv = powertoolsConfigurations.LoggerLogEvent;
         _xRayTraceId = powertoolsConfigurations.XRayTraceId;
+        // Get Logger Instance
+        // This is a singleton, so we can reuse the same instance
+        _logger = Logger.GetPowertoolsLogger();
     }
     
     private void InitializeLogger(LoggingAttribute trigger)
-    {        
-        // Always check for explicit settings 
-        bool hasExplicitSettings = (trigger.LogLevel != LogLevel.None || 
-                                   !string.IsNullOrEmpty(trigger.Service) ||
-                                   trigger.LoggerOutputCase != default ||
-                                   trigger.SamplingRate > 0);
+    {
+        // Check which settings are explicitly provided in the attribute
+        var hasLogLevel = trigger.LogLevel != LogLevel.None;
+        var hasService = !string.IsNullOrEmpty(trigger.Service);
+        var hasOutputCase = trigger.LoggerOutputCase != default;
+        var hasSamplingRate = trigger.SamplingRate > 0;
         
-        // Configure logger if not configured or we have explicit settings
-        if (!Logger.IsConfigured )
+        var hasExplicitSettings = hasLogLevel || hasService || hasOutputCase || hasSamplingRate;
+        
+        if (!Logger.IsConfigured)
         {
-            // Create configuration with default values when not explicitly specified
+            // First time initialization - create a new configuration with defaults for any unspecified values
             var config = new PowertoolsLoggerConfiguration
             {
-                // Use sensible defaults if not specified in the attribute
-                MinimumLogLevel = trigger.LogLevel != LogLevel.None ? trigger.LogLevel : LogLevel.Information,
-                Service = !string.IsNullOrEmpty(trigger.Service) ? trigger.Service : "service_undefined",
-                LoggerOutputCase = trigger.LoggerOutputCase != default ? trigger.LoggerOutputCase : LoggerOutputCase.SnakeCase,
-                SamplingRate = trigger.SamplingRate > 0 ? trigger.SamplingRate : 1.0
+                MinimumLogLevel = hasLogLevel ? trigger.LogLevel : LogLevel.Information,
+                Service = hasService ? trigger.Service : "service_undefined",
+                LoggerOutputCase = hasOutputCase ? trigger.LoggerOutputCase : LoggerOutputCase.SnakeCase,
+                SamplingRate = hasSamplingRate ? trigger.SamplingRate : 1.0
             };
             
-            // Configure the logger with our configuration
             Logger.Configure(config);
         }
+        else if (hasExplicitSettings)
+        {
+            // Preserve existing configuration and only override what's explicitly specified
+            Logger.UpdateConfiguration(config => {
+                if (hasLogLevel)
+                    config.MinimumLogLevel = trigger.LogLevel;
+                
+                if (hasService)
+                    config.Service = trigger.Service;
+                
+                if (hasOutputCase)
+                    config.LoggerOutputCase = trigger.LoggerOutputCase;
+                
+                if (hasSamplingRate)
+                    config.SamplingRate = trigger.SamplingRate;
+            });
+        }
         
-        // Get logger after configuration
-        _logger = Logger.GetPowertoolsLogger();
         
-        // Set debug flag based on the minimum level from Logger
-        _isDebug = Logger.GetConfiguration().MinimumLogLevel <= LogLevel.Debug;
-        _bufferingEnabled = Logger.GetConfiguration().LogBufferingOptions.Enabled;
+        
+        // Fetch the current configuration
+        var currentConfig = Logger.GetConfiguration();
+        
+        // Set operational flags based on current configuration
+        _isDebug = currentConfig.MinimumLogLevel <= LogLevel.Debug;
+        _bufferingEnabled = currentConfig.LogBufferingOptions?.Enabled ?? false;
     }
 
     /// <summary>

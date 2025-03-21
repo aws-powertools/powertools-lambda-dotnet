@@ -129,7 +129,7 @@ internal sealed class PowertoolsLoggerProvider : ILoggerProvider
         }
         
         // Always configure the serializer with the output case
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase);
+        // PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase);
 
         // Configure the log level key based on output case
         config.LogLevelKey = _powertoolsConfigurations.LambdaLogLevelEnabled() &&
