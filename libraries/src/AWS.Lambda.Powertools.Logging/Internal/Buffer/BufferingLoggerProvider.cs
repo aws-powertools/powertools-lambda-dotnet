@@ -27,7 +27,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 internal partial class BufferingLoggerProvider : ILoggerProvider
 {
     private readonly ILoggerProvider _innerProvider;
-    private readonly ConcurrentDictionary<string, BufferingLogger> _loggers = new();
+    private readonly ConcurrentDictionary<string, PowertoolsBufferingLogger> _loggers = new();
     private readonly IOptionsMonitor<PowertoolsLoggerConfiguration> _options;
     
     public BufferingLoggerProvider(
@@ -45,7 +45,7 @@ internal partial class BufferingLoggerProvider : ILoggerProvider
     {
         return _loggers.GetOrAdd(
             categoryName, 
-            name => new BufferingLogger(
+            name => new PowertoolsBufferingLogger(
                 _innerProvider.CreateLogger(name),
                 _options,
                 name));
@@ -82,6 +82,17 @@ internal partial class BufferingLoggerProvider : ILoggerProvider
         foreach (var logger in _loggers.Values)
         {
             logger.ClearBuffer();
+        }
+    }
+    
+    /// <summary>
+    /// Clear buffered logs for the current invocation only
+    /// </summary>
+    public void ClearCurrentBuffer()
+    {
+        foreach (var logger in _loggers.Values)
+        {
+            logger.ClearCurrentInvocation();
         }
     }
 }

@@ -24,6 +24,8 @@ internal static class ConfigurationExtensions
         destination.JsonOptions = source.JsonOptions;
         destination.TimestampFormat = source.TimestampFormat;
         destination.LogFormatter = source.LogFormatter;
+        destination.LogLevelKey = source.LogLevelKey;
+        destination.LogBufferingOptions = source.LogBufferingOptions;
         
         return destination;
     }

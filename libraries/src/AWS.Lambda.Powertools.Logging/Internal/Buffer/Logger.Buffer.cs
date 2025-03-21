@@ -26,15 +26,15 @@ public static partial class Logger
     public static void FlushBuffer()
     {
         // Use the buffer manager directly
-        LogBufferManager.FlushAllBuffers();
+        LogBufferManager.FlushCurrentBuffer();
     }
 
     /// <summary>
     /// Clear any buffered logs without writing them
     /// </summary>
-    internal static void ClearBuffer()
+    public static void ClearBuffer()
     {
         // Use the buffer manager directly
-        LogBufferManager.ClearAllBuffers();
+        LogBufferManager.ClearCurrentBuffer();
     }
 }

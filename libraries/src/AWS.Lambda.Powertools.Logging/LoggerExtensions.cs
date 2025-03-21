@@ -731,15 +731,15 @@ public static class LoggerExtensions
     public static void FlushBuffer(this ILogger logger)
     {
         // Direct call to the buffer manager to avoid any recursion
-        LogBufferManager.FlushAllBuffers();
+        LogBufferManager.FlushCurrentBuffer();
     }
 
     /// <summary>
     /// Clear any buffered logs without writing them
     /// </summary>
-    internal static void ClearBuffer(this ILogger logger)
+    public static void ClearBuffer(this ILogger logger)
     {
         // Direct call to the buffer manager to avoid any recursion
-        LogBufferManager.ClearAllBuffers();
+        LogBufferManager.ClearCurrentBuffer();
     }
 }

@@ -171,4 +171,10 @@ public class LoggingAttribute : Attribute
     /// </summary>
     /// <value>The log level.</value>
     public LoggerOutputCase LoggerOutputCase  { get; set; } = LoggerOutputCase.Default;
+
+    /// <summary>
+    /// Flush buffer on uncaught error
+    /// When buffering is enabled, this property will flush the buffer on uncaught exceptions
+    /// </summary>
+    public bool FlushBufferOnUncaughtError { get; set; }
 }

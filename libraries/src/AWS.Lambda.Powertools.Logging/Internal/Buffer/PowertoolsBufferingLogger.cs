@@ -7,14 +7,14 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// <summary>
     /// Logger implementation that supports buffering
     /// </summary>
-    internal class BufferingLogger : ILogger
+    internal class PowertoolsBufferingLogger : ILogger
     {
         private readonly ILogger _innerLogger;
         private readonly IOptionsMonitor<PowertoolsLoggerConfiguration> _options;
         private readonly string _categoryName;
         private readonly LogBuffer _buffer = new();
         
-        public BufferingLogger(
+        public PowertoolsBufferingLogger(
             ILogger innerLogger, 
             IOptionsMonitor<PowertoolsLoggerConfiguration> options,
             string categoryName)
@@ -151,5 +151,13 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
         public void ClearBuffer()
         {
             _buffer.Clear();
+        }
+
+        /// <summary>
+        /// Clear buffered logs only for the current invocation
+        /// </summary>
+        public void ClearCurrentInvocation()
+        {
+            _buffer.ClearCurrentInvocation();
         }
     }

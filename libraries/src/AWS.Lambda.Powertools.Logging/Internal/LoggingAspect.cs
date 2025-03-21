@@ -14,8 +14,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -62,9 +60,10 @@ public class LoggingAspect
     private bool _clearLambdaContext;
     
     private ILogger _logger;
-    private readonly bool _LogEventEnv;
+    private readonly bool _logEventEnv;
     private readonly string _xRayTraceId;
     private bool _isDebug;
+    private bool _bufferingEnabled;
 
 
     /// <summary>
@@ -73,7 +72,7 @@ public class LoggingAspect
     /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     public LoggingAspect(IPowertoolsConfigurations powertoolsConfigurations)
     {
-        _LogEventEnv = powertoolsConfigurations.LoggerLogEvent;
+        _logEventEnv = powertoolsConfigurations.LoggerLogEvent;
         _xRayTraceId = powertoolsConfigurations.XRayTraceId;
     }
     
@@ -86,7 +85,7 @@ public class LoggingAspect
                                    trigger.SamplingRate > 0);
         
         // Configure logger if not configured or we have explicit settings
-        if (!Logger.IsConfigured || hasExplicitSettings)
+        if (!Logger.IsConfigured )
         {
             // Create configuration with default values when not explicitly specified
             var config = new PowertoolsLoggerConfiguration
@@ -107,6 +106,7 @@ public class LoggingAspect
         
         // Set debug flag based on the minimum level from Logger
         _isDebug = Logger.GetConfiguration().MinimumLogLevel <= LogLevel.Debug;
+        _bufferingEnabled = Logger.GetConfiguration().LogBufferingOptions.Enabled;
     }
 
     /// <summary>
@@ -163,13 +163,23 @@ public class LoggingAspect
             var eventObject = eventArgs.Args.FirstOrDefault();
             CaptureXrayTraceId();
             CaptureLambdaContext(eventArgs);
+            
+            if(_bufferingEnabled)
+            {
+                LogBufferManager.SetInvocationId(LoggingLambdaContext.Instance.AwsRequestId);
+            }
+            
             CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
-            if (logEvent || _LogEventEnv)
+            if (logEvent || _logEventEnv)
                 LogEvent(eventObject);
         }
         catch (Exception exception)
         {
-            _logger.FlushBuffer();
+            if (_bufferingEnabled && trigger.FlushBufferOnUncaughtError)
+            {
+                _logger.FlushBuffer();
+            }
+
             // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
             // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
             ExceptionDispatchInfo.Capture(exception).Throw();
@@ -189,6 +199,12 @@ public class LoggingAspect
         if (_clearState)
             _logger.RemoveAllKeys();
         _initializeContext = true;
+
+        if (_bufferingEnabled)
+        {
+            // clear the buffer after the handler has finished
+            _logger.ClearBuffer();
+        }
     }
 
     /// <summary>
@@ -220,6 +236,7 @@ public class LoggingAspect
     ///     Captures the correlation identifier.
     /// </summary>
     /// <param name="eventArg">The event argument.</param>
+    /// <param name="correlationIdPath"></param>
     private void CaptureCorrelationId(object eventArg, string correlationIdPath)
     {
         if (string.IsNullOrWhiteSpace(correlationIdPath))

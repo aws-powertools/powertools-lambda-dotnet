@@ -79,31 +79,26 @@ public static class BuilderExtensions
         builder.Services.TryAddSingleton<IPowertoolsConfigurations>(sp =>
             new PowertoolsConfigurations(sp.GetRequiredService<IPowertoolsEnvironment>()));
 
-        // If buffering is enabled, register it before the standard provider
+        // If buffering is enabled, register buffer providers
         if (options?.LogBufferingOptions?.Enabled == true)
         {
-            // Add a filter for the buffer provider to capture logs at the buffer threshold
+            // Add a filter for the buffer provider
             builder.AddFilter<BufferingLoggerProvider>(
                 null, 
                 options.LogBufferingOptions.BufferAtLogLevel);
-
-            // Register the buffering provider
-            builder.Services.AddSingleton<ILoggerProvider>(sp =>
-            {
-                var optionsMonitor = sp.GetRequiredService<IOptionsMonitor<PowertoolsLoggerConfiguration>>();
-                var powertoolsConfigs = sp.GetService<IPowertoolsConfigurations>() ?? 
-                                       new PowertoolsConfigurations(sp.GetService<IPowertoolsEnvironment>() ?? 
-                                                                  new PowertoolsEnvironment());
-                var output = sp.GetService<ISystemWrapper>() ?? new SystemWrapper();
-        
-                // Create a dedicated provider for buffering
-                var powerToolsProvider = new PowertoolsLoggerProvider(optionsMonitor, powertoolsConfigs, output);
-        
-                // Return the buffering provider
-                return new BufferingLoggerProvider(
-                    powerToolsProvider,
-                    optionsMonitor);
-            });
+                
+            // Register the inner provider factory
+            builder.Services.TryAddSingleton<ILoggerProvider>(sp => 
+                new BufferingLoggerProvider(
+                    // Create a new PowertoolsLoggerProvider specifically for buffering
+                    new PowertoolsLoggerProvider(
+                        sp.GetRequiredService<IOptionsMonitor<PowertoolsLoggerConfiguration>>(),
+                        sp.GetRequiredService<IPowertoolsConfigurations>(),
+                        sp.GetRequiredService<ISystemWrapper>()
+                    ),
+                    sp.GetRequiredService<IOptionsMonitor<PowertoolsLoggerConfiguration>>()
+                )
+            );
         }
 
         // Register the regular provider

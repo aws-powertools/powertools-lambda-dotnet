@@ -14,12 +14,11 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
 /// <summary>
-/// Singleton manager for log buffer operations
+/// Singleton manager for log buffer operations with invocation context awareness
 /// </summary>
 internal static class LogBufferManager
 {
@@ -34,9 +33,17 @@ internal static class LogBufferManager
     }
     
     /// <summary>
-    /// Flush all buffered logs
+    /// Set the current invocation ID to isolate logs between Lambda invocations
     /// </summary>
-    internal static void FlushAllBuffers()
+    public static void SetInvocationId(string invocationId)
+    {
+        LogBuffer.SetCurrentInvocationId(invocationId);
+    }
+    
+    /// <summary>
+    /// Flush buffered logs for the current invocation
+    /// </summary>
+    internal static void FlushCurrentBuffer()
     {
         try
         {
@@ -49,13 +56,13 @@ internal static class LogBufferManager
     }
     
     /// <summary>
-    /// Clear all buffered logs
+    /// Clear buffered logs for the current invocation
     /// </summary>
-    internal static void ClearAllBuffers()
+    internal static void ClearCurrentBuffer()
     {
         try
         {
-            _provider?.ClearBuffers();
+            _provider?.ClearCurrentBuffer();
         }
         catch (Exception)
         {
