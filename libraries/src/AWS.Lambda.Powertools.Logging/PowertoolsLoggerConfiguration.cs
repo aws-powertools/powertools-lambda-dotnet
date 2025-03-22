@@ -13,16 +13,10 @@
  * permissions and limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using AWS.Lambda.Powertools.Common;
-using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Logging.Serializers;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -91,10 +85,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
             _jsonOptions = value;
             if (_jsonOptions != null)
             {
-#if NET8_0_OR_GREATER
-                HandleJsonOptionsTypeResolver(_jsonOptions);
-#endif
-                ApplyJsonOptions();
+                PowertoolsLoggingSerializer.SetOptions(_jsonOptions);
             }
         }
     }
@@ -104,125 +95,6 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// </summary>
     public LogBufferingOptions LogBufferingOptions { get; set; } = new LogBufferingOptions();
 
-#if NET8_0_OR_GREATER
-    /// <summary>
-    /// Default JSON serializer context
-    /// </summary>
-    private JsonSerializerContext? _jsonContext = PowertoolsLoggingSerializationContext.Default;
-    private readonly List<JsonSerializerContext> _additionalContexts = new();
-
-    /// <summary>
-    /// Add additional JsonSerializerContext for client types
-    /// </summary>
-    internal void AddJsonContext(JsonSerializerContext context)
-    {
-        if (context == null)
-            return;
-        
-        // Don't add duplicates
-        if (!_additionalContexts.Contains(context))
-        {
-            _additionalContexts.Add(context);
-            ApplyAdditionalJsonContext(context);
-            
-            // If we have existing JSON options, update their type resolver
-            if (_jsonOptions != null && !RuntimeFeatureWrapper.IsDynamicCodeSupported)
-            {
-                // Reset the type resolver chain to rebuild it
-                _jsonOptions.TypeInfoResolver = GetCompositeResolver();
-            }
-        }
-    }
-
-    /// <summary>
-    /// Get all additional contexts
-    /// </summary>
-    internal IReadOnlyList<JsonSerializerContext> GetAdditionalContexts()
-    {
-        return _additionalContexts.AsReadOnly();
-    }
-
-    private IJsonTypeInfoResolver? _customTypeInfoResolver = null;
-    private List<IJsonTypeInfoResolver>? _customTypeInfoResolvers;
-
-    /// <summary>
-    /// Process JSON options type resolver information
-    /// </summary>
-    internal void HandleJsonOptionsTypeResolver(JsonSerializerOptions options)
-    {
-        if (options == null) return;
-
-        // Check for TypeInfoResolver and ensure it's not lost
-        if (options.TypeInfoResolver != null && 
-            options.TypeInfoResolver != GetCompositeResolver())
-        {
-            _customTypeInfoResolver = options.TypeInfoResolver;
-            
-            // If it's a JsonSerializerContext, also add it to our contexts
-            if (_customTypeInfoResolver is JsonSerializerContext jsonContext)
-            {
-                AddJsonContext(jsonContext);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Get a composite resolver that includes all configured resolvers
-    /// </summary>
-    internal IJsonTypeInfoResolver GetCompositeResolver()
-    {
-        var resolvers = new List<IJsonTypeInfoResolver>();
-
-        // Add custom resolver if provided
-        if (_customTypeInfoResolver != null)
-        {
-            resolvers.Add(_customTypeInfoResolver);
-        }
-
-        // Add additional custom resolvers if any
-        if (_customTypeInfoResolvers != null)
-        {
-            foreach (var resolver in _customTypeInfoResolvers)
-            {
-                resolvers.Add(resolver);
-            }
-        }
-
-        // Add default context
-        if (_jsonContext != null)
-        {
-            resolvers.Add(_jsonContext);
-        }
-
-        // Add additional contexts
-        foreach (var context in _additionalContexts)
-        {
-            resolvers.Add(context);
-        }
-
-        return new CompositeJsonTypeInfoResolver(resolvers.ToArray());
-    }
-
-    /// <summary>
-    /// Apply additional JSON context to serializer
-    /// </summary>
-    private void ApplyAdditionalJsonContext(JsonSerializerContext context)
-    {
-        PowertoolsLoggingSerializer.AddSerializerContext(context);
-    }
-#endif
-
-    /// <summary>
-    /// Apply JSON options to the serializer
-    /// </summary>
-    private void ApplyJsonOptions()
-    {
-        if (_jsonOptions != null)
-        {
-            PowertoolsLoggingSerializer.BuildJsonSerializerOptions(_jsonOptions);
-        }
-    }
-
     /// <summary>
     /// Apply output case configuration
     /// </summary>
@@ -230,7 +102,6 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     {
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase);
     }
-
 
     // IOptions implementation
     PowertoolsLoggerConfiguration IOptions<PowertoolsLoggerConfiguration>.Value => this;

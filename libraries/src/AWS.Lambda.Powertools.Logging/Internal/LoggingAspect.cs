@@ -58,7 +58,7 @@ public class LoggingAspect
     ///     Specify to clear Lambda Context on exit
     /// </summary>
     private bool _clearLambdaContext;
-    
+
     private ILogger _logger;
     private readonly bool _logEventEnv;
     private readonly string _xRayTraceId;
@@ -75,10 +75,9 @@ public class LoggingAspect
         _logEventEnv = powertoolsConfigurations.LoggerLogEvent;
         _xRayTraceId = powertoolsConfigurations.XRayTraceId;
         // Get Logger Instance
-        // This is a singleton, so we can reuse the same instance
         _logger = Logger.GetPowertoolsLogger();
     }
-    
+
     private void InitializeLogger(LoggingAttribute trigger)
     {
         // Check which settings are explicitly provided in the attribute
@@ -86,9 +85,9 @@ public class LoggingAspect
         var hasService = !string.IsNullOrEmpty(trigger.Service);
         var hasOutputCase = trigger.LoggerOutputCase != default;
         var hasSamplingRate = trigger.SamplingRate > 0;
-        
+
         var hasExplicitSettings = hasLogLevel || hasService || hasOutputCase || hasSamplingRate;
-        
+
         if (!Logger.IsConfigured)
         {
             // First time initialization - create a new configuration with defaults for any unspecified values
@@ -99,32 +98,32 @@ public class LoggingAspect
                 LoggerOutputCase = hasOutputCase ? trigger.LoggerOutputCase : LoggerOutputCase.SnakeCase,
                 SamplingRate = hasSamplingRate ? trigger.SamplingRate : 1.0
             };
-            
+
             Logger.Configure(config);
         }
         else if (hasExplicitSettings)
         {
             // Preserve existing configuration and only override what's explicitly specified
-            Logger.UpdateConfiguration(config => {
+            Logger.UpdateConfiguration(config =>
+            {
                 if (hasLogLevel)
                     config.MinimumLogLevel = trigger.LogLevel;
-                
+
                 if (hasService)
                     config.Service = trigger.Service;
-                
+
                 if (hasOutputCase)
                     config.LoggerOutputCase = trigger.LoggerOutputCase;
-                
+
                 if (hasSamplingRate)
                     config.SamplingRate = trigger.SamplingRate;
             });
         }
-        
-        
-        
+
+
         // Fetch the current configuration
         var currentConfig = Logger.GetConfiguration();
-        
+
         // Set operational flags based on current configuration
         _isDebug = currentConfig.MinimumLogLevel <= LogLevel.Debug;
         _bufferingEnabled = currentConfig.LogBufferingOptions?.Enabled ?? false;
@@ -184,12 +183,12 @@ public class LoggingAspect
             var eventObject = eventArgs.Args.FirstOrDefault();
             CaptureXrayTraceId();
             CaptureLambdaContext(eventArgs);
-            
-            if(_bufferingEnabled)
+
+            if (_bufferingEnabled)
             {
                 LogBufferManager.SetInvocationId(LoggingLambdaContext.Instance.AwsRequestId);
             }
-            
+
             CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
             if (logEvent || _logEventEnv)
                 LogEvent(eventObject);
@@ -235,7 +234,8 @@ public class LoggingAspect
     {
         if (string.IsNullOrWhiteSpace(_xRayTraceId))
             return;
-        _logger.AppendKey(LoggingConstants.KeyXRayTraceId, _xRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
+        _logger.AppendKey(LoggingConstants.KeyXRayTraceId,
+            _xRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
     }
 
     /// <summary>
@@ -290,7 +290,7 @@ public class LoggingAspect
             {
                 // For casing parsing to be removed from Logging v2 when we get rid of outputcase
                 // without this CorrelationIdPaths.ApiGatewayRest would not work
-                
+
                 // TODO: fix this
                 // var pathWithOutputCase =
                 //     _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);

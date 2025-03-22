@@ -1,8 +1,6 @@
 using System;
-using System.Linq;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
-using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -11,12 +9,17 @@ using Microsoft.Extensions.Options;
 
 namespace AWS.Lambda.Powertools.Logging;
 
+/// <summary>
+///     Extension methods for configuring the Powertools logger
+/// </summary>
 public static class BuilderExtensions
 {
     // Track if we're in the middle of configuration to prevent recursion
     private static bool _configuring = false;
 
-    // Single base method that all other overloads call
+    /// <summary>
+    ///     Adds the Powertools logger to the logging builder.
+    /// </summary>
     public static ILoggingBuilder AddPowertoolsLogger(
         this ILoggingBuilder builder,
         Action<PowertoolsLoggerConfiguration>? configure = null)
@@ -48,7 +51,7 @@ public static class BuilderExtensions
         RegisterServices(builder, options);
 
         // Apply the output case configuration
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(options.LoggerOutputCase);
+        options.ApplyOutputCase();
 
         // Configure static Logger (if not already in a configuration cycle)
         if (!_configuring)

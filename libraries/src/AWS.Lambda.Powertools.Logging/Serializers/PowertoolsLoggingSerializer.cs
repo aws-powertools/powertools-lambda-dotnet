@@ -25,7 +25,6 @@ using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
-using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Serializers;
 
@@ -34,9 +33,11 @@ namespace AWS.Lambda.Powertools.Logging.Serializers;
 /// </summary>
 internal static class PowertoolsLoggingSerializer
 {
+    private static JsonSerializerOptions _currentOptions;
     private static LoggerOutputCase _currentOutputCase;
     private static JsonSerializerOptions _jsonOptions;
     private static readonly object _lock = new object();
+    private static IJsonTypeInfoResolver? _customTypeInfoResolver = null;
 
     private static readonly ConcurrentBag<JsonSerializerContext> AdditionalContexts =
         new ConcurrentBag<JsonSerializerContext>();
@@ -53,7 +54,7 @@ internal static class PowertoolsLoggingSerializer
             {
                 if (_jsonOptions == null)
                 {
-                    BuildJsonSerializerOptions();
+                    BuildJsonSerializerOptions(_currentOptions);
                 }
             }
         }
@@ -146,9 +147,61 @@ internal static class PowertoolsLoggingSerializer
     {
         ArgumentNullException.ThrowIfNull(context);
 
+        // Don't add duplicates
         if (!AdditionalContexts.Contains(context))
         {
             AdditionalContexts.Add(context);
+            
+            // If we have existing JSON options, update their type resolver
+            if (_jsonOptions != null && !RuntimeFeatureWrapper.IsDynamicCodeSupported)
+            {
+                // Reset the type resolver chain to rebuild it
+                _jsonOptions.TypeInfoResolver = GetCompositeResolver();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Get a composite resolver that includes all configured resolvers
+    /// </summary>
+    internal static IJsonTypeInfoResolver GetCompositeResolver()
+    {
+        var resolvers = new List<IJsonTypeInfoResolver>();
+
+        // Add custom resolver if provided
+        if (_customTypeInfoResolver != null)
+        {
+            resolvers.Add(_customTypeInfoResolver);
+        }
+
+        // Add default context
+        resolvers.Add(PowertoolsLoggingSerializationContext.Default);
+
+        // Add additional contexts
+        foreach (var context in AdditionalContexts)
+        {
+            resolvers.Add(context);
+        }
+
+        return new CompositeJsonTypeInfoResolver(resolvers.ToArray());
+    }
+    
+    /// <summary>
+    /// Handles the TypeInfoResolver from the JsonSerializerOptions.
+    /// </summary>
+    internal static void HandleJsonOptionsTypeResolver(JsonSerializerOptions options)
+    {
+        // Check for TypeInfoResolver and ensure it's not lost
+        if (options?.TypeInfoResolver != null && 
+            options.TypeInfoResolver != GetCompositeResolver())
+        {
+            _customTypeInfoResolver = options.TypeInfoResolver;
+            
+            // If it's a JsonSerializerContext, also add it to our contexts
+            if (_customTypeInfoResolver is JsonSerializerContext jsonContext)
+            {
+                AddSerializerContext(jsonContext);
+            }
         }
     }
 
@@ -207,14 +260,7 @@ internal static class PowertoolsLoggingSerializer
             // Only add TypeInfoResolver if AOT mode
             if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
             {
-                // Always ensure our default context is in the chain first
-                _jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
-
-                // Add all registered contexts
-                foreach (var context in AdditionalContexts)
-                {
-                    _jsonOptions.TypeInfoResolverChain.Add(context);
-                }
+                HandleJsonOptionsTypeResolver(_jsonOptions);
             }
 #endif
         }
@@ -279,6 +325,10 @@ internal static class PowertoolsLoggingSerializer
     }
 #endif
 
+    internal static void SetOptions(JsonSerializerOptions options)
+    {
+        _currentOptions = options;
+    }
     /// <summary>
     /// Clears options for tests
     /// </summary>
