@@ -37,8 +37,6 @@ internal static class PowertoolsLoggingSerializer
     private static LoggerOutputCase _currentOutputCase;
     private static JsonSerializerOptions _jsonOptions;
     private static readonly object _lock = new object();
-    private static IJsonTypeInfoResolver? _customTypeInfoResolver = null;
-
     private static readonly ConcurrentBag<JsonSerializerContext> AdditionalContexts =
         new ConcurrentBag<JsonSerializerContext>();
 
@@ -138,6 +136,9 @@ internal static class PowertoolsLoggingSerializer
     }
 
 #if NET8_0_OR_GREATER
+    
+    private static IJsonTypeInfoResolver? _customTypeInfoResolver = null;
+    
     /// <summary>
     /// Adds a JsonSerializerContext to the serializer options.
     /// </summary>
