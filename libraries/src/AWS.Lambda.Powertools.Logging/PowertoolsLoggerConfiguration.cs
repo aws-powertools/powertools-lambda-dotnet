@@ -83,24 +83,48 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
         set
         {
             _jsonOptions = value;
-            if (_jsonOptions != null)
+            if (_jsonOptions != null && _serializer != null)
             {
-                PowertoolsLoggingSerializer.SetOptions(_jsonOptions);
+                _serializer.SetOptions(_jsonOptions);
             }
         }
     }
 
     /// <summary>
-    /// Options for log buffering
+    /// Log buffering options.
+    /// <code>
+    /// Logger.UseLogBuffering(new LogBufferingOptions
+    /// {
+    ///     Enabled = true,
+    ///     BufferAtLogLevel = LogLevel.Debug
+    /// });
+    /// </code>
     /// </summary>
-    public LogBufferingOptions LogBufferingOptions { get; set; } = new LogBufferingOptions();
+    public LogBufferingOptions LogBuffering { get; set; } = new LogBufferingOptions();
 
     /// <summary>
-    /// Apply output case configuration
+    /// Serializer instance for this configuration
     /// </summary>
-    internal void ApplyOutputCase()
+    private PowertoolsLoggingSerializer _serializer;
+
+    /// <summary>
+    /// Gets the serializer instance for this configuration
+    /// </summary>
+    internal PowertoolsLoggingSerializer Serializer => _serializer ??= InitializeSerializer();
+
+    
+    /// <summary>
+    /// Initialize serializer with the current configuration
+    /// </summary>
+    private PowertoolsLoggingSerializer InitializeSerializer()
     {
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase);
+        var serializer = new PowertoolsLoggingSerializer();
+        if (_jsonOptions != null)
+        {
+            serializer.SetOptions(_jsonOptions);
+        }
+        serializer.ConfigureNamingPolicy(LoggerOutputCase);
+        return serializer;
     }
 
     // IOptions implementation

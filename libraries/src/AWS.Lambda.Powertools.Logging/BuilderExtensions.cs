@@ -50,9 +50,6 @@ public static class BuilderExtensions
         // Register services with the options
         RegisterServices(builder, options);
 
-        // Apply the output case configuration
-        options.ApplyOutputCase();
-
         // Configure static Logger (if not already in a configuration cycle)
         if (!_configuring)
         {
@@ -83,12 +80,12 @@ public static class BuilderExtensions
             new PowertoolsConfigurations(sp.GetRequiredService<IPowertoolsEnvironment>()));
 
         // If buffering is enabled, register buffer providers
-        if (options?.LogBufferingOptions?.Enabled == true)
+        if (options?.LogBuffering?.Enabled == true)
         {
             // Add a filter for the buffer provider
             builder.AddFilter<BufferingLoggerProvider>(
                 null, 
-                options.LogBufferingOptions.BufferAtLogLevel);
+                options.LogBuffering.BufferAtLogLevel);
                 
             // Register the inner provider factory
             builder.Services.TryAddSingleton<ILoggerProvider>(sp => 

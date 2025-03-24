@@ -75,7 +75,7 @@ public class LoggingAspect
         _logEventEnv = powertoolsConfigurations.LoggerLogEvent;
         _xRayTraceId = powertoolsConfigurations.XRayTraceId;
         // Get Logger Instance
-        _logger = Logger.GetPowertoolsLogger();
+        // _logger = Logger.GetPowertoolsLogger();
     }
 
     private void InitializeLogger(LoggingAttribute trigger)
@@ -83,50 +83,34 @@ public class LoggingAspect
         // Check which settings are explicitly provided in the attribute
         var hasLogLevel = trigger.LogLevel != LogLevel.None;
         var hasService = !string.IsNullOrEmpty(trigger.Service);
-        var hasOutputCase = trigger.LoggerOutputCase != default;
+        var hasOutputCase = trigger.LoggerOutputCase != LoggerOutputCase.Default;
         var hasSamplingRate = trigger.SamplingRate > 0;
 
-        var hasExplicitSettings = hasLogLevel || hasService || hasOutputCase || hasSamplingRate;
+        // Only update configuration if any settings were provided
+        var needsReconfiguration = hasLogLevel || hasService || hasOutputCase || hasSamplingRate;
 
-        if (!Logger.IsConfigured)
+        if (needsReconfiguration)
         {
-            // First time initialization - create a new configuration with defaults for any unspecified values
-            var config = new PowertoolsLoggerConfiguration
-            {
-                MinimumLogLevel = hasLogLevel ? trigger.LogLevel : LogLevel.Information,
-                Service = hasService ? trigger.Service : "service_undefined",
-                LoggerOutputCase = hasOutputCase ? trigger.LoggerOutputCase : LoggerOutputCase.SnakeCase,
-                SamplingRate = hasSamplingRate ? trigger.SamplingRate : 1.0
-            };
+            // Apply each setting directly using the existing Logger static methods
+            if (hasLogLevel) Logger.UseMinimumLogLevel(trigger.LogLevel);
+            if (hasService) Logger.UseServiceName(trigger.Service);
+            if (hasOutputCase) Logger.UseOutputCase(trigger.LoggerOutputCase);
+            if (hasSamplingRate) Logger.UseSamplingRate(trigger.SamplingRate);
 
-            Logger.Configure(config);
+            // Update logger reference after configuration changes
+            _logger = Logger.GetPowertoolsLogger();
         }
-        else if (hasExplicitSettings)
+        else if (_logger == null)
         {
-            // Preserve existing configuration and only override what's explicitly specified
-            Logger.UpdateConfiguration(config =>
-            {
-                if (hasLogLevel)
-                    config.MinimumLogLevel = trigger.LogLevel;
-
-                if (hasService)
-                    config.Service = trigger.Service;
-
-                if (hasOutputCase)
-                    config.LoggerOutputCase = trigger.LoggerOutputCase;
-
-                if (hasSamplingRate)
-                    config.SamplingRate = trigger.SamplingRate;
-            });
+            // Only get the logger if we don't already have it
+            _logger = Logger.GetPowertoolsLogger();
         }
-
-
         // Fetch the current configuration
         var currentConfig = Logger.GetConfiguration();
 
         // Set operational flags based on current configuration
         _isDebug = currentConfig.MinimumLogLevel <= LogLevel.Debug;
-        _bufferingEnabled = currentConfig.LogBufferingOptions?.Enabled ?? false;
+        _bufferingEnabled = currentConfig.LogBuffering?.Enabled ?? false;
     }
 
     /// <summary>
@@ -281,26 +265,26 @@ public class LoggingAspect
         {
             var correlationId = string.Empty;
 
-            var jsonDoc =
-                JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg, eventArg.GetType()));
-
-            var element = jsonDoc.RootElement;
-
-            for (var i = 0; i < correlationIdPaths.Length; i++)
-            {
-                // For casing parsing to be removed from Logging v2 when we get rid of outputcase
-                // without this CorrelationIdPaths.ApiGatewayRest would not work
-
-                // TODO: fix this
-                // var pathWithOutputCase =
-                //     _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
-                // if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
-                //     break;
-                //
-                // element = childElement;
-                if (i == correlationIdPaths.Length - 1)
-                    correlationId = element.ToString();
-            }
+            // var jsonDoc =
+            //     JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg, eventArg.GetType()));
+            //
+            // var element = jsonDoc.RootElement;
+            //
+            // for (var i = 0; i < correlationIdPaths.Length; i++)
+            // {
+            //     // For casing parsing to be removed from Logging v2 when we get rid of outputcase
+            //     // without this CorrelationIdPaths.ApiGatewayRest would not work
+            //
+            //     // TODO: fix this
+            //     // var pathWithOutputCase =
+            //     //     _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
+            //     // if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
+            //     //     break;
+            //     //
+            //     // element = childElement;
+            //     if (i == correlationIdPaths.Length - 1)
+            //         correlationId = element.ToString();
+            // }
 
             if (!string.IsNullOrWhiteSpace(correlationId))
                 _logger.AppendKey(LoggingConstants.KeyCorrelationId, correlationId);
@@ -322,12 +306,12 @@ public class LoggingAspect
         switch (eventArg)
         {
             case null:
-            {
-                if (_isDebug)
-                    _logger.LogDebug(
-                        "Skipping Event Log because event parameter not found.");
-                break;
-            }
+                {
+                    if (_isDebug)
+                        _logger.LogDebug(
+                            "Skipping Event Log because event parameter not found.");
+                    break;
+                }
             case Stream:
                 try
                 {

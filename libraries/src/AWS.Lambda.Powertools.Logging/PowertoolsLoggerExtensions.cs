@@ -23,7 +23,7 @@ namespace AWS.Lambda.Powertools.Logging;
 /// <summary>
 ///     Class LoggerExtensions.
 /// </summary>
-public static class LoggerExtensions
+public static class PowertoolsLoggerExtensions
 {
     #region JSON Logger Extentions
 
@@ -692,7 +692,7 @@ public static class LoggerExtensions
     ///     Returns all additional keys added to the log context.
     /// </summary>
     /// <returns>IEnumerable&lt;KeyValuePair&lt;System.String, System.Object&gt;&gt;.</returns>
-    public static IEnumerable<KeyValuePair<string, object>> GetAllKeys(this ILogger logger)
+    public static IEnumerable<KeyValuePair<string, object>>     GetAllKeys(this ILogger logger)
     {
         return Logger.GetAllKeys();
     }

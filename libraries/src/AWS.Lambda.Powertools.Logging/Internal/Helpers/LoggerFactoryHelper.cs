@@ -18,19 +18,22 @@ internal static class LoggerFactoryHelper
         {
             builder.AddPowertoolsLogger(config =>
             {
-                config.CopyFrom(configuration);
+                config.Service = configuration.Service;
+                config.SamplingRate = configuration.SamplingRate;
+                config.MinimumLogLevel = configuration.MinimumLogLevel;
+                config.LoggerOutputCase = configuration.LoggerOutputCase;
+                config.LoggerOutput = configuration.LoggerOutput;
+                config.JsonOptions = configuration.JsonOptions;
+                config.TimestampFormat = configuration.TimestampFormat;
+                config.LogFormatter = configuration.LogFormatter;
+                config.LogLevelKey = configuration.LogLevelKey;
+                config.LogBuffering = configuration.LogBuffering;
             });
         });
 
         // Configure the static logger with the factory
         Logger.Configure(factory);
-        
-        // Apply formatter if one is specified
-        if (configuration.LogFormatter != null)
-        {
-            Logger.UseFormatter(configuration.LogFormatter);
-        }
-        
+
         return factory;
     }
 }

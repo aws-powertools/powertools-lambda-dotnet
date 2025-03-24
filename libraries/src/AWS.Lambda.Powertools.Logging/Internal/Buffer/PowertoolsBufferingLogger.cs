@@ -34,7 +34,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
             var options = _options.CurrentValue;
     
             // If buffering is disabled, defer to inner logger
-            if (!options.LogBufferingOptions.Enabled)
+            if (!options.LogBuffering.Enabled)
             {
                 return _innerLogger.IsEnabled(logLevel);
             }
@@ -48,7 +48,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
     
             // For logs below minimum level but at or above buffer threshold, 
             // we should handle them (buffer them)
-            if (logLevel >= options.LogBufferingOptions.BufferAtLogLevel)
+            if (logLevel >= options.LogBuffering.BufferAtLogLevel)
             {
                 return true;
             }
@@ -69,7 +69,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
                 return;
                 
             var options = _options.CurrentValue;
-            var bufferOptions = options.LogBufferingOptions;
+            var bufferOptions = options.LogBuffering;
             
             // Check if this log should be buffered
             bool shouldBuffer = bufferOptions.Enabled &&

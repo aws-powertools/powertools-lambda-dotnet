@@ -64,7 +64,7 @@ public class PowertoolsLoggerBuilder
     /// </summary>
     public PowertoolsLoggerBuilder WithLogBuffering(bool enabled = true)
     {
-        _configuration.LogBufferingOptions.Enabled = enabled;
+        _configuration.LogBuffering.Enabled = enabled;
         return this;
     }
 
@@ -73,7 +73,7 @@ public class PowertoolsLoggerBuilder
     /// </summary>
     public PowertoolsLoggerBuilder WithLogBuffering(Action<LogBufferingOptions> configure)
     {
-        configure?.Invoke(_configuration.LogBufferingOptions);
+        configure?.Invoke(_configuration.LogBuffering);
         return this;
     }
     

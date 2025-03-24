@@ -13,17 +13,10 @@
  * permissions and limitations under the License.
  */
 
-using System;
-using AWS.Lambda.Powertools.Logging.Internal;
-
 namespace AWS.Lambda.Powertools.Logging;
 
 public static partial class Logger
 {
-    private static ILogFormatter _logFormatter;
-
-    #region Custom Log Formatter
-
     /// <summary>
     ///     Set the log formatter.
     /// </summary>
@@ -31,7 +24,7 @@ public static partial class Logger
     /// <remarks>WARNING: This method should not be called when using AOT. ILogFormatter should be passed to PowertoolsSourceGeneratorSerializer constructor</remarks>
     public static void UseFormatter(ILogFormatter logFormatter)
     {
-        _logFormatter = logFormatter ?? throw new ArgumentNullException(nameof(logFormatter));
+        _currentConfig.LogFormatter = logFormatter;
     }
 
     /// <summary>
@@ -39,13 +32,6 @@ public static partial class Logger
     /// </summary>
     public static void UseDefaultFormatter()
     {
-        _logFormatter = null;
+        _currentConfig.LogFormatter = null;
     }
-
-    /// <summary>
-    ///     Returns the log formatter.
-    /// </summary>
-    internal static ILogFormatter GetFormatter() => _logFormatter;
-
-    #endregion
 }

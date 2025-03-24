@@ -128,9 +128,6 @@ internal sealed class PowertoolsLoggerProvider : ILoggerProvider
             config.MinimumLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
         }
         
-        // Always configure the serializer with the output case
-        // PowertoolsLoggingSerializer.ConfigureNamingPolicy(config.LoggerOutputCase);
-
         // Configure the log level key based on output case
         config.LogLevelKey = _powertoolsConfigurations.LambdaLogLevelEnabled() &&
                               config.LoggerOutputCase == LoggerOutputCase.PascalCase

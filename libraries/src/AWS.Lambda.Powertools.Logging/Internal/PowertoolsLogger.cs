@@ -138,8 +138,9 @@ internal sealed class PowertoolsLogger : ILogger
     internal string LogEntryString<TState>(LogLevel logLevel, TState state, Exception exception, Func<TState, Exception, string> formatter)
     {
         var logEntry = LogEntry(logLevel, state, exception, formatter);
-        return PowertoolsLoggingSerializer.Serialize(logEntry, typeof(object));
+        return _currentConfig.Serializer.Serialize(logEntry, typeof(object));
     }
+    
     internal object LogEntry<TState>(LogLevel logLevel, TState state, Exception exception, Func<TState, Exception, string> formatter)
     {
         var timestamp = DateTime.UtcNow;
@@ -156,7 +157,7 @@ internal sealed class PowertoolsLogger : ILogger
             : formatter(state, exception);
 
         // Get log entry
-        var logFormatter = Logger.GetFormatter();
+        var logFormatter = _currentConfig.LogFormatter;
         var logEntry = logFormatter is null
             ? GetLogEntry(logLevel, timestamp, message, exception, structuredParameters)
             : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter, structuredParameters);
@@ -176,7 +177,7 @@ internal sealed class PowertoolsLogger : ILogger
         var logEntry = new Dictionary<string, object>();
 
         // Add Custom Keys
-        foreach (var (key, value) in Logger.GetAllKeys())
+        foreach (var (key, value) in this.GetAllKeys())
         {
             logEntry.TryAdd(key, value);
         }
@@ -257,7 +258,7 @@ internal sealed class PowertoolsLogger : ILogger
         var extraKeys = new Dictionary<string, object>();
 
         // Add Custom Keys
-        foreach (var (key, value) in Logger.GetAllKeys())
+        foreach (var (key, value) in this.GetAllKeys())
         {
             switch (key)
             {
