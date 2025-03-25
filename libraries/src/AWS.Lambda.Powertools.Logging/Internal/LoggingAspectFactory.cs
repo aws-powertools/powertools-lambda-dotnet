@@ -28,8 +28,8 @@ internal static class LoggingAspectFactory
     /// </summary>
     /// <param name="type">The type of the class to be logged.</param>
     /// <returns>An instance of the LoggingAspect class.</returns>
-    public static object GetInstance(Type type)
-    {
-        return new LoggingAspect(PowertoolsConfigurations.Instance);
-    }
+    // public static object GetInstance(Type type)
+    // {
+    //     return new LoggingAspect(PowertoolsConfigurations.Instance);
+    // }
 }

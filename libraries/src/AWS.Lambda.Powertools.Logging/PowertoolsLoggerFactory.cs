@@ -25,10 +25,7 @@ internal sealed class PowertoolsLoggerFactory : IDisposable
     {
         var options = new PowertoolsLoggerConfiguration();
         configureOptions(options);
-
         var factory = Create(options);
-        
-        Logger.Configure(factory);
         return new PowertoolsLoggerFactory(factory);
     }
     

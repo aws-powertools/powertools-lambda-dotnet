@@ -48,4 +48,13 @@ public class TestLoggerOutput : ISystemWrapper
     {
         Console.SetOut(writeTo);
     }
+
+    /// <summary>
+    /// Overrides the ToString method to return the buffer as a string.
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        return Buffer.ToString();
+    }
 }

@@ -83,7 +83,7 @@ internal sealed class PowertoolsLoggerProvider : ILoggerProvider
             _systemWrapper));
     }
 
-    private PowertoolsLoggerConfiguration GetCurrentConfig()
+    internal PowertoolsLoggerConfiguration GetCurrentConfig()
     {
         var config = _currentConfig;
 
@@ -127,6 +127,9 @@ internal sealed class PowertoolsLoggerProvider : ILoggerProvider
             var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
             config.MinimumLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
         }
+        
+        config.XRayTraceId = _powertoolsConfigurations.XRayTraceId;
+        config.LogEvent = _powertoolsConfigurations.LoggerLogEvent;
         
         // Configure the log level key based on output case
         config.LogLevelKey = _powertoolsConfigurations.LambdaLogLevelEnabled() &&

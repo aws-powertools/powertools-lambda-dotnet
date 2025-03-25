@@ -31,7 +31,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 ///     Scope.Global is singleton
 /// </summary>
 /// <seealso cref="IMethodAspectHandler" />
-[Aspect(Scope.Global, Factory = typeof(LoggingAspectFactory))]
+[Aspect(Scope.Global)]
 public class LoggingAspect
 {
     /// <summary>
@@ -60,23 +60,10 @@ public class LoggingAspect
     private bool _clearLambdaContext;
 
     private ILogger _logger;
-    private readonly bool _logEventEnv;
-    private readonly string _xRayTraceId;
     private bool _isDebug;
     private bool _bufferingEnabled;
+    private PowertoolsLoggerConfiguration _currentConfig;
 
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="LoggingAspect" /> class.
-    /// </summary>
-    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
-    public LoggingAspect(IPowertoolsConfigurations powertoolsConfigurations)
-    {
-        _logEventEnv = powertoolsConfigurations.LoggerLogEvent;
-        _xRayTraceId = powertoolsConfigurations.XRayTraceId;
-        // Get Logger Instance
-        // _logger = Logger.GetPowertoolsLogger();
-    }
 
     private void InitializeLogger(LoggingAttribute trigger)
     {
@@ -106,11 +93,11 @@ public class LoggingAspect
             _logger = Logger.GetPowertoolsLogger();
         }
         // Fetch the current configuration
-        var currentConfig = Logger.GetConfiguration();
+        _currentConfig = Logger.GetConfiguration();
 
         // Set operational flags based on current configuration
-        _isDebug = currentConfig.MinimumLogLevel <= LogLevel.Debug;
-        _bufferingEnabled = currentConfig.LogBuffering?.Enabled ?? false;
+        _isDebug = _currentConfig.MinimumLogLevel <= LogLevel.Debug;
+        _bufferingEnabled = _currentConfig.LogBuffering?.Enabled ?? false;
     }
 
     /// <summary>
@@ -174,7 +161,7 @@ public class LoggingAspect
             }
 
             CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
-            if (logEvent || _logEventEnv)
+            if (logEvent || _currentConfig.LogEvent)
                 LogEvent(eventObject);
         }
         catch (Exception exception)
@@ -216,10 +203,10 @@ public class LoggingAspect
     /// </summary>
     private void CaptureXrayTraceId()
     {
-        if (string.IsNullOrWhiteSpace(_xRayTraceId))
+        if (string.IsNullOrWhiteSpace(_currentConfig.XRayTraceId))
             return;
         _logger.AppendKey(LoggingConstants.KeyXRayTraceId,
-            _xRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
+            _currentConfig.XRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
     }
 
     /// <summary>
@@ -265,26 +252,24 @@ public class LoggingAspect
         {
             var correlationId = string.Empty;
 
-            // var jsonDoc =
-            //     JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg, eventArg.GetType()));
-            //
-            // var element = jsonDoc.RootElement;
-            //
-            // for (var i = 0; i < correlationIdPaths.Length; i++)
-            // {
-            //     // For casing parsing to be removed from Logging v2 when we get rid of outputcase
-            //     // without this CorrelationIdPaths.ApiGatewayRest would not work
-            //
-            //     // TODO: fix this
-            //     // var pathWithOutputCase =
-            //     //     _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
-            //     // if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
-            //     //     break;
-            //     //
-            //     // element = childElement;
-            //     if (i == correlationIdPaths.Length - 1)
-            //         correlationId = element.ToString();
-            // }
+            var jsonDoc =
+                JsonDocument.Parse(_currentConfig.Serializer.Serialize(eventArg, eventArg.GetType()));
+            
+            var element = jsonDoc.RootElement;
+            
+            for (var i = 0; i < correlationIdPaths.Length; i++)
+            {
+                // TODO: For casing parsing to be removed from Logging v2 when we get rid of outputcase without this CorrelationIdPaths.ApiGatewayRest would not work
+                // TODO: This will be removed and replaced by JMesPath
+                
+                var pathWithOutputCase = correlationIdPaths[i].ToCase(_currentConfig.LoggerOutputCase);
+                if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
+                    break;
+                
+                element = childElement;
+                if (i == correlationIdPaths.Length - 1)
+                    correlationId = element.ToString();
+            }
 
             if (!string.IsNullOrWhiteSpace(correlationId))
                 _logger.AppendKey(LoggingConstants.KeyCorrelationId, correlationId);

@@ -129,4 +129,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
 
     // IOptions implementation
     PowertoolsLoggerConfiguration IOptions<PowertoolsLoggerConfiguration>.Value => this;
+    
+    internal string XRayTraceId { get; set; }
+    internal bool LogEvent { get; set; }
 }
