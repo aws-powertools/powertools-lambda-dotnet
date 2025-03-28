@@ -24,19 +24,25 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// Logger provider that supports buffering logs
 /// </summary>
 [ProviderAlias("PowertoolsBuffering")]
-internal partial class BufferingLoggerProvider : ILoggerProvider
+internal class BufferingLoggerProvider : ILoggerProvider
 {
     private readonly ILoggerProvider _innerProvider;
     private readonly ConcurrentDictionary<string, PowertoolsBufferingLogger> _loggers = new();
-    private readonly IOptionsMonitor<PowertoolsLoggerConfiguration> _options;
+    private readonly IDisposable? _onChangeToken;
+    private PowertoolsLoggerConfiguration _currentConfig;
     
     public BufferingLoggerProvider(
         ILoggerProvider innerProvider, 
-        IOptionsMonitor<PowertoolsLoggerConfiguration> options)
+        IOptionsMonitor<PowertoolsLoggerConfiguration> config)
     {
         _innerProvider = innerProvider ?? throw new ArgumentNullException(nameof(innerProvider));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _currentConfig = config.CurrentValue;
         
+        _onChangeToken = config.OnChange(updatedConfig => 
+        {
+            _currentConfig = updatedConfig;
+            // No need to do anything else - the loggers get the config through GetCurrentConfig
+        });
         // Register with the buffer manager
         LogBufferManager.RegisterProvider(this);
     }
@@ -47,9 +53,11 @@ internal partial class BufferingLoggerProvider : ILoggerProvider
             categoryName, 
             name => new PowertoolsBufferingLogger(
                 _innerProvider.CreateLogger(name),
-                _options,
+                GetCurrentConfig,
                 name));
     }
+    
+    internal PowertoolsLoggerConfiguration GetCurrentConfig() => _currentConfig;
     
     public void Dispose()
     {

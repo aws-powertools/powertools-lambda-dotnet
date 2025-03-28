@@ -39,12 +39,12 @@ internal sealed class PowertoolsLogger : ILogger
     /// <summary>
     ///     The current configuration
     /// </summary>
-    private readonly PowertoolsLoggerConfiguration _currentConfig;
+    private readonly Func<PowertoolsLoggerConfiguration> _currentConfig;
 
     /// <summary>
     ///     The system wrapper
     /// </summary>
-    private readonly ISystemWrapper _systemWrapper;
+    private readonly Func<ISystemWrapper> _getSystemWrapper;
 
     /// <summary>
     ///     The current scope
@@ -56,15 +56,15 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     /// <param name="categoryName">The name.</param>
     /// <param name="getCurrentConfig"></param>
-    /// <param name="systemWrapper">The system wrapper.</param>
+    /// <param name="getSystemWrapper">The system wrapper.</param>
     public PowertoolsLogger(
         string categoryName,
         Func<PowertoolsLoggerConfiguration> getCurrentConfig,
-        ISystemWrapper systemWrapper)
+        Func<ISystemWrapper> getSystemWrapper)
     {
         _categoryName = categoryName;
-        _currentConfig = getCurrentConfig();
-        _systemWrapper = systemWrapper;
+        _currentConfig = getCurrentConfig;
+        _getSystemWrapper = getSystemWrapper;
     }
 
     /// <summary>
@@ -95,9 +95,10 @@ internal sealed class PowertoolsLogger : ILogger
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsEnabled(LogLevel logLevel)
     {
+        var config = _currentConfig();
         // If we have no explicit minimum level, use the default
-        var effectiveMinLevel = _currentConfig.MinimumLogLevel != LogLevel.None
-            ? _currentConfig.MinimumLogLevel
+        var effectiveMinLevel = config.MinimumLogLevel != LogLevel.None
+            ? config.MinimumLogLevel
             : LoggingConstants.DefaultLogLevel;
         
         // Log diagnostic info for Debug/Trace levels
@@ -127,18 +128,18 @@ internal sealed class PowertoolsLogger : ILogger
             return;
         }
         
-        _systemWrapper.LogLine(LogEntryString(logLevel, state, exception, formatter));
+        _getSystemWrapper().LogLine(LogEntryString(logLevel, state, exception, formatter));
     }
     
     internal void LogLine(string message)
     {
-        _systemWrapper.LogLine(message);
+        _getSystemWrapper().LogLine(message);
     }
 
     internal string LogEntryString<TState>(LogLevel logLevel, TState state, Exception exception, Func<TState, Exception, string> formatter)
     {
         var logEntry = LogEntry(logLevel, state, exception, formatter);
-        return _currentConfig.Serializer.Serialize(logEntry, typeof(object));
+        return _currentConfig().Serializer.Serialize(logEntry, typeof(object));
     }
     
     internal object LogEntry<TState>(LogLevel logLevel, TState state, Exception exception, Func<TState, Exception, string> formatter)
@@ -157,7 +158,7 @@ internal sealed class PowertoolsLogger : ILogger
             : formatter(state, exception);
 
         // Get log entry
-        var logFormatter = _currentConfig.LogFormatter;
+        var logFormatter = _currentConfig().LogFormatter;
         var logEntry = logFormatter is null
             ? GetLogEntry(logLevel, timestamp, message, exception, structuredParameters)
             : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter, structuredParameters);
@@ -212,13 +213,14 @@ internal sealed class PowertoolsLogger : ILogger
             }
         }
 
-        logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString( _currentConfig.TimestampFormat ?? "o"));
-        logEntry.TryAdd(_currentConfig.LogLevelKey, logLevel.ToString());
-        logEntry.TryAdd(LoggingConstants.KeyService, _currentConfig.Service);
+        var config = _currentConfig();
+        logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString( config.TimestampFormat ?? "o"));
+        logEntry.TryAdd(config.LogLevelKey, logLevel.ToString());
+        logEntry.TryAdd(LoggingConstants.KeyService, config.Service);
         logEntry.TryAdd(LoggingConstants.KeyLoggerName, _categoryName);
         logEntry.TryAdd(LoggingConstants.KeyMessage, message);
-        if (_currentConfig.SamplingRate > 0)
-            logEntry.TryAdd(LoggingConstants.KeySamplingRate, _currentConfig.SamplingRate);
+        if (config.SamplingRate > 0)
+            logEntry.TryAdd(LoggingConstants.KeySamplingRate, config.SamplingRate);
         
         // Use the AddExceptionDetails method instead of adding exception directly
         if (exception != null)
@@ -244,15 +246,16 @@ internal sealed class PowertoolsLogger : ILogger
         if (logFormatter is null)
             return null;
 
+        var config = _currentConfig();
         var logEntry = new LogEntry
         {
             Timestamp = timestamp,
             Level = logLevel,
-            Service = _currentConfig.Service,
+            Service = config.Service,
             Name = _categoryName,
             Message = message,
             Exception = exception,  // Keep this to maintain compatibility
-            SamplingRate = _currentConfig.SamplingRate,
+            SamplingRate = config.SamplingRate,
         };
 
         var extraKeys = new Dictionary<string, object>();

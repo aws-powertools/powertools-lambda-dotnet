@@ -10,17 +10,17 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
     internal class PowertoolsBufferingLogger : ILogger
     {
         private readonly ILogger _innerLogger;
-        private readonly IOptionsMonitor<PowertoolsLoggerConfiguration> _options;
+        private readonly Func<PowertoolsLoggerConfiguration> _getCurrentConfig;
         private readonly string _categoryName;
         private readonly LogBuffer _buffer = new();
         
         public PowertoolsBufferingLogger(
             ILogger innerLogger, 
-            IOptionsMonitor<PowertoolsLoggerConfiguration> options,
+            Func<PowertoolsLoggerConfiguration> getCurrentConfig,
             string categoryName)
         {
             _innerLogger = innerLogger;
-            _options = options;
+            _getCurrentConfig = getCurrentConfig;
             _categoryName = categoryName;
         }
         
@@ -31,7 +31,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
         
         public bool IsEnabled(LogLevel logLevel)
         {
-            var options = _options.CurrentValue;
+            var options = _getCurrentConfig();
     
             // If buffering is disabled, defer to inner logger
             if (!options.LogBuffering.Enabled)
@@ -68,7 +68,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
             if (!IsEnabled(logLevel))
                 return;
                 
-            var options = _options.CurrentValue;
+            var options = _getCurrentConfig();
             var bufferOptions = options.LogBuffering;
             
             // Check if this log should be buffered

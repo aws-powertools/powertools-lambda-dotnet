@@ -64,11 +64,6 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     internal string LogLevelKey { get; set; } = "level";
 
     /// <summary>
-    /// Custom output logger to use instead of Console
-    /// </summary>
-    public ISystemWrapper? LoggerOutput { get; set; }
-
-    /// <summary>
     /// Custom log formatter to use for formatting log entries
     /// </summary>
     public ILogFormatter? LogFormatter { get; set; }

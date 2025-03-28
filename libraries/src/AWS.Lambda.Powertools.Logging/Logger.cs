@@ -15,8 +15,9 @@
 
 using System;
 using System.Text.Json;
-using System.Threading;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -26,99 +27,72 @@ namespace AWS.Lambda.Powertools.Logging;
 /// </summary>
 public static partial class Logger
 {
-    // Use Lazy<T> for thread-safe initialization
-    private static Lazy<ILoggerFactory> _factoryLazy;
-    private static Lazy<ILogger> _defaultLoggerLazy;
+    private static readonly object _lock = new object();
 
-    // Static constructor to ensure initialization
+    // Static constructor to ensure initialization happens before first use
     static Logger()
     {
-        // Initialize with default configuration (ensures we never have null fields)
-        InitializeWithDefaults();
+        LoggerInstance = GetPowertoolsLogger();
+        // Factory and logger will be lazily initialized when first accessed
     }
 
-    // Properties to access the lazy-initialized instances
-    private static ILoggerFactory Factory => _factoryLazy.Value;
-    private static ILogger LoggerInstance => _defaultLoggerLazy.Value;
-
-    // Add this field to the Logger class
-    private static PowertoolsLoggerConfiguration _currentConfig;
-
-    // Initialize with default settings
-    private static void InitializeWithDefaults()
-    {
-        _currentConfig = new PowertoolsLoggerConfiguration();
-
-        // Create default factory with minimal configuration
-        _factoryLazy = new Lazy<ILoggerFactory>(() =>
-            PowertoolsLoggerFactory.Create(_currentConfig));
-
-        _defaultLoggerLazy = new Lazy<ILogger>(() =>
-            Factory.CreatePowertoolsLogger());
-    }
-
-    // Allow manual configuration using options
-    internal static void Configure(Action<PowertoolsLoggerConfiguration> configureOptions)
-    {
-        var options = new PowertoolsLoggerConfiguration();
-        configureOptions(options);
-        Configure(options);
-    }
-
-    // Configure with existing factory
-    internal static void Configure(ILoggerFactory loggerFactory)
-    {
-        Interlocked.Exchange(ref _factoryLazy,
-            new Lazy<ILoggerFactory>(() => loggerFactory));
-
-        Interlocked.Exchange(ref _defaultLoggerLazy,
-            new Lazy<ILogger>(() => Factory.CreatePowertoolsLogger()));
-    }
-
-    // Directly configure from a PowertoolsLoggerConfiguration
-    internal static void Configure(PowertoolsLoggerConfiguration options)
-    {
-        if (options == null) throw new ArgumentNullException(nameof(options));
-
-        // Store current config
-        _currentConfig = options;
-
-        // Update factory and logger
-        Interlocked.Exchange(ref _factoryLazy,
-            new Lazy<ILoggerFactory>(() => PowertoolsLoggerFactory.Create(_currentConfig)));
-
-        Interlocked.Exchange(ref _defaultLoggerLazy,
-            new Lazy<ILogger>(() => Factory.CreatePowertoolsLogger()));
-    }
-
-    // Get the current configuration
-    internal static PowertoolsLoggerConfiguration GetConfiguration()
-    {
-        // Ensure logger is initialized
-        _ = LoggerInstance;
-
-        return _currentConfig;
-    }
-
-    // Get a logger for a specific category
-    internal static ILogger GetLogger<T>() => GetLogger(typeof(T).Name);
-
-    internal static ILogger GetLogger(string category) => Factory.CreateLogger(category);
-    
-    internal static ILogger GetPowertoolsLogger() => Factory.CreatePowertoolsLogger();
+    // Get the current logger instance
+    private static ILogger LoggerInstance;
 
     /// <summary>
-    /// Sets a custom output for the static logger.
-    /// Useful for testing to redirect logs to a test output.
+    /// Configure with an existing logger factory
     /// </summary>
-    /// <param name="loggerOutput">The custom output implementation</param>
-    public static void UseOutput(ISystemWrapper loggerOutput)
+    /// <param name="loggerFactory">The factory to use</param>
+    internal static void Configure(ILoggerFactory loggerFactory)
     {
-        if (loggerOutput == null)
-            throw new ArgumentNullException(nameof(loggerOutput));
+        if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
+        LoggerFactoryHolder.SetFactory(loggerFactory);
+    }
 
-        _currentConfig.LoggerOutput = loggerOutput;
-        Configure(_currentConfig);
+    /// <summary>
+    /// Configure using a configuration action
+    /// </summary>
+    /// <param name="configure"></param>
+    internal static void Configure(Action<PowertoolsLoggerConfiguration> configure)
+    {
+        lock (_lock)
+        {
+            var config = GetCurrentConfiguration();
+            configure(config);
+            PowertoolsLoggingBuilderExtensions.UpdateConfiguration(config);
+        }
+    }
+    
+    public static PowertoolsLoggerConfiguration GetCurrentConfiguration()
+    {
+        return PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
+    }
+
+
+    // /// <summary>
+    // /// Get a logger for a specific type
+    // /// </summary>
+    // /// <typeparam name="T">The type to create logger for</typeparam>
+    // /// <returns>A configured logger</returns>
+    // internal static ILogger GetLogger<T>() => GetLogger(typeof(T).Name);
+    //
+    // /// <summary>
+    // /// Get a logger for a specific category
+    // /// </summary>
+    // /// <param name="category">The category name</param>
+    // /// <returns>A configured logger</returns>
+    // internal static ILogger GetLogger(string category)
+    // {
+    //     return LoggerFactoryHolder.GetOrCreateFactory().CreateLogger(category);
+    // }
+    //
+    /// <summary>
+    /// Get the Powertools logger instance
+    /// </summary>
+    /// <returns>The configured Powertools logger</returns>
+    internal static ILogger GetPowertoolsLogger()
+    {
+        return LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
     }
 
     /// <summary>
@@ -127,18 +101,20 @@ public static partial class Logger
     /// <param name="outputCase">The case to use for the output</param>
     public static void UseOutputCase(LoggerOutputCase outputCase)
     {
-        _currentConfig.LoggerOutputCase = outputCase;
-        Configure(_currentConfig);
+        Configure(config => {
+            config.LoggerOutputCase = outputCase;
+        });
     }
-    
+
     /// <summary>
     /// Configures the minimum log level
     /// </summary>
     /// <param name="logLevel">The minimum log level to display</param>
     public static void UseMinimumLogLevel(LogLevel logLevel)
     {
-        _currentConfig.MinimumLogLevel = logLevel;
-        Configure(_currentConfig);
+        Configure(config => {
+            config.MinimumLogLevel = logLevel;
+        });
     }
 
     /// <summary>
@@ -149,9 +125,10 @@ public static partial class Logger
     {
         if (string.IsNullOrEmpty(serviceName))
             throw new ArgumentException("Service name cannot be null or empty", nameof(serviceName));
-        
-        _currentConfig.Service = serviceName;
-        Configure(_currentConfig);
+
+        Configure(config => {
+            config.Service = serviceName;
+        });
     }
 
     /// <summary>
@@ -162,9 +139,10 @@ public static partial class Logger
     {
         if (samplingRate < 0 || samplingRate > 1)
             throw new ArgumentOutOfRangeException(nameof(samplingRate), "Sampling rate must be between 0 and 1");
-        
-        _currentConfig.SamplingRate = samplingRate;
-        Configure(_currentConfig);
+
+        Configure(config => {
+            config.SamplingRate = samplingRate;
+        });
     }
 
     /// <summary>
@@ -182,11 +160,9 @@ public static partial class Logger
         if (logBuffering == null)
             throw new ArgumentNullException(nameof(logBuffering));
 
-        // Update the current configuration
-        _currentConfig.LogBuffering = logBuffering;
-
-        // Reconfigure to apply changes
-        Configure(_currentConfig);
+        Configure(config => {
+            config.LogBuffering = logBuffering;
+        });
     }
 
 #if NET8_0_OR_GREATER
@@ -198,15 +174,25 @@ public static partial class Logger
     {
         if (jsonOptions == null)
             throw new ArgumentNullException(nameof(jsonOptions));
-            
-        // Update the current configuration
-        _currentConfig.JsonOptions = jsonOptions;
+
+        Configure(config => {
+            config.JsonOptions = jsonOptions;
+        });
     }
 #endif
 
-    // For testing purposes
+    // Add to Logger.cs
+    public static ISystemWrapper UseStringWriter()
+    {
+        return PowertoolsLoggerTestHelpers.EnableTestMode();
+
+    }
+    
+    /// <summary>
+    /// Reset the logger for testing
+    /// </summary>
     internal static void Reset()
     {
-        InitializeWithDefaults();
+        LoggerFactoryHolder.Reset();
     }
 }

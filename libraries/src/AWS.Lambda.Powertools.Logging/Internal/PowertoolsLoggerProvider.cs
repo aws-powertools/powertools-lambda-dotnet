@@ -38,7 +38,7 @@ internal sealed class PowertoolsLoggerProvider : ILoggerProvider
     /// <summary>
     ///     The system wrapper
     /// </summary>
-    private readonly ISystemWrapper _systemWrapper;
+    private ISystemWrapper _systemWrapper;
 
     /// <summary>
     ///     The loggers
@@ -56,17 +56,17 @@ internal sealed class PowertoolsLoggerProvider : ILoggerProvider
     /// <param name="systemWrapper"></param>
     public PowertoolsLoggerProvider(IOptionsMonitor<PowertoolsLoggerConfiguration> config,
         IPowertoolsConfigurations powertoolsConfigurations,
-        ISystemWrapper? systemWrapper = null)
+        ISystemWrapper systemWrapper = null)
     {
-        // Use custom system wrapper if provided through config
-        var currentConfig = config.CurrentValue;
-        _systemWrapper = currentConfig.LoggerOutput ?? systemWrapper ?? new SystemWrapper();
-        
+        _currentConfig = config.CurrentValue;
+        _systemWrapper = systemWrapper;
         _powertoolsConfigurations = powertoolsConfigurations;
-        _currentConfig = currentConfig;
-
-        _onChangeToken = config.OnChange(updatedConfig => _currentConfig = updatedConfig);
-        ApplyPowertoolsConfig(_currentConfig);
+        
+        _onChangeToken = config.OnChange(updatedConfig => 
+        {
+            _currentConfig = updatedConfig;
+            // No need to do anything else - the loggers get the config through GetCurrentConfig
+        });
     }
 
     /// <summary>
@@ -79,107 +79,112 @@ internal sealed class PowertoolsLoggerProvider : ILoggerProvider
         _powertoolsConfigurations.SetExecutionEnvironment(typeof(PowertoolsLogger));
         
         return _loggers.GetOrAdd(categoryName, name => new PowertoolsLogger(name,
-            () => _currentConfig,
-            _systemWrapper));
+            GetCurrentConfig,
+            () => _systemWrapper));
     }
 
-    internal PowertoolsLoggerConfiguration GetCurrentConfig()
+    internal PowertoolsLoggerConfiguration GetCurrentConfig() => _currentConfig;
+    
+    public void UpdateConfiguration(PowertoolsLoggerConfiguration config)
     {
-        var config = _currentConfig;
-
-        ApplyPowertoolsConfig(config);
-
-        return config;
+        _currentConfig = config;
     }
-
-    private void ApplyPowertoolsConfig(PowertoolsLoggerConfiguration config)
+    
+    public void UpdateSystem(ISystemWrapper system)
     {
-        var logLevel = _powertoolsConfigurations.GetLogLevel(LogLevel.None);
-        var lambdaLogLevel = _powertoolsConfigurations.GetLambdaLogLevel();
-        var lambdaLogLevelEnabled = _powertoolsConfigurations.LambdaLogLevelEnabled();
-
-        // Check for explicit config
-        bool hasExplicitLevel = config.MinimumLogLevel != LogLevel.None;
-
-        // Warn if Lambda log level doesn't match
-        if (lambdaLogLevelEnabled && hasExplicitLevel && config.MinimumLogLevel < lambdaLogLevel)
-        {
-            _systemWrapper.LogLine(
-                $"Current log level ({config.MinimumLogLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
-        }
-
-        // Set service from environment if not explicitly set
-        if (string.IsNullOrEmpty(config.Service))
-        {
-            config.Service = _powertoolsConfigurations.Service;
-        }
-
-        // Set output case from environment if not explicitly set
-        if (config.LoggerOutputCase == LoggerOutputCase.Default)
-        {
-            var loggerOutputCase = _powertoolsConfigurations.GetLoggerOutputCase(config.LoggerOutputCase);
-            config.LoggerOutputCase = loggerOutputCase;
-        }
-
-        // Set log level from environment ONLY if not explicitly set
-        if (!hasExplicitLevel)
-        {
-            var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
-            config.MinimumLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
-        }
-        
-        config.XRayTraceId = _powertoolsConfigurations.XRayTraceId;
-        config.LogEvent = _powertoolsConfigurations.LoggerLogEvent;
-        
-        // Configure the log level key based on output case
-        config.LogLevelKey = _powertoolsConfigurations.LambdaLogLevelEnabled() &&
-                              config.LoggerOutputCase == LoggerOutputCase.PascalCase
-            ? "LogLevel"
-            : LoggingConstants.KeyLogLevel;
-            
-        // Handle sampling rate - BUT DON'T MODIFY MINIMUM LEVEL
-        ProcessSamplingRate(config);
+        if (system == null) return;
+    
+        _systemWrapper = system;
     }
 
-    private void ProcessSamplingRate(PowertoolsLoggerConfiguration config)
-    {
-        var samplingRate = config.SamplingRate > 0 
-            ? config.SamplingRate 
-            : _powertoolsConfigurations.LoggerSampleRate;
-            
-        samplingRate = ValidateSamplingRate(samplingRate, config.MinimumLogLevel, _systemWrapper);
-        config.SamplingRate = samplingRate;
-
-        // Only notify if sampling is configured
-        if (samplingRate > 0)
-        {
-            double sample = _systemWrapper.GetRandom();
-            
-            // Instead of changing log level, just indicate sampling status
-            if (sample <= samplingRate)
-            {
-                _systemWrapper.LogLine(
-                    $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
-                config.MinimumLogLevel = LogLevel.Debug;
-            }
-        }
-    }
-
-    private static double ValidateSamplingRate(double samplingRate, LogLevel minLogLevel, ISystemWrapper systemWrapper)
-    {
-        if (samplingRate < 0 || samplingRate > 1)
-        {
-            if (minLogLevel is LogLevel.Debug or LogLevel.Trace)
-            {
-                systemWrapper.LogLine(
-                    $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate}");
-            }
-
-            return 0;
-        }
-
-        return samplingRate;
-    }
+    // private void ApplyPowertoolsConfig(PowertoolsLoggerConfiguration config)
+    // {
+    //     var logLevel = _powertoolsConfigurations.GetLogLevel(LogLevel.None);
+    //     var lambdaLogLevel = _powertoolsConfigurations.GetLambdaLogLevel();
+    //     var lambdaLogLevelEnabled = _powertoolsConfigurations.LambdaLogLevelEnabled();
+    //
+    //     // Check for explicit config
+    //     bool hasExplicitLevel = config.MinimumLogLevel != LogLevel.None;
+    //
+    //     // Warn if Lambda log level doesn't match
+    //     if (lambdaLogLevelEnabled && hasExplicitLevel && config.MinimumLogLevel < lambdaLogLevel)
+    //     {
+    //         _systemWrapper.LogLine(
+    //             $"Current log level ({config.MinimumLogLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
+    //     }
+    //
+    //     // Set service from environment if not explicitly set
+    //     if (string.IsNullOrEmpty(config.Service))
+    //     {
+    //         config.Service = _powertoolsConfigurations.Service;
+    //     }
+    //
+    //     // Set output case from environment if not explicitly set
+    //     if (config.LoggerOutputCase == LoggerOutputCase.Default)
+    //     {
+    //         var loggerOutputCase = _powertoolsConfigurations.GetLoggerOutputCase(config.LoggerOutputCase);
+    //         config.LoggerOutputCase = loggerOutputCase;
+    //     }
+    //
+    //     // Set log level from environment ONLY if not explicitly set
+    //     if (!hasExplicitLevel)
+    //     {
+    //         var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
+    //         config.MinimumLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
+    //     }
+    //     
+    //     config.XRayTraceId = _powertoolsConfigurations.XRayTraceId;
+    //     config.LogEvent = _powertoolsConfigurations.LoggerLogEvent;
+    //     
+    //     // Configure the log level key based on output case
+    //     config.LogLevelKey = _powertoolsConfigurations.LambdaLogLevelEnabled() &&
+    //                           config.LoggerOutputCase == LoggerOutputCase.PascalCase
+    //         ? "LogLevel"
+    //         : LoggingConstants.KeyLogLevel;
+    //         
+    //     // Handle sampling rate - BUT DON'T MODIFY MINIMUM LEVEL
+    //     ProcessSamplingRate(config);
+    // }
+    //
+    // private void ProcessSamplingRate(PowertoolsLoggerConfiguration config)
+    // {
+    //     var samplingRate = config.SamplingRate > 0 
+    //         ? config.SamplingRate 
+    //         : _powertoolsConfigurations.LoggerSampleRate;
+    //         
+    //     samplingRate = ValidateSamplingRate(samplingRate, config.MinimumLogLevel, _systemWrapper);
+    //     config.SamplingRate = samplingRate;
+    //
+    //     // Only notify if sampling is configured
+    //     if (samplingRate > 0)
+    //     {
+    //         double sample = _systemWrapper.GetRandom();
+    //         
+    //         // Instead of changing log level, just indicate sampling status
+    //         if (sample <= samplingRate)
+    //         {
+    //             _systemWrapper.LogLine(
+    //                 $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
+    //             config.MinimumLogLevel = LogLevel.Debug;
+    //         }
+    //     }
+    // }
+    //
+    // private static double ValidateSamplingRate(double samplingRate, LogLevel minLogLevel, ISystemWrapper systemWrapper)
+    // {
+    //     if (samplingRate < 0 || samplingRate > 1)
+    //     {
+    //         if (minLogLevel is LogLevel.Debug or LogLevel.Trace)
+    //         {
+    //             systemWrapper.LogLine(
+    //                 $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate}");
+    //         }
+    //
+    //         return 0;
+    //     }
+    //
+    //     return samplingRate;
+    // }
 
     /// <summary>
     ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

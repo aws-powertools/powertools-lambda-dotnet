@@ -24,7 +24,9 @@ public static partial class Logger
     /// <remarks>WARNING: This method should not be called when using AOT. ILogFormatter should be passed to PowertoolsSourceGeneratorSerializer constructor</remarks>
     public static void UseFormatter(ILogFormatter logFormatter)
     {
-        _currentConfig.LogFormatter = logFormatter;
+        Configure(config => {
+            config.LogFormatter = logFormatter;
+        });
     }
 
     /// <summary>
@@ -32,6 +34,8 @@ public static partial class Logger
     /// </summary>
     public static void UseDefaultFormatter()
     {
-        _currentConfig.LogFormatter = null;
+        Configure(config => {
+            config.LogFormatter = null;
+        });
     }
 }

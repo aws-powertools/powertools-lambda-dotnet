@@ -46,12 +46,6 @@ public class PowertoolsLoggerBuilder
         _configuration.LoggerOutputCase = outputCase;
         return this;
     }
-    
-    public PowertoolsLoggerBuilder WithOutput(ISystemWrapper output)
-    {
-        _configuration.LoggerOutput = output;
-        return this;
-    }
 
     public PowertoolsLoggerBuilder WithFormatter(ILogFormatter formatter)
     {

@@ -31,9 +31,11 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 ///     Scope.Global is singleton
 /// </summary>
 /// <seealso cref="IMethodAspectHandler" />
-[Aspect(Scope.Global)]
+[Aspect(Scope.Global, Factory = typeof(LoggingAspectFactory))]
 public class LoggingAspect
 {
+    private readonly ILoggerFactory _loggerFactory;
+
     /// <summary>
     ///     The is cold start
     /// </summary>
@@ -64,6 +66,10 @@ public class LoggingAspect
     private bool _bufferingEnabled;
     private PowertoolsLoggerConfiguration _currentConfig;
 
+    public LoggingAspect(ILogger logger)
+    {
+        _logger = logger ?? LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
+    }
 
     private void InitializeLogger(LoggingAttribute trigger)
     {
@@ -85,15 +91,15 @@ public class LoggingAspect
             if (hasSamplingRate) Logger.UseSamplingRate(trigger.SamplingRate);
 
             // Update logger reference after configuration changes
-            _logger = Logger.GetPowertoolsLogger();
+            // _logger = Logger.GetPowertoolsLogger();
         }
         else if (_logger == null)
         {
             // Only get the logger if we don't already have it
-            _logger = Logger.GetPowertoolsLogger();
+            // _logger = Logger.GetPowertoolsLogger();
         }
         // Fetch the current configuration
-        _currentConfig = Logger.GetConfiguration();
+        _currentConfig = Logger.GetCurrentConfiguration();
 
         // Set operational flags based on current configuration
         _isDebug = _currentConfig.MinimumLogLevel <= LogLevel.Debug;
