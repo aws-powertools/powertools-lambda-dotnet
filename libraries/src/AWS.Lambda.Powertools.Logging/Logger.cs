@@ -180,13 +180,6 @@ public static partial class Logger
         });
     }
 #endif
-
-    // Add to Logger.cs
-    public static ISystemWrapper UseStringWriter()
-    {
-        return PowertoolsLoggerTestHelpers.EnableTestMode();
-
-    }
     
     /// <summary>
     /// Reset the logger for testing

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using AWS.Lambda.Powertools.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -24,51 +25,28 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// Logger provider that supports buffering logs
 /// </summary>
 [ProviderAlias("PowertoolsBuffering")]
-internal class BufferingLoggerProvider : ILoggerProvider
+internal class BufferingLoggerProvider : PowertoolsLoggerProvider
 {
-    private readonly ILoggerProvider _innerProvider;
     private readonly ConcurrentDictionary<string, PowertoolsBufferingLogger> _loggers = new();
-    private readonly IDisposable? _onChangeToken;
-    private PowertoolsLoggerConfiguration _currentConfig;
     
     public BufferingLoggerProvider(
-        ILoggerProvider innerProvider, 
-        IOptionsMonitor<PowertoolsLoggerConfiguration> config)
+        IOptionsMonitor<PowertoolsLoggerConfiguration> config,
+        IPowertoolsConfigurations powertoolsConfigurations,
+        ISystemWrapper systemWrapper) 
+        : base(config, powertoolsConfigurations, systemWrapper)
     {
-        _innerProvider = innerProvider ?? throw new ArgumentNullException(nameof(innerProvider));
-        _currentConfig = config.CurrentValue;
-        
-        _onChangeToken = config.OnChange(updatedConfig => 
-        {
-            _currentConfig = updatedConfig;
-            // No need to do anything else - the loggers get the config through GetCurrentConfig
-        });
         // Register with the buffer manager
         LogBufferManager.RegisterProvider(this);
     }
     
-    public ILogger CreateLogger(string categoryName)
+    public override ILogger CreateLogger(string categoryName)
     {
         return _loggers.GetOrAdd(
             categoryName, 
             name => new PowertoolsBufferingLogger(
-                _innerProvider.CreateLogger(name),
+                base.CreateLogger(name), // Use the parent's logger creation
                 GetCurrentConfig,
                 name));
-    }
-    
-    internal PowertoolsLoggerConfiguration GetCurrentConfig() => _currentConfig;
-    
-    public void Dispose()
-    {
-        // Flush all buffers before disposing
-        foreach (var logger in _loggers.Values)
-        {
-            logger.FlushBuffer();
-        }
-        
-        _innerProvider.Dispose();
-        _loggers.Clear();
     }
     
     /// <summary>
@@ -102,5 +80,17 @@ internal class BufferingLoggerProvider : ILoggerProvider
         {
             logger.ClearCurrentInvocation();
         }
+    }
+    
+    public override void Dispose()
+    {
+        // Flush all buffers before disposing
+        foreach (var logger in _loggers.Values)
+        {
+            logger.FlushBuffer();
+        }
+        
+        _loggers.Clear();
+        base.Dispose();
     }
 }

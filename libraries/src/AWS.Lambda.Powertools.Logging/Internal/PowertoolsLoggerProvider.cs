@@ -28,7 +28,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// </summary>
 /// <seealso cref="T:Microsoft.Extensions.Logging.ILoggerProvider" />
 [ProviderAlias("PowertoolsLogger")]
-internal sealed class PowertoolsLoggerProvider : ILoggerProvider
+internal class PowertoolsLoggerProvider : ILoggerProvider
 {
     /// <summary>
     ///     The powertools configurations
@@ -74,7 +74,7 @@ internal sealed class PowertoolsLoggerProvider : ILoggerProvider
     /// </summary>
     /// <param name="categoryName">The category name for messages produced by the logger.</param>
     /// <returns>The instance of <see cref="T:Microsoft.Extensions.Logging.ILogger" /> that was created.</returns>
-    public ILogger CreateLogger(string categoryName)
+    public virtual ILogger CreateLogger(string categoryName)
     {
         _powertoolsConfigurations.SetExecutionEnvironment(typeof(PowertoolsLogger));
         
@@ -189,7 +189,7 @@ internal sealed class PowertoolsLoggerProvider : ILoggerProvider
     /// <summary>
     ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
     /// </summary>
-    public void Dispose()
+    public virtual void Dispose()
     {
         _loggers.Clear();
         _onChangeToken?.Dispose();

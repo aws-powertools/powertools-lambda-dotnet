@@ -63,12 +63,14 @@ public static class PowertoolsLoggingBuilderExtensions
         builder.AddConfiguration();
 
         // Register ISystemWrapper if not already registered
-        builder.Services.TryAddSingleton<ISystemWrapper>(provider =>
-        {
-            // Check if there's a pending mock system first
-            var mockSystem = PowertoolsLoggerTestHelpers.GetSystemWrapper();
-            return mockSystem ?? new SystemWrapper();
-        });
+        // builder.Services.TryAddSingleton<ISystemWrapper>(provider =>
+        // {
+        //     // Check if there's a pending mock system first
+        //     var mockSystem = PowertoolsLoggerTestFixture.GetSystemWrapper();
+        //     return mockSystem ?? new SystemWrapper();
+        // });
+        
+        builder.Services.TryAddSingleton<ISystemWrapper, SystemWrapper>();
         
         builder.Services.TryAddSingleton<IPowertoolsEnvironment, PowertoolsEnvironment>();
         // Register IPowertoolsConfigurations with all its dependencies
@@ -120,7 +122,7 @@ public static class PowertoolsLoggingBuilderExtensions
         {
             builder.SetMinimumLevel(options.MinimumLogLevel);
         }
-        
+
         builder.Services.Configure(configure);
 
         UpdateConfiguration(options);
@@ -133,18 +135,27 @@ public static class PowertoolsLoggingBuilderExtensions
                 null,
                 options.LogBuffering.BufferAtLogLevel);
 
-            // Register the inner provider factory
-            builder.Services.AddSingleton<ILoggerProvider>(sp =>
-            new BufferingLoggerProvider(
-                // We need to create a PowertoolsLoggerProvider here
-                new PowertoolsLoggerProvider(
-                    new TrackedOptionsMonitor(_currentConfig, UpdateConfiguration),
-                    sp.GetRequiredService<IPowertoolsConfigurations>(),
-                    sp.GetRequiredService<ISystemWrapper>()
-                ),
-                new TrackedOptionsMonitor(_currentConfig, UpdateConfiguration)
-            )
-        );
+            // Register the buffer provider as an enumerable service
+            // Using singleton to ensure it's properly tracked
+            builder.Services.TryAddEnumerable(
+                ServiceDescriptor.Singleton<ILoggerProvider, BufferingLoggerProvider>(provider =>
+                {
+                    var powertoolsConfigurations = provider.GetRequiredService<IPowertoolsConfigurations>();
+                    var systemWrapper = provider.GetRequiredService<ISystemWrapper>();
+
+                    var bufferingProvider = new BufferingLoggerProvider(
+                        new TrackedOptionsMonitor(_currentConfig, UpdateConfiguration),
+                        powertoolsConfigurations,
+                        systemWrapper
+                    );
+                
+                    lock (_lock)
+                    {
+                        AllProviders.Add(bufferingProvider);
+                    }
+
+                    return bufferingProvider;
+                }));
         }
 
         return builder;
@@ -160,6 +171,22 @@ public static class PowertoolsLoggingBuilderExtensions
             {
                 provider.UpdateSystem(system);
             }
+        }
+    }
+    
+    /// <summary>
+    ///     Resets all providers and clears the configuration.
+    ///     This is useful for testing purposes to ensure a clean state.
+    /// </summary>
+    internal static void ResetAllProviders()
+    {
+        lock (_lock)
+        {
+            // Clear the provider collection
+            AllProviders.Clear();
+
+            // Reset the current configuration to default
+            _currentConfig = new PowertoolsLoggerConfiguration();
         }
     }
     

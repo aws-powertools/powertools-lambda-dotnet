@@ -1,6 +1,3 @@
-using System;
-using AWS.Lambda.Powertools.Common;
-using AWS.Lambda.Powertools.Common.Tests;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal.Helpers;
@@ -37,46 +34,5 @@ internal static class LoggerFactoryHelper
         // Logger.Configure(factory);
 
         return factory;
-    }
-}
-
-// Add to a new TestHelpers.cs file
-public static class PowertoolsLoggerTestHelpers
-{
-    private static readonly object _lock = new();
-    private static ISystemWrapper _systemWrapper;
-
-    static PowertoolsLoggerTestHelpers()
-    {
-        _systemWrapper = null;
-    }
-    
-    // Call this at the beginning of your test
-    public static TestLoggerOutput EnableTestMode()
-    {
-        var system = new TestLoggerOutput();
-        _systemWrapper = system;
-        PowertoolsLoggingBuilderExtensions.UpdateSystemInAllProviders(system);
-        return system;
-    }
-
-    public static void UseCustomSystem(ISystemWrapper system)
-    {
-        if (system == null) throw new ArgumentNullException(nameof(system));
-        lock (_lock)
-        {
-            // Store the mock system for later use when providers are created
-            _systemWrapper = system;
-            // Update all providers to use the mock system
-            PowertoolsLoggingBuilderExtensions.UpdateSystemInAllProviders(system);
-        }
-    }
-    
-    internal static ISystemWrapper GetSystemWrapper()
-    {
-        lock (_lock)
-        {
-            return _systemWrapper;
-        }
     }
 }
