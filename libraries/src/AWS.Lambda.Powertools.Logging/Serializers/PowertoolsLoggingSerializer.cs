@@ -104,39 +104,15 @@ internal class PowertoolsLoggingSerializer
             return JsonSerializer.Serialize(value, jsonSerializerOptions);
         }
 
-        var options = GetSerializerOptions();
-
         // Try to serialize using the configured TypeInfoResolver
-        try
+        var typeInfo = GetTypeInfo(inputType);
+        if (typeInfo == null)
         {
-            var typeInfo = GetTypeInfo(inputType);
-            if (typeInfo != null)
-            {
-                return JsonSerializer.Serialize(value, typeInfo);
-            }
+            throw new JsonSerializerException(
+                $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.");
         }
-        catch (InvalidOperationException)
-        {
-            // Failed to get typeinfo, will fall back to trying the serializer directly
-        }
+        return JsonSerializer.Serialize(value, typeInfo);
 
-        // Fall back to direct serialization which may work if the resolver chain can handle it
-        try
-        {
-            return JsonSerializer.Serialize(value, inputType, options);
-        }
-        catch (JsonException ex)
-        {
-            throw new JsonSerializerException(
-                $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.",
-                ex);
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new JsonSerializerException(
-                $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.",
-                ex);
-        }
 #endif
     }
 
@@ -280,6 +256,9 @@ internal class PowertoolsLoggingSerializer
             if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
             {
                 HandleJsonOptionsTypeResolver(_jsonOptions);
+                
+                // Ensure the TypeInfoResolver is set
+                _jsonOptions.TypeInfoResolver = GetCompositeResolver();
             }
 #endif
         }

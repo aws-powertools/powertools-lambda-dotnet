@@ -90,14 +90,11 @@ public class LoggingAspect
             if (hasOutputCase) Logger.UseOutputCase(trigger.LoggerOutputCase);
             if (hasSamplingRate) Logger.UseSamplingRate(trigger.SamplingRate);
 
-            // Update logger reference after configuration changes
+            // Need to refresh the logger after configuration changes
             // _logger = Logger.GetPowertoolsLogger();
+            _logger = LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
         }
-        else if (_logger == null)
-        {
-            // Only get the logger if we don't already have it
-            // _logger = Logger.GetPowertoolsLogger();
-        }
+        
         // Fetch the current configuration
         _currentConfig = Logger.GetCurrentConfiguration();
 
@@ -167,8 +164,15 @@ public class LoggingAspect
             }
 
             CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
-            if (logEvent || _currentConfig.LogEvent)
+            
+            if(trigger.IsLogEventSet && trigger.LogEvent)
+            {
                 LogEvent(eventObject);
+            }
+            else if (!trigger.IsLogEventSet && _currentConfig.LogEvent)
+            {
+                LogEvent(eventObject);
+            }
         }
         catch (Exception exception)
         {
@@ -334,6 +338,5 @@ public class LoggingAspect
     internal static void ResetForTest()
     {
         LoggingLambdaContext.Clear();
-        // _logger.RemoveAllKeys();
     }
 }

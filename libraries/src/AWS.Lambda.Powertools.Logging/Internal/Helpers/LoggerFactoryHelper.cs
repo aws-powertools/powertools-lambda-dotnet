@@ -27,6 +27,9 @@ internal static class LoggerFactoryHelper
                 config.LogFormatter = configuration.LogFormatter;
                 config.LogLevelKey = configuration.LogLevelKey;
                 config.LogBuffering = configuration.LogBuffering;
+                config.LogEvent = configuration.LogEvent;
+                config.LogOutput = configuration.LogOutput;
+                config.XRayTraceId = configuration.XRayTraceId;
             });
         });
 

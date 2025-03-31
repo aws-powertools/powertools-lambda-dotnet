@@ -27,17 +27,28 @@ namespace AWS.Lambda.Powertools.Logging;
 /// </summary>
 public static partial class Logger
 {
+    private static ILogger _loggerInstance;
     private static readonly object _lock = new object();
 
-    // Static constructor to ensure initialization happens before first use
-    static Logger()
+    // Change this to a property with getter that recreates if needed
+    private static ILogger LoggerInstance 
     {
-        LoggerInstance = GetPowertoolsLogger();
-        // Factory and logger will be lazily initialized when first accessed
+        get
+        {
+            // If we have no instance or configuration has changed, get a new logger
+            if (_loggerInstance == null)
+            {
+                lock (_lock)
+                {
+                    if (_loggerInstance == null)
+                    {
+                        _loggerInstance = GetPowertoolsLogger();
+                    }
+                }
+            }
+            return _loggerInstance;
+        }
     }
-
-    // Get the current logger instance
-    private static ILogger LoggerInstance;
 
     /// <summary>
     /// Configure with an existing logger factory
@@ -68,24 +79,6 @@ public static partial class Logger
         return PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
     }
 
-
-    // /// <summary>
-    // /// Get a logger for a specific type
-    // /// </summary>
-    // /// <typeparam name="T">The type to create logger for</typeparam>
-    // /// <returns>A configured logger</returns>
-    // internal static ILogger GetLogger<T>() => GetLogger(typeof(T).Name);
-    //
-    // /// <summary>
-    // /// Get a logger for a specific category
-    // /// </summary>
-    // /// <param name="category">The category name</param>
-    // /// <returns>A configured logger</returns>
-    // internal static ILogger GetLogger(string category)
-    // {
-    //     return LoggerFactoryHolder.GetOrCreateFactory().CreateLogger(category);
-    // }
-    //
     /// <summary>
     /// Get the Powertools logger instance
     /// </summary>
@@ -115,6 +108,10 @@ public static partial class Logger
         Configure(config => {
             config.MinimumLogLevel = logLevel;
         });
+        
+        // Also directly update the log filter level to ensure it takes effect immediately
+        LoggerFactoryHolder.UpdateFilterLogLevel(logLevel);
+        _loggerInstance = null;
     }
 
     /// <summary>
@@ -137,9 +134,6 @@ public static partial class Logger
     /// <param name="samplingRate">The rate (0.0 to 1.0) for sampling</param>
     public static void UseSamplingRate(double samplingRate)
     {
-        if (samplingRate < 0 || samplingRate > 1)
-            throw new ArgumentOutOfRangeException(nameof(samplingRate), "Sampling rate must be between 0 and 1");
-
         Configure(config => {
             config.SamplingRate = samplingRate;
         });
@@ -187,5 +181,17 @@ public static partial class Logger
     internal static void Reset()
     {
         LoggerFactoryHolder.Reset();
+        _loggerInstance = null;
+        RemoveAllKeys();
+    }
+
+    public static void SetOutput(ISystemWrapper consoleOut)
+    {
+        if (consoleOut == null)
+            throw new ArgumentNullException(nameof(consoleOut));
+
+        Configure(config => {
+            config.LogOutput = consoleOut;
+        });
     }
 }

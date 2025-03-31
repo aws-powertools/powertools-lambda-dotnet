@@ -189,18 +189,7 @@ public class TestServiceHandler
 {
     public void LogWithEnv()
     {
-        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "Environment Service");
-        
         Logger.LogInformation("Service: Environment Service");
-    }
-    
-    public void LogWithAndWithoutEnv()
-    {
-        Logger.LogInformation("Service: service_undefined");
-        
-        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "Environment Service");
-        
-        Logger.LogInformation("Service: service_undefined");
     }
 
     [Logging(Service = "Attribute Service")]

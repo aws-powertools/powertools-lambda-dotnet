@@ -12,7 +12,7 @@ public class TestLoggerOutput : ISystemWrapper
     /// <summary>
     /// Buffer for all the log messages written to the logger.
     /// </summary>
-    public StringBuilder Buffer { get; } = new StringBuilder();
+    private readonly StringBuilder _outputBuffer = new StringBuilder();
 
     /// <summary>
     ///    Logs the specified value.
@@ -20,8 +20,7 @@ public class TestLoggerOutput : ISystemWrapper
     /// <param name="value"></param>
     public void Log(string value)
     {
-        Buffer.Append(value);
-        Console.Write(value);
+        _outputBuffer.Append(value);
     }
     
     /// <summary>
@@ -29,8 +28,7 @@ public class TestLoggerOutput : ISystemWrapper
     /// </summary>
     public void LogLine(string value)
     {
-        Buffer.AppendLine(value);
-        Console.WriteLine(value);
+        _outputBuffer.AppendLine(value);
     }
 
     /// <summary>
@@ -46,15 +44,15 @@ public class TestLoggerOutput : ISystemWrapper
     ///</summary>
     public void SetOut(TextWriter writeTo)
     {
-        Console.SetOut(writeTo);
     }
-
-    /// <summary>
-    /// Overrides the ToString method to return the buffer as a string.
-    /// </summary>
-    /// <returns></returns>
+    
+    public void Clear()
+    {
+        _outputBuffer.Clear();
+    }
+    
     public override string ToString()
     {
-        return Buffer.ToString();
+        return _outputBuffer.ToString();
     }
 }

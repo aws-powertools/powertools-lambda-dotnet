@@ -146,7 +146,19 @@ public class LoggingAttribute : Attribute
     ///     such as a string or any custom data object.
     /// </summary>
     /// <value><c>true</c> if [log event]; otherwise, <c>false</c>.</value>
-    public bool LogEvent { get; set; }
+    public bool LogEvent 
+    {
+        get => _logEvent;
+        set
+        {
+            _logEvent = value;
+            _logEventSet = true;
+        }
+    }
+    
+    private bool _logEventSet;
+    private bool _logEvent;
+    internal bool IsLogEventSet => _logEventSet;
 
     /// <summary>
     ///     Pointer path to extract correlation id from input parameter.

@@ -34,7 +34,13 @@ internal class ByteArrayConverter : JsonConverter<byte[]>
     /// <exception cref="NotSupportedException"></exception>
     public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        throw new NotSupportedException("Deserializing ByteArray is not allowed");
+        if (reader.TokenType == JsonTokenType.Null)
+            return null;
+            
+        if (reader.TokenType == JsonTokenType.String)
+            return Convert.FromBase64String(reader.GetString()!);
+            
+        throw new JsonException("Expected string value for byte array");
     }
 
     /// <summary>
@@ -43,22 +49,15 @@ internal class ByteArrayConverter : JsonConverter<byte[]>
     /// <param name="writer">The unicode JsonWriter.</param>
     /// <param name="values">The byte array.</param>
     /// <param name="options">The JsonSerializer options.</param>
-    public override void Write(Utf8JsonWriter writer, byte[] values, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
     {
-        if (values == null)
+        if (value == null)
         {
             writer.WriteNullValue();
+            return;
         }
-        else
-        {
-            writer.WriteStartArray();
-
-            foreach (var value in values)
-            {
-                writer.WriteNumberValue(value);
-            }
-
-            writer.WriteEndArray();
-        }
+            
+        string base64 = Convert.ToBase64String(value);
+        writer.WriteStringValue(base64);
     }
 }

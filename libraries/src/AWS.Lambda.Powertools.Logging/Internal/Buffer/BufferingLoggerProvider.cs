@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -28,27 +28,27 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 internal class BufferingLoggerProvider : PowertoolsLoggerProvider
 {
     private readonly ConcurrentDictionary<string, PowertoolsBufferingLogger> _loggers = new();
-    
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
+
     public BufferingLoggerProvider(
-        IOptionsMonitor<PowertoolsLoggerConfiguration> config,
-        IPowertoolsConfigurations powertoolsConfigurations,
-        ISystemWrapper systemWrapper) 
-        : base(config, powertoolsConfigurations, systemWrapper)
+        PowertoolsLoggerConfiguration config,
+        IPowertoolsConfigurations powertoolsConfigurations)
+        : base(config, powertoolsConfigurations)
     {
         // Register with the buffer manager
         LogBufferManager.RegisterProvider(this);
     }
-    
+
     public override ILogger CreateLogger(string categoryName)
     {
         return _loggers.GetOrAdd(
-            categoryName, 
+            categoryName,
             name => new PowertoolsBufferingLogger(
                 base.CreateLogger(name), // Use the parent's logger creation
                 GetCurrentConfig,
                 name));
     }
-    
+
     /// <summary>
     /// Flush all buffered logs
     /// </summary>
@@ -59,7 +59,7 @@ internal class BufferingLoggerProvider : PowertoolsLoggerProvider
             logger.FlushBuffer();
         }
     }
-    
+
     /// <summary>
     /// Clear all buffered logs
     /// </summary>
@@ -70,7 +70,7 @@ internal class BufferingLoggerProvider : PowertoolsLoggerProvider
             logger.ClearBuffer();
         }
     }
-    
+
     /// <summary>
     /// Clear buffered logs for the current invocation only
     /// </summary>
@@ -81,7 +81,7 @@ internal class BufferingLoggerProvider : PowertoolsLoggerProvider
             logger.ClearCurrentInvocation();
         }
     }
-    
+
     public override void Dispose()
     {
         // Flush all buffers before disposing
@@ -89,7 +89,7 @@ internal class BufferingLoggerProvider : PowertoolsLoggerProvider
         {
             logger.FlushBuffer();
         }
-        
+
         _loggers.Clear();
         base.Dispose();
     }

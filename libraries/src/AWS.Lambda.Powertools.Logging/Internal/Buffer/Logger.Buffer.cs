@@ -14,6 +14,7 @@
  * permissions and limitations under the License.
  */
 
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 
 namespace AWS.Lambda.Powertools.Logging;

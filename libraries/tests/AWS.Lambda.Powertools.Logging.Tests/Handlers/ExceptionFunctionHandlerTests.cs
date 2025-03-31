@@ -42,6 +42,6 @@ public sealed class ExceptionFunctionHandlerTests : IDisposable
     public void Dispose()
     {
         LoggingAspect.ResetForTest();
-        PowertoolsLoggingSerializer.ClearOptions();
+        Logger.Reset();
     }
 }

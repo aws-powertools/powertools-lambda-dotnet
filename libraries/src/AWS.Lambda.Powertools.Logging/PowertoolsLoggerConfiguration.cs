@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -107,7 +108,12 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// </summary>
     internal PowertoolsLoggingSerializer Serializer => _serializer ??= InitializeSerializer();
 
-    
+    /// <summary>
+    /// The system wrapper used for output operations. Defaults to SystemWrapper instance.
+    /// Primarily useful for testing to capture and verify output.
+    /// </summary>
+    public ISystemWrapper LogOutput { get; set; } = new SystemWrapper();
+
     /// <summary>
     /// Initialize serializer with the current configuration
     /// </summary>
@@ -122,9 +128,47 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
         return serializer;
     }
 
+    /// <summary>
+    /// Creates a deep clone of the configuration
+    /// </summary>
+    public PowertoolsLoggerConfiguration Clone()
+    {
+        return new PowertoolsLoggerConfiguration
+        {
+            Service = Service,
+            TimestampFormat = TimestampFormat,
+            MinimumLogLevel = MinimumLogLevel,
+            SamplingRate = SamplingRate,
+            LoggerOutputCase = LoggerOutputCase,
+            LogLevelKey = LogLevelKey,
+            LogFormatter = LogFormatter,
+            JsonOptions = JsonOptions,
+            LogBuffering = new LogBufferingOptions
+            {
+                Enabled = LogBuffering.Enabled,
+                BufferAtLogLevel = LogBuffering.BufferAtLogLevel,
+                FlushOnErrorLog = LogBuffering.FlushOnErrorLog,
+            },
+            LogOutput = LogOutput, // Reference the same output for now
+            XRayTraceId = XRayTraceId,
+            LogEvent = LogEvent
+        };
+    }
+
     // IOptions implementation
     PowertoolsLoggerConfiguration IOptions<PowertoolsLoggerConfiguration>.Value => this;
     
     internal string XRayTraceId { get; set; }
     internal bool LogEvent { get; set; }
+    
+    internal double Random { get; set; } = new Random().NextDouble();
+
+    /// <summary>
+    ///     Gets random number
+    /// </summary>
+    /// <returns>System.Double.</returns>
+    internal virtual double GetRandom()
+    {
+        return Random;
+    }
 }

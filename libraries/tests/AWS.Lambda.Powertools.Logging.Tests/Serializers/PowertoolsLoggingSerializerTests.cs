@@ -1,24 +1,10 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.IO;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Logging.Internal;
@@ -31,19 +17,21 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Serializers;
 
 public class PowertoolsLoggingSerializerTests : IDisposable
 {
+    private readonly PowertoolsLoggingSerializer _serializer;
 
     public PowertoolsLoggingSerializerTests()
     {
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
+        _serializer = new PowertoolsLoggingSerializer();
+        _serializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
 #if NET8_0_OR_GREATER
-        PowertoolsLoggingSerializer.ClearContext();
+        ClearContext();
 #endif
     }
-    
+
     [Fact]
     public void SerializerOptions_ShouldNotBeNull()
     {
-        var options = PowertoolsLoggingSerializer.GetSerializerOptions();
+        var options = _serializer.GetSerializerOptions();
         Assert.NotNull(options);
     }
 
@@ -51,9 +39,9 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     public void SerializerOptions_ShouldHaveCorrectDefaultSettings()
     {
         RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
-        
-        var options = PowertoolsLoggingSerializer.GetSerializerOptions(); 
-        
+
+        var options = _serializer.GetSerializerOptions();
+
         Assert.Collection(options.Converters,
             converter => Assert.IsType<ByteArrayConverter>(converter),
             converter => Assert.IsType<ExceptionConverter>(converter),
@@ -71,17 +59,17 @@ public class PowertoolsLoggingSerializerTests : IDisposable
 
 #if NET8_0_OR_GREATER
         Assert.Collection(options.TypeInfoResolverChain,
-            resolver => Assert.IsType<PowertoolsLoggingSerializationContext>(resolver));
+            resolver => Assert.IsType<CompositeJsonTypeInfoResolver>(resolver));
 #endif
     }
-    
+
     [Fact]
     public void SerializerOptions_ShouldHaveCorrectDefaultSettings_WhenDynamic()
     {
         RuntimeFeatureWrapper.SetIsDynamicCodeSupported(true);
-        
-        var options = PowertoolsLoggingSerializer.GetSerializerOptions();
-        
+
+        var options = _serializer.GetSerializerOptions();
+
         Assert.Collection(options.Converters,
             converter => Assert.IsType<ByteArrayConverter>(converter),
             converter => Assert.IsType<ExceptionConverter>(converter),
@@ -132,7 +120,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     public void ConfigureNamingPolicy_ShouldNotChangeWhenPassedSameCase()
     {
         var originalJson = SerializeTestObject(LoggerOutputCase.SnakeCase);
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase.SnakeCase);
+        _serializer.ConfigureNamingPolicy(LoggerOutputCase.SnakeCase);
         var newJson = SerializeTestObject(LoggerOutputCase.SnakeCase);
         Assert.Equal(originalJson, newJson);
     }
@@ -140,7 +128,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     [Fact]
     public void Serialize_ShouldHandleNestedObjects()
     {
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase.SnakeCase);
+        _serializer.ConfigureNamingPolicy(LoggerOutputCase.SnakeCase);
 
         var testObject = new LogEntry
         {
@@ -151,7 +139,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             }
         };
 
-        var json = JsonSerializer.Serialize(testObject, PowertoolsLoggingSerializer.GetSerializerOptions());
+        var json = JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
         Assert.Contains("\"cold_start\":true", json);
         Assert.Contains("\"nested_object\":{\"property_name\":\"Value\"}", json);
     }
@@ -163,7 +151,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         {
             Level = LogLevel.Error
         };
-        var json = JsonSerializer.Serialize(testObject, PowertoolsLoggingSerializer.GetSerializerOptions());
+        var json = JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
         Assert.Contains("\"level\":\"Error\"", json);
     }
 
@@ -177,29 +165,75 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
         // Act & Assert
         var exception = Assert.Throws<JsonSerializerException>(() =>
-            PowertoolsLoggingSerializer.Serialize(unknownObject, typeof(UnknownType)));
+            _serializer.Serialize(unknownObject, typeof(UnknownType)));
 
         Assert.Contains("is not known to the serializer", exception.Message);
         Assert.Contains(typeof(UnknownType).ToString(), exception.Message);
     }
-    
+
     [Fact]
     public void Serialize_UnknownType_Should_Not_Throw_InvalidOperationException_When_Dynamic()
     {
         // Arrange
-        var unknownObject = new UnknownType{ SomeProperty = "Hello"};
+        var unknownObject = new UnknownType { SomeProperty = "Hello" };
 
         RuntimeFeatureWrapper.SetIsDynamicCodeSupported(true);
         // Act & Assert
         var expected =
-            PowertoolsLoggingSerializer.Serialize(unknownObject, typeof(UnknownType));
+            _serializer.Serialize(unknownObject, typeof(UnknownType));
 
         Assert.Equal("{\"some_property\":\"Hello\"}", expected);
+    }
+
+    [Fact]
+    public void AddSerializerContext_ShouldUpdateTypeInfoResolver()
+    {
+        // Arrange
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+        var testContext = new TestSerializerContext(new JsonSerializerOptions());
+
+        // Get the initial resolver
+        var beforeOptions = _serializer.GetSerializerOptions();
+        var beforeResolver = beforeOptions.TypeInfoResolver;
+
+        // Act
+        _serializer.AddSerializerContext(testContext);
+
+        // Get the updated resolver
+        var afterOptions = _serializer.GetSerializerOptions();
+        var afterResolver = afterOptions.TypeInfoResolver;
+
+        // Assert - adding a context should create a new resolver
+        Assert.NotSame(beforeResolver, afterResolver);
+        Assert.IsType<CompositeJsonTypeInfoResolver>(afterResolver);
     }
 
     private class UnknownType
     {
         public string SomeProperty { get; set; }
+    }
+
+    private class TestSerializerContext : JsonSerializerContext
+    {
+        private readonly JsonSerializerOptions _options;
+
+        public TestSerializerContext(JsonSerializerOptions options) : base(options)
+        {
+            _options = options;
+        }
+
+        public override JsonTypeInfo? GetTypeInfo(Type type)
+        {
+            return null; // For testing purposes only
+        }
+
+        protected override JsonSerializerOptions? GeneratedSerializerOptions => _options;
+    }
+
+    private void ClearContext()
+    {
+        // Create a new serializer to clear any existing contexts
+        _serializer.SetOptions(new JsonSerializerOptions());
     }
 #endif
 
@@ -207,20 +241,172 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     {
         if (outputCase.HasValue)
         {
-            PowertoolsLoggingSerializer.ConfigureNamingPolicy(outputCase.Value);
+            _serializer.ConfigureNamingPolicy(outputCase.Value);
         }
 
         LogEntry testObject = new LogEntry { ColdStart = true };
-        return JsonSerializer.Serialize(testObject, PowertoolsLoggingSerializer.GetSerializerOptions());
+        return JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
+    }
+
+    [Fact]
+    public void ByteArrayConverter_ShouldProduceBase64EncodedString()
+    {
+        // Arrange
+        var testObject = new { BinaryData = new byte[] { 1, 2, 3, 4, 5 } };
+
+        // Act
+        var json = JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
+
+        // Assert
+        Assert.Contains("\"binary_data\":\"AQIDBAU=\"", json);
+    }
+
+    [Fact]
+    public void ExceptionConverter_ShouldSerializeExceptionDetails()
+    {
+        // Arrange
+        var exception = new InvalidOperationException("Test error message", new Exception("Inner exception"));
+        var testObject = new { Error = exception };
+
+        // Act
+        var json = JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
+
+        // Assert
+        Assert.Equal("{\"error\":{\"type\":\"System.InvalidOperationException\",\"message\":\"Test error message\",\"inner_exception\":{\"type\":\"System.Exception\",\"message\":\"Inner exception\"}}}", json);
+    }
+
+    [Fact]
+    public void MemoryStreamConverter_ShouldConvertToBase64()
+    {
+        // Arrange
+        var bytes = new byte[] { 10, 20, 30, 40, 50 };
+        var memoryStream = new MemoryStream(bytes);
+        var testObject = new { Stream = memoryStream };
+
+        // Act
+        var json = JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
+
+        // Assert
+        Assert.Contains("\"stream\":\"ChQeKDI=\"", json);
+    }
+
+    [Fact]
+    public void ConstantClassConverter_ShouldSerializeToString()
+    {
+        // Arrange
+        var testObject = new { Level = LogLevel.Warning };
+
+        // Act
+        var json = JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
+
+        // Assert
+        Assert.Contains("\"level\":\"Warning\"", json);
+    }
+
+#if NET6_0_OR_GREATER
+    [Fact]
+    public void DateOnlyConverter_ShouldSerializeToIsoDate()
+    {
+        // Arrange
+        var date = new DateOnly(2023, 10, 15);
+        var testObject = new { Date = date };
+
+        // Act
+        var json = JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
+
+        // Assert
+        Assert.Contains("\"date\":\"2023-10-15\"", json);
+    }
+
+    [Fact]
+    public void TimeOnlyConverter_ShouldSerializeToIsoTime()
+    {
+        // Arrange
+        var time = new TimeOnly(13, 45, 30);
+        var testObject = new { Time = time };
+
+        // Act
+        var json = JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
+
+        // Assert
+        Assert.Contains("\"time\":\"13:45:30\"", json);
+    }
+#endif
+
+    [Fact]
+    public void LogLevelJsonConverter_ShouldSerializeAllLogLevels()
+    {
+        // Arrange
+        var levels = new Dictionary<string, LogLevel>
+        {
+            { "trace", LogLevel.Trace },
+            { "debug", LogLevel.Debug },
+            { "info", LogLevel.Information },
+            { "warning", LogLevel.Warning },
+            { "error", LogLevel.Error },
+            { "critical", LogLevel.Critical }
+        };
+
+        // Act
+        var json = JsonSerializer.Serialize(levels, _serializer.GetSerializerOptions());
+
+        // Assert
+        Assert.Contains("\"trace\":\"Trace\"", json);
+        Assert.Contains("\"debug\":\"Debug\"", json);
+        Assert.Contains("\"info\":\"Information\"", json);
+        Assert.Contains("\"warning\":\"Warning\"", json);
+        Assert.Contains("\"error\":\"Error\"", json);
+        Assert.Contains("\"critical\":\"Critical\"", json);
+    }
+
+    [Fact]
+    public void Serialize_ComplexObjectWithMultipleConverters_ShouldConvertAllProperties()
+    {
+        // Arrange
+        var testObject = new ComplexTestObject
+        {
+            BinaryData = new byte[] { 1, 2, 3 },
+            Exception = new ArgumentException("Test argument"),
+            Stream = new MemoryStream(new byte[] { 4, 5, 6 }),
+            Level = LogLevel.Information,
+#if NET6_0_OR_GREATER
+            Date = new DateOnly(2023, 1, 15),
+            Time = new TimeOnly(14, 30, 0),
+#endif
+        };
+
+        // Act
+        var json = JsonSerializer.Serialize(testObject, _serializer.GetSerializerOptions());
+
+        // Assert
+        Assert.Contains("\"binary_data\":\"AQID\"", json);
+        Assert.Contains("\"exception\":{\"type\":\"System.ArgumentException\"", json);
+        Assert.Contains("\"stream\":\"BAUG\"", json);
+        Assert.Contains("\"level\":\"Information\"", json);
+#if NET6_0_OR_GREATER
+        Assert.Contains("\"date\":\"2023-01-15\"", json);
+        Assert.Contains("\"time\":\"14:30:00\"", json);
+#endif
+    }
+
+    private class ComplexTestObject
+    {
+        public byte[] BinaryData { get; set; }
+        public Exception Exception { get; set; }
+        public MemoryStream Stream { get; set; }
+        public LogLevel Level { get; set; }
+#if NET6_0_OR_GREATER
+        public DateOnly Date { get; set; }
+        public TimeOnly Time { get; set; }
+#endif
     }
 
     public void Dispose()
     {
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
 #if NET8_0_OR_GREATER
-        PowertoolsLoggingSerializer.ClearContext();
+        ClearContext();
 #endif
-        PowertoolsLoggingSerializer.ClearOptions();
+        _serializer.SetOptions(null);
         RuntimeFeatureWrapper.Reset();
     }
 }

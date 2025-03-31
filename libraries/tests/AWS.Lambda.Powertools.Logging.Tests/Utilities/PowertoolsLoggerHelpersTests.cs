@@ -12,7 +12,7 @@ using Xunit;
 namespace AWS.Lambda.Powertools.Logging.Tests.Utilities;
 
 public class PowertoolsLoggerHelpersTests : IDisposable
-{
+{   
     [Fact]
     public void ObjectToDictionary_AnonymousObjectWithSimpleProperties_ReturnsDictionary()
     {
@@ -73,9 +73,9 @@ public class PowertoolsLoggerHelpersTests : IDisposable
     [Fact]
     public void Should_Log_With_Anonymous()
     {
-        var consoleOut = Substitute.For<StringWriter>();
-        SystemWrapper.Instance.SetOut(consoleOut);
-
+        var consoleOut = Substitute.For<ISystemWrapper>();
+        Logger.SetOutput(consoleOut);
+        
         // Act & Assert
         Logger.AppendKey("newKey", new
         {
@@ -84,7 +84,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
 
         Logger.LogInformation("test");
 
-        consoleOut.Received(1).WriteLine(
+        consoleOut.Received(1).LogLine(
             Arg.Is<string>(i =>
                 i.Contains("\"new_key\":{\"name\":\"my name\"}"))
         );
@@ -93,9 +93,9 @@ public class PowertoolsLoggerHelpersTests : IDisposable
     [Fact]
     public void Should_Log_With_Complex_Anonymous()
     {
-        var consoleOut = Substitute.For<StringWriter>();
-        SystemWrapper.Instance.SetOut(consoleOut);
-
+        var consoleOut = Substitute.For<ISystemWrapper>();
+        Logger.SetOutput(consoleOut);
+        
         // Act & Assert
         Logger.AppendKey("newKey", new
         {
@@ -115,7 +115,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
 
         Logger.LogInformation("test");
 
-        consoleOut.Received(1).WriteLine(
+        consoleOut.Received(1).LogLine(
             Arg.Is<string>(i =>
                 i.Contains(
                     "\"new_key\":{\"id\":1,\"name\":\"my name\",\"adresses\":{\"street\":\"street 1\",\"number\":1,\"city\":{\"name\":\"city 1\",\"state\":\"state 1\"}"))
@@ -201,8 +201,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
 
     public void Dispose()
     {
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase.Default);
-        PowertoolsLoggingSerializer.ClearOptions();
+        // Logger.Reset();
     }
 }
 

@@ -27,6 +27,10 @@ public static class PowertoolsLoggingBuilderExtensions
         {
             // Update the shared configuration
             _currentConfig = config;
+        
+            // Uncomment this line to update the filter level
+            if(config.MinimumLogLevel != LogLevel.None)
+                LoggerFactoryHolder.UpdateFilterLogLevel(config.MinimumLogLevel);
 
             // Notify all providers about the change
             foreach (var provider in AllProviders)
@@ -41,19 +45,7 @@ public static class PowertoolsLoggingBuilderExtensions
         lock (_lock)
         {
             // Return a copy to prevent external modification
-            return new PowertoolsLoggerConfiguration
-            {
-                Service = _currentConfig.Service,
-                SamplingRate = _currentConfig.SamplingRate,
-                MinimumLogLevel = _currentConfig.MinimumLogLevel,
-                LoggerOutputCase = _currentConfig.LoggerOutputCase,
-                JsonOptions = _currentConfig.JsonOptions,
-                TimestampFormat = _currentConfig.TimestampFormat,
-                LogFormatter = _currentConfig.LogFormatter,
-                LogLevelKey = _currentConfig.LogLevelKey,
-                LogBuffering = _currentConfig.LogBuffering
-                
-            };
+            return _currentConfig.Clone();
         }
     }
 
@@ -62,31 +54,19 @@ public static class PowertoolsLoggingBuilderExtensions
     {
         builder.AddConfiguration();
 
-        // Register ISystemWrapper if not already registered
-        // builder.Services.TryAddSingleton<ISystemWrapper>(provider =>
-        // {
-        //     // Check if there's a pending mock system first
-        //     var mockSystem = PowertoolsLoggerTestFixture.GetSystemWrapper();
-        //     return mockSystem ?? new SystemWrapper();
-        // });
-        
-        builder.Services.TryAddSingleton<ISystemWrapper, SystemWrapper>();
-        
         builder.Services.TryAddSingleton<IPowertoolsEnvironment, PowertoolsEnvironment>();
-        // Register IPowertoolsConfigurations with all its dependencies
         builder.Services.TryAddSingleton<IPowertoolsConfigurations>(sp =>
             new PowertoolsConfigurations(sp.GetRequiredService<IPowertoolsEnvironment>()));
 
-        // Register the regular provider
         builder.Services.TryAddEnumerable(
             ServiceDescriptor.Singleton<ILoggerProvider, PowertoolsLoggerProvider>(provider =>
             {
                 var powertoolsConfigurations = provider.GetRequiredService<IPowertoolsConfigurations>();
-                var systemWrapper = provider.GetRequiredService<ISystemWrapper>();
 
                 var loggerProvider = new PowertoolsLoggerProvider(
-                    new TrackedOptionsMonitor(_currentConfig, UpdateConfiguration), powertoolsConfigurations,
-                    systemWrapper);
+                    _currentConfig, 
+                    powertoolsConfigurations);
+                
                 lock (_lock)
                 {
                     AllProviders.Add(loggerProvider);
@@ -94,9 +74,7 @@ public static class PowertoolsLoggingBuilderExtensions
 
                 return loggerProvider;
             }));
-        
-        builder.Services.ConfigureOptions<ConfigureLoggingOptions>();
-
+    
         LoggerProviderOptions.RegisterProviderOptions
             <PowertoolsLoggerConfiguration, PowertoolsLoggerProvider>(builder.Services);
 
@@ -141,12 +119,9 @@ public static class PowertoolsLoggingBuilderExtensions
                 ServiceDescriptor.Singleton<ILoggerProvider, BufferingLoggerProvider>(provider =>
                 {
                     var powertoolsConfigurations = provider.GetRequiredService<IPowertoolsConfigurations>();
-                    var systemWrapper = provider.GetRequiredService<ISystemWrapper>();
 
                     var bufferingProvider = new BufferingLoggerProvider(
-                        new TrackedOptionsMonitor(_currentConfig, UpdateConfiguration),
-                        powertoolsConfigurations,
-                        systemWrapper
+                        _currentConfig, powertoolsConfigurations
                     );
                 
                     lock (_lock)
@@ -159,19 +134,6 @@ public static class PowertoolsLoggingBuilderExtensions
         }
 
         return builder;
-    }
-    
-    internal static void UpdateSystemInAllProviders(ISystemWrapper system)
-    {
-        if (system == null) return;
-    
-        lock (_lock)
-        {
-            foreach (var provider in AllProviders)
-            {
-                provider.UpdateSystem(system);
-            }
-        }
     }
     
     /// <summary>
@@ -187,68 +149,6 @@ public static class PowertoolsLoggingBuilderExtensions
 
             // Reset the current configuration to default
             _currentConfig = new PowertoolsLoggerConfiguration();
-        }
-    }
-    
-    private class ConfigureLoggingOptions : IConfigureOptions<LoggerFilterOptions>
-    {
-        private readonly IPowertoolsConfigurations _configurations;
-        private readonly ISystemWrapper _systemWrapper;
-
-        public ConfigureLoggingOptions(IPowertoolsConfigurations configurations, ISystemWrapper systemWrapper)
-        {
-            _configurations = configurations;
-            _systemWrapper = systemWrapper;
-        }
-
-        public void Configure(LoggerFilterOptions options)
-        {
-            // This runs when IOptions<LoggerFilterOptions> is resolved
-            LoggerFactoryHolder.ConfigureFromEnvironment(_configurations,_systemWrapper);
-        }
-    }
-
-    private class TrackedOptionsMonitor : IOptionsMonitor<PowertoolsLoggerConfiguration>
-    {
-        private PowertoolsLoggerConfiguration _config;
-        private readonly Action<PowertoolsLoggerConfiguration> _updateCallback;
-        private readonly List<Action<PowertoolsLoggerConfiguration, string>> _listeners = new();
-
-        public TrackedOptionsMonitor(
-            PowertoolsLoggerConfiguration config,
-            Action<PowertoolsLoggerConfiguration> updateCallback)
-        {
-            _config = config;
-            _updateCallback = updateCallback;
-        }
-
-        public PowertoolsLoggerConfiguration CurrentValue => _config;
-
-        public IDisposable OnChange(Action<PowertoolsLoggerConfiguration, string?> listener)
-        {
-            _listeners.Add(listener);
-            return new ListenerDisposable(_listeners, listener);
-        }
-
-        public PowertoolsLoggerConfiguration Get(string? name) => _config;
-
-        private class ListenerDisposable : IDisposable
-        {
-            private readonly List<Action<PowertoolsLoggerConfiguration, string?>> _listeners;
-            private readonly Action<PowertoolsLoggerConfiguration, string?> _listener;
-
-            public ListenerDisposable(
-                List<Action<PowertoolsLoggerConfiguration, string?>> listeners,
-                Action<PowertoolsLoggerConfiguration, string?> listener)
-            {
-                _listeners = listeners;
-                _listener = listener;
-            }
-
-            public void Dispose()
-            {
-                _listeners.Remove(_listener);
-            }
         }
     }
 }

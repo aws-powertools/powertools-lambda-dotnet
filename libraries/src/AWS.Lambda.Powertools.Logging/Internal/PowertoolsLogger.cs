@@ -42,11 +42,6 @@ internal sealed class PowertoolsLogger : ILogger
     private readonly Func<PowertoolsLoggerConfiguration> _currentConfig;
 
     /// <summary>
-    ///     The system wrapper
-    /// </summary>
-    private readonly Func<ISystemWrapper> _getSystemWrapper;
-
-    /// <summary>
     ///     The current scope
     /// </summary>
     internal PowertoolsLoggerScope CurrentScope { get; private set; }
@@ -56,15 +51,12 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     /// <param name="categoryName">The name.</param>
     /// <param name="getCurrentConfig"></param>
-    /// <param name="getSystemWrapper">The system wrapper.</param>
     public PowertoolsLogger(
         string categoryName,
-        Func<PowertoolsLoggerConfiguration> getCurrentConfig,
-        Func<ISystemWrapper> getSystemWrapper)
+        Func<PowertoolsLoggerConfiguration> getCurrentConfig)
     {
         _categoryName = categoryName;
         _currentConfig = getCurrentConfig;
-        _getSystemWrapper = getSystemWrapper;
     }
 
     /// <summary>
@@ -128,12 +120,12 @@ internal sealed class PowertoolsLogger : ILogger
             return;
         }
         
-        _getSystemWrapper().LogLine(LogEntryString(logLevel, state, exception, formatter));
+        _currentConfig().LogOutput.LogLine(LogEntryString(logLevel, state, exception, formatter));
     }
     
     internal void LogLine(string message)
     {
-        _getSystemWrapper().LogLine(message);
+        _currentConfig().LogOutput.LogLine(message);
     }
 
     internal string LogEntryString<TState>(LogLevel logLevel, TState state, Exception exception, Func<TState, Exception, string> formatter)
@@ -225,7 +217,7 @@ internal sealed class PowertoolsLogger : ILogger
         // Use the AddExceptionDetails method instead of adding exception directly
         if (exception != null)
         {
-            AddExceptionDetails(logEntry, exception);
+            logEntry.TryAdd(LoggingConstants.KeyException, exception);
         }
 
         return logEntry;
@@ -308,7 +300,7 @@ internal sealed class PowertoolsLogger : ILogger
         if (exception != null)
         {
             var exceptionDetails = new Dictionary<string, object>();
-            AddExceptionDetails(exceptionDetails, exception);
+            exceptionDetails.TryAdd(LoggingConstants.KeyException, exception);
             
             // Add exception details to extra keys
             foreach (var (key, value) in exceptionDetails)
@@ -563,26 +555,5 @@ internal sealed class PowertoolsLogger : ILogger
         return colonIndex > 0 
             ? nameWithPossibleFormat.Substring(0, colonIndex) 
             : nameWithPossibleFormat;
-    }
-
-    private void AddExceptionDetails(Dictionary<string, object> logEntry, Exception exception)
-    {
-        if (exception == null)
-            return;
-        
-        logEntry.TryAdd("errorType", exception.GetType().FullName);
-        logEntry.TryAdd("errorMessage", exception.Message);
-    
-        // Add stack trace as array of strings for better readability
-        var stackFrames = exception.StackTrace?.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-        if (stackFrames?.Length > 0)
-        {
-            var cleanedStackTrace = new List<string>
-            {
-                $"{exception.GetType().FullName}: {exception.Message}"
-            };
-            cleanedStackTrace.AddRange(stackFrames);
-            logEntry.TryAdd("stackTrace", cleanedStackTrace);
-        }
     }
 }
