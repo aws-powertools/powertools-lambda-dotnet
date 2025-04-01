@@ -120,12 +120,12 @@ internal sealed class PowertoolsLogger : ILogger
             return;
         }
         
-        _currentConfig().LogOutput.LogLine(LogEntryString(logLevel, state, exception, formatter));
+        _currentConfig().LogOutput.WriteLine(LogEntryString(logLevel, state, exception, formatter));
     }
     
     internal void LogLine(string message)
     {
-        _currentConfig().LogOutput.LogLine(message);
+        _currentConfig().LogOutput.WriteLine(message);
     }
 
     internal string LogEntryString<TState>(LogLevel logLevel, TState state, Exception exception, Func<TState, Exception, string> formatter)

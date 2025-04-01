@@ -118,4 +118,9 @@ class MockEnvironment : IPowertoolsEnvironment
     {
         return "1.0.0";
     }
+
+    public void SetExecutionEnvironment<T>(T type)
+    {
+        throw new NotImplementedException();
+    }
 }

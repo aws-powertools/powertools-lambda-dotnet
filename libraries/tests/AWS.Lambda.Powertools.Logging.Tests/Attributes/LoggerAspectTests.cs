@@ -42,7 +42,7 @@ public class LoggerAspectTests : IDisposable
     public void OnEntry_ShouldInitializeLogger_WhenCalledWithValidArguments()
     {
         // Arrange
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
 
         var config = new PowertoolsLoggerConfiguration
         {
@@ -78,7 +78,7 @@ public class LoggerAspectTests : IDisposable
         loggingAspect.OnEntry(instance, name, args, hostType, method, returnType, triggers);
 
         // Assert
-        consoleOut.Received().LogLine(Arg.Is<string>(s =>
+        consoleOut.Received().WriteLine(Arg.Is<string>(s =>
             s.Contains(
                 "\"Level\":\"Information\",\"Service\":\"TestService\",\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":null},\"SamplingRate\":0.5}")
             && s.Contains("\"CorrelationId\":\"20\"")
@@ -90,7 +90,7 @@ public class LoggerAspectTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable(Constants.LoggerLogEventNameEnv, "true");
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
         
         var config = new PowertoolsLoggerConfiguration
         {
@@ -132,7 +132,7 @@ public class LoggerAspectTests : IDisposable
         Assert.Equal(0, updatedConfig.SamplingRate);
         Assert.True(updatedConfig.LogEvent);
     
-        consoleOut.Received().LogLine(Arg.Is<string>(s =>
+        consoleOut.Received().WriteLine(Arg.Is<string>(s =>
             s.Contains(
                 "\"Level\":\"Information\",\"Service\":\"TestService\",\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":null}}")
             && s.Contains("\"CorrelationId\":\"20\"")
@@ -144,7 +144,7 @@ public class LoggerAspectTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable(Constants.LoggerLogEventNameEnv, "true");
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
         
         var config = new PowertoolsLoggerConfiguration
         {
@@ -187,14 +187,14 @@ public class LoggerAspectTests : IDisposable
         Assert.Equal(0, updatedConfig.SamplingRate);
         Assert.True(updatedConfig.LogEvent);
 
-        consoleOut.DidNotReceive().LogLine(Arg.Any<string>());
+        consoleOut.DidNotReceive().WriteLine(Arg.Any<string>());
     }
     
     [Fact]
     public void OnEntry_ShouldLog_SamplingRate_When_EnvironmentVariable_Set()
     {
         // Arrange
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
     
         var config = new PowertoolsLoggerConfiguration
         {
@@ -236,7 +236,7 @@ public class LoggerAspectTests : IDisposable
         Assert.Equal(LoggerOutputCase.PascalCase, updatedConfig.LoggerOutputCase);
         Assert.Equal(0.5, updatedConfig.SamplingRate);
     
-        consoleOut.Received().LogLine(Arg.Is<string>(s =>
+        consoleOut.Received().WriteLine(Arg.Is<string>(s =>
             s.Contains(
                 "\"Level\":\"Information\",\"Service\":\"TestService\",\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":null},\"SamplingRate\":0.5}")
             && s.Contains("\"CorrelationId\":\"20\"")
@@ -247,7 +247,7 @@ public class LoggerAspectTests : IDisposable
     public void OnEntry_ShouldLogEvent_WhenLogEventIsTrue()
     {
         // Arrange
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
     
         var config = new PowertoolsLoggerConfiguration
         {
@@ -273,7 +273,7 @@ public class LoggerAspectTests : IDisposable
         loggingAspect.OnEntry(null, null, new object[] { eventObject }, null, null, null, triggers);
     
         // Assert
-        consoleOut.Received().LogLine(Arg.Is<string>(s =>
+        consoleOut.Received().WriteLine(Arg.Is<string>(s =>
             s.Contains(
                 "\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":{\"test_data\":\"test-data\"}}")
         ));
@@ -283,7 +283,7 @@ public class LoggerAspectTests : IDisposable
     public void OnEntry_ShouldNot_Log_Info_When_LogLevel_Higher_EnvironmentVariable()
     {
         // Arrange
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
     
         var config = new PowertoolsLoggerConfiguration
         {
@@ -322,7 +322,7 @@ public class LoggerAspectTests : IDisposable
         Assert.Equal("TestService", updatedConfig.Service);
         Assert.Equal(LoggerOutputCase.PascalCase, updatedConfig.LoggerOutputCase);
     
-        consoleOut.DidNotReceive().LogLine(Arg.Any<string>());
+        consoleOut.DidNotReceive().WriteLine(Arg.Any<string>());
     }
     
     [Fact]
@@ -331,7 +331,7 @@ public class LoggerAspectTests : IDisposable
         // Arrange
         Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Debug");
     
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
         var config = new PowertoolsLoggerConfiguration
         {
             LogOutput = consoleOut
@@ -371,11 +371,11 @@ public class LoggerAspectTests : IDisposable
         Assert.Equal(LoggerOutputCase.PascalCase, updatedConfig.LoggerOutputCase);
         Assert.Equal(LogLevel.Debug, updatedConfig.MinimumLogLevel);
     
-        consoleOut.Received(1).LogLine(Arg.Is<string>(s =>
+        consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
             s.Contains(
                 "\"Level\":\"Debug\",\"Service\":\"TestService\",\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"Message\":\"Skipping Lambda Context injection because ILambdaContext context parameter not found.\"}")));
     
-        consoleOut.Received(1).LogLine(Arg.Is<string>(s =>
+        consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
             s.Contains("\"CorrelationId\":\"test\"") &&
             s.Contains(
                 "\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":{\"MyRequestIdHeader\":\"test\"}")

@@ -47,7 +47,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         [Fact]
         public void Serialize_ShouldHandleEnumValues()
         {
-            var consoleOut = Substitute.For<ISystemWrapper>();
+            var consoleOut = Substitute.For<IConsoleWrapper>();
             Logger.SetOutput(consoleOut);
             
             var lambdaContext = new TestLambdaContext
@@ -62,10 +62,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             var handler = new TestHandlers();
             handler.TestEnums("fake", lambdaContext);
 
-            consoleOut.Received(1).LogLine(Arg.Is<string>(i =>
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(i =>
                 i.Contains("\"message\":5")
             ));
-            consoleOut.Received(1).LogLine(Arg.Is<string>(i =>
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(i =>
                 i.Contains("\"message\":\"Dog\"")
             ));
 
@@ -167,7 +167,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 }
             };
 
-            var systemWrapper = Substitute.For<ISystemWrapper>();
+            var systemWrapper = Substitute.For<IConsoleWrapper>();
             logFormatter.FormatLogEntry(new LogEntry()).ReturnsForAnyArgs(formattedLogEntry);
             
             var config = new PowertoolsLoggerConfiguration
@@ -223,14 +223,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                     x.LambdaContext.AwsRequestId == lambdaContext.AwsRequestId
             ));
 
-            systemWrapper.Received(1).LogLine(JsonSerializer.Serialize(formattedLogEntry));
+            systemWrapper.Received(1).WriteLine(JsonSerializer.Serialize(formattedLogEntry));
         }
 
         [Fact]
         public void Should_Log_CustomFormatter_When_Decorated()
         {
             ResetAllState();
-            var consoleOut = Substitute.For<ISystemWrapper>();
+            var consoleOut = Substitute.For<IConsoleWrapper>();
             Logger.SetOutput(consoleOut);
             
             var lambdaContext = new TestLambdaContext
@@ -249,13 +249,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             // in .net 8 it removes null properties
 
 #if NET8_0_OR_GREATER
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i.Contains(
                         "\"correlation_ids\":{\"aws_request_id\":\"requestId\"},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_mb\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\""))
             );
 #else
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i.Contains(
                     "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":\"requestId\",\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_m_b\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\""))
@@ -267,7 +267,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         public void Should_Log_CustomFormatter_When_No_Decorated_Just_Log()
         {
             ResetAllState();
-            var consoleOut = Substitute.For<ISystemWrapper>();
+            var consoleOut = Substitute.For<IConsoleWrapper>();
             Logger.SetOutput(consoleOut);
             
             var lambdaContext = new TestLambdaContext
@@ -287,13 +287,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             // in .net 8 it removes null properties
 
 #if NET8_0_OR_GREATER
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i ==
                     "{\"message\":\"test\",\"service\":\"service_undefined\",\"correlation_ids\":{},\"lambda_function\":{\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0}}")
             );
 #else
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i ==
                     "{\"message\":\"test\",\"service\":\"service_undefined\",\"correlation_ids\":{\"aws_request_id\":null,\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":null,\"arn\":null,\"memory_limit_in_m_b\":null,\"version\":null,\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0}}")
@@ -304,7 +304,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         [Fact]
         public void Should_Log_CustomFormatter_When_Decorated_No_Context()
         {
-            var consoleOut = Substitute.For<ISystemWrapper>();
+            var consoleOut = Substitute.For<IConsoleWrapper>();
             Logger.SetOutput(consoleOut);
             
             Logger.UseFormatter(new CustomLogFormatter());
@@ -312,13 +312,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             _testHandler.TestCustomFormatterWithDecoratorNoContext("test");
 
 #if NET8_0_OR_GREATER
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i ==
                     "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{},\"lambda_function\":{\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
             );
 #else
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i ==
                     "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":null,\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":null,\"arn\":null,\"memory_limit_in_m_b\":null,\"version\":null,\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
@@ -374,7 +374,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             logFormatter.FormatLogEntry(new LogEntry()).ReturnsNullForAnyArgs();
             Logger.UseFormatter(logFormatter);
 
-            var systemWrapper = Substitute.For<ISystemWrapper>();
+            var systemWrapper = Substitute.For<IConsoleWrapper>();
             var config = new PowertoolsLoggerConfiguration
             {
                 Service = service,
@@ -392,7 +392,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             // Assert
             Assert.Throws<LogFormatException>(Act);
             logFormatter.Received(1).FormatLogEntry(Arg.Any<LogEntry>());
-            systemWrapper.DidNotReceiveWithAnyArgs().LogLine(Arg.Any<string>());
+            systemWrapper.DidNotReceiveWithAnyArgs().WriteLine(Arg.Any<string>());
 
             //Clean up
             Logger.UseDefaultFormatter();
@@ -419,7 +419,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             var logFormatter = Substitute.For<ILogFormatter>();
             logFormatter.FormatLogEntry(new LogEntry()).ThrowsForAnyArgs(new Exception(errorMessage));
 
-            var systemWrapper = Substitute.For<ISystemWrapper>();
+            var systemWrapper = Substitute.For<IConsoleWrapper>();
             var config = new PowertoolsLoggerConfiguration
             {
                 Service = service,
@@ -437,7 +437,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             // Assert
             Assert.Throws<LogFormatException>(Act);
             logFormatter.Received(1).FormatLogEntry(Arg.Any<LogEntry>());
-            systemWrapper.DidNotReceiveWithAnyArgs().LogLine(Arg.Any<string>());
+            systemWrapper.DidNotReceiveWithAnyArgs().WriteLine(Arg.Any<string>());
 
             //Clean up
             Logger.UseDefaultFormatter();

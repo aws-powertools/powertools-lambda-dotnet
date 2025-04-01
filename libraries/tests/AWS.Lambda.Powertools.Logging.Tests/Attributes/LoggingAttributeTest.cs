@@ -55,14 +55,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
     
             Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
-            //Assert.True((bool)allKeys[LoggingConstants.KeyColdStart]);
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
     
-            consoleOut.DidNotReceive().LogLine(Arg.Any<string>());
+            consoleOut.DidNotReceive().WriteLine(Arg.Any<string>());
         }
     
         [Fact]
@@ -79,14 +78,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
     
             Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
-            //Assert.True((bool)allKeys[LoggingConstants.KeyColdStart]);
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
             Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
     
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Lambda Context injection because ILambdaContext context parameter not found.\"}"))
             );
@@ -101,7 +99,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Act
             _testHandlers.LogEventNoArgs();
     
-            consoleOut.DidNotReceive().LogLine(
+            consoleOut.DidNotReceive().WriteLine(
                 Arg.Any<string>()
             );
         }
@@ -129,7 +127,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Act
             _testHandlers.LogEvent(testObj, context);
     
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i => i.Contains("FunctionName\":\"PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"))
             );
         }
@@ -148,7 +146,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Act
             _testHandlers.LogEventFalse(context);
     
-            consoleOut.DidNotReceive().LogLine(
+            consoleOut.DidNotReceive().WriteLine(
                 Arg.Any<string>()
             );
         }
@@ -162,11 +160,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Act
             _testHandlers.LogEventDebug();
     
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i => i.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Event Log because event parameter not found.\"}"))
             );
             
-            consoleOut.Received(1).LogLine(
+            consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i => i.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Lambda Context injection because ILambdaContext context parameter not found.\"}"))
             );
         }
@@ -347,7 +345,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         
             // Assert
         
-            consoleOut.Received().LogLine(
+            consoleOut.Received().WriteLine(
                 Arg.Is<string>(i => i.Contains("\"message\":\"test\",\"samplingRate\":0.5"))
             );
         }
@@ -399,7 +397,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             _testHandlers.TestLogLevelCriticalLogEvent(context);
         
             // Assert
-            consoleOut.DidNotReceive().LogLine(Arg.Any<string>());
+            consoleOut.DidNotReceive().WriteLine(Arg.Any<string>());
         }
         
         [Fact]
@@ -412,10 +410,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             _testHandlers.TestLogEventWithoutContext();
         
             // Assert
-            consoleOut.Received(1).LogLine(Arg.Is<string>(s => 
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Event Log because event parameter not found.\"}")));
             
-            consoleOut.Received(1).LogLine(Arg.Is<string>(s => 
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Lambda Context injection because ILambdaContext context parameter not found.\"}")));
         }
         
@@ -431,7 +429,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             test.TestLogNoDecorator();
     
             // Assert
-            consoleOut.Received().LogLine(
+            consoleOut.Received().WriteLine(
                 Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"test\"}"))
             );
         }
@@ -448,7 +446,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             _testHandlers.TestMethodDebug(); // Uses LogLevel.Debug attribute
     
             // Assert
-            consoleOut.Received(1).LogLine(Arg.Is<string>(s => 
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"level\":\"Debug\"") && 
                 s.Contains("Skipping Lambda Context injection")));
         }
@@ -469,7 +467,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             Logger.LogDebug("This should be logged");
     
             // Assert
-            consoleOut.Received(1).LogLine(Arg.Is<string>(s => 
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"level\":\"Debug\"") && 
                 s.Contains("\"message\":\"This should be logged\"")));
         }
@@ -485,7 +483,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             _testHandlers.TestMethodDebug(); // Uses LogLevel.Debug attribute
     
             // Assert
-            consoleOut.Received().LogLine(Arg.Is<string>(s => 
+            consoleOut.Received().WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"level\":\"Debug\"")));
         }
         
@@ -503,9 +501,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             Logger.LogInformation("This should be logged");
     
             // Assert
-            consoleOut.Received(1).LogLine(Arg.Is<string>(s => 
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"message\":\"This should be logged\"")));
-            consoleOut.DidNotReceive().LogLine(Arg.Is<string>(s => 
+            consoleOut.DidNotReceive().WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"message\":\"This should NOT be logged\"")));
         }
         
@@ -514,10 +512,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             ResetAllState();
         }
         
-        private ISystemWrapper GetConsoleOutput()
+        private IConsoleWrapper GetConsoleOutput()
         {
             // Create a new mock each time
-            var output = Substitute.For<ISystemWrapper>();
+            var output = Substitute.For<IConsoleWrapper>();
             Logger.SetOutput(output);
             return output;
         }

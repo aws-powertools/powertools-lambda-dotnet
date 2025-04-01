@@ -36,19 +36,4 @@ public class ConsoleWrapperTests
         // Assert
         Assert.Equal($"error message{Environment.NewLine}", writer.ToString());
     }
-
-    [Fact]
-    public void ReadLine_Should_Read_From_Console()
-    {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        var reader = new StringReader("input text");
-        Console.SetIn(reader);
-
-        // Act
-        var result = consoleWrapper.ReadLine();
-
-        // Assert
-        Assert.Equal("input text", result);
-    }
 }

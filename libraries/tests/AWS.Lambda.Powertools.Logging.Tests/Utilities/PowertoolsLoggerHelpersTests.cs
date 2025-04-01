@@ -74,7 +74,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
     [Fact]
     public void Should_Log_With_Anonymous()
     {
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
         Logger.SetOutput(consoleOut);
         
         // Act & Assert
@@ -85,7 +85,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
 
         Logger.LogInformation("test");
 
-        consoleOut.Received(1).LogLine(
+        consoleOut.Received(1).WriteLine(
             Arg.Is<string>(i =>
                 i.Contains("\"new_key\":{\"name\":\"my name\"}"))
         );
@@ -94,7 +94,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
     [Fact]
     public void Should_Log_With_Complex_Anonymous()
     {
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
         Logger.SetOutput(consoleOut);
         
         // Act & Assert
@@ -116,7 +116,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
 
         Logger.LogInformation("test");
 
-        consoleOut.Received(1).LogLine(
+        consoleOut.Received(1).WriteLine(
             Arg.Is<string>(i =>
                 i.Contains(
                     "\"new_key\":{\"id\":1,\"name\":\"my name\",\"adresses\":{\"street\":\"street 1\",\"number\":1,\"city\":{\"name\":\"city 1\",\"state\":\"state 1\"}"))

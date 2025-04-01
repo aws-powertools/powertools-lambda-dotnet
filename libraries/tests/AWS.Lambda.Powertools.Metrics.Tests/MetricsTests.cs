@@ -17,23 +17,15 @@ public class MetricsTests
     {
         // Arrange
         Metrics.ResetForTest();
-        var assemblyName = "AWS.Lambda.Powertools.Metrics";
-        var assemblyVersion = "1.0.0";
+        var env = new PowertoolsEnvironment();
 
-        var env = Substitute.For<IPowertoolsEnvironment>();
-        env.GetAssemblyName(Arg.Any<Metrics>()).Returns(assemblyName);
-        env.GetAssemblyVersion(Arg.Any<Metrics>()).Returns(assemblyVersion);
-
-        var conf = new PowertoolsConfigurations(new SystemWrapper(env));
+        var conf = new PowertoolsConfigurations(env);
 
         _ = new Metrics(conf);
 
         // Assert
-        env.Received(1).SetEnvironmentVariable(
-            "AWS_EXECUTION_ENV", $"{Constants.FeatureContextIdentifier}/Metrics/{assemblyVersion}"
-        );
-
-        env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Metrics/0.0.1",
+            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
     }
 
     [Fact]

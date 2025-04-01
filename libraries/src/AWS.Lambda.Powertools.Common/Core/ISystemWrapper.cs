@@ -23,6 +23,13 @@ namespace AWS.Lambda.Powertools.Common;
 public interface ISystemWrapper
 {
     /// <summary>
+    ///     Gets the environment variable.
+    /// </summary>
+    /// <param name="variable">The variable.</param>
+    /// <returns>System.String.</returns>
+    string GetEnvironmentVariable(string variable);
+
+    /// <summary>
     ///     Logs the specified value.
     /// </summary>
     /// <param name="value">The value.</param>
@@ -40,6 +47,19 @@ public interface ISystemWrapper
     /// <returns>System.Double.</returns>
     double GetRandom();
     
+    /// <summary>
+    ///     Sets the environment variable.
+    /// </summary>
+    /// <param name="variable">The variable.</param>
+    /// <param name="value"></param>
+    void SetEnvironmentVariable(string variable, string value);
+    
+    /// <summary>
+    /// Sets the execution Environment Variable (AWS_EXECUTION_ENV)
+    /// </summary>
+    /// <param name="type"></param>
+    void SetExecutionEnvironment<T>(T type);
+
     /// <summary>
     /// Sets console output
     /// Useful for testing and checking the console output

@@ -58,7 +58,7 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
         // Warn if Lambda log level doesn't match
         if (lambdaLogLevelEnabled && logLevel < lambdaLogLevel)
         {
-            _currentConfig.LogOutput.LogLine(
+            _currentConfig.LogOutput.WriteLine(
                 $"Current log level ({logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
         }
 
@@ -113,7 +113,7 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
             // Instead of changing log level, just indicate sampling status
             if (sample <= samplingRate)
             {
-                config.LogOutput.LogLine(
+                config.LogOutput.WriteLine(
                     $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
                 config.MinimumLogLevel = LogLevel.Debug;
             }
@@ -129,7 +129,7 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
         {
             if (config.MinimumLogLevel is LogLevel.Debug or LogLevel.Trace)
             {
-                config.LogOutput.LogLine(
+                config.LogOutput.WriteLine(
                     $"Skipping sampling rate configuration because of invalid value. Sampling rate: {samplingRate}");
             }
 

@@ -6,7 +6,7 @@
     <!--    Do not update AspectInjector from 2.8.1 until this issue is fixed https://github.com/pamidur/aspect-injector/issues/220-->
     <PackageVersion Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
     <PackageVersion Include="AspectInjector" Version="2.8.1" />
-    <PackageVersion Include="Amazon.Lambda.Core" Version="2.5.1" />
+    <PackageVersion Include="Amazon.Lambda.Core" Version="2.5.0" />
     <PackageVersion Include="AWSSDK.AppConfig" Version="3.7.301" />
     <PackageVersion Include="AWSSDK.AppConfigData" Version="3.7.301.15" />
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="3.7.301.18" />

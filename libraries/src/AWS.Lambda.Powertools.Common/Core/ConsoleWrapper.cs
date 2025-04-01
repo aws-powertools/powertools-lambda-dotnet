@@ -14,18 +14,43 @@
  */
 
 using System;
+using System.IO;
 
 namespace AWS.Lambda.Powertools.Common;
 
 /// <inheritdoc />
 public class ConsoleWrapper : IConsoleWrapper
 {
+    private static bool _redirected;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleWrapper" /> class.
+    /// </summary>
+    public ConsoleWrapper()
+    {
+        if(_redirected)
+        {
+            _redirected = false;
+            return;
+        }
+        
+        var standardOutput = new StreamWriter(Console.OpenStandardOutput());
+        standardOutput.AutoFlush = true;
+        Console.SetOut(standardOutput);
+        var errordOutput = new StreamWriter(Console.OpenStandardError());
+        errordOutput.AutoFlush = true;
+        Console.SetError(errordOutput);
+    }
     /// <inheritdoc />
     public void WriteLine(string message) => Console.WriteLine(message);
     /// <inheritdoc />
     public void Debug(string message) => System.Diagnostics.Debug.WriteLine(message);
     /// <inheritdoc />
     public void Error(string message) => Console.Error.WriteLine(message);
-    /// <inheritdoc />
-    public string ReadLine() => Console.ReadLine();
+    
+    internal static void SetOut(StringWriter consoleOut)
+    {
+        _redirected = true;
+        Console.SetOut(consoleOut);
+    }
 }

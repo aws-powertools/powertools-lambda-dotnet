@@ -109,10 +109,10 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     internal PowertoolsLoggingSerializer Serializer => _serializer ??= InitializeSerializer();
 
     /// <summary>
-    /// The system wrapper used for output operations. Defaults to SystemWrapper instance.
+    /// The console wrapper used for output operations. Defaults to ConsoleWrapper instance.
     /// Primarily useful for testing to capture and verify output.
     /// </summary>
-    public ISystemWrapper LogOutput { get; set; } = new SystemWrapper();
+    public IConsoleWrapper LogOutput { get; set; } = new ConsoleWrapper();
 
     /// <summary>
     /// Initialize serializer with the current configuration

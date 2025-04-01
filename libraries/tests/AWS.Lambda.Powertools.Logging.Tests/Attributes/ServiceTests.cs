@@ -22,7 +22,7 @@ public class ServiceTests : IDisposable
     {
         Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "Environment Service");
             
-        var consoleOut = Substitute.For<ISystemWrapper>();
+        var consoleOut = Substitute.For<IConsoleWrapper>();
         Logger.SetOutput(consoleOut);
 
         // Act
@@ -31,10 +31,10 @@ public class ServiceTests : IDisposable
 
         // Assert
             
-        consoleOut.Received(1).LogLine(
+        consoleOut.Received(1).WriteLine(
             Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"Environment Service\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Service: Environment Service\""))
         );
-        consoleOut.Received(1).LogLine(
+        consoleOut.Received(1).WriteLine(
             Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"Attribute Service\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Service: Attribute Service\""))
         );            
     }
