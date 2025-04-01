@@ -10,7 +10,7 @@ public class TestLoggerOutput : IConsoleWrapper
     /// <summary>
     /// Buffer for all the log messages written to the logger.
     /// </summary>
-    private readonly StringBuilder _outputBuffer = new StringBuilder();
+    private readonly StringBuilder _outputBuffer = new();
     
     /// <summary>
     /// Cleasr the output buffer.
