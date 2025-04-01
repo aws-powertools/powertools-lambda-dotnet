@@ -45,8 +45,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void OnEntry_WhenLambdaContextDoesNotExist_IgnoresLambdaContext()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
     
             // Act
             _testHandlers.TestMethod();
@@ -70,8 +69,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void OnEntry_WhenLambdaContextDoesNotExist_IgnoresLambdaContextAndLogDebug()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
     
             // Act
             _testHandlers.TestMethodDebug();
@@ -98,8 +96,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void OnEntry_WhenEventArgDoesNotExist_DoesNotLogEventArg()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
     
             // Act
             _testHandlers.LogEventNoArgs();
@@ -113,8 +110,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void OnEntry_WhenEventArgExist_LogEvent()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
             var correlationId = Guid.NewGuid().ToString();
                 
             var context = new TestLambdaContext()
@@ -142,8 +138,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void OnEntry_WhenEventArgExist_LogEvent_False_Should_Not_Log()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
     
             var context = new TestLambdaContext()
             {
@@ -162,8 +157,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void OnEntry_WhenEventArgDoesNotExist_DoesNotLogEventArgAndLogDebug()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
     
             // Act
             _testHandlers.LogEventDebug();
@@ -180,10 +174,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         [Fact]
         public void OnExit_WhenHandler_ClearState_Enabled_ClearKeys()
         {
-            // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
-    
             // Act
             _testHandlers.ClearState();
     
@@ -199,7 +189,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var correlationId = Guid.NewGuid().ToString();
-    
     
             // Act
             switch (correlationIdPath)
@@ -256,7 +245,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var correlationId = Guid.NewGuid().ToString();
     
-    
             // Act
             switch (outputCase)
             {
@@ -306,7 +294,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var correlationId = Guid.NewGuid().ToString();
     
-    
             // Act
             switch (outputCase)
             {
@@ -353,8 +340,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void When_Setting_SamplingRate_Should_Add_Key()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
         
             // Act
             _testHandlers.HandlerSamplingRate();
@@ -372,7 +358,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var consoleOut = new TestLoggerOutput();
             Logger.SetOutput(consoleOut);
-        
+            
             // Act
             _testHandlers.HandlerService();
         
@@ -386,9 +372,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void When_Setting_LogLevel_Should_Update_LogLevel()
         {
             // Arrange
-            var consoleOut = new TestLoggerOutput();
+            var consoleOut = new TestLoggerOutput();;
             Logger.SetOutput(consoleOut);
-    
+            
             // Act
             _testHandlers.TestLogLevelCritical();
         
@@ -402,8 +388,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void When_Setting_LogLevel_HigherThanInformation_Should_Not_LogEvent()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
+
             var context = new TestLambdaContext()
             {
                 FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
@@ -420,8 +406,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void When_LogLevel_Debug_Should_Log_Message_When_No_Context_And_LogEvent_True()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
             
             // Act
             _testHandlers.TestLogEventWithoutContext();
@@ -438,8 +423,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void Should_Log_When_Not_Using_Decorator()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
             
             var test = new TestHandlers();
             
@@ -456,8 +440,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void LoggingAspect_ShouldRespectDynamicLogLevelChanges()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
+
             Logger.UseMinimumLogLevel(LogLevel.Warning); // Start with Warning level
     
             // Act
@@ -473,8 +457,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void LoggingAspect_ShouldCorrectlyResetLogLevelAfterExecution()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
+
             Logger.UseMinimumLogLevel(LogLevel.Warning);
     
             // Act - First call with Debug level attribute
@@ -495,14 +479,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
     
             // Act
             _testHandlers.TestMethodDebug(); // Uses LogLevel.Debug attribute
     
             // Assert
-            consoleOut.Received(1).LogLine(Arg.Is<string>(s => 
+            consoleOut.Received().LogLine(Arg.Is<string>(s => 
                 s.Contains("\"level\":\"Debug\"")));
         }
         
@@ -510,8 +493,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         public void LoggingAspect_ShouldImmediatelyApplyFilterLevelChanges()
         {
             // Arrange
-            var consoleOut = Substitute.For<ISystemWrapper>();
-            Logger.SetOutput(consoleOut);
+            var consoleOut = GetConsoleOutput();
+
             Logger.UseMinimumLogLevel(LogLevel.Error);
     
             // Act
@@ -528,11 +511,37 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         
         public void Dispose()
         {
-            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", "");
-            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "");
+            ResetAllState();
+        }
+        
+        private ISystemWrapper GetConsoleOutput()
+        {
+            // Create a new mock each time
+            var output = Substitute.For<ISystemWrapper>();
+            Logger.SetOutput(output);
+            return output;
+        }
+        
+        private void ResetAllState()
+        {
+            // Clear environment variables
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", null);
+            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", null);
+
+            // Reset all logging components
             LoggingAspect.ResetForTest();
             Logger.Reset();
             PowertoolsLoggingBuilderExtensions.ResetAllProviders();
+            LoggerFactoryHolder.Reset();
+
+            // Force default configuration
+            var config = new PowertoolsLoggerConfiguration
+            {
+                MinimumLogLevel = LogLevel.Information,
+                LoggerOutputCase = LoggerOutputCase.SnakeCase
+            };
+            PowertoolsLoggingBuilderExtensions.UpdateConfiguration(config);
         }
     }
 }

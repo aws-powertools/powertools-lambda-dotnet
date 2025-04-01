@@ -27,6 +27,17 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes;
 [Collection("Sequential")]
 public class LoggerAspectTests : IDisposable
 {
+    static LoggerAspectTests()
+    {
+        ResetAllState();
+    }
+    
+    public LoggerAspectTests()
+    {
+        // Start each test with clean state
+        ResetAllState();
+    }
+    
     [Fact]
     public void OnEntry_ShouldInitializeLogger_WhenCalledWithValidArguments()
     {
@@ -373,7 +384,28 @@ public class LoggerAspectTests : IDisposable
 
     public void Dispose()
     {
+        ResetAllState();
+    }
+    
+    private static void ResetAllState()
+    {
+        // Clear environment variables
+        Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", null);
+        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
+        Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", null);
+
+        // Reset all logging components
         LoggingAspect.ResetForTest();
         Logger.Reset();
+        PowertoolsLoggingBuilderExtensions.ResetAllProviders();
+        LoggerFactoryHolder.Reset();
+
+        // Force default configuration
+        var config = new PowertoolsLoggerConfiguration
+        {
+            MinimumLogLevel = LogLevel.Information,
+            LoggerOutputCase = LoggerOutputCase.SnakeCase
+        };
+        PowertoolsLoggingBuilderExtensions.UpdateConfiguration(config);
     }
 }

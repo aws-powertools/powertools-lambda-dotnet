@@ -6,6 +6,7 @@ using System.IO;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using AWS.Lambda.Powertools.Logging.Serializers;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
@@ -201,7 +202,27 @@ public class PowertoolsLoggerHelpersTests : IDisposable
 
     public void Dispose()
     {
-        // Logger.Reset();
+        ResetAllState();
+    }
+
+    private static void ResetAllState()
+    {
+        // Clear environment variables
+        Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", null);
+        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
+        Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", null);
+
+        // Reset all logging components
+        Logger.Reset();
+        PowertoolsLoggingBuilderExtensions.ResetAllProviders();
+
+        // Force default configuration
+        var config = new PowertoolsLoggerConfiguration
+        {
+            MinimumLogLevel = LogLevel.Information,
+            LoggerOutputCase = LoggerOutputCase.SnakeCase
+        };
+        PowertoolsLoggingBuilderExtensions.UpdateConfiguration(config);
     }
 }
 
