@@ -29,6 +29,7 @@ public class LogBufferingOptions
     
     /// <summary>
     /// Gets or sets the maximum size of the buffer in bytes
+    /// Default is 20KB (20480 bytes)
     /// </summary>
     public int MaxBytes { get; set; } = 20480;
     

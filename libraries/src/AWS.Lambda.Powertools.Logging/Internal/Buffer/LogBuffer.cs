@@ -114,25 +114,33 @@ internal class LogBuffer
     /// </summary>
     private class InvocationBuffer
     {
-        private readonly ConcurrentQueue<string> _buffer = new();
-        private int _currentSize = 0;
+        private readonly ConcurrentQueue<BufferedLogEntry> _buffer = new();
+        private int _currentSize;
         
         public void Add(string logEntry, int maxBytes)
         {
             // Same implementation as before
             var size = 100 + (logEntry?.Length ?? 0) * 2;
             
+            // If entry size exceeds max buffer size, discard the entry completely
+            if (size > maxBytes)
+            {
+                // Entry is too large to ever fit in buffer, discard it
+                return;
+            }
+            
             if (_currentSize + size > maxBytes)
             {
-                while (_buffer.TryDequeue(out _) && _currentSize + size > maxBytes)
+                // Remove oldest entries until we have enough space
+                while (_currentSize + size > maxBytes && _buffer.TryDequeue(out var removed))
                 {
-                    _currentSize -= 100;
+                    _currentSize -= removed.Size;
                 }
                 
                 if (_currentSize < 0) _currentSize = 0;
             }
             
-            _buffer.Enqueue(logEntry);
+            _buffer.Enqueue(new BufferedLogEntry(logEntry, size));
             _currentSize += size;
         }
         
@@ -144,7 +152,7 @@ internal class LogBuffer
             {
                 while (_buffer.TryDequeue(out var entry))
                 {
-                    entries.Add(entry);
+                    entries.Add(entry.Entry);
                 }
             }
             catch (Exception)
@@ -157,5 +165,17 @@ internal class LogBuffer
         }
         
         public bool HasEntries => !_buffer.IsEmpty;
+    }
+}
+
+internal class BufferedLogEntry
+{
+    public string Entry { get; }
+    public int Size { get; }
+
+    public BufferedLogEntry(string entry, int calculatedSize)
+    {
+        Entry = entry;
+        Size = calculatedSize;
     }
 }
