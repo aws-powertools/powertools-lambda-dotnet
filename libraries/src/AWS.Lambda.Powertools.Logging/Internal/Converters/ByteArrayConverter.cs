@@ -47,7 +47,7 @@ internal class ByteArrayConverter : JsonConverter<byte[]>
     ///     Write the exception value as JSON. 
     /// </summary>
     /// <param name="writer">The unicode JsonWriter.</param>
-    /// <param name="values">The byte array.</param>
+    /// <param name="value"></param>
     /// <param name="options">The JsonSerializer options.</param>
     public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
     {

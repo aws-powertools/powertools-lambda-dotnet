@@ -162,6 +162,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// <param name="timestamp">Entry timestamp.</param>
     /// <param name="message">The message to be written. Can be also an object.</param>
     /// <param name="exception">The exception related to this entry.</param>
+    /// <param name="structuredParameters">The parameters for structured formatting</param>
     private Dictionary<string, object> GetLogEntry(LogLevel logLevel, DateTime timestamp, object message,
         Exception exception, Dictionary<string, object> structuredParameters = null)
     {

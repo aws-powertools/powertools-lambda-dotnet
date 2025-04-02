@@ -36,13 +36,14 @@ internal class PowertoolsLoggingSerializer
     private JsonSerializerOptions _currentOptions;
     private LoggerOutputCase _currentOutputCase;
     private JsonSerializerOptions _jsonOptions;
-    private readonly object _lock = new object();
+    private readonly object _lock = new();
 
-    private readonly ConcurrentBag<JsonSerializerContext> _additionalContexts =
-        new ConcurrentBag<JsonSerializerContext>();
-
+#if NET8_0_OR_GREATER
+    private readonly ConcurrentBag<JsonSerializerContext> _additionalContexts = new();
     private static JsonSerializerContext _staticAdditionalContexts;
-
+    private IJsonTypeInfoResolver _customTypeInfoResolver;
+#endif
+    
     /// <summary>
     /// Gets the JsonSerializerOptions instance.
     /// </summary>
@@ -117,9 +118,7 @@ internal class PowertoolsLoggingSerializer
     }
 
 #if NET8_0_OR_GREATER
-
-    private IJsonTypeInfoResolver? _customTypeInfoResolver = null;
-
+    
     /// <summary>
     /// Adds a JsonSerializerContext to the serializer options.
     /// </summary>
@@ -211,25 +210,6 @@ internal class PowertoolsLoggingSerializer
         return options.TypeInfoResolver?.GetTypeInfo(type, options);
     }
 
-    /// <summary>
-    /// Checks if a type is supported by any of the configured type resolvers
-    /// </summary>
-    private bool IsTypeSupportedByAnyResolver(Type type)
-    {
-        var options = GetSerializerOptions();
-        if (options.TypeInfoResolver == null)
-            return false;
-
-        try
-        {
-            var typeInfo = options.TypeInfoResolver.GetTypeInfo(type, options);
-            return typeInfo != null;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 #endif
 
     /// <summary>

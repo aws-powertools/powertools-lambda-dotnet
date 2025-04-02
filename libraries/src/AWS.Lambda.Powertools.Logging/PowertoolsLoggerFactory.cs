@@ -9,7 +9,7 @@ internal sealed class PowertoolsLoggerFactory : IDisposable
 {
     private readonly ILoggerFactory _factory;
 
-    public PowertoolsLoggerFactory(ILoggerFactory? loggerFactory = null)
+    public PowertoolsLoggerFactory(ILoggerFactory loggerFactory = null)
     {
         _factory = loggerFactory ?? LoggerFactory.Create(builder =>
         {

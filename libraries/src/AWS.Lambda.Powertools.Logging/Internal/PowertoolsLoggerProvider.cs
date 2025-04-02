@@ -16,9 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using AWS.Lambda.Powertools.Common;
-using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
@@ -31,7 +29,6 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 internal class PowertoolsLoggerProvider : ILoggerProvider
 {
     private readonly ConcurrentDictionary<string, PowertoolsLogger> _loggers = new(StringComparer.OrdinalIgnoreCase);
-    private readonly IDisposable? _onChangeToken;
     private PowertoolsLoggerConfiguration _currentConfig;
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
     private bool _environmentConfigured;
@@ -164,6 +161,5 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
     public virtual void Dispose()
     {
         _loggers.Clear();
-        _onChangeToken?.Dispose();
     }
 }

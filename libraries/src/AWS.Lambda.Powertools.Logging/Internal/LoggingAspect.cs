@@ -34,8 +34,6 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 [Aspect(Scope.Global, Factory = typeof(LoggingAspectFactory))]
 public class LoggingAspect
 {
-    private readonly ILoggerFactory _loggerFactory;
-
     /// <summary>
     ///     The is cold start
     /// </summary>

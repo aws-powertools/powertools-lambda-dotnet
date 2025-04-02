@@ -44,7 +44,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <summary>
     ///     Initializes a new instance of the <see cref="PowertoolsConfigurations" /> class.
     /// </summary>
-    /// <param name="systemWrapper">The system wrapper.</param>
+    /// <param name="powertoolsEnvironment"></param>
     internal PowertoolsConfigurations(IPowertoolsEnvironment powertoolsEnvironment)
     {
         _powertoolsEnvironment = powertoolsEnvironment;

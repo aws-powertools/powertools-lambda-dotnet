@@ -19,17 +19,17 @@ internal static class LoggerFactoryHelper
             builder.AddPowertoolsLogger(config =>
             {
                 config.Service = configuration.Service;
-                config.SamplingRate = configuration.SamplingRate;
-                config.MinimumLogLevel = configuration.MinimumLogLevel;
-                config.LoggerOutputCase = configuration.LoggerOutputCase;
-                config.JsonOptions = configuration.JsonOptions;
                 config.TimestampFormat = configuration.TimestampFormat;
-                config.LogFormatter = configuration.LogFormatter;
+                config.MinimumLogLevel = configuration.MinimumLogLevel;
+                config.SamplingRate = configuration.SamplingRate;
+                config.LoggerOutputCase = configuration.LoggerOutputCase;
                 config.LogLevelKey = configuration.LogLevelKey;
+                config.LogFormatter = configuration.LogFormatter;
+                config.JsonOptions = configuration.JsonOptions;
                 config.LogBuffering = configuration.LogBuffering;
-                config.LogEvent = configuration.LogEvent;
                 config.LogOutput = configuration.LogOutput;
                 config.XRayTraceId = configuration.XRayTraceId;
+                config.LogEvent = configuration.LogEvent;
             });
             
             // Use current filter level or level from config

@@ -24,7 +24,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// </summary>
 internal static class LoggerFactoryHolder
 {
-    private static ILoggerFactory? _factory;
+    private static ILoggerFactory _factory;
     private static readonly object _lock = new object();
     
     /// <summary>

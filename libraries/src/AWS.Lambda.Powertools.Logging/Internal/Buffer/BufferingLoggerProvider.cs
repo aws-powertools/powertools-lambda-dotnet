@@ -13,11 +13,9 @@
  * permissions and limitations under the License.
  */
 
-using System;
 using System.Collections.Concurrent;
 using AWS.Lambda.Powertools.Common;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
@@ -28,7 +26,6 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 internal class BufferingLoggerProvider : PowertoolsLoggerProvider
 {
     private readonly ConcurrentDictionary<string, PowertoolsBufferingLogger> _loggers = new();
-    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
     public BufferingLoggerProvider(
         PowertoolsLoggerConfiguration config,

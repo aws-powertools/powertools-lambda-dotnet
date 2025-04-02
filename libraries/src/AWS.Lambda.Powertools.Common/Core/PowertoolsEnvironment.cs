@@ -42,6 +42,7 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
         return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : string.Empty;
     }
     
+    /// <inheritdoc />
     public void SetExecutionEnvironment<T>(T type)
     {
         const string envName = Constants.AwsExecutionEnvironmentVariableName;
