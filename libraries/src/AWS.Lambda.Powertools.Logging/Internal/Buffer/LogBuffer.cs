@@ -49,6 +49,11 @@ internal class LogBuffer
     public void Add(string logEntry, int maxBytes)
     {
         var invocationId = CurrentInvocationId;
+        if (string.IsNullOrEmpty(invocationId))
+        {
+            // No invocation ID set, do not buffer
+            return;
+        }
         var buffer = _buffersByInvocation.GetOrAdd(invocationId, _ => new InvocationBuffer());
         buffer.Add(logEntry, maxBytes);
     }
@@ -59,6 +64,12 @@ internal class LogBuffer
     public IReadOnlyCollection<string> GetAndClear()
     {
         var invocationId = CurrentInvocationId;
+        
+        if (string.IsNullOrEmpty(invocationId))
+        {
+            // No invocation ID set, return empty
+            return Array.Empty<string>();
+        }
         
         // Try to get and remove the buffer for this invocation
         if (_buffersByInvocation.TryRemove(invocationId, out var buffer))

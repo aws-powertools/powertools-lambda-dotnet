@@ -492,19 +492,35 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
-
+            
             Logger.UseMinimumLogLevel(LogLevel.Error);
     
             // Act
             Logger.LogInformation("This should NOT be logged");
             _testHandlers.TestMethodDebug(); // Should change level to Debug
             Logger.LogInformation("This should be logged");
-    
+            
             // Assert
+            
             consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"message\":\"This should be logged\"")));
             consoleOut.DidNotReceive().WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"message\":\"This should NOT be logged\"")));
+            
+            Logger.UseMinimumLogLevel(LogLevel.Warning);
+            
+            Logger.LogInformation("Information should not be logged");
+            
+            Logger.UseMinimumLogLevel(LogLevel.Information);
+            Logger.LogDebug("Debug should not be logged");
+            Logger.LogInformation("Information should be logged");
+            
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
+                s.Contains("\"message\":\"Information should be logged\"")));
+            consoleOut.DidNotReceive().WriteLine(Arg.Is<string>(s => 
+                s.Contains("\"message\":\"Information should not be logged\"")));
+            consoleOut.DidNotReceive().WriteLine(Arg.Is<string>(s => 
+                s.Contains("\"message\":\"Debug should not be logged\"")));
         }
         
         public void Dispose()

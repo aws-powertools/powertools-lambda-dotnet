@@ -31,10 +31,16 @@ internal static class LoggerFactoryHelper
                 config.LogOutput = configuration.LogOutput;
                 config.XRayTraceId = configuration.XRayTraceId;
             });
+            
+            // Use current filter level or level from config
+            if (configuration.MinimumLogLevel != LogLevel.None)
+            {
+                builder.AddFilter(null, configuration.MinimumLogLevel);
+                builder.SetMinimumLevel(configuration.MinimumLogLevel);
+            }
         });
-
-        // Configure the static logger with the factory
-        // Logger.Configure(factory);
+        
+        LoggerFactoryHolder.SetFactory(factory);
 
         return factory;
     }

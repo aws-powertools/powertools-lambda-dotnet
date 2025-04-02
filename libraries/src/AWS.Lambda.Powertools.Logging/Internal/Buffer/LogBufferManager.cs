@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
@@ -22,20 +23,21 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// </summary>
 internal static class LogBufferManager
 {
-    private static BufferingLoggerProvider _provider;
+    private static readonly List<BufferingLoggerProvider> Providers = new();
     
     /// <summary>
     /// Register a buffering provider with the manager
     /// </summary>
     internal static void RegisterProvider(BufferingLoggerProvider provider)
     {
-        _provider = provider;
+        if (!Providers.Contains(provider))
+            Providers.Add(provider);
     }
     
     /// <summary>
-    /// Set the current invocation ID to isolate logs between Lambda invocations
+    /// Set the current invocation ID to isolate logs between invocations
     /// </summary>
-    public static void SetInvocationId(string invocationId)
+    internal static void SetInvocationId(string invocationId)
     {
         LogBuffer.SetCurrentInvocationId(invocationId);
     }
@@ -47,7 +49,10 @@ internal static class LogBufferManager
     {
         try
         {
-            _provider?.FlushBuffers();
+            foreach (var provider in Providers)
+            {
+                provider?.FlushBuffers();
+            }
         }
         catch (Exception)
         {
@@ -62,11 +67,32 @@ internal static class LogBufferManager
     {
         try
         {
-            _provider?.ClearCurrentBuffer();
+            foreach (var provider in Providers)
+            {
+                provider?.ClearCurrentBuffer();
+            }
         }
         catch (Exception)
         {
             // Suppress errors
         }
+    }
+    
+    /// <summary>
+    /// Unregister a buffering provider from the manager
+    /// </summary>
+    /// <param name="provider"></param>
+    internal static void UnregisterProvider(BufferingLoggerProvider provider)
+    {
+        Providers.Remove(provider);
+    }
+    
+    /// <summary>
+    /// Reset the manager state (for testing purposes)
+    /// </summary>
+    internal static void ResetForTesting()
+    {
+        Providers.Clear();
+        LogBuffer.SetCurrentInvocationId(null);
     }
 }

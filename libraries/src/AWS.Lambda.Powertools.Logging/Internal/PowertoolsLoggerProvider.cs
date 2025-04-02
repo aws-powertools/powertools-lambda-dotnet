@@ -34,6 +34,7 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
     private readonly IDisposable? _onChangeToken;
     private PowertoolsLoggerConfiguration _currentConfig;
     private readonly IPowertoolsConfigurations _powertoolsConfigurations;
+    private bool _environmentConfigured;
 
     public PowertoolsLoggerProvider(
         PowertoolsLoggerConfiguration config,
@@ -91,6 +92,7 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
             : LoggingConstants.KeyLogLevel;
             
         ProcessSamplingRate(_currentConfig, _powertoolsConfigurations);
+        _environmentConfigured = true;
     }
     
     /// <summary>
@@ -153,7 +155,7 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
         _currentConfig = config;
         
         // Apply environment configurations if available
-        if (_powertoolsConfigurations != null)
+        if (_powertoolsConfigurations != null && !_environmentConfigured)
         {
             ConfigureFromEnvironment();
         }

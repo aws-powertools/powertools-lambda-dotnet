@@ -21,6 +21,7 @@ using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
@@ -81,22 +82,24 @@ public class LoggingAspect
 
         // Only update configuration if any settings were provided
         var needsReconfiguration = hasLogLevel || hasService || hasOutputCase || hasSamplingRate;
-
+        _currentConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
+        
         if (needsReconfiguration)
         {
             // Apply each setting directly using the existing Logger static methods
-            if (hasLogLevel) Logger.UseMinimumLogLevel(trigger.LogLevel);
-            if (hasService) Logger.UseServiceName(trigger.Service);
-            if (hasOutputCase) Logger.UseOutputCase(trigger.LoggerOutputCase);
-            if (hasSamplingRate) Logger.UseSamplingRate(trigger.SamplingRate);
+            if (hasLogLevel) _currentConfig.MinimumLogLevel = trigger.LogLevel;
+            if (hasService) _currentConfig.Service = trigger.Service;
+            if (hasOutputCase) _currentConfig.LoggerOutputCase = trigger.LoggerOutputCase;
+            if (hasSamplingRate) _currentConfig.SamplingRate = trigger.SamplingRate;
 
             // Need to refresh the logger after configuration changes
             // _logger = Logger.GetPowertoolsLogger();
-            _logger = LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
+            _logger = LoggerFactoryHelper.CreateAndConfigureFactory(_currentConfig).CreatePowertoolsLogger();
+            // Logger.ClearInstance();
         }
         
         // Fetch the current configuration
-        _currentConfig = Logger.GetCurrentConfiguration();
+        
 
         // Set operational flags based on current configuration
         _isDebug = _currentConfig.MinimumLogLevel <= LogLevel.Debug;

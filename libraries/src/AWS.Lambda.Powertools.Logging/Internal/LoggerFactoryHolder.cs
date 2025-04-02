@@ -16,6 +16,7 @@
 using System;
 using System.Threading;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -29,29 +30,29 @@ internal static class LoggerFactoryHolder
     private static readonly object _lock = new object();
     private static bool _isConfigured = false;
 
-    private static LogLevel _currentFilterLevel = LogLevel.Information;
+    // private static LogLevel _currentFilterLevel = LogLevel.Information;
 
-    /// <summary>
-    /// Updates the filter log level at runtime
-    /// </summary>
-    /// <param name="logLevel">The new minimum log level</param>
-    public static void UpdateFilterLogLevel(LogLevel logLevel)
-    {
-        lock (_lock)
-        {
-            // Only reset if level actually changes
-            if (_currentFilterLevel != logLevel)
-            {
-                _currentFilterLevel = logLevel;
-                
-                if (_factory != null)
-                {
-                    try { _factory.Dispose(); } catch { /* Ignore */ }
-                    _factory = null;
-                }
-            }
-        }
-    }
+    // /// <summary>
+    // /// Updates the filter log level at runtime
+    // /// </summary>
+    // /// <param name="logLevel">The new minimum log level</param>
+    // public static void UpdateFilterLogLevel(LogLevel logLevel)
+    // {
+    //     lock (_lock)
+    //     {
+    //         // Only reset if level actually changes
+    //         if (_currentFilterLevel != logLevel)
+    //         {
+    //             _currentFilterLevel = logLevel;
+    //             
+    //             if (_factory != null)
+    //             {
+    //                 try { _factory.Dispose(); } catch { /* Ignore */ }
+    //                 _factory = null;
+    //             }
+    //         }
+    //     }
+    // }
     
     /// <summary>
     /// Gets or creates the shared logger factory
@@ -64,18 +65,7 @@ internal static class LoggerFactoryHolder
             {
                 var config = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
                 
-                // Use current filter level or level from config
-                _currentFilterLevel = config.MinimumLogLevel != LogLevel.None 
-                    ? config.MinimumLogLevel 
-                    : _currentFilterLevel;
-                    
-                _factory = LoggerFactory.Create(builder =>
-                {
-                    builder.AddPowertoolsLogger();
-                    
-                    // Correctly configure the filter
-                    builder.AddFilter(null, _currentFilterLevel);
-                });
+                _factory = LoggerFactoryHelper.CreateAndConfigureFactory(config);
             }
             return _factory;
         }
@@ -88,6 +78,7 @@ internal static class LoggerFactoryHolder
         {
             _factory = factory;
             _isConfigured = true;
+            Logger.ClearInstance();
         }
     }
     
@@ -113,7 +104,7 @@ internal static class LoggerFactoryHolder
                 _factory = null;
             }
 
-            _currentFilterLevel = LogLevel.None;
+            // _currentFilterLevel = LogLevel.None;
             _isConfigured = false;
         }
     }

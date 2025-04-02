@@ -21,16 +21,12 @@ public static class PowertoolsLoggingBuilderExtensions
     private static readonly object _lock = new();
     private static PowertoolsLoggerConfiguration _currentConfig = new();
 
-    public static void UpdateConfiguration(PowertoolsLoggerConfiguration config)
+    internal static void UpdateConfiguration(PowertoolsLoggerConfiguration config)
     {
         lock (_lock)
         {
             // Update the shared configuration
             _currentConfig = config;
-        
-            // Uncomment this line to update the filter level
-            if(config.MinimumLogLevel != LogLevel.None)
-                LoggerFactoryHolder.UpdateFilterLogLevel(config.MinimumLogLevel);
 
             // Notify all providers about the change
             foreach (var provider in AllProviders)
@@ -40,7 +36,7 @@ public static class PowertoolsLoggingBuilderExtensions
         }
     }
     
-    public static PowertoolsLoggerConfiguration GetCurrentConfiguration()
+    internal static PowertoolsLoggerConfiguration GetCurrentConfiguration()
     {
         lock (_lock)
         {
@@ -132,6 +128,7 @@ public static class PowertoolsLoggingBuilderExtensions
                     return bufferingProvider;
                 }));
         }
+        
 
         return builder;
     }

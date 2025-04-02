@@ -108,8 +108,6 @@ public static partial class Logger
             config.MinimumLogLevel = logLevel;
         });
         
-        // Also directly update the log filter level to ensure it takes effect immediately
-        LoggerFactoryHolder.UpdateFilterLogLevel(logLevel);
         _loggerInstance = null;
     }
 
@@ -182,6 +180,11 @@ public static partial class Logger
         LoggerFactoryHolder.Reset();
         _loggerInstance = null;
         RemoveAllKeys();
+    }
+    
+    internal static void ClearInstance()
+    {
+        _loggerInstance = null;
     }
 
     /// <summary>

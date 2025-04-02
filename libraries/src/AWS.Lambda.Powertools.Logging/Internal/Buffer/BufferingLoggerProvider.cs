@@ -89,6 +89,9 @@ internal class BufferingLoggerProvider : PowertoolsLoggerProvider
         {
             logger.FlushBuffer();
         }
+        
+        // Unregister from buffer manager
+        LogBufferManager.UnregisterProvider(this);
 
         _loggers.Clear();
         base.Dispose();
