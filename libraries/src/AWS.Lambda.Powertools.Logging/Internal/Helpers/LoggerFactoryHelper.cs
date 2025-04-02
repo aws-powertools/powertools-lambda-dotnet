@@ -12,7 +12,7 @@ internal static class LoggerFactoryHelper
     /// </summary>
     /// <param name="configuration">The Powertools logger configuration to apply</param>
     /// <returns>The configured logger factory</returns>
-    public static ILoggerFactory CreateAndConfigureFactory(PowertoolsLoggerConfiguration configuration)
+    internal static ILoggerFactory CreateAndConfigureFactory(PowertoolsLoggerConfiguration configuration)
     {
         var factory = LoggerFactory.Create(builder =>
         {

@@ -159,14 +159,44 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     ///     // Use a custom formatter implementation
     ///     options.LogFormatter = new MyCustomLogFormatter();
     ///     
-    ///     // Example with a simple custom formatter class:
+    ///     // Example with a simple custom formatter class this will just return a string:
     ///     public class MyCustomLogFormatter : ILogFormatter
     ///     {
-    ///         public string FormatLog(LogEntry entry)
+    ///         public object FormatLog(LogEntry entry)
     ///         {
     ///             // Custom formatting logic here
-    ///             return $"{entry.Timestamp}: [{entry.LogLevel}] {entry.Message}";
+    ///             return $"{logEntry.Timestamp}: [{logEntry.Level}] {logEntry.Message}";
     ///         }
+    ///     }
+    ///     // Example with a complete formatter class this will just return a json object:
+    ///     public object FormatLogEntry(LogEntry logEntry)
+    ///     {
+    ///         return new
+    ///         {
+    ///             Message = logEntry.Message,
+    ///             Service = logEntry.Service,
+    ///             CorrelationIds = new
+    ///             {
+    ///                 AwsRequestId = logEntry.LambdaContext?.AwsRequestId,
+    ///                 XRayTraceId = logEntry.XRayTraceId,
+    ///                 CorrelationId = logEntry.CorrelationId
+    ///             },
+    ///             LambdaFunction = new
+    ///             {
+    ///                 Name = logEntry.LambdaContext?.FunctionName,
+    ///                 Arn = logEntry.LambdaContext?.InvokedFunctionArn,
+    ///                 MemoryLimitInMB = logEntry.LambdaContext?.MemoryLimitInMB,
+    ///                 Version = logEntry.LambdaContext?.FunctionVersion,
+    ///                 ColdStart = true,
+    ///             },
+    ///             Level = logEntry.Level.ToString(),
+    ///             Timestamp = new DateTime(2024, 1, 1).ToString("o"),
+    ///             Logger = new
+    ///             {
+    ///                 Name = logEntry.Name,
+    ///                 SampleRate = logEntry.SamplingRate
+    ///             },
+    ///     };
     ///     }
     ///     </code>
     /// </example>

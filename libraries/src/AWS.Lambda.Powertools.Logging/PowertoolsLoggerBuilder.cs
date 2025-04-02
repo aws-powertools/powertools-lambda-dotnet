@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
@@ -112,6 +113,13 @@ public class PowertoolsLoggerBuilder
         configure?.Invoke(_configuration.LogBuffering);
         return this;
     }
+    
+    public PowertoolsLoggerBuilder WithLogOutput(IConsoleWrapper console)
+    {
+        _configuration.LogOutput = console ?? throw new ArgumentNullException(nameof(console));
+        return this;
+    }
+    
 
     /// <summary>
     /// Builds and returns a configured logger instance.
