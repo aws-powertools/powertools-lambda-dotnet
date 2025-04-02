@@ -17,9 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
-using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -428,22 +426,38 @@ internal sealed class PowertoolsLogger : ILogger
                     if (!string.IsNullOrWhiteSpace(key))
                         keys.TryAdd(key, value);
                 }
-
                 break;
+            
             case IEnumerable<KeyValuePair<string, object>> objectPairs:
                 foreach (var (key, value) in objectPairs)
                 {
                     if (!string.IsNullOrWhiteSpace(key))
                         keys.TryAdd(key, value);
                 }
-
                 break;
+            
             default:
+                // Skip property reflection for primitive types, strings and value types
+                if (state is string || 
+                    (state.GetType().IsPrimitive) || 
+                    state is ValueType)
+                {
+                    // Don't extract properties from primitives or strings
+                    break;
+                }
+            
+                // For complex objects, use reflection to get properties
                 foreach (var property in state.GetType().GetProperties())
                 {
-                    keys.TryAdd(property.Name, property.GetValue(state));
+                    try
+                    {
+                        keys.TryAdd(property.Name, property.GetValue(state));
+                    }
+                    catch
+                    {
+                        // Safely ignore reflection exceptions
+                    }
                 }
-
                 break;
         }
 
@@ -511,7 +525,7 @@ internal sealed class PowertoolsLogger : ILogger
                 {
                     // Format the value using the specified format
                     string formattedValue = formattable.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
-                    
+    
                     // Try to preserve the numeric type if possible
                     if (double.TryParse(formattedValue, out double numericValue))
                     {
@@ -529,8 +543,19 @@ internal sealed class PowertoolsLogger : ILogger
                 }
                 else
                 {
-                    // For regular objects, use the value directly
-                    parameters[actualParamName] = prop.Value;
+                    // For regular objects, convert to string if it's not a primitive type
+                    if (prop.Value != null && 
+                        !(prop.Value is string) && 
+                        !(prop.Value is ValueType) &&
+                        !(prop.Value.GetType().IsPrimitive))
+                    {
+                        parameters[actualParamName] = prop.Value.ToString();
+                    }
+                    else
+                    {
+                        // For primitives, use the value directly
+                        parameters[actualParamName] = prop.Value;
+                    }
                 }
             }
         }

@@ -23,7 +23,8 @@ public class ServiceTests : IDisposable
         Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "Environment Service");
             
         var consoleOut = Substitute.For<IConsoleWrapper>();
-        Logger.SetOutput(consoleOut);
+        Logger.Configure(options => 
+            options.LogOutput = consoleOut);
 
         // Act
         _testHandler.LogWithEnv();

@@ -14,8 +14,6 @@
  */
 
 using System;
-using System.Threading;
-using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
@@ -28,31 +26,6 @@ internal static class LoggerFactoryHolder
 {
     private static ILoggerFactory? _factory;
     private static readonly object _lock = new object();
-    private static bool _isConfigured = false;
-
-    // private static LogLevel _currentFilterLevel = LogLevel.Information;
-
-    // /// <summary>
-    // /// Updates the filter log level at runtime
-    // /// </summary>
-    // /// <param name="logLevel">The new minimum log level</param>
-    // public static void UpdateFilterLogLevel(LogLevel logLevel)
-    // {
-    //     lock (_lock)
-    //     {
-    //         // Only reset if level actually changes
-    //         if (_currentFilterLevel != logLevel)
-    //         {
-    //             _currentFilterLevel = logLevel;
-    //             
-    //             if (_factory != null)
-    //             {
-    //                 try { _factory.Dispose(); } catch { /* Ignore */ }
-    //                 _factory = null;
-    //             }
-    //         }
-    //     }
-    // }
     
     /// <summary>
     /// Gets or creates the shared logger factory
@@ -77,7 +50,6 @@ internal static class LoggerFactoryHolder
         lock (_lock)
         {
             _factory = factory;
-            _isConfigured = true;
             Logger.ClearInstance();
         }
     }
@@ -90,22 +62,17 @@ internal static class LoggerFactoryHolder
         lock (_lock)
         {
             // Dispose the old factory if it exists
-            if (_factory != null)
+            if (_factory == null) return;
+            try
             {
-                try
-                {
-                    _factory.Dispose();
-                }
-                catch
-                {
-                    // Ignore disposal errors
-                }
-                
-                _factory = null;
+                _factory.Dispose();
             }
-
-            // _currentFilterLevel = LogLevel.None;
-            _isConfigured = false;
+            catch
+            {
+                // Ignore disposal errors
+            }
+                
+            _factory = null;
         }
     }
 }

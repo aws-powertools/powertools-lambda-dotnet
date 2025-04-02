@@ -48,7 +48,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         public void Serialize_ShouldHandleEnumValues()
         {
             var consoleOut = Substitute.For<IConsoleWrapper>();
-            Logger.SetOutput(consoleOut);
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
             
             var lambdaContext = new TestLambdaContext
             {
@@ -231,7 +234,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         {
             ResetAllState();
             var consoleOut = Substitute.For<IConsoleWrapper>();
-            Logger.SetOutput(consoleOut);
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+                options.LogFormatter = new CustomLogFormatter();
+            });
             
             var lambdaContext = new TestLambdaContext
             {
@@ -242,7 +249,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 MemoryLimitInMB = 128
             };
 
-            Logger.UseFormatter(new CustomLogFormatter());
+            // Logger.UseFormatter(new CustomLogFormatter());
             _testHandler.TestCustomFormatterWithDecorator("test", lambdaContext);
 
             // serializer works differently in .net 8 and AOT. In .net 6 it writes properties that have null
@@ -268,7 +275,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         {
             ResetAllState();
             var consoleOut = Substitute.For<IConsoleWrapper>();
-            Logger.SetOutput(consoleOut);
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+                options.LogFormatter = new CustomLogFormatter();
+            });
             
             var lambdaContext = new TestLambdaContext
             {
@@ -279,7 +290,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 MemoryLimitInMB = 128
             };
 
-            Logger.UseFormatter(new CustomLogFormatter());
+            // Logger.UseFormatter(new CustomLogFormatter());
 
             _testHandler.TestCustomFormatterNoDecorator("test", lambdaContext);
 
@@ -305,9 +316,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         public void Should_Log_CustomFormatter_When_Decorated_No_Context()
         {
             var consoleOut = Substitute.For<IConsoleWrapper>();
-            Logger.SetOutput(consoleOut);
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+                options.LogFormatter = new CustomLogFormatter();
+            });
             
-            Logger.UseFormatter(new CustomLogFormatter());
+            // Logger.UseFormatter(new CustomLogFormatter());
 
             _testHandler.TestCustomFormatterWithDecoratorNoContext("test");
 

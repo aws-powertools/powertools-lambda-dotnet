@@ -22,7 +22,6 @@ using System.Text.Json;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
-using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -67,6 +66,9 @@ public class LoggingAspect
     private bool _bufferingEnabled;
     private PowertoolsLoggerConfiguration _currentConfig;
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="LoggingAspect" /> class.
+    /// </summary>
     public LoggingAspect(ILogger logger)
     {
         _logger = logger ?? LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
@@ -93,13 +95,9 @@ public class LoggingAspect
             if (hasSamplingRate) _currentConfig.SamplingRate = trigger.SamplingRate;
 
             // Need to refresh the logger after configuration changes
-            // _logger = Logger.GetPowertoolsLogger();
             _logger = LoggerFactoryHelper.CreateAndConfigureFactory(_currentConfig).CreatePowertoolsLogger();
-            // Logger.ClearInstance();
+            Logger.ClearInstance();
         }
-        
-        // Fetch the current configuration
-        
 
         // Set operational flags based on current configuration
         _isDebug = _currentConfig.MinimumLogLevel <= LogLevel.Debug;

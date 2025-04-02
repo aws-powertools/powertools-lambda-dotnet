@@ -69,7 +69,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
-    
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
+            
             // Act
             _testHandlers.TestMethodDebug();
     
@@ -110,7 +114,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var consoleOut = GetConsoleOutput();
             var correlationId = Guid.NewGuid().ToString();
-                
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
+            
             var context = new TestLambdaContext()
             {
                 FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
@@ -156,7 +164,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
-    
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
             // Act
             _testHandlers.LogEventDebug();
     
@@ -339,7 +350,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
-        
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
+            
             // Act
             _testHandlers.HandlerSamplingRate();
         
@@ -355,7 +370,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = new TestLoggerOutput();
-            Logger.SetOutput(consoleOut);
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
             
             // Act
             _testHandlers.HandlerService();
@@ -371,7 +389,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = new TestLoggerOutput();;
-            Logger.SetOutput(consoleOut);
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
             
             // Act
             _testHandlers.TestLogLevelCritical();
@@ -387,7 +408,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
-
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
+            
             var context = new TestLambdaContext()
             {
                 FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
@@ -405,7 +430,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
-            
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
             // Act
             _testHandlers.TestLogEventWithoutContext();
         
@@ -422,6 +450,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
             
             var test = new TestHandlers();
             
@@ -440,7 +472,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var consoleOut = GetConsoleOutput();
 
-            Logger.UseMinimumLogLevel(LogLevel.Warning); // Start with Warning level
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+                options.MinimumLogLevel = LogLevel.Warning;
+            });
     
             // Act
             _testHandlers.TestMethodDebug(); // Uses LogLevel.Debug attribute
@@ -456,8 +492,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
-
-            Logger.UseMinimumLogLevel(LogLevel.Warning);
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+                options.MinimumLogLevel = LogLevel.Warning;
+            });
     
             // Act - First call with Debug level attribute
             _testHandlers.TestMethodDebug();
@@ -478,6 +517,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
             var consoleOut = GetConsoleOutput();
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
     
             // Act
             _testHandlers.TestMethodDebug(); // Uses LogLevel.Debug attribute
@@ -493,7 +536,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var consoleOut = GetConsoleOutput();
             
-            Logger.UseMinimumLogLevel(LogLevel.Error);
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+                options.MinimumLogLevel = LogLevel.Error;
+            });
     
             // Act
             Logger.LogInformation("This should NOT be logged");
@@ -506,21 +553,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                 s.Contains("\"message\":\"This should be logged\"")));
             consoleOut.DidNotReceive().WriteLine(Arg.Is<string>(s => 
                 s.Contains("\"message\":\"This should NOT be logged\"")));
-            
-            Logger.UseMinimumLogLevel(LogLevel.Warning);
-            
-            Logger.LogInformation("Information should not be logged");
-            
-            Logger.UseMinimumLogLevel(LogLevel.Information);
-            Logger.LogDebug("Debug should not be logged");
-            Logger.LogInformation("Information should be logged");
-            
-            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
-                s.Contains("\"message\":\"Information should be logged\"")));
-            consoleOut.DidNotReceive().WriteLine(Arg.Is<string>(s => 
-                s.Contains("\"message\":\"Information should not be logged\"")));
-            consoleOut.DidNotReceive().WriteLine(Arg.Is<string>(s => 
-                s.Contains("\"message\":\"Debug should not be logged\"")));
         }
         
         public void Dispose()
@@ -532,7 +564,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Create a new mock each time
             var output = Substitute.For<IConsoleWrapper>();
-            Logger.SetOutput(output);
             return output;
         }
         

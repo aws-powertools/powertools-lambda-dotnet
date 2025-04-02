@@ -17,6 +17,7 @@ using System;
 using System.Text.Json;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -41,12 +42,17 @@ public static partial class Logger
                 {
                     if (_loggerInstance == null)
                     {
-                        _loggerInstance = GetPowertoolsLogger();
+                        _loggerInstance = Initialize();
                     }
                 }
             }
             return _loggerInstance;
         }
+    }
+
+    private static ILogger Initialize()
+    {
+        return LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
     }
 
     /// <summary>
@@ -63,114 +69,16 @@ public static partial class Logger
     /// Configure using a configuration action
     /// </summary>
     /// <param name="configure"></param>
-    internal static void Configure(Action<PowertoolsLoggerConfiguration> configure)
+    public static void Configure(Action<PowertoolsLoggerConfiguration> configure)
     {
         lock (Lock)
         {
-            var config = GetCurrentConfiguration();
+            var config = new PowertoolsLoggerConfiguration();
             configure(config);
-            PowertoolsLoggingBuilderExtensions.UpdateConfiguration(config);
+            _loggerInstance = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
         }
     }
     
-    internal static PowertoolsLoggerConfiguration GetCurrentConfiguration()
-    {
-        return PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
-    }
-
-    /// <summary>
-    /// Get the Powertools logger instance
-    /// </summary>
-    /// <returns>The configured Powertools logger</returns>
-    internal static ILogger GetPowertoolsLogger()
-    {
-        return LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
-    }
-
-    /// <summary>
-    /// Configure logger output case (snake_case, camelCase, PascalCase)
-    /// </summary>
-    /// <param name="outputCase">The case to use for the output</param>
-    public static void UseOutputCase(LoggerOutputCase outputCase)
-    {
-        Configure(config => {
-            config.LoggerOutputCase = outputCase;
-        });
-    }
-
-    /// <summary>
-    /// Configures the minimum log level
-    /// </summary>
-    /// <param name="logLevel">The minimum log level to display</param>
-    public static void UseMinimumLogLevel(LogLevel logLevel)
-    {
-        Configure(config => {
-            config.MinimumLogLevel = logLevel;
-        });
-        
-        _loggerInstance = null;
-    }
-
-    /// <summary>
-    /// Configures the service name
-    /// </summary>
-    /// <param name="serviceName">The service name to use in logs</param>
-    public static void UseServiceName(string serviceName)
-    {
-        if (string.IsNullOrEmpty(serviceName))
-            throw new ArgumentException("Service name cannot be null or empty", nameof(serviceName));
-
-        Configure(config => {
-            config.Service = serviceName;
-        });
-    }
-
-    /// <summary>
-    /// Sets the sampling rate for logs
-    /// </summary>
-    /// <param name="samplingRate">The rate (0.0 to 1.0) for sampling</param>
-    public static void UseSamplingRate(double samplingRate)
-    {
-        Configure(config => {
-            config.SamplingRate = samplingRate;
-        });
-    }
-
-    /// <summary>
-    /// Log buffering options.
-    /// <code>
-    /// Logger.UseLogBuffering(new LogBufferingOptions
-    /// {
-    ///     Enabled = true,
-    ///     BufferAtLogLevel = LogLevel.Debug
-    /// });
-    /// </code>
-    /// </summary>
-    public static void UseLogBuffering(LogBufferingOptions logBuffering)
-    {
-        if (logBuffering == null)
-            throw new ArgumentNullException(nameof(logBuffering));
-
-        Configure(config => {
-            config.LogBuffering = logBuffering;
-        });
-    }
-
-#if NET8_0_OR_GREATER
-    /// <summary>
-    /// Configure JSON serialization options
-    /// </summary>
-    /// <param name="jsonOptions">The JSON options to use</param>
-    public static void UseJsonOptions(JsonSerializerOptions jsonOptions)
-    {
-        if (jsonOptions == null)
-            throw new ArgumentNullException(nameof(jsonOptions));
-
-        Configure(config => {
-            config.JsonOptions = jsonOptions;
-        });
-    }
-#endif
     
     /// <summary>
     /// Reset the logger for testing
@@ -185,20 +93,5 @@ public static partial class Logger
     internal static void ClearInstance()
     {
         _loggerInstance = null;
-    }
-
-    /// <summary>
-    /// Set the output for the logger
-    /// </summary>
-    /// <param name="consoleOut"></param>
-    /// <exception cref="ArgumentNullException"></exception>
-    public static void SetOutput(IConsoleWrapper consoleOut)
-    {
-        if (consoleOut == null)
-            throw new ArgumentNullException(nameof(consoleOut));
-
-        Configure(config => {
-            config.LogOutput = consoleOut;
-        });
     }
 }
