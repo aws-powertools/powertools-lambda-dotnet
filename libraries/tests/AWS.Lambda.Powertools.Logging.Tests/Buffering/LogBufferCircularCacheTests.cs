@@ -29,7 +29,7 @@ public class LogBufferCircularCacheTests : IDisposable
             LogBuffering = new LogBufferingOptions
             {
                 BufferAtLogLevel = LogLevel.Debug,
-                MaxBytes = 1024 // Small buffer size to trigger overflow
+                MaxBytes = 1200 // Small buffer size to trigger overflow - Needs to be adjusted based on the log message size
             },
             LogOutput = _consoleOut
         };

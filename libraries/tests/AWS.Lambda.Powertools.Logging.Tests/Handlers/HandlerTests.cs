@@ -260,8 +260,6 @@ public class HandlerTests
         var output = new TestLoggerOutput();
         var handler = new SimpleFunctionWithStaticConfigure(output);
         
-        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
-
         await SimpleFunctionWithStaticConfigure.FunctionHandler();
 
         var logOutput = output.ToString();
@@ -272,6 +270,7 @@ public class HandlerTests
         Assert.Contains("\"service\":\"MyServiceName\"", logOutput);
         Assert.Contains("\"level\":\"Information\"", logOutput);
         Assert.Contains("\"message\":\"Starting up!\"", logOutput);
+        Assert.Contains("\"xray_trace_id\"", logOutput);
     }
 
     [Fact]

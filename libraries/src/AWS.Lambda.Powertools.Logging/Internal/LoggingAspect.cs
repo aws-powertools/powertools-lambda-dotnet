@@ -91,7 +91,7 @@ public class LoggingAspect
             if (hasService) _currentConfig.Service = trigger.Service;
             if (hasOutputCase) _currentConfig.LoggerOutputCase = trigger.LoggerOutputCase;
             if (hasSamplingRate) _currentConfig.SamplingRate = trigger.SamplingRate;
-
+            
             // Need to refresh the logger after configuration changes
             _logger = LoggerFactoryHelper.CreateAndConfigureFactory(_currentConfig).CreatePowertoolsLogger();
             Logger.ClearInstance();
@@ -138,8 +138,6 @@ public class LoggingAspect
                 Triggers = triggers
             };
 
-
-            var logEvent = trigger.LogEvent;
             _clearState = trigger.ClearState;
 
             InitializeLogger(trigger);
@@ -154,7 +152,6 @@ public class LoggingAspect
             _isContextInitialized = true;
 
             var eventObject = eventArgs.Args.FirstOrDefault();
-            CaptureXrayTraceId();
             CaptureLambdaContext(eventArgs);
             CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
             
@@ -199,17 +196,6 @@ public class LoggingAspect
             // clear the buffer after the handler has finished
             _logger.ClearBuffer();
         }
-    }
-
-    /// <summary>
-    ///     Captures the xray trace identifier.
-    /// </summary>
-    private void CaptureXrayTraceId()
-    {
-        if (string.IsNullOrWhiteSpace(_currentConfig.XRayTraceId))
-            return;
-        _logger.AppendKey(LoggingConstants.KeyXRayTraceId,
-            _currentConfig.XRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
     }
 
     /// <summary>

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
@@ -39,6 +40,8 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     private readonly Func<PowertoolsLoggerConfiguration> _currentConfig;
 
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
+
     /// <summary>
     ///     The current scope
     /// </summary>
@@ -49,12 +52,15 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     /// <param name="categoryName">The name.</param>
     /// <param name="getCurrentConfig"></param>
+    /// <param name="powertoolsConfigurations"></param>
     public PowertoolsLogger(
         string categoryName,
-        Func<PowertoolsLoggerConfiguration> getCurrentConfig)
+        Func<PowertoolsLoggerConfiguration> getCurrentConfig,
+        IPowertoolsConfigurations powertoolsConfigurations)
     {
         _categoryName = categoryName;
         _currentConfig = getCurrentConfig;
+        _powertoolsConfigurations = powertoolsConfigurations;
     }
 
     /// <summary>
@@ -217,8 +223,12 @@ internal sealed class PowertoolsLogger : ILogger
         logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString( config.TimestampFormat ?? "o"));
         logEntry.TryAdd(config.LogLevelKey, logLevel.ToString());
         logEntry.TryAdd(LoggingConstants.KeyService, config.Service);
+        if(! string.IsNullOrWhiteSpace(_powertoolsConfigurations.XRayTraceId))
+            logEntry.TryAdd(LoggingConstants.KeyXRayTraceId,
+                _powertoolsConfigurations.XRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
         logEntry.TryAdd(LoggingConstants.KeyLoggerName, _categoryName);
         logEntry.TryAdd(LoggingConstants.KeyMessage, message);
+        
         if (config.SamplingRate > 0)
             logEntry.TryAdd(LoggingConstants.KeySamplingRate, config.SamplingRate);
         

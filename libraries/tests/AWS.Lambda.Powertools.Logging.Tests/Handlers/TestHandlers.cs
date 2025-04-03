@@ -205,7 +205,6 @@ public class SimpleFunctionWithStaticConfigure
 {
     public SimpleFunctionWithStaticConfigure(IConsoleWrapper output)
     {
-        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
         // Constructor logic can go here if needed
         Logger.Configure(logger =>
         {
@@ -221,6 +220,9 @@ public class SimpleFunctionWithStaticConfigure
     [Logging]
     public static async Task<APIGatewayHttpApiV2ProxyResponse> FunctionHandler()
     {
+        // only set on handler
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+
         Logger.LogInformation("Starting up!");
 
         // throw new Exception();

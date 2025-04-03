@@ -142,7 +142,8 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
     {
         return _loggers.GetOrAdd(categoryName, name => new PowertoolsLogger(
             name,
-            GetCurrentConfig));
+            GetCurrentConfig,
+            _powertoolsConfigurations));
     }
 
     internal PowertoolsLoggerConfiguration GetCurrentConfig() => _currentConfig;
