@@ -1,6 +1,21 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
+using AWS.Lambda.Powertools.Common;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
@@ -11,17 +26,16 @@ internal class PowertoolsBufferingLogger : ILogger
 {
     private readonly ILogger _innerLogger;
     private readonly Func<PowertoolsLoggerConfiguration> _getCurrentConfig;
-    private readonly string _categoryName;
-    private readonly LogBuffer _buffer = new();
+    private readonly LogBuffer _buffer;
 
     public PowertoolsBufferingLogger(
         ILogger innerLogger,
         Func<PowertoolsLoggerConfiguration> getCurrentConfig,
-        string categoryName)
+        IPowertoolsConfigurations powertoolsConfigurations)
     {
         _innerLogger = innerLogger;
         _getCurrentConfig = getCurrentConfig;
-        _categoryName = categoryName;
+        _buffer = new LogBuffer(powertoolsConfigurations);
     }
 
     public IDisposable BeginScope<TState>(TState state)
@@ -31,30 +45,7 @@ internal class PowertoolsBufferingLogger : ILogger
 
     public bool IsEnabled(LogLevel logLevel)
     {
-        var options = _getCurrentConfig();
-
-        // If buffering is disabled, defer to inner logger
-        if (!options.LogBuffering.Enabled)
-        {
-            return _innerLogger.IsEnabled(logLevel);
-        }
-
-        // If the log level is at or above the configured minimum log level,
-        // let the inner logger decide
-        if (logLevel >= options.MinimumLogLevel)
-        {
-            return _innerLogger.IsEnabled(logLevel);
-        }
-
-        // For logs below minimum level but at or above buffer threshold, 
-        // we should handle them (buffer them)
-        if (logLevel >= options.LogBuffering.BufferAtLogLevel)
-        {
-            return true;
-        }
-
-        // Otherwise, the log level is below our buffer threshold
-        return false;
+        return true;
     }
 
     public void Log<TState>(
@@ -64,17 +55,11 @@ internal class PowertoolsBufferingLogger : ILogger
         Exception exception,
         Func<TState, Exception, string> formatter)
     {
-        // Skip if logger is not enabled for this level
-        if (!IsEnabled(logLevel))
-            return;
-
         var options = _getCurrentConfig();
         var bufferOptions = options.LogBuffering;
 
         // Check if this log should be buffered
-        bool shouldBuffer = bufferOptions.Enabled &&
-                            logLevel >= bufferOptions.BufferAtLogLevel &&
-                            logLevel < options.MinimumLogLevel;
+        bool shouldBuffer = logLevel <= bufferOptions.BufferAtLogLevel;
 
         if (shouldBuffer)
         {
@@ -84,7 +69,19 @@ internal class PowertoolsBufferingLogger : ILogger
                 if (_innerLogger is PowertoolsLogger powertoolsLogger)
                 {
                     var logEntry = powertoolsLogger.LogEntryString(logLevel, state, exception, formatter);
-                    _buffer.Add(logEntry, bufferOptions.MaxBytes);
+                    
+                    // Check the size of the log entry, log it if too large
+                    var size = 100 + (logEntry?.Length ?? 0) * 2;
+                    if (size > bufferOptions.MaxBytes)
+                    {
+                        // log the entry directly if it exceeds the buffer size
+                        powertoolsLogger.LogLine(logEntry);
+                        powertoolsLogger.LogWarning("Cannot add item to the buffer");
+                    }
+                    else
+                    {
+                        _buffer.Add(logEntry, bufferOptions.MaxBytes, size);
+                    }
                 }
             }
             catch (Exception ex)
@@ -103,15 +100,11 @@ internal class PowertoolsBufferingLogger : ILogger
         else
         {
             // If this is an error and we should flush on error
-            if (bufferOptions.Enabled &&
-                bufferOptions.FlushOnErrorLog &&
+            if (bufferOptions.FlushOnErrorLog &&
                 logLevel >= LogLevel.Error)
             {
                 FlushBuffer();
             }
-
-            // When not buffering, forward to the inner logger
-            _innerLogger.Log(logLevel, eventId, state, exception, formatter);
         }
     }
 
@@ -122,11 +115,16 @@ internal class PowertoolsBufferingLogger : ILogger
     {
         try
         {
-            // Get all buffered entries
-            var entries = _buffer.GetAndClear();
-
             if (_innerLogger is PowertoolsLogger powertoolsLogger)
             {
+                if (_buffer.HasEvictions)
+                {
+                    powertoolsLogger.LogWarning("Some logs are not displayed because they were evicted from the buffer. Increase buffer size to store more logs in the buffer");
+                }
+         
+                // Get all buffered entries
+                var entries = _buffer.GetAndClear();
+                
                 // Log each entry directly
                 foreach (var entry in entries)
                 {

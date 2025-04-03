@@ -2,6 +2,7 @@ using System;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Common.Tests;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -24,22 +25,21 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             // Arrange
             var config = new PowertoolsLoggerConfiguration
             {
-                LogBuffering = new LogBufferingOptions { Enabled = true },
+                LogBuffering = new LogBufferingOptions(),
                 LogOutput = _consoleOut
             };
 
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-            var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
             // Act
-            LogBufferManager.SetInvocationId("invocation-1");
+
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
             logger.LogDebug("Debug message from invocation 1");
 
-            LogBufferManager.SetInvocationId("invocation-2");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-2");
             logger.LogDebug("Debug message from invocation 2");
 
-            LogBufferManager.SetInvocationId("invocation-1");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
             logger.LogError("Error message from invocation 1");
 
             // Assert
@@ -54,23 +54,21 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void BufferedLogger_OnlyBuffersConfiguredLogLevels()
         {
             // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
+            
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
-                    BufferAtLogLevel = LogLevel.Debug
+                    BufferAtLogLevel = LogLevel.Trace
                 },
                 LogOutput = _consoleOut
             };
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-            var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
-            LogBufferManager.SetInvocationId("invocation-1");
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
             // Act
-            logger.LogTrace("Trace message"); // Below buffer threshold, should be ignored
+            logger.LogTrace("Trace message"); // should buffer
             logger.LogDebug("Debug message"); // Should be buffered
             logger.LogInformation("Info message"); // Above minimum, should be logged directly
 
@@ -84,7 +82,103 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Logger.FlushBuffer();
 
             output = _consoleOut.ToString();
-            Assert.Contains("Debug message", output); // Now should be visible
+            Assert.Contains("Trace message", output); // Now should be visible
+        }
+        
+        [Trait("Category", "BufferedLogger")]
+        [Fact]
+        public void BufferedLogger_Buffer_Takes_Precedence_Same_Level()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
+            
+            var config = new PowertoolsLoggerConfiguration
+            {
+                MinimumLogLevel = LogLevel.Information,
+                LogBuffering = new LogBufferingOptions
+                {
+                    BufferAtLogLevel = LogLevel.Information
+                },
+                LogOutput = _consoleOut
+            };
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
+
+            // Act
+            logger.LogTrace("Trace message"); // Below buffer threshold, should be ignored
+            logger.LogDebug("Debug message"); // Should be buffered
+            logger.LogInformation("Info message"); // Above minimum, should be logged directly
+
+            // Assert
+            var output = _consoleOut.ToString();
+            Assert.Empty(output);
+
+            // Flush the buffer
+            Logger.FlushBuffer();
+
+            output = _consoleOut.ToString();
+            Assert.Contains("Info message", output); // Now should be visible
+        }
+        
+        [Trait("Category", "BufferedLogger")]
+        [Fact]
+        public void BufferedLogger_Buffer_Takes_Precedence_Higher_Level()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
+            
+            var config = new PowertoolsLoggerConfiguration
+            {
+                MinimumLogLevel = LogLevel.Information,
+                LogBuffering = new LogBufferingOptions
+                {
+                    BufferAtLogLevel = LogLevel.Warning
+                },
+                LogOutput = _consoleOut
+            };
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
+
+            // Act
+            logger.LogWarning("Warning message"); // Should be buffered
+            logger.LogInformation("Info message"); // Should be buffered
+
+            // Assert
+            var output = _consoleOut.ToString();
+            Assert.Empty(output);
+
+            // Flush the buffer
+            Logger.FlushBuffer();
+
+            output = _consoleOut.ToString();
+            Assert.DoesNotContain("Info message", output); // Now should be visible
+            Assert.Contains("Warning message", output);
+        }
+        
+        [Trait("Category", "BufferedLogger")]
+        [Fact]
+        public void BufferedLogger_Buffer_Log_Level_Error_Does_Not_Buffer()
+        {
+            // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
+            
+            var config = new PowertoolsLoggerConfiguration
+            {
+                MinimumLogLevel = LogLevel.Information,
+                LogBuffering = new LogBufferingOptions
+                {
+                    BufferAtLogLevel = LogLevel.Error
+                },
+                LogOutput = _consoleOut
+            };
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
+
+            // Act
+            logger.LogError("Error message"); // Should be buffered
+            logger.LogInformation("Info message"); // Should be buffered
+
+            // Assert
+            var output = _consoleOut.ToString();
+            Assert.Contains("Error message", output);
+            Assert.Contains("Info message", output);
         }
 
         [Trait("Category", "BufferedLogger")]
@@ -92,21 +186,19 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void FlushOnErrorLog_FlushesBufferWhenEnabled()
         {
             // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug,
                     FlushOnErrorLog = true
                 },
                 LogOutput = _consoleOut
             };
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-            var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
-            LogBufferManager.SetInvocationId("invocation-1");
+
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
             // Act
             logger.LogDebug("Debug message 1"); // Should be buffered
@@ -125,20 +217,19 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void ClearBuffer_RemovesAllBufferedLogs()
         {
             // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug
                 },
                 LogOutput = _consoleOut
             };
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-            var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
-            LogBufferManager.SetInvocationId("invocation-1");
+            
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
+            
 
             // Act
             logger.LogDebug("Debug message 1"); // Should be buffered
@@ -162,21 +253,19 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void BufferSizeLimit_DiscardOldestEntriesWhenExceeded()
         {
             // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug,
                     MaxBytes = 1000 // Small buffer size to force overflow
                 },
                 LogOutput = _consoleOut
             };
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-            var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
-            LogBufferManager.SetInvocationId("invocation-1");
+            
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
             // Act
             // Add enough logs to exceed buffer size
@@ -198,20 +287,19 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void DisposingProvider_FlushesBufferedLogs()
         {
             // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug
                 },
                 LogOutput = _consoleOut
             };
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-            var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
-            LogBufferManager.SetInvocationId("invocation-1");
+
+            var provider = LoggerFactoryHelper.CreateAndConfigureFactory(config);
+            var logger = provider.CreatePowertoolsLogger();
 
             // Act
             logger.LogDebug("Debug message before disposal"); // Should be buffered
@@ -222,68 +310,20 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Assert.Contains("Debug message before disposal", output);
         }
 
-        [Trait("Category", "LoggerIntegration")]
-        [Fact]
-        public void DirectLoggerAndBufferedLogger_WorkTogether()
-        {
-            // Arrange
-            var config = new PowertoolsLoggerConfiguration
-            {
-                MinimumLogLevel = LogLevel.Information,
-                LogBuffering = new LogBufferingOptions
-                {
-                    Enabled = true,
-                    BufferAtLogLevel = LogLevel.Debug
-                },
-                LogOutput = _consoleOut
-            };
-
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-
-            // Create both standard and buffering providers
-            var standardProvider = new PowertoolsLoggerProvider(config, powertoolsConfig);
-            var bufferingProvider = new BufferingLoggerProvider(config, powertoolsConfig);
-
-            var standardLogger = standardProvider.CreateLogger("StandardLogger");
-            var bufferedLogger = bufferingProvider.CreateLogger("BufferedLogger");
-
-            LogBufferManager.SetInvocationId("test-invocation");
-
-            // Act
-            standardLogger.LogInformation("Direct info message");
-            bufferedLogger.LogDebug("Buffered debug message");
-            bufferedLogger.LogInformation("Direct info from buffered logger");
-
-            // Assert - before flush
-            var output = _consoleOut.ToString();
-            Assert.Contains("Direct info message", output);
-            Assert.Contains("Direct info from buffered logger", output);
-            Assert.DoesNotContain("Buffered debug message", output);
-
-            // Flush and check again
-            Logger.FlushBuffer();
-            output = _consoleOut.ToString();
-            Assert.Contains("Buffered debug message", output);
-        }
-
         [Trait("Category", "LoggerConfiguration")]
         [Fact]
         public void LoggerInitialization_RegistersWithBufferManager()
         {
             // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-id");
             var config = new PowertoolsLoggerConfiguration
             {
-                LogBuffering = new LogBufferingOptions { Enabled = true },
+                LogBuffering = new LogBufferingOptions(),
                 LogOutput = _consoleOut
             };
 
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
-            // Act
-            var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
-
-            LogBufferManager.SetInvocationId("test-id");
             logger.LogDebug("Test message");
             Logger.FlushBuffer();
 
@@ -304,9 +344,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 LogOutput = customOutput
             };
 
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-            var provider = new PowertoolsLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
+            var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
             // Act
             logger.LogDebug("Direct debug message");
@@ -321,12 +359,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void RegisteringMultipleProviders_AllWorkCorrectly()
         {
             // Arrange - create a clean configuration for this test
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "shared-invocation");
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug
                 },
                 LogOutput = _consoleOut
@@ -343,8 +381,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
 
             var logger1 = provider1.CreateLogger("Logger1");
             var logger2 = provider2.CreateLogger("Logger2");
-
-            LogBufferManager.SetInvocationId("shared-invocation");
 
             // Act
             logger1.LogDebug("Debug from logger1");
@@ -363,10 +399,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         {
             // Ensure we start with clean state
             LogBufferManager.ResetForTesting();
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
             // Arrange
             var config = new PowertoolsLoggerConfiguration
             {
-                LogBuffering = new LogBufferingOptions { Enabled = true },
+                LogBuffering = new LogBufferingOptions(),
                 LogOutput = _consoleOut
             };
 
@@ -381,8 +418,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             // Now create and register a second provider
             var provider2 = new BufferingLoggerProvider(config, powertoolsConfig);
             var logger2 = provider2.CreateLogger("Logger2");
-
-            LogBufferManager.SetInvocationId("test-invocation");
 
             // Act
             logger1.LogDebug("Debug from first provider");
@@ -404,16 +439,16 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         {
             // Arrange
             LogBufferManager.ResetForTesting();
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "empty-test");
             var config = new PowertoolsLoggerConfiguration
             {
-                LogBuffering = new LogBufferingOptions { Enabled = true },
+                LogBuffering = new LogBufferingOptions(),
                 LogOutput = _consoleOut
             };
             var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
             var provider = new BufferingLoggerProvider(config, powertoolsConfig);
 
             // Act - flush without any logs
-            LogBufferManager.SetInvocationId("empty-test");
             Logger.FlushBuffer();
 
             // Assert - should not throw exceptions
@@ -426,12 +461,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         {
             // Arrange
             LogBufferManager.ResetForTesting();
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "threshold-test");
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug
                 },
                 LogOutput = _consoleOut
@@ -441,7 +476,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             var logger = provider.CreateLogger("TestLogger");
 
             // Act
-            LogBufferManager.SetInvocationId("threshold-test");
             logger.LogDebug("Debug message exactly at threshold"); // Should be buffered
 
             // Assert before flush
@@ -452,32 +486,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Assert.Contains("Debug message exactly at threshold", _consoleOut.ToString());
         }
 
-        [Trait("Category", "LoggerDisabling")]
-        [Fact]
-        public void DisablingBuffering_StillLogsNormally()
-        {
-            // Arrange
-            LogBufferManager.ResetForTesting();
-            var config = new PowertoolsLoggerConfiguration
-            {
-                MinimumLogLevel = LogLevel.Debug,
-                LogBuffering = new LogBufferingOptions
-                {
-                    Enabled = false // Buffering disabled
-                },
-                LogOutput = _consoleOut
-            };
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-            var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
-
-            // Act
-            LogBufferManager.SetInvocationId("disabled-test");
-            logger.LogDebug("Debug message with buffering disabled");
-
-            // Assert - should log immediately even without flushing
-            Assert.Contains("Debug message with buffering disabled", _consoleOut.ToString());
-        }
 
         [Trait("Category", "MultipleInvocations")]
         [Fact]
@@ -488,7 +496,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
-                LogBuffering = new LogBufferingOptions { Enabled = true },
+                LogBuffering = new LogBufferingOptions(),
                 LogOutput = _consoleOut
             };
             var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
@@ -497,11 +505,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
 
             // Act
             // First invocation
-            LogBufferManager.SetInvocationId("invocation-A");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-A");
             logger.LogDebug("Debug for invocation A");
 
             // Switch to second invocation
-            LogBufferManager.SetInvocationId("invocation-B");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-B");
             logger.LogDebug("Debug for invocation B");
             Logger.FlushBuffer(); // Only flush B
 
@@ -511,68 +519,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Assert.DoesNotContain("Debug for invocation A", output);
 
             // Now flush A
-            LogBufferManager.SetInvocationId("invocation-A");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-A");
             Logger.FlushBuffer();
 
             output = _consoleOut.ToString();
             Assert.Contains("Debug for invocation A", output);
-        }
-
-        [Trait("Category", "ConfigurationUpdate")]
-        [Fact]
-        public void ChangingConfigurationDynamically_UpdatesBufferingBehavior()
-        {
-            // Arrange
-            LogBufferManager.ResetForTesting();
-            var initialConfig = new PowertoolsLoggerConfiguration
-            {
-                MinimumLogLevel = LogLevel.Warning, // Keep this as Warning
-                LogBuffering = new LogBufferingOptions
-                {
-                    Enabled = true,
-                    BufferAtLogLevel = LogLevel.Information // Buffer at info level
-                },
-                LogOutput = _consoleOut
-            };
-
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-    
-            // Create provider with initial config
-            var provider = new BufferingLoggerProvider(initialConfig, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
-
-            LogBufferManager.SetInvocationId("config-test");
-
-            // Act - with initial config
-            logger.LogInformation("Info message with initial config");
-    
-            // Should be buffered (Info < Warning minimum level)
-            Assert.DoesNotContain("Info message with initial config", _consoleOut.ToString());
-
-            // Update config to not buffer info anymore
-            var updatedConfig = new PowertoolsLoggerConfiguration
-            {
-                MinimumLogLevel = LogLevel.Information, // Changed to Information
-                LogBuffering = new LogBufferingOptions
-                {
-                    Enabled = true,
-                    BufferAtLogLevel = LogLevel.Debug // Only buffer debug level now
-                },
-                LogOutput = _consoleOut
-            };
-
-            // Directly update the provider's configuration
-            provider.UpdateConfiguration(updatedConfig);
-    
-            // Log with updated config
-            logger.LogInformation("Info message with updated config");
-    
-            // Assert - should log immediately with updated config
-            Assert.Contains("Info message with updated config", _consoleOut.ToString());
-    
-            // Flush and check if first message appears
-            Logger.FlushBuffer();
-            Assert.Contains("Info message with initial config", _consoleOut.ToString());
         }
 
         public void Dispose()
@@ -580,6 +531,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             // Clean up all state between tests
             Logger.ClearBuffer();
             LogBufferManager.ResetForTesting();
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", null);
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Common.Tests;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -27,18 +28,15 @@ public class LogBufferCircularCacheTests : IDisposable
             MinimumLogLevel = LogLevel.Information,
             LogBuffering = new LogBufferingOptions
             {
-                Enabled = true,
                 BufferAtLogLevel = LogLevel.Debug,
                 MaxBytes = 1024 // Small buffer size to trigger overflow
             },
             LogOutput = _consoleOut
         };
 
-        var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-        var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-        var logger = provider.CreateLogger("TestLogger");
+        var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
-        LogBufferManager.SetInvocationId("circular-buffer-test");
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "circular-buffer-test");
 
         // Act - add many debug logs to fill buffer
         for (int i = 0; i < 5; i++)
@@ -66,6 +64,46 @@ public class LogBufferCircularCacheTests : IDisposable
         Assert.Contains("New debug message 3", output);
         Assert.Contains("New debug message 4", output);
     }
+    
+    [Trait("Category", "CircularBuffer")]
+    [Fact]
+    public void Buffer_WhenMaxSizeExceeded_DiscardOldestEntries_Warn()
+    {
+        // Arrange
+        var config = new PowertoolsLoggerConfiguration
+        {
+            MinimumLogLevel = LogLevel.Information,
+            LogBuffering = new LogBufferingOptions
+            {
+                BufferAtLogLevel = LogLevel.Debug,
+                MaxBytes = 1024 // Small buffer size to trigger overflow
+            },
+            LogOutput = _consoleOut
+        };
+
+        var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
+
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "circular-buffer-test");
+
+        // Act - add many debug logs to fill buffer
+        for (int i = 0; i < 5; i++)
+        {
+            logger.LogDebug($"Old debug message {i} that should be removed");
+        }
+        
+        // Add more logs that should push out the older ones
+        for (int i = 0; i < 5; i++)
+        {
+            logger.LogDebug($"New debug message {i} that should remain");
+        }
+        
+        // Flush buffer
+        logger.FlushBuffer();
+
+        // Assert
+        var output = _consoleOut.ToString();
+        Assert.Contains("Some logs are not displayed because they were evicted from the buffer. Increase buffer size to store more logs in the buffer", output);
+    }
 
     [Trait("Category", "CircularBuffer")]
     [Fact]
@@ -77,18 +115,15 @@ public class LogBufferCircularCacheTests : IDisposable
             MinimumLogLevel = LogLevel.Information,
             LogBuffering = new LogBufferingOptions
             {
-                Enabled = true,
                 BufferAtLogLevel = LogLevel.Debug,
                 MaxBytes = 2048 // Small buffer size to trigger overflow
             },
             LogOutput = _consoleOut
         };
 
-        var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-        var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-        var logger = provider.CreateLogger("TestLogger");
+        var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
-        LogBufferManager.SetInvocationId("large-entry-test");
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "large-entry-test");
 
         // Act - add many small entries first
         for (int i = 0; i < 10; i++)
@@ -121,7 +156,7 @@ public class LogBufferCircularCacheTests : IDisposable
 
     [Trait("Category", "CircularBuffer")]
     [Fact]
-    public void Buffer_WithExtremelyLargeEntry_Discards()
+    public void Buffer_WithExtremelyLargeEntry_Logs_Directly_And_Warning()
     {
         // Arrange
         var config = new PowertoolsLoggerConfiguration
@@ -129,21 +164,18 @@ public class LogBufferCircularCacheTests : IDisposable
             MinimumLogLevel = LogLevel.Information,
             LogBuffering = new LogBufferingOptions
             {
-                Enabled = true,
                 BufferAtLogLevel = LogLevel.Debug,
                 MaxBytes = 4096 // Even with a larger buffer
             },
             LogOutput = _consoleOut
         };
 
-        var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-        var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-        var logger = provider.CreateLogger("TestLogger");
+        var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
-        LogBufferManager.SetInvocationId("extreme-entry-test");
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "extreme-entry-test");
 
         // Act - add some small entries first
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 4; i++)
         {
             logger.LogDebug($"Initial message {i}");
         }
@@ -152,8 +184,15 @@ public class LogBufferCircularCacheTests : IDisposable
         var hugeMessage = new string('X', 3000);
         logger.LogDebug($"Huge message: {hugeMessage}");
         
+        var bigMessageAndWarning = _consoleOut.ToString();
+        
+        // Huge message may be partially discarded depending on implementation
+        Assert.Contains("Huge message", bigMessageAndWarning);
+        Assert.Contains("level\":\"Warning", bigMessageAndWarning);
+        Assert.Contains("Cannot add item to the buffer", bigMessageAndWarning);
+        
         // Add more entries after
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 4; i++)
         {
             logger.LogDebug($"Final message {i}");
         }
@@ -165,16 +204,13 @@ public class LogBufferCircularCacheTests : IDisposable
         var output = _consoleOut.ToString();
         
         // Initial messages should be discarded
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 4; i++)
         {
             Assert.Contains($"Initial message {i}", output);
         }
         
-        // Huge message may be partially discarded depending on implementation
-        Assert.DoesNotContain("Huge message", output);
-        
         // Some of the final messages should be present
-        Assert.Contains("Final message 4", output);
+        Assert.Contains("Final message 3", output);
     }
 
     [Trait("Category", "CircularBuffer")]
@@ -187,25 +223,23 @@ public class LogBufferCircularCacheTests : IDisposable
             MinimumLogLevel = LogLevel.Information,
             LogBuffering = new LogBufferingOptions
             {
-                Enabled = true,
                 BufferAtLogLevel = LogLevel.Debug
             },
             LogOutput = _consoleOut
         };
 
-        var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-        var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-        var logger = provider.CreateLogger("TestLogger");
+        var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
         // Act - fill buffer for first invocation
-        LogBufferManager.SetInvocationId("invocation-1");
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
         for (int i = 0; i < 10; i++)
         {
             logger.LogDebug($"Invocation 1 message {i}");
         }
 
         // Switch to second invocation with fresh buffer
-        LogBufferManager.SetInvocationId("invocation-2");
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-2");
+        
         for (int i = 0; i < 5; i++)
         {
             logger.LogDebug($"Invocation 2 message {i}");
@@ -216,7 +250,7 @@ public class LogBufferCircularCacheTests : IDisposable
         var outputAfterSecond = _consoleOut.ToString();
         
         // Flush first invocation
-        LogBufferManager.SetInvocationId("invocation-1");
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
         logger.FlushBuffer();
         var outputAfterBoth = _consoleOut.ToString();
 
@@ -239,5 +273,7 @@ public class LogBufferCircularCacheTests : IDisposable
         // Clean up all state between tests
         Logger.ClearBuffer();
         LogBufferManager.ResetForTesting();
+        Logger.Reset();
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", null);
     }
 }

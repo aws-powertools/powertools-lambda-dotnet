@@ -110,6 +110,7 @@ public static class PowertoolsLoggingBuilderExtensions
     ///     Adds the Powertools logger to the logging builder with default configuration.
     /// </summary>
     /// <param name="builder">The logging builder to configure.</param>
+    /// <param name="configure"></param>
     /// <returns>The logging builder for further configuration.</returns>
     /// <remarks>
     ///     This method registers the Powertools logger with default settings. The logger will output 
@@ -174,7 +175,7 @@ public static class PowertoolsLoggingBuilderExtensions
         UpdateConfiguration(options);
 
         // If buffering is enabled, register buffer providers
-        if (options.LogBuffering?.Enabled == true)
+        if (options.LogBuffering != null)
         {
             // Add a filter for the buffer provider
             builder.AddFilter<BufferingLoggerProvider>(

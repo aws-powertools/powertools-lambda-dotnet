@@ -157,12 +157,11 @@ public class PowertoolsLoggerBuilderTests
             .WithService("buffer-test")
             .WithLogBuffering(options =>
             {
-                options.Enabled = true;
                 options.BufferAtLogLevel = LogLevel.Debug;
             })
             .Build();
 
-        LogBufferManager.SetInvocationId("config-test");
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "config-test");
         logger.LogDebug("Debug buffered message");
         logger.LogInformation("Info message");
 

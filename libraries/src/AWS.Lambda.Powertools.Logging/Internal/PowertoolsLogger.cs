@@ -86,6 +86,15 @@ internal sealed class PowertoolsLogger : ILogger
     public bool IsEnabled(LogLevel logLevel)
     {
         var config = _currentConfig();
+        
+        //if Buffering is enabled and the log level is below the buffer threshold, skip logging only if bellow error
+        if (logLevel <= config.LogBuffering?.BufferAtLogLevel
+            && config.LogBuffering?.BufferAtLogLevel != LogLevel.Error
+            && config.LogBuffering?.BufferAtLogLevel != LogLevel.Critical)
+        {
+            return false;
+        }
+        
         // If we have no explicit minimum level, use the default
         var effectiveMinLevel = config.MinimumLogLevel != LogLevel.None
             ? config.MinimumLogLevel

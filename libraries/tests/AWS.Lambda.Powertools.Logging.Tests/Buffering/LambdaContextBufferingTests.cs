@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
@@ -25,24 +26,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         }
 
         [Fact]
-        public void DisabledBuffering_LogsAllLevelsDirectly()
-        {
-            // Arrange
-            var logger = CreateLogger(LogLevel.Debug, false, LogLevel.Debug);
-            var handler = new LambdaHandler(logger);
-            var context = CreateTestContext("test-request-2");
-
-            // Act
-            handler.TestMethod("Event", context);
-
-            // Assert
-            var output = _consoleOut.ToString();
-            Assert.Contains("Information message", output);
-            Assert.Contains("Debug message", output);
-            Assert.Contains("Error message", output);
-        }
-
-        [Fact]
         public void FlushOnErrorEnabled_AutomaticallyFlushesBuffer()
         {
             // Arrange
@@ -50,6 +33,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             var handler = new ErrorOnlyHandler(logger);
             var context = CreateTestContext("test-request-3");
 
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
             // Act
             handler.TestMethod("Event", context);
 
@@ -58,15 +42,52 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Assert.Contains("Debug message", output);
             Assert.Contains("Error triggering flush", output);
         }
+        
+        [Fact]
+        public void Decorator_Clears_Buffer_On_Exit()
+        {
+            // Arrange
+            var logger = CreateLoggerWithFlushOnError(false);
+            var handler = new NoFlushHandler(logger);
+            var context = CreateTestContext("test-request-3");
+
+            // Act
+            handler.TestMethod("Event", context);
+
+            // Assert
+            var output = _consoleOut.ToString();
+            Assert.DoesNotContain("Debug message", output);
+            
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-request-3");
+            Logger.FlushBuffer();
+            
+            var debugNotFlushed = _consoleOut.ToString();
+            Assert.DoesNotContain("Debug message", debugNotFlushed);
+            
+            // second event
+            handler.TestMethod("Event", context);
+
+            // Assert
+            var output2 = _consoleOut.ToString();
+            Assert.DoesNotContain("Debug message", output2);
+            
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-request-4");
+            Logger.FlushBuffer();
+            
+            var debugNotFlushed2 = _consoleOut.ToString();
+            Assert.DoesNotContain("Debug message", debugNotFlushed2);
+        }
 
         [Fact]
         public async Task AsyncOperations_MaintainBufferContext()
         {
             // Arrange
-            var logger = CreateLogger(LogLevel.Information, true, LogLevel.Debug);
+            var logger = CreateLogger(LogLevel.Information, LogLevel.Debug);
             var handler = new AsyncLambdaHandler(logger);
             var context = CreateTestContext("async-test");
-
+            
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+            
             // Act
             await handler.TestMethodAsync("Event", context);
 
@@ -88,20 +109,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             };
         }
 
-        private int CountOccurrences(string text, string pattern)
-        {
-            int count = 0;
-            int i = 0;
-            while ((i = text.IndexOf(pattern, i)) != -1)
-            {
-                i += pattern.Length;
-                count++;
-            }
-
-            return count;
-        }
-
-        private ILogger CreateLogger(LogLevel minimumLevel, bool enableBuffering, LogLevel bufferAtLevel)
+        private ILogger CreateLogger(LogLevel minimumLevel, LogLevel bufferAtLevel)
         {
             return LoggerFactory.Create(builder =>
             {
@@ -112,7 +120,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                     config.LogOutput = _consoleOut;
                     config.LogBuffering = new LogBufferingOptions
                     {
-                        Enabled = enableBuffering,
                         BufferAtLogLevel = bufferAtLevel
                     };
                 });
@@ -130,7 +137,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                     config.LogOutput = _consoleOut;
                     config.LogBuffering = new LogBufferingOptions
                     {
-                        Enabled = true,
                         BufferAtLogLevel = LogLevel.Debug,
                         FlushOnErrorLog = flushOnError
                     };
@@ -142,11 +148,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         {
             Logger.ClearBuffer();
             LogBufferManager.ResetForTesting();
+            Logger.Reset();
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", null);
         }
     }
 
 
     [Collection("Sequential")]
+    [SuppressMessage("Usage", "xUnit1031:Do not use blocking task operations in test method")]
     public class StaticLoggerBufferingTests : IDisposable
     {
         private readonly TestLoggerOutput _consoleOut;
@@ -176,14 +185,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 options.MinimumLogLevel = LogLevel.Information;
                 options.LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
+
                     BufferAtLogLevel = LogLevel.Debug,
                     FlushOnErrorLog = false // Disable auto-flush to test manual flush
                 };
             });
 
             // Set invocation ID manually
-            LogBufferManager.SetInvocationId("test-static-request-1");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-1");
 
             // Act - log messages
             Logger.AppendKey("custom-key", "custom-value");
@@ -208,12 +217,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void StaticLogger_WithLoggingDecoratedHandler()
         {
             // Arrange
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
             Logger.Configure(options =>
             {
                 options.LogOutput = _consoleOut;
                 options.LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
+
                     BufferAtLogLevel = LogLevel.Debug,
                     FlushOnErrorLog = true
                 };
@@ -248,13 +258,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 options.MinimumLogLevel = LogLevel.Information;
                 options.LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
+
                     BufferAtLogLevel = LogLevel.Debug
                 };
             });
 
             // Set invocation ID
-            LogBufferManager.SetInvocationId("test-static-request-3");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-3");
 
             // Act - log message and clear buffer
             Logger.LogDebug("Debug message before clear");
@@ -278,14 +288,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 options.MinimumLogLevel = LogLevel.Information;
                 options.LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
+
                     BufferAtLogLevel = LogLevel.Debug,
                     FlushOnErrorLog = true
                 };
             });
 
             // Set invocation ID
-            LogBufferManager.SetInvocationId("test-static-request-4");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-4");
 
             // Act - log debug then error
             Logger.LogDebug("Debug message");
@@ -307,17 +317,17 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 options.MinimumLogLevel = LogLevel.Information;
                 options.LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
+
                     BufferAtLogLevel = LogLevel.Debug
                 };
             });
 
             // Act - first invocation
-            LogBufferManager.SetInvocationId("test-static-request-5A");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-5A");
             Logger.LogDebug("Debug from invocation A");
 
             // Switch to second invocation
-            LogBufferManager.SetInvocationId("test-static-request-5B");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-5B");
             Logger.LogDebug("Debug from invocation B");
             Logger.FlushBuffer(); // Only flush B
 
@@ -327,7 +337,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Assert.DoesNotContain("Debug from invocation A", outputAfterFirstFlush);
 
             // Switch back to first invocation and flush
-            LogBufferManager.SetInvocationId("test-static-request-5A");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-5A");
             Logger.FlushBuffer();
 
             // Assert - after second flush
@@ -346,13 +356,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 options.MinimumLogLevel = LogLevel.Information;
                 options.LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug,
                     FlushOnErrorLog = false
                 };
             });
 
-            LogBufferManager.SetInvocationId("test-static-request-6");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-6");
 
             // Act - log debug then error
             Logger.LogDebug("Debug message with auto-flush disabled");
@@ -380,13 +389,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 options.MinimumLogLevel = LogLevel.Information;
                 options.LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug,
                     FlushOnErrorLog = false
                 };
             });
 
-            LogBufferManager.SetInvocationId("test-static-request-8");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-8");
 
             // Act - simulate async operations
             Task.Run(() => { Logger.LogDebug("Debug from task 1"); }).Wait();
@@ -412,6 +420,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             LogBufferManager.ResetForTesting();
             LoggerFactoryHolder.Reset();
             _consoleOut.Clear();
+            Logger.Reset();
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", null);
         }
     }
 
@@ -465,7 +475,25 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             _logger.LogError("Error triggering flush");
         }
     }
+    
+    public class NoFlushHandler
+    {
+        private readonly ILogger _logger;
 
+        public NoFlushHandler(ILogger logger)
+        {
+            _logger = logger;
+        }
+
+        [Logging(LogEvent = true)]
+        public void TestMethod(string message, ILambdaContext lambdaContext)
+        {
+            _logger.LogDebug("Debug message");
+            _logger.LogError("Error triggering flush");
+            // No flush here - Decorator clears buffer on exit
+        }
+    }
+    
     public class AsyncLambdaHandler
     {
         private readonly ILogger _logger;

@@ -15,11 +15,13 @@
 
 using System;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.CloudWatchEvents.S3Events;
 using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Tests.Serializers;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -196,5 +198,36 @@ public class TestServiceHandler
     public void Handler()
     {
         Logger.LogInformation("Service: Attribute Service");
+    }
+}
+
+public class SimpleFunctionWithStaticConfigure
+{
+    public SimpleFunctionWithStaticConfigure(IConsoleWrapper output)
+    {
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+        // Constructor logic can go here if needed
+        Logger.Configure(logger =>
+        {
+            logger.LogOutput = output;
+            logger.Service = "MyServiceName";
+            logger.LogBuffering = new LogBufferingOptions
+            {
+                BufferAtLogLevel = LogLevel.Debug,
+            };
+        });
+    }
+
+    [Logging]
+    public static async Task<APIGatewayHttpApiV2ProxyResponse> FunctionHandler()
+    {
+        Logger.LogInformation("Starting up!");
+
+        // throw new Exception();
+        return new APIGatewayHttpApiV2ProxyResponse
+        {
+            Body = "Hello",
+            StatusCode = 200
+        };
     }
 }

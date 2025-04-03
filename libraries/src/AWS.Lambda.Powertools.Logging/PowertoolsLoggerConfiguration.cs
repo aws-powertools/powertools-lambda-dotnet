@@ -267,7 +267,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     ///     };
     ///     </code>
     /// </example>
-    public LogBufferingOptions LogBuffering { get; set; } = new();
+    public LogBufferingOptions LogBuffering { get; set; }
 
     /// <summary>
     /// Serializer instance for this configuration

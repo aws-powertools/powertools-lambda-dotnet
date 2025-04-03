@@ -26,9 +26,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void BasicBufferingBehavior_BuffersDebugLogsOnly()
         {
             // Arrange
-            var logger = CreateLogger(LogLevel.Information, true, LogLevel.Debug);
+            var logger = CreateLogger(LogLevel.Information, LogLevel.Debug);
             var handler = new HandlerWithoutFlush(logger); // Use a handler that doesn't flush
-            LogBufferManager.SetInvocationId("test-invocation");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
 
             // Act - log messages without flushing
             handler.TestMethod();
@@ -50,29 +50,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         }
 
         [Fact]
-        public void DisabledBuffering_LogsAllLevelsDirectly()
-        {
-            // Arrange
-            var logger = CreateLogger(LogLevel.Debug, false, LogLevel.Debug);
-            var handler = new Handlers(logger);
-            LogBufferManager.SetInvocationId("test-invocation");
-
-            // Act
-            handler.TestMethod();
-
-            // Assert
-            var output = _consoleOut.ToString();
-            Assert.Contains("Information message", output);
-            Assert.Contains("Error message", output);
-            Assert.Contains("Debug message", output); // Should be logged directly
-        }
-
-        [Fact]
         public void FlushOnErrorEnabled_AutomaticallyFlushesBuffer()
         {
             // Arrange
             var logger = CreateLoggerWithFlushOnError(true);
-            LogBufferManager.SetInvocationId("test-invocation");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
 
             // Act - with custom handler that doesn't manually flush
             var handler = new CustomHandlerWithoutFlush(logger);
@@ -89,7 +71,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         {
             // Arrange
             var logger = CreateLoggerWithFlushOnError(false);
-            LogBufferManager.SetInvocationId("test-invocation");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
 
             // Act
             var handler = new CustomHandlerWithoutFlush(logger);
@@ -105,8 +87,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void ClearingBuffer_RemovesBufferedLogs()
         {
             // Arrange
-            var logger = CreateLogger(LogLevel.Information, true, LogLevel.Debug);
-            LogBufferManager.SetInvocationId("test-invocation");
+            var logger = CreateLogger(LogLevel.Information, LogLevel.Debug);
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
 
             // Act
             var handler = new ClearBufferHandler(logger);
@@ -122,14 +104,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public void MultipleInvocations_IsolateLogBuffers()
         {
             // Arrange
-            var logger = CreateLogger(LogLevel.Information, true, LogLevel.Debug);
+            var logger = CreateLogger(LogLevel.Information, LogLevel.Debug);
             var handler = new Handlers(logger);
 
             // Act
-            LogBufferManager.SetInvocationId("invocation-1");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
             handler.TestMethod();
 
-            LogBufferManager.SetInvocationId("invocation-2");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-2");
             // Create a custom handler that logs different messages
             var customHandler = new MultipleInvocationHandler(logger);
             customHandler.TestMethod();
@@ -147,7 +129,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
-                LogBuffering = new LogBufferingOptions { Enabled = true, BufferAtLogLevel = LogLevel.Debug },
+                LogBuffering = new LogBufferingOptions { BufferAtLogLevel = LogLevel.Debug },
                 LogOutput = _consoleOut
             };
 
@@ -160,7 +142,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             var logger1 = provider1.CreateLogger("Provider1");
             var logger2 = provider2.CreateLogger("Provider2");
             
-            LogBufferManager.SetInvocationId("multi-provider-test");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "multi-provider-test");
 
             // Act
             logger1.LogDebug("Debug from provider 1");
@@ -179,9 +161,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         public async Task AsyncOperations_MaintainBufferContext()
         {
             // Arrange
-            var logger = CreateLogger(LogLevel.Information, true, LogLevel.Debug);
+            var logger = CreateLogger(LogLevel.Information, LogLevel.Debug);
             var handler = new AsyncHandler(logger);
-            LogBufferManager.SetInvocationId("async-test");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "async-test");
 
             // Act
             await handler.TestMethodAsync();
@@ -193,7 +175,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Assert.Contains("Debug from task 2", output);
         }
 
-        private ILogger CreateLogger(LogLevel minimumLevel, bool enableBuffering, LogLevel bufferAtLevel)
+        private ILogger CreateLogger(LogLevel minimumLevel, LogLevel bufferAtLevel)
         {
             return LoggerFactory.Create(builder =>
             {
@@ -204,7 +186,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                     config.LogOutput = _consoleOut;
                     config.LogBuffering = new LogBufferingOptions
                     {
-                        Enabled = enableBuffering,
                         BufferAtLogLevel = bufferAtLevel,
                         FlushOnErrorLog = false
                     };
@@ -223,7 +204,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                     config.LogOutput = _consoleOut;
                     config.LogBuffering = new LogBufferingOptions
                     {
-                        Enabled = true,
                         BufferAtLogLevel = LogLevel.Debug,
                         FlushOnErrorLog = flushOnError
                     };
@@ -236,6 +216,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             // Clean up all state between tests
             Logger.ClearBuffer();
             LogBufferManager.ResetForTesting();
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", null);
         }
     }
 

@@ -93,27 +93,42 @@ public class PowertoolsLoggerBuilder
     }
 
     /// <summary>
-    /// Enables or disables log buffering with default options.
-    /// </summary>
-    /// <param name="enabled">Whether log buffering should be enabled.</param>
-    /// <returns>The builder instance for method chaining.</returns>
-    public PowertoolsLoggerBuilder WithLogBuffering(bool enabled = true)
-    {
-        _configuration.LogBuffering.Enabled = enabled;
-        return this;
-    }
-
-    /// <summary>
     /// Configures log buffering with custom options.
     /// </summary>
     /// <param name="configure">Action to configure the log buffering options.</param>
     /// <returns>The builder instance for method chaining.</returns>
     public PowertoolsLoggerBuilder WithLogBuffering(Action<LogBufferingOptions> configure)
     {
+        _configuration.LogBuffering = new LogBufferingOptions();
         configure?.Invoke(_configuration.LogBuffering);
         return this;
     }
     
+    /// <summary>
+    ///     Specifies the console output wrapper used for writing logs. This property allows
+    ///     redirecting log output for testing or specialized handling scenarios.
+    ///     Defaults to standard console output via ConsoleWrapper.
+    /// </summary>
+    /// <example>
+    ///     <code>
+    ///     // Using TestLoggerOutput
+    ///     .WithLogOutput(new TestLoggerOutput());
+    ///
+    ///     // Custom console output for testing
+    ///     .WithLogOutput(new TestConsoleWrapper());
+    ///     
+    ///     // Example implementation for testing:
+    ///     public class TestConsoleWrapper : IConsoleWrapper
+    ///     {
+    ///         public List&lt;string&gt; CapturedOutput { get; } = new();
+    ///         
+    ///         public void WriteLine(string message)
+    ///         {
+    ///             CapturedOutput.Add(message);
+    ///         }
+    ///     }
+    ///     </code>
+    /// </example>
     public PowertoolsLoggerBuilder WithLogOutput(IConsoleWrapper console)
     {
         _configuration.LogOutput = console ?? throw new ArgumentNullException(nameof(console));

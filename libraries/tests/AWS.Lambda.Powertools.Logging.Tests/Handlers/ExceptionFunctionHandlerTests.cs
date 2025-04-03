@@ -7,6 +7,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Handlers;
 
+[Collection("Sequential")]
 public sealed class ExceptionFunctionHandlerTests : IDisposable
 {
     [Fact]

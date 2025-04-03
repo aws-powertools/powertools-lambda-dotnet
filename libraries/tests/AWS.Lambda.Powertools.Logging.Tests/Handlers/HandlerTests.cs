@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
@@ -193,8 +194,7 @@ public class HandlerTests
                 config.LogOutput = output;
                 config.LogBuffering = new LogBufferingOptions
                 {
-                    Enabled = true,
-                    BufferAtLogLevel = LogLevel.Debug,
+                    BufferAtLogLevel = LogLevel.Debug
                 };
             });
         }).CreatePowertoolsLogger();
@@ -252,6 +252,26 @@ public class HandlerTests
         Assert.Contains("\"Service\":\"my-service122\"", logOutput);
         Assert.Contains("\"Level\":\"Information\"", logOutput);
         Assert.Contains("\"Message\":\"Static method\"", logOutput);
+    }
+    
+    [Fact]
+    public async Task Should_Log_Properties_Setup_Constructor()
+    {
+        var output = new TestLoggerOutput();
+        var handler = new SimpleFunctionWithStaticConfigure(output);
+        
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+
+        await SimpleFunctionWithStaticConfigure.FunctionHandler();
+
+        var logOutput = output.ToString();
+        _output.WriteLine(logOutput);
+
+        // Verify static logger configuration
+        // Verify override of LoggerOutputCase from attribute
+        Assert.Contains("\"service\":\"MyServiceName\"", logOutput);
+        Assert.Contains("\"level\":\"Information\"", logOutput);
+        Assert.Contains("\"message\":\"Starting up!\"", logOutput);
     }
 
     [Fact]

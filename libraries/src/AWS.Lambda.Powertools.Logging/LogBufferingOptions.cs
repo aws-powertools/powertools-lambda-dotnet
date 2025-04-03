@@ -23,18 +23,17 @@ namespace AWS.Lambda.Powertools.Logging;
 public class LogBufferingOptions
 {
     /// <summary>
-    /// Gets or sets whether buffering is enabled
-    /// </summary>
-    public bool Enabled { get; set; } = false;
-    
-    /// <summary>
     /// Gets or sets the maximum size of the buffer in bytes
+    /// <para></para>
     /// Default is 20KB (20480 bytes)
     /// </summary>
     public int MaxBytes { get; set; } = 20480;
     
     /// <summary>
     /// Gets or sets the minimum log level to buffer
+    /// Defaults to Debug
+    /// <para></para>
+    /// Valid values are: Trace, Debug, Information, Warning
     /// </summary>
     public LogLevel BufferAtLogLevel { get; set; } = LogLevel.Debug;
     

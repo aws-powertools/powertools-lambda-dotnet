@@ -282,7 +282,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             configurations.LoggerSampleRate.Returns(loggerSampleRate);
 
             var systemWrapper = Substitute.For<IConsoleWrapper>();
-            
+
             var loggerConfiguration = new PowertoolsLoggerConfiguration
             {
                 Service = service,
@@ -1478,11 +1478,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
 
         [Theory]
-        [InlineData(true, "WARN", LogLevel.Warning)]
-        [InlineData(false, "Fatal", LogLevel.Critical)]
-        [InlineData(false, "NotValid", LogLevel.Critical)]
-        [InlineData(true, "NotValid", LogLevel.Warning)]
-        public void Log_Should_Use_Powertools_Log_Level_When_Lambda_Log_Level_Enabled(bool willLog, string awsLogLevel,
+        [InlineData("WARN", LogLevel.Warning)]
+        [InlineData("Fatal", LogLevel.Critical)]
+        [InlineData("NotValid", LogLevel.Critical)]
+        [InlineData("NotValid", LogLevel.Warning)]
+        public void Log_Should_Use_Powertools_Log_Level_When_Lambda_Log_Level_Enabled(string awsLogLevel,
             LogLevel logLevel)
         {
             // Arrange
@@ -1519,9 +1519,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         }
 
         [Theory]
-        [InlineData(true, "WARN", LogLevel.Warning)]
-        [InlineData(true, "Fatal", LogLevel.Critical)]
-        public void Log_Should_Use_AWS_Lambda_Log_Level_When_Enabled(bool willLog, string awsLogLevel,
+        [InlineData("WARN", LogLevel.Warning)]
+        [InlineData("Fatal", LogLevel.Critical)]
+        public void Log_Should_Use_AWS_Lambda_Log_Level_When_Enabled(string awsLogLevel,
             LogLevel logLevel)
         {
             // Arrange

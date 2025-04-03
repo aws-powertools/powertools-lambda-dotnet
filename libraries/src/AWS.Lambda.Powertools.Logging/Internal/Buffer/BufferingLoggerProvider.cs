@@ -25,13 +25,15 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 [ProviderAlias("PowertoolsBuffering")]
 internal class BufferingLoggerProvider : PowertoolsLoggerProvider
 {
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
     private readonly ConcurrentDictionary<string, PowertoolsBufferingLogger> _loggers = new();
 
-    public BufferingLoggerProvider(
+    internal BufferingLoggerProvider(
         PowertoolsLoggerConfiguration config,
         IPowertoolsConfigurations powertoolsConfigurations)
         : base(config, powertoolsConfigurations)
     {
+        _powertoolsConfigurations = powertoolsConfigurations;
         // Register with the buffer manager
         LogBufferManager.RegisterProvider(this);
     }
@@ -43,13 +45,13 @@ internal class BufferingLoggerProvider : PowertoolsLoggerProvider
             name => new PowertoolsBufferingLogger(
                 base.CreateLogger(name), // Use the parent's logger creation
                 GetCurrentConfig,
-                name));
+                _powertoolsConfigurations));
     }
 
     /// <summary>
     /// Flush all buffered logs
     /// </summary>
-    public void FlushBuffers()
+    internal void FlushBuffers()
     {
         foreach (var logger in _loggers.Values)
         {
@@ -60,7 +62,7 @@ internal class BufferingLoggerProvider : PowertoolsLoggerProvider
     /// <summary>
     /// Clear all buffered logs
     /// </summary>
-    public void ClearBuffers()
+    internal void ClearBuffers()
     {
         foreach (var logger in _loggers.Values)
         {
@@ -71,7 +73,7 @@ internal class BufferingLoggerProvider : PowertoolsLoggerProvider
     /// <summary>
     /// Clear buffered logs for the current invocation only
     /// </summary>
-    public void ClearCurrentBuffer()
+    internal void ClearCurrentBuffer()
     {
         foreach (var logger in _loggers.Values)
         {

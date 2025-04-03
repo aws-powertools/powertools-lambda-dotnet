@@ -99,7 +99,7 @@ public class LoggingAspect
 
         // Set operational flags based on current configuration
         _isDebug = _currentConfig.MinimumLogLevel <= LogLevel.Debug;
-        _bufferingEnabled = _currentConfig.LogBuffering?.Enabled ?? false;
+        _bufferingEnabled = _currentConfig.LogBuffering != null;
     }
 
     /// <summary>
@@ -156,12 +156,6 @@ public class LoggingAspect
             var eventObject = eventArgs.Args.FirstOrDefault();
             CaptureXrayTraceId();
             CaptureLambdaContext(eventArgs);
-
-            if (_bufferingEnabled)
-            {
-                LogBufferManager.SetInvocationId(LoggingLambdaContext.Instance.AwsRequestId);
-            }
-
             CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
             
             if(trigger.IsLogEventSet && trigger.LogEvent)

@@ -16,8 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
-using Microsoft.Extensions.Logging;
+using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
@@ -26,27 +25,23 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// </summary>
 internal class LogBuffer
 {
-    // Use AsyncLocal for automatic context flow across async calls
-    private static readonly AsyncLocal<string> _currentInvocationId = new AsyncLocal<string>();
-    
-    // Dictionary of buffers by invocation ID
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
+
+// Dictionary of buffers by invocation ID
     private readonly ConcurrentDictionary<string, InvocationBuffer> _buffersByInvocation = new();
     
     // Get the current invocation ID or create a fallback
-    private string CurrentInvocationId => _currentInvocationId.Value;
-    
-    /// <summary>
-    /// Set the current invocation ID (call this at the start of a Lambda invocation)
-    /// </summary>
-    public static void SetCurrentInvocationId(string invocationId)
+    private string CurrentInvocationId => _powertoolsConfigurations.XRayTraceId;
+
+    public LogBuffer(IPowertoolsConfigurations powertoolsConfigurations)
     {
-        _currentInvocationId.Value = invocationId;
+        _powertoolsConfigurations = powertoolsConfigurations;
     }
     
     /// <summary>
     /// Add a log entry to the buffer for the current invocation
     /// </summary>
-    public void Add(string logEntry, int maxBytes)
+    public void Add(string logEntry, int maxBytes, int size)
     {
         var invocationId = CurrentInvocationId;
         if (string.IsNullOrEmpty(invocationId))
@@ -55,7 +50,7 @@ internal class LogBuffer
             return;
         }
         var buffer = _buffersByInvocation.GetOrAdd(invocationId, _ => new InvocationBuffer());
-        buffer.Add(logEntry, maxBytes);
+        buffer.Add(logEntry, maxBytes, size);
     }
     
     /// <summary>
@@ -109,73 +104,12 @@ internal class LogBuffer
         }
     }
     
-    /// <summary>
-    /// Buffer for a specific invocation
-    /// </summary>
-    private class InvocationBuffer
+    public bool HasEvictions
     {
-        private readonly ConcurrentQueue<BufferedLogEntry> _buffer = new();
-        private int _currentSize;
-        
-        public void Add(string logEntry, int maxBytes)
+        get
         {
-            // Same implementation as before
-            var size = 100 + (logEntry?.Length ?? 0) * 2;
-            
-            // If entry size exceeds max buffer size, discard the entry completely
-            if (size > maxBytes)
-            {
-                // Entry is too large to ever fit in buffer, discard it
-                return;
-            }
-            
-            if (_currentSize + size > maxBytes)
-            {
-                // Remove oldest entries until we have enough space
-                while (_currentSize + size > maxBytes && _buffer.TryDequeue(out var removed))
-                {
-                    _currentSize -= removed.Size;
-                }
-                
-                if (_currentSize < 0) _currentSize = 0;
-            }
-            
-            _buffer.Enqueue(new BufferedLogEntry(logEntry, size));
-            _currentSize += size;
+            var invocationId = CurrentInvocationId;
+            return _buffersByInvocation.TryGetValue(invocationId, out var buffer) && buffer.HasEvictions;
         }
-        
-        public IReadOnlyCollection<string> GetAndClear()
-        {
-            var entries = new List<string>();
-            
-            try
-            {
-                while (_buffer.TryDequeue(out var entry))
-                {
-                    entries.Add(entry.Entry);
-                }
-            }
-            catch (Exception)
-            {
-                _buffer.Clear();
-            }
-            
-            _currentSize = 0;
-            return entries;
-        }
-        
-        public bool HasEntries => !_buffer.IsEmpty;
-    }
-}
-
-internal class BufferedLogEntry
-{
-    public string Entry { get; }
-    public int Size { get; }
-
-    public BufferedLogEntry(string entry, int calculatedSize)
-    {
-        Entry = entry;
-        Size = calculatedSize;
     }
 }

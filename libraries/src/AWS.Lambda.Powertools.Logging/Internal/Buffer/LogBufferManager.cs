@@ -35,14 +35,6 @@ internal static class LogBufferManager
     }
     
     /// <summary>
-    /// Set the current invocation ID to isolate logs between invocations
-    /// </summary>
-    internal static void SetInvocationId(string invocationId)
-    {
-        LogBuffer.SetCurrentInvocationId(invocationId);
-    }
-    
-    /// <summary>
     /// Flush buffered logs for the current invocation
     /// </summary>
     internal static void FlushCurrentBuffer()
@@ -93,6 +85,5 @@ internal static class LogBufferManager
     internal static void ResetForTesting()
     {
         Providers.Clear();
-        LogBuffer.SetCurrentInvocationId(null);
     }
 }
