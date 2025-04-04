@@ -126,7 +126,12 @@ public class HandlerTests
         Assert.Contains("  ", logOutput);
 
         // Verify write indented JSON
-        Assert.Contains("  \"Level\": \"Information\",\n  \"Service\": \"my-service122\",", logOutput);
+        Assert.Contains("\"Level\": \"Information\"", logOutput);
+        Assert.Contains("\"Service\": \"my-service122\"", logOutput);
+        Assert.Contains("\"Message\": \"Information message\"", logOutput);
+        Assert.Contains("\"Custom-key\": \"custom-value\"", logOutput);
+        Assert.Contains("\"FunctionName\": \"test-function\"", logOutput);
+        Assert.Contains("\"SamplingRate\": 0.002", logOutput);
     }
 
     [Fact]

@@ -97,6 +97,27 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Assert.Contains("Debug from task 1", output);
             Assert.Contains("Debug from task 2", output);
         }
+        
+        [Fact]
+        public async Task Should_Log_All_Levels_Bellow()
+        {
+            // Arrange
+            var logger = CreateLogger(LogLevel.Information, LogLevel.Information);
+            var handler = new AsyncLambdaHandler(logger);
+            var context = CreateTestContext("async-test");
+            
+            // Act
+            await handler.TestMethodAsync("Event", context);
+
+            // Assert
+            var output = _consoleOut.ToString();
+            Assert.Contains("Async info message", output);
+            Assert.Contains("Async debug message", output);
+            Assert.Contains("Async trace message", output);
+            Assert.Contains("Async warning message", output);
+            Assert.Contains("Debug from task 1", output);
+            Assert.Contains("Debug from task 2", output);
+        }
 
         private TestLambdaContext CreateTestContext(string requestId)
         {
@@ -308,7 +329,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         }
 
         [Fact]
-        public void StaticLogger_MultipleInvocationsIsolated()
+        public void StaticLogger_MultipleInvocationsIsolated_And_Clear()
         {
             // Arrange
             Logger.Configure(options =>
@@ -329,20 +350,18 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             // Switch to second invocation
             Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-5B");
             Logger.LogDebug("Debug from invocation B");
-            Logger.FlushBuffer(); // Only flush B
-
-            // Assert - after first flush
-            var outputAfterFirstFlush = _consoleOut.ToString();
-            Assert.Contains("Debug from invocation B", outputAfterFirstFlush);
-            Assert.DoesNotContain("Debug from invocation A", outputAfterFirstFlush);
 
             // Switch back to first invocation and flush
-            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-5A");
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-5C");
+            Logger.LogDebug("Debug from invocation C");
+            
             Logger.FlushBuffer();
 
             // Assert - after second flush
             var outputAfterSecondFlush = _consoleOut.ToString();
-            Assert.Contains("Debug from invocation A", outputAfterSecondFlush);
+            Assert.DoesNotContain("Debug from invocation A", outputAfterSecondFlush);
+            Assert.DoesNotContain("Debug from invocation B", outputAfterSecondFlush);
+            Assert.Contains("Debug from invocation C", outputAfterSecondFlush);
         }
 
         [Fact]
@@ -506,8 +525,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
         [Logging(LogEvent = true)]
         public async Task TestMethodAsync(string message, ILambdaContext lambdaContext)
         {
+            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+            
             _logger.LogInformation("Async info message");
             _logger.LogDebug("Async debug message");
+            _logger.LogTrace("Async trace message");
+            _logger.LogWarning("Async warning message");
 
             var task1 = Task.Run(() => { _logger.LogDebug("Debug from task 1"); });
 

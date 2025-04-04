@@ -180,7 +180,7 @@ public static class PowertoolsLoggingBuilderExtensions
             // Add a filter for the buffer provider
             builder.AddFilter<BufferingLoggerProvider>(
                 null,
-                options.LogBuffering.BufferAtLogLevel);
+                LogLevel.Trace);
 
             // Register the buffer provider as an enumerable service
             // Using singleton to ensure it's properly tracked

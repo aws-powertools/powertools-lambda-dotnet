@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -14,6 +14,7 @@
  */
 
 using System.Globalization;
+using AWS.Lambda.Powertools.Common.Core;
 
 namespace AWS.Lambda.Powertools.Common;
 
@@ -22,7 +23,7 @@ namespace AWS.Lambda.Powertools.Common;
 ///     Implements the <see cref="IPowertoolsConfigurations" />
 /// </summary>
 /// <seealso cref="IPowertoolsConfigurations" />
-public class PowertoolsConfigurations : IPowertoolsConfigurations
+internal class PowertoolsConfigurations : IPowertoolsConfigurations
 {
     private readonly IPowertoolsEnvironment _powertoolsEnvironment;
 
@@ -157,7 +158,8 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// </summary>
     /// <value>The logger sample rate.</value>
     public double LoggerSampleRate =>
-        double.TryParse(_powertoolsEnvironment.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture,  out var result)
+        double.TryParse(_powertoolsEnvironment.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv),
+            NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var result)
             ? result
             : 0;
 
@@ -187,7 +189,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// </summary>
     /// <value><c>true</c> if this instance is Lambda; otherwise, <c>false</c>.</value>
     public bool IsLambdaEnvironment => GetEnvironmentVariable(Constants.LambdaTaskRoot) is not null;
-    
+
     /// <summary>
     ///     Gets a value indicating whether [tracing is disabled].
     /// </summary>
@@ -206,17 +208,28 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
         GetEnvironmentVariableOrDefault(Constants.IdempotencyDisabledEnv, false);
 
     /// <inheritdoc />
-    public string BatchProcessingErrorHandlingPolicy => GetEnvironmentVariableOrDefault(Constants.BatchErrorHandlingPolicyEnv, "DeriveFromEvent");
+    public string BatchProcessingErrorHandlingPolicy =>
+        GetEnvironmentVariableOrDefault(Constants.BatchErrorHandlingPolicyEnv, "DeriveFromEvent");
 
     /// <inheritdoc />
-    public bool BatchParallelProcessingEnabled => GetEnvironmentVariableOrDefault(Constants.BatchParallelProcessingEnabled, false);
+    public bool BatchParallelProcessingEnabled =>
+        GetEnvironmentVariableOrDefault(Constants.BatchParallelProcessingEnabled, false);
 
     /// <inheritdoc />
-    public int BatchProcessingMaxDegreeOfParallelism => GetEnvironmentVariableOrDefault(Constants.BatchMaxDegreeOfParallelismEnv, 1);
+    public int BatchProcessingMaxDegreeOfParallelism =>
+        GetEnvironmentVariableOrDefault(Constants.BatchMaxDegreeOfParallelismEnv, 1);
 
     /// <inheritdoc />
-    public bool BatchThrowOnFullBatchFailureEnabled => GetEnvironmentVariableOrDefault(Constants.BatchThrowOnFullBatchFailureEnv, true);
+    public bool BatchThrowOnFullBatchFailureEnabled =>
+        GetEnvironmentVariableOrDefault(Constants.BatchThrowOnFullBatchFailureEnv, true);
 
     /// <inheritdoc />
     public bool MetricsDisabled => GetEnvironmentVariableOrDefault(Constants.PowertoolsMetricsDisabledEnv, false);
+
+    /// <inheritdoc />
+    public bool IsColdStart => LambdaLifecycleTracker.IsColdStart;
+    
+    /// <inheritdoc />
+    public string AwsInitializationType =>
+        GetEnvironmentVariable(Constants.AWSInitializationTypeEnv);
 }

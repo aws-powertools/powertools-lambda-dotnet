@@ -76,7 +76,7 @@ internal class PowertoolsBufferingLogger : ILogger
                     {
                         // log the entry directly if it exceeds the buffer size
                         powertoolsLogger.LogLine(logEntry);
-                        powertoolsLogger.LogWarning("Cannot add item to the buffer");
+                        ConsoleWrapper.WriteLine(LogLevel.Warning.ToLambdaLogLevel(), "Cannot add item to the buffer");
                     }
                     else
                     {
@@ -119,7 +119,7 @@ internal class PowertoolsBufferingLogger : ILogger
             {
                 if (_buffer.HasEvictions)
                 {
-                    powertoolsLogger.LogWarning("Some logs are not displayed because they were evicted from the buffer. Increase buffer size to store more logs in the buffer");
+                    ConsoleWrapper.WriteLine(LogLevel.Warning.ToLambdaLogLevel(), "Some logs are not displayed because they were evicted from the buffer. Increase buffer size to store more logs in the buffer");
                 }
          
                 // Get all buffered entries

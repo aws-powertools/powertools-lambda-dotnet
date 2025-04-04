@@ -32,12 +32,18 @@ public class ServiceTests : IDisposable
 
         // Assert
             
-        consoleOut.Received(1).WriteLine(
-            Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"Environment Service\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Service: Environment Service\""))
-        );
-        consoleOut.Received(1).WriteLine(
-            Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"Attribute Service\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Service: Attribute Service\""))
-        );            
+        consoleOut.Received(1).WriteLine(Arg.Is<string>(i => 
+            i.Contains("\"level\":\"Information\"") && 
+            i.Contains("\"service\":\"Environment Service\"") && 
+            i.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"") && 
+            i.Contains("\"message\":\"Service: Environment Service\"")
+        ));
+        consoleOut.Received(1).WriteLine(Arg.Is<string>(i => 
+            i.Contains("\"level\":\"Information\"") && 
+            i.Contains("\"service\":\"Attribute Service\"") && 
+            i.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"") && 
+            i.Contains("\"message\":\"Service: Attribute Service\"")
+        ));         
     }
 
     public void Dispose()

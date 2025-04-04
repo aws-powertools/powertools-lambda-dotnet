@@ -29,6 +29,7 @@ internal class LogBuffer
 
 // Dictionary of buffers by invocation ID
     private readonly ConcurrentDictionary<string, InvocationBuffer> _buffersByInvocation = new();
+    private string _lastInvocationId;
     
     // Get the current invocation ID or create a fallback
     private string CurrentInvocationId => _powertoolsConfigurations.XRayTraceId;
@@ -49,6 +50,15 @@ internal class LogBuffer
             // No invocation ID set, do not buffer
             return;
         }
+
+        // If this is a new invocation ID, clear previous buffers
+        if (_lastInvocationId != invocationId)
+        {
+            if (_lastInvocationId != null)
+                _buffersByInvocation.Clear();
+            _lastInvocationId = invocationId;
+        }
+        
         var buffer = _buffersByInvocation.GetOrAdd(invocationId, _ => new InvocationBuffer());
         buffer.Add(logEntry, maxBytes, size);
     }

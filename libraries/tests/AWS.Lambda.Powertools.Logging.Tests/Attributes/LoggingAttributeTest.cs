@@ -15,12 +15,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents.S3Events;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Core;
 using AWS.Lambda.Powertools.Common.Tests;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Tests.Handlers;
@@ -42,11 +44,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         }
     
         [Fact]
-        public void OnEntry_WhenLambdaContextDoesNotExist_IgnoresLambdaContext()
+        public void OnEntry_WhenLambdaContextDoesNotExist_IgnoresLambdaContext_No_Debug()
         {
             // Arrange
-            var consoleOut = GetConsoleOutput();
-    
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
             // Act
             _testHandlers.TestMethod();
     
@@ -54,14 +56,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             var allKeys = Logger.GetAllKeys()
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
     
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
-    
-            consoleOut.DidNotReceive().WriteLine(Arg.Any<string>());
+            Assert.Empty(allKeys);
+            
+            var st = stringWriter.ToString();
+            Assert.Empty(st);
         }
     
         [Fact]
@@ -69,6 +67,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
             Logger.Configure(options =>
             {
                 options.LogOutput = consoleOut;
@@ -81,17 +81,10 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             var allKeys = Logger.GetAllKeys()
                 .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
     
-            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyColdStart));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionName));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionVersion));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionMemorySize));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionArn));
-            Assert.False(allKeys.ContainsKey(LoggingConstants.KeyFunctionRequestId));
+            Assert.Empty(allKeys);
     
-            consoleOut.Received(1).WriteLine(
-                Arg.Is<string>(i =>
-                    i.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Lambda Context injection because ILambdaContext context parameter not found.\"}"))
-            );
+            var st = stringWriter.ToString();
+            Assert.Contains("Skipping Lambda Context injection because ILambdaContext context parameter not found", st);
         }
     
         [Fact]
@@ -164,20 +157,20 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
             Logger.Configure(options =>
             {
                 options.LogOutput = consoleOut;
             });
+            
             // Act
             _testHandlers.LogEventDebug();
     
-            consoleOut.Received(1).WriteLine(
-                Arg.Is<string>(i => i.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Event Log because event parameter not found.\"}"))
-            );
-            
-            consoleOut.Received(1).WriteLine(
-                Arg.Is<string>(i => i.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Lambda Context injection because ILambdaContext context parameter not found.\"}"))
-            );
+            // Assert
+            var st = stringWriter.ToString();
+            Assert.Contains("Skipping Event Log because event parameter not found.", st);
+            Assert.Contains("Skipping Lambda Context injection because ILambdaContext context parameter not found", st);
         }
     
         [Fact]
@@ -359,10 +352,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             _testHandlers.HandlerSamplingRate();
         
             // Assert
-        
-            consoleOut.Received().WriteLine(
-                Arg.Is<string>(i => i.Contains("\"message\":\"test\",\"samplingRate\":0.5"))
-            );
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
+                s.Contains("\"level\":\"Information\"") && 
+                s.Contains("\"service\":\"service_undefined\"") && 
+                s.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"") && 
+                s.Contains("\"message\":\"test\"") &&
+                s.Contains("\"samplingRate\":0.5")
+            ));
         }
         
         [Fact]
@@ -381,7 +377,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Assert
         
             var st = consoleOut.ToString();
-            Assert.Contains("\"level\":\"Information\",\"service\":\"test\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"test\"", st);
+
+            Assert.Contains("\"level\":\"Information\"", st);
+            Assert.Contains("\"service\":\"test\"", st);
+            Assert.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"", st);
+            Assert.Contains("\"message\":\"test\"", st);
         }
         
         [Fact]
@@ -430,19 +430,22 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+            
             Logger.Configure(options =>
             {
                 options.LogOutput = consoleOut;
             });
+            
             // Act
             _testHandlers.TestLogEventWithoutContext();
-        
-            // Assert
-            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
-                s.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Event Log because event parameter not found.\"}")));
             
-            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
-                s.Contains("\"level\":\"Debug\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"Skipping Lambda Context injection because ILambdaContext context parameter not found.\"}")));
+            // Assert
+            var st = stringWriter.ToString();
+            Assert.Contains("Skipping Event Log because event parameter not found.", st);
+            Assert.Contains("Skipping Lambda Context injection because ILambdaContext context parameter not found", st);
+           
         }
         
         [Fact]
@@ -461,9 +464,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             test.TestLogNoDecorator();
     
             // Assert
-            consoleOut.Received().WriteLine(
-                Arg.Is<string>(i => i.Contains("\"level\":\"Information\",\"service\":\"service_undefined\",\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":\"test\"}"))
-            );
+            consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
+                s.Contains("\"level\":\"Information\"") && 
+                s.Contains("\"service\":\"service_undefined\"") && 
+                s.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"") && 
+                s.Contains("\"message\":\"test\"")
+            ));
         }
         
         [Fact]
@@ -471,7 +477,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = GetConsoleOutput();
-
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+            
             Logger.Configure(options =>
             {
                 options.LogOutput = consoleOut;
@@ -482,9 +490,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             _testHandlers.TestMethodDebug(); // Uses LogLevel.Debug attribute
     
             // Assert
-            consoleOut.Received(1).WriteLine(Arg.Is<string>(s => 
-                s.Contains("\"level\":\"Debug\"") && 
-                s.Contains("Skipping Lambda Context injection")));
+            var st = stringWriter.ToString();
+            Assert.Contains("Skipping Lambda Context injection because ILambdaContext context parameter not found", st);
         }
         
         [Fact]
@@ -517,6 +524,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
             var consoleOut = GetConsoleOutput();
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+            
             Logger.Configure(options =>
             {
                 options.LogOutput = consoleOut;
@@ -526,8 +536,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             _testHandlers.TestMethodDebug(); // Uses LogLevel.Debug attribute
     
             // Assert
-            consoleOut.Received().WriteLine(Arg.Is<string>(s => 
-                s.Contains("\"level\":\"Debug\"")));
+            var st = stringWriter.ToString();
+            Assert.Contains("Skipping Lambda Context injection because ILambdaContext context parameter not found", st);
         }
         
         [Fact]
@@ -587,6 +597,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                 LoggerOutputCase = LoggerOutputCase.SnakeCase
             };
             PowertoolsLoggingBuilderExtensions.UpdateConfiguration(config);
+            LambdaLifecycleTracker.Reset();
         }
     }
 }

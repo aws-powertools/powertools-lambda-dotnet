@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.IO;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Tests.Handlers;
@@ -89,10 +90,13 @@ public class LoggerAspectTests : IDisposable
         loggingAspect.OnEntry(aspectArgs);
 
         // Assert
-        consoleOut.Received().WriteLine(Arg.Is<string>(s =>
-            s.Contains(
-                "\"Level\":\"Information\",\"Service\":\"TestService\",\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":null},\"SamplingRate\":0.5}")
-            && s.Contains("\"CorrelationId\":\"20\"")
+        consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
+            s.Contains("\"Level\":\"Information\"") && 
+            s.Contains("\"Service\":\"TestService\"") && 
+            s.Contains("\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\"") && 
+            s.Contains("\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":null}") &&
+            s.Contains("\"CorrelationId\":\"20\"") &&
+            s.Contains("\"SamplingRate\":0.5")
         ));
     }
 
@@ -154,10 +158,12 @@ public class LoggerAspectTests : IDisposable
         Assert.Equal(0, updatedConfig.SamplingRate);
         Assert.True(updatedConfig.LogEvent);
     
-        consoleOut.Received().WriteLine(Arg.Is<string>(s =>
-            s.Contains(
-                "\"Level\":\"Information\",\"Service\":\"TestService\",\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":null}}")
-            && s.Contains("\"CorrelationId\":\"20\"")
+        consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
+            s.Contains("\"Level\":\"Information\"") && 
+            s.Contains("\"Service\":\"TestService\"") && 
+            s.Contains("\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\"") && 
+            s.Contains("\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":null}") &&
+            s.Contains("\"CorrelationId\":\"20\"")
         ));
     }
     
@@ -281,11 +287,14 @@ public class LoggerAspectTests : IDisposable
         Assert.Equal("TestService", updatedConfig.Service);
         Assert.Equal(LoggerOutputCase.PascalCase, updatedConfig.LoggerOutputCase);
         Assert.Equal(0.5, updatedConfig.SamplingRate);
-    
-        consoleOut.Received().WriteLine(Arg.Is<string>(s =>
-            s.Contains(
-                "\"Level\":\"Information\",\"Service\":\"TestService\",\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":null},\"SamplingRate\":0.5}")
-            && s.Contains("\"CorrelationId\":\"20\"")
+        
+        consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
+            s.Contains("\"Level\":\"Information\"") && 
+            s.Contains("\"Service\":\"TestService\"") && 
+            s.Contains("\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\"") && 
+            s.Contains("\"Message\":{\"FullName\":\"Powertools\",\"Age\":20,\"Headers\":null}") &&
+            s.Contains("\"CorrelationId\":\"20\"") &&
+            s.Contains("\"SamplingRate\":0.5")
         ));
     }
     
@@ -326,9 +335,11 @@ public class LoggerAspectTests : IDisposable
         loggingAspect.OnEntry(aspectArgs);
     
         // Assert
-        consoleOut.Received().WriteLine(Arg.Is<string>(s =>
-            s.Contains(
-                "\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"message\":{\"test_data\":\"test-data\"}}")
+        consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
+            s.Contains("\"level\":\"Information\"") && 
+            s.Contains("\"service\":\"TestService\"") && 
+            s.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"") && 
+            s.Contains("\"message\":{\"test_data\":\"test-data\"}")
         ));
     }
     
@@ -437,6 +448,8 @@ public class LoggerAspectTests : IDisposable
         };
 
         // Act        
+        var stringWriter = new StringWriter();
+        Console.SetOut(stringWriter);
         var loggingAspect = new LoggingAspect(logger);
         loggingAspect.OnEntry(aspectArgs);
     
@@ -447,10 +460,9 @@ public class LoggerAspectTests : IDisposable
         Assert.Equal(LoggerOutputCase.PascalCase, updatedConfig.LoggerOutputCase);
         Assert.Equal(LogLevel.Debug, updatedConfig.MinimumLogLevel);
     
-        consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
-            s.Contains(
-                "\"Level\":\"Debug\",\"Service\":\"TestService\",\"Name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"Message\":\"Skipping Lambda Context injection because ILambdaContext context parameter not found.\"}")));
-    
+        string consoleOutput = stringWriter.ToString();
+        Assert.Contains("Skipping Lambda Context injection because ILambdaContext context parameter not found.", consoleOutput);
+        
         consoleOut.Received(1).WriteLine(Arg.Is<string>(s =>
             s.Contains("\"CorrelationId\":\"test\"") &&
             s.Contains(

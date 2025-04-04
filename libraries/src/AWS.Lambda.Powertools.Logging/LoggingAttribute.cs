@@ -191,6 +191,10 @@ public class LoggingAttribute : MethodAspectAttribute
     /// </summary>
     public bool FlushBufferOnUncaughtError { get; set; }
 
+    /// <summary>
+    /// Creates the aspect with the Logger
+    /// </summary>
+    /// <returns></returns>
     protected override IMethodAspectHandler CreateHandler()
     {
         return new LoggingAspect(LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger());

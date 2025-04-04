@@ -20,6 +20,8 @@ namespace AWS.Lambda.Powertools.Common;
 /// </summary>
 internal static class Constants
 {
+    internal const string AWSInitializationTypeEnv = "AWS_LAMBDA_INITIALIZATION_TYPE";
+
     /// <summary>
     ///     Constant for POWERTOOLS_SERVICE_NAME environment variable
     /// </summary>

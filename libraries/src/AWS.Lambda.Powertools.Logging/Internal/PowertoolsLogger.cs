@@ -183,18 +183,35 @@ internal sealed class PowertoolsLogger : ILogger
     {
         var logEntry = new Dictionary<string, object>();
 
-        // Add Custom Keys
-        foreach (var (key, value) in this.GetAllKeys())
-        {
-            logEntry.TryAdd(key, value);
-        }
-
+        var config = _currentConfig();
+        logEntry.TryAdd(config.LogLevelKey, logLevel.ToString());
+        logEntry.TryAdd(LoggingConstants.KeyMessage, message);
+        logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString( config.TimestampFormat ?? "o"));
+        logEntry.TryAdd(LoggingConstants.KeyService, config.Service);
+        logEntry.TryAdd(LoggingConstants.KeyColdStart, _powertoolsConfigurations.IsColdStart);
+        
         // Add Lambda Context Keys
         if (LoggingLambdaContext.Instance is not null)
         {
             AddLambdaContextKeys(logEntry);
         }
-
+        
+        
+        if(! string.IsNullOrWhiteSpace(_powertoolsConfigurations.XRayTraceId))
+            logEntry.TryAdd(LoggingConstants.KeyXRayTraceId,
+                _powertoolsConfigurations.XRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
+        logEntry.TryAdd(LoggingConstants.KeyLoggerName, _categoryName);
+        
+        if (config.SamplingRate > 0)
+            logEntry.TryAdd(LoggingConstants.KeySamplingRate, config.SamplingRate);
+        
+        // Add Custom Keys
+        foreach (var (key, value) in this.GetAllKeys())
+        {
+            logEntry.TryAdd(key, value);
+        }
+        
+        
         // Add Extra Fields
         if (CurrentScope?.ExtraKeys is not null)
         {
@@ -218,19 +235,6 @@ internal sealed class PowertoolsLogger : ILogger
                 }
             }
         }
-
-        var config = _currentConfig();
-        logEntry.TryAdd(LoggingConstants.KeyTimestamp, timestamp.ToString( config.TimestampFormat ?? "o"));
-        logEntry.TryAdd(config.LogLevelKey, logLevel.ToString());
-        logEntry.TryAdd(LoggingConstants.KeyService, config.Service);
-        if(! string.IsNullOrWhiteSpace(_powertoolsConfigurations.XRayTraceId))
-            logEntry.TryAdd(LoggingConstants.KeyXRayTraceId,
-                _powertoolsConfigurations.XRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
-        logEntry.TryAdd(LoggingConstants.KeyLoggerName, _categoryName);
-        logEntry.TryAdd(LoggingConstants.KeyMessage, message);
-        
-        if (config.SamplingRate > 0)
-            logEntry.TryAdd(LoggingConstants.KeySamplingRate, config.SamplingRate);
         
         // Use the AddExceptionDetails method instead of adding exception directly
         if (exception != null)
@@ -401,10 +405,10 @@ internal sealed class PowertoolsLogger : ILogger
     {
         var context = LoggingLambdaContext.Instance;
         logEntry.TryAdd(LoggingConstants.KeyFunctionName, context.FunctionName);
-        logEntry.TryAdd(LoggingConstants.KeyFunctionVersion, context.FunctionVersion);
         logEntry.TryAdd(LoggingConstants.KeyFunctionMemorySize, context.MemoryLimitInMB);
         logEntry.TryAdd(LoggingConstants.KeyFunctionArn, context.InvokedFunctionArn);
         logEntry.TryAdd(LoggingConstants.KeyFunctionRequestId, context.AwsRequestId);
+        logEntry.TryAdd(LoggingConstants.KeyFunctionVersion, context.FunctionVersion);
     }
 
     /// <summary>

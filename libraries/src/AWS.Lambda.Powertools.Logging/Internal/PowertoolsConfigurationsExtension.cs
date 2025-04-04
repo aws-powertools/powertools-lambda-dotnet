@@ -20,6 +20,32 @@ using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
 
+internal static class LambdaLogLevelMapper
+{
+    public static string ToLambdaLogLevel(this LogLevel logLevel)
+    {
+        switch (logLevel)
+        {
+            case LogLevel.Trace:
+                return "trace";
+            case LogLevel.Debug:
+                return "debug";
+            case LogLevel.Information:
+                return "info";
+            case LogLevel.Warning:
+                return "warn";
+            case LogLevel.Error:
+                return "error";
+            case LogLevel.Critical:
+                return "fatal";
+            default:
+                return "info";
+        }
+    }
+}
+
+
+
 /// <summary>
 ///     Class PowertoolsConfigurationsExtension.
 /// </summary>

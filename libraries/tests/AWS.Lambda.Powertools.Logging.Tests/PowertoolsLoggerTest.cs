@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Core;
 using AWS.Lambda.Powertools.Common.Tests;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Serializers;
@@ -1129,8 +1130,16 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             ));
 
             systemWrapper.Received(1).WriteLine(Arg.Is<string>(s =>
-                s.Contains("\"level\":\"Error\",\"service\":\"" + service + "\",\"name\":\"" + loggerName +
-                           "\",\"message\":\"Something went wrong and we logged an exception itself with an inner exception. This is a param 12345\",\"exception\":{\"type\":\"System.InvalidOperationException\",\"message\":\"Parent exception message\",\"inner_exception\":{\"type\":\"System.ArgumentNullException\",\"message\":\"Very important inner exception message (Parameter 'service')\"}}}")
+                s.Contains("\"level\":\"Error\"") &&
+                s.Contains("\"service\":\"" + service + "\"") &&
+                s.Contains("\"name\":\"" + loggerName + "\"") &&
+                s.Contains("\"message\":\"Something went wrong and we logged an exception itself with an inner exception. This is a param 12345\"") &&
+                s.Contains("\"exception\":{") &&
+                s.Contains("\"type\":\"System.InvalidOperationException\"") &&
+                s.Contains("\"message\":\"Parent exception message\"") &&
+                s.Contains("\"inner_exception\":{") &&
+                s.Contains("\"type\":\"System.ArgumentNullException\"") &&
+                s.Contains("\"message\":\"Very important inner exception message (Parameter 'service')\"")
             ));
         }
 
@@ -1170,8 +1179,16 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             // Assert
             systemWrapper.Received(1).WriteLine(Arg.Is<string>(s =>
-                s.Contains(
-                    "\"message\":\"Something went wrong and we logged an exception itself with an inner exception. This is a param 12345\",\"exception\":{\"type\":\"System.InvalidOperationException\",\"message\":\"Parent exception message\",\"inner_exception\":{\"type\":\"System.ArgumentNullException\",\"message\":\"service\",\"inner_exception\":{\"type\":\"System.Exception\",\"message\":\"Very important nested inner exception message\"}}}}")
+                s.Contains("\"message\":\"Something went wrong and we logged an exception itself with an inner exception. This is a param 12345\"") &&
+                s.Contains("\"exception\":{") &&
+                s.Contains("\"type\":\"System.InvalidOperationException\"") &&
+                s.Contains("\"message\":\"Parent exception message\"") &&
+                s.Contains("\"inner_exception\":{") &&
+                s.Contains("\"type\":\"System.ArgumentNullException\"") &&
+                s.Contains("\"message\":\"service\"") &&
+                s.Contains("\"inner_exception\":{") &&
+                s.Contains("\"type\":\"System.Exception\"") &&
+                s.Contains("\"message\":\"Very important nested inner exception message\"")
             ));
         }
 
@@ -1427,7 +1444,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             systemWrapper.Received(1).WriteLine(
                 Arg.Is<string>(s =>
                     s.Contains(
-                        "\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\",\"propThree\":{\"propFour\":1},\"date\":\"2022-01-01\"}}")
+                        "\"message\":{\"propOne\":\"Value 1\",\"propTwo\":\"Value 2\",\"propThree\":{\"propFour\":1},\"date\":\"2022-01-01\"}")
                 )
             );
         }
@@ -1721,11 +1738,38 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             Assert.True(logger.IsEnabled(logLevel));
             Assert.Equal(logLevel.ToString(), configurations.LogLevel);
         }
+        
+        [Theory]
+        [InlineData(true, "on-demand")]
+        [InlineData(false, "provisioned-concurrency")]
+        public void Log_Cold_Start(bool willLog, string awsInitType)
+        {
+            // Arrange
+            var logOutput = new TestLoggerOutput();
+            Environment.SetEnvironmentVariable("AWS_LAMBDA_INITIALIZATION_TYPE", awsInitType);
+            var configurations = new PowertoolsConfigurations(new PowertoolsEnvironment());
+
+            var loggerConfiguration = new PowertoolsLoggerConfiguration
+            {
+                LoggerOutputCase = LoggerOutputCase.CamelCase,
+                LogOutput = logOutput
+            };
+
+            var provider = new PowertoolsLoggerProvider(loggerConfiguration, configurations);
+            var logger = provider.CreateLogger("temp");
+
+            // Act
+            logger.LogInformation("Hello");
+
+            var outPut = logOutput.ToString();
+            // Assert
+            Assert.Contains($"\"coldStart\":{willLog.ToString().ToLower()}", outPut);
+        }
 
         public void Dispose()
         {
-            // PowertoolsLoggingSerializer.ClearOptions();
-            // LoggingAspect.ResetForTest();
+            // Environment.SetEnvironmentVariable("AWS_LAMBDA_INITIALIZATION_TYPE", null);
+            LambdaLifecycleTracker.Reset();
         }
     }
 }

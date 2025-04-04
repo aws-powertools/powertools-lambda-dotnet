@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Common.Tests;
 using AWS.Lambda.Powertools.Logging.Internal;
@@ -85,6 +86,9 @@ public class LogBufferCircularCacheTests : IDisposable
 
         Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "circular-buffer-test");
 
+        var stringWriter = new StringWriter();
+        Console.SetOut(stringWriter);
+        
         // Act - add many debug logs to fill buffer
         for (int i = 0; i < 5; i++)
         {
@@ -101,8 +105,51 @@ public class LogBufferCircularCacheTests : IDisposable
         logger.FlushBuffer();
 
         // Assert
-        var output = _consoleOut.ToString();
-        Assert.Contains("Some logs are not displayed because they were evicted from the buffer. Increase buffer size to store more logs in the buffer", output);
+        var st = stringWriter.ToString();
+        Assert.Contains("Some logs are not displayed because they were evicted from the buffer. Increase buffer size to store more logs in the buffer", st);
+    }
+    
+    [Trait("Category", "CircularBuffer")]
+    [Fact]
+    public void Buffer_WhenMaxSizeExceeded_DiscardOldestEntries_Warn_With_Warning_Level()
+    {
+        // Arrange
+        var config = new PowertoolsLoggerConfiguration
+        {
+            MinimumLogLevel = LogLevel.Information,
+            LogBuffering = new LogBufferingOptions
+            {
+                BufferAtLogLevel = LogLevel.Warning,
+                MaxBytes = 1024 // Small buffer size to trigger overflow
+            },
+            LogOutput = _consoleOut
+        };
+
+        var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
+
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "circular-buffer-test");
+
+        var stringWriter = new StringWriter();
+        Console.SetOut(stringWriter);
+        
+        // Act - add many debug logs to fill buffer
+        for (int i = 0; i < 5; i++)
+        {
+            logger.LogDebug($"Old debug message {i} that should be removed");
+        }
+        
+        // Add more logs that should push out the older ones
+        for (int i = 0; i < 5; i++)
+        {
+            logger.LogDebug($"New debug message {i} that should remain");
+        }
+        
+        // Flush buffer
+        logger.FlushBuffer();
+
+        // Assert
+        var st = stringWriter.ToString();
+        Assert.Contains("Some logs are not displayed because they were evicted from the buffer. Increase buffer size to store more logs in the buffer", st);
     }
 
     [Trait("Category", "CircularBuffer")]
@@ -165,7 +212,7 @@ public class LogBufferCircularCacheTests : IDisposable
             LogBuffering = new LogBufferingOptions
             {
                 BufferAtLogLevel = LogLevel.Debug,
-                MaxBytes = 4096 // Even with a larger buffer
+                MaxBytes = 5096 // Even with a larger buffer
             },
             LogOutput = _consoleOut
         };
@@ -174,6 +221,9 @@ public class LogBufferCircularCacheTests : IDisposable
 
         Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "extreme-entry-test");
 
+        var stringWriter = new StringWriter();
+        Console.SetOut(stringWriter);
+        
         // Act - add some small entries first
         for (int i = 0; i < 4; i++)
         {
@@ -184,12 +234,8 @@ public class LogBufferCircularCacheTests : IDisposable
         var hugeMessage = new string('X', 3000);
         logger.LogDebug($"Huge message: {hugeMessage}");
         
-        var bigMessageAndWarning = _consoleOut.ToString();
-        
-        // Huge message may be partially discarded depending on implementation
-        Assert.Contains("Huge message", bigMessageAndWarning);
-        Assert.Contains("level\":\"Warning", bigMessageAndWarning);
-        Assert.Contains("Cannot add item to the buffer", bigMessageAndWarning);
+        var st = stringWriter.ToString();
+        Assert.Contains("Cannot add item to the buffer", st);
         
         // Add more entries after
         for (int i = 0; i < 4; i++)
@@ -211,61 +257,6 @@ public class LogBufferCircularCacheTests : IDisposable
         
         // Some of the final messages should be present
         Assert.Contains("Final message 3", output);
-    }
-
-    [Trait("Category", "CircularBuffer")]
-    [Fact]
-    public void MultipleInvocations_EachHaveTheirOwnCircularBuffer()
-    {
-        // Arrange
-        var config = new PowertoolsLoggerConfiguration
-        {
-            MinimumLogLevel = LogLevel.Information,
-            LogBuffering = new LogBufferingOptions
-            {
-                BufferAtLogLevel = LogLevel.Debug
-            },
-            LogOutput = _consoleOut
-        };
-
-        var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
-
-        // Act - fill buffer for first invocation
-        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
-        for (int i = 0; i < 10; i++)
-        {
-            logger.LogDebug($"Invocation 1 message {i}");
-        }
-
-        // Switch to second invocation with fresh buffer
-        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-2");
-        
-        for (int i = 0; i < 5; i++)
-        {
-            logger.LogDebug($"Invocation 2 message {i}");
-        }
-        
-        // Flush second invocation first
-        logger.FlushBuffer();
-        var outputAfterSecond = _consoleOut.ToString();
-        
-        // Flush first invocation
-        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
-        logger.FlushBuffer();
-        var outputAfterBoth = _consoleOut.ToString();
-
-        // Assert
-        // First invocation buffer should be complete
-        for (int i = 0; i < 5; i++)
-        {
-            Assert.Contains($"Invocation 1 message {i}", outputAfterBoth);
-        }
-        
-        // Second invocation buffer should be complete (not affected by first)
-        for (int i = 0; i < 5; i++)
-        {
-            Assert.Contains($"Invocation 2 message {i}", outputAfterSecond);
-        }
     }
 
     public void Dispose()

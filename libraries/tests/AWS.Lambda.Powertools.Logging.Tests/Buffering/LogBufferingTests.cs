@@ -20,7 +20,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
 
         [Trait("Category", "BufferManager")]
         [Fact]
-        public void SetInvocationId_IsolatesLogsBetweenInvocations()
+        public void SetInvocationId_IsolatesLogsBetweenInvocations_And_Clear()
         {
             // Arrange
             var config = new PowertoolsLoggerConfiguration
@@ -39,14 +39,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-2");
             logger.LogDebug("Debug message from invocation 2");
 
-            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-1");
-            logger.LogError("Error message from invocation 1");
-
+            logger.FlushBuffer();
+            
             // Assert
             var output = _consoleOut.ToString();
-            Assert.Contains("Error message from invocation 1", output);
-            Assert.Contains("Debug message from invocation 1", output);
-            Assert.DoesNotContain("Debug message from invocation 2", output);
+            Assert.DoesNotContain("Debug message from invocation 1", output);
+            Assert.Contains("Debug message from invocation 2", output);
         }
 
         [Trait("Category", "BufferedLogger")]
@@ -117,6 +115,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
 
             output = _consoleOut.ToString();
             Assert.Contains("Info message", output); // Now should be visible
+            Assert.Contains("Debug message", output); // Now should be visible
+            Assert.Contains("Trace message", output); // Now should be visible
         }
         
         [Trait("Category", "BufferedLogger")]
@@ -140,7 +140,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             // Act
             logger.LogWarning("Warning message"); // Should be buffered
             logger.LogInformation("Info message"); // Should be buffered
-
+            logger.LogDebug("Debug message");
+            
             // Assert
             var output = _consoleOut.ToString();
             Assert.Empty(output);
@@ -149,8 +150,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Logger.FlushBuffer();
 
             output = _consoleOut.ToString();
-            Assert.DoesNotContain("Info message", output); // Now should be visible
+            Assert.Contains("Info message", output); // Now should be visible
             Assert.Contains("Warning message", output);
+            Assert.Contains("Debug message", output);
         }
         
         [Trait("Category", "BufferedLogger")]
@@ -484,46 +486,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             // After flush
             Logger.FlushBuffer();
             Assert.Contains("Debug message exactly at threshold", _consoleOut.ToString());
-        }
-
-
-        [Trait("Category", "MultipleInvocations")]
-        [Fact]
-        public void SwitchingBetweenInvocations_PreservesSeparateBuffers()
-        {
-            // Arrange
-            LogBufferManager.ResetForTesting();
-            var config = new PowertoolsLoggerConfiguration
-            {
-                MinimumLogLevel = LogLevel.Information,
-                LogBuffering = new LogBufferingOptions(),
-                LogOutput = _consoleOut
-            };
-            var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
-            var provider = new BufferingLoggerProvider(config, powertoolsConfig);
-            var logger = provider.CreateLogger("TestLogger");
-
-            // Act
-            // First invocation
-            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-A");
-            logger.LogDebug("Debug for invocation A");
-
-            // Switch to second invocation
-            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-B");
-            logger.LogDebug("Debug for invocation B");
-            Logger.FlushBuffer(); // Only flush B
-
-            // Assert
-            var output = _consoleOut.ToString();
-            Assert.Contains("Debug for invocation B", output);
-            Assert.DoesNotContain("Debug for invocation A", output);
-
-            // Now flush A
-            Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "invocation-A");
-            Logger.FlushBuffer();
-
-            output = _consoleOut.ToString();
-            Assert.Contains("Debug for invocation A", output);
         }
 
         public void Dispose()
