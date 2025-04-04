@@ -15,6 +15,7 @@
 
 using System;
 using AspectInjector.Broker;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 
@@ -116,8 +117,8 @@ namespace AWS.Lambda.Powertools.Logging;
 ///     </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Method)]
-[Injection(typeof(LoggingAspect))]
-public class LoggingAttribute : Attribute
+// [Injection(typeof(LoggingAspect))]
+public class LoggingAttribute : MethodAspectAttribute
 {
     /// <summary>
     ///     Service name is used for logging.
@@ -189,4 +190,9 @@ public class LoggingAttribute : Attribute
     /// When buffering is enabled, this property will flush the buffer on uncaught exceptions
     /// </summary>
     public bool FlushBufferOnUncaughtError { get; set; }
+
+    protected override IMethodAspectHandler CreateHandler()
+    {
+        return new LoggingAspect(LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger());
+    }
 }

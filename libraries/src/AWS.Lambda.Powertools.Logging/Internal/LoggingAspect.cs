@@ -32,7 +32,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// </summary>
 /// <seealso cref="IMethodAspectHandler" />
 [Aspect(Scope.Global, Factory = typeof(LoggingAspectFactory))]
-public class LoggingAspect
+public class LoggingAspect : IMethodAspectHandler
 {
     /// <summary>
     ///     The is cold start
@@ -63,6 +63,7 @@ public class LoggingAspect
     private bool _isDebug;
     private bool _bufferingEnabled;
     private PowertoolsLoggerConfiguration _currentConfig;
+    private bool _flushBufferOnUncaughtError;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LoggingAspect" /> class.
@@ -71,6 +72,95 @@ public class LoggingAspect
     {
         _logger = logger ?? LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
     }
+
+    // [Advice(Kind.Around)]
+    // public object Around(
+    //     [Argument(Source.Instance)] object instance,
+    //     [Argument(Source.Name)] string name,
+    //     [Argument(Source.Arguments)] object[] args,
+    //     [Argument(Source.Type)] Type hostType,
+    //     [Argument(Source.Metadata)] MethodBase method,
+    //     [Argument(Source.ReturnType)] Type returnType,
+    //     [Argument(Source.Triggers)] Attribute[] triggers,
+    //     [Argument(Source.Target)] Func<object[], object> target)
+    // {
+    //     var trigger = triggers.OfType<LoggingAttribute>().First();
+    //
+    //     try
+    //     {
+    //         var eventArgs = new AspectEventArgs
+    //         {
+    //             Instance = instance,
+    //             Type = hostType,
+    //             Method = method,
+    //             Name = name,
+    //             Args = args,
+    //             ReturnType = returnType,
+    //             Triggers = triggers
+    //         };
+    //
+    //         _clearState = trigger.ClearState;
+    //
+    //         InitializeLogger(trigger);
+    //
+    //         if (!_initializeContext)
+    //         {
+    //             return target(args);
+    //         }
+    //
+    //         _logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
+    //
+    //         _isColdStart = false;
+    //         _initializeContext = false;
+    //         _isContextInitialized = true;
+    //
+    //         var eventObject = eventArgs.Args.FirstOrDefault();
+    //         CaptureLambdaContext(eventArgs);
+    //         CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
+    //
+    //         if (trigger.IsLogEventSet && trigger.LogEvent)
+    //         {
+    //             LogEvent(eventObject);
+    //         }
+    //         else if (!trigger.IsLogEventSet && _currentConfig.LogEvent)
+    //         {
+    //             LogEvent(eventObject);
+    //         }
+    //
+    //         var result = target(args);
+    //
+    //         return result;
+    //     }
+    //     catch (Exception exception)
+    //     {
+    //         if (_bufferingEnabled && trigger.FlushBufferOnUncaughtError)
+    //         {
+    //             _logger.FlushBuffer();
+    //         }
+    //
+    //         // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
+    //         // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
+    //         ExceptionDispatchInfo.Capture(exception).Throw();
+    //         throw;
+    //     }
+    //     finally
+    //     {
+    //         if (_isContextInitialized)
+    //         {
+    //             if (_clearLambdaContext)
+    //                 LoggingLambdaContext.Clear();
+    //             if (_clearState)
+    //                 _logger.RemoveAllKeys();
+    //             _initializeContext = true;
+    //
+    //             if (_bufferingEnabled)
+    //             {
+    //                 // clear the buffer after the handler has finished
+    //                 _logger.ClearBuffer();
+    //             }
+    //         }
+    //     }
+    // }
 
     private void InitializeLogger(LoggingAttribute trigger)
     {
@@ -83,7 +173,7 @@ public class LoggingAspect
         // Only update configuration if any settings were provided
         var needsReconfiguration = hasLogLevel || hasService || hasOutputCase || hasSamplingRate;
         _currentConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
-        
+
         if (needsReconfiguration)
         {
             // Apply each setting directly using the existing Logger static methods
@@ -91,7 +181,7 @@ public class LoggingAspect
             if (hasService) _currentConfig.Service = trigger.Service;
             if (hasOutputCase) _currentConfig.LoggerOutputCase = trigger.LoggerOutputCase;
             if (hasSamplingRate) _currentConfig.SamplingRate = trigger.SamplingRate;
-            
+
             // Need to refresh the logger after configuration changes
             _logger = LoggerFactoryHelper.CreateAndConfigureFactory(_currentConfig).CreatePowertoolsLogger();
             Logger.ClearInstance();
@@ -102,101 +192,101 @@ public class LoggingAspect
         _bufferingEnabled = _currentConfig.LogBuffering != null;
     }
 
-    /// <summary>
-    /// Runs before the execution of the method marked with the Logging Attribute
-    /// </summary>
-    /// <param name="instance"></param>
-    /// <param name="name"></param>
-    /// <param name="args"></param>
-    /// <param name="hostType"></param>
-    /// <param name="method"></param>
-    /// <param name="returnType"></param>
-    /// <param name="triggers"></param>
-    [Advice(Kind.Before)]
-    public void OnEntry(
-        [Argument(Source.Instance)] object instance,
-        [Argument(Source.Name)] string name,
-        [Argument(Source.Arguments)] object[] args,
-        [Argument(Source.Type)] Type hostType,
-        [Argument(Source.Metadata)] MethodBase method,
-        [Argument(Source.ReturnType)] Type returnType,
-        [Argument(Source.Triggers)] Attribute[] triggers)
-    {
-        // Called before the method
-        var trigger = triggers.OfType<LoggingAttribute>().First();
+    // /// <summary>
+    // /// Runs before the execution of the method marked with the Logging Attribute
+    // /// </summary>
+    // /// <param name="instance"></param>
+    // /// <param name="name"></param>
+    // /// <param name="args"></param>
+    // /// <param name="hostType"></param>
+    // /// <param name="method"></param>
+    // /// <param name="returnType"></param>
+    // /// <param name="triggers"></param>
+    // [Advice(Kind.Before)]
+    // public void OnEntry(
+    //     [Argument(Source.Instance)] object instance,
+    //     [Argument(Source.Name)] string name,
+    //     [Argument(Source.Arguments)] object[] args,
+    //     [Argument(Source.Type)] Type hostType,
+    //     [Argument(Source.Metadata)] MethodBase method,
+    //     [Argument(Source.ReturnType)] Type returnType,
+    //     [Argument(Source.Triggers)] Attribute[] triggers)
+    // {
+    //     // Called before the method
+    //     var trigger = triggers.OfType<LoggingAttribute>().First();
+    //
+    //     try
+    //     {
+    //         var eventArgs = new AspectEventArgs
+    //         {
+    //             Instance = instance,
+    //             Type = hostType,
+    //             Method = method,
+    //             Name = name,
+    //             Args = args,
+    //             ReturnType = returnType,
+    //             Triggers = triggers
+    //         };
+    //
+    //         _clearState = trigger.ClearState;
+    //
+    //         InitializeLogger(trigger);
+    //
+    //         if (!_initializeContext)
+    //             return;
+    //
+    //         _logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
+    //
+    //         _isColdStart = false;
+    //         _initializeContext = false;
+    //         _isContextInitialized = true;
+    //
+    //         var eventObject = eventArgs.Args.FirstOrDefault();
+    //         CaptureLambdaContext(eventArgs);
+    //         CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
+    //
+    //         if (trigger.IsLogEventSet && trigger.LogEvent)
+    //         {
+    //             LogEvent(eventObject);
+    //         }
+    //         else if (!trigger.IsLogEventSet && _currentConfig.LogEvent)
+    //         {
+    //             LogEvent(eventObject);
+    //         }
+    //     }
+    //     catch (Exception exception)
+    //     {
+    //         if (_bufferingEnabled && trigger.FlushBufferOnUncaughtError)
+    //         {
+    //             _logger.FlushBuffer();
+    //         }
+    //
+    //         // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
+    //         // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
+    //         ExceptionDispatchInfo.Capture(exception).Throw();
+    //     }
+    // }
 
-        try
-        {
-            var eventArgs = new AspectEventArgs
-            {
-                Instance = instance,
-                Type = hostType,
-                Method = method,
-                Name = name,
-                Args = args,
-                ReturnType = returnType,
-                Triggers = triggers
-            };
-
-            _clearState = trigger.ClearState;
-
-            InitializeLogger(trigger);
-
-            if (!_initializeContext)
-                return;
-
-            _logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
-
-            _isColdStart = false;
-            _initializeContext = false;
-            _isContextInitialized = true;
-
-            var eventObject = eventArgs.Args.FirstOrDefault();
-            CaptureLambdaContext(eventArgs);
-            CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
-            
-            if(trigger.IsLogEventSet && trigger.LogEvent)
-            {
-                LogEvent(eventObject);
-            }
-            else if (!trigger.IsLogEventSet && _currentConfig.LogEvent)
-            {
-                LogEvent(eventObject);
-            }
-        }
-        catch (Exception exception)
-        {
-            if (_bufferingEnabled && trigger.FlushBufferOnUncaughtError)
-            {
-                _logger.FlushBuffer();
-            }
-
-            // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
-            // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
-            ExceptionDispatchInfo.Capture(exception).Throw();
-        }
-    }
-
-    /// <summary>
-    ///     Handles the Kind.After event.
-    /// </summary>
-    [Advice(Kind.After)]
-    public void OnExit()
-    {
-        if (!_isContextInitialized)
-            return;
-        if (_clearLambdaContext)
-            LoggingLambdaContext.Clear();
-        if (_clearState)
-            _logger.RemoveAllKeys();
-        _initializeContext = true;
-
-        if (_bufferingEnabled)
-        {
-            // clear the buffer after the handler has finished
-            _logger.ClearBuffer();
-        }
-    }
+    // /// <summary>
+    // ///     Handles the Kind.After event.
+    // /// </summary>
+    // [Advice(Kind.After)]
+    // public void OnExit()
+    // {
+    //     if (!_isContextInitialized)
+    //         return;
+    //     if (_clearLambdaContext)
+    //         LoggingLambdaContext.Clear();
+    //     if (_clearState)
+    //         _logger.RemoveAllKeys();
+    //     _initializeContext = true;
+    //
+    //     if (_bufferingEnabled)
+    //     {
+    //         // clear the buffer after the handler has finished
+    //         _logger.ClearBuffer();
+    //     }
+    // }
 
     /// <summary>
     ///     Captures the lambda context.
@@ -243,18 +333,18 @@ public class LoggingAspect
 
             var jsonDoc =
                 JsonDocument.Parse(_currentConfig.Serializer.Serialize(eventArg, eventArg.GetType()));
-            
+
             var element = jsonDoc.RootElement;
-            
+
             for (var i = 0; i < correlationIdPaths.Length; i++)
             {
                 // TODO: For casing parsing to be removed from Logging v2 when we get rid of outputcase without this CorrelationIdPaths.ApiGatewayRest would not work
                 // TODO: This will be removed and replaced by JMesPath
-                
+
                 var pathWithOutputCase = correlationIdPaths[i].ToCase(_currentConfig.LoggerOutputCase);
                 if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
                     break;
-                
+
                 element = childElement;
                 if (i == correlationIdPaths.Length - 1)
                     correlationId = element.ToString();
@@ -280,12 +370,12 @@ public class LoggingAspect
         switch (eventArg)
         {
             case null:
-                {
-                    if (_isDebug)
-                        _logger.LogDebug(
-                            "Skipping Event Log because event parameter not found.");
-                    break;
-                }
+            {
+                if (_isDebug)
+                    _logger.LogDebug(
+                        "Skipping Event Log because event parameter not found.");
+                break;
+            }
             case Stream:
                 try
                 {
@@ -317,5 +407,81 @@ public class LoggingAspect
     internal static void ResetForTest()
     {
         LoggingLambdaContext.Clear();
+    }
+
+    public void OnEntry(AspectEventArgs eventArgs)
+    {
+        var trigger = eventArgs.Triggers.OfType<LoggingAttribute>().First();
+        try
+        {
+            _clearState = trigger.ClearState;
+
+            InitializeLogger(trigger);
+
+            if (!_initializeContext)
+                return;
+
+            _logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
+
+            _isColdStart = false;
+            _initializeContext = false;
+            _isContextInitialized = true;
+            _flushBufferOnUncaughtError = trigger.FlushBufferOnUncaughtError;
+
+            var eventObject = eventArgs.Args.FirstOrDefault();
+            CaptureLambdaContext(eventArgs);
+            CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
+
+            if (trigger.IsLogEventSet && trigger.LogEvent)
+            {
+                LogEvent(eventObject);
+            }
+            else if (!trigger.IsLogEventSet && _currentConfig.LogEvent)
+            {
+                LogEvent(eventObject);
+            }
+        }
+        catch (Exception exception)
+        {
+            if (_bufferingEnabled && _flushBufferOnUncaughtError)
+            {
+                _logger.FlushBuffer();
+            }
+
+            // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
+            // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
+            ExceptionDispatchInfo.Capture(exception).Throw();
+        }
+    }
+
+    public void OnSuccess(AspectEventArgs eventArgs, object result)
+    {
+        
+    }
+
+    public void OnException(AspectEventArgs eventArgs, Exception exception)
+    {
+        if (_bufferingEnabled && _flushBufferOnUncaughtError)
+        {
+            _logger.FlushBuffer();
+        }
+        ExceptionDispatchInfo.Capture(exception).Throw();
+    }
+
+    public void OnExit(AspectEventArgs eventArgs)
+    {
+        if (!_isContextInitialized)
+            return;
+        if (_clearLambdaContext)
+            LoggingLambdaContext.Clear();
+        if (_clearState)
+            _logger.RemoveAllKeys();
+        _initializeContext = true;
+        
+        if (_bufferingEnabled)
+        {
+            // clear the buffer after the handler has finished
+            _logger.ClearBuffer();
+        }
     }
 }

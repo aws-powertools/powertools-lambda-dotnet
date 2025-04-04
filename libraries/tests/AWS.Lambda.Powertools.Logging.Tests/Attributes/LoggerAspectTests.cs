@@ -73,9 +73,20 @@ public class LoggerAspectTests : IDisposable
             }
         };
 
+        var aspectArgs = new AspectEventArgs
+        {
+            Instance = instance,
+            Name = name,
+            Args = args,
+            Type = hostType,
+            Method = method,
+            ReturnType = returnType,
+            Triggers = triggers
+        };
+
         // Act        
         var loggingAspect = new LoggingAspect(logger);
-        loggingAspect.OnEntry(instance, name, args, hostType, method, returnType, triggers);
+        loggingAspect.OnEntry(aspectArgs);
 
         // Assert
         consoleOut.Received().WriteLine(Arg.Is<string>(s =>
@@ -119,10 +130,21 @@ public class LoggerAspectTests : IDisposable
                 ClearState = true
             }
         };
-    
-        // Act
+        
+        var aspectArgs = new AspectEventArgs
+        {
+            Instance = instance,
+            Name = name,
+            Args = args,
+            Type = hostType,
+            Method = method,
+            ReturnType = returnType,
+            Triggers = triggers
+        };
+
+        // Act        
         var loggingAspect = new LoggingAspect(logger);
-        loggingAspect.OnEntry(instance, name, args, hostType, method, returnType, triggers);
+        loggingAspect.OnEntry(aspectArgs);
     
         var updatedConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
     
@@ -175,9 +197,21 @@ public class LoggerAspectTests : IDisposable
             }
         };
     
-        // Act
+
+        var aspectArgs = new AspectEventArgs
+        {
+            Instance = instance,
+            Name = name,
+            Args = args,
+            Type = hostType,
+            Method = method,
+            ReturnType = returnType,
+            Triggers = triggers
+        };
+
+        // Act        
         var loggingAspect = new LoggingAspect(logger);
-        loggingAspect.OnEntry(instance, name, args, hostType, method, returnType, triggers);
+        loggingAspect.OnEntry(aspectArgs);
     
         var updatedConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
     
@@ -225,9 +259,21 @@ public class LoggerAspectTests : IDisposable
             }
         };
 
-        // Act
+
+        var aspectArgs = new AspectEventArgs
+        {
+            Instance = instance,
+            Name = name,
+            Args = args,
+            Type = hostType,
+            Method = method,
+            ReturnType = returnType,
+            Triggers = triggers
+        };
+
+        // Act        
         var loggingAspect = new LoggingAspect(logger);
-        loggingAspect.OnEntry(instance, name, args, hostType, method, returnType, triggers);
+        loggingAspect.OnEntry(aspectArgs);
     
         // Assert
         var updatedConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
@@ -268,9 +314,16 @@ public class LoggerAspectTests : IDisposable
         };
     
         // Act
-    
+        
+        var aspectArgs = new AspectEventArgs
+        {
+            Args = new object[] { eventObject },
+            Triggers = triggers
+        };
+
+        // Act        
         var loggingAspect = new LoggingAspect(logger);
-        loggingAspect.OnEntry(null, null, new object[] { eventObject }, null, null, null, triggers);
+        loggingAspect.OnEntry(aspectArgs);
     
         // Assert
         consoleOut.Received().WriteLine(Arg.Is<string>(s =>
@@ -312,9 +365,21 @@ public class LoggerAspectTests : IDisposable
             }
         };
     
-        // Act
+
+        var aspectArgs = new AspectEventArgs
+        {
+            Instance = instance,
+            Name = name,
+            Args = args,
+            Type = hostType,
+            Method = method,
+            ReturnType = returnType,
+            Triggers = triggers
+        };
+
+        // Act        
         var loggingAspect = new LoggingAspect(logger);
-        loggingAspect.OnEntry(instance, name, args, hostType, method, returnType, triggers);
+        loggingAspect.OnEntry(aspectArgs);
     
         var updatedConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
     
@@ -359,10 +424,21 @@ public class LoggerAspectTests : IDisposable
     
         var logger = PowertoolsLoggerFactory.Create(config).CreatePowertoolsLogger();
 
-    
-        // Act
+
+        var aspectArgs = new AspectEventArgs
+        {
+            Instance = instance,
+            Name = name,
+            Args = args,
+            Type = hostType,
+            Method = method,
+            ReturnType = returnType,
+            Triggers = triggers
+        };
+
+        // Act        
         var loggingAspect = new LoggingAspect(logger);
-        loggingAspect.OnEntry(instance, name, args, hostType, method, returnType, triggers);
+        loggingAspect.OnEntry(aspectArgs);
     
         // Assert
         var updatedConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();

@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 #if NET8_0_OR_GREATER
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,6 +27,7 @@ public class Handlers
     public Handlers(ILogger logger)
     {
         _logger = logger;
+        PowertoolsLoggingBuilderExtensions.ResetAllProviders();
     }
 
     [Logging(LogEvent = true)]
@@ -124,7 +124,7 @@ public class HandlerTests
         // Check if the output contains newlines and spacing (indentation)
         Assert.Contains("\n", logOutput);
         Assert.Contains("  ", logOutput);
-        
+
         // Verify write indented JSON
         Assert.Contains("  \"Level\": \"Information\",\n  \"Service\": \"my-service122\",", logOutput);
     }
@@ -170,7 +170,6 @@ public class HandlerTests
         Assert.Contains("\"level\":\"Information\"", logOutput);
         Assert.Contains("\"message\":\"Information message\"", logOutput);
         Assert.Contains("\"correlationIds\":{\"awsRequestId\":\"123\"}", logOutput);
-        
     }
 
     [Fact]
@@ -253,23 +252,66 @@ public class HandlerTests
         Assert.Contains("\"Level\":\"Information\"", logOutput);
         Assert.Contains("\"Message\":\"Static method\"", logOutput);
     }
-    
+
     [Fact]
     public async Task Should_Log_Properties_Setup_Constructor()
     {
         var output = new TestLoggerOutput();
-        var handler = new SimpleFunctionWithStaticConfigure(output);
-        
+        _ = new SimpleFunctionWithStaticConfigure(output);
+
         await SimpleFunctionWithStaticConfigure.FunctionHandler();
 
         var logOutput = output.ToString();
         _output.WriteLine(logOutput);
 
-        // Verify static logger configuration
-        // Verify override of LoggerOutputCase from attribute
+
         Assert.Contains("\"service\":\"MyServiceName\"", logOutput);
         Assert.Contains("\"level\":\"Information\"", logOutput);
         Assert.Contains("\"message\":\"Starting up!\"", logOutput);
+        Assert.Contains("\"xray_trace_id\"", logOutput);
+    }
+
+    [Fact]
+    public async Task Should_Flush_On_Exception_Async()
+    {
+        var output = new TestLoggerOutput();
+        var handler = new SimpleFunctionWithStaticConfigure(output);
+
+        try
+        {
+            await handler.AsyncException();
+        }
+        catch
+        {
+        }
+
+        var logOutput = output.ToString();
+        _output.WriteLine(logOutput);
+
+        Assert.Contains("\"level\":\"Debug\"", logOutput);
+        Assert.Contains("\"message\":\"Debug!!\"", logOutput);
+        Assert.Contains("\"xray_trace_id\"", logOutput);
+    }
+
+    [Fact]
+    public void Should_Flush_On_Exception()
+    {
+        var output = new TestLoggerOutput();
+        var handler = new SimpleFunctionWithStaticConfigure(output);
+
+        try
+        {
+            handler.SyncException();
+        }
+        catch
+        {
+        }
+
+        var logOutput = output.ToString();
+        _output.WriteLine(logOutput);
+
+        Assert.Contains("\"level\":\"Debug\"", logOutput);
+        Assert.Contains("\"message\":\"Debug!!\"", logOutput);
         Assert.Contains("\"xray_trace_id\"", logOutput);
     }
 
@@ -341,7 +383,7 @@ public class HandlerTests
         _output.WriteLine(logOutput);
 
         // Fix assertion to match actual camelCase behavior with acronyms
-        Assert.Contains("\"userID\":12345", logOutput);  // ID remains uppercase
+        Assert.Contains("\"userID\":12345", logOutput); // ID remains uppercase
         Assert.Contains("\"orderDetails\":", logOutput);
         Assert.Contains("\"shippingAddress\":", logOutput);
     }

@@ -224,12 +224,35 @@ public class SimpleFunctionWithStaticConfigure
         Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
 
         Logger.LogInformation("Starting up!");
-
-        // throw new Exception();
+        
         return new APIGatewayHttpApiV2ProxyResponse
         {
             Body = "Hello",
             StatusCode = 200
         };
+    }
+    
+    [Logging(FlushBufferOnUncaughtError = true)]
+    public APIGatewayHttpApiV2ProxyResponse SyncException()
+    {
+        // only set on handler
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+
+        Logger.LogDebug("Debug!!");
+        Logger.LogInformation("Starting up!");
+
+        throw new Exception();
+    }
+    
+    [Logging(FlushBufferOnUncaughtError = true)]
+    public async Task<APIGatewayHttpApiV2ProxyResponse> AsyncException()
+    {
+        // only set on handler
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+
+        Logger.LogDebug("Debug!!");
+        Logger.LogInformation("Starting up!");
+
+        throw new Exception();
     }
 }
