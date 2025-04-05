@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AWS.Lambda.Powertools.Common.Core;
 using AWS.Lambda.Powertools.Common.Tests;
 using AWS.Lambda.Powertools.Logging.Tests.Handlers;
 using Microsoft.Extensions.Logging;
@@ -476,6 +477,113 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             Assert.Contains("\"level\":\"Error\"", logOutput);
             Assert.Contains("\"level\":\"Critical\"", logOutput);
         }
+        
+        [Fact]
+        public void Should_Log_Multiple_Formats_No_Duplicates()
+        {
+            var output = new TestLoggerOutput();
+            LambdaLifecycleTracker.Reset();
+            LoggerFactory.Create(builder =>
+            {
+                builder.AddPowertoolsLogger(config =>
+                {
+                    config.Service = "log-level-test-service";
+                    config.MinimumLogLevel = LogLevel.Debug;
+                    config.LoggerOutputCase = LoggerOutputCase.SnakeCase;
+                    config.LogOutput = output;
+                });
+            }).CreatePowertoolsLogger();
+
+            var user = new User
+            {
+                FirstName = "John",
+                LastName = "Doe",
+                Age = 42,
+                TimeStamp = "FakeTime"
+            };
+            
+            Logger.LogInformation<User>(user, "{Name} and is {Age} years old", new object[]{user.Name, user.Age});
+            Assert.Contains("\"first_name\":\"John\"", output.ToString());
+            Assert.Contains("\"last_name\":\"Doe\"", output.ToString());
+            Assert.Contains("\"age\":42", output.ToString());
+            Assert.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"", output.ToString()); // does not override name
+            
+            output.Clear();
+            
+            Logger.LogInformation("{level}", user);
+            Assert.Contains("\"level\":\"Information\"", output.ToString()); // does not override level
+            Assert.Contains("\"message\":\"Doe, John (42)\"", output.ToString()); // does not override message
+            Assert.DoesNotContain("\"timestamp\":\"FakeTime\"", output.ToString());
+            
+            output.Clear();
+
+            Logger.LogInformation("{coldstart}", user); // still not sure if convert to PascalCase to compare or not
+            Assert.Contains("\"cold_start\":true", output.ToString());
+            
+            output.Clear();
+            
+            Logger.AppendKey("level", "Override");
+            Logger.AppendKey("message", "Override");
+            Logger.AppendKey("timestamp", "Override");
+            Logger.AppendKey("name", "Override");
+            Logger.AppendKey("service", "Override");
+            Logger.AppendKey("cold_start", "Override");
+            Logger.AppendKey("message2", "Its ok!");
+            
+            Logger.LogInformation("no override");
+            Assert.DoesNotContain("\"level\":\"Override\"", output.ToString());
+            Assert.DoesNotContain("\"message\":\"Override\"", output.ToString());
+            Assert.DoesNotContain("\"timestamp\":\"Override\"", output.ToString());
+            Assert.DoesNotContain("\"name\":\"Override\"", output.ToString());
+            Assert.DoesNotContain("\"service\":\"Override\"", output.ToString());
+            Assert.DoesNotContain("\"cold_start\":\"Override\"", output.ToString());
+            Assert.Contains("\"message2\":\"Its ok!\"", output.ToString());
+            Assert.Contains("\"level\":\"Information\"", output.ToString());
+        }
+        
+        [Fact]
+        public void Should_Log_Multiple_Formats()
+        {
+            var output = new TestLoggerOutput();
+            var logger = LoggerFactory.Create(builder =>
+            {
+                builder.AddPowertoolsLogger(config =>
+                {
+                    config.Service = "log-level-test-service";
+                    config.MinimumLogLevel = LogLevel.Debug;
+                    config.LoggerOutputCase = LoggerOutputCase.SnakeCase;
+                    config.LogOutput = output;
+                });
+            }).CreatePowertoolsLogger();
+
+            
+            
+            var user = new User
+            {
+                FirstName = "John",
+                LastName = "Doe",
+                Age = 42
+            };
+            Logger.LogInformation<User>(user, "{Name} and is {Age} years old", new object[]{user.FirstName, user.Age});
+            //{"level":"Information","message":"John and is 42 years old","timestamp":"2025-04-04T21:53:35.2085220Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","first_name":"John","last_name":"Doe","age":42}
+            
+            Logger.LogInformation("{user}", user);
+            //{"level":"Information","message":"Doe, John (42)","timestamp":"2025-04-04T21:53:35.2419180Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","user":"Doe, John (42)"}
+            
+            Logger.LogInformation("{@user}", user);
+            //{"level":"Information","message":"Doe, John (42)","timestamp":"2025-04-04T21:53:35.2422190Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","user":{"first_name":"John","last_name":"Doe","age":42}}
+            
+            Logger.LogInformation("{cold_start}", user);
+            //{"level":"Information","message":"Doe, John (42)","timestamp":"2025-04-04T21:53:35.2440630Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","level":"Doe, John (42)"}
+            
+            Logger.AppendKey("level", "Doe, John (42)");
+            Logger.LogInformation("no override");
+            //{"level":"Information","message":"Doe, John (42)","timestamp":"2025-04-04T21:55:58.1410950Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","level":"Doe, John (42)"}
+            
+            var logOutput = output.ToString();
+            _output.WriteLine(logOutput);
+
+        }
 
         public class ParentClass
         {
@@ -515,6 +623,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             public string FirstName { get; set; }
             public string LastName { get; set; }
             public int Age { get; set; }
+            public string Name => $"{FirstName} {LastName}";
+            public string TimeStamp { get; set; }
 
             public override string ToString()
             {

@@ -43,7 +43,7 @@ internal class PowertoolsLoggingSerializer
     private static JsonSerializerContext _staticAdditionalContexts;
     private IJsonTypeInfoResolver _customTypeInfoResolver;
 #endif
-    
+
     /// <summary>
     /// Gets the JsonSerializerOptions instance.
     /// </summary>
@@ -112,13 +112,14 @@ internal class PowertoolsLoggingSerializer
             throw new JsonSerializerException(
                 $"Type {inputType} is not known to the serializer. Ensure it's included in the JsonSerializerContext.");
         }
+
         return JsonSerializer.Serialize(value, typeInfo);
 
 #endif
     }
 
 #if NET8_0_OR_GREATER
-    
+
     /// <summary>
     /// Adds a JsonSerializerContext to the serializer options.
     /// </summary>
@@ -141,7 +142,7 @@ internal class PowertoolsLoggingSerializer
             }
         }
     }
-    
+
     internal static void AddStaticSerializerContext(JsonSerializerContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -161,7 +162,7 @@ internal class PowertoolsLoggingSerializer
         {
             resolvers.Add(_customTypeInfoResolver);
         }
-        
+
         // add any static resolvers
         if (_staticAdditionalContexts != null)
         {
@@ -220,24 +221,53 @@ internal class PowertoolsLoggingSerializer
     {
         lock (_lock)
         {
-            // This should already be in a lock when called
-            _jsonOptions = options ?? new JsonSerializerOptions();
+            // Create a completely new options instance regardless
+            _jsonOptions = new JsonSerializerOptions();
 
+            // Copy any properties from the original options if provided
+            if (options != null)
+            {
+                // Copy standard properties
+                _jsonOptions.DefaultIgnoreCondition = options.DefaultIgnoreCondition;
+                _jsonOptions.PropertyNameCaseInsensitive = options.PropertyNameCaseInsensitive;
+                _jsonOptions.PropertyNamingPolicy = options.PropertyNamingPolicy;
+                _jsonOptions.DictionaryKeyPolicy = options.DictionaryKeyPolicy;
+                _jsonOptions.WriteIndented = options.WriteIndented;
+                _jsonOptions.ReferenceHandler = options.ReferenceHandler;
+                _jsonOptions.MaxDepth = options.MaxDepth;
+                _jsonOptions.IgnoreReadOnlyFields = options.IgnoreReadOnlyFields;
+                _jsonOptions.IgnoreReadOnlyProperties = options.IgnoreReadOnlyProperties;
+                _jsonOptions.IncludeFields = options.IncludeFields;
+                _jsonOptions.NumberHandling = options.NumberHandling;
+                _jsonOptions.ReadCommentHandling = options.ReadCommentHandling;
+                _jsonOptions.UnknownTypeHandling = options.UnknownTypeHandling;
+                _jsonOptions.AllowTrailingCommas = options.AllowTrailingCommas;
+
+#if NET8_0_OR_GREATER
+                // Handle type resolver extraction without setting it yet
+                if (options.TypeInfoResolver != null)
+                {
+                    _customTypeInfoResolver = options.TypeInfoResolver;
+
+                    // If it's a JsonSerializerContext, also add it to our contexts
+                    if (_customTypeInfoResolver is JsonSerializerContext jsonContext)
+                    {
+                        AddSerializerContext(jsonContext);
+                    }
+                }
+#endif
+            }
+
+            // Set output case and other properties
             SetOutputCase();
-
             AddConverters();
-
             _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             _jsonOptions.PropertyNameCaseInsensitive = true;
 
 #if NET8_0_OR_GREATER
-
-            // Only add TypeInfoResolver if AOT mode
+            // Set TypeInfoResolver last, as this makes options read-only
             if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
             {
-                HandleJsonOptionsTypeResolver(_jsonOptions);
-                
-                // Ensure the TypeInfoResolver is set
                 _jsonOptions.TypeInfoResolver = GetCompositeResolver();
             }
 #endif

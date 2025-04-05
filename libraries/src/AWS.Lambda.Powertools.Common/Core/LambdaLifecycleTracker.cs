@@ -6,7 +6,7 @@ namespace AWS.Lambda.Powertools.Common.Core;
 /// <summary>
 /// Tracks Lambda lifecycle state including cold starts
 /// </summary>
-public static class LambdaLifecycleTracker
+internal static class LambdaLifecycleTracker
 {
     // Static flag that's true only for the first Lambda container initialization
     private static bool _isFirstContainer = true;

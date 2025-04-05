@@ -196,7 +196,6 @@ internal sealed class PowertoolsLogger : ILogger
             AddLambdaContextKeys(logEntry);
         }
         
-        
         if(! string.IsNullOrWhiteSpace(_powertoolsConfigurations.XRayTraceId))
             logEntry.TryAdd(LoggingConstants.KeyXRayTraceId,
                 _powertoolsConfigurations.XRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
@@ -208,9 +207,12 @@ internal sealed class PowertoolsLogger : ILogger
         // Add Custom Keys
         foreach (var (key, value) in this.GetAllKeys())
         {
-            logEntry.TryAdd(key, value);
+            // Skip keys that are already defined in LoggingConstants
+            if (!IsLogConstantKey(key))
+            {
+                logEntry.TryAdd(key, value);
+            }
         }
-        
         
         // Add Extra Fields
         if (CurrentScope?.ExtraKeys is not null)
@@ -219,7 +221,10 @@ internal sealed class PowertoolsLogger : ILogger
             {
                 if (!string.IsNullOrWhiteSpace(key))
                 {
-                    logEntry.TryAdd(key, value);
+                    if (!IsLogConstantKey(key))
+                    {
+                        logEntry.TryAdd(key, value);
+                    }
                 }
             }
         }
@@ -231,7 +236,10 @@ internal sealed class PowertoolsLogger : ILogger
             {
                 if (!string.IsNullOrWhiteSpace(key) && key != "json")
                 {
-                    logEntry.TryAdd(key, value);
+                    if (!IsLogConstantKey(key))
+                    {
+                        logEntry.TryAdd(key, value);
+                    }
                 }
             }
         }
@@ -243,6 +251,30 @@ internal sealed class PowertoolsLogger : ILogger
         }
 
         return logEntry;
+    }
+    
+    /// <summary>
+    /// Checks if a key is defined in LoggingConstants
+    /// </summary>
+    /// <param name="key">The key to check</param>
+    /// <returns>true if the key is a LoggingConstants key</returns>
+    private bool IsLogConstantKey(string key)
+    {
+        return string.Equals(key.ToPascal(), LoggingConstants.KeyColdStart, StringComparison.OrdinalIgnoreCase)
+               // || string.Equals(key.ToPascal(), LoggingConstants.KeyCorrelationId, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyException, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyFunctionArn, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyFunctionMemorySize, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyFunctionName, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyFunctionRequestId, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyFunctionVersion, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyLoggerName, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyLogLevel, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyMessage, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeySamplingRate, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyService, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyTimestamp, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(key.ToPascal(), LoggingConstants.KeyXRayTraceId, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
