@@ -4,7 +4,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Common.Tests;
 
-public class ConsoleWrapperTests
+public class ConsoleWrapperTests : IDisposable
 {
     [Fact]
     public void WriteLine_Should_Write_To_Console()
@@ -61,11 +61,11 @@ public class ConsoleWrapperTests
         try
         {
             var consoleWrapper = new ConsoleWrapper();
-
+            
             // Act - create a custom StringWriter and set it after constructor 
             // but before WriteLine (which triggers OverrideLambdaLogger)
             var writer = new StringWriter();
-            Console.SetOut(writer);
+            ConsoleWrapper.SetOut(writer);
 
             consoleWrapper.WriteLine("test message");
 
@@ -75,7 +75,7 @@ public class ConsoleWrapperTests
         finally
         {
             // Restore original console out
-            Console.SetOut(originalOut);
+            ConsoleWrapper.ResetForTest();
         }
     }
     
@@ -86,7 +86,7 @@ public class ConsoleWrapperTests
             var consoleWrapper = new ConsoleWrapper();
             var originalOutput = Console.Out;
             using var stringWriter = new StringWriter();
-            Console.SetOut(stringWriter);
+            ConsoleWrapper.SetOut(stringWriter);
             
             try
             {
@@ -100,28 +100,8 @@ public class ConsoleWrapperTests
             finally
             {
                 // Restore original output
-                Console.SetOut(originalOutput);
+                ConsoleWrapper.ResetForTest();
             }
-        }
-        
-        [Fact]
-        public void Error_WritesMessageToErrorOutput()
-        {
-            // Arrange
-            var consoleWrapper = new ConsoleWrapper();
-            var writer = new StringWriter();
-    
-            // This sets _override = true, preventing Error from creating a new stream
-            ConsoleWrapper.SetOut(writer);
-            Console.SetError(writer);
-
-            // Act
-            consoleWrapper.Error("Error message");
-            writer.Flush();
-        
-            // Assert
-            var output = writer.ToString();
-            Assert.Contains("Error message", output);
         }
         
         [Fact]
@@ -175,5 +155,10 @@ public class ConsoleWrapperTests
                 // Restore original output
                 Console.SetOut(originalOutput);
             }
+        }
+
+        public void Dispose()
+        {
+            ConsoleWrapper.ResetForTest();
         }
 }

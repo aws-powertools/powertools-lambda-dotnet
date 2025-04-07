@@ -417,5 +417,6 @@ public class FunctionHandlerTests : IDisposable
     {
         Metrics.ResetForTest();
         MetricsAspect.ResetForTest();
+        ConsoleWrapper.ResetForTest();
     }
 }

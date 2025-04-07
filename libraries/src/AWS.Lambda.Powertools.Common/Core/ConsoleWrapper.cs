@@ -72,4 +72,9 @@ public class ConsoleWrapper : IConsoleWrapper
     {
         Console.WriteLine($"{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}\t{logLevel}\t{message}");
     }
+
+    public static void ResetForTest()
+    {
+        _override = false;
+    }
 }
