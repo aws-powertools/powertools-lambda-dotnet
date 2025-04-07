@@ -4,7 +4,7 @@ using System.Text;
 namespace AWS.Lambda.Powertools.Common;
 
 /// <inheritdoc />
-internal class PowertoolsEnvironment : IPowertoolsEnvironment
+public class PowertoolsEnvironment : IPowertoolsEnvironment
 {
     /// <summary>
     ///     The instance

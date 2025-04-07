@@ -23,7 +23,7 @@ namespace AWS.Lambda.Powertools.Common;
 ///     Implements the <see cref="IPowertoolsConfigurations" />
 /// </summary>
 /// <seealso cref="IPowertoolsConfigurations" />
-internal class PowertoolsConfigurations : IPowertoolsConfigurations
+public class PowertoolsConfigurations : IPowertoolsConfigurations
 {
     private readonly IPowertoolsEnvironment _powertoolsEnvironment;
 
