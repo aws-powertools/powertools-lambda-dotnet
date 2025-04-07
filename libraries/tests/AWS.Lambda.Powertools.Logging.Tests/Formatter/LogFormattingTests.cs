@@ -544,6 +544,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         [Fact]
         public void Should_Log_Multiple_Formats()
         {
+            LambdaLifecycleTracker.Reset();
             var output = new TestLoggerOutput();
             var logger = LoggerFactory.Create(builder =>
             {
@@ -556,32 +557,80 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 });
             }).CreatePowertoolsLogger();
 
-            
-            
             var user = new User
             {
                 FirstName = "John",
                 LastName = "Doe",
                 Age = 42
             };
-            Logger.LogInformation<User>(user, "{Name} and is {Age} years old", new object[]{user.FirstName, user.Age});
-            //{"level":"Information","message":"John and is 42 years old","timestamp":"2025-04-04T21:53:35.2085220Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","first_name":"John","last_name":"Doe","age":42}
             
-            Logger.LogInformation("{user}", user);
-            //{"level":"Information","message":"Doe, John (42)","timestamp":"2025-04-04T21:53:35.2419180Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","user":"Doe, John (42)"}
-            
-            Logger.LogInformation("{@user}", user);
-            //{"level":"Information","message":"Doe, John (42)","timestamp":"2025-04-04T21:53:35.2422190Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","user":{"first_name":"John","last_name":"Doe","age":42}}
-            
-            Logger.LogInformation("{cold_start}", user);
-            //{"level":"Information","message":"Doe, John (42)","timestamp":"2025-04-04T21:53:35.2440630Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","level":"Doe, John (42)"}
-            
-            Logger.AppendKey("level", "Doe, John (42)");
-            Logger.LogInformation("no override");
-            //{"level":"Information","message":"Doe, John (42)","timestamp":"2025-04-04T21:55:58.1410950Z","service":"log-level-test-service","cold_start":true,"name":"AWS.Lambda.Powertools.Logging.Logger","level":"Doe, John (42)"}
+            Logger.LogInformation<User>(user, "{Name} is {Age} years old", new object[]{user.FirstName, user.Age});
             
             var logOutput = output.ToString();
-            _output.WriteLine(logOutput);
+            Assert.Contains("\"level\":\"Information\"", logOutput);
+            Assert.Contains("\"message\":\"John is 42 years old\"", logOutput);
+            Assert.Contains("\"service\":\"log-level-test-service\"", logOutput);
+            Assert.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"", logOutput);
+            Assert.Contains("\"first_name\":\"John\"", logOutput);
+            Assert.Contains("\"last_name\":\"Doe\"", logOutput);
+            Assert.Contains("\"age\":42", logOutput);
+            
+            output.Clear();
+            
+            // Message template string
+            Logger.LogInformation("{user}", user);
+            
+            logOutput = output.ToString();
+            Assert.Contains("\"level\":\"Information\"", logOutput);
+            Assert.Contains("\"message\":\"Doe, John (42)\"", logOutput);
+            Assert.Contains("\"service\":\"log-level-test-service\"", logOutput);
+            Assert.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"", logOutput);
+            Assert.Contains("\"user\":\"Doe, John (42)\"", logOutput);
+            // Verify user properties are NOT included in output (since @ prefix wasn't used)
+            Assert.DoesNotContain("\"first_name\":", logOutput);
+            Assert.DoesNotContain("\"last_name\":", logOutput);
+            Assert.DoesNotContain("\"age\":", logOutput);
+            
+            output.Clear();
+            
+            // Object serialization with @ prefix
+            Logger.LogInformation("{@user}", user);
+            
+            logOutput = output.ToString();
+            Assert.Contains("\"level\":\"Information\"", logOutput);
+            Assert.Contains("\"message\":\"Doe, John (42)\"", logOutput);
+            Assert.Contains("\"service\":\"log-level-test-service\"", logOutput);
+            Assert.Contains("\"cold_start\":true", logOutput);
+            Assert.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"", logOutput);
+            // Verify serialized user object with all properties
+            Assert.Contains("\"user\":{", logOutput);
+            Assert.Contains("\"first_name\":\"John\"", logOutput);
+            Assert.Contains("\"last_name\":\"Doe\"", logOutput);
+            Assert.Contains("\"age\":42", logOutput);
+            Assert.Contains("\"name\":\"John Doe\"", logOutput);
+            Assert.Contains("\"time_stamp\":null", logOutput);
+            Assert.Contains("}", logOutput);
+            
+            output.Clear();
+            
+            Logger.LogInformation("{cold_start}", false);
+            
+            logOutput = output.ToString();
+            // Assert that the reserved field wasn't replaced
+            Assert.Contains("\"cold_start\":true", logOutput);
+            Assert.DoesNotContain("\"cold_start\":false", logOutput);
+
+            output.Clear();
+            
+            Logger.AppendKey("level", "fakeLevel");
+            Logger.LogInformation("no override");
+            
+            logOutput = output.ToString();
+            
+            Assert.Contains("\"level\":\"Information\"", logOutput);
+            Assert.DoesNotContain("\"level\":\"fakeLevel\"", logOutput);
+            
+            _output.WriteLine(logOutput);  
 
         }
 

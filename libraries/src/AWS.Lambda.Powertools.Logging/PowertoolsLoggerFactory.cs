@@ -8,12 +8,9 @@ internal sealed class PowertoolsLoggerFactory : IDisposable
 {
     private readonly ILoggerFactory _factory;
 
-    internal PowertoolsLoggerFactory(ILoggerFactory loggerFactory = null)
+    internal PowertoolsLoggerFactory(ILoggerFactory loggerFactory)
     {
-        _factory = loggerFactory ?? LoggerFactory.Create(builder =>
-        {
-            builder.AddPowertoolsLogger();
-        });
+        _factory = loggerFactory;
     }
     
     internal PowertoolsLoggerFactory() : this(LoggerFactory.Create(builder => { builder.AddPowertoolsLogger(); }))

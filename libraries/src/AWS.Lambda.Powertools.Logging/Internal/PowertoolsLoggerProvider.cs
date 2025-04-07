@@ -76,9 +76,6 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
         // Set log level from environment ONLY if not explicitly set
         var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
         _currentConfig.MinimumLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
-        
-        // LoggerFactoryHolder.UpdateFilterLogLevel(minLogLevel);
-        
         _currentConfig.XRayTraceId = _powertoolsConfigurations.XRayTraceId;
         _currentConfig.LogEvent = _powertoolsConfigurations.LoggerLogEvent;
         

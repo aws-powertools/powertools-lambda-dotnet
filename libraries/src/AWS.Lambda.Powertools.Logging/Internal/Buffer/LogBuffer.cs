@@ -99,7 +99,7 @@ internal class LogBuffer
     public void ClearCurrentInvocation()
     {
         var invocationId = CurrentInvocationId;
-        if (_buffersByInvocation.TryRemove(invocationId, out _)) {}
+        _buffersByInvocation.TryRemove(invocationId, out _);
     }
     
     /// <summary>

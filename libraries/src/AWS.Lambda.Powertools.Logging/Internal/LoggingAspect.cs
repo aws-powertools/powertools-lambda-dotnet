@@ -240,13 +240,12 @@ public class LoggingAspect : IMethodAspectHandler
             CaptureLambdaContext(eventArgs);
             CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
 
-            if (trigger.IsLogEventSet && trigger.LogEvent)
+            switch (trigger.IsLogEventSet)
             {
-                LogEvent(eventObject);
-            }
-            else if (!trigger.IsLogEventSet && _currentConfig.LogEvent)
-            {
-                LogEvent(eventObject);
+                case true when trigger.LogEvent:
+                case false when _currentConfig.LogEvent:
+                    LogEvent(eventObject);
+                    break;
             }
         }
         catch (Exception exception)

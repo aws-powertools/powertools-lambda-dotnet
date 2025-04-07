@@ -113,7 +113,7 @@ You can also use the `ILogger` interface to log messages. This interface is part
         }
     ```
 
-=== "Powertools Logger Builder"
+=== "With Builder"
 
     ```c# hl_lines="6 10-13 19"
         /**
@@ -919,7 +919,7 @@ builder.Logging.AddPowertoolsLogger(options =>
 {
     options.JsonOptions = new JsonSerializerOptions
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase, // Override output casing
+        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase, // Override output casing
         TypeInfoResolver = MyCustomJsonSerializerContext.Default // Your custom JsonSerializerContext
     };
 });
@@ -1044,7 +1044,7 @@ Log buffering enables you to buffer logs for a specific request or invocation. E
               logger.LogBuffering = new LogBufferingOptions
               {
                   BufferAtLogLevel = LogLevel.Debug,
-                  MaxBytes = 123455, // Default is 20KB (20480 bytes) 
+                  MaxBytes = 20480, // Default is 20KB (20480 bytes) 
                   FlushOnErrorLog = true // default true
               };
           });
@@ -1206,13 +1206,13 @@ sequenceDiagram
     Client->>Lambda: Invoke Lambda
     Lambda->>Logger: Initialize with DEBUG level buffering
     Logger-->>Lambda: Logger buffer ready
-    Lambda->>Logger: logger.debug("First debug log")
+    Lambda->>Logger: Logger.LogDebug("First debug log")
     Logger-->>Logger: Buffer first debug log
-    Lambda->>Logger: logger.info("Info log")
+    Lambda->>Logger: Logger.LogInformation("Info log")
     Logger->>CloudWatch: Directly log info message
-    Lambda->>Logger: logger.debug("Second debug log")
+    Lambda->>Logger: Logger.LogDebug("Second debug log")
     Logger-->>Logger: Buffer second debug log
-    Lambda->>Logger: logger.flush_buffer()
+    Lambda->>Logger: Logger.FlushBuffer()
     Logger->>CloudWatch: Emit buffered logs to stdout
     Lambda->>Client: Return execution result
 ```
@@ -1231,14 +1231,14 @@ sequenceDiagram
     Client->>Lambda: Invoke Lambda
     Lambda->>Logger: Initialize with DEBUG level buffering
     Logger-->>Lambda: Logger buffer ready
-    Lambda->>Logger: logger.debug("First log")
+    Lambda->>Logger: Logger.LogDebug("First log")
     Logger-->>Logger: Buffer first debug log
-    Lambda->>Logger: logger.debug("Second log")
+    Lambda->>Logger: Logger.LogDebug("Second log")
     Logger-->>Logger: Buffer second debug log
-    Lambda->>Logger: logger.debug("Third log")
+    Lambda->>Logger: Logger.LogDebug("Third log")
     Logger-->>Logger: Buffer third debug log
     Lambda->>Lambda: Exception occurs
-    Lambda->>Logger: logger.error("Error details")
+    Lambda->>Logger: Logger.LogError("Error details")
     Logger->>CloudWatch: Emit buffered debug logs
     Logger->>CloudWatch: Emit error log
     Lambda->>Client: Raise exception
@@ -1260,9 +1260,9 @@ sequenceDiagram
     Client->>Lambda: Invoke Lambda
     Lambda->>Logger: Using decorator
     Logger-->>Lambda: Logger context injected
-    Lambda->>Logger: logger.debug("First log")
+    Lambda->>Logger: Logger.LogDebug("First log")
     Logger-->>Logger: Buffer first debug log
-    Lambda->>Logger: logger.debug("Second log")
+    Lambda->>Logger: Logger.LogDebug("Second log")
     Logger-->>Logger: Buffer second debug log
     Lambda->>Lambda: Uncaught Exception
     Lambda->>CloudWatch: Automatically emit buffered debug logs

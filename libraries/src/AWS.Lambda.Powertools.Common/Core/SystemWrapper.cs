@@ -41,13 +41,13 @@ public class SystemWrapper : ISystemWrapper
         _powertoolsEnvironment = powertoolsEnvironment;
         _instance ??= this;
         
-        // // Clear AWS SDK Console injected parameters StdOut and StdErr
-        // var standardOutput = new StreamWriter(Console.OpenStandardOutput());
-        // standardOutput.AutoFlush = true;
-        // Console.SetOut(standardOutput);
-        // var errordOutput = new StreamWriter(Console.OpenStandardError());
-        // errordOutput.AutoFlush = true;
-        // Console.SetError(errordOutput);
+        // Clear AWS SDK Console injected parameters StdOut and StdErr
+        var standardOutput = new StreamWriter(Console.OpenStandardOutput());
+        standardOutput.AutoFlush = true;
+        Console.SetOut(standardOutput);
+        var errordOutput = new StreamWriter(Console.OpenStandardError());
+        errordOutput.AutoFlush = true;
+        Console.SetError(errordOutput);
     }
 
     /// <summary>

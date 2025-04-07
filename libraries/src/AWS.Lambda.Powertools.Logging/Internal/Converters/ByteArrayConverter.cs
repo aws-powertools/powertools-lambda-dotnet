@@ -35,7 +35,7 @@ internal class ByteArrayConverter : JsonConverter<byte[]>
     public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
-            return null;
+            return [];
             
         if (reader.TokenType == JsonTokenType.String)
             return Convert.FromBase64String(reader.GetString()!);

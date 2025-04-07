@@ -289,16 +289,8 @@ internal class PowertoolsLoggingSerializer
             default: // Snake case
 #if NET8_0_OR_GREATER
                 // If is default (Not Set) and JsonOptions provided with DictionaryKeyPolicy or PropertyNamingPolicy, use it
-                if (_jsonOptions.DictionaryKeyPolicy != null || _jsonOptions.PropertyNamingPolicy != null)
-                {
-                    _jsonOptions.DictionaryKeyPolicy = _jsonOptions.DictionaryKeyPolicy;
-                    _jsonOptions.PropertyNamingPolicy = _jsonOptions.PropertyNamingPolicy;
-                }
-                else
-                {
-                    _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-                    _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
-                }
+                _jsonOptions.DictionaryKeyPolicy ??= JsonNamingPolicy.SnakeCaseLower;
+                _jsonOptions.PropertyNamingPolicy ??= JsonNamingPolicy.SnakeCaseLower;
 #else
                 _jsonOptions.PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance;
                 _jsonOptions.DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance;

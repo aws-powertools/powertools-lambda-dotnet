@@ -70,9 +70,6 @@ public class ConsoleWrapper : IConsoleWrapper
     
     internal static void WriteLine(string logLevel, string message)
     {
-        // var standardOutput = new StreamWriter(Console.OpenStandardOutput());
-        // standardOutput.AutoFlush = true;
-        // Console.SetOut(standardOutput);
         Console.WriteLine($"{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}\t{logLevel}\t{message}");
     }
 }
