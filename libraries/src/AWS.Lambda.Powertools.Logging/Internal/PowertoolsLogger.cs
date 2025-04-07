@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
@@ -544,7 +545,7 @@ internal sealed class PowertoolsLogger : ILogger
                     // Extract format specifiers from the template
                     var matches = System.Text.RegularExpressions.Regex.Matches(
                         template, 
-                        @"{([@\w]+)(?::([^{}]+))?}");
+                        @"{([@\w]+)(?::([^{}]+))?}", RegexOptions.None, TimeSpan.FromSeconds(2));
                     
                     foreach (System.Text.RegularExpressions.Match match in matches)
                     {

@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -327,7 +328,7 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     internal string XRayTraceId { get; set; }
     internal bool LogEvent { get; set; }
 
-    internal double Random { get; set; } = new Random().NextDouble();
+    internal double Random { get; set; } = GetSafeRandom();
 
     /// <summary>
     ///     Gets random number
@@ -336,5 +337,13 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     internal virtual double GetRandom()
     {
         return Random;
+    }
+    
+    internal static double GetSafeRandom()
+    {
+        var randomGenerator = RandomNumberGenerator.Create();
+        byte[] data = new byte[16];
+        randomGenerator.GetBytes(data);
+        return BitConverter.ToDouble(data);
     }
 }
