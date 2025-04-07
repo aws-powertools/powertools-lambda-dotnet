@@ -216,6 +216,12 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             // Assert
             Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"EnvNamespace\",\"Metrics\":[{\"Name\":\"SingleMetric\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Default\"]]}]},\"Default\":\"SingleMetric\",\"SingleMetric\":1}", metricsOutput);
+            
+            // assert with different service name
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"EnvNamespace\",\"Metrics\":[{\"Name\":\"SingleMetric2\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Service\",\"Default\"]]}]},\"Service\":\"service1\",\"Default\":\"SingleMetric\",\"SingleMetric2\":1}", metricsOutput);
+            
+            // assert with different service name
+            Assert.Contains("\"CloudWatchMetrics\":[{\"Namespace\":\"EnvNamespace\",\"Metrics\":[{\"Name\":\"SingleMetric3\",\"Unit\":\"Count\",\"StorageResolution\":1}],\"Dimensions\":[[\"Service\",\"Default\"]]}]},\"Service\":\"service2\",\"Default\":\"SingleMetric\",\"SingleMetric3\":1}", metricsOutput);
         }
 
         [Trait("Category", "MetricsImplementation")]

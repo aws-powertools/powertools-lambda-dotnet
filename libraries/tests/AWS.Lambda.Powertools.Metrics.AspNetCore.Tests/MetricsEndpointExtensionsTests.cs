@@ -20,8 +20,7 @@ public class MetricsEndpointExtensionsTests : IDisposable
         var options = new MetricsOptions
         {
             CaptureColdStart = true,
-            Namespace = "TestNamespace",
-            Service = "TestService"
+            Namespace = "TestNamespace"
         };
         
         var conf = Substitute.For<IPowertoolsConfigurations>();
@@ -61,7 +60,6 @@ public class MetricsEndpointExtensionsTests : IDisposable
         {
             CaptureColdStart = true,
             Namespace = "TestNamespace",
-            Service = "TestService"
         };
         
         var conf = Substitute.For<IPowertoolsConfigurations>();
@@ -111,7 +109,6 @@ public class MetricsEndpointExtensionsTests : IDisposable
         {
             CaptureColdStart = true,
             Namespace = "TestNamespace",
-            Service = "TestService",
             DefaultDimensions = new Dictionary<string, string>
             {
                 { "Environment", "Prod" }

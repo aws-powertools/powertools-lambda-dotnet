@@ -21,7 +21,6 @@ public class MetricsMiddlewareExtensionsTests : IDisposable
         {
             CaptureColdStart = true,
             Namespace = "TestNamespace",
-            Service = "TestService"
         };
         
         var conf = Substitute.For<IPowertoolsConfigurations>();
@@ -59,7 +58,6 @@ public class MetricsMiddlewareExtensionsTests : IDisposable
         {
             CaptureColdStart = true,
             Namespace = "TestNamespace",
-            Service = "TestService"
         };
         
         var conf = Substitute.For<IPowertoolsConfigurations>();
