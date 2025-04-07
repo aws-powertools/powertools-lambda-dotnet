@@ -78,4 +78,102 @@ public class ConsoleWrapperTests
             Console.SetOut(originalOut);
         }
     }
+    
+    [Fact]
+        public void WriteLine_WritesMessageToConsole()
+        {
+            // Arrange
+            var consoleWrapper = new ConsoleWrapper();
+            var originalOutput = Console.Out;
+            using var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+            
+            try
+            {
+                // Act
+                consoleWrapper.WriteLine("Test message");
+                
+                // Assert
+                var output = stringWriter.ToString();
+                Assert.Contains("Test message", output);
+            }
+            finally
+            {
+                // Restore original output
+                Console.SetOut(originalOutput);
+            }
+        }
+        
+        [Fact]
+        public void Error_WritesMessageToErrorOutput()
+        {
+            // Arrange
+            var consoleWrapper = new ConsoleWrapper();
+            var writer = new StringWriter();
+    
+            // This sets _override = true, preventing Error from creating a new stream
+            ConsoleWrapper.SetOut(writer);
+            Console.SetError(writer);
+
+            // Act
+            consoleWrapper.Error("Error message");
+            writer.Flush();
+        
+            // Assert
+            var output = writer.ToString();
+            Assert.Contains("Error message", output);
+        }
+        
+        [Fact]
+        public void SetOut_OverridesConsoleOutput()
+        {
+            // Arrange
+            var originalOutput = Console.Out;
+            using var stringWriter = new StringWriter();
+            
+            try
+            {
+                // Act
+                typeof(ConsoleWrapper)
+                    .GetMethod("SetOut", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    ?.Invoke(null, new object[] { stringWriter });
+                
+                Console.WriteLine("Test override");
+                
+                // Assert
+                var output = stringWriter.ToString();
+                Assert.Contains("Test override", output);
+            }
+            finally
+            {
+                // Restore original output
+                Console.SetOut(originalOutput);
+            }
+        }
+        
+        [Fact]
+        public void StaticWriteLine_FormatsLogMessageCorrectly()
+        {
+            // Arrange
+            var originalOutput = Console.Out;
+            using var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+            
+            try
+            {
+                // Act
+                typeof(ConsoleWrapper)
+                    .GetMethod("WriteLine", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, new[] { typeof(string), typeof(string) }, null)
+                    ?.Invoke(null, new object[] { "INFO", "Test log message" });
+                
+                // Assert
+                var output = stringWriter.ToString();
+                Assert.Matches(@"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\tINFO\tTest log message", output);
+            }
+            finally
+            {
+                // Restore original output
+                Console.SetOut(originalOutput);
+            }
+        }
 }
