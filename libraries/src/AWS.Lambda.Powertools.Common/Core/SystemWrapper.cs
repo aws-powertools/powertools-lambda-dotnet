@@ -27,6 +27,9 @@ namespace AWS.Lambda.Powertools.Common;
 public class SystemWrapper : ISystemWrapper
 {
     private static IPowertoolsEnvironment _powertoolsEnvironment;
+    private static bool _inTestMode = false;
+    private static TextWriter _testOutputStream;
+    private static bool _outputResetPerformed = false;
 
     /// <summary>
     ///     The instance
@@ -41,13 +44,11 @@ public class SystemWrapper : ISystemWrapper
         _powertoolsEnvironment = powertoolsEnvironment;
         _instance ??= this;
         
-        // Clear AWS SDK Console injected parameters StdOut and StdErr
-        var standardOutput = new StreamWriter(Console.OpenStandardOutput());
-        standardOutput.AutoFlush = true;
-        Console.SetOut(standardOutput);
-        var errordOutput = new StreamWriter(Console.OpenStandardError());
-        errordOutput.AutoFlush = true;
-        Console.SetError(errordOutput);
+        if (!_inTestMode)
+        {
+            // Clear AWS SDK Console injected parameters in production only
+            ResetConsoleOutput();
+        }
     }
 
     /// <summary>
@@ -72,7 +73,15 @@ public class SystemWrapper : ISystemWrapper
     /// <param name="value">The value.</param>
     public void Log(string value)
     {
-        Console.Write(value);
+        if (_inTestMode && _testOutputStream != null)
+        {
+            _testOutputStream.Write(value);
+        }
+        else
+        {
+            EnsureConsoleOutputOnce();
+            Console.Write(value);
+        }
     }
 
     /// <summary>
@@ -81,7 +90,15 @@ public class SystemWrapper : ISystemWrapper
     /// <param name="value">The value.</param>
     public void LogLine(string value)
     {
-        Console.WriteLine(value);
+        if (_inTestMode && _testOutputStream != null)
+        {
+            _testOutputStream.WriteLine(value);
+        }
+        else
+        {
+            EnsureConsoleOutputOnce();
+            Console.WriteLine(value);
+        }
     }
 
     /// <summary>
@@ -129,6 +146,8 @@ public class SystemWrapper : ISystemWrapper
     /// <inheritdoc />
     public void SetOut(TextWriter writeTo)
     {
+        _testOutputStream = writeTo;
+        _inTestMode = true;
         Console.SetOut(writeTo);
     }
 
@@ -151,5 +170,34 @@ public class SystemWrapper : ISystemWrapper
         }
 
         return $"{Constants.FeatureContextIdentifier}/{assemblyName}";
+    }
+    
+    private void EnsureConsoleOutputOnce()
+    {
+        if (_outputResetPerformed) return;
+        ResetConsoleOutput();
+        _outputResetPerformed = true;
+    }
+    
+    private void ResetConsoleOutput()
+    {
+        var standardOutput = new StreamWriter(Console.OpenStandardOutput());
+        standardOutput.AutoFlush = true;
+        Console.SetOut(standardOutput);
+        var errorOutput = new StreamWriter(Console.OpenStandardError());
+        errorOutput.AutoFlush = true;
+        Console.SetError(errorOutput);
+    }
+    
+    public void ClearOutputResetFlag()
+    {
+        _outputResetPerformed = false;
+    }
+    
+    // For test cleanup
+    internal static void ResetTestMode()
+    {
+        _inTestMode = false;
+        _testOutputStream = null;
     }
 }
