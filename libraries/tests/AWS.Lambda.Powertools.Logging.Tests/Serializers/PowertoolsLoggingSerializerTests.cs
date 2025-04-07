@@ -456,19 +456,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         }
 
 #if NET8_0_OR_GREATER
-        [Fact]
-        public void AddSerializerContext_AddsContext()
-        {
-            // Arrange
-            var serializer = new PowertoolsLoggingSerializer();
-            var context = new TestJsonContext(new JsonSerializerOptions());
-            
-            // Act
-            serializer.AddSerializerContext(context);
-            
-            // No immediate assertion - the context is added internally
-            // We'll verify it works through serialization tests
-        }
 
         [Fact]
         public void SetOptions_WithTypeInfoResolver_SetsCustomResolver()
@@ -491,24 +478,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
 
             // Assert - options are properly configured
             Assert.NotNull(serializerOptions.TypeInfoResolver);
-        }
-
-        [Fact]
-        public void SetOptions_WithContextAsResolver_AddsToContexts()
-        {
-            // Arrange
-            var serializer = new PowertoolsLoggingSerializer();
-            var context = new TestJsonContext(new JsonSerializerOptions());
-            var options = new JsonSerializerOptions
-            {
-                TypeInfoResolver = context
-            };
-            
-            // Act - This adds the context automatically
-            serializer.SetOptions(options);
-            
-            // No direct assertion possible for internal state, but we can test it works
-            // through proper serialization
         }
 #endif
 
