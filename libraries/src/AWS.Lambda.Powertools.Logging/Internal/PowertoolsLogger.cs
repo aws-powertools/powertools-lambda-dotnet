@@ -238,12 +238,10 @@ internal sealed class PowertoolsLogger : ILogger
         {
             foreach (var (key, value) in structuredParameters)
             {
-                if (!string.IsNullOrWhiteSpace(key) && key != "json")
+                if (string.IsNullOrWhiteSpace(key) || key == "json") continue;
+                if (!IsLogConstantKey(key))
                 {
-                    if (!IsLogConstantKey(key))
-                    {
-                        logEntry.TryAdd(key, value);
-                    }
+                    logEntry.TryAdd(key, value);
                 }
             }
         }
@@ -551,15 +549,15 @@ internal sealed class PowertoolsLogger : ILogger
         var statePropsArray = stateProps.ToArray();
 
         // First pass - extract message template and identify format specifiers
-        ExtractFormatSpecifiers<TState>(ref messageTemplate, statePropsArray, formatSpecifiers);
+        ExtractFormatSpecifiers(ref messageTemplate, statePropsArray, formatSpecifiers);
 
         // Second pass - process values with extracted format specifiers
-        ProcessValuesWithSpecifiers<TState>(statePropsArray, formatSpecifiers, parameters);
+        ProcessValuesWithSpecifiers(statePropsArray, formatSpecifiers, parameters);
 
         return parameters;
     }
 
-    private void ProcessValuesWithSpecifiers<TState>(KeyValuePair<string, object>[] statePropsArray, Dictionary<string, string> formatSpecifiers,
+    private void ProcessValuesWithSpecifiers(KeyValuePair<string, object>[] statePropsArray, Dictionary<string, string> formatSpecifiers,
         Dictionary<string, object> parameters)
     {
         foreach (var prop in statePropsArray)
@@ -618,7 +616,7 @@ internal sealed class PowertoolsLogger : ILogger
         }
     }
 
-    private static void ExtractFormatSpecifiers<TState>(ref string messageTemplate, KeyValuePair<string, object>[] statePropsArray,
+    private static void ExtractFormatSpecifiers(ref string messageTemplate, KeyValuePair<string, object>[] statePropsArray,
         Dictionary<string, string> formatSpecifiers)
     {
         foreach (var prop in statePropsArray)

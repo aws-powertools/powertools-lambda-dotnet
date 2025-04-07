@@ -24,23 +24,23 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// </summary>
 internal class PowertoolsBufferingLogger : ILogger
 {
-    private readonly ILogger _innerLogger;
+    private readonly ILogger _logger;
     private readonly Func<PowertoolsLoggerConfiguration> _getCurrentConfig;
     private readonly LogBuffer _buffer;
 
     public PowertoolsBufferingLogger(
-        ILogger innerLogger,
+        ILogger logger,
         Func<PowertoolsLoggerConfiguration> getCurrentConfig,
         IPowertoolsConfigurations powertoolsConfigurations)
     {
-        _innerLogger = innerLogger;
+        _logger = logger;
         _getCurrentConfig = getCurrentConfig;
         _buffer = new LogBuffer(powertoolsConfigurations);
     }
 
     public IDisposable BeginScope<TState>(TState state)
     {
-        return _innerLogger.BeginScope(state);
+        return _logger.BeginScope(state);
     }
 
     public bool IsEnabled(LogLevel logLevel)
@@ -66,7 +66,7 @@ internal class PowertoolsBufferingLogger : ILogger
             // Add to buffer instead of logging
             try
             {
-                if (_innerLogger is PowertoolsLogger powertoolsLogger)
+                if (_logger is PowertoolsLogger powertoolsLogger)
                 {
                     var logEntry = powertoolsLogger.LogEntryString(logLevel, state, exception, formatter);
                     
@@ -89,7 +89,7 @@ internal class PowertoolsBufferingLogger : ILogger
                 // If buffering fails, try to log an error about it
                 try
                 {
-                    _innerLogger.LogError(ex, "Failed to buffer log entry");
+                    _logger.LogError(ex, "Failed to buffer log entry");
                 }
                 catch
                 {
@@ -115,7 +115,7 @@ internal class PowertoolsBufferingLogger : ILogger
     {
         try
         {
-            if (_innerLogger is PowertoolsLogger powertoolsLogger)
+            if (_logger is PowertoolsLogger powertoolsLogger)
             {
                 if (_buffer.HasEvictions)
                 {
@@ -137,7 +137,7 @@ internal class PowertoolsBufferingLogger : ILogger
             // If the entire flush operation fails, try to log an error
             try
             {
-                _innerLogger.LogError(ex, "Failed to flush log buffer");
+                _logger.LogError(ex, "Failed to flush log buffer");
             }
             catch
             {

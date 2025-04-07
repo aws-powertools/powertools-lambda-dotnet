@@ -6,6 +6,30 @@ using Architecture = Amazon.CDK.AWS.Lambda.Architecture;
 
 namespace InfraAot;
 
+public class ConstructArgs
+{
+    public ConstructArgs(Construct scope, string id, Runtime runtime, Architecture architecture, string name, string sourcePath, string distPath, string handler)
+    {
+        Scope = scope;
+        Id = id;
+        Runtime = runtime;
+        Architecture = architecture;
+        Name = name;
+        SourcePath = sourcePath;
+        DistPath = distPath;
+        Handler = handler;
+    }
+
+    public Construct Scope { get; private set; }
+    public string Id { get; private set; }
+    public Runtime Runtime { get; private set; }
+    public Architecture Architecture { get; private set; }
+    public string Name { get; private set; }
+    public string SourcePath { get; private set; }
+    public string DistPath { get; private set; }
+    public string Handler { get; private set; }
+}
+
 public class CoreAotStack : Stack
 {
     private readonly Architecture _architecture;
@@ -26,21 +50,19 @@ public class CoreAotStack : Stack
         var distAotPath = $"../functions/core/{utility}/{function}/dist/{function}";
         var arch = _architecture == Architecture.X86_64 ? "X64" : "ARM";
 
-        CreateFunctionConstruct(this, $"{utility}_{arch}_aot_net8_{function}", Runtime.DOTNET_8, _architecture,
-            $"E2ETestLambda_{arch}_AOT_NET8_{utility}_{function}", baseAotPath, distAotPath, function);
+        CreateFunctionConstruct(new ConstructArgs(this, $"{utility}_{arch}_aot_net8_{function}", Runtime.DOTNET_8, _architecture, $"E2ETestLambda_{arch}_AOT_NET8_{utility}_{function}", baseAotPath, distAotPath, function));
     }
 
-    private void CreateFunctionConstruct(Construct scope, string id, Runtime runtime, Architecture architecture,
-        string name, string sourcePath, string distPath, string handler)
+    private void CreateFunctionConstruct(ConstructArgs constructArgs)
     {
-        _ = new FunctionConstruct(scope, id, new FunctionConstructProps
+        _ = new FunctionConstruct(constructArgs.Scope, constructArgs.Id, new FunctionConstructProps
         {
-            Runtime = runtime,
-            Architecture = architecture,
-            Name = name,
-            Handler = handler,
-            SourcePath = sourcePath,
-            DistPath = distPath,
+            Runtime = constructArgs.Runtime,
+            Architecture = constructArgs.Architecture,
+            Name = constructArgs.Name,
+            Handler = constructArgs.Handler,
+            SourcePath = constructArgs.SourcePath,
+            DistPath = constructArgs.DistPath,
             IsAot = true
         });
     }
