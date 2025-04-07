@@ -35,7 +35,7 @@ public class BatchProcessingInternalTests
         var sqsBatchProcessor = new SqsBatchProcessor(conf);
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/BatchProcessing/0.0.1",
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/BatchProcessing/1.0.0",
             env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
         
         Assert.NotNull(sqsBatchProcessor);
@@ -52,7 +52,7 @@ public class BatchProcessingInternalTests
         var KinesisEventBatchProcessor = new KinesisEventBatchProcessor(conf);
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/BatchProcessing/0.0.1",
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/BatchProcessing/1.0.0",
             env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
         
         Assert.NotNull(KinesisEventBatchProcessor);
@@ -69,7 +69,7 @@ public class BatchProcessingInternalTests
         var dynamoDbStreamBatchProcessor = new DynamoDbStreamBatchProcessor(conf);
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/BatchProcessing/0.0.1",
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/BatchProcessing/1.0.0",
             env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
         
         Assert.NotNull(dynamoDbStreamBatchProcessor);

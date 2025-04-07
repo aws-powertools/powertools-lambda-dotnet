@@ -272,7 +272,7 @@ public class IdempotentAspectTests : IDisposable
         var xRayRecorder = new Idempotency(conf);
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/Idempotency/0.0.1",
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Idempotency/1.0.0",
             env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
 
         Assert.NotNull(xRayRecorder);

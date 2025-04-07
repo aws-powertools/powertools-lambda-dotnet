@@ -40,7 +40,7 @@ public class XRayRecorderTests
         var xRayRecorder = new XRayRecorder(awsXray, conf);
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tracing/0.0.1",
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tracing/1.0.0",
             env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
 
         Assert.NotNull(xRayRecorder);

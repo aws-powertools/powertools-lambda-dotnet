@@ -24,7 +24,7 @@ public class MetricsTests
         _ = new Metrics(conf);
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/Metrics/0.0.1",
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Metrics/1.0.0",
             env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
     }
 

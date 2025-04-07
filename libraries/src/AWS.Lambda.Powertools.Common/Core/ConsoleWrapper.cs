@@ -21,6 +21,8 @@ namespace AWS.Lambda.Powertools.Common;
 /// <inheritdoc />
 public class ConsoleWrapper : IConsoleWrapper
 {
+    private static bool _override;
+
     /// <inheritdoc />
     public void WriteLine(string message)
     {
@@ -38,19 +40,28 @@ public class ConsoleWrapper : IConsoleWrapper
     /// <inheritdoc />
     public void Error(string message)
     {
-        var errordOutput = new StreamWriter(Console.OpenStandardError());
-        errordOutput.AutoFlush = true;
-        Console.SetError(errordOutput);
+        if (!_override)
+        {
+            var errordOutput = new StreamWriter(Console.OpenStandardError());
+            errordOutput.AutoFlush = true;
+            Console.SetError(errordOutput);
+        }
+
         Console.Error.WriteLine(message);
     }
 
     internal static void SetOut(StringWriter consoleOut)
     {
+        _override = true;
         Console.SetOut(consoleOut);
     }
     
     private void OverrideLambdaLogger()
     {
+        if (_override)
+        {
+            return;
+        }
         // Force override of LambdaLogger
         var standardOutput = new StreamWriter(Console.OpenStandardOutput());
         standardOutput.AutoFlush = true;
