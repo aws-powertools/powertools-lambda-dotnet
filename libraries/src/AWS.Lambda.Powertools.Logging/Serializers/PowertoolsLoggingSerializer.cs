@@ -182,25 +182,6 @@ internal class PowertoolsLoggingSerializer
     }
 
     /// <summary>
-    /// Handles the TypeInfoResolver from the JsonSerializerOptions.
-    /// </summary>
-    private void HandleJsonOptionsTypeResolver(JsonSerializerOptions options)
-    {
-        // Check for TypeInfoResolver and ensure it's not lost
-        if (options?.TypeInfoResolver != null &&
-            options.TypeInfoResolver != GetCompositeResolver())
-        {
-            _customTypeInfoResolver = options.TypeInfoResolver;
-
-            // If it's a JsonSerializerContext, also add it to our contexts
-            if (_customTypeInfoResolver is JsonSerializerContext jsonContext)
-            {
-                AddSerializerContext(jsonContext);
-            }
-        }
-    }
-
-    /// <summary>
     /// Gets the JsonTypeInfo for a given type.
     /// </summary>
     /// <param name="type">The type to get information for.</param>

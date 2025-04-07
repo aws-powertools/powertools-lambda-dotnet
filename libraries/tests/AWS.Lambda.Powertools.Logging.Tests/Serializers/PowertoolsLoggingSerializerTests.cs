@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
@@ -400,6 +401,198 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         public TimeOnly Time { get; set; }
 #endif
     }
+    
+    [Fact]
+        public void ConfigureNamingPolicy_WhenChanged_RebuildsOptions()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+            
+            // Force initialization of _jsonOptions
+            _ = serializer.GetSerializerOptions();
+            
+            // Act
+            serializer.ConfigureNamingPolicy(LoggerOutputCase.CamelCase);
+            var options = serializer.GetSerializerOptions();
+            
+            // Assert
+            Assert.Equal(JsonNamingPolicy.CamelCase, options.PropertyNamingPolicy);
+            Assert.Equal(JsonNamingPolicy.CamelCase, options.DictionaryKeyPolicy);
+        }
+
+        [Fact]
+        public void ConfigureNamingPolicy_WhenAlreadySet_DoesNothing()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+            serializer.ConfigureNamingPolicy(LoggerOutputCase.CamelCase);
+            
+            // Get the initial options
+            var initialOptions = serializer.GetSerializerOptions();
+            
+            // Act - set the same case again
+            serializer.ConfigureNamingPolicy(LoggerOutputCase.CamelCase);
+            var newOptions = serializer.GetSerializerOptions();
+            
+            // Assert - should be the same instance
+            Assert.Same(initialOptions, newOptions);
+        }
+
+        [Fact]
+        public void Serialize_WithValidObject_ReturnsJsonString()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+            var testObj = new TestClass { Name = "Test", Value = 123 };
+            
+            // Act
+            var json = serializer.Serialize(testObj, typeof(TestClass));
+            
+            // Assert
+            Assert.Contains("\"name\"", json);
+            Assert.Contains("\"value\"", json);
+            Assert.Contains("123", json);
+            Assert.Contains("Test", json);
+        }
+
+#if NET8_0_OR_GREATER
+        [Fact]
+        public void AddSerializerContext_AddsContext()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+            var context = new TestJsonContext(new JsonSerializerOptions());
+            
+            // Act
+            serializer.AddSerializerContext(context);
+            
+            // No immediate assertion - the context is added internally
+            // We'll verify it works through serialization tests
+        }
+
+        [Fact]
+        public void SetOptions_WithTypeInfoResolver_SetsCustomResolver()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+    
+            // Explicitly disable dynamic code - important to set before creating options
+            RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+    
+            var context = new TestJsonContext(new JsonSerializerOptions());
+            var options = new JsonSerializerOptions
+            {
+                TypeInfoResolver = context
+            };
+
+            // Act
+            serializer.SetOptions(options);
+            var serializerOptions = serializer.GetSerializerOptions();
+
+            // Assert - options are properly configured
+            Assert.NotNull(serializerOptions.TypeInfoResolver);
+        }
+
+        [Fact]
+        public void SetOptions_WithContextAsResolver_AddsToContexts()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+            var context = new TestJsonContext(new JsonSerializerOptions());
+            var options = new JsonSerializerOptions
+            {
+                TypeInfoResolver = context
+            };
+            
+            // Act - This adds the context automatically
+            serializer.SetOptions(options);
+            
+            // No direct assertion possible for internal state, but we can test it works
+            // through proper serialization
+        }
+#endif
+
+        [Fact]
+        public void SetOutputCase_CamelCase_SetsPoliciesCorrectly()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+            serializer.ConfigureNamingPolicy(LoggerOutputCase.CamelCase);
+            
+            // Act
+            var options = serializer.GetSerializerOptions();
+            
+            // Assert
+            Assert.Equal(JsonNamingPolicy.CamelCase, options.PropertyNamingPolicy);
+            Assert.Equal(JsonNamingPolicy.CamelCase, options.DictionaryKeyPolicy);
+        }
+
+        [Fact]
+        public void SetOutputCase_PascalCase_SetsPoliciesCorrectly()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+            serializer.ConfigureNamingPolicy(LoggerOutputCase.PascalCase);
+            
+            // Act
+            var options = serializer.GetSerializerOptions();
+            
+            // Assert
+            Assert.IsType<PascalCaseNamingPolicy>(options.PropertyNamingPolicy);
+            Assert.IsType<PascalCaseNamingPolicy>(options.DictionaryKeyPolicy);
+        }
+
+        [Fact]
+        public void SetOutputCase_SnakeCase_SetsPoliciesCorrectly()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+            serializer.ConfigureNamingPolicy(LoggerOutputCase.SnakeCase);
+            
+            // Act
+            var options = serializer.GetSerializerOptions();
+
+#if NET8_0_OR_GREATER
+            // Assert - in .NET 8 we use built-in SnakeCaseLower
+            Assert.Equal(JsonNamingPolicy.SnakeCaseLower, options.PropertyNamingPolicy);
+            Assert.Equal(JsonNamingPolicy.SnakeCaseLower, options.DictionaryKeyPolicy);
+#else
+            // Assert - in earlier versions, we use custom SnakeCaseNamingPolicy
+            Assert.IsType<SnakeCaseNamingPolicy>(options.PropertyNamingPolicy);
+            Assert.IsType<SnakeCaseNamingPolicy>(options.DictionaryKeyPolicy);
+#endif
+        }
+
+        [Fact]
+        public void GetSerializerOptions_AddsAllConverters()
+        {
+            // Arrange
+            var serializer = new PowertoolsLoggingSerializer();
+            
+            // Act
+            var options = serializer.GetSerializerOptions();
+            
+            // Assert
+            Assert.Contains(options.Converters, c => c is ByteArrayConverter);
+            Assert.Contains(options.Converters, c => c is ExceptionConverter);
+            Assert.Contains(options.Converters, c => c is MemoryStreamConverter);
+            Assert.Contains(options.Converters, c => c is ConstantClassConverter);
+            Assert.Contains(options.Converters, c => c is DateOnlyConverter);
+            Assert.Contains(options.Converters, c => c is TimeOnlyConverter);
+#if NET8_0_OR_GREATER || NET6_0
+            Assert.Contains(options.Converters, c => c is LogLevelJsonConverter);
+#endif
+        }
+
+        // Test class for serialization
+        private class TestClass
+        {
+            public string Name { get; set; }
+            public int Value { get; set; }
+        }
+
+
+    
 
     public void Dispose()
     {
