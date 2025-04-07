@@ -127,7 +127,7 @@ public class ConsoleWrapperTests : IDisposable
             finally
             {
                 // Restore original output
-                Console.SetOut(originalOutput);
+                ConsoleWrapper.ResetForTest();
             }
         }
         
@@ -137,7 +137,7 @@ public class ConsoleWrapperTests : IDisposable
             // Arrange
             var originalOutput = Console.Out;
             using var stringWriter = new StringWriter();
-            Console.SetOut(stringWriter);
+            ConsoleWrapper.SetOut(stringWriter);
             
             try
             {
@@ -153,7 +153,7 @@ public class ConsoleWrapperTests : IDisposable
             finally
             {
                 // Restore original output
-                Console.SetOut(originalOutput);
+                ConsoleWrapper.ResetForTest();
             }
         }
 
