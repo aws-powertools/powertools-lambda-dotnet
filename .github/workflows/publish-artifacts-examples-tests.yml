@@ -79,6 +79,7 @@ jobs:
 
       # Ensure we preserve access to NuGet.org
       - name: Configure NuGet.org source
+        continue-on-error: true
         run: |
           dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget.org
 

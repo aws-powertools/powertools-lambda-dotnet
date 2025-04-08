@@ -22,41 +22,77 @@ namespace AWS.Lambda.Powertools.Common;
 public class ConsoleWrapper : IConsoleWrapper
 {
     private static bool _override;
+    private static TextWriter _testOutputStream;
+    private static bool _outputResetPerformed = false;
+    private static bool _inTestMode = false;
 
     /// <inheritdoc />
     public void WriteLine(string message)
     {
-        OverrideLambdaLogger();
-        Console.WriteLine(message);
+        if (_inTestMode && _testOutputStream != null)
+        {
+            _testOutputStream.WriteLine(message);
+        }
+        else
+        {
+            EnsureConsoleOutputOnce();
+            Console.WriteLine(message);
+        }
     }
 
     /// <inheritdoc />
     public void Debug(string message)
     {
-        OverrideLambdaLogger();
-        System.Diagnostics.Debug.WriteLine(message);
+        if (_inTestMode && _testOutputStream != null)
+        {
+            _testOutputStream.WriteLine(message);
+        }
+        else
+        {
+            EnsureConsoleOutputOnce();
+            System.Diagnostics.Debug.WriteLine(message);
+        }
     }
 
     /// <inheritdoc />
     public void Error(string message)
     {
-        if (!_override)
+        if (_inTestMode && _testOutputStream != null)
         {
-            var errordOutput = new StreamWriter(Console.OpenStandardError());
-            errordOutput.AutoFlush = true;
-            Console.SetError(errordOutput);
+            _testOutputStream.WriteLine(message);
         }
-
-        Console.Error.WriteLine(message);
+        else
+        {
+            if (!_override)
+            {
+                var errordOutput = new StreamWriter(Console.OpenStandardError());
+                errordOutput.AutoFlush = true;
+                Console.SetError(errordOutput);
+            }
+            Console.Error.WriteLine(message);
+        }
     }
 
-    internal static void SetOut(StringWriter consoleOut)
+    /// <summary>
+    ///     Set the ConsoleWrapper to use a different TextWriter
+    ///     This is useful for unit tests where you want to capture the output
+    /// </summary>
+    public static void SetOut(TextWriter consoleOut)
     {
+        _testOutputStream = consoleOut;
+        _inTestMode = true;
         _override = true;
         Console.SetOut(consoleOut);
     }
     
-    private void OverrideLambdaLogger()
+    private static void EnsureConsoleOutputOnce()
+    {
+        if (_outputResetPerformed) return;
+        OverrideLambdaLogger();
+        _outputResetPerformed = true;
+    }
+    
+    private static void OverrideLambdaLogger()
     {
         if (_override)
         {
@@ -73,8 +109,22 @@ public class ConsoleWrapper : IConsoleWrapper
         Console.WriteLine($"{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}\t{logLevel}\t{message}");
     }
 
+    /// <summary>
+    ///     Reset the ConsoleWrapper to its original state
+    /// </summary>
     public static void ResetForTest()
     {
         _override = false;
+        _inTestMode = false;
+        _testOutputStream = null;
+        _outputResetPerformed = false;
+    }
+    
+    /// <summary>
+    ///     Clear the output reset flag
+    /// </summary>
+    public static void ClearOutputResetFlag()
+    {
+        _outputResetPerformed = false;
     }
 }
