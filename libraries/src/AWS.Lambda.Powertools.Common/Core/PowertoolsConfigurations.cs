@@ -14,6 +14,7 @@
  */
 
 using System.Globalization;
+using AWS.Lambda.Powertools.Common.Core;
 
 namespace AWS.Lambda.Powertools.Common;
 
@@ -222,4 +223,11 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
 
     /// <inheritdoc />
     public bool MetricsDisabled => GetEnvironmentVariableOrDefault(Constants.PowertoolsMetricsDisabledEnv, false);
+    
+    /// <inheritdoc />
+    public bool IsColdStart => LambdaLifecycleTracker.IsColdStart;
+    
+    /// <inheritdoc />
+    public string AwsInitializationType =>
+        GetEnvironmentVariable(Constants.AWSInitializationTypeEnv);
 }
