@@ -25,36 +25,64 @@ using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Logging.Internal.Converters;
-using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Serializers;
 
 /// <summary>
 /// Provides serialization functionality for Powertools logging.
 /// </summary>
-internal static class PowertoolsLoggingSerializer
+internal class PowertoolsLoggingSerializer
 {
-    private static LoggerOutputCase _currentOutputCase;
-    private static JsonSerializerOptions _jsonOptions;
+    private JsonSerializerOptions _currentOptions;
+    private LoggerOutputCase _currentOutputCase;
+    private JsonSerializerOptions _jsonOptions;
+    private readonly object _lock = new();
 
-    private static readonly ConcurrentBag<JsonSerializerContext> AdditionalContexts =
-        new ConcurrentBag<JsonSerializerContext>();
+#if NET8_0_OR_GREATER
+    private readonly ConcurrentBag<JsonSerializerContext> _additionalContexts = new();
+    private static JsonSerializerContext _staticAdditionalContexts;
+    private IJsonTypeInfoResolver _customTypeInfoResolver;
+#endif
 
     /// <summary>
     /// Gets the JsonSerializerOptions instance.
     /// </summary>
-    internal static JsonSerializerOptions GetSerializerOptions()
+    internal JsonSerializerOptions GetSerializerOptions()
     {
-        return _jsonOptions ?? BuildJsonSerializerOptions();
+        // Double-checked locking pattern for thread safety while ensuring we only build once
+        if (_jsonOptions == null)
+        {
+            lock (_lock)
+            {
+                if (_jsonOptions == null)
+                {
+                    BuildJsonSerializerOptions(_currentOptions);
+                }
+            }
+        }
+
+        return _jsonOptions;
     }
 
     /// <summary>
     /// Configures the naming policy for the serializer.
     /// </summary>
     /// <param name="loggerOutputCase">The case to use for serialization.</param>
-    internal static void ConfigureNamingPolicy(LoggerOutputCase loggerOutputCase)
+    internal void ConfigureNamingPolicy(LoggerOutputCase loggerOutputCase)
     {
-        _currentOutputCase = loggerOutputCase;
+        if (_currentOutputCase != loggerOutputCase)
+        {
+            lock (_lock)
+            {
+                _currentOutputCase = loggerOutputCase;
+
+                // Only rebuild options if they already exist
+                if (_jsonOptions != null)
+                {
+                    SetOutputCase();
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -64,7 +92,7 @@ internal static class PowertoolsLoggingSerializer
     /// <param name="inputType">The type of the object to serialize.</param>
     /// <returns>A JSON string representation of the object.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the input type is not known to the serializer.</exception>
-    internal static string Serialize(object value, Type inputType)
+    internal string Serialize(object value, Type inputType)
     {
 #if NET6_0
         var options = GetSerializerOptions();
@@ -72,11 +100,12 @@ internal static class PowertoolsLoggingSerializer
 #else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
-            var options = GetSerializerOptions();
+            var jsonSerializerOptions = GetSerializerOptions();
 #pragma warning disable
-            return JsonSerializer.Serialize(value, options);
+            return JsonSerializer.Serialize(value, jsonSerializerOptions);
         }
 
+        // Try to serialize using the configured TypeInfoResolver
         var typeInfo = GetTypeInfo(inputType);
         if (typeInfo == null)
         {
@@ -85,23 +114,71 @@ internal static class PowertoolsLoggingSerializer
         }
 
         return JsonSerializer.Serialize(value, typeInfo);
+
 #endif
     }
 
 #if NET8_0_OR_GREATER
+
     /// <summary>
     /// Adds a JsonSerializerContext to the serializer options.
     /// </summary>
     /// <param name="context">The JsonSerializerContext to add.</param>
     /// <exception cref="ArgumentNullException">Thrown when the context is null.</exception>
-    internal static void AddSerializerContext(JsonSerializerContext context)
+    internal void AddSerializerContext(JsonSerializerContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (!AdditionalContexts.Contains(context))
+        // Don't add duplicates
+        if (!_additionalContexts.Contains(context))
         {
-            AdditionalContexts.Add(context);
+            _additionalContexts.Add(context);
+
+            // If we have existing JSON options, update their type resolver
+            if (_jsonOptions != null && !RuntimeFeatureWrapper.IsDynamicCodeSupported)
+            {
+                // Reset the type resolver chain to rebuild it
+                _jsonOptions.TypeInfoResolver = GetCompositeResolver();
+            }
         }
+    }
+
+    internal static void AddStaticSerializerContext(JsonSerializerContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        _staticAdditionalContexts = context;
+    }
+
+    /// <summary>
+    /// Get a composite resolver that includes all configured resolvers
+    /// </summary>
+    private IJsonTypeInfoResolver GetCompositeResolver()
+    {
+        var resolvers = new List<IJsonTypeInfoResolver>();
+
+        // Add custom resolver if provided
+        if (_customTypeInfoResolver != null)
+        {
+            resolvers.Add(_customTypeInfoResolver);
+        }
+
+        // add any static resolvers
+        if (_staticAdditionalContexts != null)
+        {
+            resolvers.Add(_staticAdditionalContexts);
+        }
+
+        // Add default context
+        resolvers.Add(PowertoolsLoggingSerializationContext.Default);
+
+        // Add additional contexts
+        foreach (var context in _additionalContexts)
+        {
+            resolvers.Add(context);
+        }
+
+        return new CompositeJsonTypeInfoResolver(resolvers.ToArray());
     }
 
     /// <summary>
@@ -109,21 +186,77 @@ internal static class PowertoolsLoggingSerializer
     /// </summary>
     /// <param name="type">The type to get information for.</param>
     /// <returns>The JsonTypeInfo for the specified type, or null if not found.</returns>
-    internal static JsonTypeInfo GetTypeInfo(Type type)
+    private JsonTypeInfo GetTypeInfo(Type type)
     {
         var options = GetSerializerOptions();
         return options.TypeInfoResolver?.GetTypeInfo(type, options);
     }
+
 #endif
 
     /// <summary>
     /// Builds and configures the JsonSerializerOptions.
     /// </summary>
     /// <returns>A configured JsonSerializerOptions instance.</returns>
-    private static JsonSerializerOptions BuildJsonSerializerOptions()
+    private void BuildJsonSerializerOptions(JsonSerializerOptions options = null)
     {
-        _jsonOptions = new JsonSerializerOptions();
+        lock (_lock)
+        {
+            // Create a completely new options instance regardless
+            _jsonOptions = new JsonSerializerOptions();
 
+            // Copy any properties from the original options if provided
+            if (options != null)
+            {
+                // Copy standard properties
+                _jsonOptions.DefaultIgnoreCondition = options.DefaultIgnoreCondition;
+                _jsonOptions.PropertyNameCaseInsensitive = options.PropertyNameCaseInsensitive;
+                _jsonOptions.PropertyNamingPolicy = options.PropertyNamingPolicy;
+                _jsonOptions.DictionaryKeyPolicy = options.DictionaryKeyPolicy;
+                _jsonOptions.WriteIndented = options.WriteIndented;
+                _jsonOptions.ReferenceHandler = options.ReferenceHandler;
+                _jsonOptions.MaxDepth = options.MaxDepth;
+                _jsonOptions.IgnoreReadOnlyFields = options.IgnoreReadOnlyFields;
+                _jsonOptions.IgnoreReadOnlyProperties = options.IgnoreReadOnlyProperties;
+                _jsonOptions.IncludeFields = options.IncludeFields;
+                _jsonOptions.NumberHandling = options.NumberHandling;
+                _jsonOptions.ReadCommentHandling = options.ReadCommentHandling;
+                _jsonOptions.UnknownTypeHandling = options.UnknownTypeHandling;
+                _jsonOptions.AllowTrailingCommas = options.AllowTrailingCommas;
+
+#if NET8_0_OR_GREATER
+                // Handle type resolver extraction without setting it yet
+                if (options.TypeInfoResolver != null)
+                {
+                    _customTypeInfoResolver = options.TypeInfoResolver;
+
+                    // If it's a JsonSerializerContext, also add it to our contexts
+                    if (_customTypeInfoResolver is JsonSerializerContext jsonContext)
+                    {
+                        AddSerializerContext(jsonContext);
+                    }
+                }
+#endif
+            }
+
+            // Set output case and other properties
+            SetOutputCase();
+            AddConverters();
+            _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+            _jsonOptions.PropertyNameCaseInsensitive = true;
+
+#if NET8_0_OR_GREATER
+            // Set TypeInfoResolver last, as this makes options read-only
+            if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
+            {
+                _jsonOptions.TypeInfoResolver = GetCompositeResolver();
+            }
+#endif
+        }
+    }
+
+    internal void SetOutputCase()
+    {
         switch (_currentOutputCase)
         {
             case LoggerOutputCase.CamelCase:
@@ -136,15 +269,19 @@ internal static class PowertoolsLoggingSerializer
                 break;
             default: // Snake case
 #if NET8_0_OR_GREATER
-                _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-                _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
+                // If is default (Not Set) and JsonOptions provided with DictionaryKeyPolicy or PropertyNamingPolicy, use it
+                _jsonOptions.DictionaryKeyPolicy ??= JsonNamingPolicy.SnakeCaseLower;
+                _jsonOptions.PropertyNamingPolicy ??= JsonNamingPolicy.SnakeCaseLower;
 #else
                 _jsonOptions.PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance;
                 _jsonOptions.DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance;
 #endif
                 break;
         }
+    }
 
+    private void AddConverters()
+    {
         _jsonOptions.Converters.Add(new ByteArrayConverter());
         _jsonOptions.Converters.Add(new ExceptionConverter());
         _jsonOptions.Converters.Add(new MemoryStreamConverter());
@@ -157,42 +294,10 @@ internal static class PowertoolsLoggingSerializer
 #elif NET6_0
         _jsonOptions.Converters.Add(new LogLevelJsonConverter());
 #endif
-
-        _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-        _jsonOptions.PropertyNameCaseInsensitive = true;
-
-#if NET8_0_OR_GREATER
-
-        // Only add TypeInfoResolver if AOT mode
-        if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
-        {
-            _jsonOptions.TypeInfoResolverChain.Add(PowertoolsLoggingSerializationContext.Default);
-            foreach (var context in AdditionalContexts)
-            {
-                _jsonOptions.TypeInfoResolverChain.Add(context);
-            }
-        }
-#endif
-        return _jsonOptions;
     }
 
-#if NET8_0_OR_GREATER
-    internal static bool HasContext(JsonSerializerContext customContext)
+    internal void SetOptions(JsonSerializerOptions options)
     {
-        return AdditionalContexts.Contains(customContext);
-    }
-
-    internal static void ClearContext()
-    {
-        AdditionalContexts.Clear();
-    }
-#endif
-
-    /// <summary>
-    /// Clears options for tests
-    /// </summary>
-    internal static void ClearOptions()
-    {
-        _jsonOptions = null;
+        _currentOptions = options;
     }
 }

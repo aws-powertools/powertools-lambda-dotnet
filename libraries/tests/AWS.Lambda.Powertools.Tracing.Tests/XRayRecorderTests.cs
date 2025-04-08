@@ -31,27 +31,17 @@ public class XRayRecorderTests
     public void Tracing_Set_Execution_Environment_Context()
     {
         // Arrange
-        var assemblyName = "AWS.Lambda.Powertools.Tracing";
-        var assemblyVersion = "1.0.0";
+        var env = new PowertoolsEnvironment();
 
-        var env = Substitute.For<IPowertoolsEnvironment>();
-        env.GetAssemblyName(Arg.Any<XRayRecorder>()).Returns(assemblyName);
-        env.GetAssemblyVersion(Arg.Any<XRayRecorder>()).Returns(assemblyVersion);
-
-        var conf = new PowertoolsConfigurations(new SystemWrapper(env));
+        var conf = new PowertoolsConfigurations(env);
         var awsXray = Substitute.For<IAWSXRayRecorder>();
 
         // Act
         var xRayRecorder = new XRayRecorder(awsXray, conf);
 
         // Assert
-        env.Received(1).SetEnvironmentVariable(
-            "AWS_EXECUTION_ENV", $"{Constants.FeatureContextIdentifier}/Tracing/{assemblyVersion}"
-        );
-
-        env.Received(1).GetEnvironmentVariable(
-            "AWS_EXECUTION_ENV"
-        );
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tracing/1.0.0",
+            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
 
         Assert.NotNull(xRayRecorder);
     }

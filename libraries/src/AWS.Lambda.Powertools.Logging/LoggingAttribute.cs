@@ -15,6 +15,7 @@
 
 using System;
 using AspectInjector.Broker;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 
@@ -116,8 +117,8 @@ namespace AWS.Lambda.Powertools.Logging;
 ///     </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Method)]
-[Injection(typeof(LoggingAspect))]
-public class LoggingAttribute : Attribute
+// [Injection(typeof(LoggingAspect))]
+public class LoggingAttribute : MethodAspectAttribute
 {
     /// <summary>
     ///     Service name is used for logging.
@@ -146,7 +147,19 @@ public class LoggingAttribute : Attribute
     ///     such as a string or any custom data object.
     /// </summary>
     /// <value><c>true</c> if [log event]; otherwise, <c>false</c>.</value>
-    public bool LogEvent { get; set; }
+    public bool LogEvent 
+    {
+        get => _logEvent;
+        set
+        {
+            _logEvent = value;
+            _logEventSet = true;
+        }
+    }
+    
+    private bool _logEventSet;
+    private bool _logEvent;
+    internal bool IsLogEventSet => _logEventSet;
 
     /// <summary>
     ///     Pointer path to extract correlation id from input parameter.
@@ -171,4 +184,19 @@ public class LoggingAttribute : Attribute
     /// </summary>
     /// <value>The log level.</value>
     public LoggerOutputCase LoggerOutputCase  { get; set; } = LoggerOutputCase.Default;
+
+    /// <summary>
+    /// Flush buffer on uncaught error
+    /// When buffering is enabled, this property will flush the buffer on uncaught exceptions
+    /// </summary>
+    public bool FlushBufferOnUncaughtError { get; set; }
+
+    /// <summary>
+    /// Creates the aspect with the Logger
+    /// </summary>
+    /// <returns></returns>
+    protected override IMethodAspectHandler CreateHandler()
+    {
+        return new LoggingAspect(LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger());
+    }
 }

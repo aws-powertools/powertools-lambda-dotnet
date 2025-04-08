@@ -14,18 +14,67 @@
  */
 
 using System;
+using System.IO;
 
 namespace AWS.Lambda.Powertools.Common;
 
 /// <inheritdoc />
 public class ConsoleWrapper : IConsoleWrapper
 {
+    private static bool _override;
+
     /// <inheritdoc />
-    public void WriteLine(string message) => Console.WriteLine(message);
+    public void WriteLine(string message)
+    {
+        OverrideLambdaLogger();
+        Console.WriteLine(message);
+    }
+
     /// <inheritdoc />
-    public void Debug(string message) => System.Diagnostics.Debug.WriteLine(message);
+    public void Debug(string message)
+    {
+        OverrideLambdaLogger();
+        System.Diagnostics.Debug.WriteLine(message);
+    }
+
     /// <inheritdoc />
-    public void Error(string message) => Console.Error.WriteLine(message);
-    /// <inheritdoc />
-    public string ReadLine() => Console.ReadLine();
+    public void Error(string message)
+    {
+        if (!_override)
+        {
+            var errordOutput = new StreamWriter(Console.OpenStandardError());
+            errordOutput.AutoFlush = true;
+            Console.SetError(errordOutput);
+        }
+
+        Console.Error.WriteLine(message);
+    }
+
+    internal static void SetOut(StringWriter consoleOut)
+    {
+        _override = true;
+        Console.SetOut(consoleOut);
+    }
+    
+    private void OverrideLambdaLogger()
+    {
+        if (_override)
+        {
+            return;
+        }
+        // Force override of LambdaLogger
+        var standardOutput = new StreamWriter(Console.OpenStandardOutput());
+        standardOutput.AutoFlush = true;
+        Console.SetOut(standardOutput);
+    }
+    
+    internal static void WriteLine(string logLevel, string message)
+    {
+        Console.WriteLine($"{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss.fffZ}\t{logLevel}\t{message}");
+    }
+
+    public static void ResetForTest()
+    {
+        _override = false;
+    }
 }

@@ -35,15 +35,20 @@
 
     <!--    Include Common files in projects that reference AWS.Lambda.Powertools.Common -->
     <!--    This is needed because of the way nuget expects dependencies to be nuget packages as well which is not what we want -->
-    <ItemGroup Condition="'$(IncludeCommonFiles)' == 'true' AND '$(Configuration)'=='Release'">
+    <Target Name="CopyCommonFilesAfterAspect"
+            AfterTargets="AfterCompile"
+            BeforeTargets="GenerateNuspec"
+            Condition="'$(IncludeCommonFiles)' == 'true' AND'$(Configuration)'=='Release'">
+        <ItemGroup>
+            <ProjectReference Remove="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj"/>
+            <PackageReference Include="AspectInjector"/>
 
-        <ProjectReference Remove="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj"/>
-        <PackageReference Include="AspectInjector"/>
-        <Compile Include="..\AWS.Lambda.Powertools.Common\**\*.cs">
-            <Link>Common\%(RecursiveDir)%(Filename)%(Extension)</Link>
-        </Compile>
-        <Compile Remove="..\AWS.Lambda.Powertools.Common\obj\**"/>
-    </ItemGroup>
-
+            <CommonSourceFiles Include="..\AWS.Lambda.Powertools.Common\**\*.cs"
+                               Exclude="..\AWS.Lambda.Powertools.Common\obj\**">
+                <Link>Common\Common\</Link>
+            </CommonSourceFiles>
+            <Compile Include="@(CommonSourceFiles)" />
+        </ItemGroup>
+    </Target>
 
 </Project>

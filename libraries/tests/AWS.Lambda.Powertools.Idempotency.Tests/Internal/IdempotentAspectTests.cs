@@ -264,25 +264,16 @@ public class IdempotentAspectTests : IDisposable
     public void Idempotency_Set_Execution_Environment_Context()
     {
         // Arrange
-        var assemblyName = "AWS.Lambda.Powertools.Idempotency";
-        var assemblyVersion = "1.0.0";
 
-        var env = Substitute.For<IPowertoolsEnvironment>();
-        env.GetAssemblyName(Arg.Any<Idempotency>()).Returns(assemblyName);
-        env.GetAssemblyVersion(Arg.Any<Idempotency>()).Returns(assemblyVersion);
-
-        var conf = new PowertoolsConfigurations(new SystemWrapper(env));
+        var env = new PowertoolsEnvironment();
+        var conf = new PowertoolsConfigurations(env);
 
         // Act
         var xRayRecorder = new Idempotency(conf);
 
         // Assert
-        env.Received(1).SetEnvironmentVariable(
-            "AWS_EXECUTION_ENV",
-            $"{Constants.FeatureContextIdentifier}/Idempotency/{assemblyVersion}"
-        );
-
-        env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Idempotency/1.0.0",
+            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
 
         Assert.NotNull(xRayRecorder);
     }

@@ -15,10 +15,7 @@
 
 using System;
 using Xunit;
-using NSubstitute;
-using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
-using AWS.Lambda.Powertools.Logging.Serializers;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Utilities;
 
@@ -31,12 +28,8 @@ public class PowertoolsConfigurationExtensionsTests : IDisposable
     [InlineData(LoggerOutputCase.SnakeCase, "testString", "test_string")] // Default case
     public void ConvertToOutputCase_ShouldConvertCorrectly(LoggerOutputCase outputCase, string input, string expected)
     {
-        // Arrange
-        var systemWrapper = Substitute.For<ISystemWrapper>();
-        var configurations = new PowertoolsConfigurations(systemWrapper);
-
         // Act
-        var result = configurations.ConvertToOutputCase(input, outputCase);
+        var result = input.ToCase(outputCase);
 
         // Assert
         Assert.Equal(expected, result);
@@ -66,7 +59,7 @@ public class PowertoolsConfigurationExtensionsTests : IDisposable
     public void ToSnakeCase_ShouldConvertCorrectly(string input, string expected)
     {
         // Act
-        var result = PrivateMethod.InvokeStatic<string>(typeof(PowertoolsConfigurationsExtension), "ToSnakeCase", input);
+        var result = input.ToSnake();
 
         // Assert
         Assert.Equal(expected, result);
@@ -97,7 +90,7 @@ public class PowertoolsConfigurationExtensionsTests : IDisposable
     public void ToPascalCase_ShouldConvertCorrectly(string input, string expected)
     {
         // Act
-        var result = PrivateMethod.InvokeStatic<string>(typeof(PowertoolsConfigurationsExtension), "ToPascalCase", input);
+        var result = input.ToPascal();
 
         // Assert
         Assert.Equal(expected, result);
@@ -135,7 +128,7 @@ public class PowertoolsConfigurationExtensionsTests : IDisposable
     public void ToCamelCase_ShouldConvertCorrectly(string input, string expected)
     {
         // Act
-        var result = PrivateMethod.InvokeStatic<string>(typeof(PowertoolsConfigurationsExtension), "ToCamelCase", input);
+        var result = input.ToCamel();
 
         // Assert
         Assert.Equal(expected, result);
@@ -144,7 +137,6 @@ public class PowertoolsConfigurationExtensionsTests : IDisposable
     public void Dispose()
     {
         LoggingAspect.ResetForTest();
-        PowertoolsLoggingSerializer.ClearOptions();
     }
 }
 

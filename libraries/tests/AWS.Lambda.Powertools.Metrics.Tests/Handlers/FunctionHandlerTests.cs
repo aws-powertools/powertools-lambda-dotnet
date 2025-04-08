@@ -34,7 +34,7 @@ public class FunctionHandlerTests : IDisposable
     {
         _handler = new FunctionHandler();
         _consoleOut = new CustomConsoleWriter();
-        SystemWrapper.SetOut(_consoleOut);
+        ConsoleWrapper.SetOut(_consoleOut);
     }
 
     [Fact]
@@ -417,5 +417,6 @@ public class FunctionHandlerTests : IDisposable
     {
         Metrics.ResetForTest();
         MetricsAspect.ResetForTest();
+        ConsoleWrapper.ResetForTest();
     }
 }

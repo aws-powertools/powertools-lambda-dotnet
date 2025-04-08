@@ -1,6 +1,6 @@
 {
 	"Core": {
-		"Logging": "1.7.0",
+		"Logging": "2.0.0-preview.1",
 		"Metrics": "2.0.1",
 		"Tracing": "1.6.2",
 		"Metrics.AspNetCore": "0.1.0"
