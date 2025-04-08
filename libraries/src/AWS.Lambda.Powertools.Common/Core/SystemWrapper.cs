@@ -146,8 +146,8 @@ public class SystemWrapper : ISystemWrapper
     /// <inheritdoc />
     public void SetOut(TextWriter writeTo)
     {
-        _testOutputStream = writeTo;
-        _inTestMode = true;
+        SystemWrapper._testOutputStream = writeTo;
+        SystemWrapper._inTestMode = true;
         Console.SetOut(writeTo);
     }
 
@@ -172,14 +172,14 @@ public class SystemWrapper : ISystemWrapper
         return $"{Constants.FeatureContextIdentifier}/{assemblyName}";
     }
     
-    private void EnsureConsoleOutputOnce()
+    private static void EnsureConsoleOutputOnce()
     {
         if (_outputResetPerformed) return;
         ResetConsoleOutput();
         _outputResetPerformed = true;
     }
     
-    private void ResetConsoleOutput()
+    private static void ResetConsoleOutput()
     {
         var standardOutput = new StreamWriter(Console.OpenStandardOutput());
         standardOutput.AutoFlush = true;
