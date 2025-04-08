@@ -15,11 +15,13 @@
 
 using System;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.CloudWatchEvents.S3Events;
 using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Tests.Serializers;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -189,23 +191,68 @@ public class TestServiceHandler
 {
     public void LogWithEnv()
     {
-        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "Environment Service");
-        
         Logger.LogInformation("Service: Environment Service");
-    }
-    
-    public void LogWithAndWithoutEnv()
-    {
-        Logger.LogInformation("Service: service_undefined");
-        
-        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "Environment Service");
-        
-        Logger.LogInformation("Service: service_undefined");
     }
 
     [Logging(Service = "Attribute Service")]
     public void Handler()
     {
         Logger.LogInformation("Service: Attribute Service");
+    }
+}
+
+public class SimpleFunctionWithStaticConfigure
+{
+    public SimpleFunctionWithStaticConfigure(IConsoleWrapper output)
+    {
+        // Constructor logic can go here if needed
+        Logger.Configure(logger =>
+        {
+            logger.LogOutput = output;
+            logger.Service = "MyServiceName";
+            logger.LogBuffering = new LogBufferingOptions
+            {
+                BufferAtLogLevel = LogLevel.Debug,
+            };
+        });
+    }
+
+    [Logging]
+    public static async Task<APIGatewayHttpApiV2ProxyResponse> FunctionHandler()
+    {
+        // only set on handler
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+
+        Logger.LogInformation("Starting up!");
+        
+        return new APIGatewayHttpApiV2ProxyResponse
+        {
+            Body = "Hello",
+            StatusCode = 200
+        };
+    }
+    
+    [Logging(FlushBufferOnUncaughtError = true)]
+    public APIGatewayHttpApiV2ProxyResponse SyncException()
+    {
+        // only set on handler
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+
+        Logger.LogDebug("Debug!!");
+        Logger.LogInformation("Starting up!");
+
+        throw new Exception();
+    }
+    
+    [Logging(FlushBufferOnUncaughtError = true)]
+    public async Task<APIGatewayHttpApiV2ProxyResponse> AsyncException()
+    {
+        // only set on handler
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+
+        Logger.LogDebug("Debug!!");
+        Logger.LogInformation("Starting up!");
+
+        throw new Exception();
     }
 }

@@ -35,7 +35,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
         {
             _handler = new FunctionHandler();
             _consoleOut = new CustomConsoleWriter();
-            SystemWrapper.Instance.SetOut(_consoleOut);
+            ConsoleWrapper.SetOut(_consoleOut);
         }
 
         [Trait("Category", value: "SchemaValidation")]

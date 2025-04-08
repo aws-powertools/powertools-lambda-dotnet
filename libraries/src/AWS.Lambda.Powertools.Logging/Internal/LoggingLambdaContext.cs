@@ -7,7 +7,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// <summary>
 /// Lambda Context
 /// </summary>
-public class LoggingLambdaContext
+internal class LoggingLambdaContext
 {
     /// <summary>
     /// The AWS request ID associated with the request.

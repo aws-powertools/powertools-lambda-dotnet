@@ -23,7 +23,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal.Converters;
 /// <summary>
 /// DateOnly JSON converter
 /// </summary>
-public class DateOnlyConverter : JsonConverter<DateOnly>
+internal class DateOnlyConverter : JsonConverter<DateOnly>
 {
     private const string DateFormat = "yyyy-MM-dd";
     

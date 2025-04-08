@@ -19,7 +19,7 @@ Powertools for AWS Lambda (.NET) are available as NuGet packages. You can instal
 
 * [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
 
-    `dotnet add package AWS.Lambda.Powertools.Logging`
+    `dotnet add package AWS.Lambda.Powertools.Logging --version 1.6.5`
 
 ## Getting started
 
