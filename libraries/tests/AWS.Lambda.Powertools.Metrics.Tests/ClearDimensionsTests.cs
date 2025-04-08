@@ -13,7 +13,7 @@ public class ClearDimensionsTests
     {
         // Arrange
         var consoleOut = new StringWriter();
-        SystemWrapper.Instance.SetOut(consoleOut);
+        SystemWrapper.SetOut(consoleOut);
         
         // Act
         var handler = new FunctionHandler();
