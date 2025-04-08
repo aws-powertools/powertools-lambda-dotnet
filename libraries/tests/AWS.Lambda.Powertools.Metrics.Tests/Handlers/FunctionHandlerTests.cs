@@ -34,7 +34,7 @@ public class FunctionHandlerTests : IDisposable
     {
         _handler = new FunctionHandler();
         _consoleOut = new CustomConsoleWriter();
-        SystemWrapper.Instance.SetOut(_consoleOut);
+        SystemWrapper.SetOut(_consoleOut);
     }
 
     [Fact]
