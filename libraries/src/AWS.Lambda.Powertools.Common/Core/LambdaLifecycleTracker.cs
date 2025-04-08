@@ -15,7 +15,7 @@ internal static class LambdaLifecycleTracker
     private static readonly AsyncLocal<bool?> CurrentInvocationColdStart = new AsyncLocal<bool?>();
 
     private static string _lambdaInitType;
-    private static string LambdaInitType => _lambdaInitType ?? Environment.GetEnvironmentVariable("AWS_LAMBDA_INITIALIZATION_TYPE");
+    private static string LambdaInitType => _lambdaInitType ?? Environment.GetEnvironmentVariable(Constants.AWSInitializationTypeEnv);
     
     /// <summary>
     /// Returns true if the current Lambda invocation is a cold start
@@ -53,9 +53,13 @@ internal static class LambdaLifecycleTracker
     /// <summary>
     /// Resets the cold start state for testing
     /// </summary>
-    internal static void Reset()
+    /// <param name="resetContainer">Whether to reset the container state (defaults to true)</param>
+    internal static void Reset(bool resetContainer = true)
     {
-        _isFirstContainer = true;
+        if (resetContainer)
+        {
+            _isFirstContainer = true;
+        }
         CurrentInvocationColdStart.Value = null;
         _lambdaInitType = null;
     }
