@@ -20,8 +20,6 @@ namespace AWS.Lambda.Powertools.Common;
 /// </summary>
 internal static class Constants
 {
-    internal const string AWSInitializationTypeEnv = "AWS_LAMBDA_INITIALIZATION_TYPE";
-
     /// <summary>
     ///     Constant for AWS_LAMBDA_INITIALIZATION_TYPE environment variable
     ///     This is used to determine if the Lambda function is running in provisioned concurrency mode
