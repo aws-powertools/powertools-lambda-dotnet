@@ -13,6 +13,6 @@
         <PackageReference Include="Amazon.Lambda.DynamoDBEvents" />
         <PackageReference Include="Amazon.Lambda.KinesisEvents" />
         <PackageReference Include="Amazon.Lambda.SQSEvents" />
-        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj"/>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
 </Project>
