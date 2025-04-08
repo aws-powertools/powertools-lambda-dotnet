@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using System.Text;
 using Amazon.XRay.Recorder.Core;
+using AWS.Lambda.Powertools.Common.Core;
 using AWS.Lambda.Powertools.Tracing.Internal;
 using Xunit;
 
@@ -50,6 +51,8 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var subSegmentCold = segmentCold.Subsegments[0];
 
             // Warm Start Execution
+            // Clear just the AsyncLocal value to simulate new invocation in same container
+            LambdaLifecycleTracker.Reset(resetContainer: false);
             // Start segment
             var segmentWarm = AWSXRayRecorder.Instance.TraceContext.GetEntity();
             _handler.Handle();
@@ -87,6 +90,9 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             var subSegmentCold = segmentCold.Subsegments[0];
 
             // Warm Start Execution
+            // Clear just the AsyncLocal value to simulate new invocation in same container
+            LambdaLifecycleTracker.Reset(resetContainer: false);
+
             // Start segment
             var segmentWarm = AWSXRayRecorder.Instance.TraceContext.GetEntity();
             _handler.Handle();

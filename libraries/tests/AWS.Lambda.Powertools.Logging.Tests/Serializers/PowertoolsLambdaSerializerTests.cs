@@ -30,28 +30,21 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Serializers;
 
 public class PowertoolsLambdaSerializerTests : IDisposable
 {
+    private readonly PowertoolsLoggingSerializer _serializer;
+
+    public PowertoolsLambdaSerializerTests()
+    {
+        _serializer = new PowertoolsLoggingSerializer();
+    }
+    
 #if NET8_0_OR_GREATER
     [Fact]
     public void Constructor_ShouldNotThrowException()
     {
         // Arrange & Act & Assert
         var exception =
-            Record.Exception(() => PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default));
+            Record.Exception(() => _serializer.AddSerializerContext(TestJsonContext.Default));
         Assert.Null(exception);
-    }
-
-    [Fact]
-    public void Constructor_ShouldAddCustomerContext()
-    {
-        // Arrange
-        var customerContext = new TestJsonContext();
-
-        // Act
-        PowertoolsLoggingSerializer.AddSerializerContext(customerContext);
-        ;
-
-        // Assert
-        Assert.True(PowertoolsLoggingSerializer.HasContext(customerContext));
     }
 
     [Theory]
@@ -81,7 +74,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
         var serializer = new PowertoolsSourceGeneratorSerializer<TestJsonContext>();
         ;
 
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase.PascalCase);
+        _serializer.ConfigureNamingPolicy(LoggerOutputCase.PascalCase);
 
         var json = "{\"FullName\":\"John\",\"Age\":30}";
         var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -209,7 +202,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
         stream.Position = 0;
         var outputExternalSerializer = new StreamReader(stream).ReadToEnd();
 
-        var outptuMySerializer = PowertoolsLoggingSerializer.Serialize(log, typeof(LogEntry));
+        var outptuMySerializer = _serializer.Serialize(log, typeof(LogEntry));
 
         // Assert
         Assert.Equal(
@@ -224,8 +217,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
 #endif
     public void Dispose()
     {
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
-        PowertoolsLoggingSerializer.ClearOptions();
+
     }
 
 #if NET6_0
@@ -234,7 +226,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     public void Should_Serialize_Net6()
     {
         // Arrange
-        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
+        _serializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
         var testObject = new APIGatewayProxyRequest
         {
             Path = "asda",
@@ -250,7 +242,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
             Message = testObject
         };
 
-        var outptuMySerializer = PowertoolsLoggingSerializer.Serialize(log, null);
+        var outptuMySerializer = _serializer.Serialize(log, null);
 
         // Assert
         Assert.Equal(

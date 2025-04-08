@@ -7,6 +7,7 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Handlers;
 
+[Collection("Sequential")]
 public sealed class ExceptionFunctionHandlerTests : IDisposable
 {
     [Fact]
@@ -42,6 +43,6 @@ public sealed class ExceptionFunctionHandlerTests : IDisposable
     public void Dispose()
     {
         LoggingAspect.ResetForTest();
-        PowertoolsLoggingSerializer.ClearOptions();
+        Logger.Reset();
     }
 }

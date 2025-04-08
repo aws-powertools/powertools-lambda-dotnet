@@ -28,25 +28,15 @@ public class BatchProcessingInternalTests
     public void BatchProcessing_Set_Execution_Environment_Context_SQS()
     {
         // Arrange
-        var assemblyName = "AWS.Lambda.Powertools.BatchProcessing";
-        var assemblyVersion = "1.0.0";
-        
-        var env = Substitute.For<IPowertoolsEnvironment>();
-        env.GetAssemblyName(Arg.Any<object>()).Returns(assemblyName);
-        env.GetAssemblyVersion(Arg.Any<object>()).ReturnsForAnyArgs(assemblyVersion);
-
-        var conf = new PowertoolsConfigurations(new SystemWrapper(env));
+        var env = new PowertoolsEnvironment();
+        var conf = new PowertoolsConfigurations(env);
         
         // Act
         var sqsBatchProcessor = new SqsBatchProcessor(conf);
 
         // Assert
-        env.Received(1).SetEnvironmentVariable(
-            "AWS_EXECUTION_ENV",
-            $"{Constants.FeatureContextIdentifier}/BatchProcessing/{assemblyVersion}"
-        );
-
-        env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
+        Assert.Contains($"{Constants.FeatureContextIdentifier}/BatchProcessing/",
+            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
         
         Assert.NotNull(sqsBatchProcessor);
     }
@@ -55,25 +45,15 @@ public class BatchProcessingInternalTests
     public void BatchProcessing_Set_Execution_Environment_Context_Kinesis()
     {
         // Arrange
-        var assemblyName = "AWS.Lambda.Powertools.BatchProcessing";
-        var assemblyVersion = "1.0.0";
-        
-        var env = Substitute.For<IPowertoolsEnvironment>();
-        env.GetAssemblyName(Arg.Any<object>()).Returns(assemblyName);
-        env.GetAssemblyVersion(Arg.Any<object>()).ReturnsForAnyArgs(assemblyVersion);
-
-        var conf = new PowertoolsConfigurations(new SystemWrapper(env));
+        var env = new PowertoolsEnvironment();
+        var conf = new PowertoolsConfigurations(env);
         
         // Act
         var KinesisEventBatchProcessor = new KinesisEventBatchProcessor(conf);
 
         // Assert
-        env.Received(1).SetEnvironmentVariable(
-            "AWS_EXECUTION_ENV",
-            $"{Constants.FeatureContextIdentifier}/BatchProcessing/{assemblyVersion}"
-        );
-
-        env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
+        Assert.Contains($"{Constants.FeatureContextIdentifier}/BatchProcessing/",
+            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
         
         Assert.NotNull(KinesisEventBatchProcessor);
     }
@@ -82,25 +62,15 @@ public class BatchProcessingInternalTests
     public void BatchProcessing_Set_Execution_Environment_Context_DynamoDB()
     {
         // Arrange
-        var assemblyName = "AWS.Lambda.Powertools.BatchProcessing";
-        var assemblyVersion = "1.0.0";
-        
-        var env = Substitute.For<IPowertoolsEnvironment>();
-        env.GetAssemblyName(Arg.Any<object>()).Returns(assemblyName);
-        env.GetAssemblyVersion(Arg.Any<object>()).ReturnsForAnyArgs(assemblyVersion);
-
-        var conf = new PowertoolsConfigurations(new SystemWrapper(env));
+        var env = new PowertoolsEnvironment();
+        var conf = new PowertoolsConfigurations(env);
         
         // Act
         var dynamoDbStreamBatchProcessor = new DynamoDbStreamBatchProcessor(conf);
 
         // Assert
-        env.Received(1).SetEnvironmentVariable(
-            "AWS_EXECUTION_ENV",
-            $"{Constants.FeatureContextIdentifier}/BatchProcessing/{assemblyVersion}"
-        );
-
-        env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
+        Assert.Contains($"{Constants.FeatureContextIdentifier}/BatchProcessing/",
+            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
         
         Assert.NotNull(dynamoDbStreamBatchProcessor);
     }

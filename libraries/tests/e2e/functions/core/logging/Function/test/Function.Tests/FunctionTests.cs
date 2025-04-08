@@ -5,6 +5,7 @@ using Xunit;
 using Amazon.Lambda.Model;
 using TestUtils;
 using Xunit.Abstractions;
+using Environment = Amazon.Lambda.Model.Environment;
 
 namespace Function.Tests;
 
@@ -22,10 +23,21 @@ public class FunctionTests
     
     [Trait("Category", "AOT")]
     [Theory]
-    [InlineData("E2ETestLambda_X64_AOT_NET8_logging")]
-    [InlineData("E2ETestLambda_ARM_AOT_NET8_logging")]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_logging_AOT-Function")]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_logging_AOT-Function")]
     public async Task AotFunctionTest(string functionName)
     {
+        // await ResetFunction(functionName);
+        await TestFunction(functionName);
+    }
+    
+    [Trait("Category", "AOT")]
+    [Theory]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_logging_AOT-Function-ILogger")]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_logging_AOT-Function-ILogger")]
+    public async Task AotILoggerFunctionTest(string functionName)
+    {
+        // await ResetFunction(functionName);
         await TestFunction(functionName);
     }
 
@@ -36,6 +48,51 @@ public class FunctionTests
     [InlineData("E2ETestLambda_ARM_NET8_logging")]
     public async Task FunctionTest(string functionName)
     {
+        await UpdateFunctionHandler(functionName, "Function::Function.Function::FunctionHandler");
+        await TestFunction(functionName);
+    }
+    
+    [Theory]
+    [InlineData("E2ETestLambda_X64_NET6_logging")]
+    [InlineData("E2ETestLambda_ARM_NET6_logging")]
+    [InlineData("E2ETestLambda_X64_NET8_logging")]
+    [InlineData("E2ETestLambda_ARM_NET8_logging")]
+    public async Task StaticConfigurationFunctionTest(string functionName)
+    {
+        await UpdateFunctionHandler(functionName, "Function::StaticConfiguration.Function::FunctionHandler");
+        await TestFunction(functionName);
+    }
+    
+    [Theory]
+    [InlineData("E2ETestLambda_X64_NET6_logging")]
+    [InlineData("E2ETestLambda_ARM_NET6_logging")]
+    [InlineData("E2ETestLambda_X64_NET8_logging")]
+    [InlineData("E2ETestLambda_ARM_NET8_logging")]
+    public async Task StaticILoggerConfigurationFunctionTest(string functionName)
+    {
+        await UpdateFunctionHandler(functionName, "Function::StaticILoggerConfiguration.Function::FunctionHandler");
+        await TestFunction(functionName);
+    }
+    
+    [Theory]
+    [InlineData("E2ETestLambda_X64_NET6_logging")]
+    [InlineData("E2ETestLambda_ARM_NET6_logging")]
+    [InlineData("E2ETestLambda_X64_NET8_logging")]
+    [InlineData("E2ETestLambda_ARM_NET8_logging")]
+    public async Task ILoggerConfigurationFunctionTest(string functionName)
+    {
+        await UpdateFunctionHandler(functionName, "Function::ILoggerConfiguration.Function::FunctionHandler");
+        await TestFunction(functionName);
+    }
+    
+    [Theory]
+    [InlineData("E2ETestLambda_X64_NET6_logging")]
+    [InlineData("E2ETestLambda_ARM_NET6_logging")]
+    [InlineData("E2ETestLambda_X64_NET8_logging")]
+    [InlineData("E2ETestLambda_ARM_NET8_logging")]
+    public async Task ILoggerBuilderFunctionTest(string functionName)
+    {
+        await UpdateFunctionHandler(functionName, "Function::ILoggerBuilder.Function::FunctionHandler");
         await TestFunction(functionName);
     }
 
@@ -242,5 +299,49 @@ public class FunctionTests
         
         Assert.False(root.TryGetProperty("Test1", out JsonElement _));
         Assert.False(root.TryGetProperty("Test2", out JsonElement _));
+    }
+    
+    private async Task UpdateFunctionHandler(string functionName, string handler)
+    {
+        var updateRequest = new UpdateFunctionConfigurationRequest
+        {
+            FunctionName = functionName,
+            Handler = handler
+        };
+
+        var updateResponse = await _lambdaClient.UpdateFunctionConfigurationAsync(updateRequest);
+        
+        if (updateResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
+        {
+            Console.WriteLine($"Successfully updated the handler for function {functionName} to {handler}");
+        }
+        else
+        {
+            Assert.Fail(
+                $"Failed to update the handler for function {functionName}. Status code: {updateResponse.HttpStatusCode}");
+        }
+        
+        //wait a few seconds for the changes to take effect
+        await Task.Delay(1000);
+    }
+    
+    private async Task ResetFunction(string functionName)
+    {
+        var updateRequest = new UpdateFunctionConfigurationRequest
+        {
+            FunctionName = functionName,
+            Environment = new Environment 
+            {
+                Variables = 
+                {
+                    {"Updated", DateTime.UtcNow.ToString("G")}
+                }
+            }
+        };
+
+        await _lambdaClient.UpdateFunctionConfigurationAsync(updateRequest);
+        
+        //wait a few seconds for the changes to take effect
+        await Task.Delay(1000);
     }
 }

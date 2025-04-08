@@ -14,238 +14,68 @@
  */
 
 using System;
-using AWS.Lambda.Powertools.Logging.Internal;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging;
 
-/// <summary>
-///     Class LoggerExtensions.
-/// </summary>
-public static class LoggerExtensions
+public partial class Logger
 {
-    #region JSON Logger Extentions
-
-    /// <summary>
-    ///     Formats and writes a trace log message as JSON.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>logger.LogTrace(new {User = user, Address = address})</example>
-    public static void LogTrace(this ILogger logger, object message)
-    {
-        logger.LogTrace(LoggingConstants.KeyJsonFormatter, message);
-    }
-
-    /// <summary>
-    ///     Formats and writes an trace log message.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="exception">The exception to log.</param>
-    /// <example>logger.LogTrace(exception)</example>
-    public static void LogTrace(this ILogger logger, Exception exception)
-    {
-        logger.LogTrace(exception: exception, message: exception.Message);
-    }
-
-    /// <summary>
-    ///     Formats and writes a debug log message as JSON.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>logger.LogDebug(new {User = user, Address = address})</example>
-    public static void LogDebug(this ILogger logger, object message)
-    {
-        logger.LogDebug(LoggingConstants.KeyJsonFormatter, message);
-    }
-
-    /// <summary>
-    ///     Formats and writes an debug log message.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="exception">The exception to log.</param>
-    /// <example>logger.LogDebug(exception)</example>
-    public static void LogDebug(this ILogger logger, Exception exception)
-    {
-        logger.LogDebug(exception: exception, message: exception.Message);
-    }
-
-    /// <summary>
-    ///     Formats and writes an information log message as JSON.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>logger.LogInformation(new {User = user, Address = address})</example>
-    public static void LogInformation(this ILogger logger, object message)
-    {
-        logger.LogInformation(LoggingConstants.KeyJsonFormatter, message);
-    }
-
-    /// <summary>
-    ///     Formats and writes an information log message.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="exception">The exception to log.</param>
-    /// <example>logger.LogInformation(exception)</example>
-    public static void LogInformation(this ILogger logger, Exception exception)
-    {
-        logger.LogInformation(exception: exception, message: exception.Message);
-    }
-
-    /// <summary>
-    ///     Formats and writes a warning log message as JSON.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>logger.LogWarning(new {User = user, Address = address})</example>
-    public static void LogWarning(this ILogger logger, object message)
-    {
-        logger.LogWarning(LoggingConstants.KeyJsonFormatter, message);
-    }
-
-    /// <summary>
-    ///     Formats and writes an warning log message.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="exception">The exception to log.</param>
-    /// <example>logger.LogWarning(exception)</example>
-    public static void LogWarning(this ILogger logger, Exception exception)
-    {
-        logger.LogWarning(exception: exception, message: exception.Message);
-    }
-
-    /// <summary>
-    ///     Formats and writes a error log message as JSON.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>logger.LogCritical(new {User = user, Address = address})</example>
-    public static void LogError(this ILogger logger, object message)
-    {
-        logger.LogError(LoggingConstants.KeyJsonFormatter, message);
-    }
-
-    /// <summary>
-    ///     Formats and writes an error log message.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="exception">The exception to log.</param>
-    /// <example>logger.LogError(exception)</example>
-    public static void LogError(this ILogger logger, Exception exception)
-    {
-        logger.LogError(exception: exception, message: exception.Message);
-    }
-
-    /// <summary>
-    ///     Formats and writes a critical log message as JSON.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>logger.LogCritical(new {User = user, Address = address})</example>
-    public static void LogCritical(this ILogger logger, object message)
-    {
-        logger.LogCritical(LoggingConstants.KeyJsonFormatter, message);
-    }
-
-    /// <summary>
-    ///     Formats and writes an critical log message.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="exception">The exception to log.</param>
-    /// <example>logger.LogCritical(exception)</example>
-    public static void LogCritical(this ILogger logger, Exception exception)
-    {
-        logger.LogCritical(exception: exception, message: exception.Message);
-    }
-
-    /// <summary>
-    ///     Formats and writes a log message as JSON at the specified log level.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="logLevel">Entry will be written on this level.</param>
-    /// <param name="message">The object to be serialized as JSON.</param>
-    /// <example>logger.Log(LogLevel.Information, new {User = user, Address = address})</example>
-    public static void Log(this ILogger logger, LogLevel logLevel, object message)
-    {
-        logger.Log(logLevel, LoggingConstants.KeyJsonFormatter, message);
-    }
-
-    /// <summary>
-    ///     Formats and writes a log message at the specified log level.
-    /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger" /> to write to.</param>
-    /// <param name="logLevel">Entry will be written on this level.</param>
-    /// <param name="exception">The exception to log.</param>
-    /// <example>logger.Log(LogLevel.Information, exception)</example>
-    public static void Log(this ILogger logger, LogLevel logLevel, Exception exception)
-    {
-        logger.Log(logLevel, exception: exception, message: exception.Message);
-    }
-
-    #endregion
-
-    #region ExtraKeys Logger Extentions
+    #region ExtraKeys Logger Methods
 
     #region Debug
 
     /// <summary>
     /// Formats and writes a debug log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogDebug(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogDebug<T>(this ILogger logger, T extraKeys, EventId eventId, Exception exception,
-        string message, params object[] args) where T : class
+    public static void LogDebug<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
-        Log(logger, LogLevel.Debug, extraKeys, eventId, exception, message, args);
+        LoggerInstance.LogDebug(extraKeys, eventId, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a debug log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogDebug(extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void LogDebug<T>(this ILogger logger, T extraKeys, EventId eventId, string message,
-        params object[] args) where T : class
+    public static void LogDebug<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Debug, extraKeys, eventId, message, args);
+        LoggerInstance.LogDebug(extraKeys, eventId, message, args);
     }
 
     /// <summary>
     /// Formats and writes a debug log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogDebug(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogDebug<T>(this ILogger logger, T extraKeys, Exception exception, string message,
-        params object[] args) where T : class
+    public static void LogDebug<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
-        Log(logger, LogLevel.Debug, extraKeys, exception, message, args);
+        LoggerInstance.LogDebug(extraKeys, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a debug log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogDebug(extraKeys, "Processing request from {Address}", address)</example>
-    public static void LogDebug<T>(this ILogger logger, T extraKeys, string message, params object[] args)
-        where T : class
+    public static void LogDebug<T>(T extraKeys, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Debug, extraKeys, message, args);
+        LoggerInstance.LogDebug(extraKeys, message, args);
     }
 
     #endregion
@@ -255,61 +85,55 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a trace log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogTrace(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogTrace<T>(this ILogger logger, T extraKeys, EventId eventId, Exception exception,
-        string message, params object[] args) where T : class
+    public static void LogTrace<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
-        Log(logger, LogLevel.Trace, extraKeys, eventId, exception, message, args);
+        LoggerInstance.LogTrace(extraKeys, eventId, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a trace log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogTrace(extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void LogTrace<T>(this ILogger logger, T extraKeys, EventId eventId, string message,
-        params object[] args) where T : class
+    public static void LogTrace<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Trace, extraKeys, eventId, message, args);
+        LoggerInstance.LogTrace(extraKeys, eventId, message, args);
     }
 
     /// <summary>
     /// Formats and writes a trace log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogTrace(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogTrace<T>(this ILogger logger, T extraKeys, Exception exception, string message,
-        params object[] args) where T : class
+    public static void LogTrace<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
-        Log(logger, LogLevel.Trace, extraKeys, exception, message, args);
+        LoggerInstance.LogTrace(extraKeys, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a trace log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogTrace(extraKeys, "Processing request from {Address}", address)</example>
-    public static void LogTrace<T>(this ILogger logger, T extraKeys, string message, params object[] args)
-        where T : class
+    public static void LogTrace<T>(T extraKeys, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Trace, extraKeys, message, args);
+        LoggerInstance.LogTrace(extraKeys, message, args);
     }
 
     #endregion
@@ -319,61 +143,56 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an informational log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogInformation(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogInformation<T>(this ILogger logger, T extraKeys, EventId eventId, Exception exception,
-        string message, params object[] args) where T : class
+    public static void LogInformation<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
-        Log(logger, LogLevel.Information, extraKeys, eventId, exception, message, args);
+        LoggerInstance.LogInformation(extraKeys, eventId, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes an informational log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogInformation(extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void LogInformation<T>(this ILogger logger, T extraKeys, EventId eventId, string message,
-        params object[] args) where T : class
+    public static void LogInformation<T>(T extraKeys, EventId eventId, string message, params object[] args)
+        where T : class
     {
-        Log(logger, LogLevel.Information, extraKeys, eventId, message, args);
+        LoggerInstance.LogInformation(extraKeys, eventId, message, args);
     }
 
     /// <summary>
     /// Formats and writes an informational log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogInformation(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogInformation<T>(this ILogger logger, T extraKeys, Exception exception, string message,
-        params object[] args) where T : class
+    public static void LogInformation<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
-        Log(logger, LogLevel.Information, extraKeys, exception, message, args);
+        LoggerInstance.LogInformation(extraKeys, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes an informational log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogInformation(extraKeys, "Processing request from {Address}", address)</example>
-    public static void LogInformation<T>(this ILogger logger, T extraKeys, string message, params object[] args)
-        where T : class
+    public static void LogInformation<T>(T extraKeys, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Information, extraKeys, message, args);
+        LoggerInstance.LogInformation(extraKeys, message, args);
     }
 
     #endregion
@@ -383,61 +202,55 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a warning log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogWarning(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogWarning<T>(this ILogger logger, T extraKeys, EventId eventId, Exception exception,
-        string message, params object[] args) where T : class
+    public static void LogWarning<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
-        Log(logger, LogLevel.Warning, extraKeys, eventId, exception, message, args);
+        LoggerInstance.LogWarning(extraKeys, eventId, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a warning log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogWarning(extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void LogWarning<T>(this ILogger logger, T extraKeys, EventId eventId, string message,
-        params object[] args) where T : class
+    public static void LogWarning<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Warning, extraKeys, eventId, message, args);
+        LoggerInstance.LogWarning(extraKeys, eventId, message, args);
     }
 
     /// <summary>
     /// Formats and writes a warning log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogWarning(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogWarning<T>(this ILogger logger, T extraKeys, Exception exception, string message,
-        params object[] args) where T : class
+    public static void LogWarning<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
-        Log(logger, LogLevel.Warning, extraKeys, exception, message, args);
+        LoggerInstance.LogWarning(extraKeys, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a warning log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogWarning(extraKeys, "Processing request from {Address}", address)</example>
-    public static void LogWarning<T>(this ILogger logger, T extraKeys, string message, params object[] args)
-        where T : class
+    public static void LogWarning<T>(T extraKeys, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Warning, extraKeys, message, args);
+        LoggerInstance.LogWarning(extraKeys, message, args);
     }
 
     #endregion
@@ -447,61 +260,55 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes an error log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogError(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogError<T>(this ILogger logger, T extraKeys, EventId eventId, Exception exception,
-        string message, params object[] args) where T : class
+    public static void LogError<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
-        Log(logger, LogLevel.Error, extraKeys, eventId, exception, message, args);
+        LoggerInstance.LogError(extraKeys, eventId, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes an error log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogError(extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void LogError<T>(this ILogger logger, T extraKeys, EventId eventId, string message,
-        params object[] args) where T : class
+    public static void LogError<T>(T extraKeys, EventId eventId, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Error, extraKeys, eventId, message, args);
+        LoggerInstance.LogError(extraKeys, eventId, message, args);
     }
 
     /// <summary>
     /// Formats and writes an error log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogError(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogError<T>(this ILogger logger, T extraKeys, Exception exception, string message,
-        params object[] args) where T : class
+    public static void LogError<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
-        Log(logger, LogLevel.Error, extraKeys, exception, message, args);
+        LoggerInstance.LogError(extraKeys, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes an error log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogError(extraKeys, "Processing request from {Address}", address)</example>
-    public static void LogError<T>(this ILogger logger, T extraKeys, string message, params object[] args)
-        where T : class
+    public static void LogError<T>(T extraKeys, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Error, extraKeys, message, args);
+        LoggerInstance.LogError(extraKeys, message, args);
     }
 
     #endregion
@@ -511,61 +318,56 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a critical log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogCritical(extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogCritical<T>(this ILogger logger, T extraKeys, EventId eventId, Exception exception,
-        string message, params object[] args) where T : class
+    public static void LogCritical<T>(T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
-        Log(logger, LogLevel.Critical, extraKeys, eventId, exception, message, args);
+        LoggerInstance.LogCritical(extraKeys, eventId, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a critical log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogCritical(extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void LogCritical<T>(this ILogger logger, T extraKeys, EventId eventId, string message,
-        params object[] args) where T : class
+    public static void LogCritical<T>(T extraKeys, EventId eventId, string message, params object[] args)
+        where T : class
     {
-        Log(logger, LogLevel.Critical, extraKeys, eventId, message, args);
+        LoggerInstance.LogCritical(extraKeys, eventId, message, args);
     }
 
     /// <summary>
     /// Formats and writes a critical log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogCritical(extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void LogCritical<T>(this ILogger logger, T extraKeys, Exception exception, string message,
-        params object[] args) where T : class
+    public static void LogCritical<T>(T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
-        Log(logger, LogLevel.Critical, extraKeys, exception, message, args);
+        LoggerInstance.LogCritical(extraKeys, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a critical log message.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.LogCritical(extraKeys, "Processing request from {Address}", address)</example>
-    public static void LogCritical<T>(this ILogger logger, T extraKeys, string message, params object[] args)
-        where T : class
+    public static void LogCritical<T>(T extraKeys, string message, params object[] args) where T : class
     {
-        Log(logger, LogLevel.Critical, extraKeys, message, args);
+        LoggerInstance.LogCritical(extraKeys, message, args);
     }
 
     #endregion
@@ -575,7 +377,6 @@ public static class LoggerExtensions
     /// <summary>
     /// Formats and writes a log message at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
@@ -583,70 +384,53 @@ public static class LoggerExtensions
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.Log(LogLevel.Information, extraKeys, 0, exception, "Error while processing request from {Address}", address)</example>
-    public static void Log<T>(this ILogger logger, LogLevel logLevel, T extraKeys, EventId eventId, Exception exception,
-        string message, params object[] args) where T : class
+    public static void Log<T>(LogLevel logLevel, T extraKeys, EventId eventId, Exception exception, string message,
+        params object[] args) where T : class
     {
-        if (extraKeys is Exception ex && exception is null)
-            logger.Log(logLevel, eventId, ex, message, args);
-        else if (extraKeys is not null)
-            using (logger.BeginScope(extraKeys))
-                logger.Log(logLevel, eventId, exception, message, args);
-        else
-            logger.Log(logLevel, eventId, exception, message, args);
+        LoggerInstance.Log(logLevel, extraKeys, eventId, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a log message at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="eventId">The event id associated with the log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.Log(LogLevel.Information, extraKeys, 0, "Processing request from {Address}", address)</example>
-    public static void Log<T>(this ILogger logger, LogLevel logLevel, T extraKeys, EventId eventId, string message,
-        params object[] args) where T : class
+    public static void Log<T>(LogLevel logLevel, T extraKeys, EventId eventId, string message, params object[] args)
+        where T : class
     {
-        Log(logger, logLevel, extraKeys, eventId, null, message, args);
+        LoggerInstance.Log(logLevel, extraKeys, eventId, message, args);
     }
 
     /// <summary>
     /// Formats and writes a log message at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="exception">The exception to log.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.Log(LogLevel.Information, extraKeys, exception, "Error while processing request from {Address}", address)</example>
-    public static void Log<T>(this ILogger logger, LogLevel logLevel, T extraKeys, Exception exception, string message,
-        params object[] args) where T : class
+    public static void Log<T>(LogLevel logLevel, T extraKeys, Exception exception, string message, params object[] args)
+        where T : class
     {
-        Log(logger, logLevel, extraKeys, 0, exception, message, args);
+        LoggerInstance.Log(logLevel, extraKeys, exception, message, args);
     }
 
     /// <summary>
     /// Formats and writes a log message at the specified log level.
     /// </summary>
-    /// <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to write to.</param>
     /// <param name="logLevel">Entry will be written on this level.</param>
     /// <param name="extraKeys">Additional keys will be appended to the log entry.</param>
     /// <param name="message">Format string of the log message in message template format. Example: <c>"User {User} logged in from {Address}"</c></param>
     /// <param name="args">An object array that contains zero or more objects to format.</param>
     /// <example>logger.Log(LogLevel.Information, extraKeys, "Processing request from {Address}", address)</example>
-    public static void Log<T>(this ILogger logger, LogLevel logLevel, T extraKeys, string message, params object[] args)
-        where T : class
+    public static void Log<T>(LogLevel logLevel, T extraKeys, string message, params object[] args) where T : class
     {
-        try
-        {
-            Log(logger, logLevel, extraKeys, 0, null, message, args);
-        }
-        catch (Exception e)
-        {
-            logger.Log(LogLevel.Error, 0, e, "Powertools internal error");
-        }
+        LoggerInstance.Log(logLevel, extraKeys, message, args);
     }
 
     #endregion

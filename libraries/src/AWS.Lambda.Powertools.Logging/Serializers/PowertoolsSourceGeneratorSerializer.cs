@@ -74,7 +74,7 @@ public sealed class PowertoolsSourceGeneratorSerializer<
         }
 
         var jsonSerializerContext = constructor.Invoke(new object[] { options }) as TSgContext;
-        PowertoolsLoggingSerializer.AddSerializerContext(jsonSerializerContext);
+        PowertoolsLoggingSerializer.AddStaticSerializerContext(jsonSerializerContext);
     }
 }
 

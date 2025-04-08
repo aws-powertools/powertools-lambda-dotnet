@@ -20,6 +20,7 @@ using System.Reflection;
 using Amazon.Lambda.Core;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Core;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
@@ -31,20 +32,10 @@ namespace AWS.Lambda.Powertools.Metrics;
 public class MetricsAspect
 {
     /// <summary>
-    ///     The is cold start
-    /// </summary>
-    private static bool _isColdStart;
-
-    /// <summary>
     ///     Gets the metrics instance.
     /// </summary>
     /// <value>The metrics instance.</value>
     private static IMetrics _metricsInstance;
-
-    static MetricsAspect()
-    {
-        _isColdStart = true;
-    }
 
     /// <summary>
     /// Runs before the execution of the method marked with the Metrics Attribute
@@ -89,10 +80,9 @@ public class MetricsAspect
             Triggers = triggers
         };
 
-        if (_isColdStart)
+        if (LambdaLifecycleTracker.IsColdStart)
         {
             _metricsInstance.CaptureColdStartMetric(GetContext(eventArgs));
-            _isColdStart = false;
         }
     }
 
@@ -112,7 +102,7 @@ public class MetricsAspect
     internal static void ResetForTest()
     {
         _metricsInstance = null;
-        _isColdStart = true;
+        LambdaLifecycleTracker.Reset();
         Metrics.ResetForTest();
     }
 
