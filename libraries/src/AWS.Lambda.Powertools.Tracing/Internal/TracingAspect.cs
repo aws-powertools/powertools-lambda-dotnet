@@ -20,6 +20,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Core;
 using AWS.Lambda.Powertools.Common.Utils;
 
 namespace AWS.Lambda.Powertools.Tracing.Internal;
@@ -40,11 +41,6 @@ public class TracingAspect
     ///     X-Ray Recorder
     /// </summary>
     private readonly IXRayRecorder _xRayRecorder;
-
-    /// <summary>
-    ///     If true, then is cold start
-    /// </summary>
-    private static bool _isColdStart = true;
 
     /// <summary>
     ///     If true, capture annotations
@@ -148,7 +144,7 @@ public class TracingAspect
 
         if (_captureAnnotations)
         {
-            _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
+            _xRayRecorder.AddAnnotation("ColdStart", LambdaLifecycleTracker.IsColdStart);
 
             _captureAnnotations = false;
             _isAnnotationsCaptured = true;
@@ -156,8 +152,6 @@ public class TracingAspect
             if (_powertoolsConfigurations.IsServiceDefined)
                 _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
         }
-
-        _isColdStart = false;
     }
 
     private void HandleResponse(string name, object result, TracingCaptureMode captureMode, string @namespace)
@@ -253,7 +247,7 @@ public class TracingAspect
 
     internal static void ResetForTest()
     {
-        _isColdStart = true;
+        LambdaLifecycleTracker.Reset();
         _captureAnnotations = true;
     }
 }
