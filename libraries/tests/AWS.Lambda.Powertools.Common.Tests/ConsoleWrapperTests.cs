@@ -6,19 +6,28 @@ namespace AWS.Lambda.Powertools.Common.Tests;
 
 public class ConsoleWrapperTests : IDisposable
 {
+    private StringWriter _writer;
+
+    public ConsoleWrapperTests()
+    {
+        // Setup a new StringWriter for each test
+        _writer = new StringWriter();
+        // Reset static state for clean testing
+        ConsoleWrapper.ResetForTest();
+    }
+
     [Fact]
     public void WriteLine_Should_Write_To_Console()
     {
         // Arrange
         var consoleWrapper = new ConsoleWrapper();
-        var writer = new StringWriter();
-        ConsoleWrapper.SetOut(writer);
+        ConsoleWrapper.SetOut(_writer);
 
         // Act
         consoleWrapper.WriteLine("test message");
 
         // Assert
-        Assert.Equal($"test message{Environment.NewLine}", writer.ToString());
+        Assert.Equal($"test message{Environment.NewLine}", _writer.ToString());
     }
 
     [Fact]
@@ -26,16 +35,15 @@ public class ConsoleWrapperTests : IDisposable
     {
         // Arrange
         var consoleWrapper = new ConsoleWrapper();
-        var writer = new StringWriter();
-        ConsoleWrapper.SetOut(writer);
-        Console.SetError(writer);
+        ConsoleWrapper.SetOut(_writer);
+        Console.SetError(_writer);
 
         // Act
         consoleWrapper.Error("error message");
-        writer.Flush();
+        _writer.Flush();
 
         // Assert
-        Assert.Equal($"error message{Environment.NewLine}", writer.ToString());
+        Assert.Equal($"error message{Environment.NewLine}", _writer.ToString());
     }
 
     [Fact]
@@ -43,122 +51,91 @@ public class ConsoleWrapperTests : IDisposable
     {
         // Arrange
         var consoleWrapper = new ConsoleWrapper();
-        var writer = new StringWriter();
-        ConsoleWrapper.SetOut(writer);
+        ConsoleWrapper.SetOut(_writer);
 
         // Act
         consoleWrapper.WriteLine("test message");
 
         // Assert
-        Assert.Equal($"test message{Environment.NewLine}", writer.ToString());
+        Assert.Equal($"test message{Environment.NewLine}", _writer.ToString());
     }
 
     [Fact]
     public void OverrideLambdaLogger_Should_Override_Console_Out()
     {
-// Arrange
-        var originalOut = Console.Out;
-        try
-        {
-            var consoleWrapper = new ConsoleWrapper();
-            
-            // Act - create a custom StringWriter and set it after constructor 
-            // but before WriteLine (which triggers OverrideLambdaLogger)
-            var writer = new StringWriter();
-            ConsoleWrapper.SetOut(writer);
+        // Arrange
+        var consoleWrapper = new ConsoleWrapper();
+        ConsoleWrapper.SetOut(_writer);
 
-            consoleWrapper.WriteLine("test message");
+        // Act
+        consoleWrapper.WriteLine("test message");
 
-            // Assert
-            Assert.Equal($"test message{Environment.NewLine}", writer.ToString());
-        }
-        finally
-        {
-            // Restore original console out
-            ConsoleWrapper.ResetForTest();
-        }
+        // Assert
+        Assert.Equal($"test message{Environment.NewLine}", _writer.ToString());
     }
-    
-    [Fact]
-        public void WriteLine_WritesMessageToConsole()
-        {
-            // Arrange
-            var consoleWrapper = new ConsoleWrapper();
-            var originalOutput = Console.Out;
-            using var stringWriter = new StringWriter();
-            ConsoleWrapper.SetOut(stringWriter);
-            
-            try
-            {
-                // Act
-                consoleWrapper.WriteLine("Test message");
-                
-                // Assert
-                var output = stringWriter.ToString();
-                Assert.Contains("Test message", output);
-            }
-            finally
-            {
-                // Restore original output
-                ConsoleWrapper.ResetForTest();
-            }
-        }
-        
-        [Fact]
-        public void SetOut_OverridesConsoleOutput()
-        {
-            // Arrange
-            var originalOutput = Console.Out;
-            using var stringWriter = new StringWriter();
-            
-            try
-            {
-                // Act
-                typeof(ConsoleWrapper)
-                    .GetMethod("SetOut", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                    ?.Invoke(null, new object[] { stringWriter });
-                
-                Console.WriteLine("Test override");
-                
-                // Assert
-                var output = stringWriter.ToString();
-                Assert.Contains("Test override", output);
-            }
-            finally
-            {
-                // Restore original output
-                ConsoleWrapper.ResetForTest();
-            }
-        }
-        
-        [Fact]
-        public void StaticWriteLine_FormatsLogMessageCorrectly()
-        {
-            // Arrange
-            var originalOutput = Console.Out;
-            using var stringWriter = new StringWriter();
-            ConsoleWrapper.SetOut(stringWriter);
-            
-            try
-            {
-                // Act
-                typeof(ConsoleWrapper)
-                    .GetMethod("WriteLine", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, new[] { typeof(string), typeof(string) }, null)
-                    ?.Invoke(null, new object[] { "INFO", "Test log message" });
-                
-                // Assert
-                var output = stringWriter.ToString();
-                Assert.Matches(@"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\tINFO\tTest log message", output);
-            }
-            finally
-            {
-                // Restore original output
-                ConsoleWrapper.ResetForTest();
-            }
-        }
 
-        public void Dispose()
-        {
-            ConsoleWrapper.ResetForTest();
-        }
+    [Fact]
+    public void WriteLine_WritesMessageToConsole()
+    {
+        // Arrange
+        var consoleWrapper = new ConsoleWrapper();
+        ConsoleWrapper.SetOut(_writer);
+
+        // Act
+        consoleWrapper.WriteLine("Test message");
+
+        // Assert
+        var output = _writer.ToString();
+        Assert.Contains("Test message", output);
+    }
+
+    [Fact]
+    public void SetOut_OverridesConsoleOutput()
+    {
+        // Act
+        ConsoleWrapper.SetOut(_writer);
+        Console.WriteLine("Test override");
+
+        // Assert
+        var output = _writer.ToString();
+        Assert.Contains("Test override", output);
+    }
+
+    [Fact]
+    public void StaticWriteLine_FormatsLogMessageCorrectly()
+    {
+        // Arrange
+        ConsoleWrapper.SetOut(_writer);
+
+        // Act - Using reflection to call internal static method
+        typeof(ConsoleWrapper)
+            .GetMethod("WriteLine", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, new[] { typeof(string), typeof(string) }, null)
+            ?.Invoke(null, new object[] { "INFO", "Test log message" });
+
+        // Assert
+        var output = _writer.ToString();
+        Assert.Matches(@"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\tINFO\tTest log message", output);
+    }
+
+    [Fact]
+    public void ClearOutputResetFlag_ResetsFlag()
+    {
+        // Arrange
+        var consoleWrapper = new ConsoleWrapper();
+        ConsoleWrapper.SetOut(_writer);
+        
+        // Act
+        consoleWrapper.WriteLine("First message"); // Should set the reset flag
+        ConsoleWrapper.ClearOutputResetFlag();
+        consoleWrapper.WriteLine("Second message"); // Should set it again
+        
+        // Assert
+        Assert.Equal($"First message{Environment.NewLine}Second message{Environment.NewLine}", _writer.ToString());
+    }
+
+    public void Dispose()
+    {
+        ConsoleWrapper.ResetForTest();
+        _writer?.Dispose();
+    }
 }
