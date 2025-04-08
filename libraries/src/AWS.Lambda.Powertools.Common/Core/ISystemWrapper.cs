@@ -59,15 +59,4 @@ public interface ISystemWrapper
     /// </summary>
     /// <param name="type"></param>
     void SetExecutionEnvironment<T>(T type);
-
-    /// <summary>
-    /// Sets console output
-    /// Useful for testing and checking the console output
-    /// <code>
-    /// var consoleOut = new StringWriter();
-    /// SystemWrapper.Instance.SetOut(consoleOut);
-    /// </code>
-    /// </summary>
-    /// <param name="writeTo">The TextWriter instance where to write to</param>
-    void SetOut(TextWriter writeTo);
 }

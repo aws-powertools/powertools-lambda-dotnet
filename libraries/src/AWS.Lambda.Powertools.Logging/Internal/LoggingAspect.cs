@@ -21,6 +21,7 @@ using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Core;
 using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
@@ -34,11 +35,6 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 [Aspect(Scope.Global, Factory = typeof(LoggingAspectFactory))]
 public class LoggingAspect
 {
-    /// <summary>
-    ///     The is cold start
-    /// </summary>
-    private bool _isColdStart = true;
-
     /// <summary>
     ///     The initialize context
     /// </summary>
@@ -143,9 +139,8 @@ public class LoggingAspect
             if (!_initializeContext)
                 return;
 
-            Logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
+            Logger.AppendKey(LoggingConstants.KeyColdStart, LambdaLifecycleTracker.IsColdStart);
 
-            _isColdStart = false;
             _initializeContext = false;
             _isContextInitialized = true;
 
