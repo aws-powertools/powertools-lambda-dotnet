@@ -74,7 +74,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
     public void Should_Log_With_Anonymous()
     {
         var consoleOut = Substitute.For<StringWriter>();
-        SystemWrapper.Instance.SetOut(consoleOut);
+        SystemWrapper.SetOut(consoleOut);
 
         // Act & Assert
         Logger.AppendKey("newKey", new
@@ -94,7 +94,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
     public void Should_Log_With_Complex_Anonymous()
     {
         var consoleOut = Substitute.For<StringWriter>();
-        SystemWrapper.Instance.SetOut(consoleOut);
+        SystemWrapper.SetOut(consoleOut);
 
         // Act & Assert
         Logger.AppendKey("newKey", new

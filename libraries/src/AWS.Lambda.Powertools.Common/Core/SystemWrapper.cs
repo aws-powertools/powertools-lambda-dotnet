@@ -143,11 +143,20 @@ public class SystemWrapper : ISystemWrapper
         SetEnvironmentVariable(envName, envValue.ToString());
     }
 
-    /// <inheritdoc />
-    public void SetOut(TextWriter writeTo)
+    /// <summary>
+    /// Sets console output
+    /// Useful for testing and checking the console output
+    /// <code>
+    /// var consoleOut = new StringWriter();
+    /// SystemWrapper.Instance.SetOut(consoleOut);
+    /// </code>
+    /// </summary>
+    /// <param name="writeTo">The TextWriter instance where to write to</param>
+
+    public static void SetOut(TextWriter writeTo)
     {
-        SystemWrapper._testOutputStream = writeTo;
-        SystemWrapper._inTestMode = true;
+        _testOutputStream = writeTo;
+        _inTestMode = true;
         Console.SetOut(writeTo);
     }
 
@@ -189,7 +198,7 @@ public class SystemWrapper : ISystemWrapper
         Console.SetError(errorOutput);
     }
     
-    public void ClearOutputResetFlag()
+    public static void ClearOutputResetFlag()
     {
         _outputResetPerformed = false;
     }

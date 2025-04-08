@@ -46,7 +46,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
 
             // Act
             _testHandlers.TestMethod();
@@ -72,7 +72,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
 
             // Act
             _testHandlers.TestMethodDebug();
@@ -101,7 +101,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
 
             // Act
             _testHandlers.LogEventNoArgs();
@@ -116,7 +116,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
             var correlationId = Guid.NewGuid().ToString();
                 
 #if NET8_0_OR_GREATER
@@ -150,7 +150,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
             
 #if NET8_0_OR_GREATER
 
@@ -175,7 +175,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
 
             // Act
             _testHandlers.LogEventDebug();
@@ -190,7 +190,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
 
             // Act
             _testHandlers.ClearState();
@@ -378,7 +378,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
         
             // Act
             _testHandlers.HandlerSamplingRate();
@@ -395,7 +395,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = new StringWriter();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
         
             // Act
             _testHandlers.HandlerService();
@@ -411,7 +411,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = new StringWriter();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
 
             // Act
             _testHandlers.TestLogLevelCritical();
@@ -427,7 +427,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
             var context = new TestLambdaContext()
             {
                 FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
@@ -445,7 +445,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
             
             // Act
             _testHandlers.TestLogEventWithoutContext();
@@ -459,7 +459,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
             
             var test = new TestHandlers();
             
@@ -496,7 +496,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
 
             // Act
             _testHandler.LogWithEnv();
@@ -517,7 +517,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         {
             // Arrange
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
 
             // Act
             _testHandler.LogWithAndWithoutEnv();

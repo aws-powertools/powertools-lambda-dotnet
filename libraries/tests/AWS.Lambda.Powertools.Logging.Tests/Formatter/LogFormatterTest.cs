@@ -48,7 +48,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         public void Serialize_ShouldHandleEnumValues()
         {
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
             var lambdaContext = new TestLambdaContext
             {
                 FunctionName = "funtionName",
@@ -228,7 +228,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         public void Should_Log_CustomFormatter_When_Decorated()
         {
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
             var lambdaContext = new TestLambdaContext
             {
                 FunctionName = "funtionName",
@@ -263,7 +263,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         public void Should_Log_CustomFormatter_When_No_Decorated_Just_Log()
         {
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
             var lambdaContext = new TestLambdaContext
             {
                 FunctionName = "funtionName",
@@ -299,7 +299,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         public void Should_Log_CustomFormatter_When_Decorated_No_Context()
         {
             var consoleOut = Substitute.For<StringWriter>();
-            SystemWrapper.Instance.SetOut(consoleOut);
+            SystemWrapper.SetOut(consoleOut);
 
             Logger.UseFormatter(new CustomLogFormatter());
 

@@ -79,7 +79,7 @@ public class SystemWrapperTests : IDisposable
         wrapper.Log("First message"); // This should cause a reset
         bool afterFirstLog = (bool)_outputResetPerformedField.GetValue(null);
         
-        wrapper.ClearOutputResetFlag();
+        SystemWrapper.ClearOutputResetFlag();
         bool afterClear = (bool)_outputResetPerformedField.GetValue(null);
         
         wrapper.Log("After clear"); // This should cause another reset
@@ -96,7 +96,7 @@ public class SystemWrapperTests : IDisposable
     {
         // Arrange
         var wrapper = new SystemWrapper(_mockEnvironment);
-        wrapper.SetOut(_testWriter);
+        SystemWrapper.SetOut(_testWriter);
         var message = "Test message";
 
         // Act
@@ -111,7 +111,7 @@ public class SystemWrapperTests : IDisposable
     {
         // Arrange
         var wrapper = new SystemWrapper(_mockEnvironment);
-        wrapper.SetOut(_testWriter);
+        SystemWrapper.SetOut(_testWriter);
         var message = "Test line";
 
         // Act
@@ -126,7 +126,7 @@ public class SystemWrapperTests : IDisposable
     {
         // Arrange
         var wrapper = new SystemWrapper(_mockEnvironment);
-        wrapper.SetOut(_testWriter);
+        SystemWrapper.SetOut(_testWriter);
         var message = "This should go to console";
 
         // Act
@@ -148,7 +148,7 @@ public class SystemWrapperTests : IDisposable
         var message = "Test output";
 
         // Act
-        wrapper.SetOut(_testWriter);
+        SystemWrapper.SetOut(_testWriter);
         wrapper.Log(message);
 
         // Assert
@@ -160,7 +160,7 @@ public class SystemWrapperTests : IDisposable
     {
         // Arrange
         var wrapper = new SystemWrapper(_mockEnvironment);
-        wrapper.SetOut(_testWriter);
+        SystemWrapper.SetOut(_testWriter);
         var message1 = "First test message";
         var message2 = "Second test message";
 
@@ -183,7 +183,7 @@ public class SystemWrapperTests : IDisposable
         wrapper.Log("First message"); // Should reset output
         bool afterFirstLog = (bool)_outputResetPerformedField.GetValue(null);
         
-        wrapper.ClearOutputResetFlag();
+        SystemWrapper.ClearOutputResetFlag();
         bool afterClear = (bool)_outputResetPerformedField.GetValue(null);
         
         wrapper.Log("Second message"); // Should reset again
