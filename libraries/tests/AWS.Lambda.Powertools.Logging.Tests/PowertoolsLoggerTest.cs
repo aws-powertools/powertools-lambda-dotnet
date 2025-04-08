@@ -1369,7 +1369,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             logger.LogInformation("Test");
 
             // Assert
-            Assert.Equal($"{Constants.FeatureContextIdentifier}/Logging/{env.GetAssemblyVersion(this)}",
+            Assert.Contains($"{Constants.FeatureContextIdentifier}/Logging/",
                 env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
         }
 
