@@ -20,27 +20,69 @@ public class AppSyncEventsResolver
         _subscribeRoutes = new RouteHandlerRegistry<AppSyncResolverEvent, bool>();
     }
 
-
     /// <summary>
-    /// Registers a handler for publish events on a specific channel path
-    /// Processes each event in the payload individually
+    /// Registers a handler for publish events on a specific channel path.
+    /// Processes each event in the payload individually.
     /// </summary>
-    public AppSyncEventsResolver OnPublish(string path, Func<Dictionary<string, object>, Task<object>> handler,
-        bool aggregate = false)
+    public AppSyncEventsResolver OnPublish(string path, Func<Dictionary<string, object>, Task<object>> handler)
     {
-        return OnPublish(path, async (evt, context) =>
+        _publishRoutes.Register(new RouteHandlerOptions<AppSyncResolverEvent, object>
         {
-            var tasks = evt.Events.Select(eventItem =>
-                ProcessSingleEvent(eventItem.Payload, handler)
-            ).ToList();
-
-            var results = await Task.WhenAll(tasks);
-            return results;
-        }, aggregate);
+            Path = path,
+            Handler = (evt, ctx) =>
+            {
+                var payload = evt.Events.FirstOrDefault()?.Payload;
+                return handler(payload ?? new Dictionary<string, object>());
+            },
+            Aggregate = false
+        });
+        return this;
     }
 
+    /// <summary>
+    /// Registers a handler for publish events on a specific channel path.
+    /// Processes each event in the payload individually.
+    /// Lambda context available
+    /// </summary>
     public AppSyncEventsResolver OnPublish(string path,
-        Func<AppSyncResolverEvent, ILambdaContext, Task<object>> handler, bool aggregate = false)
+        Func<Dictionary<string, object>, ILambdaContext, Task<object>> handler)
+    {
+        _publishRoutes.Register(new RouteHandlerOptions<AppSyncResolverEvent, object>
+        {
+            Path = path,
+            Handler = (evt, ctx) =>
+            {
+                var payload = evt.Events.FirstOrDefault()?.Payload;
+                return handler(payload ?? new Dictionary<string, object>(), ctx);
+            },
+            Aggregate = false
+        });
+        return this;
+    }
+
+    /// <summary>
+    /// Registers a handler for publish events on a specific channel path.
+    /// Processes all events in a single handler invocation.
+    /// </summary>
+    public AppSyncEventsResolver OnPublish(string path, Func<AppSyncResolverEvent, Task<object>> handler,
+        bool aggregate = true)
+    {
+        _publishRoutes.Register(new RouteHandlerOptions<AppSyncResolverEvent, object>
+        {
+            Path = path,
+            Handler = (evt, ctx) => handler(evt),
+            Aggregate = aggregate
+        });
+        return this;
+    }
+
+    /// <summary>
+    /// Registers a handler for publish events on a specific channel path.
+    /// Processes all events in a single handler invocation.
+    /// Lambda context available
+    /// </summary>
+    public AppSyncEventsResolver OnPublish(string path,
+        Func<AppSyncResolverEvent, ILambdaContext, Task<object>> handler, bool aggregate = true)
     {
         _publishRoutes.Register(new RouteHandlerOptions<AppSyncResolverEvent, object>
         {
@@ -48,24 +90,34 @@ public class AppSyncEventsResolver
             Handler = handler,
             Aggregate = aggregate
         });
-
         return this;
     }
 
+    /// <summary>
+    /// Registers a handler for subscription events on a specific channel path.
+    /// </summary>
     public AppSyncEventsResolver OnSubscribe(string path, Func<Information, Task<bool>> handler)
-    {
-        return OnSubscribe(path, (evt, _) => handler(ExtractSubscriptionInfo(evt)));
-    }
-
-    public AppSyncEventsResolver OnSubscribe(string path,
-        Func<AppSyncResolverEvent, ILambdaContext, Task<bool>> handler)
     {
         _subscribeRoutes.Register(new RouteHandlerOptions<AppSyncResolverEvent, bool>
         {
             Path = path,
-            Handler = handler
+            Handler = async (evt, ctx) => await handler(ExtractSubscriptionInfo(evt)),
+            Aggregate = true
         });
+        return this;
+    }
 
+    /// <summary>
+    /// Registers a handler for subscription events on a specific channel path with Lambda context.
+    /// </summary>
+    public AppSyncEventsResolver OnSubscribe(string path, Func<Information, ILambdaContext, Task<bool>> handler)
+    {
+        _subscribeRoutes.Register(new RouteHandlerOptions<AppSyncResolverEvent, bool>
+        {
+            Path = path,
+            Handler = async (evt, ctx) => await handler(ExtractSubscriptionInfo(evt), ctx),
+            Aggregate = true
+        });
         return this;
     }
 
@@ -88,95 +140,104 @@ public class AppSyncEventsResolver
         ILambdaContext context)
     {
         var channelPath = appsyncEvent.Info.Channel.Path;
-        var matchingHandlers = _publishRoutes.ResolveAll(channelPath);
+        var handlerOptions = _publishRoutes.ResolveFirst(channelPath);
 
-        if (matchingHandlers.Count == 0)
+        if (handlerOptions == null)
         {
-            return new AppSyncResolverEventsResponse
-            {
-                Events = appsyncEvent.Events.Select(e =>
-                    new AppSyncResolverEventsResult
-                    {
-                        Id = e.id,
-                        Payload = e.Payload
-                    }).ToList()
-            };
+            // Return unchanged events if no handler found
+            var events = appsyncEvent.Events
+                .Select(e => new AppSyncResolverEventsResult
+                {
+                    Id = e.Id,
+                    Payload = e.Payload
+                })
+                .ToList();
+            return new AppSyncResolverEventsResponse { Events = events };
         }
 
         var results = new List<AppSyncResolverEventsResult>();
 
-        // Process each matching handler
-        foreach (var handlerOptions in matchingHandlers)
+        if (handlerOptions.Aggregate)
         {
             try
             {
-                var handler = handlerOptions.Handler;
-                var aggregate = handlerOptions.Aggregate;
+                // Process entire event in one call
+                var handlerResult = await handlerOptions.Handler(appsyncEvent, context);
 
-                // Call handler once per registered handler
-                var handlerResult = await handler(appsyncEvent, context);
-
-                if (aggregate)
+                // Check if the handler returned a collection of events
+                if (handlerResult is Dictionary<string, object> dict &&
+                    dict.TryGetValue("events", out var eventsObj) &&
+                    eventsObj is IEnumerable<object> eventsList)
                 {
-                    // For aggregate mode, return a single result
-                    string error;
-                    var payload = ConvertToPayload(handlerResult, out error);
-                    results.Add(new AppSyncResolverEventsResult
+                    // Process each event in the collection
+                    foreach (var eventObj in eventsList)
                     {
-                        Id = Guid.NewGuid().ToString(),
-                        Payload = payload,
-                        Error = error
-                    });
-                }
-                else if (handlerResult is IEnumerable<object> resultArray)
-                {
-                    // For non-aggregate mode with array result
-                    var eventItems = appsyncEvent.Events.ToArray();
-                    var i = 0;
-
-                    foreach (var item in resultArray)
-                    {
-                        var id = i < eventItems.Length ? eventItems[i].id : Guid.NewGuid().ToString();
-
-                        // Convert payload and check for errors
-                        string errorMessage;
-                        var payload = ConvertToPayload(item, out errorMessage);
-
-                        if (errorMessage != null)
+                        if (eventObj is Dictionary<string, object> eventDict)
                         {
-                            results.Add(new AppSyncResolverEventsResult
+                            string eventId = null;
+                            if (eventDict.TryGetValue("id", out var idObj) && idObj != null)
                             {
-                                Id = id,
-                                Error = errorMessage
-                            });
-                        }
-                        else
-                        {
-                            results.Add(new AppSyncResolverEventsResult
-                            {
-                                Id = id,
-                                Payload = payload
-                            });
-                        }
+                                eventId = idObj.ToString();
+                            }
 
-                        i++;
+                            if (eventDict.TryGetValue("error", out var errorObj) && errorObj != null)
+                            {
+                                // This is an error result
+                                results.Add(new AppSyncResolverEventsResult
+                                {
+                                    Id = eventId,
+                                    Error = errorObj.ToString()
+                                });
+                            }
+                            else
+                            {
+                                // Remove id from payload if present
+                                var payload = new Dictionary<string, object>(eventDict);
+                                if (payload.ContainsKey("id")) payload.Remove("id");
+
+                                results.Add(new AppSyncResolverEventsResult
+                                {
+                                    Id = eventId,
+                                    Payload = payload
+                                });
+                            }
+                        }
                     }
-                }
-                else
-                {
-                    string error;
-                    var payload = ConvertToPayload(handlerResult, out error);
-                    results.Add(new AppSyncResolverEventsResult
-                    {
-                        Id = appsyncEvent.Events.FirstOrDefault()?.id ?? Guid.NewGuid().ToString(),
-                        Payload = payload,
-                        Error = error
-                    });
                 }
             }
             catch (Exception ex)
             {
-                results.Add(FormatErrorResponse(ex, Guid.NewGuid().ToString()));
+                results.Add(FormatErrorResponse(ex, null));
+            }
+        }
+        else
+        {
+            // Process each event individually
+            foreach (var eventItem in appsyncEvent.Events)
+            {
+                try
+                {
+                    // Create a copy of the event with just this single event
+                    var singleEventCopy = new AppSyncResolverEvent
+                    {
+                        Info = appsyncEvent.Info,
+                        Events = [eventItem]
+                    };
+
+                    var handlerResult = await handlerOptions.Handler(singleEventCopy, context);
+                    var payload = ConvertToPayload(handlerResult, out var error);
+
+                    results.Add(new AppSyncResolverEventsResult
+                    {
+                        Id = eventItem.Id,
+                        Payload = payload,
+                        Error = error
+                    });
+                }
+                catch (Exception ex)
+                {
+                    results.Add(FormatErrorResponse(ex, eventItem.Id));
+                }
             }
         }
 
@@ -187,27 +248,17 @@ public class AppSyncEventsResolver
         ILambdaContext context)
     {
         var channelPath = appsyncEvent.Info.Channel.Path;
-        var matchingHandlers = _subscribeRoutes.ResolveAll(channelPath);
+        var handlerOptions = _subscribeRoutes.ResolveFirst(channelPath);
 
-        if (matchingHandlers.Count == 0)
+        if (handlerOptions == null)
         {
             return new AppSyncResolverEventsResponse { Authorized = false };
         }
 
         try
         {
-            foreach (var handlerOptions in matchingHandlers)
-            {
-                var result = await handlerOptions.Handler(appsyncEvent, context);
-
-                // If handler returns false, deny subscription
-                if (!result)
-                {
-                    return new AppSyncResolverEventsResponse { Authorized = false };
-                }
-            }
-
-            return new AppSyncResolverEventsResponse { Authorized = true };
+            var result = await handlerOptions.Handler(appsyncEvent, context);
+            return new AppSyncResolverEventsResponse { Authorized = (bool)result };
         }
         catch (Exception ex)
         {
@@ -215,22 +266,6 @@ public class AppSyncEventsResolver
             return new AppSyncResolverEventsResponse { Authorized = false };
         }
     }
-
-
-// Helper to process a single event and handle exceptions
-    private async Task<object> ProcessSingleEvent(Dictionary<string, object> payload,
-        Func<Dictionary<string, object>, Task<object>> handler)
-    {
-        try
-        {
-            return await handler(payload);
-        }
-        catch (Exception ex)
-        {
-            return new Dictionary<string, object> { ["error"] = ex.Message };
-        }
-    }
-
 
     private Information ExtractSubscriptionInfo(AppSyncResolverEvent appsyncEvent)
     {
@@ -267,30 +302,9 @@ public class AppSyncEventsResolver
     {
         return new AppSyncResolverEventsResult
         {
-            Id = id,
+            Id = id, // This will be the original event ID or null
             Error = $"{ex.GetType().Name} - {ex.Message}"
         };
-    }
-
-    private List<string> FindMatchingPaths(IEnumerable<string> registeredPaths, string channelPath)
-    {
-        return registeredPaths.Where(pattern => IsMatch(pattern, channelPath)).ToList();
-    }
-
-    private bool IsMatch(string pattern, string path)
-    {
-        if (pattern == path)
-        {
-            return true;
-        }
-
-        // Convert wildcards to regex patterns
-        var regexPattern = "^" + Regex.Escape(pattern)
-                                   .Replace("\\*\\*", ".*") // ** matches any segments
-                                   .Replace("\\*", "[^/]*") // * matches anything within a segment
-                               + "$";
-
-        return Regex.IsMatch(path, regexPattern);
     }
 
     private bool IsPublishEvent(AppSyncResolverEvent appsyncEvent)

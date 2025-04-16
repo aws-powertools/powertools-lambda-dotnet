@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.EventHandler.Internal;
 
 namespace AWS.Lambda.Powertools.EventHandler.Tests;
@@ -11,218 +9,218 @@ public class RouteHandlerRegistryTests
     [InlineData("/default/*", true)]
     [InlineData("/*", true)]
     [InlineData("/a/b/c", true)]
-    [InlineData("/a/b/c/*", true)]
-    [InlineData("default/channel", false)] // Missing leading slash
-    [InlineData("/default/*/channel", false)] // Wildcard in middle
-    [InlineData("/default/**", false)] // Double wildcard
-    [InlineData("/*a", false)] // Invalid wildcard usage
-    [InlineData("", false)] // Empty
+    [InlineData("/a/*/c", false)] // Wildcard in the middle is invalid
+    [InlineData("*/default", false)] // Wildcard at the beginning is invalid
+    [InlineData("default/*", false)] // Not starting with slash
+    [InlineData("", false)] // Empty path
+    [InlineData(null, false)] // Null path
     public void IsValidPath_ShouldValidateCorrectly(string path, bool expected)
     {
+        // Create a private method accessor to test private IsValidPath method
+        var registry = new RouteHandlerRegistry<object, object>();
+        var isValidPathMethod = typeof(RouteHandlerRegistry<object, object>)
+            .GetMethod("IsValidPath", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        
         // Act
-        var result = RouteHandlerRegistry<object, object>.IsValidPath(path);
+        var result = (bool)isValidPathMethod.Invoke(null, new object[] { path });
         
         // Assert
         Assert.Equal(expected, result);
     }
-    
-    [Theory]
-    [InlineData("/default/channel", @"^/default/channel$")]
-    [InlineData("/default/*", @"^/default/.*$")]
-    [InlineData("/*", @"^/.*$")]
-    [InlineData("/a/b+c", @"^/a/b\+c$")] // Test escaping special characters
-    public void PathToRegexString_ShouldConvertCorrectly(string path, string expected)
-    {
-        // Act
-        var result = RouteHandlerRegistry<object, object>.PathToRegexString(path);
-        
-        // Assert
-        Assert.Equal(expected, result);
-        Assert.True(Regex.IsMatch(path.Replace("*", "anything"), result));
-    }
-    
+
     [Fact]
     public void Register_ShouldNotAddInvalidPath()
     {
         // Arrange
-        var registry = new RouteHandlerRegistry<string, bool>();
-        var called = false;
+        var registry = new RouteHandlerRegistry<object, object>();
         
         // Act
-        registry.Register(new RouteHandlerOptions<string, bool> 
-        { 
-            Path = "/invalid/*/path", 
-            Handler = (_, __) => 
-            {
-                called = true;
-                return Task.FromResult(true);
-            }
+        registry.Register(new RouteHandlerOptions<object, object>
+        {
+            Path = "/invalid/*/path", // Invalid path with wildcard in the middle
+            Handler = (_, _) => Task.FromResult<object>(null)
         });
         
-        var result = registry.Resolve("/invalid/something/path");
-        
-        // Assert
-        Assert.Null(result);
+        // Assert - Try to resolve an invalid path
+        var result = registry.ResolveFirst("/invalid/test/path");
+        Assert.Null(result); // Should not find any handler
     }
-    
+
     [Fact]
     public void Register_ShouldReplaceExistingHandler()
     {
         // Arrange
-        var registry = new RouteHandlerRegistry<string, string>();
+        var registry = new RouteHandlerRegistry<object, object>();
+        int firstHandlerCalled = 0;
+        int secondHandlerCalled = 0;
         
         // Act
-        registry.Register(new RouteHandlerOptions<string, string>
+        registry.Register(new RouteHandlerOptions<object, object>
         {
             Path = "/test/path",
-            Handler = (_, __) => Task.FromResult("first")
+            Handler = (_, _) => {
+                firstHandlerCalled++;
+                return Task.FromResult<object>("first");
+            }
         });
         
-        registry.Register(new RouteHandlerOptions<string, string>
+        registry.Register(new RouteHandlerOptions<object, object>
         {
-            Path = "/test/path",
-            Handler = (_, __) => Task.FromResult("second")
+            Path = "/test/path", // Same path, should replace first handler
+            Handler = (_, _) => {
+                secondHandlerCalled++;
+                return Task.FromResult<object>("second");
+            }
         });
-        
-        var handler = registry.Resolve("/test/path");
         
         // Assert
+        var handler = registry.ResolveFirst("/test/path");
         Assert.NotNull(handler);
-        var result = handler.Handler("test", new TestLambdaContext()).Result;
+        var result = handler.Handler(null, null).Result;
         Assert.Equal("second", result);
+        Assert.Equal(0, firstHandlerCalled);
+        Assert.Equal(1, secondHandlerCalled);
     }
-    
+
     [Fact]
-    public void Resolve_ShouldReturnMostSpecificHandler()
+    public async Task ResolveFirst_ShouldReturnMostSpecificHandler()
     {
         // Arrange
-        var registry = new RouteHandlerRegistry<string, string>();
+        var registry = new RouteHandlerRegistry<object, object>();
         
-        registry.Register(new RouteHandlerOptions<string, string>
+        registry.Register(new RouteHandlerOptions<object, object>
         {
             Path = "/*",
-            Handler = (_, __) => Task.FromResult("wildcard")
+            Handler = (_, _) => Task.FromResult<object>("least-specific")
         });
         
-        registry.Register(new RouteHandlerOptions<string, string>
+        registry.Register(new RouteHandlerOptions<object, object>
         {
-            Path = "/test/*",
-            Handler = (_, __) => Task.FromResult("test-wildcard")
+            Path = "/default/*",
+            Handler = (_, _) => Task.FromResult<object>("more-specific")
         });
         
-        registry.Register(new RouteHandlerOptions<string, string>
+        registry.Register(new RouteHandlerOptions<object, object>
         {
-            Path = "/test/exact",
-            Handler = (_, __) => Task.FromResult("exact")
+            Path = "/default/channel",
+            Handler = (_, _) => Task.FromResult<object>("most-specific")
         });
         
-        // Act & Assert
-        var handler1 = registry.Resolve("/test/exact");
-        Assert.Equal("exact", handler1.Handler("test", new TestLambdaContext()).Result);
+        // Act - Test various paths
+        var exactMatch = registry.ResolveFirst("/default/channel");
+        var wildcardMatch = registry.ResolveFirst("/default/something");
+        var rootMatch = registry.ResolveFirst("/something");
         
-        var handler2 = registry.Resolve("/test/other");
-        Assert.Equal("test-wildcard", handler2.Handler("test", new TestLambdaContext()).Result);
+        // Assert
+        Assert.NotNull(exactMatch);
+        Assert.Equal("most-specific", await exactMatch.Handler(null, null));
         
-        var handler3 = registry.Resolve("/other/path");
-        Assert.Equal("wildcard", handler3.Handler("test", new TestLambdaContext()).Result);
+        Assert.NotNull(wildcardMatch);
+        Assert.Equal("more-specific", await wildcardMatch.Handler(null, null));
+        
+        Assert.NotNull(rootMatch);
+        Assert.Equal("least-specific", await rootMatch.Handler(null, null));
     }
-    
+
     [Fact]
-    public void Resolve_ShouldReturnNullWhenNoMatch()
+    public void ResolveFirst_ShouldReturnNullWhenNoMatch()
     {
         // Arrange
-        var registry = new RouteHandlerRegistry<string, string>();
+        var registry = new RouteHandlerRegistry<object, object>();
         
-        registry.Register(new RouteHandlerOptions<string, string>
+        registry.Register(new RouteHandlerOptions<object, object>
         {
-            Path = "/test/*",
-            Handler = (_, __) => Task.FromResult("test-wildcard")
+            Path = "/default/*",
+            Handler = (_, _) => Task.FromResult<object>("test")
         });
         
         // Act
-        var handler = registry.Resolve("/other/path");
+        var result = registry.ResolveFirst("/other/path");
         
         // Assert
-        Assert.Null(handler);
+        Assert.Null(result);
     }
-    
+
     [Fact]
-    public void ResolveAll_ShouldReturnAllMatchingHandlersInOrder()
+    public void ResolveFirst_ShouldUseCacheForRepeatedPaths()
     {
         // Arrange
-        var registry = new RouteHandlerRegistry<string, string>();
+        var registry = new RouteHandlerRegistry<object, object>();
+        int handlerCallCount = 0;
         
-        registry.Register(new RouteHandlerOptions<string, string>
-        {
-            Path = "/*",
-            Handler = (_, __) => Task.FromResult("global")
-        });
-        
-        registry.Register(new RouteHandlerOptions<string, string>
+        registry.Register(new RouteHandlerOptions<object, object>
         {
             Path = "/test/*",
-            Handler = (_, __) => Task.FromResult("test-wildcard")
+            Handler = (_, _) => {
+                handlerCallCount++;
+                return Task.FromResult<object>("cached");
+            }
         });
         
-        registry.Register(new RouteHandlerOptions<string, string>
-        {
-            Path = "/test/exact",
-            Handler = (_, __) => Task.FromResult("exact")
-        });
+        // Act - Resolve the same path multiple times
+        var first = registry.ResolveFirst("/test/path");
+        var firstResult = first.Handler(null, null).Result;
         
-        // Act
-        var handlers = registry.ResolveAll("/test/exact");
+        // Should use cached result
+        var second = registry.ResolveFirst("/test/path");
+        var secondResult = second.Handler(null, null).Result;
         
         // Assert
-        Assert.Equal(3, handlers.Count);
-        Assert.Equal("exact", handlers[0].Handler("test", new TestLambdaContext()).Result); // Most specific
-        Assert.Equal("test-wildcard", handlers[1].Handler("test", new TestLambdaContext()).Result);
-        Assert.Equal("global", handlers[2].Handler("test", new TestLambdaContext()).Result); // Least specific
+        Assert.Equal("cached", firstResult);
+        Assert.Equal("cached", secondResult);
+        Assert.Equal(2, handlerCallCount); // Handler should be called twice because handlers are executed
+                                          // even though the path resolution is cached
+        
+        // The objects should be the same instance
+        Assert.Same(first, second);
     }
-    
+
     [Fact]
-    public void Resolve_ShouldUseCacheForRepeatedPaths()
-    {
-        // Arrange
-        var registry = new RouteHandlerRegistry<string, int>(3); // Small cache size
-        var callCount = 0;
-        
-        registry.Register(new RouteHandlerOptions<string, int>
-        {
-            Path = "/path1",
-            Handler = (_, __) => { callCount++; return Task.FromResult(1); }
-        });
-        
-        // Act
-        var handler1 = registry.Resolve("/path1");
-        var result1 = handler1.Handler("test", new TestLambdaContext()).Result;
-        
-        var handler2 = registry.Resolve("/path1"); // Should use cache
-        var result2 = handler2.Handler("test", new TestLambdaContext()).Result;
-        
-        // Assert
-        Assert.Equal(1, result1);
-        Assert.Equal(1, result2);
-        Assert.Equal(2, callCount); // Handler called twice, but resolution only happened once
-    }
-    
-    [Fact]
-    public void Cache_ShouldEvictOldestItemsWhenFull()
+    public void LRUCache_ShouldEvictOldestItemsWhenFull()
     {
         // Arrange - Create a cache with size 2
         var cache = new LRUCache<string, string>(2);
         
         // Act
-        cache.Add("key1", "value1");
-        cache.Add("key2", "value2");
-        cache.Add("key3", "value3"); // Should evict key1
+        cache.Set("key1", "value1");
+        cache.Set("key2", "value2");
+        cache.Set("key3", "value3"); // Should evict key1
         
         // Assert
-        string value;
-        Assert.False(cache.TryGetValue("key1", out value)); // Should be evicted
-        Assert.True(cache.TryGetValue("key2", out value));
-        Assert.Equal("value2", value);
-        Assert.True(cache.TryGetValue("key3", out value));
-        Assert.Equal("value3", value);
+        Assert.False(cache.TryGet("key1", out _)); // Should be evicted
+        Assert.True(cache.TryGet("key2", out var value2));
+        Assert.Equal("value2", value2);
+        Assert.True(cache.TryGet("key3", out var value3));
+        Assert.Equal("value3", value3);
+    }
+
+    [Fact]
+    public void IsWildcardMatch_ShouldMatchPathsCorrectly()
+    {
+        // Arrange
+        var registry = new RouteHandlerRegistry<object, object>();
+        var isWildcardMatchMethod = typeof(RouteHandlerRegistry<object, object>)
+            .GetMethod("IsWildcardMatch", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        // Test cases
+        var testCases = new[]
+        {
+            (pattern: "/default/*", path: "/default/channel", expected: true),
+            (pattern: "/default/*", path: "/default/other", expected: true),
+            (pattern: "/default/*", path: "/default/nested/path", expected: true),
+            (pattern: "/default/channel", path: "/default/channel", expected: true),
+            (pattern: "/default/channel", path: "/default/other", expected: false),
+            (pattern: "/*", path: "/anything", expected: true),
+            (pattern: "/*", path: "/default/nested/deep", expected: true)
+        };
+        
+        foreach (var (pattern, path, expected) in testCases)
+        {
+            // Act
+            var result = (bool)isWildcardMatchMethod.Invoke(registry, new object[] { pattern, path });
+            
+            // Assert
+            Assert.Equal(expected, result);
+        }
     }
 }

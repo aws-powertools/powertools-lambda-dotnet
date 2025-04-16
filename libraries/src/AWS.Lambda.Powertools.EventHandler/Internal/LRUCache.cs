@@ -5,68 +5,41 @@ namespace AWS.Lambda.Powertools.EventHandler.Internal;
 /// <summary>
 /// Basic LRU cache implementation
 /// </summary>
-internal class LRUCache<TKey, TValue> where TKey : notnull
+/// <summary>
+/// Simple LRU cache implementation for caching route resolutions
+/// </summary>
+internal class LRUCache<TKey, TValue>
 {
     private readonly int _capacity;
-    private readonly ConcurrentDictionary<TKey, LinkedListNode<LRUCacheItem>> _cache;
-    private readonly LinkedList<LRUCacheItem> _lruList;
-    private readonly object _lock = new();
+    private readonly Dictionary<TKey, LinkedListNode<CacheItem>> _cache;
+    private readonly LinkedList<CacheItem> _lruList;
 
-    /// <summary>
-    /// Initialize LRU cache with specified capacity
-    /// </summary>
-    public LRUCache(int capacity)
+    internal class CacheItem
     {
-        _capacity = capacity;
-        _cache = new ConcurrentDictionary<TKey, LinkedListNode<LRUCacheItem>>();
-        _lruList = new LinkedList<LRUCacheItem>();
-    }
+        public TKey Key { get; }
+        public TValue Value { get; }
 
-    /// <summary>
-    /// Add or update a key-value pair in the cache
-    /// </summary>
-    public void Add(TKey key, TValue value)
-    {
-        lock (_lock)
+        public CacheItem(TKey key, TValue value)
         {
-            if (_cache.TryGetValue(key, out LinkedListNode<LRUCacheItem> node))
-            {
-                // Move existing item to front of list
-                _lruList.Remove(node);
-                node.Value.Value = value;
-                _lruList.AddFirst(node);
-            }
-            else
-            {
-                // Trim cache if at capacity
-                if (_cache.Count >= _capacity && _lruList.Last != null)
-                {
-                    _cache.TryRemove(_lruList.Last.Value.Key, out _);
-                    _lruList.RemoveLast();
-                }
-
-                // Add new item to front
-                var cacheItem = new LRUCacheItem { Key = key, Value = value };
-                var newNode = new LinkedListNode<LRUCacheItem>(cacheItem);
-                _lruList.AddFirst(newNode);
-                _cache[key] = newNode;
-            }
+            Key = key;
+            Value = value;
         }
     }
 
-    /// <summary>
-    /// Try to get a value from the cache
-    /// </summary>
-    public bool TryGetValue(TKey key, out TValue value)
+    public LRUCache(int capacity)
+    {
+        _capacity = capacity;
+        _cache = new Dictionary<TKey, LinkedListNode<CacheItem>>();
+        _lruList = new LinkedList<CacheItem>();
+    }
+
+    public bool TryGet(TKey key, out TValue value)
     {
         if (_cache.TryGetValue(key, out var node))
         {
-            lock (_lock)
-            {
-                // Move accessed item to front of list
-                _lruList.Remove(node);
-                _lruList.AddFirst(node);
-            }
+            // Move to the front of the list (most recently used)
+            _lruList.Remove(node);
+            _lruList.AddFirst(node);
             value = node.Value.Value;
             return true;
         }
@@ -75,27 +48,29 @@ internal class LRUCache<TKey, TValue> where TKey : notnull
         return false;
     }
 
-    /// <summary>
-    /// Get or create a value in the cache
-    /// </summary>
-    public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
+    public void Set(TKey key, TValue value)
     {
-        if (TryGetValue(key, out var value))
+        if (_cache.TryGetValue(key, out var existingNode))
         {
-            return value;
+            _lruList.Remove(existingNode);
+            _cache.Remove(key);
+        }
+        else if (_cache.Count >= _capacity)
+        {
+            // Remove least recently used item
+            var lastNode = _lruList.Last;
+            _lruList.RemoveLast();
+            _cache.Remove(lastNode.Value.Key);
         }
 
-        var newValue = valueFactory(key);
-        Add(key, newValue);
-        return newValue;
+        var newNode = new LinkedListNode<CacheItem>(new CacheItem(key, value));
+        _lruList.AddFirst(newNode);
+        _cache[key] = newNode;
     }
 
-    /// <summary>
-    /// Helper class for LRU cache items
-    /// </summary>
-    private class LRUCacheItem
+    public void Clear()
     {
-        public TKey Key { get; set; }
-        public TValue Value { get; set; }
+        _cache.Clear();
+        _lruList.Clear();
     }
 }

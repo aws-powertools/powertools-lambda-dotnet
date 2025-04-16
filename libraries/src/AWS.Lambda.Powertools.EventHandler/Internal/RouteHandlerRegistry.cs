@@ -9,7 +9,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Internal;
 internal class RouteHandlerRegistry<TEvent, TResult>
 {
     /// <summary>
-    /// Dictionary of registered handlers, keyed by regex pattern
+    /// Dictionary of registered handlers
     /// </summary>
     private readonly Dictionary<string, RouteHandlerOptions<TEvent, TResult>> _resolvers = new();
 
@@ -19,7 +19,7 @@ internal class RouteHandlerRegistry<TEvent, TResult>
     private readonly LRUCache<string, RouteHandlerOptions<TEvent, TResult>> _resolverCache;
 
     /// <summary>
-    /// Set to track already logged warnings to prevent duplicates
+    /// Set to track already logged warnings
     /// </summary>
     private readonly HashSet<string> _warnedPaths = new();
 
@@ -38,25 +38,16 @@ internal class RouteHandlerRegistry<TEvent, TResult>
     /// <param name="options">Options for the route handler</param>
     public void Register(RouteHandlerOptions<TEvent, TResult> options)
     {
-        LogDebug($"Registering route handler for path \"{options.Path}\" with aggregate \"{options.Aggregate}\"");
-
         if (!IsValidPath(options.Path))
         {
             LogWarning($"The path \"{options.Path}\" is not valid and will be skipped. " +
-                      "A path should always have a namespace starting with \"/\". A path can have multiple namespaces, " +
-                      "all separated by \"/\". Wildcards are allowed only at the end of the path.");
+                      "Wildcards are allowed only at the end of the path.");
             return;
         }
 
-        string regex = PathToRegexString(options.Path);
-
-        if (_resolvers.ContainsKey(regex))
-        {
-            LogWarning($"A route handler for path \"{options.Path}\" is already registered. " +
-                      "The previous handler will be replaced.");
-        }
-
-        _resolvers[regex] = options;
+        // Clear cache when registering new handlers
+        _resolverCache.Clear();
+        _resolvers[options.Path] = options;
     }
 
     /// <summary>
@@ -64,101 +55,84 @@ internal class RouteHandlerRegistry<TEvent, TResult>
     /// </summary>
     /// <param name="path">The path to match against registered routes</param>
     /// <returns>Most specific matching handler or null if no match</returns>
-    public RouteHandlerOptions<TEvent, TResult> Resolve(string path)
+    public RouteHandlerOptions<TEvent, TResult>? ResolveFirst(string path)
     {
-        // First check cache
-        if (_resolverCache.TryGetValue(path, out var cachedHandler))
+        if (_resolverCache.TryGet(path, out var cachedHandler))
         {
             return cachedHandler;
         }
 
-        LogDebug($"Resolving handler for path \"{path}\"");
-
-        RouteHandlerOptions<TEvent, TResult> mostSpecificHandler = null;
-        int mostSpecificRouteLength = 0;
-
-        foreach (var (pattern, handlerOptions) in _resolvers)
+        // First try for exact match
+        if (_resolvers.TryGetValue(path, out var exactMatch))
         {
-            if (Regex.IsMatch(path, pattern))
-            {
-                // Calculate specificity (length of path minus wildcard)
-                int specificityLength = handlerOptions.Path.Length -
-                                       (handlerOptions.Path.EndsWith("*") ? 1 : 0);
-
-                if (specificityLength > mostSpecificRouteLength)
-                {
-                    mostSpecificRouteLength = specificityLength;
-                    mostSpecificHandler = handlerOptions;
-                    _resolverCache.Add(path, handlerOptions);
-                }
-            }
+            _resolverCache.Set(path, exactMatch);
+            return exactMatch;
         }
 
-        // Log warning if no handler found
-        if (mostSpecificHandler == null && !_warnedPaths.Contains(path))
+        // Then try wildcard matches, sorted by specificity (most segments first)
+        var wildcardMatches = _resolvers.Keys
+            .Where(pattern => IsWildcardMatch(pattern, path))
+            .OrderByDescending(pattern => pattern.Count(c => c == '/'))
+            .ThenByDescending(pattern => pattern.Length);
+
+        var bestMatch = wildcardMatches.FirstOrDefault();
+
+        if (bestMatch != null)
         {
-            LogWarning($"No route handler found for path \"{path}\".");
-            _warnedPaths.Add(path);
+            var handler = _resolvers[bestMatch];
+            _resolverCache.Set(path, handler);
+            return handler;
         }
 
-        return mostSpecificHandler;
-    }
-
-    /// <summary>
-    /// Find all handlers that match the given path.
-    /// Returns them sorted by specificity (most specific first).
-    /// </summary>
-    /// <param name="path">Path to match</param>
-    /// <returns>List of matching handlers in order of specificity</returns>
-    public List<RouteHandlerOptions<TEvent, TResult>> ResolveAll(string path)
-    {
-        var matches = new List<(RouteHandlerOptions<TEvent, TResult> Handler, int Specificity)>();
-
-        foreach (var (pattern, handlerOptions) in _resolvers)
-        {
-            if (Regex.IsMatch(path, pattern))
-            {
-                int specificityLength = handlerOptions.Path.Length -
-                                      (handlerOptions.Path.EndsWith("*") ? 1 : 0);
-                matches.Add((handlerOptions, specificityLength));
-            }
-        }
-
-        return matches
-            .OrderByDescending(x => x.Specificity)
-            .Select(x => x.Handler)
-            .ToList();
+        return null;
     }
 
     /// <summary>
     /// Check if a path pattern is valid according to routing rules.
     /// </summary>
-    /// <param name="path">Path to validate</param>
-    /// <returns>Whether the path is valid</returns>
-    public static bool IsValidPath(string path)
+    private static bool IsValidPath(string path)
     {
-        if (path == "/*") return true;
-        return Regex.IsMatch(path, @"^\/([^\/\*]+)(\/[^\/\*]+)*(\/\*)?$");
+        if (string.IsNullOrWhiteSpace(path) || !path.StartsWith("/"))
+            return false;
+
+        // Check for invalid wildcard usage
+        return !path.Contains("*/");
     }
 
     /// <summary>
-    /// Converts a path pattern to a regex string for matching.
+    /// Check if a wildcard pattern matches the given path
     /// </summary>
-    /// <param name="path">Path pattern to convert</param>
-    /// <returns>Regular expression string</returns>
-    public static string PathToRegexString(string path)
+    private bool IsWildcardMatch(string pattern, string path)
     {
-        string escapedPath = Regex.Escape(path);
-        return $"^{escapedPath.Replace("\\*", ".*")}$";
-    }
+        if (!pattern.Contains('*'))
+            return pattern == path;
 
-    private void LogDebug(string message)
-    {
-        Console.WriteLine(message);
+        var patternSegments = pattern.Split('/');
+        var pathSegments = path.Split('/');
+
+        if (patternSegments.Length > pathSegments.Length)
+            return false;
+
+        for (var i = 0; i < patternSegments.Length; i++)
+        {
+            // If we've reached the wildcard segment, it matches the rest
+            if (patternSegments[i] == "*")
+                return true;
+
+            // Otherwise, segments must match exactly
+            if (patternSegments[i] != pathSegments[i])
+                return false;
+        }
+
+        return patternSegments.Length == pathSegments.Length;
     }
 
     private void LogWarning(string message)
     {
-        Console.WriteLine($"Warning: {message}");
+        if (!_warnedPaths.Contains(message))
+        {
+            _warnedPaths.Add(message);
+            Console.WriteLine($"Warning: {message}");
+        }
     }
 }

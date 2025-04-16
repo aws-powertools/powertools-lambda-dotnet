@@ -56,5 +56,5 @@ public class AppSyncResolverEvent
     
     public object[] OutErrors { get; set; }
     
-    public Events[] Events { get; set; }
+    public Event[] Events { get; set; }
 }

@@ -52,10 +52,10 @@ public enum AppsyncEventsOperation
     Publish
 }
 
-public class Events
+public class Event
 {
     public Dictionary<string,object> Payload { get; set; }
     
-    public string id { get; set; }
+    public string Id { get; set; }
 }
 
