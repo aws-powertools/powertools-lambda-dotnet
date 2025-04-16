@@ -1,6 +1,9 @@
 namespace AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 
-public class AppSyncResolverEventsResult
+/// <summary>
+/// Represents an event from AWS AppSync.
+/// </summary>
+public class AppSyncEvent
 {
     /// <summary>
     /// Payload data when operation succeeds
@@ -14,6 +17,7 @@ public class AppSyncResolverEventsResult
         
     /// <summary>
     /// Unique identifier for the event
+    /// This Id is provided by AppSync and needs to be preserved.
     /// </summary>
-    public string Id { get; set; } = string.Empty;
+    public required string Id { get; set; }
 }

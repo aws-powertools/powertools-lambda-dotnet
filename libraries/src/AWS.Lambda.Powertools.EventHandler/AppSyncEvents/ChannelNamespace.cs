@@ -5,5 +5,8 @@ namespace AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 /// </summary>
 public class ChannelNamespace
 {
-    public string Name { get; set; }
+    /// <summary>
+    /// Name of the channel namespace
+    /// </summary>
+    public string? Name { get; set; }
 }

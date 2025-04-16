@@ -8,10 +8,10 @@ public class Channel
     /// <summary>
     /// Provides direct access to the 'Path' attribute within the 'Channel' object.
     /// </summary>
-    public string Path { get; set; }
+    public required string Path { get; set; }
     
     /// <summary>
     /// Provides direct access to the 'Segments' attribute within the 'Channel' object.
     /// </summary>
-    public string[] Segments { get; set; }
+    public required string[] Segments { get; set; }
 }

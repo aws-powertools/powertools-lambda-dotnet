@@ -8,35 +8,35 @@ public class AppSyncCognitoIdentity
     /// <summary>
     /// The source IP address of the caller received by AWS AppSync
     /// </summary>
-    public List<string> SourceIp { get; set; }
+    public List<string>? SourceIp { get; set; }
 
     /// <summary>
     /// The username of the authenticated user
     /// </summary>
-    public string Username { get; set; }
+    public string? Username { get; set; }
 
     /// <summary>
     /// The UUID of the authenticated user
     /// </summary>
-    public string Sub { get; set; }
+    public string? Sub { get; set; }
 
     /// <summary>
     /// The claims that the user has
     /// </summary>
-    public Dictionary<string, object> Claims { get; set; }
+    public Dictionary<string, object>? Claims { get; set; }
 
     /// <summary>
     /// The default authorization strategy for this caller (ALLOW or DENY)
     /// </summary>
-    public string DefaultAuthStrategy { get; set; }
+    public string? DefaultAuthStrategy { get; set; }
 
     /// <summary>
     /// List of OIDC groups
     /// </summary>
-    public List<string> Groups { get; set; }
+    public List<string>? Groups { get; set; }
 
     /// <summary>
     /// The token issuer
     /// </summary>
-    public string Issuer { get; set; }
+    public string? Issuer { get; set; }
 }

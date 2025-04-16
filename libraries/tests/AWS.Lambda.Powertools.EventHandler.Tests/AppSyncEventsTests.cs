@@ -8,11 +8,11 @@ namespace AWS.Lambda.Powertools.EventHandler.Tests;
 
 public class AppSyncEventsTests
 {
-    private readonly AppSyncResolverEvent? _appSyncEvent;
+    private readonly AppSyncEventsEvent? _appSyncEvent;
 
     public AppSyncEventsTests()
     {
-        _appSyncEvent = JsonSerializer.Deserialize<AppSyncResolverEvent>(
+        _appSyncEvent = JsonSerializer.Deserialize<AppSyncEventsEvent>(
             File.ReadAllText("appSyncEventsEvent.json"),
             new JsonSerializerOptions
             {
@@ -131,13 +131,20 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
+        app.OnPublish("/default/channel", async (payload) => payload);
+        
         app.OnSubscribe("/default/*", async (info) => true);
-        var subscribeEvent = new AppSyncResolverEvent
+        var subscribeEvent = new AppSyncEventsEvent
         {
             Info = new Information
             {
-                Channel = new Channel { Path = "/default/channel" },
-                Operation = AppsyncEventsOperation.Subscribe
+                Channel = new Channel
+                {
+                    Path = "/default/channel",
+                    Segments = ["default", "channel"]
+                },
+                Operation = AppSyncEventsOperation.Subscribe,
+                ChannelNamespace = new ChannelNamespace{ Name = "default" }
             }
         };
         // Act
@@ -153,14 +160,17 @@ public class AppSyncEventsTests
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
-
+        
+        app.OnPublish("/default/channel", async (payload) => payload);
+        
         app.OnSubscribe("/default/*", async (info) => false);
-        var subscribeEvent = new AppSyncResolverEvent
+        var subscribeEvent = new AppSyncEventsEvent
         {
             Info = new Information
             {
-                Channel = new Channel { Path = "/default/channel" },
-                Operation = AppsyncEventsOperation.Subscribe
+                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"]},
+                Operation = AppSyncEventsOperation.Subscribe,
+                ChannelNamespace = new ChannelNamespace{ Name = "default" }
             }
         };
         // Act
@@ -176,15 +186,18 @@ public class AppSyncEventsTests
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
-
+        
+        app.OnPublish("/default/channel", async (payload) => payload);
+        
         app.OnSubscribe("/default/*", async (info) => { throw new Exception("Authorization error"); });
 
-        var subscribeEvent = new AppSyncResolverEvent
+        var subscribeEvent = new AppSyncEventsEvent
         {
             Info = new Information
             {
-                Channel = new Channel { Path = "/default/channel" },
-                Operation = AppsyncEventsOperation.Subscribe
+                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
+                Operation = AppSyncEventsOperation.Subscribe,
+                ChannelNamespace = new ChannelNamespace{ Name = "default" }
             }
         };
 
@@ -192,7 +205,7 @@ public class AppSyncEventsTests
         var result = await app.Resolve(subscribeEvent, lambdaContext);
 
         // Assert
-        Assert.False(result.Authorized);
+        Assert.Equal("Authorization error", result.Error);
     }
 
     [Fact]
@@ -249,12 +262,13 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        var unknownEvent = new AppSyncResolverEvent
+        var unknownEvent = new AppSyncEventsEvent
         {
             Info = new Information
             {
-                Channel = new Channel { Path = "/default/channel" },
-                Operation = (AppsyncEventsOperation)999 // Unknown operation
+                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
+                Operation = (AppSyncEventsOperation)999, // Unknown operation
+                ChannelNamespace = new ChannelNamespace{ Name = "default" }
             }
         };
 
@@ -441,152 +455,236 @@ public class AppSyncEventsTests
         Assert.Equal("3", result.Events[2].Id);
         Assert.Contains("Error for event 3", result.Events[2].Error);
     }
+
+    [Fact]
+    public async Task Should_Match_Most_Specific_Handler_Only()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        int firstHandlerCalls = 0;
+        int secondHandlerCalls = 0;
+
+        app.OnPublish("/default/channel", async (payload) =>
+        {
+            firstHandlerCalls++;
+            return new Dictionary<string, object> { ["handler"] = "first" };
+        });
+
+        app.OnPublish("/default/*", async (payload) =>
+        {
+            secondHandlerCalls++;
+            return new Dictionary<string, object> { ["handler"] = "second" };
+        });
+
+        // Act
+        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+
+        // Assert - Only the first (most specific) handler should be called
+        Assert.Equal(3, result.Events.Count);
+        Assert.Equal("first", result.Events[0].Payload["handler"].ToString());
+        Assert.Equal(3, firstHandlerCalls);
+        Assert.Equal(0, secondHandlerCalls);
+    }
+
+    [Fact]
+    public async Task Should_Handle_Multiple_Keys_In_Payload()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        // Create an event with multiple keys in the payload
+        var multiKeyEvent = new AppSyncEventsEvent
+        {
+            Info = new Information
+            {
+                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
+                Operation = AppSyncEventsOperation.Publish,
+                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+            },
+            Events =
+            [
+                new AppSyncEvent
+                {
+                    Id = "1",
+                    Payload = new Dictionary<string, object>
+                    {
+                        ["event_1"] = "data_1",
+                        ["event_1a"] = "data_1a"
+                    }
+                }
+            ]
+        };
+
+        app.OnPublish("/default/channel", async (payload) =>
+        {
+            // Check that both keys are present
+            Assert.Equal("data_1", payload["event_1"]);
+            Assert.Equal("data_1a", payload["event_1a"]);
+
+            // Return a processed result with both keys
+            return new Dictionary<string, object>
+            {
+                ["processed_1"] = payload["event_1"],
+                ["processed_1a"] = payload["event_1a"]
+            };
+        });
+
+        // Act
+        var result = await app.Resolve(multiKeyEvent, lambdaContext);
+
+        // Assert
+        Assert.Single(result.Events);
+        Assert.Equal("1", result.Events[0].Id);
+        Assert.Equal("data_1", result.Events[0].Payload["processed_1"]);
+        Assert.Equal("data_1a", result.Events[0].Payload["processed_1a"]);
+    }
+
+    [Fact]
+    public async Task Should_Only_Use_First_Matching_Handler_By_Specificity()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        // Register handlers with different specificity
+        app.OnPublish("/*", async (payload) =>
+            new Dictionary<string, object> { ["handler"] = "least-specific" });
+
+        app.OnPublish("/default/*", async (payload) =>
+            new Dictionary<string, object> { ["handler"] = "more-specific" });
+
+        app.OnPublish("/default/channel", async (payload) =>
+            new Dictionary<string, object> { ["handler"] = "most-specific" });
+
+        // Act
+        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+
+        // Assert - Only the most specific handler should be called
+        Assert.Equal(3, result.Events.Count);
+        Assert.Equal("most-specific", result.Events[0].Payload["handler"].ToString());
+        Assert.Equal("most-specific", result.Events[1].Payload["handler"].ToString());
+        Assert.Equal("most-specific", result.Events[2].Payload["handler"].ToString());
+    }
+
+    [Fact]
+    public async Task Should_Fallback_To_Less_Specific_Handler_If_No_Exact_Match()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        // Create an event with a path that has no exact match
+        var fallbackEvent = new AppSyncEventsEvent
+        {
+            Info = new Information
+            {
+                Channel = new Channel { Path = "/default/specific/path", Segments = ["default", "specific", "path"] },
+                Operation = AppSyncEventsOperation.Publish,
+                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+            },
+            Events =
+            [
+                new AppSyncEvent
+                {
+                    Id = "1",
+                    Payload = new Dictionary<string, object> { ["key"] = "value" }
+                }
+            ]
+        };
+
+        app.OnPublish("/default/*", async (payload) =>
+            new Dictionary<string, object> { ["handler"] = "wildcard-handler" });
+
+        // Act
+        var result = await app.Resolve(fallbackEvent, lambdaContext);
+
+        // Assert
+        Assert.Single(result.Events);
+        Assert.Equal("wildcard-handler", result.Events[0].Payload["handler"].ToString());
+    }
     
     [Fact]
-public async Task Should_Match_Most_Specific_Handler_Only()
-{
-    // Arrange
-    var lambdaContext = new TestLambdaContext();
-    var app = new AppSyncEventsResolver();
-    
-    int firstHandlerCalls = 0;
-    int secondHandlerCalls = 0;
-
-    app.OnPublish("/default/channel", async (payload) => 
-    { 
-        firstHandlerCalls++;
-        return new Dictionary<string, object> { ["handler"] = "first" }; 
-    });
-
-    app.OnPublish("/default/*", async (payload) => 
-    { 
-        secondHandlerCalls++;
-        return new Dictionary<string, object> { ["handler"] = "second" }; 
-    });
-
-    // Act
-    var result = await app.Resolve(_appSyncEvent, lambdaContext);
-
-    // Assert - Only the first (most specific) handler should be called
-    Assert.Equal(3, result.Events.Count);
-    Assert.Equal("first", result.Events[0].Payload["handler"].ToString());
-    Assert.Equal(3, firstHandlerCalls);
-    Assert.Equal(0, secondHandlerCalls);
-}
-
-[Fact]
-public async Task Should_Handle_Multiple_Keys_In_Payload()
-{
-    // Arrange
-    var lambdaContext = new TestLambdaContext();
-    var app = new AppSyncEventsResolver();
-
-    // Create an event with multiple keys in the payload
-    var multiKeyEvent = new AppSyncResolverEvent
+    public async Task Should_Return_Null_When_Subscribing_To_Path_Without_Publish_Handler()
     {
-        Info = new Information
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        // Only set up a subscribe handler without corresponding publish handler
+        app.OnSubscribe("/subscribe-only", async (info) => true);
+
+        var subscribeEvent = new AppSyncEventsEvent
         {
-            Channel = new Channel { Path = "/default/channel" },
-            Operation = AppsyncEventsOperation.Publish
-        },
-        Events =
-        [
-            new Event
+            Info = new Information
             {
-                Id = "1",
-                Payload = new Dictionary<string, object>
-                {
-                    ["event_1"] = "data_1",
-                    ["event_1a"] = "data_1a"
-                }
+                Channel = new Channel { Path = "/subscribe-only", Segments = ["subscribe-only"] },
+                Operation = AppSyncEventsOperation.Subscribe,
+                ChannelNamespace = new ChannelNamespace{ Name = "default" }
             }
-        ]
-    };
-
-    app.OnPublish("/default/channel", async (payload) =>
-    {
-        // Check that both keys are present
-        Assert.Equal("data_1", payload["event_1"]);
-        Assert.Equal("data_1a", payload["event_1a"]);
-        
-        // Return a processed result with both keys
-        return new Dictionary<string, object> 
-        { 
-            ["processed_1"] = payload["event_1"],
-            ["processed_1a"] = payload["event_1a"]
         };
-    });
 
-    // Act
-    var result = await app.Resolve(multiKeyEvent, lambdaContext);
+        // Act
+        var result = await app.Resolve(subscribeEvent, lambdaContext);
 
-    // Assert
-    Assert.Single(result.Events);
-    Assert.Equal("1", result.Events[0].Id);
-    Assert.Equal("data_1", result.Events[0].Payload["processed_1"]);
-    Assert.Equal("data_1a", result.Events[0].Payload["processed_1a"]);
-}
-
-[Fact]
-public async Task Should_Only_Use_First_Matching_Handler_By_Specificity()
-{
-    // Arrange
-    var lambdaContext = new TestLambdaContext();
-    var app = new AppSyncEventsResolver();
-
-    // Register handlers with different specificity
-    app.OnPublish("/*", async (payload) => 
-        new Dictionary<string, object> { ["handler"] = "least-specific" });
-
-    app.OnPublish("/default/*", async (payload) => 
-        new Dictionary<string, object> { ["handler"] = "more-specific" });
-
-    app.OnPublish("/default/channel", async (payload) => 
-        new Dictionary<string, object> { ["handler"] = "most-specific" });
-
-    // Act
-    var result = await app.Resolve(_appSyncEvent, lambdaContext);
-
-    // Assert - Only the most specific handler should be called
-    Assert.Equal(3, result.Events.Count);
-    Assert.Equal("most-specific", result.Events[0].Payload["handler"].ToString());
-    Assert.Equal("most-specific", result.Events[1].Payload["handler"].ToString());
-    Assert.Equal("most-specific", result.Events[2].Payload["handler"].ToString());
-}
-
-[Fact]
-public async Task Should_Fallback_To_Less_Specific_Handler_If_No_Exact_Match()
-{
-    // Arrange
-    var lambdaContext = new TestLambdaContext();
-    var app = new AppSyncEventsResolver();
+        // Assert
+        Assert.Null(result);
+    }
     
-    // Create an event with a path that has no exact match
-    var fallbackEvent = new AppSyncResolverEvent
+    [Fact]
+    public async Task Should_Return_Null_When_Subscribing_To_Path_With_No_Match_Publish_Handler()
     {
-        Info = new Information
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        app.OnPublish("/default/channel", async (payload) => payload);
+        app.OnSubscribe("/default/channel1", async (info) => true);
+
+        var subscribeEvent = new AppSyncEventsEvent
         {
-            Channel = new Channel { Path = "/default/specific/path" },
-            Operation = AppsyncEventsOperation.Publish
-        },
-        Events =
-        [
-            new Event
+            Info = new Information
             {
-                Id = "1",
-                Payload = new Dictionary<string, object> { ["key"] = "value" }
+                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
+                Operation = AppSyncEventsOperation.Subscribe,
+                ChannelNamespace = new ChannelNamespace{ Name = "default" }
             }
-        ]
-    };
+        };
 
-    app.OnPublish("/default/*", async (payload) => 
-        new Dictionary<string, object> { ["handler"] = "wildcard-handler" });
+        // Act
+        var result = await app.Resolve(subscribeEvent, lambdaContext);
 
-    // Act
-    var result = await app.Resolve(fallbackEvent, lambdaContext);
+        // Assert
+        Assert.Null(result);
+    }
+    
+    [Fact]
+    public async Task Should_Return_UnauthorizedException_When_Throwing_UnauthorizedException()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
 
-    // Assert
-    Assert.Single(result.Events);
-    Assert.Equal("wildcard-handler", result.Events[0].Payload["handler"].ToString());
-}
+        app.OnPublish("/default/channel", async (payload) => payload);
+        app.OnSubscribe("/default/channel", async (info, lambdaContext) =>
+        {
+            throw new UnauthorizedException("OOPS");
+        });
+
+        var subscribeEvent = new AppSyncEventsEvent
+        {
+            Info = new Information
+            {
+                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
+                Operation = AppSyncEventsOperation.Subscribe,
+                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+            }
+        };
+
+        // Act && Assert
+        await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            app.Resolve(subscribeEvent, lambdaContext));
+    }
 }

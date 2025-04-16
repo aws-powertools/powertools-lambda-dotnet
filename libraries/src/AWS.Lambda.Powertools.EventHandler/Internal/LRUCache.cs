@@ -8,7 +8,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Internal;
 /// <summary>
 /// Simple LRU cache implementation for caching route resolutions
 /// </summary>
-internal class LRUCache<TKey, TValue>
+internal class LRUCache<TKey, TValue> where TKey : notnull
 {
     private readonly int _capacity;
     private readonly Dictionary<TKey, LinkedListNode<CacheItem>> _cache;
@@ -33,7 +33,7 @@ internal class LRUCache<TKey, TValue>
         _lruList = new LinkedList<CacheItem>();
     }
 
-    public bool TryGet(TKey key, out TValue value)
+    public bool TryGet(TKey key, out TValue? value)
     {
         if (_cache.TryGetValue(key, out var node))
         {
@@ -60,7 +60,7 @@ internal class LRUCache<TKey, TValue>
             // Remove least recently used item
             var lastNode = _lruList.Last;
             _lruList.RemoveLast();
-            _cache.Remove(lastNode.Value.Key);
+            if (lastNode != null) _cache.Remove(lastNode.Value.Key);
         }
 
         var newNode = new LinkedListNode<CacheItem>(new CacheItem(key, value));
