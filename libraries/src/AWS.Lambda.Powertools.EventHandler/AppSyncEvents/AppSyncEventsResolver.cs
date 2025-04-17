@@ -11,13 +11,13 @@ namespace AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 /// </summary>
 public class AppSyncEventsResolver
 {
-    private readonly RouteHandlerRegistry<AppSyncEventsEvent, object> _publishRoutes;
-    private readonly RouteHandlerRegistry<AppSyncEventsEvent, bool> _subscribeRoutes;
+    private readonly RouteHandlerRegistry<AppSyncEventsRequest, object> _publishRoutes;
+    private readonly RouteHandlerRegistry<AppSyncEventsRequest, bool> _subscribeRoutes;
 
     public AppSyncEventsResolver()
     {
-        _publishRoutes = new RouteHandlerRegistry<AppSyncEventsEvent, object>();
-        _subscribeRoutes = new RouteHandlerRegistry<AppSyncEventsEvent, bool>();
+        _publishRoutes = new RouteHandlerRegistry<AppSyncEventsRequest, object>();
+        _subscribeRoutes = new RouteHandlerRegistry<AppSyncEventsRequest, bool>();
     }
 
     /// <summary>
@@ -26,7 +26,7 @@ public class AppSyncEventsResolver
     /// </summary>
     public AppSyncEventsResolver OnPublish(string path, Func<Dictionary<string, object>, Task<object>> handler)
     {
-        _publishRoutes.Register(new RouteHandlerOptions<AppSyncEventsEvent, object>
+        _publishRoutes.Register(new RouteHandlerOptions<AppSyncEventsRequest, object>
         {
             Path = path,
             Handler = (evt, ctx) =>
@@ -47,7 +47,7 @@ public class AppSyncEventsResolver
     public AppSyncEventsResolver OnPublish(string path,
         Func<Dictionary<string, object>, ILambdaContext, Task<object>> handler)
     {
-        _publishRoutes.Register(new RouteHandlerOptions<AppSyncEventsEvent, object>
+        _publishRoutes.Register(new RouteHandlerOptions<AppSyncEventsRequest, object>
         {
             Path = path,
             Handler = (evt, ctx) =>
@@ -64,10 +64,10 @@ public class AppSyncEventsResolver
     /// Registers a handler for publish events on a specific channel path.
     /// Processes all events in a single handler invocation.
     /// </summary>
-    public AppSyncEventsResolver OnPublish(string path, Func<AppSyncEventsEvent, Task<object>> handler,
+    public AppSyncEventsResolver OnPublish(string path, Func<AppSyncEventsRequest, Task<object>> handler,
         bool aggregate = true)
     {
-        _publishRoutes.Register(new RouteHandlerOptions<AppSyncEventsEvent, object>
+        _publishRoutes.Register(new RouteHandlerOptions<AppSyncEventsRequest, object>
         {
             Path = path,
             Handler = (evt, ctx) => handler(evt),
@@ -82,9 +82,9 @@ public class AppSyncEventsResolver
     /// Lambda context available
     /// </summary>
     public AppSyncEventsResolver OnPublish(string path,
-        Func<AppSyncEventsEvent, ILambdaContext, Task<object>> handler, bool aggregate = true)
+        Func<AppSyncEventsRequest, ILambdaContext, Task<object>> handler, bool aggregate = true)
     {
-        _publishRoutes.Register(new RouteHandlerOptions<AppSyncEventsEvent, object>
+        _publishRoutes.Register(new RouteHandlerOptions<AppSyncEventsRequest, object>
         {
             Path = path,
             Handler = handler,
@@ -96,9 +96,9 @@ public class AppSyncEventsResolver
     /// <summary>
     /// Registers a handler for subscription events on a specific channel path.
     /// </summary>
-    public AppSyncEventsResolver OnSubscribe(string path, Func<AppSyncEventsEvent, Task<bool>> handler)
+    public AppSyncEventsResolver OnSubscribe(string path, Func<AppSyncEventsRequest, Task<bool>> handler)
     {
-        _subscribeRoutes.Register(new RouteHandlerOptions<AppSyncEventsEvent, bool>
+        _subscribeRoutes.Register(new RouteHandlerOptions<AppSyncEventsRequest, bool>
         {
             Path = path,
             Handler = async (evt, ctx) => await handler(evt),
@@ -110,9 +110,9 @@ public class AppSyncEventsResolver
     /// <summary>
     /// Registers a handler for subscription events on a specific channel path with Lambda context.
     /// </summary>
-    public AppSyncEventsResolver OnSubscribe(string path, Func<AppSyncEventsEvent, ILambdaContext, Task<bool>> handler)
+    public AppSyncEventsResolver OnSubscribe(string path, Func<AppSyncEventsRequest, ILambdaContext, Task<bool>> handler)
     {
-        _subscribeRoutes.Register(new RouteHandlerOptions<AppSyncEventsEvent, bool>
+        _subscribeRoutes.Register(new RouteHandlerOptions<AppSyncEventsRequest, bool>
         {
             Path = path,
             Handler = async (evt, ctx) => await handler(evt, ctx),
@@ -121,7 +121,7 @@ public class AppSyncEventsResolver
         return this;
     }
 
-    public async Task<AppSyncEventsResponse> Resolve(AppSyncEventsEvent appsyncEvent, ILambdaContext context)
+    public async Task<AppSyncEventsResponse> Resolve(AppSyncEventsRequest appsyncEvent, ILambdaContext context)
     {
         if (IsPublishEvent(appsyncEvent))
         {
@@ -136,11 +136,14 @@ public class AppSyncEventsResolver
         throw new InvalidOperationException("Unknown event type");
     }
 
-    private async Task<AppSyncEventsResponse> HandlePublishEvent(AppSyncEventsEvent appsyncEvent,
+    private async Task<AppSyncEventsResponse> HandlePublishEvent(AppSyncEventsRequest appsyncEvent,
         ILambdaContext context)
     {
         var channelPath = appsyncEvent.Info.Channel.Path;
         var handlerOptions = _publishRoutes.ResolveFirst(channelPath);
+        
+        context.Logger.LogInformation($"Resolving publish event for path: {channelPath}");
+        
 
         if (handlerOptions == null)
         {
@@ -207,7 +210,12 @@ public class AppSyncEventsResolver
             }
             catch (Exception ex)
             {
-                results.Add(FormatErrorResponse(ex, null));
+                // results.Add(FormatErrorResponse(ex, null));
+                return new AppSyncEventsResponse
+                {
+                    Error = ex.Message,
+                    
+                };
             }
         }
         else
@@ -217,8 +225,9 @@ public class AppSyncEventsResolver
             {
                 try
                 {
+                    context.Logger.LogInformation($"Handling event item: {eventItem.Id}");
                     // Create a copy of the event with just this single event
-                    var singleEventCopy = new AppSyncEventsEvent
+                    var singleEventCopy = new AppSyncEventsRequest
                     {
                         Info = appsyncEvent.Info,
                         Events = [eventItem]
@@ -244,30 +253,41 @@ public class AppSyncEventsResolver
         return new AppSyncEventsResponse { Events = results };
     }
 
-    private async Task<AppSyncEventsResponse> HandleSubscribeEvent(AppSyncEventsEvent appsyncEvent,
+    /// <summary>
+    ///  Handles subscription events.
+    /// Null is successful, otherwise returns an error message.
+    /// </summary>
+    /// <param name="appsyncEvent"></param>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    private async Task<AppSyncEventsResponse?> HandleSubscribeEvent(AppSyncEventsRequest appsyncEvent,
         ILambdaContext context)
     {
         var channelPath = appsyncEvent.Info.Channel.Path;
-    
-        // Check if there's a publish handler for this path
-        var publishHandler = _publishRoutes.ResolveFirst(channelPath);
-        if (publishHandler == null)
-        {
-            // No publish handler exists for this path, return null
-            return null;
-        }
-    
+        var channelBase = $"/{appsyncEvent.Info.Channel.Segments[0]}";
+
+        // Find matching subscribe handler
         var subscribeHandler = _subscribeRoutes.ResolveFirst(channelPath);
         if (subscribeHandler == null)
         {
-            // No subscribe handler exists for this path, return null
+            return null;
+        }
+
+        // Check if there's ANY publish handler for the base channel namespace
+        // This ensures we don't require exact path matches between publish and subscribe
+        bool hasAnyPublishHandler = _publishRoutes.GetAllHandlers()
+            .Any(h => h.Path.StartsWith(channelBase));
+        
+        if (!hasAnyPublishHandler)
+        {
             return null;
         }
 
         try
         {
             var result = await subscribeHandler.Handler(appsyncEvent, context);
-            return new AppSyncEventsResponse { Authorized = result };
+            return !result ?
+                new AppSyncEventsResponse { Error = "Subscription failed" } : null;
         }
         catch (UnauthorizedException)
         {
@@ -309,12 +329,12 @@ public class AppSyncEventsResolver
         };
     }
 
-    private bool IsPublishEvent(AppSyncEventsEvent appsyncEvent)
+    private bool IsPublishEvent(AppSyncEventsRequest appsyncEvent)
     {
         return appsyncEvent.Info.Operation == AppSyncEventsOperation.Publish;
     }
 
-    private bool IsSubscribeEvent(AppSyncEventsEvent appsyncEvent)
+    private bool IsSubscribeEvent(AppSyncEventsRequest appsyncEvent)
     {
         return appsyncEvent.Info.Operation == AppSyncEventsOperation.Subscribe;
     }

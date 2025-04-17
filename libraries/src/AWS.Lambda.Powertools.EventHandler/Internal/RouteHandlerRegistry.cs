@@ -86,6 +86,14 @@ internal class RouteHandlerRegistry<TEvent, TResult>
 
         return null;
     }
+    
+    /// <summary>
+    /// Get all registered handlers
+    /// </summary>
+    public IEnumerable<RouteHandlerOptions<TEvent, TResult>> GetAllHandlers()
+    {
+        return _resolvers.Values;
+    }
 
     /// <summary>
     /// Check if a path pattern is valid according to routing rules.

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 
 /// <summary>
@@ -8,15 +10,13 @@ public class AppSyncEventsResponse
     /// <summary>
     /// Collection of event results
     /// </summary>
+    [JsonPropertyName("events")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<AppSyncEvent>? Events { get; set; }
-    
-    /// <summary>
-    /// Used for OnSubscribe to determine if the subscription should be authorized
-    /// </summary>
-    public bool? Authorized { get; set; }
     
     /// <summary>
     /// When operation fails, this will contain the error message
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Error { get; set; }
 }

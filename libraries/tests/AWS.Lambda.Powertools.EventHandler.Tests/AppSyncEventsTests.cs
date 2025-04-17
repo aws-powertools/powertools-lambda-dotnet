@@ -8,11 +8,11 @@ namespace AWS.Lambda.Powertools.EventHandler.Tests;
 
 public class AppSyncEventsTests
 {
-    private readonly AppSyncEventsEvent? _appSyncEvent;
+    private readonly AppSyncEventsRequest? _appSyncEvent;
 
     public AppSyncEventsTests()
     {
-        _appSyncEvent = JsonSerializer.Deserialize<AppSyncEventsEvent>(
+        _appSyncEvent = JsonSerializer.Deserialize<AppSyncEventsRequest>(
             File.ReadAllText("appSyncEventsEvent.json"),
             new JsonSerializerOptions
             {
@@ -132,9 +132,9 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         app.OnPublish("/default/channel", async (payload) => payload);
-        
+
         app.OnSubscribe("/default/*", async (info) => true);
-        var subscribeEvent = new AppSyncEventsEvent
+        var subscribeEvent = new AppSyncEventsRequest
         {
             Info = new Information
             {
@@ -144,14 +144,14 @@ public class AppSyncEventsTests
                     Segments = ["default", "channel"]
                 },
                 Operation = AppSyncEventsOperation.Subscribe,
-                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
             }
         };
         // Act
         var result = await app.Resolve(subscribeEvent, lambdaContext);
 
         // Assert
-        Assert.True(result.Authorized);
+        Assert.Null(result);
     }
 
     [Fact]
@@ -160,24 +160,24 @@ public class AppSyncEventsTests
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
-        
+
         app.OnPublish("/default/channel", async (payload) => payload);
-        
+
         app.OnSubscribe("/default/*", async (info) => false);
-        var subscribeEvent = new AppSyncEventsEvent
+        var subscribeEvent = new AppSyncEventsRequest
         {
             Info = new Information
             {
-                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"]},
+                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
                 Operation = AppSyncEventsOperation.Subscribe,
-                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
             }
         };
         // Act
         var result = await app.Resolve(subscribeEvent, lambdaContext);
 
         // Assert
-        Assert.False(result.Authorized);
+        Assert.NotNull(result.Error);
     }
 
     [Fact]
@@ -186,18 +186,18 @@ public class AppSyncEventsTests
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
-        
+
         app.OnPublish("/default/channel", async (payload) => payload);
-        
+
         app.OnSubscribe("/default/*", async (info) => { throw new Exception("Authorization error"); });
 
-        var subscribeEvent = new AppSyncEventsEvent
+        var subscribeEvent = new AppSyncEventsRequest
         {
             Info = new Information
             {
                 Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
                 Operation = AppSyncEventsOperation.Subscribe,
-                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
             }
         };
 
@@ -262,13 +262,13 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        var unknownEvent = new AppSyncEventsEvent
+        var unknownEvent = new AppSyncEventsRequest
         {
             Info = new Information
             {
                 Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
                 Operation = (AppSyncEventsOperation)999, // Unknown operation
-                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
             }
         };
 
@@ -496,13 +496,13 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         // Create an event with multiple keys in the payload
-        var multiKeyEvent = new AppSyncEventsEvent
+        var multiKeyEvent = new AppSyncEventsRequest
         {
             Info = new Information
             {
                 Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
                 Operation = AppSyncEventsOperation.Publish,
-                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
             },
             Events =
             [
@@ -577,13 +577,13 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         // Create an event with a path that has no exact match
-        var fallbackEvent = new AppSyncEventsEvent
+        var fallbackEvent = new AppSyncEventsRequest
         {
             Info = new Information
             {
                 Channel = new Channel { Path = "/default/specific/path", Segments = ["default", "specific", "path"] },
                 Operation = AppSyncEventsOperation.Publish,
-                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
             },
             Events =
             [
@@ -605,7 +605,7 @@ public class AppSyncEventsTests
         Assert.Single(result.Events);
         Assert.Equal("wildcard-handler", result.Events[0].Payload["handler"].ToString());
     }
-    
+
     [Fact]
     public async Task Should_Return_Null_When_Subscribing_To_Path_Without_Publish_Handler()
     {
@@ -616,13 +616,13 @@ public class AppSyncEventsTests
         // Only set up a subscribe handler without corresponding publish handler
         app.OnSubscribe("/subscribe-only", async (info) => true);
 
-        var subscribeEvent = new AppSyncEventsEvent
+        var subscribeEvent = new AppSyncEventsRequest
         {
             Info = new Information
             {
                 Channel = new Channel { Path = "/subscribe-only", Segments = ["subscribe-only"] },
                 Operation = AppSyncEventsOperation.Subscribe,
-                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
             }
         };
 
@@ -632,24 +632,27 @@ public class AppSyncEventsTests
         // Assert
         Assert.Null(result);
     }
-    
-    [Fact]
-    public async Task Should_Return_Null_When_Subscribing_To_Path_With_No_Match_Publish_Handler()
+
+    [Theory]
+    [InlineData("/default/channel", "/default/channel1")]
+    [InlineData("/default/channel3", "/default/channel")]
+    public async Task Should_Return_Null_When_Subscribing_To_Path_With_No_Match_Publish_Handler(string publishPath,
+        string subscribePath)
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (payload) => payload);
-        app.OnSubscribe("/default/channel1", async (info) => true);
+        app.OnPublish(publishPath, async (payload) => payload);
+        app.OnSubscribe(subscribePath, async (info) => true);
 
-        var subscribeEvent = new AppSyncEventsEvent
+        var subscribeEvent = new AppSyncEventsRequest
         {
             Info = new Information
             {
-                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
+                Channel = new Channel { Path = subscribePath, Segments = ["default", "channel"] },
                 Operation = AppSyncEventsOperation.Subscribe,
-                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
             }
         };
 
@@ -659,27 +662,30 @@ public class AppSyncEventsTests
         // Assert
         Assert.Null(result);
     }
-    
-    [Fact]
-    public async Task Should_Return_UnauthorizedException_When_Throwing_UnauthorizedException()
+
+    [Theory]
+    [InlineData("/default/channel", "/default/channel")]
+    [InlineData("/default/channel", "/default/*")]
+    [InlineData("/default/test", "/default/*")]
+    [InlineData("/default/*", "/default/*")]
+    public async Task Should_Return_UnauthorizedException_When_Throwing_UnauthorizedException(string publishPath,
+        string subscribePath)
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (payload) => payload);
-        app.OnSubscribe("/default/channel", async (info, lambdaContext) =>
-        {
-            throw new UnauthorizedException("OOPS");
-        });
+        app.OnPublish(publishPath, async (payload) => payload);
+        app.OnSubscribe(subscribePath,
+            async (info, lambdaContext) => { throw new UnauthorizedException("OOPS"); });
 
-        var subscribeEvent = new AppSyncEventsEvent
+        var subscribeEvent = new AppSyncEventsRequest
         {
             Info = new Information
             {
-                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
+                Channel = new Channel { Path = subscribePath, Segments = ["default", "channel"] },
                 Operation = AppSyncEventsOperation.Subscribe,
-                ChannelNamespace = new ChannelNamespace{ Name = "default" }
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
             }
         };
 

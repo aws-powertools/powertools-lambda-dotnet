@@ -1,9 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 
 /// <summary>
 /// Represents the event payload received from AWS AppSync.
 /// </summary>
-public class AppSyncEventsEvent
+public class AppSyncEventsRequest
 {
     /// <summary>
     /// An object that contains information about the caller.
@@ -50,6 +52,7 @@ public class AppSyncEventsEvent
     /// <summary>
     /// The error message when the operation fails.
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Error { get; set; }
     
     /// <summary>
@@ -60,5 +63,6 @@ public class AppSyncEventsEvent
     /// <summary>
     /// The list of events sent.
     /// </summary>
+    [JsonPropertyName("events")]
     public AppSyncEvent[]? Events { get; set; }
 }
