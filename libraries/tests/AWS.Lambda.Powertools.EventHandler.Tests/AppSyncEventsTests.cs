@@ -8,7 +8,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Tests;
 
 public class AppSyncEventsTests
 {
-    private readonly AppSyncEventsRequest? _appSyncEvent;
+    private readonly AppSyncEventsRequest _appSyncEvent;
 
     public AppSyncEventsTests()
     {
@@ -18,7 +18,7 @@ public class AppSyncEventsTests
             {
                 PropertyNameCaseInsensitive = true,
                 Converters = { new JsonStringEnumConverter() }
-            });
+            })!;
     }
 
     [Fact]
@@ -215,16 +215,14 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel",
-            async (evt, ctx) => { throw new InvalidOperationException("Aggregate error"); }, aggregate: true);
+        app.OnPublishAggregate("/default/channel",
+            async (evt, ctx) => { throw new InvalidOperationException("Aggregate error"); });
 
         // Act
         var result = await app.Resolve(_appSyncEvent, lambdaContext);
 
         // Assert
-        Assert.Single(result.Events);
-        Assert.NotNull(result.Events[0].Error);
-        Assert.Contains("Aggregate error", result.Events[0].Error);
+        Assert.Contains("Aggregate error", result.Error);
     }
 
     [Fact]
@@ -370,10 +368,10 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (evt) =>
+        app.OnPublishAggregate("/default/channel", async (evt) =>
         {
             // Iterate through events and return individual results with IDs
-            var results = new List<Dictionary<string, object>>();
+            var results = new List<AppSyncEvent>();
 
             foreach (var eventItem in evt.Events)
             {
@@ -382,35 +380,38 @@ public class AppSyncEventsTests
                     if (eventItem.Payload.ContainsKey("event_2"))
                     {
                         // Create an error for the second event
-                        results.Add(new Dictionary<string, object>
+                        results.Add(new AppSyncEvent
                         {
-                            ["id"] = eventItem.Id,
-                            ["error"] = "Intentional error for event 2"
+                            Id = eventItem.Id,
+                            Error = "Intentional error for event 2"
                         });
                     }
                     else
                     {
                         // Process normally
-                        results.Add(new Dictionary<string, object>
+                        results.Add(new AppSyncEvent
                         {
-                            ["id"] = eventItem.Id,
-                            ["processed"] = true,
-                            ["originalData"] = eventItem.Payload
+                            Id = eventItem.Id,
+                            Payload = new Dictionary<string, object>
+                            {
+                                ["processed"] = true,
+                                ["originalData"] = eventItem.Payload
+                            }
                         });
                     }
                 }
                 catch (Exception ex)
                 {
-                    results.Add(new Dictionary<string, object>
+                    results.Add(new AppSyncEvent
                     {
-                        ["id"] = eventItem.Id,
-                        ["error"] = $"{ex.GetType().Name} - {ex.Message}"
+                        Id = eventItem.Id,
+                        Error = $"{ex.GetType().Name} - {ex.Message}"
                     });
                 }
             }
 
-            return new Dictionary<string, object> { ["events"] = results };
-        }, aggregate: true);
+            return new AppSyncEventsResponse { Events = results };
+        });
 
         // Act
         var result = await app.Resolve(_appSyncEvent, lambdaContext);
@@ -687,6 +688,47 @@ public class AppSyncEventsTests
                 Operation = AppSyncEventsOperation.Subscribe,
                 ChannelNamespace = new ChannelNamespace { Name = "default" }
             }
+        };
+
+        // Act && Assert
+        await Assert.ThrowsAsync<UnauthorizedException>(() =>
+            app.Resolve(subscribeEvent, lambdaContext));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Should_Return_UnauthorizedException_When_Throwing_UnauthorizedException_Publish(bool aggreate)
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        if (aggreate)
+        {
+            app.OnPublishAggregate("/default/channel", async (payload) => throw new UnauthorizedException("OOPS"));
+        }
+        else
+        {
+            app.OnPublish("/default/channel", async (payload) => throw new UnauthorizedException("OOPS"));
+        }
+
+        var subscribeEvent = new AppSyncEventsRequest
+        {
+            Info = new Information
+            {
+                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
+                Operation = AppSyncEventsOperation.Publish,
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
+            },
+            Events =
+            [
+                new AppSyncEvent
+                {
+                    Id = "1",
+                    Payload = new Dictionary<string, object> { ["key"] = "value" }
+                }
+            ]
         };
 
         // Act && Assert
