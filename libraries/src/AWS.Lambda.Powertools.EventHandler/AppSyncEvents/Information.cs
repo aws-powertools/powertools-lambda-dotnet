@@ -10,6 +10,7 @@ public class Information
     /// <summary>
     ///  The channel being used for the operation
     /// </summary>
+    [JsonPropertyName("channel")]
     public Channel Channel { get; set; }
     
     /// <summary>
@@ -20,5 +21,6 @@ public class Information
     /// <summary>
     ///  The operation being performed (e.g., Publish, Subscribe)
     /// </summary>
+    [JsonPropertyName("operation")]
     public AppSyncEventsOperation Operation { get; set; }
 }

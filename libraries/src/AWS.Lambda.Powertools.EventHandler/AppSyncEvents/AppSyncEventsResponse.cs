@@ -18,5 +18,6 @@ public class AppSyncEventsResponse
     /// When operation fails, this will contain the error message
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    [JsonPropertyName("error")]
     public string? Error { get; set; }
 }

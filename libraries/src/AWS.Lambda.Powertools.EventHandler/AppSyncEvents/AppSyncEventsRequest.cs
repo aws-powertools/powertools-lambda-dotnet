@@ -27,32 +27,38 @@ public class AppSyncEventsRequest
     /// <summary>
     /// Gets or sets information about the data source that originated the event.
     /// </summary>
+    [JsonPropertyName("source")]
     public object? Source { get; set; }
 
     /// <summary>
     /// Gets or sets information about the HTTP request that triggered the event.
     /// </summary>
+    [JsonPropertyName("request")]
     public RequestContext? Request { get; set; }
 
     /// <summary>
     /// Gets or sets information about the previous state of the data before the operation was executed.
     /// </summary>
+    [JsonPropertyName("prev")]
     public object? Prev { get; set; }
 
     /// <summary>
     /// Gets or sets information about the GraphQL operation being executed.
     /// </summary>
+    [JsonPropertyName("info")]
     public Information? Info { get; set; }
 
     /// <summary>
     /// Gets or sets additional information that can be passed between Lambda functions during an AppSync pipeline.
     /// </summary>
+    [JsonPropertyName("stash")]
     public Dictionary<string, object>? Stash { get; set; }
     
     /// <summary>
     /// The error message when the operation fails.
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    [JsonPropertyName("error")]
     public string? Error { get; set; }
     
     /// <summary>
