@@ -21,6 +21,7 @@ nav:
           - core/metrics.md
           - core/metrics-v2.md
       - core/tracing.md
+      - core/event_handler/appsync_events.md
   - Utilities:
       - utilities/parameters.md
       - utilities/idempotency.md
