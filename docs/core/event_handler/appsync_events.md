@@ -431,7 +431,7 @@ When processing batch of items with `OnPublishAggregate()`, you must format the 
 
 ??? warning "Raising `UnauthorizedException` will cause the Lambda invocation to fail."
 
-You can also reject the entire payload by raising an `UnauthorizedException`. This prevents Powertools from processing any messages and causes the Lambda invocation to fail, returning an error to AppSync.
+You can also reject the entire payload by raising an `UnauthorizedException`. This prevents Powertools for AWS from processing any messages and causes the Lambda invocation to fail, returning an error to AppSync.
 
 === "Rejecting the entire request"
 
