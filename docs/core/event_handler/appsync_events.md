@@ -91,7 +91,7 @@ You must have an existing AppSync Events API with real-time capabilities enabled
 
 ### AppSync request and response format
 
-AppSync Events uses a specific event format for Lambda requests and responses. In most scenarios, Powertools simplifies this interaction by automatically formatting resolver returns to match the expected AppSync response structure.
+AppSync Events uses a specific event format for Lambda requests and responses. In most scenarios, Powertools for AWS simplifies this interaction by automatically formatting resolver returns to match the expected AppSync response structure.
 
 === "AppSync payload request"
 
@@ -214,7 +214,7 @@ AppSync Events uses a specific event format for Lambda requests and responses. I
 
 When processing events with Lambda, you can return errors to AppSync in three ways:
 
-* **Error per item:** Return an `error` key within each individual item's response. AppSync Events expects this format for item-specific errors.
+* **Item specific error:** Return an `error` key within each individual item's response. AppSync Events expects this format for item-specific errors.
 * **Fail entire request:** Return a JSON object with a top-level `error` key. This signals a general failure, and AppSync treats the entire request as unsuccessful.
 * **Unauthorized exception**: Raise the **UnauthorizedException** exception to reject a subscribe or publish request with HTTP 403.
 
@@ -295,7 +295,7 @@ You can define your handlers for different event types using the `OnPublish()`, 
 
 You can use wildcard patterns to create catch-all handlers for multiple channels or namespaces. This is particularly useful for centralizing logic that applies to multiple channels.
 
-When multiple handlers could match the same event, the most specific pattern takes precedence.
+When an event matches with multiple handlers, the most specific pattern takes precedence.
 
 === "Wildcard patterns"
 
@@ -372,7 +372,7 @@ In some scenarios, you might want to process all events for a channel as a batch
 
 ### Handling errors
 
-You can filter or reject events by throwing exceptions in your resolvers or by formatting the payload according to the expected response structure. This instructs AppSync not to propagate that specific message, so subscribers will not receive the corresponding message.
+You can filter or reject events by raising exceptions in your resolvers or by formatting the payload according to the expected response structure. This instructs AppSync not to propagate that specific message, so subscribers will not receive it.
 
 #### Handling errors with individual items
 
