@@ -15,7 +15,7 @@ internal class RouteHandlerOptions<TEvent, TResult>
     /// <summary>
     /// The handler function to execute when path matches
     /// </summary>
-    public Func<TEvent, ILambdaContext, Task<TResult>> Handler { get; set; }
+    public required Func<TEvent, ILambdaContext, Task<TResult>> Handler { get; set; }
 
     /// <summary>
     /// Whether to aggregate all events into a single handler call

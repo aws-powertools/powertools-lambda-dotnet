@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace AWS.Lambda.Powertools.EventHandler.Internal;
 
 /// <summary>
@@ -55,15 +53,15 @@ internal class RouteHandlerRegistry<TEvent, TResult>
     /// </summary>
     /// <param name="path">The path to match against registered routes</param>
     /// <returns>Most specific matching handler or null if no match</returns>
-    public RouteHandlerOptions<TEvent, TResult>? ResolveFirst(string path)
+    public RouteHandlerOptions<TEvent, TResult>? ResolveFirst(string? path)
     {
-        if (_resolverCache.TryGet(path, out var cachedHandler))
+        if (path != null && _resolverCache.TryGet(path, out var cachedHandler))
         {
             return cachedHandler;
         }
 
         // First try for exact match
-        if (_resolvers.TryGetValue(path, out var exactMatch))
+        if (path != null && _resolvers.TryGetValue(path, out var exactMatch))
         {
             _resolverCache.Set(path, exactMatch);
             return exactMatch;
@@ -71,7 +69,7 @@ internal class RouteHandlerRegistry<TEvent, TResult>
 
         // Then try wildcard matches, sorted by specificity (most segments first)
         var wildcardMatches = _resolvers.Keys
-            .Where(pattern => IsWildcardMatch(pattern, path))
+            .Where(pattern => path != null && IsWildcardMatch(pattern, path))
             .OrderByDescending(pattern => pattern.Count(c => c == '/'))
             .ThenByDescending(pattern => pattern.Length);
 
@@ -80,7 +78,7 @@ internal class RouteHandlerRegistry<TEvent, TResult>
         if (bestMatch != null)
         {
             var handler = _resolvers[bestMatch];
-            _resolverCache.Set(path, handler);
+            if (path != null) _resolverCache.Set(path, handler);
             return handler;
         }
 
@@ -137,10 +135,7 @@ internal class RouteHandlerRegistry<TEvent, TResult>
 
     private void LogWarning(string message)
     {
-        if (!_warnedPaths.Contains(message))
-        {
-            _warnedPaths.Add(message);
-            Console.WriteLine($"Warning: {message}");
-        }
+        if (!_warnedPaths.Add(message)) return;
+        Console.WriteLine($"Warning: {message}");
     }
 }

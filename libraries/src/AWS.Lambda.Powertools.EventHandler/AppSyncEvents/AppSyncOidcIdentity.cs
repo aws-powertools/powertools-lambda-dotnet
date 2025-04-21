@@ -8,15 +8,15 @@ public class AppSyncOidcIdentity
     /// <summary>
     /// Claims from the OIDC token as key-value pairs
     /// </summary>
-    public Dictionary<string, object> Claims { get; set; }
+    public Dictionary<string, object>? Claims { get; set; }
 
     /// <summary>
     /// The issuer of the OIDC token
     /// </summary>
-    public string Issuer { get; set; }
+    public string? Issuer { get; set; }
 
     /// <summary>
     /// The UUID of the authenticated user
     /// </summary>
-    public string Sub { get; set; }
+    public string? Sub { get; set; }
 }

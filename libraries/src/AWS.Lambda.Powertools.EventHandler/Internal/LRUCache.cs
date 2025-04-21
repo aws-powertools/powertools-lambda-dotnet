@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 namespace AWS.Lambda.Powertools.EventHandler.Internal;
 
 /// <summary>

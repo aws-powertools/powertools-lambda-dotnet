@@ -11,12 +11,12 @@ public class Information
     ///  The channel being used for the operation
     /// </summary>
     [JsonPropertyName("channel")]
-    public Channel Channel { get; set; }
+    public Channel? Channel { get; set; }
     
     /// <summary>
     ///  The namespace of the channel
     /// </summary>
-    public ChannelNamespace ChannelNamespace { get; set; }
+    public ChannelNamespace? ChannelNamespace { get; set; }
     
     /// <summary>
     ///  The operation being performed (e.g., Publish, Subscribe)

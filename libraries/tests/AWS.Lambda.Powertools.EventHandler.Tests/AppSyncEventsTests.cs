@@ -22,15 +22,14 @@ public class AppSyncEventsTests
     }
 
     [Fact]
-    public async Task Should_Return_Unchanged_Payload_No_Handlers()
+    public void Should_Return_Unchanged_Payload_No_Handlers()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
         // Act
-        var result =
-            await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = app.Resolve(_appSyncEvent, lambdaContext);
 
         // Assert
         Assert.Equal(3, result.Events.Count);
@@ -43,13 +42,39 @@ public class AppSyncEventsTests
     }
 
     [Fact]
-    public async Task Should_Return_Unchanged_Payload()
+    public void Should_Return_Unchanged_Payload()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (Dictionary<string, object> payload) =>
+        app.OnPublish("/default/channel", payload =>
+        {
+            // Handle channel1 events
+            return payload;
+        });
+
+        // Act
+        var result = app.Resolve(_appSyncEvent, lambdaContext);
+
+        // Assert
+        Assert.Equal(3, result.Events.Count);
+        Assert.Equal("1", result.Events[0].Id);
+        Assert.Equal("data_1", result.Events[0].Payload?["event_1"].ToString());
+        Assert.Equal("2", result.Events[1].Id);
+        Assert.Equal("data_2", result.Events[1].Payload?["event_2"].ToString());
+        Assert.Equal("3", result.Events[2].Id);
+        Assert.Equal("data_3", result.Events[2].Payload?["event_3"].ToString());
+    }
+
+    [Fact]
+    public async Task Should_Return_Unchanged_Payload_Async()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        app.OnPublishAsync("/default/channel", async payload =>
         {
             // Handle channel1 events
             return payload;
@@ -57,7 +82,7 @@ public class AppSyncEventsTests
 
         // Act
         var result =
-            await app.Resolve(_appSyncEvent, lambdaContext);
+            await app.ResolveAsync(_appSyncEvent, lambdaContext);
 
         // Assert
         Assert.Equal(3, result.Events.Count);
@@ -76,7 +101,7 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", async (payload) =>
         {
             // Throw exception for second event
             if (payload.ContainsKey("event_2"))
@@ -88,17 +113,20 @@ public class AppSyncEventsTests
         });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
 
         // Assert
-        Assert.Equal(3, result.Events.Count);
-        Assert.Equal("1", result.Events[0].Id);
-        Assert.Equal("data_1", result.Events[0].Payload["event_1"].ToString());
-        Assert.Equal("2", result.Events[1].Id);
-        Assert.NotNull(result.Events[1].Error);
-        Assert.Contains("Test error", result.Events[1].Error);
-        Assert.Equal("3", result.Events[2].Id);
-        Assert.Equal("data_3", result.Events[2].Payload["event_3"].ToString());
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal("1", result.Events[0].Id);
+            Assert.Equal("data_1", result.Events[0].Payload?["event_1"].ToString());
+            Assert.Equal("2", result.Events[1].Id);
+            Assert.NotNull(result.Events[1].Error);
+            Assert.Contains("Test error", result.Events[1].Error);
+            Assert.Equal("3", result.Events[2].Id);
+            Assert.Equal("data_3", result.Events[2].Payload?["event_3"].ToString());
+        }
     }
 
     [Fact]
@@ -109,19 +137,22 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         int callCount = 0;
-        app.OnPublish("/default/*", async (payload) =>
+        app.OnPublishAsync("/default/*", async (payload) =>
         {
             callCount++;
             return new Dictionary<string, object> { ["wildcard_matched"] = true };
         });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
 
         // Assert
-        Assert.Equal(3, result.Events.Count);
-        Assert.Equal(3, callCount);
-        Assert.True((bool)result.Events[0].Payload["wildcard_matched"]);
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal(3, callCount);
+            Assert.True((bool)(result.Events[0].Payload?["wildcard_matched"] ?? false));
+        }
     }
 
     [Fact]
@@ -131,9 +162,9 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (payload) => payload);
+        app.OnPublishAsync("/default/channel", async (payload) => payload);
 
-        app.OnSubscribe("/default/*", async (info) => true);
+        app.OnSubscribeAsync("/default/*", async (info) => true);
         var subscribeEvent = new AppSyncEventsRequest
         {
             Info = new Information
@@ -148,22 +179,22 @@ public class AppSyncEventsTests
             }
         };
         // Act
-        var result = await app.Resolve(subscribeEvent, lambdaContext);
+        var result = await app.ResolveAsync(subscribeEvent, lambdaContext);
 
         // Assert
         Assert.Null(result);
     }
 
     [Fact]
-    public async Task Should_Deny_Subscription()
+    public void Should_Deny_Subscription()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (payload) => payload);
+        app.OnPublish("/default/channel", (payload) => payload);
 
-        app.OnSubscribe("/default/*", async (info) => false);
+        app.OnSubscribe("/default/*", (info) => false);
         var subscribeEvent = new AppSyncEventsRequest
         {
             Info = new Information
@@ -174,22 +205,22 @@ public class AppSyncEventsTests
             }
         };
         // Act
-        var result = await app.Resolve(subscribeEvent, lambdaContext);
+        var result = app.Resolve(subscribeEvent, lambdaContext);
 
         // Assert
         Assert.NotNull(result.Error);
     }
 
     [Fact]
-    public async Task Should_Deny_Subscription_On_Exception()
+    public void Should_Deny_Subscription_On_Exception()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (payload) => payload);
+        app.OnPublish("/default/channel", (payload) => payload);
 
-        app.OnSubscribe("/default/*", async (info) => { throw new Exception("Authorization error"); });
+        app.OnSubscribe("/default/*", (info) => { throw new Exception("Authorization error"); });
 
         var subscribeEvent = new AppSyncEventsRequest
         {
@@ -202,37 +233,54 @@ public class AppSyncEventsTests
         };
 
         // Act
-        var result = await app.Resolve(subscribeEvent, lambdaContext);
+        var result = app.Resolve(subscribeEvent, lambdaContext);
 
         // Assert
         Assert.Equal("Authorization error", result.Error);
     }
 
     [Fact]
-    public async Task Should_Handle_Error_In_Aggregate_Mode()
+    public void Should_Handle_Error_In_Aggregate_Mode()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
         app.OnPublishAggregate("/default/channel",
-            async (evt, ctx) => { throw new InvalidOperationException("Aggregate error"); });
+            (evt, ctx) => { throw new InvalidOperationException("Aggregate error"); });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = app.Resolve(_appSyncEvent, lambdaContext);
 
         // Assert
         Assert.Contains("Aggregate error", result.Error);
     }
 
     [Fact]
-    public async Task Should_Handle_TransformingPayload()
+    public async Task Should_Handle_Error_In_Aggregate_Mode_Async()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (payload) =>
+        app.OnPublishAggregateAsync("/default/channel",
+            async (evt, ctx) => { throw new InvalidOperationException("Aggregate error"); });
+
+        // Act
+        var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
+
+        // Assert
+        Assert.Contains("Aggregate error", result.Error);
+    }
+
+    [Fact]
+    public void Should_Handle_TransformingPayload()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        app.OnPublish("/default/channel", (payload) =>
         {
             // Transform each event payload
             var transformedPayload = new Dictionary<string, object>();
@@ -245,16 +293,50 @@ public class AppSyncEventsTests
         });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = app.Resolve(_appSyncEvent, lambdaContext);
 
         // Assert
-        Assert.Equal(3, result.Events.Count);
-        Assert.Equal("transformed_event_1", result.Events[0].Payload.Keys.First());
-        Assert.Equal("transformed_data_1", result.Events[0].Payload["transformed_event_1"].ToString());
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal("transformed_event_1", result.Events[0].Payload?.Keys.First());
+            Assert.Equal("transformed_data_1", result.Events[0].Payload?["transformed_event_1"].ToString());
+        }
     }
 
     [Fact]
-    public async Task Should_Throw_For_Unknown_EventType()
+    public async Task Should_Handle_TransformingPayload_Async()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        app.OnPublishAsync("/default/channel", async (payload) =>
+        {
+            // Transform each event payload
+            var transformedPayload = new Dictionary<string, object>();
+            foreach (var key in payload.Keys)
+            {
+                transformedPayload[$"transformed_{key}"] = $"transformed_{payload[key]}";
+            }
+
+            return transformedPayload;
+        });
+
+        // Act
+        var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
+
+        // Assert
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal("transformed_event_1", result.Events[0].Payload?.Keys.First());
+            Assert.Equal("transformed_data_1", result.Events[0].Payload?["transformed_event_1"].ToString());
+        }
+    }
+
+    [Fact]
+    public async Task Should_Throw_For_Unknown_EventType_Async()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
@@ -272,32 +354,57 @@ public class AppSyncEventsTests
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            app.Resolve(unknownEvent, lambdaContext));
+            app.ResolveAsync(unknownEvent, lambdaContext));
     }
 
     [Fact]
-    public async Task Should_Return_NonDictionary_Values_Wrapped_In_Data()
+    public void Should_Throw_For_Unknown_EventType()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish("/default/channel", async (payload) =>
+        var unknownEvent = new AppSyncEventsRequest
+        {
+            Info = new Information
+            {
+                Channel = new Channel { Path = "/default/channel", Segments = ["default", "channel"] },
+                Operation = (AppSyncEventsOperation)999, // Unknown operation
+                ChannelNamespace = new ChannelNamespace { Name = "default" }
+            }
+        };
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() =>
+            app.Resolve(unknownEvent, lambdaContext));
+    }
+
+    [Fact]
+    public void Should_Return_NonDictionary_Values_Wrapped_In_Data()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        app.OnPublish("/default/channel", (payload) =>
         {
             // Return a non-dictionary value
             return "string value";
         });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = app.Resolve(_appSyncEvent, lambdaContext);
 
         // Assert
-        Assert.Equal(3, result.Events.Count);
-        Assert.Equal("string value", result.Events[0].Payload["data"].ToString());
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal("string value", result.Events[0].Payload?["data"].ToString());
+        }
     }
 
     [Fact]
-    public async Task Should_Skip_Invalid_Path_Registration()
+    public void Should_Skip_Invalid_Path_Registration()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
@@ -305,60 +412,94 @@ public class AppSyncEventsTests
         var handlerCalled = false;
 
         // Register with invalid path
-        app.OnPublish("/invalid/*/path", async (payload) =>
+        app.OnPublish("/invalid/*/path", (payload) =>
         {
             handlerCalled = true;
             return payload;
         });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = app.Resolve(_appSyncEvent, lambdaContext);
 
         // Assert - Should return original payload, handler not called
-        Assert.Equal(3, result.Events.Count);
-        Assert.Equal("data_1", result.Events[0].Payload["event_1"].ToString());
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal("data_1", result.Events[0].Payload?["event_1"].ToString());
+        }
+
         Assert.False(handlerCalled);
     }
 
     [Fact]
-    public async Task Should_Replace_Handler_When_RegisteringTwice()
+    public void Should_Replace_Handler_When_RegisteringTwice()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
         app.OnPublish("/default/channel",
-            async (payload) => { return new Dictionary<string, object> { ["handler"] = "first" }; });
+             (payload) => { return new Dictionary<string, object> { ["handler"] = "first" }; });
 
         app.OnPublish("/default/channel",
+             (payload) => { return new Dictionary<string, object> { ["handler"] = "second" }; });
+
+        // Act
+        var result = app.Resolve(_appSyncEvent, lambdaContext);
+
+        // Assert - Only second handler should be used
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal("second", result.Events[0].Payload?["handler"].ToString());
+        }
+    }
+    
+    [Fact]
+    public async Task Should_Replace_Handler_When_RegisteringTwice_Async()
+    {
+        // Arrange
+        var lambdaContext = new TestLambdaContext();
+        var app = new AppSyncEventsResolver();
+
+        app.OnPublishAsync("/default/channel",
+            async (payload) => { return new Dictionary<string, object> { ["handler"] = "first" }; });
+
+        app.OnPublishAsync("/default/channel",
             async (payload) => { return new Dictionary<string, object> { ["handler"] = "second" }; });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
 
         // Assert - Only second handler should be used
-        Assert.Equal(3, result.Events.Count);
-        Assert.Equal("second", result.Events[0].Payload["handler"].ToString());
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal("second", result.Events[0].Payload?["handler"].ToString());
+        }
     }
 
     [Fact]
-    public async Task Should_Maintain_EventIds_When_Processing()
+    public void Should_Maintain_EventIds_When_Processing()
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
         app.OnPublish("/default/channel",
-            async (payload) => { return new Dictionary<string, object> { ["processed"] = true }; });
+             (payload) => { return new Dictionary<string, object> { ["processed"] = true }; });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = app.Resolve(_appSyncEvent, lambdaContext);
 
         // Assert
-        Assert.Equal(3, result.Events.Count);
-        Assert.Equal("1", result.Events[0].Id);
-        Assert.Equal("2", result.Events[1].Id);
-        Assert.Equal("3", result.Events[2].Id);
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal("1", result.Events[0].Id);
+            Assert.Equal("2", result.Events[1].Id);
+            Assert.Equal("3", result.Events[2].Id);
+        }
     }
 
     [Fact]
@@ -368,7 +509,11 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublishAggregate("/default/channel", async (evt) =>
+        app.OnPublishAggregateAsync("/default/channel13", (payload) => { throw new Exception("My custom exception"); });
+
+        app.OnPublishAsync("/default/channel12", (payload) => { throw new Exception("My custom exception"); });
+
+        app.OnPublishAggregateAsync("/default/channel", async (evt) =>
         {
             // Iterate through events and return individual results with IDs
             var results = new List<AppSyncEvent>();
@@ -414,17 +559,20 @@ public class AppSyncEventsTests
         });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
 
         // Assert
-        Assert.Equal(3, result.Events.Count);
-        Assert.Equal("1", result.Events[0].Id);
-        Assert.True((bool)result.Events[0].Payload["processed"]);
-        Assert.Equal("2", result.Events[1].Id);
-        Assert.NotNull(result.Events[1].Error);
-        Assert.Contains("Intentional error for event 2", result.Events[1].Error);
-        Assert.Equal("3", result.Events[2].Id);
-        Assert.True((bool)result.Events[2].Payload["processed"]);
+        if (result.Events != null)
+        {
+            Assert.Equal(3, result.Events.Count);
+            Assert.Equal("1", result.Events[0].Id);
+            Assert.True((bool)(result.Events[0].Payload?["processed"] ?? false));
+            Assert.Equal("2", result.Events[1].Id);
+            Assert.NotNull(result.Events[1].Error);
+            Assert.Contains("Intentional error for event 2", result.Events[1].Error);
+            Assert.Equal("3", result.Events[2].Id);
+            Assert.True((bool)(result.Events[2].Payload?["processed"] ?? false));
+        }
     }
 
     [Fact]
@@ -435,7 +583,7 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         // Create handlers that throw exceptions for specific events
-        app.OnPublish("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", async (payload) =>
         {
             if (payload.ContainsKey("event_1"))
                 throw new InvalidOperationException("Error for event 1");
@@ -445,7 +593,7 @@ public class AppSyncEventsTests
         });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
 
         // Assert
         Assert.Equal(3, result.Events.Count);
@@ -467,20 +615,20 @@ public class AppSyncEventsTests
         int firstHandlerCalls = 0;
         int secondHandlerCalls = 0;
 
-        app.OnPublish("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", async (payload) =>
         {
             firstHandlerCalls++;
             return new Dictionary<string, object> { ["handler"] = "first" };
         });
 
-        app.OnPublish("/default/*", async (payload) =>
+        app.OnPublishAsync("/default/*", async (payload) =>
         {
             secondHandlerCalls++;
             return new Dictionary<string, object> { ["handler"] = "second" };
         });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
 
         // Assert - Only the first (most specific) handler should be called
         Assert.Equal(3, result.Events.Count);
@@ -519,7 +667,7 @@ public class AppSyncEventsTests
             ]
         };
 
-        app.OnPublish("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", async (payload) =>
         {
             // Check that both keys are present
             Assert.Equal("data_1", payload["event_1"]);
@@ -534,7 +682,7 @@ public class AppSyncEventsTests
         });
 
         // Act
-        var result = await app.Resolve(multiKeyEvent, lambdaContext);
+        var result = await app.ResolveAsync(multiKeyEvent, lambdaContext);
 
         // Assert
         Assert.Single(result.Events);
@@ -551,17 +699,17 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         // Register handlers with different specificity
-        app.OnPublish("/*", async (payload) =>
+        app.OnPublishAsync("/*", async (payload) =>
             new Dictionary<string, object> { ["handler"] = "least-specific" });
 
-        app.OnPublish("/default/*", async (payload) =>
+        app.OnPublishAsync("/default/*", async (payload) =>
             new Dictionary<string, object> { ["handler"] = "more-specific" });
 
-        app.OnPublish("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", async (payload) =>
             new Dictionary<string, object> { ["handler"] = "most-specific" });
 
         // Act
-        var result = await app.Resolve(_appSyncEvent, lambdaContext);
+        var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
 
         // Assert - Only the most specific handler should be called
         Assert.Equal(3, result.Events.Count);
@@ -596,11 +744,11 @@ public class AppSyncEventsTests
             ]
         };
 
-        app.OnPublish("/default/*", async (payload) =>
+        app.OnPublishAsync("/default/*", async (payload) =>
             new Dictionary<string, object> { ["handler"] = "wildcard-handler" });
 
         // Act
-        var result = await app.Resolve(fallbackEvent, lambdaContext);
+        var result = await app.ResolveAsync(fallbackEvent, lambdaContext);
 
         // Assert
         Assert.Single(result.Events);
@@ -615,7 +763,7 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         // Only set up a subscribe handler without corresponding publish handler
-        app.OnSubscribe("/subscribe-only", async (info) => true);
+        app.OnSubscribeAsync("/subscribe-only", async (info) => true);
 
         var subscribeEvent = new AppSyncEventsRequest
         {
@@ -628,7 +776,7 @@ public class AppSyncEventsTests
         };
 
         // Act
-        var result = await app.Resolve(subscribeEvent, lambdaContext);
+        var result = await app.ResolveAsync(subscribeEvent, lambdaContext);
 
         // Assert
         Assert.Null(result);
@@ -637,15 +785,15 @@ public class AppSyncEventsTests
     [Theory]
     [InlineData("/default/channel", "/default/channel1")]
     [InlineData("/default/channel3", "/default/channel")]
-    public async Task Should_Return_Null_When_Subscribing_To_Path_With_No_Match_Publish_Handler(string publishPath,
+    public void Should_Return_Null_When_Subscribing_To_Path_With_No_Match_Publish_Handler(string publishPath,
         string subscribePath)
     {
         // Arrange
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish(publishPath, async (payload) => payload);
-        app.OnSubscribe(subscribePath, async (info) => true);
+        app.OnPublish(publishPath, (payload) => payload);
+        app.OnSubscribe(subscribePath, (info) => true);
 
         var subscribeEvent = new AppSyncEventsRequest
         {
@@ -658,7 +806,7 @@ public class AppSyncEventsTests
         };
 
         // Act
-        var result = await app.Resolve(subscribeEvent, lambdaContext);
+        var result = app.Resolve(subscribeEvent, lambdaContext);
 
         // Assert
         Assert.Null(result);
@@ -676,9 +824,9 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublish(publishPath, async (payload) => payload);
-        app.OnSubscribe(subscribePath,
-            async (info, lambdaContext) => { throw new UnauthorizedException("OOPS"); });
+        app.OnPublishAsync(publishPath, async (payload) => payload);
+        app.OnSubscribeAsync(subscribePath,
+            (info, lambdaContext) => { throw new UnauthorizedException("OOPS"); });
 
         var subscribeEvent = new AppSyncEventsRequest
         {
@@ -692,7 +840,7 @@ public class AppSyncEventsTests
 
         // Act && Assert
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
-            app.Resolve(subscribeEvent, lambdaContext));
+            app.ResolveAsync(subscribeEvent, lambdaContext));
     }
 
     [Theory]
@@ -706,11 +854,11 @@ public class AppSyncEventsTests
 
         if (aggreate)
         {
-            app.OnPublishAggregate("/default/channel", async (payload) => throw new UnauthorizedException("OOPS"));
+            app.OnPublishAggregateAsync("/default/channel", (payload) => throw new UnauthorizedException("OOPS"));
         }
         else
         {
-            app.OnPublish("/default/channel", async (payload) => throw new UnauthorizedException("OOPS"));
+            app.OnPublishAsync("/default/channel", (payload) => throw new UnauthorizedException("OOPS"));
         }
 
         var subscribeEvent = new AppSyncEventsRequest
@@ -733,6 +881,6 @@ public class AppSyncEventsTests
 
         // Act && Assert
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
-            app.Resolve(subscribeEvent, lambdaContext));
+            app.ResolveAsync(subscribeEvent, lambdaContext));
     }
 }
