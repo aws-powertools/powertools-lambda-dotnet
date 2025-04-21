@@ -59,7 +59,7 @@ You must have an existing AppSync Events API with real-time capabilities enabled
 
 === "Getting started with AppSync Events"
 
-    ```yaml hl_lines="5 10 12"
+    ```yaml
     Resources:
         WebsocketAPI:
             Type: AWS::AppSync::Api
@@ -95,7 +95,7 @@ AppSync Events uses a specific event format for Lambda requests and responses. I
 
 === "AppSync payload request"
 
-    ```json"
+    ```json
     {
         "identity":"None",
         "result":"None",
@@ -171,7 +171,7 @@ AppSync Events uses a specific event format for Lambda requests and responses. I
 
 === "AppSync payload response"
 
-    ```json"
+    ```json
     {
         "events":[
            {
@@ -191,9 +191,9 @@ AppSync Events uses a specific event format for Lambda requests and responses. I
 
     ```
 
-=== "AppSync payload response with error
+=== "AppSync payload response with error"
 
-    ```json"
+    ```json
     {
         "events":[
            {
@@ -221,9 +221,9 @@ When processing events with Lambda, you can return errors to AppSync in three wa
 ### Resolver
 
 ???+ important
-    The event handler automatically parses the incoming event data and invokes the appropriate handler based on the namespace/channel pattern you register.
+    When you return `Resolve` or `ResolveAsync` from your handler it will automatically parse the incoming event data and invokes the appropriate handler based on the namespace/channel pattern you register.
 
-You can define your handlers for different event types using the `OnPublish()`, `OnPublishAggregate()`, and `OnSubscribe()` methods and their `Async` versions.
+    You can define your handlers for different event types using the `OnPublish()`, `OnPublishAggregate()`, and `OnSubscribe()` methods and their `Async` versions `OnPublishAsync()`, `OnPublishAggregateAsync()`, and `OnSubscribeAsync()`.
 
 === "Publish events - Class library handler"
 
@@ -334,7 +334,7 @@ When an event matches with multiple handlers, the most specific pattern takes pr
 ### Aggregated processing
 
 ???+ note "Aggregate Processing"
-    `OnPublishAggregate()`, receives a list of all events, requiring you to manage the response format. Ensure your response includes results for each event in the expected [AppSync Request and Response Format](#appsync-request-and-response-format).
+    `OnPublishAggregate()` and `OnPublishAggregateAsync()`, receives a list of all events, requiring you to manage the response format. Ensure your response includes results for each event in the expected [AppSync Request and Response Format](#appsync-request-and-response-format).
 
 In some scenarios, you might want to process all events for a channel as a batch rather than individually. This is useful when you need to:
 
@@ -376,12 +376,21 @@ You can filter or reject events by raising exceptions in your resolvers or by fo
 
 #### Handling errors with individual items
 
-When processing items individually with `OnPublish()`, you can raise an exception to fail a specific item. When an exception is raised, the Event Handler will catch it and include the exception name and message in the response.
+When processing items individually with `OnPublish()` and `OnPublishAsync()`, you can raise an exception to fail a specific item. When an exception is raised, the Event Handler will catch it and include the exception name and message in the response.
 
 === "Error handling individual items"
 
     ```csharp
     app.OnPublish("/default/channel", (payload) =>
+    {
+        throw new Exception("My custom exception");
+    });
+    ```
+
+=== "Error handling individual items Async"
+
+    ```csharp
+    app.OnPublishAsync("/default/channel", async (payload) =>
     {
         throw new Exception("My custom exception");
     });
@@ -408,12 +417,21 @@ When processing items individually with `OnPublish()`, you can raise an exceptio
 
 #### Handling errors with batch of items
 
-When processing batch of items with `OnPublishAggregate()`, you must format the payload according the expected response.
+When processing batch of items with `OnPublishAggregate()` and `OnPublishAggregateAsync()`, you must format the payload according the expected response.
 
 === "Error handling batch items"
 
     ```csharp
     app.OnPublishAggregate("/default/channel", (payload) =>
+    {
+        throw new Exception("My custom exception");
+    });
+    ```
+
+=== "Error handling batch items Async"
+
+    ```csharp
+    app.OnPublishAggregateAsync("/default/channel", async (payload) =>
     {
         throw new Exception("My custom exception");
     });
