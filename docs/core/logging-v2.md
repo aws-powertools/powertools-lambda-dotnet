@@ -1,5 +1,5 @@
 ---
-title: Logging V2
+title: Logging v2
 description: Core utility
 ---
 
@@ -24,6 +24,14 @@ The logging utility provides a Lambda optimized logger with output structured as
   for [ILoggerFactory](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.iloggerfactory?view=dotnet-plat-ext-7.0)
   interface
 * Support for message templates `{}` and `{@}` for structured logging
+
+## Breaking changes from v1 (dependency updates)
+
+| Change | Before (v1.x) | After (v2.0) | Migration Action |
+|--------|---------------|--------------|-----------------|
+| Amazon.Lambda.Core | 2.2.0|2.5.0 | dotnet add package Amazon.Lambda.Core |
+| Amazon.Lambda.Serialization.SystemTextJson | 2.4.3 | 2.4.4 | dotnet add package Amazon.Lambda.Serialization.SystemTextJson |
+| Microsoft.Extensions.DependencyInjection | 8.0.0 | 8.0.1 | dotnet add package Microsoft.Extensions.DependencyInjection |
 
 ## Installation
 
@@ -1467,10 +1475,13 @@ You can change where the `Logger` will output its logs by setting the `LogOutput
 We also provide a helper class for tests `TestLoggerOutput` or you can provider your own implementation of `IConsoleWrapper`.
 
 ```csharp
-// Using TestLoggerOutput
-options.LogOutput = new TestLoggerOutput();
-// Custom console output for testing
-options.LogOutput = new TestConsoleWrapper();
+Logger.Configure(options =>
+{
+    // Using TestLoggerOutput
+    options.LogOutput = new TestLoggerOutput();
+    // Custom console output for testing
+    options.LogOutput = new TestConsoleWrapper();
+});
 
 // Example implementation for testing:
 public class TestConsoleWrapper : IConsoleWrapper
@@ -1483,6 +1494,32 @@ public class TestConsoleWrapper : IConsoleWrapper
     }
 }
 ```
+```csharp
+// Test example
+[Fact]
+public void When_Setting_Service_Should_Update_Key()
+{
+    // Arrange
+    var consoleOut = new TestLoggerOutput();
+    Logger.Configure(options =>
+    {
+        options.LogOutput = consoleOut;
+    });
+    
+    // Act
+    _testHandlers.HandlerService();
+
+    // Assert
+
+    var st = consoleOut.ToString();
+
+    Assert.Contains("\"level\":\"Information\"", st);
+    Assert.Contains("\"service\":\"test\"", st);
+    Assert.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"", st);
+    Assert.Contains("\"message\":\"test\"", st);
+}
+```
+
 ### ILogger
 
 If you are using ILogger interface you can inject the logger in a dedicated constructor for your Lambda function and thus you can mock your ILogger instance.

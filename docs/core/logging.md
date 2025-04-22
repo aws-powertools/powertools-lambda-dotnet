@@ -1,9 +1,18 @@
 ---
-title: Logging
+title: Logging v1
 description: Core utility
 ---
 
+!!! warning
+    Version 1.x.x will continue to be supported until **end of July 2025** for critical bug fixes and security updates in very exceptional cases where you cannot update to v2, but no new features will be added to this version. 
+    
+    We recommend you upgrade to the latest version.
+
+    The latest version is available at [Logging v2](https://docs.powertools.aws.dev/lambda/dotnet/core/logging-v2/).
+    
+
 The logging utility provides a Lambda optimized logger with output structured as JSON.
+
 
 ## Key features
 
