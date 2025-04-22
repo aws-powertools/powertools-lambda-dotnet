@@ -445,11 +445,14 @@ When processing batch of items with `OnPublishAggregate()` and `OnPublishAggrega
     }
     ```
 
-#### Rejecting the entire request
+#### Authorization control
 
 ??? warning "Raising `UnauthorizedException` will cause the Lambda invocation to fail."
 
 You can also reject the entire payload by raising an `UnauthorizedException`. This prevents Powertools for AWS from processing any messages and causes the Lambda invocation to fail, returning an error to AppSync.
+
+- **When working with publish events** Powertools for AWS will stop processing messages and subscribers will not receive any message.
+- **When working with subscribe events** the subscription won't be established.
 
 === "Rejecting the entire request"
 
@@ -473,6 +476,107 @@ You can access to the original Lambda event or context for additional informatio
         return payload;
     });
     ```
+
+## Event Handler workflow
+
+#### Working with single items
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AppSync
+    participant Lambda
+    participant EventHandler
+    note over Client,EventHandler: Individual Event Processing (aggregate=False)
+    Client->>+AppSync: Send multiple events to channel
+    AppSync->>+Lambda: Invoke Lambda with batch of events
+    Lambda->>+EventHandler: Process events with aggregate=False
+    loop For each event in batch
+        EventHandler->>EventHandler: Process individual event
+    end
+    EventHandler-->>-Lambda: Return array of processed events
+    Lambda-->>-AppSync: Return event-by-event responses
+    AppSync-->>-Client: Report individual event statuses
+```
+</center>
+
+
+#### Working with aggregated items
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AppSync
+    participant Lambda
+    participant EventHandler
+    note over Client,EventHandler: Aggregate Processing Workflow
+    Client->>+AppSync: Send multiple events to channel
+    AppSync->>+Lambda: Invoke Lambda with batch of events
+    Lambda->>+EventHandler: Process events with aggregate=True
+    EventHandler->>EventHandler: Batch of events
+    EventHandler->>EventHandler: Process entire batch at once
+    EventHandler->>EventHandler: Format response for each event
+    EventHandler-->>-Lambda: Return aggregated results
+    Lambda-->>-AppSync: Return success responses
+    AppSync-->>-Client: Confirm all events processed
+```
+</center>
+
+#### Authorization fails for publish
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AppSync
+    participant Lambda
+    participant EventHandler
+    note over Client,EventHandler: Publish Event Authorization Flow
+    Client->>AppSync: Publish message to channel
+    AppSync->>Lambda: Invoke Lambda with publish event
+    Lambda->>EventHandler: Process publish event
+    alt Authorization Failed
+        EventHandler->>EventHandler: Authorization check fails
+        EventHandler->>Lambda: Raise UnauthorizedException
+        Lambda->>AppSync: Return error response
+        AppSync--xClient: Message not delivered
+        AppSync--xAppSync: No distribution to subscribers
+    else Authorization Passed
+        EventHandler->>Lambda: Return successful response
+        Lambda->>AppSync: Return processed event
+        AppSync->>Client: Acknowledge message
+        AppSync->>AppSync: Distribute to subscribers
+    end
+```
+</center>
+
+#### Authorization fails for subscribe
+
+<center>
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AppSync
+    participant Lambda
+    participant EventHandler
+    note over Client,EventHandler: Subscribe Event Authorization Flow
+    Client->>AppSync: Request subscription to channel
+    AppSync->>Lambda: Invoke Lambda with subscribe event
+    Lambda->>EventHandler: Process subscribe event
+    alt Authorization Failed
+        EventHandler->>EventHandler: Authorization check fails
+        EventHandler->>Lambda: Raise UnauthorizedException
+        Lambda->>AppSync: Return error response
+        AppSync--xClient: Subscription denied (HTTP 403)
+    else Authorization Passed
+        EventHandler->>Lambda: Return successful response
+        Lambda->>AppSync: Return authorization success
+        AppSync->>Client: Subscription established
+    end
+```
+</center>
 
 ## Testing your code
 
