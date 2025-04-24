@@ -179,7 +179,7 @@ public class RouteHandlerRegistryTests
     public void LRUCache_ShouldEvictOldestItemsWhenFull()
     {
         // Arrange - Create a cache with size 2
-        var cache = new LRUCache<string, string>(2);
+        var cache = new LruCache<string, string>(2);
         
         // Act
         cache.Set("key1", "value1");

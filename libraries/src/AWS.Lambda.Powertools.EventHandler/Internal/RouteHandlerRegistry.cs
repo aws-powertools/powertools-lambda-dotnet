@@ -14,7 +14,7 @@ internal class RouteHandlerRegistry<TEvent, TResult>
     /// <summary>
     /// Cache for resolved routes to improve performance
     /// </summary>
-    private readonly LRUCache<string, RouteHandlerOptions<TEvent, TResult>> _resolverCache;
+    private readonly LruCache<string, RouteHandlerOptions<TEvent, TResult>> _resolverCache;
 
     /// <summary>
     /// Set to track already logged warnings
@@ -27,7 +27,7 @@ internal class RouteHandlerRegistry<TEvent, TResult>
     /// <param name="cacheSize">Max size of LRU cache (default 100)</param>
     public RouteHandlerRegistry(int cacheSize = 100)
     {
-        _resolverCache = new LRUCache<string, RouteHandlerOptions<TEvent, TResult>>(cacheSize);
+        _resolverCache = new LruCache<string, RouteHandlerOptions<TEvent, TResult>>(cacheSize);
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ internal class RouteHandlerRegistry<TEvent, TResult>
     /// </summary>
     private static bool IsValidPath(string path)
     {
-        if (string.IsNullOrWhiteSpace(path) || !path.StartsWith("/"))
+        if (string.IsNullOrWhiteSpace(path) || !path.StartsWith('/'))
             return false;
 
         // Check for invalid wildcard usage

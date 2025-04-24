@@ -6,7 +6,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Internal;
 /// <summary>
 /// Simple LRU cache implementation for caching route resolutions
 /// </summary>
-internal class LRUCache<TKey, TValue> where TKey : notnull
+internal class LruCache<TKey, TValue> where TKey : notnull
 {
     private readonly int _capacity;
     private readonly Dictionary<TKey, LinkedListNode<CacheItem>> _cache;
@@ -24,7 +24,7 @@ internal class LRUCache<TKey, TValue> where TKey : notnull
         }
     }
 
-    public LRUCache(int capacity)
+    public LruCache(int capacity)
     {
         _capacity = capacity;
         _cache = new Dictionary<TKey, LinkedListNode<CacheItem>>();
