@@ -33,6 +33,65 @@ The logging utility provides a Lambda optimized logger with output structured as
 | Amazon.Lambda.Serialization.SystemTextJson | 2.4.3 | 2.4.4 | dotnet add package Amazon.Lambda.Serialization.SystemTextJson |
 | Microsoft.Extensions.DependencyInjection | 8.0.0 | 8.0.1 | dotnet add package Microsoft.Extensions.DependencyInjection |
 
+#### Extra keys - Breaking change
+
+In v1.x, the extra keys were added to the log entry as a dictionary. In v2.x, the extra keys are added to the log entry as
+a JSON object.
+
+There is no longer a method that accepts extra keys as first argument.
+
+=== "Before (v1)"
+
+    ```csharp
+    public class User
+    {
+        public string Name { get; set; }
+        public int Age { get; set; }
+    }
+    
+    Logger.LogInformation<User>(user, "{Name} is {Age} years old", 
+          new object[]{user.Name, user.Age});
+    
+    var scopeKeys = new
+    {
+        PropOne = "Value 1",
+        PropTwo = "Value 2"
+    };
+    Logger.LogInformation(scopeKeys, "message");
+    
+    ```
+
+=== "After (v2)"
+
+    ```csharp
+    public class User
+    {
+        public string Name { get; set; }
+        public int Age { get; set; }
+        
+        public override string ToString()
+        {
+            return $"{Name} is {Age} years old";
+        }
+    }
+
+    // It uses the ToString() method of the object to log the message
+    // the extra keys are added because of the {@} in the message template
+    Logger.LogInformation("{@user}", user);
+    
+    var scopeKeys = new
+    {
+        PropOne = "Value 1",
+        PropTwo = "Value 2"
+    };
+
+    // there is no longer a method that accepts extra keys as first argument.
+    Logger.LogInformation("{@keys}", scopeKeys);
+    ```
+
+This change was made to improve the performance of the logger and to make it easier to work with the extra keys.
+
+
 ## Installation
 
 Powertools for AWS Lambda (.NET) are available as NuGet packages. You can install the packages
@@ -243,6 +302,9 @@ Your logs will always include the following keys to your structured logging:
  **Name**               | string | "Powertools for AWS Lambda (.NET) Logger"                                                            | Logger name                                                            
  **SamplingRate**       | int    | 0.1                                                                                                  | Debug logging sampling rate in percentage e.g. 10% in this case        
  **Customer Keys**      |        |                                                                                                      |
+
+!!! Warning
+    If you emit a log message with a key that matches one of `level`, `message`, `name`, `service`, or `timestamp`, the Logger will ignore the key.
 
 ## Message templates
 
