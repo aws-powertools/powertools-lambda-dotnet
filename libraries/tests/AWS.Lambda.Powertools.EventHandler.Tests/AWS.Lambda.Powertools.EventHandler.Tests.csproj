@@ -1,7 +1,11 @@
+<!--suppress MsbuildTargetFrameworkTagInspection -->
+
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <AssemblyName>AWS.Lambda.Powertools.EventHandler.Tests</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.EventHandler.Tests</RootNamespace>
+        <TargetFrameworks>net8.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
