@@ -36,9 +36,11 @@ nav:
             - core/metrics.md
             - core/metrics-v2.md
         - core/tracing.md
-        - utilities/parameters.md
         - utilities/idempotency.md
         - utilities/batch-processing.md
+        - Event Handler:
+            - core/event_handler/appsync_events.md
+        - utilities/parameters.md
         - utilities/jmespath-functions.md
   - API Reference: api/" target="_blank
       

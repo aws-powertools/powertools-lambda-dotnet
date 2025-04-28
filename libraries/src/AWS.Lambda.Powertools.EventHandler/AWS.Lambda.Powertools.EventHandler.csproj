@@ -1,0 +1,19 @@
+﻿<!--suppress MsbuildTargetFrameworkTagInspection -->
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>AWS.Lambda.Powertools.EventHandler</PackageId>
+        <Description>Powertools for AWS Lambda (.NET) - Event Handler package.</Description>
+        <AssemblyName>AWS.Lambda.Powertools.EventHandler</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.EventHandler</RootNamespace>
+        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetMultiFramework>false</TargetMultiFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.Core" />
+    </ItemGroup>
+
+</Project>
