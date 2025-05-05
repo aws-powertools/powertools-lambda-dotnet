@@ -27,6 +27,7 @@ Next, install the AWS Lambda .NET CLI tools:
 
 ```bash
 dotnet tool install -g Amazon.Lambda.Tools
+dotnet new install Amazon.Lambda.Templates
 ```
 
 Verify installation:
