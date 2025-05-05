@@ -29,12 +29,8 @@ nav:
             - getting-started/idempotency/simple.md
             - getting-started/idempotency/aot.md
     - Features:
-        - Logging:
-            - core/logging.md
-            - core/logging-v2.md
-        - Metrics:
-            - core/metrics.md
-            - core/metrics-v2.md
+        - core/logging.md
+        - core/metrics.md
         - core/tracing.md
         - utilities/idempotency.md
         - utilities/batch-processing.md
@@ -64,7 +60,6 @@ theme:
   features:
     - header.autohide
     - navigation.sections
-#    - navigation.expand
     - navigation.top
     - navigation.tabs
     - navigation.instant
