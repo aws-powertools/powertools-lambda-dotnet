@@ -34,14 +34,14 @@ public class ExceptionFunctionHandler
         Logger.LogDebug("Hello {input}", input);
         Logger.LogTrace("Hello {input}", input);
         
-        Logger.LogInformation("Testing with parameter Log Information Method {company}", new[] { "AWS" });
+        Logger.LogInformation("Testing with parameter Log Information Method {company}", "AWS" );
         
         var customKeys = new Dictionary<string, string>
         {
             {"test1", "value1"}, 
             {"test2", "value2"}
         };
-        Logger.LogInformation(customKeys, "Retrieved data for city {cityName} with count {company}", "AWS");
+        Logger.LogInformation("Retrieved data for city {cityName} with count {company}", "AWS", customKeys);
 
         Logger.AppendKey("aws",1);
         Logger.AppendKey("aws",3);
@@ -51,11 +51,5 @@ public class ExceptionFunctionHandler
         Logger.AppendKeys(new[]{ new KeyValuePair<string, object>("aws",1), new KeyValuePair<string, object>("aws",2)});
         
         return "OK";
-    }
-    
-    [Logging(LogEvent = true)]
-    public string HandleOk(string input)
-    {
-        return input.ToUpper(CultureInfo.InvariantCulture);
     }
 }
