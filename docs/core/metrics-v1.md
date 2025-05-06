@@ -1,5 +1,5 @@
 ---
-title: Metrics v1
+title: Metrics v1 - Legacy
 description: Core utility
 ---
 
