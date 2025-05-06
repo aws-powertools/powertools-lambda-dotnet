@@ -108,7 +108,7 @@ jobs:
         run: dotnet test ./examples/ --no-restore --configuration Release --verbosity normal
   
   publish-packages:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/develop') || ${{ github.event_name == 'workflow_dispatch' }}
     needs: run-tests
     runs-on: ubuntu-latest
     permissions:
@@ -130,10 +130,7 @@ jobs:
       - name: Setup GitHub Packages source
         run: |
           dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \
-            --name github \
-            --username ${{ github.actor }} \
-            --password ${{ secrets.GITHUB_TOKEN }}
-            --store-password-in-clear-text
+            --name github
 
       - name: Publish packages to GitHub Packages
         run: |
