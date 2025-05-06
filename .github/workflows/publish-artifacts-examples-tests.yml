@@ -108,7 +108,7 @@ jobs:
         run: dotnet test ./examples/ --no-restore --configuration Release --verbosity normal
   
   publish-packages:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    if: github.event_name == 'push'
     needs: run-tests
     runs-on: ubuntu-latest
     permissions:
