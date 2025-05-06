@@ -25,8 +25,8 @@ public class FunctionTests
     
     [Trait("Category", "AOT")]
     [Theory]
-    [InlineData("E2ETestLambda_X64_AOT_NET8_tracing")]
-    [InlineData("E2ETestLambda_ARM_AOT_NET8_tracing")]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_tracing_AOT-Function")]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_tracing_AOT-Function")]
     public async Task AotFunctionTest(string functionName)
     {
         await TestFunction(functionName);
