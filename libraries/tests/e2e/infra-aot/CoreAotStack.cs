@@ -47,7 +47,7 @@ public class CoreAotStack : Stack
             Name = $"E2ETestLambda_{arch}_AOT_NET8_{utility}_{function}",
             SourcePath = baseAotPath,
             DistPath = distAotPath,
-            Handler = $"{function}.Function::AWS.Lambda.Powertools.{utility}.{function}.Function.FunctionHandler"
+            Handler = function
         };
         
         CreateFunctionConstruct(construct);

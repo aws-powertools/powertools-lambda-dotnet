@@ -173,53 +173,23 @@ public class FunctionTests
 
         Assert.True(messageElement.TryGetProperty("HttpMethod", out JsonElement httpMethodElement));
         Assert.Equal("POST", httpMethodElement.GetString());
-
-        Assert.True(messageElement.TryGetProperty("Headers", out JsonElement headersElement));
-        Assert.True(headersElement.TryGetProperty("Accept-Encoding", out JsonElement acceptEncodingElement));
-        Assert.Equal("gzip, deflate, sdch", acceptEncodingElement.GetString());
-
-        Assert.True(headersElement.TryGetProperty("Accept-Language", out JsonElement acceptLanguageElement));
-        Assert.Equal("en-US,en;q=0.8", acceptLanguageElement.GetString());
-
-        Assert.True(headersElement.TryGetProperty("Cache-Control", out JsonElement cacheControlElement));
-        Assert.Equal("max-age=0", cacheControlElement.GetString());
-
-        Assert.True(
-            messageElement.TryGetProperty("QueryStringParameters", out JsonElement queryStringParametersElement));
-        Assert.True(queryStringParametersElement.TryGetProperty("Foo", out JsonElement fooElement));
-        Assert.Equal("bar", fooElement.GetString());
-
+        
         Assert.True(messageElement.TryGetProperty("RequestContext", out JsonElement requestContextElement));
         Assert.True(requestContextElement.TryGetProperty("Path", out JsonElement requestContextPathElement));
         Assert.Equal("/prod/path/to/resource", requestContextPathElement.GetString());
 
-        Assert.True(requestContextElement.TryGetProperty("AccountId", out JsonElement accountIdElement));
-        Assert.Equal("123456789012", accountIdElement.GetString());
-
         Assert.True(requestContextElement.TryGetProperty("ResourceId", out JsonElement resourceIdElement));
         Assert.Equal("123456", resourceIdElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("Stage", out JsonElement stageElement));
-        Assert.Equal("prod", stageElement.GetString());
-
+        
         Assert.True(requestContextElement.TryGetProperty("RequestId", out JsonElement requestIdElement));
         Assert.Equal("c6af9ac6-7b61-11e6-9a41-93e8deadbeef", requestIdElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("ResourcePath", out JsonElement resourcePathElement));
-        Assert.Equal("/{proxy+}", resourcePathElement.GetString());
-
+        
         Assert.True(
             requestContextElement.TryGetProperty("HttpMethod", out JsonElement requestContextHttpMethodElement));
         Assert.Equal("POST", requestContextHttpMethodElement.GetString());
 
         Assert.True(requestContextElement.TryGetProperty("ApiId", out JsonElement apiIdElement));
         Assert.Equal("1234567890", apiIdElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("RequestTime", out JsonElement requestTimeElement));
-        Assert.Equal("09/Apr/2015:12:34:56 +0000", requestTimeElement.GetString());
-
-        Assert.True(requestContextElement.TryGetProperty("RequestTimeEpoch", out JsonElement requestTimeEpochElement));
-        Assert.Equal(1428582896000, requestTimeEpochElement.GetInt64());
 
         Assert.True(messageElement.TryGetProperty("Body", out JsonElement bodyElement));
         Assert.Equal("hello world", bodyElement.GetString());

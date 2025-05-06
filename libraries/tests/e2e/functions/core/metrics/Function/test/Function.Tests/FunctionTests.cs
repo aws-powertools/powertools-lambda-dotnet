@@ -317,6 +317,6 @@ public class FunctionTests
 
         _ = await _lambdaClient.UpdateFunctionConfigurationAsync(updateRequest);
 
-        await Task.Delay(2000);
+        await Task.Delay(15000);
     }
 }
