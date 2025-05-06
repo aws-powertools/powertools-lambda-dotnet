@@ -5,7 +5,8 @@ description: Getting started with Logging in Native AOT applications
 
 # Getting Started with AWS Lambda Powertools for .NET Logger in Native AOT
 
-This tutorial shows you how to set up an AWS Lambda project using Native AOT compilation with Powertools for .NET Logger, addressing performance, trimming, and deployment considerations.
+This tutorial shows you how to set up an AWS Lambda project using Native AOT compilation with Powertools for .NET
+Logger, addressing performance, trimming, and deployment considerations.
 
 ## Prerequisites
 
@@ -16,7 +17,8 @@ This tutorial shows you how to set up an AWS Lambda project using Native AOT com
 
 ## 1. Understanding Native AOT
 
-Native AOT (Ahead-of-Time) compilation converts your .NET application directly to native code during build time rather than compiling to IL (Intermediate Language) code that gets JIT-compiled at runtime. Benefits for AWS Lambda include:
+Native AOT (Ahead-of-Time) compilation converts your .NET application directly to native code during build time rather
+than compiling to IL (Intermediate Language) code that gets JIT-compiled at runtime. Benefits for AWS Lambda include:
 
 - Faster cold start times (typically 50-70% reduction)
 - Lower memory footprint
@@ -74,130 +76,114 @@ dotnet add package AWS.Lambda.Powertools.Logging
 Let's modify the Function.cs file to implement our function with Powertools Logger in an AOT-compatible way:
 
 ```csharp
-using System.Text.Json;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using AWS.Lambda.Powertools.Logging;
+using Microsoft.Extensions.Logging;
+
 
 namespace PowertoolsAotLoggerDemo;
 
 public class Function
 {
-    /// <summary>
-    /// The main entry point for the Lambda function. The main function is called once during the Lambda init phase.
-    /// It initializes the Lambda runtime client and passes the function handler to it.
-    /// </summary>
+    private static ILogger _logger;
+
     private static async Task Main()
     {
-        // Configure the serializer
-        var serializer = new DefaultLambdaJsonSerializer(options =>
-        {
-            options.PropertyNameCaseInsensitive = true;
-        });
+        _logger = LoggerFactory.Create(builder =>
+            {
+                builder.AddPowertoolsLogger(config =>
+                {
+                    config.Service = "TestService";
+                    config.LoggerOutputCase = LoggerOutputCase.PascalCase;
+                    config.JsonOptions = new JsonSerializerOptions
+                    {
+                        TypeInfoResolver = LambdaFunctionJsonSerializerContext.Default
+                    };
+                });
+            }).CreatePowertoolsLogger();
 
-        // Create a runtime client and pass the handler function
-        using var handlerWrapper = LambdaBootstrapBuilder.Create()
-            .WithSerializer(serializer)
-            .WithHandler(FunctionHandler)
-            .Build();
-
-        // Start handling Lambda events
-        await handlerWrapper.RunAsync();
+        Func<string, ILambdaContext, string> handler = FunctionHandler;
+        await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>())
+            .Build()
+            .RunAsync();
     }
 
-    /// <summary>
-    /// This function handler processes incoming events.
-    /// </summary>
-    [Logging(LoggerOutputCase = LoggerOutputCase.CamelCase, CorrelationIdPath = "/headers/x-correlation-id")]
-    public static async Task<string> FunctionHandler(JsonElement input, ILambdaContext context)
+    public static string FunctionHandler(string input, ILambdaContext context)
     {
-        // Log the incoming event
-        Logger.LogInformation("Processing event: {@Event}", input);
+        _logger.LogInformation("Processing input: {Input}", input);
+        _logger.LogInformation("Processing context: {@Context}", context);
 
-        // Extract a name from the event (if provided)
-        string name = "World";
-        if (input.TryGetProperty("name", out var nameProperty) && nameProperty.ValueKind == JsonValueKind.String)
-        {
-            name = nameProperty.GetString() ?? "World";
-            Logger.LogInformation("Name provided: {Name}", name);
-        }
-        else
-        {
-            Logger.LogInformation("Using default name");
-        }
-
-        // Create a simple response
-        var response = new
-        {
-            Message = $"Hello, {name}! (from Native AOT)",
-            ProcessedAt = DateTime.UtcNow.ToString("o"),
-            ExecutionEnvironment = "Native AOT"
-        };
-
-        // Log the response
-        Logger.LogInformation("Returning response: {@Response}", response);
-
-        // Return the serialized response
-        return JsonSerializer.Serialize(response);
+        return input.ToUpper();
     }
+}
+
+
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(ILambdaContext))] // make sure to include ILambdaContext for serialization
+public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
+{
 }
 ```
 
 ## 6. Updating the Project File for AOT Compatibility
 
-
 ```xml
+
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    
-    <!-- Enable AOT compilation -->
-    <PublishAot>true</PublishAot>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
 
-    <!-- Enable trimming, required for Native AOT -->
-    <PublishTrimmed>true</PublishTrimmed>
-    
-    <!-- Set trimming level: full is most aggressive -->
-    <TrimMode>full</TrimMode>
-    
-    <!-- Prevent warnings from becoming errors -->
-    <TrimmerWarningLevel>0</TrimmerWarningLevel>
-    
-    <!-- If you're encountering trimming issues, enable this for more detailed info -->
-    <!-- <TrimmerLogLevel>detailed</TrimmerLogLevel> -->
-    
-    <!-- These settings optimize for Lambda -->
-    <StripSymbols>true</StripSymbols>
-    <OptimizationPreference>Size</OptimizationPreference>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    
-    <!-- Assembly attributes needed for Lambda -->
-    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <AWSProjectType>Lambda</AWSProjectType>
-    
-    <!-- Native AOT requires executable, not library -->
-    <OutputType>Exe</OutputType>
-    
-    <!-- Avoid the copious logging from the native AOT compiler -->
-    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
-    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
-  </PropertyGroup>
+        <!-- Enable AOT compilation -->
+        <PublishAot>true</PublishAot>
 
-  <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.10.0" />
-    <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.0" />
-    <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.4.0" />
-  </ItemGroup>
+        <!-- Enable trimming, required for Native AOT -->
+        <PublishTrimmed>true</PublishTrimmed>
+
+        <!-- Set trimming level: full is most aggressive -->
+        <TrimMode>full</TrimMode>
+
+        <!-- Prevent warnings from becoming errors -->
+        <TrimmerWarningLevel>0</TrimmerWarningLevel>
+
+        <!-- If you're encountering trimming issues, enable this for more detailed info -->
+        <!-- <TrimmerLogLevel>detailed</TrimmerLogLevel> -->
+
+        <!-- These settings optimize for Lambda -->
+        <StripSymbols>true</StripSymbols>
+        <OptimizationPreference>Size</OptimizationPreference>
+        <InvariantGlobalization>true</InvariantGlobalization>
+
+        <!-- Assembly attributes needed for Lambda -->
+        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+        <AWSProjectType>Lambda</AWSProjectType>
+
+        <!-- Native AOT requires executable, not library -->
+        <OutputType>Exe</OutputType>
+
+        <!-- Avoid the copious logging from the native AOT compiler -->
+        <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+        <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.12.0"/>
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0"/>
+        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4"/>
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="2.0.0"/>
+    </ItemGroup>
 </Project>
 ```
 
 ## 8. Cross-Platform Deployment Considerations
 
-Native AOT compilation must target the same OS and architecture as the deployment environment. AWS Lambda runs on Amazon Linux 2023 (AL2023) with x64 architecture.
+Native AOT compilation must target the same OS and architecture as the deployment environment. AWS Lambda runs on Amazon
+Linux 2023 (AL2023) with x64 architecture.
 
 ### Building for AL2023 on Different Platforms
 
@@ -210,6 +196,7 @@ dotnet lambda deploy-function --function-name powertools-aot-logger-demo --funct
 ```
 
 This will:
+
 1. Detect your project is using Native AOT
 2. Use Docker behind the scenes to compile for Amazon Linux
 3. Deploy the resulting function
@@ -267,9 +254,42 @@ You should see a response like:
 
 ```json
 {
-  "Message": "Hello, PowertoolsAOT! (from Native AOT)",
-  "ProcessedAt": "2023-11-10T10:15:20.1234567Z",
-  "ExecutionEnvironment": "Native AOT"
+  "Level": "Information",
+  "Message": "test",
+  "Timestamp": "2025-05-06T09:52:19.8222787Z",
+  "Service": "TestService",
+  "ColdStart": true,
+  "XrayTraceId": "1-6819dbd3-0de6dc4b6cc712b020ee8ae7",
+  "Name": "AWS.Lambda.Powertools.Logging.Logger"
+}
+{
+  "Level": "Information",
+  "Message": "Processing context: Amazon.Lambda.RuntimeSupport.LambdaContext",
+  "Timestamp": "2025-05-06T09:52:19.8232664Z",
+  "Service": "TestService",
+  "ColdStart": true,
+  "XrayTraceId": "1-6819dbd3-0de6dc4b6cc712b020ee8ae7",
+  "Name": "AWS.Lambda.Powertools.Logging.Logger",
+  "Context": {
+    "AwsRequestId": "20f8da57-002b-426d-84c2-c295e4797e23",
+    "ClientContext": {
+      "Environment": null,
+      "Client": null,
+      "Custom": null
+    },
+    "FunctionName": "powertools-aot-logger-demo",
+    "FunctionVersion": "$LATEST",
+    "Identity": {
+      "IdentityId": null,
+      "IdentityPoolId": null
+    },
+    "InvokedFunctionArn": "your arn",
+    "Logger": {},
+    "LogGroupName": "/aws/lambda/powertools-aot-logger-demo",
+    "LogStreamName": "2025/05/06/[$LATEST]71249d02013b42b9b044b42dd4c7c37a",
+    "MemoryLimitInMB": 512,
+    "RemainingTime": "00:00:29.9972216"
+  }
 }
 ```
 
@@ -279,7 +299,8 @@ Check the logs in CloudWatch Logs to see the structured logs created by Powertoo
 
 ### Trimming Considerations
 
-Native AOT uses aggressive trimming, which can cause issues with reflection-based code. Here are tips to avoid common problems:
+Native AOT uses aggressive trimming, which can cause issues with reflection-based code. Here are tips to avoid common
+problems:
 
 1. **Using DynamicJsonSerializer**: If you're encountering trimming issues with JSON serialization, add a trimming hint:
 
@@ -291,7 +312,8 @@ public class MyRequestType
 }
 ```
 
-2. **Logging Objects**: When logging objects with structural logging, consider creating simple DTOs instead of complex types:
+2. **Logging Objects**: When logging objects with structural logging, consider creating simple DTOs instead of complex
+   types:
 
 ```csharp
 // Instead of logging complex domain objects:
@@ -305,18 +327,20 @@ Logger.LogInformation("User: {@userInfo}", userInfo);
 3. **Handling Reflection**: If you need reflection, explicitly preserve types:
 
 ```xml
+
 <ItemGroup>
-  <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml"/>
 </ItemGroup>
 ```
 
 And in TrimmerRoots.xml:
 
 ```xml
+
 <linker>
-  <assembly fullname="YourAssembly">
-    <type fullname="YourAssembly.TypeToPreserve" preserve="all" />
-  </assembly>
+    <assembly fullname="YourAssembly">
+        <type fullname="YourAssembly.TypeToPreserve" preserve="all"/>
+    </assembly>
 </linker>
 ```
 
@@ -341,11 +365,13 @@ aws lambda update-function-configuration \
 3. **ARM64 Support**: For even better performance, consider using ARM64 architecture:
 
 When creating your project:
+
 ```bash
 dotnet new lambda.NativeAOT -n PowertoolsAotLoggerDemo --architecture arm64
 ```
 
 Or modify your deployment:
+
 ```bash
 aws lambda update-function-configuration \
     --function-name powertools-aot-logger-demo \
@@ -370,16 +396,18 @@ fields @timestamp, coldStart, billedDurationMs, maxMemoryUsedMB
 If you see errors about missing metadata, you may need to add more types to your trimmer roots:
 
 ```xml
+
 <ItemGroup>
-  <TrimmerRootAssembly Include="AWS.Lambda.Powertools.Logging" />
-  <TrimmerRootAssembly Include="System.Private.CoreLib" />
-  <TrimmerRootAssembly Include="System.Text.Json" />
+    <TrimmerRootAssembly Include="AWS.Lambda.Powertools.Logging"/>
+    <TrimmerRootAssembly Include="System.Private.CoreLib"/>
+    <TrimmerRootAssembly Include="System.Text.Json"/>
 </ItemGroup>
 ```
 
 ### Build Failures on macOS/Windows
 
-If you're building directly on macOS/Windows without Docker and encountering errors, remember that Native AOT is platform-specific. Always use the cross-platform build options mentioned earlier.
+If you're building directly on macOS/Windows without Docker and encountering errors, remember that Native AOT is
+platform-specific. Always use the cross-platform build options mentioned earlier.
 
 ## Summary
 
@@ -390,7 +418,9 @@ In this tutorial, you've learned:
 3. Cross-platform build and deployment strategies for Amazon Linux 2023
 4. Performance optimization techniques specific to AOT lambdas
 
-Native AOT combined with Powertools Logger gives you the best of both worlds: high-performance, low-latency Lambda functions with rich, structured logging capabilities.
+Native AOT combined with Powertools Logger gives you the best of both worlds: high-performance, low-latency Lambda
+functions with rich, structured logging capabilities.
 
 !!! tip "Next Steps"
-    Explore using the Embedded Metrics Format (EMF) with your Native AOT Lambda functions for enhanced observability, or try implementing Powertools Tracing in your Native AOT functions.
+Explore using the Embedded Metrics Format (EMF) with your Native AOT Lambda functions for enhanced observability, or try
+implementing Powertools Tracing in your Native AOT functions.
