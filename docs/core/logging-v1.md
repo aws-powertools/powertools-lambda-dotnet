@@ -1,5 +1,5 @@
 ---
-title: Logging v1
+title: Logging v1 - Legacy
 description: Core utility
 ---
 
