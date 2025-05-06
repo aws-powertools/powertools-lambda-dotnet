@@ -6,29 +6,30 @@ edit_uri: edit/develop/docs
 site_url: https://docs.powertools.aws.dev/lambda/dotnet/
 
 nav:
-  - Homepage: index.md
-  - References: references.md
-  - Changelog: changelog.md
-  - Roadmap: roadmap.md
+  - Homepage: 
+    - index.md
+    - References: references.md
+    - Changelog: changelog.md
+    - Roadmap: roadmap.md
+    - We Made This (Community): we_made_this.md
+    - Workshop 🆕: https://s12d.com/powertools-for-aws-lambda-workshop" target="_blank
+    - Getting started:
+        - Logging:
+            - getting-started/logger/simple.md
+            - getting-started/logger/aspnet.md
+            - getting-started/logger/aot.md
+    - Features:
+        - core/logging.md
+        - core/metrics.md
+        - core/tracing.md
+        - utilities/idempotency.md
+        - utilities/batch-processing.md
+        - Event Handler:
+            - core/event_handler/appsync_events.md
+        - utilities/parameters.md
+        - utilities/jmespath-functions.md
   - API Reference: api/" target="_blank
-  - We Made This (Community): we_made_this.md
-  - Workshop 🆕: https://s12d.com/powertools-for-aws-lambda-workshop" target="_blank
-  - Core utilities:
-      - Logging:
-          - core/logging.md
-          - core/logging-v2.md
-      - Metrics:
-          - core/metrics.md
-          - core/metrics-v2.md
-      - core/tracing.md
-      - Event Handler:
-          - core/event_handler/appsync_events.md
-  - Utilities:
-      - utilities/parameters.md
-      - utilities/idempotency.md
-      - utilities/batch-processing.md
-      - utilities/jmespath-functions.md
-
+      
 theme:
   name: material
   font:
@@ -49,14 +50,16 @@ theme:
   features:
     - header.autohide
     - navigation.sections
-    - navigation.expand
     - navigation.top
+    - navigation.tabs
     - navigation.instant
     - navigation.indexes
     - navigation.tracking
     - content.code.annotate
+    - content.code.copy
     - toc.follow
     - announce.dismiss
+    - content.tabs.link
   icon:
     repo: fontawesome/brands/github
   logo: media/aws-logo-light.svg

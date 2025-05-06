@@ -133,6 +133,7 @@ jobs:
             --name github \
             --username ${{ github.actor }} \
             --password ${{ secrets.GITHUB_TOKEN }}
+            --store-password-in-clear-text
 
       - name: Publish packages to GitHub Packages
         run: |

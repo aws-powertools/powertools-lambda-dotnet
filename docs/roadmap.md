@@ -27,19 +27,19 @@ You can help us prioritize by [upvoting existing feature requests](https://githu
 
 Modernizing our logging capabilities to align with .NET practices and improve developer experience.
 
-- [ ] Logger buffer implementation
-- [ ] New .NET-friendly API design (Serilog-like patterns)
-- [ ] Filtering and JMESPath expression support
-- [ ] Documentation for SDK context.Logger vs Powertools Logger differences
+- [x] Logger buffer implementation
+- [x] New .NET-friendly API design ILogger and LoggerFactory support
+- [x] Filtering and JMESPath expression support
+- [x] Message templates
 
 #### Metrics V2
 
 Updating metrics implementation to support latest EMF specifications and improve performance.
 
-- [ ] Update to latest EMF specifications
-- [ ] Breaking changes implementation for multiple dimensions
-- [ ] Add support for default dimensions on ColdStart metric
-- [ ] API updates - missing functionality that is present in Python implementation (ie: flush_metrics)
+- [x] Update to latest EMF specifications
+- [x] Breaking changes implementation for multiple dimensions
+- [x] Add support for default dimensions on ColdStart metric
+- [x] API updates - missing functionality that is present in Python implementation (ie: flush_metrics)
 
 ### Security and Production Readiness (P1)
 
@@ -47,7 +47,7 @@ Ensuring enterprise-grade security and compatibility with latest .NET developmen
 
 - [ ] .NET 10 support from day one
 - [ ] Deprecation path for .NET 6
-- [ ] Scorecard implementation
+- [x] Scorecard implementation
 - [ ] Security compliance checks on our pipeline
 - [ ] All utilities with end-to-end tests in our pipeline
 
