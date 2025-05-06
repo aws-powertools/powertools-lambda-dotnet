@@ -502,10 +502,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 TimeStamp = "FakeTime"
             };
             
-            Logger.LogInformation<User>(user, "{Name} and is {Age} years old", new object[]{user.Name, user.Age});
-            Assert.Contains("\"first_name\":\"John\"", output.ToString());
-            Assert.Contains("\"last_name\":\"Doe\"", output.ToString());
-            Assert.Contains("\"age\":42", output.ToString());
+            Logger.LogInformation("{Name} is {Age} years old", user.Name, user.Age);
+            
+            Assert.Contains("\"message\":\"John Doe is 42 years old\"", output.ToString());
             Assert.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"", output.ToString()); // does not override name
             
             output.Clear();
@@ -564,16 +563,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 Age = 42
             };
             
-            Logger.LogInformation<User>(user, "{Name} is {Age} years old", new object[]{user.FirstName, user.Age});
+            Logger.LogInformation("{Name} is {Age} years old", user.FirstName, user.Age);
             
             var logOutput = output.ToString();
             Assert.Contains("\"level\":\"Information\"", logOutput);
             Assert.Contains("\"message\":\"John is 42 years old\"", logOutput);
             Assert.Contains("\"service\":\"log-level-test-service\"", logOutput);
             Assert.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"", logOutput);
-            Assert.Contains("\"first_name\":\"John\"", logOutput);
-            Assert.Contains("\"last_name\":\"Doe\"", logOutput);
-            Assert.Contains("\"age\":42", logOutput);
             
             output.Clear();
             
@@ -630,8 +626,63 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             Assert.Contains("\"level\":\"Information\"", logOutput);
             Assert.DoesNotContain("\"level\":\"fakeLevel\"", logOutput);
             
+            output.Clear();
+            
+            Logger.LogInformation("{Name} is {Age} years old and {@user}", user.FirstName, user.Age, user);
+            
+            logOutput = output.ToString();
+            
+            Assert.Contains("\"message\":\"John is 42 years old and Doe, John (42)\"", logOutput);
+            // Verify serialized user object with all properties
+            Assert.Contains("\"user\":{", logOutput);
+            Assert.Contains("\"first_name\":\"John\"", logOutput);
+            Assert.Contains("\"last_name\":\"Doe\"", logOutput);
+            Assert.Contains("\"age\":42", logOutput);
+            Assert.Contains("\"name\":\"John Doe\"", logOutput);
+            Assert.Contains("\"time_stamp\":null", logOutput);
+            Assert.Contains("}", logOutput);
+            
             _output.WriteLine(logOutput);  
+        }
+        
+        [Fact]
+        public void TestMessageTemplateFormatting()
+        {
+            var output = new TestLoggerOutput();
+            var logger = LoggerFactory.Create(builder =>
+            {
+                builder.AddPowertoolsLogger(config =>
+                {
+                    config.Service = "template-format-service";
+                    config.MinimumLogLevel = LogLevel.Debug;
+                    config.LoggerOutputCase = LoggerOutputCase.SnakeCase;
+                    config.LogOutput = output;
+                });
+            }).CreatePowertoolsLogger();
 
+            // Simple template with one parameter
+            logger.LogInformation("This is a test with {param}", "Hello");
+
+            var logOutput = output.ToString();
+            _output.WriteLine(logOutput);
+
+            // Verify full formatted message appears correctly
+            Assert.Contains("\"message\":\"This is a test with Hello\"", logOutput);
+            // Verify parameter is also included separately
+            Assert.Contains("\"param\":\"Hello\"", logOutput);
+
+            output.Clear();
+
+            // Multiple parameters
+            logger.LogInformation("Test with {first} and {second}", "One", "Two");
+
+            logOutput = output.ToString();
+            _output.WriteLine(logOutput);
+
+            // Verify message with multiple parameters
+            Assert.Contains("\"message\":\"Test with One and Two\"", logOutput);
+            Assert.Contains("\"first\":\"One\"", logOutput);
+            Assert.Contains("\"second\":\"Two\"", logOutput);
         }
 
         public class ParentClass

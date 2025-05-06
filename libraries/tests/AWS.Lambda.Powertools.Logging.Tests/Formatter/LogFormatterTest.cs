@@ -25,6 +25,7 @@ using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Serializers;
 using AWS.Lambda.Powertools.Logging.Tests.Handlers;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -193,7 +194,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             };
 
             // Act
-            logger.LogInformation(scopeExtraKeys, message);
+            logger.LogInformation(message, scopeExtraKeys);
 
             // Assert
             logFormatter.Received(1).FormatLogEntry(Arg.Is<LogEntry>

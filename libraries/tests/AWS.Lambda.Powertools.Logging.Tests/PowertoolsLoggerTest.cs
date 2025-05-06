@@ -811,7 +811,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
-            var message = Guid.NewGuid().ToString();
+            var message = "{@keys}";
 
             var configurations = Substitute.For<IPowertoolsConfigurations>();
             configurations.Service.Returns(service);
@@ -836,29 +836,29 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             if (logMethod)
             {
-                logger.Log(logLevel, scopeKeys, message);
+                logger.Log(logLevel, message,scopeKeys);
             }
             else
             {
                 switch (logLevel)
                 {
                     case LogLevel.Trace:
-                        logger.LogTrace(scopeKeys, message);
+                        logger.LogTrace(message,scopeKeys);
                         break;
                     case LogLevel.Debug:
-                        logger.LogDebug(scopeKeys, message);
+                        logger.LogDebug(message,scopeKeys);
                         break;
                     case LogLevel.Information:
-                        logger.LogInformation(scopeKeys, message);
+                        logger.LogInformation(message,scopeKeys);
                         break;
                     case LogLevel.Warning:
-                        logger.LogWarning(scopeKeys, message);
+                        logger.LogWarning(message,scopeKeys);
                         break;
                     case LogLevel.Error:
-                        logger.LogError(scopeKeys, message);
+                        logger.LogError(message,scopeKeys);
                         break;
                     case LogLevel.Critical:
-                        logger.LogCritical(scopeKeys, message);
+                        logger.LogCritical(message,scopeKeys);
                         break;
                     case LogLevel.None:
                         break;
@@ -895,7 +895,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
-            var message = Guid.NewGuid().ToString();
+            var message = "{@keys}";
 
             var configurations = Substitute.For<IPowertoolsConfigurations>();
             configurations.Service.Returns(service);
@@ -921,29 +921,29 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             if (logMethod)
             {
-                logger.Log(logLevel, scopeKeys, message);
+                logger.Log(logLevel, message,scopeKeys);
             }
             else
             {
                 switch (logLevel)
                 {
                     case LogLevel.Trace:
-                        logger.LogTrace(scopeKeys, message);
+                        logger.LogTrace(message,scopeKeys);
                         break;
                     case LogLevel.Debug:
-                        logger.LogDebug(scopeKeys, message);
+                        logger.LogDebug(message,scopeKeys);
                         break;
                     case LogLevel.Information:
-                        logger.LogInformation(scopeKeys, message);
+                        logger.LogInformation(message,scopeKeys);
                         break;
                     case LogLevel.Warning:
-                        logger.LogWarning(scopeKeys, message);
+                        logger.LogWarning(message,scopeKeys);
                         break;
                     case LogLevel.Error:
-                        logger.LogError(scopeKeys, message);
+                        logger.LogError(message,scopeKeys);
                         break;
                     case LogLevel.Critical:
-                        logger.LogCritical(scopeKeys, message);
+                        logger.LogCritical(message,scopeKeys);
                         break;
                     case LogLevel.None:
                         break;
@@ -980,7 +980,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
             var service = Guid.NewGuid().ToString();
-            var message = Guid.NewGuid().ToString();
+            var message = "{@keys}";
 
             var configurations = Substitute.For<IPowertoolsConfigurations>();
             configurations.Service.Returns(service);
@@ -1006,29 +1006,29 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             if (logMethod)
             {
-                logger.Log(logLevel, scopeKeys, message);
+                logger.Log(logLevel, message, scopeKeys);
             }
             else
             {
                 switch (logLevel)
                 {
                     case LogLevel.Trace:
-                        logger.LogTrace(scopeKeys, message);
+                        logger.LogTrace(message,scopeKeys);
                         break;
                     case LogLevel.Debug:
-                        logger.LogDebug(scopeKeys, message);
+                        logger.LogDebug(message,scopeKeys);
                         break;
                     case LogLevel.Information:
-                        logger.LogInformation(scopeKeys, message);
+                        logger.LogInformation(message,scopeKeys);
                         break;
                     case LogLevel.Warning:
-                        logger.LogWarning(scopeKeys, message);
+                        logger.LogWarning(message,scopeKeys);
                         break;
                     case LogLevel.Error:
-                        logger.LogError(scopeKeys, message);
+                        logger.LogError(message,scopeKeys);
                         break;
                     case LogLevel.Critical:
-                        logger.LogCritical(scopeKeys, message);
+                        logger.LogCritical(message,scopeKeys);
                         break;
                     case LogLevel.None:
                         break;
