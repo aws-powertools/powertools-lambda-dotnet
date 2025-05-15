@@ -214,7 +214,7 @@ public class MetricDirective
             // Check the actual dimension count inside the first dimension set
             if (firstDimensionSet.Dimensions.Count >= PowertoolsConfigurations.MaxDimensions)
             {
-                throw new ArgumentOutOfRangeException(nameof(Dimensions),
+                throw new ArgumentOutOfRangeException(nameof(dimension),
                     $"Cannot add more than {PowertoolsConfigurations.MaxDimensions} dimensions at the same time.");
             }
 

@@ -596,11 +596,11 @@ public class Metrics : IMetrics, IDisposable
         foreach (var (key, value) in dimensions)
         {
             if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentNullException(nameof(key),
+                throw new ArgumentNullException(nameof(dimensions),
                     "'AddDimensions' method requires valid dimension keys. 'Null' or empty values are not allowed.");
 
             if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentNullException(nameof(value),
+                throw new ArgumentNullException(nameof(dimensions),
                     "'AddDimensions' method requires valid dimension values. 'Null' or empty values are not allowed.");
         }
 
