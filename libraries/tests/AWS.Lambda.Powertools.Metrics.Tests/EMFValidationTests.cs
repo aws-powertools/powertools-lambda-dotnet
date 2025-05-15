@@ -110,7 +110,7 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
         [Trait("Category", "EMFLimits")]
         [Fact]
-        public void WhenMoreThan9DimensionsAdded_ThrowArgumentOutOfRangeException()
+        public void WhenMoreThan29DimensionsAdded_ThrowArgumentOutOfRangeException()
         {
             // Act
             var act = () => { _handler.MaxDimensions(29); };
@@ -399,6 +399,96 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             Assert.Contains(
                 "{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\"]]",
                 metricsOutput);
+        }
+        
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void AddDimensions_WithMultipleValues_AddsDimensionsToSameDimensionSet()
+        {
+            // Act
+            _handler.AddMultipleDimensionsInSameSet();
+
+            var result = _consoleOut.ToString();
+    
+            // Assert
+            Assert.Contains("\"Dimensions\":[[\"Service\",\"Environment\",\"Region\"]]", result);
+            Assert.Contains("\"Service\":\"testService\",\"Environment\":\"test\",\"Region\":\"us-west-2\"", result);
+        }
+
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void AddDimensions_WithEmptyArray_DoesNotAddAnyDimensions()
+        {
+            // Act
+            _handler.AddEmptyDimensions();
+    
+            var result = _consoleOut.ToString();
+    
+            // Assert
+            Assert.Contains("\"Dimensions\":[[\"Service\"]]", result);
+            Assert.DoesNotContain("\"Environment\":", result);
+        }
+
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void AddDimensions_WithNullOrEmptyKey_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => _handler.AddDimensionsWithInvalidKey());
+        }
+
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void AddDimensions_WithNullOrEmptyValue_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => _handler.AddDimensionsWithInvalidValue());
+        }
+        
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void AddDimensions_OverwritesExistingDimensions_LastValueWins()
+        {
+            // Act
+            _handler.AddDimensionsWithOverwrite();
+
+            var result = _consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"Service\":\"testService\",\"dimension1\":\"B\",\"dimension2\":\"2\"", result);
+            Assert.DoesNotContain("\"dimension1\":\"A\"", result);
+        }
+
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void AddDimensions_IncludesDefaultDimensions()
+        {
+            // Act
+            _handler.AddDimensionsWithDefaultDimensions();
+
+            var result = _consoleOut.ToString();
+
+            // Assert
+            Assert.Contains("\"Dimensions\":[[\"Service\",\"environment\",\"dimension1\",\"dimension2\"]]", result);
+            Assert.Contains("\"Service\":\"testService\",\"environment\":\"prod\",\"dimension1\":\"1\",\"dimension2\":\"2\"", result);
+        }
+
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
+        public void AddDefaultDimensionsAtRuntime_OnlyAppliedToNewDimensionSets()
+        {
+            // Act
+            _handler.AddDefaultDimensionsAtRuntime();
+
+            var result = _consoleOut.ToString();
+
+            // First metric output should have original default dimensions
+            Assert.Contains("\"Metrics\":[{\"Name\":\"FirstMetric\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"environment\",\"dimension1\",\"dimension2\"]]", result);
+            Assert.Contains("\"Service\":\"testService\",\"environment\":\"prod\",\"dimension1\":\"1\",\"dimension2\":\"2\",\"FirstMetric\":1", result);
+    
+            // Second metric output should have additional default dimensions
+            Assert.Contains("\"Metrics\":[{\"Name\":\"SecondMetric\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"environment\",\"tenantId\",\"foo\",\"bar\"]]", result);
+            Assert.Contains("\"Service\":\"testService\",\"environment\":\"prod\",\"tenantId\":\"1\",\"foo\":\"1\",\"bar\":\"2\",\"SecondMetric\":1", result);
         }
 
 
