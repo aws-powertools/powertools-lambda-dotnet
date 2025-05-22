@@ -109,6 +109,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Event
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.EventHandler", "src\AWS.Lambda.Powertools.EventHandler\AWS.Lambda.Powertools.EventHandler.csproj", "{F4B8D5AF-D3CA-4910-A14D-E5BAEF0FD1DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver", "src\AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver\AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver.csproj", "{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -590,6 +592,18 @@ Global
 		{F4B8D5AF-D3CA-4910-A14D-E5BAEF0FD1DE}.Release|x64.Build.0 = Release|Any CPU
 		{F4B8D5AF-D3CA-4910-A14D-E5BAEF0FD1DE}.Release|x86.ActiveCfg = Release|Any CPU
 		{F4B8D5AF-D3CA-4910-A14D-E5BAEF0FD1DE}.Release|x86.Build.0 = Release|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Debug|x64.Build.0 = Debug|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Debug|x86.Build.0 = Debug|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Release|x64.ActiveCfg = Release|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Release|x64.Build.0 = Release|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Release|x86.ActiveCfg = Release|Any CPU
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 
 	GlobalSection(NestedProjects) = preSolution
@@ -641,5 +655,6 @@ Global
 		{7FC6DD65-0352-4139-8D08-B25C0A0403E3} = {4EAB66F9-C9CB-4E8A-BEE6-A14CD7FDE02F}
 		{61374D8E-F77C-4A31-AE07-35DAF1847369} = {1CFF5568-8486-475F-81F6-06105C437528}
 		{F4B8D5AF-D3CA-4910-A14D-E5BAEF0FD1DE} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
+		{281F7EB5-ACE5-458F-BC88-46A8899DF3BA} = {73C9B1E5-3893-47E8-B373-17E5F5D7E6F5}
 	EndGlobalSection
 EndGlobal
