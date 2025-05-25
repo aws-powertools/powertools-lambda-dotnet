@@ -14,6 +14,7 @@
     <PackageVersion Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.13.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.1" />
     <PackageVersion Include="AWSSDK.SecretsManager" Version="3.7.302.29" />
     <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="3.7.303.2" />
