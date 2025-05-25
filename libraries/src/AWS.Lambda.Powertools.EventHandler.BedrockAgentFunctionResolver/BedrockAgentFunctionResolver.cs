@@ -1,14 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Lambda.Core;
 
+// ReSharper disable once CheckNamespace
 namespace AWS.Lambda.Powertools.EventHandler
 {
+    /// <summary>
+    /// A resolver for Bedrock Agent functions that allows registering handlers for tool functions.
+    /// </summary>
+    /// <example>
+    /// Basic usage:
+    /// <code>
+    /// var resolver = new BedrockAgentFunctionResolver();
+    /// resolver.Tool("GetWeather", (string city) => $"Weather in {city} is sunny");
+    /// 
+    /// // Lambda handler
+    /// public ActionGroupInvocationOutput FunctionHandler(ActionGroupInvocationInput input, ILambdaContext context)
+    /// {
+    ///     return resolver.Resolve(input, context);
+    /// }
+    /// </code>
+    /// </example>
     public class BedrockAgentFunctionResolver
     {
         private readonly
@@ -33,6 +45,23 @@ namespace AWS.Lambda.Powertools.EventHandler
         /// <summary>
         /// Registers a handler that directly accepts ActionGroupInvocationInput and returns ActionGroupInvocationOutput
         /// </summary>
+        /// <param name="name">The name of the tool function</param>
+        /// <param name="handler">The handler function that accepts input and context and returns output</param>
+        /// <param name="description">Optional description of the tool function</param>
+        /// <returns>The resolver instance for method chaining</returns>
+        /// <example>
+        /// <code>
+        /// var resolver = new BedrockAgentFunctionResolver();
+        /// resolver.Tool(
+        ///     "GetWeatherDetails",
+        ///     (ActionGroupInvocationInput input, ILambdaContext context) => {
+        ///         context.Logger.LogLine($"Processing request for {input.Function}");
+        ///         return new ActionGroupInvocationOutput { Text = "Weather details response" };
+        ///     },
+        ///     "Gets detailed weather information"
+        /// );
+        /// </code>
+        /// </example>
         public BedrockAgentFunctionResolver Tool(
             string name,
             Func<ActionGroupInvocationInput, ILambdaContext?, ActionGroupInvocationOutput> handler,
@@ -48,6 +77,23 @@ namespace AWS.Lambda.Powertools.EventHandler
         /// <summary>
         /// Registers a handler that directly accepts ActionGroupInvocationInput and returns ActionGroupInvocationOutput
         /// </summary>
+        /// <param name="name">The name of the tool function</param>
+        /// <param name="handler">The handler function that accepts input and returns output</param>
+        /// <param name="description">Optional description of the tool function</param>
+        /// <returns>The resolver instance for method chaining</returns>
+        /// <example>
+        /// <code>
+        /// var resolver = new BedrockAgentFunctionResolver();
+        /// resolver.Tool(
+        ///     "GetWeatherDetails",
+        ///     (ActionGroupInvocationInput input) => {
+        ///         var city = input.Parameters.FirstOrDefault(p => p.Name == "city")?.Value;
+        ///         return new ActionGroupInvocationOutput { Text = $"Weather in {city} is sunny" };
+        ///     },
+        ///     "Gets weather for a city"
+        /// );
+        /// </code>
+        /// </example>
         public BedrockAgentFunctionResolver Tool(
             string name,
             Func<ActionGroupInvocationInput, ActionGroupInvocationOutput> handler,
@@ -61,24 +107,199 @@ namespace AWS.Lambda.Powertools.EventHandler
         }
 
         /// <summary>
-        /// Registers a handler for a tool function with automatically converted return type.
+        /// Registers a parameter-less handler that returns ActionGroupInvocationOutput
         /// </summary>
+        /// <param name="name">The name of the tool function</param>
+        /// <param name="handler">The handler function that returns output</param>
+        /// <param name="description">Optional description of the tool function</param>
+        /// <returns>The resolver instance for method chaining</returns>
+        /// <example>
+        /// <code>
+        /// var resolver = new BedrockAgentFunctionResolver();
+        /// resolver.Tool(
+        ///     "GetCurrentTime",
+        ///     () => new ActionGroupInvocationOutput { Text = DateTime.Now.ToString() },
+        ///     "Gets the current server time"
+        /// );
+        /// </code>
+        /// </example>
         public BedrockAgentFunctionResolver Tool(
             string name,
-            string description = "",
-            Delegate? handler = null)
+            Func<ActionGroupInvocationOutput> handler,
+            string description = "")
         {
-            // Delegate to the generic version with object as return type
+            ArgumentNullException.ThrowIfNull(handler);
+
+            _handlers[name] = (input, context) => handler();
+            return this;
+        }
+
+        /// <summary>
+        /// Registers a parameter-less handler with automatic string conversion
+        /// </summary>
+        /// <param name="name">The name of the tool function</param>
+        /// <param name="handler">The handler function that returns a string</param>
+        /// <param name="description">Optional description of the tool function</param>
+        /// <returns>The resolver instance for method chaining</returns>
+        /// <example>
+        /// <code>
+        /// var resolver = new BedrockAgentFunctionResolver();
+        /// resolver.Tool(
+        ///     "GetGreeting",
+        ///     () => "Hello, world!",
+        ///     "Returns a greeting message"
+        /// );
+        /// </code>
+        /// </example>
+        public BedrockAgentFunctionResolver Tool(
+            string name,
+            Func<string> handler,
+            string description = "")
+        {
+            ArgumentNullException.ThrowIfNull(handler);
+
+            _handlers[name] = (input, context) => new ActionGroupInvocationOutput { Text = handler() };
+            return this;
+        }
+
+        /// <summary>
+        /// Registers a parameter-less handler with automatic object conversion
+        /// </summary>
+        /// <param name="name">The name of the tool function</param>
+        /// <param name="handler">The handler function that returns an object</param>
+        /// <param name="description">Optional description of the tool function</param>
+        /// <returns>The resolver instance for method chaining</returns>
+        /// <example>
+        /// <code>
+        /// var resolver = new BedrockAgentFunctionResolver();
+        /// resolver.Tool(
+        ///     "GetServerStatus",
+        ///     () => new { Status = "Online", Uptime = "99.9%" },
+        ///     "Returns the server status information"
+        /// );
+        /// </code>
+        /// </example>
+        public BedrockAgentFunctionResolver Tool(
+            string name,
+            Func<object> handler,
+            string description = "")
+        {
+            ArgumentNullException.ThrowIfNull(handler);
+
+            _handlers[name] = (input, context) =>
+            {
+                var result = handler();
+                return ConvertToOutput(result);
+            };
+            return this;
+        }
+
+        /// <summary>
+        /// Registers a handler for a tool function with automatically converted return type (no description).
+        /// </summary>
+        /// <param name="name">The name of the tool function</param>
+        /// <param name="handler">The delegate handler function</param>
+        /// <returns>The resolver instance for method chaining</returns>
+        /// <example>
+        /// <code>
+        /// var resolver = new BedrockAgentFunctionResolver();
+        /// resolver.Tool(
+        ///     "CalculateSum", 
+        ///     (int a, int b) => a + b
+        /// );
+        /// </code>
+        /// </example>
+        public BedrockAgentFunctionResolver Tool(
+            string name,
+            Delegate handler)
+        {
+            return Tool<object>(name, "", handler);
+        }
+
+        /// <summary>
+        /// Registers a handler for a tool function with description and automatically converted return type.
+        /// </summary>
+        /// <param name="name">The name of the tool function</param>
+        /// <param name="description">Description of the tool function</param>
+        /// <param name="handler">The delegate handler function</param>
+        /// <returns>The resolver instance for method chaining</returns>
+        /// <example>
+        /// <code>
+        /// var resolver = new BedrockAgentFunctionResolver();
+        /// resolver.Tool(
+        ///     "GetWeather",
+        ///     "Gets the weather forecast for a specific city", 
+        ///     (string city, int days) => $"{days}-day forecast for {city}: Sunny"
+        /// );
+        /// </code>
+        /// </example>
+        public BedrockAgentFunctionResolver Tool(
+            string name,
+            string description,
+            Delegate handler)
+        {
             return Tool<object>(name, description, handler);
         }
 
         /// <summary>
-        /// Registers a handler for a tool function with typed return value.
+        /// Registers a handler for a tool function with typed return value (no description).
         /// </summary>
+        /// <typeparam name="TResult">The return type of the handler</typeparam>
+        /// <param name="name">The name of the tool function</param>
+        /// <param name="handler">The delegate handler function</param>
+        /// <returns>The resolver instance for method chaining</returns>
+        /// <example>
+        /// <code>
+        /// var resolver = new BedrockAgentFunctionResolver();
+        /// resolver.Tool&lt;int&gt;(
+        ///     "CalculateArea", 
+        ///     (int width, int height) => width * height
+        /// );
+        /// </code>
+        /// </example>
         public BedrockAgentFunctionResolver Tool<TResult>(
             string name,
-            string description = "",
-            Delegate? handler = null)
+            Delegate handler)
+        {
+            return Tool<TResult>(name, "", handler);
+        }
+
+        /// <summary>
+        /// Registers a handler for a tool function with description and typed return value.
+        /// </summary>
+        /// <typeparam name="TResult">The return type of the handler</typeparam>
+        /// <param name="name">The name of the tool function</param>
+        /// <param name="description">Description of the tool function</param>
+        /// <param name="handler">The delegate handler function</param>
+        /// <returns>The resolver instance for method chaining</returns>
+        /// <example>
+        /// <code>
+        /// var resolver = new BedrockAgentFunctionResolver();
+        /// 
+        /// // Register a function with strongly typed parameters and return value
+        /// resolver.Tool&lt;double&gt;(
+        ///     "CalculateDistance",
+        ///     "Calculates the distance between two points", 
+        ///     (double x1, double y1, double x2, double y2) => {
+        ///         return Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(y2 - y1, 2));
+        ///     }
+        /// );
+        /// 
+        /// // Register a function that accepts Lambda context
+        /// resolver.Tool&lt;string&gt;(
+        ///     "LogAndReturn",
+        ///     "Logs a message and returns it", 
+        ///     (string message, ILambdaContext context) => {
+        ///         context.Logger.LogLine($"Message received: {message}");
+        ///         return message;
+        ///     }
+        /// );
+        /// </code>
+        /// </example>
+        public BedrockAgentFunctionResolver Tool<TResult>(
+            string name,
+            string description,
+            Delegate handler)
         {
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
@@ -91,7 +312,7 @@ namespace AWS.Lambda.Powertools.EventHandler
                 var bedrockParamIndex = 0;
 
                 // Get service provider from resolver if available
-                var serviceProvider = (this as DIBedrockAgentFunctionResolver)?.ServiceProvider;
+                var serviceProvider = (this as DiBedrockAgentFunctionResolver)?.ServiceProvider;
 
                 // Map parameters from Bedrock input and DI
                 for (var i = 0; i < parameters.Length; i++)
@@ -198,57 +419,24 @@ namespace AWS.Lambda.Powertools.EventHandler
         }
 
         /// <summary>
-        /// Registers a parameter-less handler that returns ActionGroupInvocationOutput
-        /// </summary>
-        public BedrockAgentFunctionResolver Tool(
-            string name,
-            Func<ActionGroupInvocationOutput> handler,
-            string description = "")
-        {
-            if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-
-            _handlers[name] = (input, context) => handler();
-            return this;
-        }
-
-        /// <summary>
-        /// Registers a parameter-less handler with automatic string conversion
-        /// </summary>
-        public BedrockAgentFunctionResolver Tool(
-            string name,
-            Func<string> handler,
-            string description = "")
-        {
-            if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-
-            _handlers[name] = (input, context) => new ActionGroupInvocationOutput { Text = handler() };
-            return this;
-        }
-
-        /// <summary>
-        /// Registers a parameter-less handler with automatic object conversion
-        /// </summary>
-        public BedrockAgentFunctionResolver Tool(
-            string name,
-            Func<object> handler,
-            string description = "")
-        {
-            if (handler == null)
-                throw new ArgumentNullException(nameof(handler));
-
-            _handlers[name] = (input, context) =>
-            {
-                var result = handler();
-                return ConvertToOutput(result);
-            };
-            return this;
-        }
-
-        /// <summary>
         /// Resolves and processes a Bedrock Agent function invocation.
         /// </summary>
+        /// <param name="input">The Bedrock Agent input containing the function name and parameters</param>
+        /// <param name="context">Optional Lambda context</param>
+        /// <returns>The output from the function execution</returns>
+        /// <example>
+        /// <code>
+        /// // Lambda handler
+        /// public ActionGroupInvocationOutput FunctionHandler(ActionGroupInvocationInput input, ILambdaContext context)
+        /// {
+        ///     var resolver = new BedrockAgentFunctionResolver()
+        ///         .Tool("GetWeather", (string city) => $"Weather in {city} is sunny")
+        ///         .Tool("GetTime", () => DateTime.Now.ToString());
+        ///     
+        ///     return resolver.Resolve(input, context);
+        /// }
+        /// </code>
+        /// </example>
         public ActionGroupInvocationOutput Resolve(ActionGroupInvocationInput input, ILambdaContext? context = null)
         {
             return ResolveAsync(input, context).GetAwaiter().GetResult();
@@ -257,6 +445,26 @@ namespace AWS.Lambda.Powertools.EventHandler
         /// <summary>
         /// Asynchronously resolves and processes a Bedrock Agent function invocation.
         /// </summary>
+        /// <param name="input">The Bedrock Agent input containing the function name and parameters</param>
+        /// <param name="context">Optional Lambda context</param>
+        /// <returns>A task that completes with the output from the function execution</returns>
+        /// <example>
+        /// <code>
+        /// // Async Lambda handler
+        /// public async Task&lt;ActionGroupInvocationOutput&gt; FunctionHandler(ActionGroupInvocationInput input, ILambdaContext context)
+        /// {
+        ///     var resolver = new BedrockAgentFunctionResolver()
+        ///         .Tool("GetWeatherAsync", async (string city) => {
+        ///             // Simulate API call
+        ///             await Task.Delay(100);
+        ///             return $"Weather in {city} is sunny";
+        ///         })
+        ///         .Tool("GetTime", () => DateTime.Now.ToString());
+        ///     
+        ///     return await resolver.ResolveAsync(input, context);
+        /// }
+        /// </code>
+        /// </example>
         public async Task<ActionGroupInvocationOutput> ResolveAsync(ActionGroupInvocationInput input,
             ILambdaContext? context = null)
         {

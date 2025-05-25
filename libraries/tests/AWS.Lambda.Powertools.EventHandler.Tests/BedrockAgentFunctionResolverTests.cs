@@ -1,9 +1,11 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using Microsoft.Extensions.DependencyInjection;
+#pragma warning disable CS0162 // Unreachable code detected
 
 namespace AWS.Lambda.Powertools.EventHandler.Tests;
 
@@ -102,7 +104,7 @@ public class BedrockAgentFunctionResolverTests
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
         resolver.Tool("TestFunction",
-            (ActionGroupInvocationInput input, ILambdaContext context) => new ActionGroupInvocationOutput { Text = $"Hello, {input.Function}!" });
+            (input, context) => new ActionGroupInvocationOutput { Text = $"Hello, {input.Function}!" });
 
         var input = new ActionGroupInvocationInput { Function = "TestFunction" };
         var context = new TestLambdaContext();
@@ -120,7 +122,7 @@ public class BedrockAgentFunctionResolverTests
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
         resolver.Tool("TestFunction",
-            (ActionGroupInvocationInput input) => new ActionGroupInvocationOutput { Text = $"Hello, {input.Function}!" });
+            input => new ActionGroupInvocationOutput { Text = $"Hello, {input.Function}!" });
 
         var input = new ActionGroupInvocationInput { Function = "TestFunction" };
         var context = new TestLambdaContext();
@@ -176,10 +178,6 @@ public class BedrockAgentFunctionResolverTests
         var input = new ActionGroupInvocationInput
         {
             Function = "TestFunction",
-            RequestBody = new RequestBody
-            {
-                
-            },
             Parameters = new List<Parameter>
             {
                 new Parameter
@@ -267,11 +265,9 @@ public class BedrockAgentFunctionResolverTests
     [Fact]
     public void TestFunctionHandlerWithEventAndServices()
     {
-        // Arrange
-        
         // Setup DI
         var services = new ServiceCollection();
-        services.AddSingleton(new HttpClient());
+        services.AddSingleton<IMyInterface>(new MyImplementation());
         services.AddBedrockResolver();
 
         var serviceProvider = services.BuildServiceProvider();
@@ -280,18 +276,10 @@ public class BedrockAgentFunctionResolverTests
         resolver.Tool(
             name: "GetCustomForecast",
             description: "Get detailed forecast for a location",
-            handler: async (string location, int days, HttpClient client, ILambdaContext ctx) =>
+            handler: async (string location, int days, IMyInterface client, ILambdaContext ctx) =>
             {
-                var resp = await client.GetStringAsync("https://api.open-meteo.com/v1/forecast?latitude=38.7167&longitude=-9.1333&current=temperature_2m");
+                var resp = await client.DoSomething(location , days);
                 return resp;
-            }
-        );
-        
-        resolver.Tool(
-            name: "Greet",
-            description: "Greet a user",
-            handler: (string name) => {
-                return $"Hello {name}";
             }
         );
         
@@ -321,7 +309,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("1-day forecast for Lisbon", result.Text);
+        Assert.Equal("Forecast for Lisbon for 1 days", result.Text);
     }
     
     [Fact]
@@ -374,11 +362,304 @@ public class BedrockAgentFunctionResolverTests
         // Assert
         Assert.Equal("1-day forecast for Lisbon", result.Text);
     }
+    
+    [Fact]
+    public void TestFunctionHandlerWithBooleanParameter()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "TestBool",
+            description: "Test boolean parameter",
+            handler: (bool isEnabled) => {
+                return $"Feature is {(isEnabled ? "enabled" : "disabled")}";
+            }
+        );
+
+        var input = new ActionGroupInvocationInput
+        {
+            Function = "TestBool",
+            Parameters = new List<Parameter>
+            {
+                new Parameter
+                {
+                    Name = "isEnabled",
+                    Value = "true",
+                    Type = "Boolean"
+                }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Equal("Feature is enabled", result.Text);
+    }
+    
+    [Fact]
+    public void TestFunctionHandlerWithMissingRequiredParameter()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "RequiredParam",
+            description: "Function with required parameter",
+            handler: (string name) => $"Hello, {name}!"
+        );
+
+        var input = new ActionGroupInvocationInput
+        {
+            Function = "RequiredParam",
+            Parameters = new List<Parameter>() // Empty parameters
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Contains("Hello, !", result.Text);
+    }
+    
+    [Fact]
+    public void TestFunctionHandlerWithMultipleParameterTypes()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "ComplexFunction",
+            description: "Test multiple parameter types",
+            handler: (string name, int count, bool isActive) => {
+                return $"Name: {name}, Count: {count}, Active: {isActive}";
+            }
+        );
+
+        var input = new ActionGroupInvocationInput
+        {
+            Function = "ComplexFunction",
+            Parameters = new List<Parameter>
+            {
+                new Parameter { Name = "name", Value = "Test", Type = "String" },
+                new Parameter { Name = "count", Value = "5", Type = "Integer" },
+                new Parameter { Name = "isActive", Value = "true", Type = "Boolean" }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Equal("Name: Test, Count: 5, Active: True", result.Text);
+    }
+    
+    public enum TestEnum
+    {
+        Option1,
+        Option2,
+        Option3
+    }
+
+    [Fact]
+    public void TestFunctionHandlerWithEnumParameter()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "EnumTest",
+            description: "Test enum parameter",
+            handler: (TestEnum option) => {
+                return $"Selected option: {option}";
+            }
+        );
+
+        var input = new ActionGroupInvocationInput
+        {
+            Function = "EnumTest",
+            Parameters = new List<Parameter>
+            {
+                new Parameter
+                {
+                    Name = "option",
+                    Value = "Option2",
+                    Type = "String" // Enums come as strings
+                }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Equal("Selected option: Option2", result.Text);
+    }
+    
+    [Fact]
+    public void TestParameterNameCaseSensitivity()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "CaseTest",
+            description: "Test case sensitivity",
+            handler: (string userName) => $"Hello, {userName}!"
+        );
+
+        var input = new ActionGroupInvocationInput
+        {
+            Function = "CaseTest",
+            Parameters = new List<Parameter>
+            {
+                new Parameter
+                {
+                    Name = "UserName", // Different case than parameter
+                    Value = "John",
+                    Type = "String"
+                }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Equal("Hello, John!", result.Text);
+    }
+    
+    [Fact]
+    public void TestParameterOrderIndependence()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "OrderTest",
+            description: "Test parameter order independence",
+            handler: (string firstName, string lastName) => {
+                return $"Name: {firstName} {lastName}";
+            }
+        );
+
+        var input = new ActionGroupInvocationInput
+        {
+            Function = "OrderTest",
+            Parameters = new List<Parameter>
+            {
+                // Parameters in reverse order of handler parameters
+                new Parameter { Name = "lastName", Value = "Smith", Type = "String" },
+                new Parameter { Name = "firstName", Value = "John", Type = "String" }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Equal("Name: John Smith", result.Text);
+    }
+    
+    [Fact]
+    public void TestFunctionHandlerWithDecimalParameter()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "PriceCalculator",
+            description: "Calculate total price with tax",
+            handler: (decimal price) => {
+                var withTax = price * 1.2m;
+                return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
+            }
+        );
+
+        var input = new ActionGroupInvocationInput
+        {
+            Function = "PriceCalculator",
+            Parameters = new List<Parameter>
+            {
+                new Parameter
+                {
+                    Name = "price",
+                    Value = "29.99",
+                    Type = "Number"
+                }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Contains("35.99", result.Text);
+    }
+    
+    [Fact]
+    public void TestFunctionHandlerWithArrayParameter()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "ArrayTest",
+            description: "Test with array parameter",
+            handler: (string text) => {
+                // In a real implementation, you'd parse the array from the string
+                // ActionGroupInvocationInput doesn't directly support array types
+                return $"Received: {text}";
+            }
+        );
+
+        var input = new ActionGroupInvocationInput
+        {
+            Function = "ArrayTest",
+            Parameters = new List<Parameter>
+            {
+                new Parameter
+                {
+                    Name = "text",
+                    Value = "[\"item1\",\"item2\"]", // Array as JSON string
+                    Type = "Array" 
+                }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Equal("Received: [\"item1\",\"item2\"]", result.Text);
+    }
+    
+    [Fact]
+    public void TestFunctionHandlerWithExceptionInHandler()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "ThrowingFunction",
+            description: "Function that throws exception",
+            handler: () => {
+                throw new InvalidOperationException("Test error");
+                return "This will not run:";
+            }
+        );
+    
+        var input = new ActionGroupInvocationInput { Function = "ThrowingFunction" };
+    
+        // Act
+        var result = resolver.Resolve(input);
+    
+        // Assert
+        Assert.Contains("Error executing function", result.Text);
+    }
 }
 
+internal interface IMyInterface
+{
+    Task<string> DoSomething(string location, int days);
+}
 
-// String
-// Number
-// Integer
-// Boolean
-// Array
+internal class MyImplementation : IMyInterface
+{
+    public async Task<string> DoSomething(string location, int days)
+    {
+        return await Task.FromResult($"Forecast for {location} for {days} days");
+    }
+}
