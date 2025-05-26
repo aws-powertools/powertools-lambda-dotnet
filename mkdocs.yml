@@ -26,6 +26,7 @@ nav:
         - utilities/batch-processing.md
         - Event Handler:
             - core/event_handler/appsync_events.md
+            - core/event_handler/bedrock_agent_function.md
         - utilities/parameters.md
         - utilities/jmespath-functions.md
     - Resources:

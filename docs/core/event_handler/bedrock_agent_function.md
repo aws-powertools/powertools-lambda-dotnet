@@ -1,3 +1,8 @@
+---
+title: Bedrock Agent Function Resolver
+description: Event Handler - Bedrock Agent Function Resolver
+---
+
 # AWS Lambda Powertools for .NET - Bedrock Agent Function Resolver
 
 ## Overview
@@ -14,8 +19,6 @@ Amazon Bedrock Agents can invoke functions to perform tasks based on user input.
 - **Flexible Input Options**: Support for various parameter types including string, int, bool, DateTime, and enums
 - **Lambda Context Access**: Easy access to Lambda context for logging and AWS Lambda features
 - **Dependency Injection Support**: Seamless integration with .NET's dependency injection system
-- **Error Handling**: Automatic error capturing and formatting for responses
-- **Async Support**: First-class support for asynchronous function execution
 
 ## Installation
 
@@ -195,10 +198,10 @@ resolver.Tool(
 2. The agent determines which function to call and what parameters are needed.
 3. Bedrock sends a request to your Lambda function with the function name and parameters.
 4. The BedrockAgentFunctionResolver automatically:
-   - Finds the registered handler for the requested function
-   - Extracts and converts parameters to the correct types
-   - Invokes your handler with the parameters
-   - Formats the response in the way Bedrock Agents expect
+    - Finds the registered handler for the requested function
+    - Extracts and converts parameters to the correct types
+    - Invokes your handler with the parameters
+    - Formats the response in the way Bedrock Agents expect
 5. The agent receives the response and uses it to continue the conversation with the user
 
 ## Supported Parameter Types

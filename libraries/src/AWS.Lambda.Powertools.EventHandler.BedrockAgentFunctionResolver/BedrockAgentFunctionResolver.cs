@@ -1,10 +1,22 @@
 ﻿using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Lambda.Core;
 
 // ReSharper disable once CheckNamespace
 namespace AWS.Lambda.Powertools.EventHandler
 {
+    [JsonSerializable(typeof(string[]))]
+    [JsonSerializable(typeof(int[]))]
+    [JsonSerializable(typeof(long[]))]
+    [JsonSerializable(typeof(double[]))]
+    [JsonSerializable(typeof(bool[]))]
+    [JsonSerializable(typeof(decimal[]))]
+    internal partial class BedrockFunctionResolverContext : JsonSerializerContext
+    {
+    }
+    
     /// <summary>
     /// A resolver for Bedrock Agent functions that allows registering handlers for tool functions.
     /// </summary>
@@ -36,11 +48,18 @@ namespace AWS.Lambda.Powertools.EventHandler
             typeof(bool),
             typeof(decimal),
             typeof(DateTime),
-            typeof(Guid)
+            typeof(Guid),
+            typeof(string[]),
+            typeof(int[]),
+            typeof(long[]),
+            typeof(double[]),
+            typeof(bool[]),
+            typeof(decimal[])
         };
 
         private static bool IsBedrockParameter(Type type) =>
-            _bedrockParameterTypes.Contains(type) || type.IsEnum;
+            _bedrockParameterTypes.Contains(type) || type.IsEnum || 
+            (type.IsArray && _bedrockParameterTypes.Contains(type.GetElementType()!));
 
         /// <summary>
         /// Registers a handler that directly accepts ActionGroupInvocationInput and returns ActionGroupInvocationOutput
@@ -333,6 +352,41 @@ namespace AWS.Lambda.Powertools.EventHandler
                         var paramName = parameter.Name ?? $"arg{bedrockParamIndex}";
 
                         // AOT-compatible parameter access - direct type checks
+                        // Array parameter handling
+                        if (paramType.IsArray)
+                        {
+                            var jsonArrayStr = accessor.Get<string>(paramName);
+    
+                            if (!string.IsNullOrEmpty(jsonArrayStr))
+                            {
+                                try
+                                {
+                                    // AOT-compatible deserialization using source generation
+                                    if (paramType == typeof(string[]))
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.StringArray);
+                                    else if (paramType == typeof(int[]))
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.Int32Array);
+                                    else if (paramType == typeof(long[]))
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.Int64Array);
+                                    else if (paramType == typeof(double[]))
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.DoubleArray);
+                                    else if (paramType == typeof(bool[]))
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.BooleanArray);
+                                    else if (paramType == typeof(decimal[]))
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.DecimalArray);
+                                    else
+                                        args[i] = null; // Unsupported array type
+                                }
+                                catch (JsonException)
+                                {
+                                    args[i] = null;
+                                }
+                            }
+                            else
+                            {
+                                args[i] = null;
+                            }
+                        }
                         if (paramType == typeof(string))
                             args[i] = accessor.Get<string>(paramName);
                         else if (paramType == typeof(int))
