@@ -29,6 +29,9 @@ nav:
             - core/event_handler/bedrock_agent_function.md
         - utilities/parameters.md
         - utilities/jmespath-functions.md
+    - Resources:
+        - "llms.txt": ./llms.txt
+        - "llms.txt (full version)": ./llms-full.txt
   - API Reference: api/" target="_blank
       
 theme:
@@ -102,7 +105,28 @@ plugins:
   - privacy
   - git-revision-date
   - search
-
+  - llmstxt:
+      markdown_description: Powertools for AWS Lambda (.NET) is a developer toolkit to implement Serverless best practices and increase developer velocity. It provides a suite of utilities for AWS Lambda Functions that makes tracing with AWS X-Ray, structured logging and creating custom metrics asynchronously easier.
+      full_output: llms-full.txt
+      sections:
+        Project Overview:
+          - index.md
+          - changelog.md
+          - roadmap.md
+        Core Utilities:
+          - core/logging.md
+          - core/metrics.md
+          - core/tracing.md
+        Utilities:
+          - utilities/idempotency.md
+          - utilities/batch-processing.md
+          - utilities/parameters.md
+          - utilities/jmespath-functions.md
+          - core/event_handler/appsync_events.md
+        Getting Started:
+          - getting-started/logger/simple.md
+          - getting-started/logger/aspnet.md
+          - getting-started/logger/aot.md
 extra_css:
   - stylesheets/extra.css
 extra_javascript:
