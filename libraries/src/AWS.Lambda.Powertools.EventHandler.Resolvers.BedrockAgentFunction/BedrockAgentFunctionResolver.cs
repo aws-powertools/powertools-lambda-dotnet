@@ -1,22 +1,26 @@
-﻿using System.Globalization;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System.Globalization;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 
 // ReSharper disable once CheckNamespace
 namespace AWS.Lambda.Powertools.EventHandler.Resolvers
 {
-    [JsonSerializable(typeof(string[]))]
-    [JsonSerializable(typeof(int[]))]
-    [JsonSerializable(typeof(long[]))]
-    [JsonSerializable(typeof(double[]))]
-    [JsonSerializable(typeof(bool[]))]
-    [JsonSerializable(typeof(decimal[]))]
-    internal partial class BedrockFunctionResolverContext : JsonSerializerContext
-    {
-    }
-
     /// <summary>
     /// A resolver for Bedrock Agent functions that allows registering handlers for tool functions.
     /// </summary>
@@ -35,6 +39,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
     /// </example>
     public class BedrockAgentFunctionResolver
     {
+        private const int MaxTools = 5;
+
         private readonly
             Dictionary<string, Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse>>
             _handlers = new();
@@ -60,6 +66,28 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         private static bool IsBedrockParameter(Type type) =>
             _bedrockParameterTypes.Contains(type) || type.IsEnum ||
             (type.IsArray && _bedrockParameterTypes.Contains(type.GetElementType()!));
+
+        /// <summary>
+        /// Checks if another tool can be registered, and logs a warning if the maximum limit is reached
+        /// or if a tool with the same name is already registered
+        /// </summary>
+        /// <param name="name">The name of the tool being registered</param>
+        /// <returns>True if the tool can be registered, false if the maximum limit is reached</returns>
+        private bool CanRegisterTool(string name)
+        {
+            if (_handlers.Count >= MaxTools && !_handlers.ContainsKey(name))
+            {
+                Console.WriteLine($"WARNING: Maximum number of tools ({MaxTools}) reached. Tool '{name}' will not be registered.");
+                return false;
+            }
+            
+            if (_handlers.ContainsKey(name))
+            {
+                Console.WriteLine($"WARNING: Tool {name} already registered. Overwriting with new definition.");
+            }
+            
+            return true;
+        }
 
         /// <summary>
         /// Registers a handler that directly accepts BedrockFunctionRequest and returns BedrockFunctionResponse
@@ -88,6 +116,9 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         {
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
+
+            if (!CanRegisterTool(name))
+                return this;
 
             _handlers[name] = handler;
             return this;
@@ -121,6 +152,9 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
 
+            if (!CanRegisterTool(name))
+                return this;
+
             _handlers[name] = (input, _) => handler(input);
             return this;
         }
@@ -148,6 +182,9 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             string description = "")
         {
             ArgumentNullException.ThrowIfNull(handler);
+
+            if (!CanRegisterTool(name))
+                return this;
 
             _handlers[name] = (input, context) => handler();
             return this;
@@ -177,7 +214,16 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         {
             ArgumentNullException.ThrowIfNull(handler);
 
-            _handlers[name] = (input, context) => BedrockFunctionResponse.WithText(handler(), input.ActionGroup, name);
+            if (!CanRegisterTool(name))
+                return this;
+
+            _handlers[name] = (input, context) => BedrockFunctionResponse.WithText(
+                handler(), 
+                input.ActionGroup, 
+                name,
+                input.SessionAttributes,
+                input.PromptSessionAttributes,
+                new Dictionary<string, string>());
             return this;
         }
 
@@ -205,10 +251,13 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         {
             ArgumentNullException.ThrowIfNull(handler);
 
+            if (!CanRegisterTool(name))
+                return this;
+
             _handlers[name] = (input, context) =>
             {
                 var result = handler();
-                return ConvertToOutput(result, input.ActionGroup, name);
+                return ConvertToOutput(result, input);
             };
             return this;
         }
@@ -322,6 +371,9 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         {
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
+
+            if (!CanRegisterTool(name))
+                return this;
 
             _handlers[name] = (input, context) =>
             {
@@ -439,39 +491,50 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                     if (result is Task<BedrockFunctionResponse> outputTask)
                         return outputTask.Result;
                     if (result is Task<string> stringTask)
-                        return ConvertToOutput((TResult)(object)stringTask.Result, input.ActionGroup, name);
+                        return ConvertToOutput((TResult)(object)stringTask.Result, input);
                     if (result is Task<int> intTask)
-                        return ConvertToOutput((TResult)(object)intTask.Result, input.ActionGroup, name);
+                        return ConvertToOutput((TResult)(object)intTask.Result, input);
                     if (result is Task<bool> boolTask)
-                        return ConvertToOutput((TResult)(object)boolTask.Result, input.ActionGroup, name);
+                        return ConvertToOutput((TResult)(object)boolTask.Result, input);
                     if (result is Task<double> doubleTask)
-                        return ConvertToOutput((TResult)(object)doubleTask.Result, input.ActionGroup, name);
+                        return ConvertToOutput((TResult)(object)doubleTask.Result, input);
                     if (result is Task<long> longTask)
-                        return ConvertToOutput((TResult)(object)longTask.Result, input.ActionGroup, name);
+                        return ConvertToOutput((TResult)(object)longTask.Result, input);
                     if (result is Task<decimal> decimalTask)
-                        return ConvertToOutput((TResult)(object)decimalTask.Result, input.ActionGroup, name);
+                        return ConvertToOutput((TResult)(object)decimalTask.Result, input);
                     if (result is Task<DateTime> dateTimeTask)
-                        return ConvertToOutput((TResult)(object)dateTimeTask.Result, input.ActionGroup, name);
+                        return ConvertToOutput((TResult)(object)dateTimeTask.Result, input);
                     if (result is Task<Guid> guidTask)
-                        return ConvertToOutput((TResult)(object)guidTask.Result, input.ActionGroup, name);
+                        return ConvertToOutput((TResult)(object)guidTask.Result, input);
                     if (result is Task<object> objectTask)
-                        return ConvertToOutput((TResult)objectTask.Result!, input.ActionGroup, name);
+                        return ConvertToOutput((TResult)objectTask.Result!, input);
 
                     // For regular Task with no result
                     if (result is Task task)
                     {
                         task.GetAwaiter().GetResult();
-                        return BedrockFunctionResponse.WithText(string.Empty, input.ActionGroup, name);
+                        return BedrockFunctionResponse.WithText(
+                            string.Empty, 
+                            input.ActionGroup, 
+                            name,
+                            input.SessionAttributes,
+                            input.PromptSessionAttributes,
+                            new Dictionary<string, string>());
                     }
 
-                    return ConvertToOutput(result, input.ActionGroup, name);
+                    return ConvertToOutput(result, input);
                 }
                 catch (Exception ex)
                 {
                     context?.Logger.LogError(ex.ToString());
                     var innerException = ex.InnerException ?? ex;
-                    return BedrockFunctionResponse.WithText($"Error executing function: {innerException.Message}",
-                        input.ActionGroup, name);
+                    return BedrockFunctionResponse.WithText(
+                        $"Error when invoking tool: {innerException.Message}",
+                        input.ActionGroup, 
+                        name,
+                        input.SessionAttributes,
+                        input.PromptSessionAttributes,
+                        new Dictionary<string, string>());
                 }
             };
 
@@ -535,7 +598,13 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         {
             if (string.IsNullOrEmpty(input.Function))
             {
-                return BedrockFunctionResponse.WithText("No function specified in the request", input.ActionGroup, "");
+                return BedrockFunctionResponse.WithText(
+                    "No tool specified in the request", 
+                    input.ActionGroup, 
+                    "",
+                    input.SessionAttributes,
+                    input.PromptSessionAttributes,
+                    new Dictionary<string, string>());
             }
 
             if (_handlers.TryGetValue(input.Function, out var handler))
@@ -547,21 +616,40 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                 catch (Exception ex)
                 {
                     context?.Logger.LogError(ex.ToString());
-                    return BedrockFunctionResponse.WithText($"Error executing function: {ex.Message}", input.ActionGroup,
-                        input.Function);
+                    return BedrockFunctionResponse.WithText(
+                        $"Error when invoking tool: {ex.Message}",
+                        input.ActionGroup,
+                        input.Function,
+                        input.SessionAttributes,
+                        input.PromptSessionAttributes,
+                        new Dictionary<string, string>());
                 }
             }
 
-            context?.Logger.LogWarning($"No handler registered for function: {input.Function}");
-            return BedrockFunctionResponse.WithText($"No handler registered for function: {input.Function}",
-                input.ActionGroup, input.Function);
+            context?.Logger.LogWarning($"Tool {input.Function} has not been registered.");
+            return BedrockFunctionResponse.WithText(
+                $"Error: Tool {input.Function} has not been registered in handler",
+                input.ActionGroup, 
+                input.Function,
+                input.SessionAttributes,
+                input.PromptSessionAttributes,
+                new Dictionary<string, string>());
         }
 
-        private BedrockFunctionResponse ConvertToOutput<T>(T result, string actionGroup, string function)
+        private BedrockFunctionResponse ConvertToOutput<T>(T result, BedrockFunctionRequest input)
         {
+            string actionGroup = input.ActionGroup;
+            string function = input.Function;
+
             if (result == null)
             {
-                return BedrockFunctionResponse.WithText(string.Empty, actionGroup, function);
+                return BedrockFunctionResponse.WithText(
+                    string.Empty, 
+                    actionGroup, 
+                    function,
+                    input.SessionAttributes,
+                    input.PromptSessionAttributes,
+                    new Dictionary<string, string>());
             }
 
             // If result is already an BedrockFunctionResponse, ensure action group and function are set
@@ -584,39 +672,78 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             // For primitive types and strings, convert to string
             if (result is string str)
             {
-                return BedrockFunctionResponse.WithText(str, actionGroup, function);
+                return BedrockFunctionResponse.WithText(
+                    str, 
+                    actionGroup, 
+                    function,
+                    input.SessionAttributes,
+                    input.PromptSessionAttributes,
+                    new Dictionary<string, string>());
             }
 
             if (result is int intVal)
             {
-                return BedrockFunctionResponse.WithText(intVal.ToString(CultureInfo.InvariantCulture), actionGroup, function);
+                return BedrockFunctionResponse.WithText(
+                    intVal.ToString(CultureInfo.InvariantCulture), 
+                    actionGroup, 
+                    function,
+                    input.SessionAttributes,
+                    input.PromptSessionAttributes,
+                    new Dictionary<string, string>());
             }
 
             if (result is double doubleVal)
             {
-                return BedrockFunctionResponse.WithText(doubleVal.ToString(CultureInfo.InvariantCulture), actionGroup,
-                    function);
+                return BedrockFunctionResponse.WithText(
+                    doubleVal.ToString(CultureInfo.InvariantCulture), 
+                    actionGroup,
+                    function,
+                    input.SessionAttributes,
+                    input.PromptSessionAttributes,
+                    new Dictionary<string, string>());
             }
 
             if (result is bool boolVal)
             {
-                return BedrockFunctionResponse.WithText(boolVal.ToString(), actionGroup, function);
+                return BedrockFunctionResponse.WithText(
+                    boolVal.ToString(), 
+                    actionGroup, 
+                    function,
+                    input.SessionAttributes,
+                    input.PromptSessionAttributes,
+                    new Dictionary<string, string>());
             }
 
             if (result is long longVal)
             {
-                return BedrockFunctionResponse.WithText(longVal.ToString(CultureInfo.InvariantCulture), actionGroup,
-                    function);
+                return BedrockFunctionResponse.WithText(
+                    longVal.ToString(CultureInfo.InvariantCulture), 
+                    actionGroup,
+                    function,
+                    input.SessionAttributes,
+                    input.PromptSessionAttributes,
+                    new Dictionary<string, string>());
             }
 
             if (result is decimal decimalVal)
             {
-                return BedrockFunctionResponse.WithText(decimalVal.ToString(CultureInfo.InvariantCulture), actionGroup,
-                    function);
+                return BedrockFunctionResponse.WithText(
+                    decimalVal.ToString(CultureInfo.InvariantCulture), 
+                    actionGroup,
+                    function,
+                    input.SessionAttributes,
+                    input.PromptSessionAttributes,
+                    new Dictionary<string, string>());
             }
 
             // For any other type, use ToString()
-            return BedrockFunctionResponse.WithText(result.ToString() ?? string.Empty, actionGroup, function);
+            return BedrockFunctionResponse.WithText(
+                result.ToString() ?? string.Empty, 
+                actionGroup, 
+                function,
+                input.SessionAttributes,
+                input.PromptSessionAttributes,
+                new Dictionary<string, string>());
         }
     }
 }

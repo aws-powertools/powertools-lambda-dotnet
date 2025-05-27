@@ -15,16 +15,15 @@
 
 using System.Text.Json.Serialization;
 
-namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
+// ReSharper disable once CheckNamespace
+namespace AWS.Lambda.Powertools.EventHandler.Resolvers;
 
-/// <summary>
-/// Represents the response body part of a FunctionResponse.
-/// </summary>
-public class ResponseBody
+[JsonSerializable(typeof(string[]))]
+[JsonSerializable(typeof(int[]))]
+[JsonSerializable(typeof(long[]))]
+[JsonSerializable(typeof(double[]))]
+[JsonSerializable(typeof(bool[]))]
+[JsonSerializable(typeof(decimal[]))]
+internal partial class BedrockFunctionResolverContext : JsonSerializerContext
 {
-    /// <summary>
-    /// Gets or sets the text body.
-    /// </summary>
-    [JsonPropertyName("TEXT")]
-    public TextBody Text { get; set; } = new TextBody();
 }
