@@ -9,23 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable CS0162 // Unreachable code detected
 
-namespace AWS.Lambda.Powertools.EventHandler.Tests;
+// ReSharper disable once CheckNamespace
+namespace AWS.Lambda.Powertools.EventHandler.Resolvers.Tests;
 
 public class BedrockAgentFunctionResolverTests
 {
-    private readonly ActionGroupInvocationInput _bedrockEvent;
-
-    public BedrockAgentFunctionResolverTests()
-    {
-        _bedrockEvent = JsonSerializer.Deserialize<ActionGroupInvocationInput>(
-            File.ReadAllText("bedrockFunctionEvent.json"),
-            new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter() }
-            })!;
-    }
-
     [Fact]
     public void TestFunctionHandlerWithNoParameters()
     {
@@ -724,6 +712,31 @@ public class BedrockAgentFunctionResolverTests
         Assert.Contains("1. Squats, 3 sets of 10 reps", result.Text);
         Assert.Contains("2. Push-ups, 3 sets of 10 reps", result.Text);
         Assert.Contains("3. Plank, 3 sets of 30 seconds", result.Text);
+    }
+    
+    [Fact]
+    public async Task TestPayload2()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool("getWeatherForCity", "Get weather for a specific city", async (string city, ILambdaContext context) =>
+        {
+            return await Task.FromResult(city);
+        });
+
+        var input = JsonSerializer.Deserialize<ActionGroupInvocationInput>(
+            File.ReadAllText("bedrockFunctionEvent2.json"),
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            })!;
+
+        // Act
+        var result = await resolver.ResolveAsync(input);
+
+        // Assert
+        Assert.Equal("Lisbon", result.Text);
     }
 
     [Fact]

@@ -1,7 +1,8 @@
 using System.Globalization;
 using Amazon.BedrockAgentRuntime.Model;
 
-namespace AWS.Lambda.Powertools.EventHandler;
+// ReSharper disable once CheckNamespace
+namespace AWS.Lambda.Powertools.EventHandler.Resolvers;
 
 /// <summary>
 /// Provides strongly-typed access to the parameters of an agent function call.
