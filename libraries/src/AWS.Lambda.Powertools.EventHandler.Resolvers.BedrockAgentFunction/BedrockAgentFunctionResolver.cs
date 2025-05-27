@@ -45,7 +45,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             Dictionary<string, Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse>>
             _handlers = new();
 
-        private static readonly HashSet<Type> _bedrockParameterTypes = new()
+        private static readonly HashSet<Type> BedrockParameterTypes = new()
         {
             typeof(string),
             typeof(int),
@@ -64,8 +64,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         };
 
         private static bool IsBedrockParameter(Type type) =>
-            _bedrockParameterTypes.Contains(type) || type.IsEnum ||
-            (type.IsArray && _bedrockParameterTypes.Contains(type.GetElementType()!));
+            BedrockParameterTypes.Contains(type) || type.IsEnum ||
+            (type.IsArray && BedrockParameterTypes.Contains(type.GetElementType()!));
 
         /// <summary>
         /// Checks if another tool can be registered, and logs a warning if the maximum limit is reached
@@ -507,22 +507,19 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                     if (result is Task<Guid> guidTask)
                         return ConvertToOutput((TResult)(object)guidTask.Result, input);
                     if (result is Task<object> objectTask)
-                        return ConvertToOutput((TResult)objectTask.Result!, input);
+                        return ConvertToOutput((TResult)objectTask.Result, input);
 
                     // For regular Task with no result
-                    if (result is Task task)
-                    {
-                        task.GetAwaiter().GetResult();
-                        return BedrockFunctionResponse.WithText(
-                            string.Empty, 
-                            input.ActionGroup, 
-                            name,
-                            input.SessionAttributes,
-                            input.PromptSessionAttributes,
-                            new Dictionary<string, string>());
-                    }
+                    if (result is not Task task) return ConvertToOutput(result, input);
+                    task.GetAwaiter().GetResult();
+                    return BedrockFunctionResponse.WithText(
+                        string.Empty, 
+                        input.ActionGroup, 
+                        name,
+                        input.SessionAttributes,
+                        input.PromptSessionAttributes,
+                        new Dictionary<string, string>());
 
-                    return ConvertToOutput(result, input);
                 }
                 catch (Exception ex)
                 {
