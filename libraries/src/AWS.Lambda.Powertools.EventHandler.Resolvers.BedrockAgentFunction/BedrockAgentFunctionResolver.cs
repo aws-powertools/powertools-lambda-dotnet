@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 
 // ReSharper disable once CheckNamespace
 namespace AWS.Lambda.Powertools.EventHandler.Resolvers
@@ -16,7 +16,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
     internal partial class BedrockFunctionResolverContext : JsonSerializerContext
     {
     }
-    
+
     /// <summary>
     /// A resolver for Bedrock Agent functions that allows registering handlers for tool functions.
     /// </summary>
@@ -27,7 +27,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
     /// resolver.Tool("GetWeather", (string city) => $"Weather in {city} is sunny");
     /// 
     /// // Lambda handler
-    /// public ActionGroupInvocationOutput FunctionHandler(ActionGroupInvocationInput input, ILambdaContext context)
+    /// public BedrockFunctionResponse FunctionHandler(BedrockFunctionRequest input, ILambdaContext context)
     /// {
     ///     return resolver.Resolve(input, context);
     /// }
@@ -36,7 +36,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
     public class BedrockAgentFunctionResolver
     {
         private readonly
-            Dictionary<string, Func<ActionGroupInvocationInput, ILambdaContext?, ActionGroupInvocationOutput>>
+            Dictionary<string, Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse>>
             _handlers = new();
 
         private static readonly HashSet<Type> _bedrockParameterTypes = new()
@@ -58,11 +58,11 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         };
 
         private static bool IsBedrockParameter(Type type) =>
-            _bedrockParameterTypes.Contains(type) || type.IsEnum || 
+            _bedrockParameterTypes.Contains(type) || type.IsEnum ||
             (type.IsArray && _bedrockParameterTypes.Contains(type.GetElementType()!));
 
         /// <summary>
-        /// Registers a handler that directly accepts ActionGroupInvocationInput and returns ActionGroupInvocationOutput
+        /// Registers a handler that directly accepts BedrockFunctionRequest and returns BedrockFunctionResponse
         /// </summary>
         /// <param name="name">The name of the tool function</param>
         /// <param name="handler">The handler function that accepts input and context and returns output</param>
@@ -73,9 +73,9 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// var resolver = new BedrockAgentFunctionResolver();
         /// resolver.Tool(
         ///     "GetWeatherDetails",
-        ///     (ActionGroupInvocationInput input, ILambdaContext context) => {
+        ///     (BedrockFunctionRequest input, ILambdaContext context) => {
         ///         context.Logger.LogLine($"Processing request for {input.Function}");
-        ///         return new ActionGroupInvocationOutput { Text = "Weather details response" };
+        ///         return new BedrockFunctionResponse { Text = "Weather details response" };
         ///     },
         ///     "Gets detailed weather information"
         /// );
@@ -83,7 +83,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// </example>
         public BedrockAgentFunctionResolver Tool(
             string name,
-            Func<ActionGroupInvocationInput, ILambdaContext?, ActionGroupInvocationOutput> handler,
+            Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse> handler,
             string description = "")
         {
             if (handler == null)
@@ -94,7 +94,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         }
 
         /// <summary>
-        /// Registers a handler that directly accepts ActionGroupInvocationInput and returns ActionGroupInvocationOutput
+        /// Registers a handler that directly accepts BedrockFunctionRequest and returns BedrockFunctionResponse
         /// </summary>
         /// <param name="name">The name of the tool function</param>
         /// <param name="handler">The handler function that accepts input and returns output</param>
@@ -105,9 +105,9 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// var resolver = new BedrockAgentFunctionResolver();
         /// resolver.Tool(
         ///     "GetWeatherDetails",
-        ///     (ActionGroupInvocationInput input) => {
+        ///     (BedrockFunctionRequest input) => {
         ///         var city = input.Parameters.FirstOrDefault(p => p.Name == "city")?.Value;
-        ///         return new ActionGroupInvocationOutput { Text = $"Weather in {city} is sunny" };
+        ///         return new BedrockFunctionResponse { Text = $"Weather in {city} is sunny" };
         ///     },
         ///     "Gets weather for a city"
         /// );
@@ -115,7 +115,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// </example>
         public BedrockAgentFunctionResolver Tool(
             string name,
-            Func<ActionGroupInvocationInput, ActionGroupInvocationOutput> handler,
+            Func<BedrockFunctionRequest, BedrockFunctionResponse> handler,
             string description = "")
         {
             if (handler == null)
@@ -126,7 +126,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         }
 
         /// <summary>
-        /// Registers a parameter-less handler that returns ActionGroupInvocationOutput
+        /// Registers a parameter-less handler that returns BedrockFunctionResponse
         /// </summary>
         /// <param name="name">The name of the tool function</param>
         /// <param name="handler">The handler function that returns output</param>
@@ -137,14 +137,14 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// var resolver = new BedrockAgentFunctionResolver();
         /// resolver.Tool(
         ///     "GetCurrentTime",
-        ///     () => new ActionGroupInvocationOutput { Text = DateTime.Now.ToString() },
+        ///     () => new BedrockFunctionResponse { Text = DateTime.Now.ToString() },
         ///     "Gets the current server time"
         /// );
         /// </code>
         /// </example>
         public BedrockAgentFunctionResolver Tool(
             string name,
-            Func<ActionGroupInvocationOutput> handler,
+            Func<BedrockFunctionResponse> handler,
             string description = "")
         {
             ArgumentNullException.ThrowIfNull(handler);
@@ -177,7 +177,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         {
             ArgumentNullException.ThrowIfNull(handler);
 
-            _handlers[name] = (input, context) => new ActionGroupInvocationOutput { Text = handler() };
+            _handlers[name] = (input, context) => BedrockFunctionResponse.WithText(handler(), input.ActionGroup, name);
             return this;
         }
 
@@ -208,7 +208,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             _handlers[name] = (input, context) =>
             {
                 var result = handler();
-                return ConvertToOutput(result);
+                return ConvertToOutput(result, input.ActionGroup, name);
             };
             return this;
         }
@@ -343,7 +343,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                     {
                         args[i] = context;
                     }
-                    else if (paramType == typeof(ActionGroupInvocationInput))
+                    else if (paramType == typeof(BedrockFunctionRequest))
                     {
                         args[i] = input;
                     }
@@ -356,24 +356,30 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                         if (paramType.IsArray)
                         {
                             var jsonArrayStr = accessor.Get<string>(paramName);
-    
+
                             if (!string.IsNullOrEmpty(jsonArrayStr))
                             {
                                 try
                                 {
                                     // AOT-compatible deserialization using source generation
                                     if (paramType == typeof(string[]))
-                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.StringArray);
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr,
+                                            BedrockFunctionResolverContext.Default.StringArray);
                                     else if (paramType == typeof(int[]))
-                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.Int32Array);
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr,
+                                            BedrockFunctionResolverContext.Default.Int32Array);
                                     else if (paramType == typeof(long[]))
-                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.Int64Array);
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr,
+                                            BedrockFunctionResolverContext.Default.Int64Array);
                                     else if (paramType == typeof(double[]))
-                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.DoubleArray);
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr,
+                                            BedrockFunctionResolverContext.Default.DoubleArray);
                                     else if (paramType == typeof(bool[]))
-                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.BooleanArray);
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr,
+                                            BedrockFunctionResolverContext.Default.BooleanArray);
                                     else if (paramType == typeof(decimal[]))
-                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.DecimalArray);
+                                        args[i] = JsonSerializer.Deserialize(jsonArrayStr,
+                                            BedrockFunctionResolverContext.Default.DecimalArray);
                                     else
                                         args[i] = null; // Unsupported array type
                                 }
@@ -387,6 +393,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                                 args[i] = null;
                             }
                         }
+
                         if (paramType == typeof(string))
                             args[i] = accessor.Get<string>(paramName);
                         else if (paramType == typeof(int))
@@ -424,48 +431,47 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                     // Execute the handler
                     var result = handler.DynamicInvoke(args);
 
-                    // Direct return for ActionGroupInvocationOutput
-                    if (result is ActionGroupInvocationOutput output)
+                    // Direct return for BedrockFunctionResponse
+                    if (result is BedrockFunctionResponse output)
                         return output;
 
                     // Handle async results with specific type checks (AOT-compatible)
-                    if (result is Task<ActionGroupInvocationOutput> outputTask)
+                    if (result is Task<BedrockFunctionResponse> outputTask)
                         return outputTask.Result;
                     if (result is Task<string> stringTask)
-                        return ConvertToOutput((TResult)(object)stringTask.Result);
+                        return ConvertToOutput((TResult)(object)stringTask.Result, input.ActionGroup, name);
                     if (result is Task<int> intTask)
-                        return ConvertToOutput((TResult)(object)intTask.Result);
+                        return ConvertToOutput((TResult)(object)intTask.Result, input.ActionGroup, name);
                     if (result is Task<bool> boolTask)
-                        return ConvertToOutput((TResult)(object)boolTask.Result);
+                        return ConvertToOutput((TResult)(object)boolTask.Result, input.ActionGroup, name);
                     if (result is Task<double> doubleTask)
-                        return ConvertToOutput((TResult)(object)doubleTask.Result);
+                        return ConvertToOutput((TResult)(object)doubleTask.Result, input.ActionGroup, name);
                     if (result is Task<long> longTask)
-                        return ConvertToOutput((TResult)(object)longTask.Result);
+                        return ConvertToOutput((TResult)(object)longTask.Result, input.ActionGroup, name);
                     if (result is Task<decimal> decimalTask)
-                        return ConvertToOutput((TResult)(object)decimalTask.Result);
+                        return ConvertToOutput((TResult)(object)decimalTask.Result, input.ActionGroup, name);
                     if (result is Task<DateTime> dateTimeTask)
-                        return ConvertToOutput((TResult)(object)dateTimeTask.Result);
+                        return ConvertToOutput((TResult)(object)dateTimeTask.Result, input.ActionGroup, name);
                     if (result is Task<Guid> guidTask)
-                        return ConvertToOutput((TResult)(object)guidTask.Result);
+                        return ConvertToOutput((TResult)(object)guidTask.Result, input.ActionGroup, name);
                     if (result is Task<object> objectTask)
-                        return ConvertToOutput((TResult)objectTask.Result!);
+                        return ConvertToOutput((TResult)objectTask.Result!, input.ActionGroup, name);
 
                     // For regular Task with no result
                     if (result is Task task)
                     {
                         task.GetAwaiter().GetResult();
-                        return new ActionGroupInvocationOutput { Text = string.Empty };
+                        return BedrockFunctionResponse.WithText(string.Empty, input.ActionGroup, name);
                     }
 
-                    return ConvertToOutput((TResult)result!);
+                    return ConvertToOutput(result, input.ActionGroup, name);
                 }
                 catch (Exception ex)
                 {
-                    context?.Logger.LogError($"Error executing function {name}: {ex.Message}");
-                    return new ActionGroupInvocationOutput
-                    {
-                        Text = $"Error executing function: {ex.Message}"
-                    };
+                    context?.Logger.LogError(ex.ToString());
+                    var innerException = ex.InnerException ?? ex;
+                    return BedrockFunctionResponse.WithText($"Error executing function: {innerException.Message}",
+                        input.ActionGroup, name);
                 }
             };
 
@@ -481,7 +487,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <example>
         /// <code>
         /// // Lambda handler
-        /// public ActionGroupInvocationOutput FunctionHandler(ActionGroupInvocationInput input, ILambdaContext context)
+        /// public BedrockFunctionResponse FunctionHandler(BedrockFunctionRequest input, ILambdaContext context)
         /// {
         ///     var resolver = new BedrockAgentFunctionResolver()
         ///         .Tool("GetWeather", (string city) => $"Weather in {city} is sunny")
@@ -491,7 +497,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// }
         /// </code>
         /// </example>
-        public ActionGroupInvocationOutput Resolve(ActionGroupInvocationInput input, ILambdaContext? context = null)
+        public BedrockFunctionResponse Resolve(BedrockFunctionRequest input, ILambdaContext? context = null)
         {
             return ResolveAsync(input, context).GetAwaiter().GetResult();
         }
@@ -505,7 +511,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <example>
         /// <code>
         /// // Async Lambda handler
-        /// public async Task&lt;ActionGroupInvocationOutput&gt; FunctionHandler(ActionGroupInvocationInput input, ILambdaContext context)
+        /// public async Task&lt;BedrockFunctionResponse&gt; FunctionHandler(BedrockFunctionRequest input, ILambdaContext context)
         /// {
         ///     var resolver = new BedrockAgentFunctionResolver()
         ///         .Tool("GetWeatherAsync", async (string city) => {
@@ -519,20 +525,17 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// }
         /// </code>
         /// </example>
-        public async Task<ActionGroupInvocationOutput> ResolveAsync(ActionGroupInvocationInput input,
+        public async Task<BedrockFunctionResponse> ResolveAsync(BedrockFunctionRequest input,
             ILambdaContext? context = null)
         {
             return await Task.FromResult(HandleEvent(input, context));
         }
 
-        private ActionGroupInvocationOutput HandleEvent(ActionGroupInvocationInput input, ILambdaContext? context)
+        private BedrockFunctionResponse HandleEvent(BedrockFunctionRequest input, ILambdaContext? context)
         {
             if (string.IsNullOrEmpty(input.Function))
             {
-                return new ActionGroupInvocationOutput
-                {
-                    Text = "No function specified in the request"
-                };
+                return BedrockFunctionResponse.WithText("No function specified in the request", input.ActionGroup, "");
             }
 
             if (_handlers.TryGetValue(input.Function, out var handler))
@@ -543,67 +546,77 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                 }
                 catch (Exception ex)
                 {
-                    context?.Logger.LogError($"Error executing function {input.Function}: {ex.Message}");
-                    return new ActionGroupInvocationOutput
-                    {
-                        Text = $"Error executing function: {ex.Message}"
-                    };
+                    context?.Logger.LogError(ex.ToString());
+                    return BedrockFunctionResponse.WithText($"Error executing function: {ex.Message}", input.ActionGroup,
+                        input.Function);
                 }
             }
 
             context?.Logger.LogWarning($"No handler registered for function: {input.Function}");
-            return new ActionGroupInvocationOutput
-            {
-                Text = $"No handler registered for function: {input.Function}"
-            };
+            return BedrockFunctionResponse.WithText($"No handler registered for function: {input.Function}",
+                input.ActionGroup, input.Function);
         }
 
-        private ActionGroupInvocationOutput ConvertToOutput<T>(T result)
+        private BedrockFunctionResponse ConvertToOutput<T>(T result, string actionGroup, string function)
         {
             if (result == null)
             {
-                return new ActionGroupInvocationOutput { Text = string.Empty };
+                return BedrockFunctionResponse.WithText(string.Empty, actionGroup, function);
             }
 
-            // If result is already an ActionGroupInvocationOutput, return it directly
-            if (result is ActionGroupInvocationOutput output)
+            // If result is already an BedrockFunctionResponse, ensure action group and function are set
+            if (result is BedrockFunctionResponse output)
             {
+                // If the action group or function are not set in the output, use the provided values
+                if (string.IsNullOrEmpty(output.Response.ActionGroup))
+                {
+                    output.Response.ActionGroup = actionGroup;
+                }
+
+                if (string.IsNullOrEmpty(output.Response.Function))
+                {
+                    output.Response.Function = function;
+                }
+
                 return output;
             }
 
             // For primitive types and strings, convert to string
             if (result is string str)
             {
-                return new ActionGroupInvocationOutput { Text = str };
+                return BedrockFunctionResponse.WithText(str, actionGroup, function);
             }
 
             if (result is int intVal)
             {
-                return new ActionGroupInvocationOutput { Text = intVal.ToString(CultureInfo.InvariantCulture) };
+                return BedrockFunctionResponse.WithText(intVal.ToString(CultureInfo.InvariantCulture), actionGroup, function);
             }
 
             if (result is double doubleVal)
             {
-                return new ActionGroupInvocationOutput { Text = doubleVal.ToString(CultureInfo.InvariantCulture) };
+                return BedrockFunctionResponse.WithText(doubleVal.ToString(CultureInfo.InvariantCulture), actionGroup,
+                    function);
             }
 
             if (result is bool boolVal)
             {
-                return new ActionGroupInvocationOutput { Text = boolVal.ToString() };
+                return BedrockFunctionResponse.WithText(boolVal.ToString(), actionGroup, function);
             }
 
             if (result is long longVal)
             {
-                return new ActionGroupInvocationOutput { Text = longVal.ToString(CultureInfo.InvariantCulture) };
+                return BedrockFunctionResponse.WithText(longVal.ToString(CultureInfo.InvariantCulture), actionGroup,
+                    function);
             }
 
             if (result is decimal decimalVal)
             {
-                return new ActionGroupInvocationOutput { Text = decimalVal.ToString(CultureInfo.InvariantCulture) };
+                return BedrockFunctionResponse.WithText(decimalVal.ToString(CultureInfo.InvariantCulture), actionGroup,
+                    function);
             }
 
-            // For any other type, use ToString() instead of JSON serialization
-            return new ActionGroupInvocationOutput { Text = result.ToString() ?? string.Empty };
+            // For any other type, use ToString()
+            return BedrockFunctionResponse.WithText(result.ToString() ?? string.Empty, actionGroup, function);
         }
     }
 }

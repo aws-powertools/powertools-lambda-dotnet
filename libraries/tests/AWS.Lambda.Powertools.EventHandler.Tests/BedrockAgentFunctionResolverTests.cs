@@ -2,9 +2,9 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable CS0162 // Unreachable code detected
@@ -19,16 +19,30 @@ public class BedrockAgentFunctionResolverTests
     {
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction", () => new ActionGroupInvocationOutput { Text = "Hello, World!" });
+        resolver.Tool("TestFunction", () => new BedrockFunctionResponse
+        {
+            Response = new Response
+            {
+                ActionGroup = "TestGroup",
+                Function = "TestFunction",
+                FunctionResponse = new FunctionResponse
+                {
+                    ResponseBody = new ResponseBody
+                    {
+                        Text = new TextBody { Body = "Hello, World!" }
+                    }
+                }
+            }
+        });
 
-        var input = new ActionGroupInvocationInput { Function = "TestFunction" };
+        var input = new BedrockFunctionRequest { Function = "TestFunction" };
         var context = new TestLambdaContext();
 
         // Act
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("Hello, World!", result.Text);
+        Assert.Equal("Hello, World!", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -36,16 +50,30 @@ public class BedrockAgentFunctionResolverTests
     {
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction", () => new ActionGroupInvocationOutput { Text = "Hello, World!" });
+        resolver.Tool("TestFunction", () => new BedrockFunctionResponse
+        {
+            Response = new Response
+            {
+                ActionGroup = "TestGroup",
+                Function = "TestFunction",
+                FunctionResponse = new FunctionResponse
+                {
+                    ResponseBody = new ResponseBody
+                    {
+                        Text = new TextBody { Body = "Hello, World!" }
+                    }
+                }
+            }
+        });
 
-        var input = new ActionGroupInvocationInput { Function = "TestFunction" };
+        var input = new BedrockFunctionRequest { Function = "TestFunction" };
         var context = new TestLambdaContext();
 
         // Act
         var result = await resolver.ResolveAsync(input, context);
 
         // Assert
-        Assert.Equal("Hello, World!", result.Text);
+        Assert.Equal("Hello, World!", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -53,17 +81,31 @@ public class BedrockAgentFunctionResolverTests
     {
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction", () => new ActionGroupInvocationOutput { Text = "Hello, World!" },
+        resolver.Tool("TestFunction", () => new BedrockFunctionResponse
+            {
+                Response = new Response
+                {
+                    ActionGroup = "TestGroup",
+                    Function = "TestFunction",
+                    FunctionResponse = new FunctionResponse
+                    {
+                        ResponseBody = new ResponseBody
+                        {
+                            Text = new TextBody { Body = "Hello, World!" }
+                        }
+                    }
+                }
+            },
             "This is a test function");
 
-        var input = new ActionGroupInvocationInput { Function = "TestFunction" };
+        var input = new BedrockFunctionRequest { Function = "TestFunction" };
         var context = new TestLambdaContext();
 
         // Act
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("Hello, World!", result.Text);
+        Assert.Equal("Hello, World!", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -71,11 +113,40 @@ public class BedrockAgentFunctionResolverTests
     {
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction1", () => new ActionGroupInvocationOutput { Text = "Hello from Function 1!" });
-        resolver.Tool("TestFunction2", () => new ActionGroupInvocationOutput { Text = "Hello from Function 2!" });
+        
+        resolver.Tool("TestFunction1", () => new BedrockFunctionResponse
+        {
+            Response = new Response
+            {
+                ActionGroup = "TestGroup",
+                Function = "TestFunction",
+                FunctionResponse = new FunctionResponse
+                {
+                    ResponseBody = new ResponseBody
+                    {
+                        Text = new TextBody { Body = "Hello from Function 1!" }
+                    }
+                }
+            }
+        });
+        resolver.Tool("TestFunction2", () => new BedrockFunctionResponse
+        {
+            Response = new Response
+            {
+                ActionGroup = "TestGroup",
+                Function = "TestFunction",
+                FunctionResponse = new FunctionResponse
+                {
+                    ResponseBody = new ResponseBody
+                    {
+                        Text = new TextBody { Body = "Hello from Function 2!" }
+                    }
+                }
+            }
+        });
 
-        var input1 = new ActionGroupInvocationInput { Function = "TestFunction1" };
-        var input2 = new ActionGroupInvocationInput { Function = "TestFunction2" };
+        var input1 = new BedrockFunctionRequest { Function = "TestFunction1" };
+        var input2 = new BedrockFunctionRequest { Function = "TestFunction2" };
         var context = new TestLambdaContext();
 
         // Act
@@ -83,8 +154,57 @@ public class BedrockAgentFunctionResolverTests
         var result2 = resolver.Resolve(input2, context);
 
         // Assert
-        Assert.Equal("Hello from Function 1!", result1.Text);
-        Assert.Equal("Hello from Function 2!", result2.Text);
+        Assert.Equal("Hello from Function 1!", result1.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Equal("Hello from Function 2!", result2.Response.FunctionResponse.ResponseBody.Text.Body);
+    }
+    
+    [Fact]
+    public void TestFunctionHandlerWithMultiplToolsDuplicate()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool("TestFunction1", () => new BedrockFunctionResponse
+        {
+            Response = new Response
+            {
+                ActionGroup = "TestGroup",
+                Function = "TestFunction",
+                FunctionResponse = new FunctionResponse
+                {
+                    ResponseBody = new ResponseBody
+                    {
+                        Text = new TextBody { Body = "Hello from Function 1!" }
+                    }
+                }
+            }
+        });
+        resolver.Tool("TestFunction1", () => new BedrockFunctionResponse
+        {
+            Response = new Response
+            {
+                ActionGroup = "TestGroup",
+                Function = "TestFunction",
+                FunctionResponse = new FunctionResponse
+                {
+                    ResponseBody = new ResponseBody
+                    {
+                        Text = new TextBody { Body = "Hello from Function 2!" }
+                    }
+                }
+            }
+        });
+
+        var input1 = new BedrockFunctionRequest { Function = "TestFunction1" };
+        var input2 = new BedrockFunctionRequest { Function = "TestFunction1" };
+        var context = new TestLambdaContext();
+
+        // Act
+        var result1 = resolver.Resolve(input1, context);
+        var result2 = resolver.Resolve(input2, context);
+
+        // Assert
+        Assert.Equal("Hello from Function 2!", result1.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Equal("Hello from Function 2!", result2.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
 
@@ -94,16 +214,30 @@ public class BedrockAgentFunctionResolverTests
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
         resolver.Tool("TestFunction",
-            (input, context) => new ActionGroupInvocationOutput { Text = $"Hello, {input.Function}!" });
+            (input, context) => new BedrockFunctionResponse
+            {
+                Response = new Response
+                {
+                    ActionGroup = "TestGroup",
+                    Function = "TestFunction",
+                    FunctionResponse = new FunctionResponse
+                    {
+                        ResponseBody = new ResponseBody
+                        {
+                            Text = new TextBody { Body = $"Hello, {input.Function}!" }
+                        }
+                    }
+                }
+            });
 
-        var input = new ActionGroupInvocationInput { Function = "TestFunction" };
+        var input = new BedrockFunctionRequest { Function = "TestFunction" };
         var context = new TestLambdaContext();
 
         // Act
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("Hello, TestFunction!", result.Text);
+        Assert.Equal("Hello, TestFunction!", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -112,16 +246,30 @@ public class BedrockAgentFunctionResolverTests
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
         resolver.Tool("TestFunction",
-            input => new ActionGroupInvocationOutput { Text = $"Hello, {input.Function}!" });
+            input => new BedrockFunctionResponse
+            {
+                Response = new Response
+                {
+                    ActionGroup = "TestGroup",
+                    Function = "TestFunction",
+                    FunctionResponse = new FunctionResponse
+                    {
+                        ResponseBody = new ResponseBody
+                        {
+                            Text = new TextBody { Body = $"Hello, {input.Function}!" }
+                        }
+                    }
+                }
+            });
 
-        var input = new ActionGroupInvocationInput { Function = "TestFunction" };
+        var input = new BedrockFunctionRequest { Function = "TestFunction" };
         var context = new TestLambdaContext();
 
         // Act
         var result = await resolver.ResolveAsync(input, context);
 
         // Assert
-        Assert.Equal("Hello, TestFunction!", result.Text);
+        Assert.Equal("Hello, TestFunction!", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -129,16 +277,31 @@ public class BedrockAgentFunctionResolverTests
     {
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction", () => new ActionGroupInvocationOutput { Text = "Hello, World!" });
+        resolver.Tool("TestFunction", () => new BedrockFunctionResponse
+        {
+            Response = new Response
+            {
+                ActionGroup = "TestGroup",
+                Function = "TestFunction",
+                FunctionResponse = new FunctionResponse
+                {
+                    ResponseBody = new ResponseBody
+                    {
+                        Text = new TextBody { Body = "Hello, World!" }
+                    }
+                }
+            }
+        });
 
-        var input = new ActionGroupInvocationInput { Function = "NonExistentFunction" };
+        var input = new BedrockFunctionRequest { Function = "NonExistentFunction" };
         var context = new TestLambdaContext();
 
         // Act
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("No handler registered for function: NonExistentFunction", result.Text);
+        Assert.Equal("No handler registered for function: NonExistentFunction",
+            result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -146,16 +309,31 @@ public class BedrockAgentFunctionResolverTests
     {
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction", () => new ActionGroupInvocationOutput { Text = "Hello, World!" });
+        resolver.Tool("TestFunction", () => new BedrockFunctionResponse
+        {
+            Response = new Response
+            {
+                ActionGroup = "TestGroup",
+                Function = "TestFunction",
+                FunctionResponse = new FunctionResponse
+                {
+                    ResponseBody = new ResponseBody
+                    {
+                        Text = new TextBody { Body = "Hello, World!" }
+                    }
+                }
+            }
+        });
 
-        var input = new ActionGroupInvocationInput { Function = "NonExistentFunction" };
+        var input = new BedrockFunctionRequest { Function = "NonExistentFunction" };
         var context = new TestLambdaContext();
 
         // Act
         var result = await resolver.ResolveAsync(input, context);
 
         // Assert
-        Assert.Equal("No handler registered for function: NonExistentFunction", result.Text);
+        Assert.Equal("No handler registered for function: NonExistentFunction",
+            result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -163,9 +341,23 @@ public class BedrockAgentFunctionResolverTests
     {
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction", () => new ActionGroupInvocationOutput { Text = "Hello, World!" });
+        resolver.Tool("TestFunction", () => new BedrockFunctionResponse
+        {
+            Response = new Response
+            {
+                ActionGroup = "TestGroup",
+                Function = "TestFunction",
+                FunctionResponse = new FunctionResponse
+                {
+                    ResponseBody = new ResponseBody
+                    {
+                        Text = new TextBody { Body = "Hello, World!" }
+                    }
+                }
+            }
+        });
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "TestFunction",
             Parameters = new List<Parameter>
@@ -190,7 +382,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("Hello, World!", result.Text);
+        Assert.Equal("Hello, World!", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -220,7 +412,7 @@ public class BedrockAgentFunctionResolverTests
             handler: () => { return "Hello"; }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "GetCustomForecast",
             Parameters = new List<Parameter>
@@ -246,7 +438,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("1-day forecast for Lisbon", result.Text);
+        Assert.Equal("1-day forecast for Lisbon", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -270,7 +462,7 @@ public class BedrockAgentFunctionResolverTests
             }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "GetCustomForecast",
             Parameters = new List<Parameter>
@@ -296,7 +488,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("Forecast for Lisbon for 1 days", result.Text);
+        Assert.Equal("Forecast for Lisbon for 1 days", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -320,7 +512,7 @@ public class BedrockAgentFunctionResolverTests
             handler: (string name) => { return $"Hello {name}"; }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "GetCustomForecast",
             Parameters = new List<Parameter>
@@ -346,7 +538,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("1-day forecast for Lisbon", result.Text);
+        Assert.Equal("1-day forecast for Lisbon", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -360,7 +552,7 @@ public class BedrockAgentFunctionResolverTests
             handler: (bool isEnabled) => { return $"Feature is {(isEnabled ? "enabled" : "disabled")}"; }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "TestBool",
             Parameters = new List<Parameter>
@@ -378,7 +570,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Equal("Feature is enabled", result.Text);
+        Assert.Equal("Feature is enabled", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -392,7 +584,7 @@ public class BedrockAgentFunctionResolverTests
             handler: (string name) => $"Hello, {name}!"
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "RequiredParam",
             Parameters = new List<Parameter>() // Empty parameters
@@ -402,7 +594,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Contains("Hello, !", result.Text);
+        Assert.Contains("Hello, !", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -419,7 +611,7 @@ public class BedrockAgentFunctionResolverTests
             }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "ComplexFunction",
             Parameters = new List<Parameter>
@@ -434,7 +626,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Equal("Name: Test, Count: 5, Active: True", result.Text);
+        Assert.Equal("Name: Test, Count: 5, Active: True", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     public enum TestEnum
@@ -455,7 +647,7 @@ public class BedrockAgentFunctionResolverTests
             handler: (TestEnum option) => { return $"Selected option: {option}"; }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "EnumTest",
             Parameters = new List<Parameter>
@@ -473,7 +665,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Equal("Selected option: Option2", result.Text);
+        Assert.Equal("Selected option: Option2", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -487,7 +679,7 @@ public class BedrockAgentFunctionResolverTests
             handler: (string userName) => $"Hello, {userName}!"
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "CaseTest",
             Parameters = new List<Parameter>
@@ -505,7 +697,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Equal("Hello, John!", result.Text);
+        Assert.Equal("Hello, John!", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -519,7 +711,7 @@ public class BedrockAgentFunctionResolverTests
             handler: (string firstName, string lastName) => { return $"Name: {firstName} {lastName}"; }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "OrderTest",
             Parameters = new List<Parameter>
@@ -534,7 +726,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Equal("Name: John Smith", result.Text);
+        Assert.Equal("Name: John Smith", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -552,7 +744,7 @@ public class BedrockAgentFunctionResolverTests
             }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "PriceCalculator",
             Parameters = new List<Parameter>
@@ -570,7 +762,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Contains("35.99", result.Text);
+        Assert.Contains("35.99", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -584,12 +776,12 @@ public class BedrockAgentFunctionResolverTests
             handler: (string text) =>
             {
                 // In a real implementation, you'd parse the array from the string
-                // ActionGroupInvocationInput doesn't directly support array types
+                // BedrockFunctionRequest doesn't directly support array types
                 return $"Received: {text}";
             }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "ArrayTest",
             Parameters = new List<Parameter>
@@ -607,7 +799,7 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Equal("Received: [\"item1\",\"item2\"]", result.Text);
+        Assert.Equal("Received: [\"item1\",\"item2\"]", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -632,7 +824,7 @@ public class BedrockAgentFunctionResolverTests
             }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "ProcessWorkout",
             Parameters = new List<Parameter>
@@ -651,10 +843,10 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Contains("Your workout plan:", result.Text);
-        Assert.Contains("1. Squats, 3 sets of 10 reps", result.Text);
-        Assert.Contains("2. Push-ups, 3 sets of 10 reps", result.Text);
-        Assert.Contains("3. Plank, 3 sets of 30 seconds", result.Text);
+        Assert.Contains("Your workout plan:", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Contains("1. Squats, 3 sets of 10 reps", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Contains("2. Push-ups, 3 sets of 10 reps", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Contains("3. Plank, 3 sets of 30 seconds", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -665,7 +857,7 @@ public class BedrockAgentFunctionResolverTests
         resolver.Tool(
             name: "ProcessWorkout",
             description: "Process workout exercises",
-            handler: (ActionGroupInvocationInput input) =>
+            handler: (BedrockFunctionRequest input) =>
             {
                 // Manual array parsing since the resolver doesn't natively support arrays
                 var exercisesJson = input.Parameters.FirstOrDefault(p => p.Name == "exercises")?.Value ?? "[]";
@@ -689,7 +881,7 @@ public class BedrockAgentFunctionResolverTests
             }
         );
 
-        var input = new ActionGroupInvocationInput
+        var input = new BedrockFunctionRequest
         {
             Function = "ProcessWorkout",
             Parameters = new List<Parameter>
@@ -708,23 +900,21 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Contains("Your workout plan:", result.Text);
-        Assert.Contains("1. Squats, 3 sets of 10 reps", result.Text);
-        Assert.Contains("2. Push-ups, 3 sets of 10 reps", result.Text);
-        Assert.Contains("3. Plank, 3 sets of 30 seconds", result.Text);
+        Assert.Contains("Your workout plan:", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Contains("1. Squats, 3 sets of 10 reps", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Contains("2. Push-ups, 3 sets of 10 reps", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Contains("3. Plank, 3 sets of 30 seconds", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
-    
+
     [Fact]
     public async Task TestPayload2()
     {
         // Arrange
         var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("getWeatherForCity", "Get weather for a specific city", async (string city, ILambdaContext context) =>
-        {
-            return await Task.FromResult(city);
-        });
+        resolver.Tool("get_weather_city", "Get weather for a specific city",
+            async (string city, ILambdaContext context) => { return await Task.FromResult(city); });
 
-        var input = JsonSerializer.Deserialize<ActionGroupInvocationInput>(
+        var input = JsonSerializer.Deserialize<BedrockFunctionRequest>(
             File.ReadAllText("bedrockFunctionEvent2.json"),
             new JsonSerializerOptions
             {
@@ -736,7 +926,7 @@ public class BedrockAgentFunctionResolverTests
         var result = await resolver.ResolveAsync(input);
 
         // Assert
-        Assert.Equal("Lisbon", result.Text);
+        Assert.Equal("Lisbon", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -754,13 +944,13 @@ public class BedrockAgentFunctionResolverTests
             }
         );
 
-        var input = new ActionGroupInvocationInput { Function = "ThrowingFunction" };
+        var input = new BedrockFunctionRequest { Function = "ThrowingFunction" };
 
         // Act
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Contains("Error executing function", result.Text);
+        Assert.Contains("Error executing function", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 }
 
