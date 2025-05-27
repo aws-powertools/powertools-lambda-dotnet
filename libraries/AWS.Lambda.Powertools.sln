@@ -109,7 +109,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.Event
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.EventHandler", "src\AWS.Lambda.Powertools.EventHandler\AWS.Lambda.Powertools.EventHandler.csproj", "{F4B8D5AF-D3CA-4910-A14D-E5BAEF0FD1DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver", "src\AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver\AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver.csproj", "{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction", "src\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj", "{281F7EB5-ACE5-458F-BC88-46A8899DF3BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,12 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace
-namespace AWS.Lambda.Powertools.EventHandler
+namespace AWS.Lambda.Powertools.EventHandler.Resolvers
 {
     /// <summary>
     /// Extended Bedrock Agent Function Resolver with dependency injection support.
     /// </summary>
-    public class DiBedrockAgentFunctionResolver : BedrockAgentFunctionResolver
+    internal class DiBedrockAgentFunctionResolver : BedrockAgentFunctionResolver
     {
         /// <summary>
         /// Gets the service provider used for dependency injection.

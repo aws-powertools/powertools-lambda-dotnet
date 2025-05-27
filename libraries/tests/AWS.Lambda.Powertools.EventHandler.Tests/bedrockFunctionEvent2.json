@@ -1,0 +1,27 @@
+{
+  "messageVersion": "1.0",
+  "function": "get_weather_city",
+  "parameters": [
+    {
+      "name": "month",
+      "type": "number",
+      "value": "5"
+    },
+    {
+      "name": "city",
+      "type": "string",
+      "value": "London"
+    }
+  ],
+  "sessionId": "533568316194812",
+  "agent": {
+    "name": "powertools-function-agent",
+    "version": "DRAFT",
+    "id": "AVMWXZYN4X",
+    "alias": "TSTALIASID"
+  },
+  "actionGroup": "action_group_quick_start_hgo6p",
+  "sessionAttributes": {},
+  "promptSessionAttributes": {},
+  "inputText": "weather in london?"
+}

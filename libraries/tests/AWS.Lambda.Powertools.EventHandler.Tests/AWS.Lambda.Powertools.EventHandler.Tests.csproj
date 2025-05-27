@@ -32,7 +32,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver\AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver.csproj" />
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj" />
       <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler\AWS.Lambda.Powertools.EventHandler.csproj" />
     </ItemGroup>
 
@@ -44,6 +44,10 @@
         <None Remove="bedrockFunctionEvent.json" />
         <Content Include="bedrockFunctionEvent.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <None Remove="bedrockFunctionEvent2.json" />
+        <Content Include="bedrockFunctionEvent2.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
 

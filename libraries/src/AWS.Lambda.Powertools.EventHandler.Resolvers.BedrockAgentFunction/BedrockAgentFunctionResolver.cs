@@ -5,7 +5,7 @@ using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Lambda.Core;
 
 // ReSharper disable once CheckNamespace
-namespace AWS.Lambda.Powertools.EventHandler
+namespace AWS.Lambda.Powertools.EventHandler.Resolvers
 {
     [JsonSerializable(typeof(string[]))]
     [JsonSerializable(typeof(int[]))]

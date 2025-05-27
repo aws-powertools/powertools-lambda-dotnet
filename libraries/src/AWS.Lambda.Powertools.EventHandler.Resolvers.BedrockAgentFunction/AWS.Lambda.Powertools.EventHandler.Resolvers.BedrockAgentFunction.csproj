@@ -2,10 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <PackageId>AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver</PackageId>
+        <PackageId>AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction</PackageId>
         <Description>Powertools for AWS Lambda (.NET) - Event Handler Bedrock Agent Function Resolver package.</Description>
-        <AssemblyName>AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver</AssemblyName>
-        <RootNamespace>AWS.Lambda.Powertools.EventHandler.BedrockAgentFunctionResolver</RootNamespace>
         <TargetFrameworks>net8.0</TargetFrameworks>
         <TargetMultiFramework>false</TargetMultiFramework>
         <ImplicitUsings>enable</ImplicitUsings>
