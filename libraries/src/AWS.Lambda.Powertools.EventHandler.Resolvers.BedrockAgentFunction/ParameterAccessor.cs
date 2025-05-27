@@ -1,5 +1,4 @@
 using System.Globalization;
-using Amazon.BedrockAgentRuntime.Model;
 
 // ReSharper disable once CheckNamespace
 namespace AWS.Lambda.Powertools.EventHandler.Resolvers;
