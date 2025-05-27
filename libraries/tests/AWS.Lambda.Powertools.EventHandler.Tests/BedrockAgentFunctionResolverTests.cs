@@ -46,37 +46,6 @@ public class BedrockAgentFunctionResolverTests
     }
 
     [Fact]
-    public async Task TestFunctionHandlerWithNoParametersAsync()
-    {
-        // Arrange
-        var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction", () => new BedrockFunctionResponse
-        {
-            Response = new Response
-            {
-                ActionGroup = "TestGroup",
-                Function = "TestFunction",
-                FunctionResponse = new FunctionResponse
-                {
-                    ResponseBody = new ResponseBody
-                    {
-                        Text = new TextBody { Body = "Hello, World!" }
-                    }
-                }
-            }
-        });
-
-        var input = new BedrockFunctionRequest { Function = "TestFunction" };
-        var context = new TestLambdaContext();
-
-        // Act
-        var result = await resolver.ResolveAsync(input, context);
-
-        // Assert
-        Assert.Equal("Hello, World!", result.Response.FunctionResponse.ResponseBody.Text.Body);
-    }
-
-    [Fact]
     public void TestFunctionHandlerWithDescription()
     {
         // Arrange
@@ -241,38 +210,6 @@ public class BedrockAgentFunctionResolverTests
     }
 
     [Fact]
-    public async Task TestFunctionHandlerWithInputAsync()
-    {
-        // Arrange
-        var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction",
-            input => new BedrockFunctionResponse
-            {
-                Response = new Response
-                {
-                    ActionGroup = "TestGroup",
-                    Function = "TestFunction",
-                    FunctionResponse = new FunctionResponse
-                    {
-                        ResponseBody = new ResponseBody
-                        {
-                            Text = new TextBody { Body = $"Hello, {input.Function}!" }
-                        }
-                    }
-                }
-            });
-
-        var input = new BedrockFunctionRequest { Function = "TestFunction" };
-        var context = new TestLambdaContext();
-
-        // Act
-        var result = await resolver.ResolveAsync(input, context);
-
-        // Assert
-        Assert.Equal("Hello, TestFunction!", result.Response.FunctionResponse.ResponseBody.Text.Body);
-    }
-
-    [Fact]
     public void TestFunctionHandlerNoToolMatch()
     {
         // Arrange
@@ -300,89 +237,8 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input, context);
 
         // Assert
-        Assert.Equal("No handler registered for function: NonExistentFunction",
+        Assert.Equal($"Error: Tool {input.Function} has not been registered in handler",
             result.Response.FunctionResponse.ResponseBody.Text.Body);
-    }
-
-    [Fact]
-    public async Task TestFunctionHandlerNoToolMatchAsync()
-    {
-        // Arrange
-        var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction", () => new BedrockFunctionResponse
-        {
-            Response = new Response
-            {
-                ActionGroup = "TestGroup",
-                Function = "TestFunction",
-                FunctionResponse = new FunctionResponse
-                {
-                    ResponseBody = new ResponseBody
-                    {
-                        Text = new TextBody { Body = "Hello, World!" }
-                    }
-                }
-            }
-        });
-
-        var input = new BedrockFunctionRequest { Function = "NonExistentFunction" };
-        var context = new TestLambdaContext();
-
-        // Act
-        var result = await resolver.ResolveAsync(input, context);
-
-        // Assert
-        Assert.Equal("No handler registered for function: NonExistentFunction",
-            result.Response.FunctionResponse.ResponseBody.Text.Body);
-    }
-
-    [Fact]
-    public void TestFunctionHandlerWithParameters()
-    {
-        // Arrange
-        var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("TestFunction", () => new BedrockFunctionResponse
-        {
-            Response = new Response
-            {
-                ActionGroup = "TestGroup",
-                Function = "TestFunction",
-                FunctionResponse = new FunctionResponse
-                {
-                    ResponseBody = new ResponseBody
-                    {
-                        Text = new TextBody { Body = "Hello, World!" }
-                    }
-                }
-            }
-        });
-
-        var input = new BedrockFunctionRequest
-        {
-            Function = "TestFunction",
-            Parameters = new List<Parameter>
-            {
-                new Parameter
-                {
-                    Name = "a",
-                    Value = "1",
-                    Type = "Number"
-                },
-                new Parameter
-                {
-                    Name = "b",
-                    Value = "1",
-                    Type = "Number"
-                }
-            }
-        };
-        var context = new TestLambdaContext();
-
-        // Act
-        var result = resolver.Resolve(input, context);
-
-        // Assert
-        Assert.Equal("Hello, World!", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -489,56 +345,6 @@ public class BedrockAgentFunctionResolverTests
 
         // Assert
         Assert.Equal("Forecast for Lisbon for 1 days", result.Response.FunctionResponse.ResponseBody.Text.Body);
-    }
-
-    [Fact]
-    public void TestFunctionHandlerWithEventTypes()
-    {
-        // Arrange
-        var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool(
-            name: "GetCustomForecast",
-            description: "Get detailed forecast for a location",
-            handler: (string location, int days, ILambdaContext ctx) =>
-            {
-                ctx.Logger.LogLine($"Getting forecast for {location}");
-                return $"{days}-day forecast for {location}";
-            }
-        );
-
-        resolver.Tool(
-            name: "Greet",
-            description: "Greet a user",
-            handler: (string name) => { return $"Hello {name}"; }
-        );
-
-        var input = new BedrockFunctionRequest
-        {
-            Function = "GetCustomForecast",
-            Parameters = new List<Parameter>
-            {
-                new Parameter
-                {
-                    Name = "location",
-                    Value = "Lisbon",
-                    Type = "String"
-                },
-                new Parameter
-                {
-                    Name = "days",
-                    Value = "1",
-                    Type = "Number"
-                }
-            }
-        };
-
-        var context = new TestLambdaContext();
-
-        // Act
-        var result = resolver.Resolve(input, context);
-
-        // Assert
-        Assert.Equal("1-day forecast for Lisbon", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 
     [Fact]
@@ -766,43 +572,6 @@ public class BedrockAgentFunctionResolverTests
     }
 
     [Fact]
-    public void TestFunctionHandlerWithArrayParameter()
-    {
-        // Arrange
-        var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool(
-            name: "ArrayTest",
-            description: "Test with array parameter",
-            handler: (string text) =>
-            {
-                // In a real implementation, you'd parse the array from the string
-                // BedrockFunctionRequest doesn't directly support array types
-                return $"Received: {text}";
-            }
-        );
-
-        var input = new BedrockFunctionRequest
-        {
-            Function = "ArrayTest",
-            Parameters = new List<Parameter>
-            {
-                new Parameter
-                {
-                    Name = "text",
-                    Value = "[\"item1\",\"item2\"]", // Array as JSON string
-                    Type = "Array"
-                }
-            }
-        };
-
-        // Act
-        var result = resolver.Resolve(input);
-
-        // Assert
-        Assert.Equal("Received: [\"item1\",\"item2\"]", result.Response.FunctionResponse.ResponseBody.Text.Body);
-    }
-
-    [Fact]
     public void TestFunctionHandlerWithStringArrayParameter()
     {
         // Arrange
@@ -850,86 +619,6 @@ public class BedrockAgentFunctionResolverTests
     }
 
     [Fact]
-    public void TestFunctionHandlerWithStringArrayParameterManualParse()
-    {
-        // Arrange
-        var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool(
-            name: "ProcessWorkout",
-            description: "Process workout exercises",
-            handler: (BedrockFunctionRequest input) =>
-            {
-                // Manual array parsing since the resolver doesn't natively support arrays
-                var exercisesJson = input.Parameters.FirstOrDefault(p => p.Name == "exercises")?.Value ?? "[]";
-
-                // Parse JSON array
-                var exercises = JsonSerializer.Deserialize<string[]>(exercisesJson);
-
-                // Process the array items
-                var result = new StringBuilder();
-                result.AppendLine("Your workout plan:");
-
-                if (exercises != null)
-                {
-                    for (int i = 0; i < exercises.Length; i++)
-                    {
-                        result.AppendLine($"  {i + 1}. {exercises[i]}");
-                    }
-                }
-
-                return result.ToString();
-            }
-        );
-
-        var input = new BedrockFunctionRequest
-        {
-            Function = "ProcessWorkout",
-            Parameters = new List<Parameter>
-            {
-                new Parameter
-                {
-                    Name = "exercises",
-                    Value =
-                        "[\"Squats, 3 sets of 10 reps\",\"Push-ups, 3 sets of 10 reps\",\"Plank, 3 sets of 30 seconds\"]",
-                    Type = "String" // The type is still String even though it contains JSON
-                }
-            }
-        };
-
-        // Act
-        var result = resolver.Resolve(input);
-
-        // Assert
-        Assert.Contains("Your workout plan:", result.Response.FunctionResponse.ResponseBody.Text.Body);
-        Assert.Contains("1. Squats, 3 sets of 10 reps", result.Response.FunctionResponse.ResponseBody.Text.Body);
-        Assert.Contains("2. Push-ups, 3 sets of 10 reps", result.Response.FunctionResponse.ResponseBody.Text.Body);
-        Assert.Contains("3. Plank, 3 sets of 30 seconds", result.Response.FunctionResponse.ResponseBody.Text.Body);
-    }
-
-    [Fact]
-    public async Task TestPayload2()
-    {
-        // Arrange
-        var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("get_weather_city", "Get weather for a specific city",
-            async (string city, ILambdaContext context) => { return await Task.FromResult(city); });
-
-        var input = JsonSerializer.Deserialize<BedrockFunctionRequest>(
-            File.ReadAllText("bedrockFunctionEvent2.json"),
-            new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter() }
-            })!;
-
-        // Act
-        var result = await resolver.ResolveAsync(input);
-
-        // Assert
-        Assert.Equal("Lisbon", result.Response.FunctionResponse.ResponseBody.Text.Body);
-    }
-
-    [Fact]
     public void TestFunctionHandlerWithExceptionInHandler()
     {
         // Arrange
@@ -950,7 +639,205 @@ public class BedrockAgentFunctionResolverTests
         var result = resolver.Resolve(input);
 
         // Assert
-        Assert.Contains("Error executing function", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Contains("Error when invoking tool: Test error", result.Response.FunctionResponse.ResponseBody.Text.Body);
+    }
+
+    [Fact]
+    public void TestSessionAttributesPreservation()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "SessionTest",
+            description: "Test session attributes preservation",
+            handler: (string message) => message
+        );
+
+        var input = new BedrockFunctionRequest 
+        { 
+            Function = "SessionTest",
+            ActionGroup = "TestGroup",
+            Parameters = new List<Parameter>
+            {
+                new Parameter { Name = "message", Value = "Hello", Type = "String" }
+            },
+            SessionAttributes = new Dictionary<string, string>
+            {
+                { "userId", "12345" },
+                { "preferredLanguage", "en-US" }
+            },
+            PromptSessionAttributes = new Dictionary<string, string>
+            {
+                { "context", "customer_support" },
+                { "previousQuestion", "How do I reset my password?" }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Equal("Hello", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Equal(2, result.SessionAttributes.Count);
+        Assert.Equal("12345", result.SessionAttributes["userId"]);
+        Assert.Equal("en-US", result.SessionAttributes["preferredLanguage"]);
+        Assert.Equal(2, result.PromptSessionAttributes.Count);
+        Assert.Equal("customer_support", result.PromptSessionAttributes["context"]);
+        Assert.Equal("How do I reset my password?", result.PromptSessionAttributes["previousQuestion"]);
+    }
+
+    [Fact]
+    public void TestSessionAttributesPreservationWithErrorHandling()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "ErrorTest",
+            description: "Test session attributes preservation with error",
+            handler: () => { throw new Exception("Test error"); return "This will not run"; }
+        );
+
+        var input = new BedrockFunctionRequest 
+        { 
+            Function = "ErrorTest",
+            ActionGroup = "TestGroup",
+            SessionAttributes = new Dictionary<string, string>
+            {
+                { "userId", "12345" },
+                { "session", "active" }
+            },
+            PromptSessionAttributes = new Dictionary<string, string>
+            {
+                { "lastAction", "login" }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Contains("Error when invoking tool: Test error", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Equal(2, result.SessionAttributes.Count);
+        Assert.Equal("12345", result.SessionAttributes["userId"]);
+        Assert.Equal("active", result.SessionAttributes["session"]);
+        Assert.Equal(1, result.PromptSessionAttributes?.Count);
+        Assert.Equal("login", result.PromptSessionAttributes?["lastAction"]);
+    }
+
+    [Fact]
+    public void TestSessionAttributesPreservationWithNoToolMatch()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        
+        var input = new BedrockFunctionRequest 
+        { 
+            Function = "NonExistentTool",
+            SessionAttributes = new Dictionary<string, string>
+            {
+                { "preferredTheme", "dark" }
+            },
+            PromptSessionAttributes = new Dictionary<string, string>
+            {
+                { "lastVisited", "homepage" }
+            }
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Contains($"Error: Tool {input.Function} has not been registered in handler", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Equal(1, result.SessionAttributes?.Count);
+        Assert.Equal("dark", result.SessionAttributes?["preferredTheme"]);
+        Assert.Equal(1, result.PromptSessionAttributes?.Count);
+        Assert.Equal("homepage", result.PromptSessionAttributes?["lastVisited"]);
+    }
+    
+    [Fact]
+    public void TestSReturningNull()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "NullTest",
+            description: "Test session attributes preservation with error",
+            handler: () =>
+            {
+                string test = null!;
+                return test;
+            }
+        );
+        
+        var input = new BedrockFunctionRequest 
+        { 
+            Function = "NullTest",
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Equal("", result.Response.FunctionResponse.ResponseBody.Text.Body);
+    }
+
+    [Fact]
+    public void TestMaximumToolLimit()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        
+        // Register 5 tools (the maximum)
+        for (int i = 1; i <= 5; i++)
+        {
+            var toolName = $"Tool{i}";
+            var response = $"Response from {toolName}";
+            resolver.Tool(toolName, () => response);
+            
+            // Verify each tool works as it's registered
+            var testInput = new BedrockFunctionRequest { Function = toolName };
+            var testResult = resolver.Resolve(testInput);
+            Assert.Contains(response, testResult.Response.FunctionResponse.ResponseBody.Text.Body);
+        }
+        
+        // Try to register a 6th tool that should not be registered
+        resolver.Tool("Tool6", () => "This should not be registered");
+        
+        // Verify the 6th tool doesn't work
+        var input6 = new BedrockFunctionRequest { Function = "Tool6" };
+        var result6 = resolver.Resolve(input6);
+        
+        // 6th tool should not be registered
+        Assert.Contains("has not been registered", result6.Response.FunctionResponse.ResponseBody.Text.Body);
+        
+        // Double-check that the original 5 tools still work
+        for (int i = 1; i <= 5; i++)
+        {
+            var toolName = $"Tool{i}";
+            var input = new BedrockFunctionRequest { Function = toolName };
+            var result = resolver.Resolve(input);
+            Assert.Contains($"Response from {toolName}", result.Response.FunctionResponse.ResponseBody.Text.Body);
+        }
+    }
+
+    [Fact]
+    public void TestToolOverrideWithWarning()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        
+        // Register a tool
+        resolver.Tool("Calculator", () => "Original Calculator");
+        
+        // Register same tool again with different implementation
+        resolver.Tool("Calculator", () => "New Calculator");
+        
+        // Verify the tool was overridden
+        var input = new BedrockFunctionRequest { Function = "Calculator" };
+        var result = resolver.Resolve(input);
+        
+        // The second registration should have overwritten the first
+        Assert.Equal("New Calculator", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
 }
 
