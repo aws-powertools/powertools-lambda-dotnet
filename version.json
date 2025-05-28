@@ -10,6 +10,6 @@
 		"Idempotency": "1.3.0",
 		"BatchProcessing": "1.2.1",
 		"EventHandler": "1.0.0",
-		"BedrockAgentFunctionResolver": "1.0.0"
+		"BedrockAgentFunctionResolver": "1.0.0-alpha.1",
 	}
 }
