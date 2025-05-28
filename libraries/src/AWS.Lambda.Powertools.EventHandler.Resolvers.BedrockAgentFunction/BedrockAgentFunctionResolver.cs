@@ -39,8 +39,6 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
     /// </example>
     public class BedrockAgentFunctionResolver
     {
-        private const int MaxTools = 5;
-
         private readonly
             Dictionary<string, Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse>>
             _handlers = new();
@@ -75,12 +73,6 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <returns>True if the tool can be registered, false if the maximum limit is reached</returns>
         private bool CanRegisterTool(string name)
         {
-            if (_handlers.Count >= MaxTools && !_handlers.ContainsKey(name))
-            {
-                Console.WriteLine($"WARNING: Maximum number of tools ({MaxTools}) reached. Tool '{name}' will not be registered.");
-                return false;
-            }
-            
             if (_handlers.ContainsKey(name))
             {
                 Console.WriteLine($"WARNING: Tool {name} already registered. Overwriting with new definition.");
