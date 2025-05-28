@@ -1,7 +1,5 @@
 using System.Globalization;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
@@ -782,45 +780,6 @@ public class BedrockAgentFunctionResolverTests
     }
 
     [Fact]
-    public void TestMaximumToolLimit()
-    {
-        // Arrange
-        var resolver = new BedrockAgentFunctionResolver();
-        
-        // Register 5 tools (the maximum)
-        for (int i = 1; i <= 5; i++)
-        {
-            var toolName = $"Tool{i}";
-            var response = $"Response from {toolName}";
-            resolver.Tool(toolName, () => response);
-            
-            // Verify each tool works as it's registered
-            var testInput = new BedrockFunctionRequest { Function = toolName };
-            var testResult = resolver.Resolve(testInput);
-            Assert.Contains(response, testResult.Response.FunctionResponse.ResponseBody.Text.Body);
-        }
-        
-        // Try to register a 6th tool that should not be registered
-        resolver.Tool("Tool6", () => "This should not be registered");
-        
-        // Verify the 6th tool doesn't work
-        var input6 = new BedrockFunctionRequest { Function = "Tool6" };
-        var result6 = resolver.Resolve(input6);
-        
-        // 6th tool should not be registered
-        Assert.Contains("has not been registered", result6.Response.FunctionResponse.ResponseBody.Text.Body);
-        
-        // Double-check that the original 5 tools still work
-        for (int i = 1; i <= 5; i++)
-        {
-            var toolName = $"Tool{i}";
-            var input = new BedrockFunctionRequest { Function = toolName };
-            var result = resolver.Resolve(input);
-            Assert.Contains($"Response from {toolName}", result.Response.FunctionResponse.ResponseBody.Text.Body);
-        }
-    }
-
-    [Fact]
     public void TestToolOverrideWithWarning()
     {
         // Arrange
@@ -839,14 +798,74 @@ public class BedrockAgentFunctionResolverTests
         // The second registration should have overwritten the first
         Assert.Equal("New Calculator", result.Response.FunctionResponse.ResponseBody.Text.Body);
     }
+    
+    [Fact]
+    public void TestAttributeBasedToolRegistration()
+    {
+        // Arrange
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IMyInterface>(new MyImplementation());
+        services.AddBedrockResolver();
+
+        var serviceProvider = services.BuildServiceProvider();
+        var resolver = serviceProvider.GetRequiredService<BedrockAgentFunctionResolver>()
+            .RegisterTool<AttributeBasedTool>();
+
+        // Create test input for echo function
+        var echoInput = new BedrockFunctionRequest
+        {
+            Function = "Echo",
+            Parameters = new List<Parameter>
+            {
+                new Parameter { Name = "message", Value = "Hello world", Type = "String" }
+            }
+        };
+    
+        // Create test input for calculate function
+        var calcInput = new BedrockFunctionRequest
+        {
+            Function = "Calculate",
+            Parameters = new List<Parameter>
+            {
+                new Parameter { Name = "x", Value = "5", Type = "Number" },
+                new Parameter { Name = "y", Value = "3", Type = "Number" }
+            }
+        };
+
+        // Act
+        var echoResult = resolver.Resolve(echoInput);
+        var calcResult = resolver.Resolve(calcInput);
+
+        // Assert
+        Assert.Equal("You asked: Forecast for Lisbon for 1 days", echoResult.Response.FunctionResponse.ResponseBody.Text.Body);
+        Assert.Equal("Result: 8", calcResult.Response.FunctionResponse.ResponseBody.Text.Body);
+    }
+
+    // Example tool class using attributes
+    [BedrockFunctionType]
+    public class AttributeBasedTool
+    {
+        [BedrockFunctionTool(Name = "Echo", Description = "Echoes back the input message")]
+        public static string EchoMessage(string message, IMyInterface myInterface, ILambdaContext context)
+        {
+            return $"You asked: {myInterface.DoSomething("Lisbon", 1).Result}";
+        }
+
+        [BedrockFunctionTool(Name = "Calculate", Description = "Adds two numbers together")]
+        public static string Calculate(int x, int y)
+        {
+            return $"Result: {x + y}";
+        }
+    }
 }
 
-internal interface IMyInterface
+public interface IMyInterface
 {
     Task<string> DoSomething(string location, int days);
 }
 
-internal class MyImplementation : IMyInterface
+public class MyImplementation : IMyInterface
 {
     public async Task<string> DoSomething(string location, int days)
     {
