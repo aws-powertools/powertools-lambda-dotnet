@@ -204,24 +204,61 @@ resolver.Tool(
 ## Supported Parameter Types
 
 - `string`
-- `int` / `long`
-- `double` / `decimal`
+- `int`
+- `number`
 - `bool`
-- `DateTime`
-- `Guid`
 - `enum` types
 - `ILambdaContext` (for accessing Lambda context)
 - `ActionGroupInvocationInput` (for accessing raw request)
 - Any service registered in dependency injection
 
-## Benefits
 
-- **Reduced Boilerplate**: Eliminate repetitive code for parsing requests and formatting responses
-- **Type Safety**: Strong typing for parameters and return values
-- **Simplified Development**: Focus on business logic instead of request/response handling
-- **Reusable Components**: Build a library of tool functions that can be shared across agents
-- **Easy Testing**: Functions can be easily unit tested in isolation
-- **Flexible Integration**: Works seamlessly with AWS Lambda and Bedrock Agents
+## Using Attributes to Define Tools
+
+You can define Bedrock Agent functions using attributes instead of explicit registration. This approach provides a clean, declarative way to organize your tools into classes:
+
+### Define Tool Classes with Attributes
+
+```csharp
+// Define your tool class with BedrockFunctionType attribute
+[BedrockFunctionType]
+public class WeatherTools
+{
+    // Each method marked with BedrockFunctionTool attribute becomes a tool
+    [BedrockFunctionTool(Name = "GetWeather", Description = "Gets weather forecast for a location")]
+    public static string GetWeather(string city, int days)
+    {
+        return $"Weather forecast for {city} for the next {days} days: Sunny";
+    }
+    
+    // Supports dependency injection and Lambda context access
+    [BedrockFunctionTool(Name = "GetDetailedForecast", Description = "Gets detailed weather forecast")]
+    public static string GetDetailedForecast(
+        string location, 
+        IWeatherService weatherService, 
+        ILambdaContext context)
+    {
+        context.Logger.LogLine($"Getting forecast for {location}");
+        return weatherService.GetForecast(location);
+    }
+}
+```
+
+### Register Tool Classes in Your Application
+
+Using the extension method provided in the library, you can easily register all tools from a class:
+
+```csharp
+
+var services = new ServiceCollection();
+services.AddSingleton<IWeatherService, WeatherService>();
+services.AddBedrockResolver(); // Extension method to register the resolver
+
+var serviceProvider = services.BuildServiceProvider();
+var resolver = serviceProvider.GetRequiredService<BedrockAgentFunctionResolver>()
+    .RegisterTool<WeatherTools>(); // Register tools from the class during service registration
+
+```
 
 ## Complete Example with Dependency Injection
 
@@ -298,7 +335,3 @@ namespace MyBedrockAgent
     }
 }
 ```
-
-## Learn More
-
-For more information about Amazon Bedrock Agents and function integration, see the [Amazon Bedrock documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-tools.html).
