@@ -2,13 +2,14 @@ using System.Globalization;
 using System.Text;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
+using AWS.Lambda.Powertools.EventHandler.Resolvers;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable CS0162 // Unreachable code detected
 
-// ReSharper disable once CheckNamespace
-namespace AWS.Lambda.Powertools.EventHandler.Resolvers.Tests;
+
+namespace AWS.Lambda.Powertools.EventHandler.BedrockAgentFunction;
 
 public class BedrockAgentFunctionResolverTests
 {

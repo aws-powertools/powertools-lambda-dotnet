@@ -6,7 +6,7 @@ using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 #pragma warning disable CS8604 // Possible null reference argument.
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
 
-namespace AWS.Lambda.Powertools.EventHandler.Tests;
+namespace AWS.Lambda.Powertools.EventHandler;
 
 public class AppSyncEventsTests
 {
