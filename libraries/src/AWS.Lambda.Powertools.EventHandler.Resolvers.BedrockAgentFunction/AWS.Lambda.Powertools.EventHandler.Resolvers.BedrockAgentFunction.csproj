@@ -9,7 +9,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RunAOTCompilation>true</RunAOTCompilation>
-        <Version>1.0.4</Version>
     </PropertyGroup>
 
     <ItemGroup>
