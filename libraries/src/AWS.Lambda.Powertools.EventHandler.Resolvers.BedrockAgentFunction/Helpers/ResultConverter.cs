@@ -22,7 +22,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
     /// <summary>
     /// Converts handler results to BedrockFunctionResponse
     /// </summary>
-    public class ResultConverter
+    internal class ResultConverter
     {
         /// <summary>
         /// Processes results from handler functions and converts to BedrockFunctionResponse

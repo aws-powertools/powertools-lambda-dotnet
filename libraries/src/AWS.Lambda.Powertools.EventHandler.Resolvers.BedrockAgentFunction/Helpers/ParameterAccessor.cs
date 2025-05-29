@@ -15,13 +15,12 @@
 
 using System.Globalization;
 
-// ReSharper disable once CheckNamespace
-namespace AWS.Lambda.Powertools.EventHandler.Resolvers;
+namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Helpers;
 
 /// <summary>
 /// Provides strongly-typed access to the parameters of an agent function call.
 /// </summary>
-public class ParameterAccessor
+internal class ParameterAccessor
 {
     private readonly List<Parameter> _parameters;
 
@@ -74,7 +73,21 @@ public class ParameterAccessor
             return defaultValue;
         }
 
-        return ConvertParameter<T>(parameter);
+        try
+        {
+            var result = ConvertParameter<T>(parameter);
+            // If conversion returns default value but we have a non-null parameter,
+            // that means conversion failed, so return the provided default value
+            if (EqualityComparer<T>.Default.Equals(result, default) && parameter.Value != null)
+            {
+                return defaultValue;
+            }
+            return result;
+        }
+        catch
+        {
+            return defaultValue;
+        }
     }
 
     private static T ConvertParameter<T>(Parameter? parameter)

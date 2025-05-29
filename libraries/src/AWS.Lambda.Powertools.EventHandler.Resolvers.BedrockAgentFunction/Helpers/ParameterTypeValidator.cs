@@ -18,7 +18,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
     /// <summary>
     /// Validates parameter types for Bedrock Agent functions
     /// </summary>
-    public class ParameterTypeValidator
+    internal class ParameterTypeValidator
     {
         private static readonly HashSet<Type> BedrockParameterTypes = new()
         {
