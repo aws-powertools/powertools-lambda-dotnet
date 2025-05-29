@@ -93,6 +93,7 @@ The following companies, among others, use Powertools:
 
 * [Caylent](https://caylent.com/)
 * [Pushpay](https://pushpay.com/)
+* [Instil Software](https://instil.co/)
 
 ### Sharing your work
 
