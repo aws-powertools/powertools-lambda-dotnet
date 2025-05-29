@@ -44,14 +44,14 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
             // Handle various Task<T> types
             if (result is Task task)
             {
-                return HandleTaskResult<TResult>(task, input, functionName);
+                return HandleTaskResult<TResult>(task, input);
             }
 
             // Handle regular (non-task) results
             return ConvertToOutput(result, input);
         }
 
-        private BedrockFunctionResponse HandleTaskResult<TResult>(Task task, BedrockFunctionRequest input, string functionName)
+        private BedrockFunctionResponse HandleTaskResult<TResult>(Task task, BedrockFunctionRequest input)
         {
             // For Task<string>
             if (task is Task<string> stringTask)
@@ -105,10 +105,9 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
         /// </summary>
         public BedrockFunctionResponse ConvertToOutput<T>(T result, BedrockFunctionRequest input)
         {
-            string actionGroup = input.ActionGroup;
-            string function = input.Function;
+            var function = input.Function;
 
-            if (result == null)
+            if (EqualityComparer<T>.Default.Equals(result, default(T)))
             {
                 return CreateEmptyResponse(input);
             }
@@ -125,8 +124,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
         
         private BedrockFunctionResponse ConvertPrimitiveToOutput<T>(T result, BedrockFunctionRequest input)
         {
-            string actionGroup = input.ActionGroup;
-            string function = input.Function;
+            var actionGroup = input.ActionGroup;
+            var function = input.Function;
             
             // For primitive types and strings, convert to string
             if (result is string str)
