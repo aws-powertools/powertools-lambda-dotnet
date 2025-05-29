@@ -23,7 +23,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
     /// <summary>
     /// Maps parameters for Bedrock Agent function handlers
     /// </summary>
-    public class ParameterMapper
+    internal class ParameterMapper
     {
         private readonly ParameterTypeValidator _validator = new();
         

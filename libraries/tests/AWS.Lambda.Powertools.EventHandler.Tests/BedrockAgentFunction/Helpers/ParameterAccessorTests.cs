@@ -1,4 +1,5 @@
 using AWS.Lambda.Powertools.EventHandler.Resolvers;
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Helpers;
 
 namespace AWS.Lambda.Powertools.EventHandler.BedrockAgentFunction.Helpers
 {
@@ -192,6 +193,146 @@ namespace AWS.Lambda.Powertools.EventHandler.BedrockAgentFunction.Helpers
             
             // Assert
             Assert.Null(result);
+        }
+
+        [Fact]
+        public void GetAt_WithValidIndex_ReturnsValue()
+        {
+            // Arrange
+            var parameters = new List<Parameter>
+            {
+                new Parameter { Name = "first", Value = "Value1", Type = "String" },
+                new Parameter { Name = "second", Value = "42", Type = "Number" },
+                new Parameter { Name = "third", Value = "true", Type = "Boolean" }
+            };
+            var accessor = new ParameterAccessor(parameters);
+            
+            // Act
+            var stringResult = accessor.GetAt<string>(0);
+            var intResult = accessor.GetAt<int>(1);
+            var boolResult = accessor.GetAt<bool>(2);
+            
+            // Assert
+            Assert.Equal("Value1", stringResult);
+            Assert.Equal(42, intResult);
+            Assert.True(boolResult);
+        }
+        
+        [Fact]
+        public void GetAt_WithInvalidIndex_ReturnsDefaultValue()
+        {
+            // Arrange
+            var parameters = new List<Parameter>
+            {
+                new Parameter { Name = "param", Value = "Value", Type = "String" }
+            };
+            var accessor = new ParameterAccessor(parameters);
+            
+            // Act
+            var negativeIndexResult = accessor.GetAt<string>(-1);
+            var tooLargeIndexResult = accessor.GetAt<string>(1);
+            
+            // Assert
+            Assert.Null(negativeIndexResult);
+            Assert.Null(tooLargeIndexResult);
+        }
+        
+        [Fact]
+        public void GetAt_WithNullParameters_ReturnsDefaultValue()
+        {
+            // Arrange
+            var accessor = new ParameterAccessor(null);
+            
+            // Act
+            var result = accessor.GetAt<string>(0);
+            
+            // Assert
+            Assert.Null(result);
+        }
+        
+        [Fact]
+        public void GetAt_WithNullValue_ReturnsDefaultValue()
+        {
+            // Arrange
+            var parameters = new List<Parameter>
+            {
+                new Parameter { Name = "param", Value = null, Type = "String" }
+            };
+            var accessor = new ParameterAccessor(parameters);
+            
+            // Act
+            var result = accessor.GetAt<string>(0);
+            
+            // Assert
+            Assert.Null(result);
+        }
+        
+        [Fact]
+        public void GetOrDefault_WithExistingParameter_ReturnsValue()
+        {
+            // Arrange
+            var parameters = new List<Parameter>
+            {
+                new Parameter { Name = "name", Value = "TestValue", Type = "String" }
+            };
+            var accessor = new ParameterAccessor(parameters);
+            
+            // Act
+            var result = accessor.GetOrDefault("name", "DefaultValue");
+            
+            // Assert
+            Assert.Equal("TestValue", result);
+        }
+        
+        [Fact]
+        public void GetOrDefault_WithNonExistentParameter_ReturnsDefaultValue()
+        {
+            // Arrange
+            var parameters = new List<Parameter>
+            {
+                new Parameter { Name = "existing", Value = "value", Type = "String" }
+            };
+            var accessor = new ParameterAccessor(parameters);
+            
+            // Act
+            var result = accessor.GetOrDefault("nonExistent", "DefaultValue");
+            
+            // Assert
+            Assert.Equal("DefaultValue", result);
+        }
+        
+        [Fact]
+        public void GetOrDefault_WithNullValue_ReturnsDefaultValue()
+        {
+            // Arrange
+            var parameters = new List<Parameter>
+            {
+                new Parameter { Name = "param", Value = null, Type = "String" }
+            };
+            var accessor = new ParameterAccessor(parameters);
+            
+            // Act
+            var result = accessor.GetOrDefault("param", "DefaultValue");
+            
+            // Assert
+            Assert.Equal("DefaultValue", result);
+        }
+        
+        [Fact]
+        public void GetOrDefault_WithInvalidConversion_ReturnsDefaultValue()
+        {
+            // Arrange
+            var parameters = new List<Parameter>
+            {
+                new Parameter { Name = "invalidNumber", Value = "not-a-number", Type = "Number" }
+            };
+            var accessor = new ParameterAccessor(parameters);
+            
+            // Act
+            var result = accessor.GetOrDefault("invalidNumber", 999);
+            
+            // Assert
+            Assert.Equal(999, result);
         }
     }
 }
