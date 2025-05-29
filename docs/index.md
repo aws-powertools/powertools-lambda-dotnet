@@ -166,6 +166,9 @@ Knowing which companies are using this library is important to help prioritize t
 [**Pushpay**](https://pushpay.com/){target="_blank" rel="nofollow"}
 { .card }
 
+[**Instil Software**](https://instil.co/){target="_blank" rel="nofollow"}
+{ .card }
+
 </div>
 
 ## Tenets
