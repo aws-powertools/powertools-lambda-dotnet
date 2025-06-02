@@ -68,6 +68,9 @@ You must create an Amazon Bedrock Agent with at least one action group. Each act
 
 ??? note "Click to see example IaC templates"
 
+TODO: add cdk
+
+
 ## Basic Usage
 
 To create an agent, use the `BedrockAgentFunctionResolver` to register your tools and handle the requests. The resolver will automatically parse the request, route it to the appropriate function, and return a well-formed response that includes the tool's output and any existing session attributes.
