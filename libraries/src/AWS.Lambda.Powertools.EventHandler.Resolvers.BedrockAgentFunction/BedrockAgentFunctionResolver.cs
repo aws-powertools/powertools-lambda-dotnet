@@ -45,7 +45,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
 
         private readonly ParameterTypeValidator _parameterValidator = new();
         private readonly ResultConverter _resultConverter = new();
-        private readonly ParameterMapper _parameterMapper = new();
+        private readonly ParameterMapper _parameterMapper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BedrockAgentFunctionResolver"/> class.
