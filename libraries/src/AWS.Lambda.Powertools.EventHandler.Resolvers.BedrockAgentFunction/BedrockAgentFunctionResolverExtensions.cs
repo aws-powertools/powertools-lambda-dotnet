@@ -16,6 +16,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace
@@ -30,6 +31,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// Registers a Bedrock Agent Function Resolver with dependency injection support.
         /// </summary>
         /// <param name="services">The service collection to add the resolver to.</param>
+        /// <param name="typeResolver"></param>
         /// <returns>The updated service collection.</returns>
         /// <example>
         /// <code>
@@ -41,10 +43,12 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// }
         /// </code>
         /// </example>
-        public static IServiceCollection AddBedrockResolver(this IServiceCollection services)
+        public static IServiceCollection AddBedrockResolver(
+            this IServiceCollection services,
+            IJsonTypeInfoResolver? typeResolver = null)
         {
             services.AddSingleton<BedrockAgentFunctionResolver>(sp =>
-                new DiBedrockAgentFunctionResolver(sp));
+                new DiBedrockAgentFunctionResolver(sp, typeResolver));
             return services;
         }
 
@@ -72,7 +76,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// resolver.RegisterTool&lt;WeatherTools&gt;();
         /// </code>
         /// </example>
-        public static BedrockAgentFunctionResolver RegisterTool<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] T>(
+        public static BedrockAgentFunctionResolver RegisterTool<
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] T>(
             this BedrockAgentFunctionResolver resolver)
             where T : class
         {
@@ -89,14 +94,14 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                 if (attr == null) continue;
 
                 string toolName = attr.Name ?? method.Name;
-                string description = attr.Description ??  
+                string description = attr.Description ??
                                      string.Empty;
 
                 // Create delegate from the static method
                 var del = Delegate.CreateDelegate(
-                    GetDelegateType(method), 
+                    GetDelegateType(method),
                     method);
-            
+
                 // Call the Tool method directly instead of using reflection
                 resolver.Tool(toolName, description, del);
             }
@@ -109,7 +114,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             var parameters = method.GetParameters();
             var parameterTypes = parameters.Select(p => p.ParameterType).ToList();
             parameterTypes.Add(method.ReturnType);
-    
+
             return Expression.GetDelegateType(parameterTypes.ToArray());
         }
     }

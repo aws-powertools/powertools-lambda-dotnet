@@ -13,8 +13,7 @@
  * permissions and limitations under the License.
  */
 
-using System.Globalization;
-using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Helpers;
@@ -48,6 +47,15 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         private readonly ResultConverter _resultConverter = new();
         private readonly ParameterMapper _parameterMapper = new();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BedrockAgentFunctionResolver"/> class.
+        /// Optionally accepts a type resolver for JSON serialization.
+        /// </summary>
+        public BedrockAgentFunctionResolver(IJsonTypeInfoResolver? typeResolver = null)
+        {
+            _parameterMapper = new ParameterMapper(typeResolver);
+        }
+        
         /// <summary>
         /// Checks if another tool can be registered, and logs a warning if the maximum limit is reached
         /// or if a tool with the same name is already registered

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json.Serialization;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.EventHandler.Resolvers;
@@ -801,6 +802,62 @@ public class BedrockAgentFunctionResolverTests
     }
     
     [Fact]
+    public void TestFunctionHandlerWithCustomType()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver();
+        resolver.Tool(
+            name: "PriceCalculator",
+            description: "Calculate total price with tax",
+            handler: (MyCustomType myCustomType) =>
+            {
+                var withTax = myCustomType.Price * 1.2m;
+                return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
+            }
+        );
+
+        var input = new BedrockFunctionRequest
+        {
+            Function = "PriceCalculator",
+            InputText = "{\"Price\": 29.99}", // JSON representation of MyCustomType
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Contains("35.99", result.Response.FunctionResponse.ResponseBody.Text.Body);
+    }
+    
+    [Fact]
+    public void TestFunctionHandlerWithCustomTypeWithTypeInfoResolver()
+    {
+        // Arrange
+        var resolver = new BedrockAgentFunctionResolver(MycustomSerializationContext.Default);
+        resolver.Tool(
+            name: "PriceCalculator",
+            description: "Calculate total price with tax",
+            handler: (MyCustomType myCustomType) =>
+            {
+                var withTax = myCustomType.Price * 1.2m;
+                return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
+            }
+        );
+
+        var input = new BedrockFunctionRequest
+        {
+            Function = "PriceCalculator",
+            InputText = "{\"Price\": 29.99}", // JSON representation of MyCustomType
+        };
+
+        // Act
+        var result = resolver.Resolve(input);
+
+        // Assert
+        Assert.Contains("35.99", result.Response.FunctionResponse.ResponseBody.Text.Body);
+    }
+    
+    [Fact]
     public void TestAttributeBasedToolRegistration()
     {
         // Arrange
@@ -872,4 +929,15 @@ public class MyImplementation : IMyInterface
     {
         return await Task.FromResult($"Forecast for {location} for {days} days");
     }
+}
+
+public class MyCustomType
+{
+    public decimal Price { get; set; }
+}
+
+
+[JsonSerializable(typeof(MyCustomType))]
+public partial class MycustomSerializationContext : JsonSerializerContext
+{
 }
