@@ -92,6 +92,7 @@ Knowing which companies are using this library is important to help prioritize t
 The following companies, among others, use Powertools:
 
 * [Caylent](https://caylent.com/)
+* [Instil Software](https://instil.co/)
 * [Pushpay](https://pushpay.com/)
 
 ### Sharing your work
