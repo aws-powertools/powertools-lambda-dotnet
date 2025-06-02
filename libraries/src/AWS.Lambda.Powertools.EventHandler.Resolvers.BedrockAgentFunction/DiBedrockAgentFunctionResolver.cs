@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization.Metadata;
+
 namespace AWS.Lambda.Powertools.EventHandler.Resolvers;
 
 /// <summary>
@@ -14,7 +16,9 @@ internal class DiBedrockAgentFunctionResolver : BedrockAgentFunctionResolver
     /// Initializes a new instance of the <see cref="DiBedrockAgentFunctionResolver"/> class.
     /// </summary>
     /// <param name="serviceProvider">The service provider for dependency injection.</param>
-    public DiBedrockAgentFunctionResolver(IServiceProvider serviceProvider)
+    /// <param name="typeResolver"></param>
+    public DiBedrockAgentFunctionResolver(IServiceProvider serviceProvider, IJsonTypeInfoResolver? typeResolver = null)
+        : base(typeResolver)
     {
         ServiceProvider = serviceProvider;
     }

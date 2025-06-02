@@ -15,6 +15,7 @@
 
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 
@@ -26,7 +27,13 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
     internal class ParameterMapper
     {
         private readonly ParameterTypeValidator _validator = new();
-        
+        private readonly IJsonTypeInfoResolver? _typeResolver;
+
+        public ParameterMapper(IJsonTypeInfoResolver? typeResolver = null)
+        {
+            _typeResolver = typeResolver;
+        }
+
         /// <summary>
         /// Maps parameters for a handler method from a Bedrock function request
         /// </summary>
@@ -36,15 +43,14 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
         /// <param name="serviceProvider">Optional service provider for dependency injection</param>
         /// <returns>Array of arguments to pass to the handler</returns>
         public object?[] MapParameters(
-            MethodInfo methodInfo, 
-            BedrockFunctionRequest input, 
+            MethodInfo methodInfo,
+            BedrockFunctionRequest input,
             ILambdaContext? context,
             IServiceProvider? serviceProvider)
         {
             var parameters = methodInfo.GetParameters();
             var args = new object?[parameters.Length];
             var accessor = new ParameterAccessor(input.Parameters);
-            var bedrockParamIndex = 0;
 
             for (var i = 0; i < parameters.Length; i++)
             {
@@ -54,15 +60,66 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
                 if (paramType == typeof(ILambdaContext))
                 {
                     args[i] = context;
+                    continue; // Skip further processing for this parameter
                 }
                 else if (paramType == typeof(BedrockFunctionRequest))
                 {
                     args[i] = input;
+                    continue; // Skip further processing for this parameter
                 }
-                else if (_validator.IsBedrockParameter(paramType))
+
+                // Try to deserialize custom complex type from InputText
+                if (!string.IsNullOrEmpty(input.InputText) &&
+                    !paramType.IsPrimitive &&
+                    paramType != typeof(string) &&
+                    !paramType.IsEnum)
                 {
-                    args[i] = MapBedrockParameter(paramType, parameter.Name ?? $"arg{bedrockParamIndex}", accessor);
-                    bedrockParamIndex++;
+                    try
+                    {
+                        var options = new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        };
+
+                        if (_typeResolver != null)
+                        {
+                            options.TypeInfoResolver = _typeResolver;
+
+                            // Get the JsonTypeInfo for the parameter type
+                            var jsonTypeInfo = _typeResolver.GetTypeInfo(paramType, options);
+                            if (jsonTypeInfo != null)
+                            {
+                                // Use the AOT-friendly overload with JsonTypeInfo
+                                args[i] = JsonSerializer.Deserialize(input.InputText, jsonTypeInfo);
+
+                                if (args[i] != null)
+                                {
+                                    continue;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Fallback to non-AOT deserialization with warning
+#pragma warning disable IL2026, IL3050
+                            args[i] = JsonSerializer.Deserialize(input.InputText, paramType, options);
+#pragma warning restore IL2026, IL3050
+
+                            if (args[i] != null)
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Deserialization failed, continue to regular parameter mapping
+                    }
+                }
+
+                if (_validator.IsBedrockParameter(paramType))
+                {
+                    args[i] = MapBedrockParameter(paramType, parameter.Name ?? $"arg{i}", accessor);
                 }
                 else if (serviceProvider != null)
                 {
@@ -107,9 +164,11 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
                 if (paramType == typeof(double[]))
                     return JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.DoubleArray);
                 if (paramType == typeof(bool[]))
-                    return JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.BooleanArray);
+                    return JsonSerializer.Deserialize(jsonArrayStr,
+                        BedrockFunctionResolverContext.Default.BooleanArray);
                 if (paramType == typeof(decimal[]))
-                    return JsonSerializer.Deserialize(jsonArrayStr, BedrockFunctionResolverContext.Default.DecimalArray);
+                    return JsonSerializer.Deserialize(jsonArrayStr,
+                        BedrockFunctionResolverContext.Default.DecimalArray);
             }
             catch (JsonException)
             {
