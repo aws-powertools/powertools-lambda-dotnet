@@ -13,6 +13,8 @@ namespace Infra
 
             _ = new IdempotencyStack(app, "IdempotencyStack", new IdempotencyStackProps { TableName = "IdempotencyTable" });
             
+            _ = new BatchProcessingStack(app, "BatchProcessingStack", new BatchProcessingStackProps { });
+            
             app.Synth();
         }
     }
