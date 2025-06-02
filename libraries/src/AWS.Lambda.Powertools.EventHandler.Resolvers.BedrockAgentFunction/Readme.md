@@ -34,12 +34,6 @@ Install the package via NuGet:
 dotnet add package AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction
 ```
 
-### Required resources
-
-You must create an Amazon Bedrock Agent with at least one action group. Each action group can contain up to 5 tools, which in turn need to match the ones defined in your Lambda function. Bedrock must have permission to invoke your Lambda function.
-
-??? note "Click to see example IaC templates"
-
 ## Basic Usage
 
 To create an agent, use the `BedrockAgentFunctionResolver` to register your tools and handle the requests. The resolver will automatically parse the request, route it to the appropriate function, and return a well-formed response that includes the tool's output and any existing session attributes.
