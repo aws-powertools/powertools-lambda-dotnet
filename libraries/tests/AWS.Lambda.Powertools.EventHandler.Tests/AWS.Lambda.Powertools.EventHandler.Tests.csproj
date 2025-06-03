@@ -17,6 +17,7 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk"/>
         <PackageReference Include="xunit"/>
         <PackageReference Include="Amazon.Lambda.TestUtilities" />
+        <PackageReference Include="NSubstitute" />
         <PackageReference Include="xunit.runner.visualstudio">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
@@ -32,6 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj" />
       <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler\AWS.Lambda.Powertools.EventHandler.csproj" />
     </ItemGroup>
 
@@ -39,6 +41,11 @@
         <None Remove="appSyncEventsEvent.json" />
         <Content Include="appSyncEventsEvent.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <None Remove="bedrockFunctionEvent.json" />
+        <None Remove="bedrockFunctionEvent2.json" />
+        <Content Update="BedrockAgentFunction\bedrockFunctionEvent.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
 

@@ -1,0 +1,19 @@
+﻿<!--suppress MsbuildTargetFrameworkTagInspection -->
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction</PackageId>
+        <Description>Powertools for AWS Lambda (.NET) - Event Handler Bedrock Agent Function Resolver package.</Description>
+        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetMultiFramework>false</TargetMultiFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RunAOTCompilation>true</RunAOTCompilation>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.Core"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    </ItemGroup>
+
+</Project>

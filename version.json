@@ -9,6 +9,7 @@
 		"Parameters": "1.3.1",
 		"Idempotency": "1.3.0",
 		"BatchProcessing": "1.2.1",
-		"EventHandler": "1.0.0"
+		"EventHandler": "1.0.0",
+		"EventHandler.Resolvers.BedrockAgentFunction": "1.0.0"
 	}
 }

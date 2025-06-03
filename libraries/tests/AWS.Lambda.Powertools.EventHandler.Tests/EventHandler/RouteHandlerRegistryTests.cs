@@ -1,7 +1,13 @@
+using System.Diagnostics.CodeAnalysis;
 using AWS.Lambda.Powertools.EventHandler.Internal;
+#pragma warning disable CS8605 // Unboxing a possibly null value.
+#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
-namespace AWS.Lambda.Powertools.EventHandler.Tests;
+namespace AWS.Lambda.Powertools.EventHandler;
 
+[SuppressMessage("Usage", "xUnit1031:Do not use blocking task operations in test method")]
 public class RouteHandlerRegistryTests
 {
     [Theory]
@@ -14,7 +20,7 @@ public class RouteHandlerRegistryTests
     [InlineData("default/*", false)] // Not starting with slash
     [InlineData("", false)] // Empty path
     [InlineData(null, false)] // Null path
-    public void IsValidPath_ShouldValidateCorrectly(string path, bool expected)
+    public void IsValidPath_ShouldValidateCorrectly(string? path, bool expected)
     {
         // Create a private method accessor to test private IsValidPath method
         var registry = new RouteHandlerRegistry<object, object>();
