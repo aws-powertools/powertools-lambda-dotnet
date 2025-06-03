@@ -208,6 +208,48 @@ To create an agent, use the `BedrockAgentFunctionResolver` to register your tool
     ```
 When the Bedrock Agent invokes your Lambda function with a request to use the "GetWeather" tool and a parameter for "city", the resolver automatically extracts the parameter, passes it to your function, and formats the response.
 
+## Response Format
+
+You can return any type from your tool function, the library will automatically format the response in a way that Bedrock Agents expect. 
+
+The response will include:
+
+- The action group name
+- The function name
+- The function response body, which can be a text response or other structured data in string format
+- Any session attributes that were passed in the request or modified during the function execution
+
+The response body will **always be a string**. 
+
+If you want to return an object the best practice is to override the `ToString()` method of your return type to provide a custom string representation, or if you don't override, create an anonymous object `return new {}` and pass your object, or simply return a string directly.
+
+```csharp
+public class AirportInfo
+{
+    public string City { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+
+    public override string ToString()
+    {
+        return $"{Name} ({Code}) in {City}";
+    }
+}
+
+resolver.Tool("getAirportCodeForCity", "Get airport code and full name for a specific city", (string city, ILambdaContext context) =>
+{
+    var airportService = new AirportService();
+    var airportInfo = airportService.GetAirportInfoForCity(city);
+    // Note: Best approach is to override the ToString method in the AirportInfo class
+    return airportInfo;
+});
+    
+//Alternatively, you can return an anonymous object if you dont override ToString()
+// return new {
+//     airportInfo
+// }; 
+```
+
 ## How It Works with Amazon Bedrock Agents
 
 1. When a user interacts with a Bedrock Agent, the agent identifies when it needs to call an action to fulfill the user's request.

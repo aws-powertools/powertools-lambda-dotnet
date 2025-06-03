@@ -11,7 +11,6 @@ import { Runtime, Function as LambdaFunction, Code, Architecture } from 'aws-cdk
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { CfnAgent } from 'aws-cdk-lib/aws-bedrock';
 import {
-  Effect,
   PolicyDocument,
   PolicyStatement,
   Role,
