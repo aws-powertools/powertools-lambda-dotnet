@@ -18,28 +18,24 @@ flowchart LR
     Bedrock[LLM] <-- uses --> Agent
     You[User input] --> Agent
     Agent[Bedrock Agent] <-- tool use --> Lambda
-
     subgraph Agent[Bedrock Agent]
         ToolDescriptions[Tool Definitions]
     end
-
     subgraph Lambda[Lambda Function]
         direction TB
         Parsing[Parameter Parsing] --> Routing
         Routing --> Code[Your code]
         Code --> ResponseBuilding[Response Building]
     end
-
     style You stroke:#0F0,stroke-width:2px
 ```
 
 ## Features
 
-- **Simple Tool Registration**: Register functions with descriptive names that Bedrock Agents can invoke
-- **Automatic Parameter Handling**: Parameters are automatically extracted from Bedrock Agent requests and converted to the appropriate types
-- **Lambda Context Access**: Easy access to Lambda context for logging and AWS Lambda features
-- **Dependency Injection Support**: Seamless integration with .NET's dependency injection system
-- **AOT Compatibility**: Fully compatible with .NET 8 AOT compilation through source generation
+* Easily expose tools for your Large Language Model (LLM) agents
+* Automatic routing based on tool name and function details
+* Graceful error handling and response formatting
+* Fully compatible with .NET 8 AOT compilation through source generation
 
 ## Terminology
 
@@ -66,67 +62,202 @@ dotnet add package AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunc
 
 You must create an Amazon Bedrock Agent with at least one action group. Each action group can contain up to 5 tools, which in turn need to match the ones defined in your Lambda function. Bedrock must have permission to invoke your Lambda function.
 
-??? note "Click to see example IaC templates"
+??? note "Click to see example SAM template"
+    ```yaml
+    AWSTemplateFormatVersion: '2010-09-09'
+    Transform: AWS::Serverless-2016-10-31
 
-TODO: add cdk
+    Globals:
+    Function:
+        Timeout: 30
+        MemorySize: 256
+        Runtime: dotnet8
 
+    Resources:
+    HelloWorldFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+        Handler: FunctionHandler
+        CodeUri: hello_world
+
+    AirlineAgentRole:
+        Type: AWS::IAM::Role
+        Properties:
+        RoleName: !Sub '${AWS::StackName}-AirlineAgentRole'
+        Description: 'Role for Bedrock Airline agent'
+        AssumeRolePolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+                Principal:
+                Service: bedrock.amazonaws.com
+                Action: sts:AssumeRole
+        Policies:
+            - PolicyName: bedrock
+            PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                - Effect: Allow
+                    Action: 'bedrock:*'
+                    Resource:
+                    - !Sub 'arn:aws:bedrock:us-*::foundation-model/*'
+                    - !Sub 'arn:aws:bedrock:us-*:*:inference-profile/*'
+
+    BedrockAgentInvokePermission:
+        Type: AWS::Lambda::Permission
+        Properties:
+        FunctionName: !Ref HelloWorldFunction
+        Action: lambda:InvokeFunction
+        Principal: bedrock.amazonaws.com
+        SourceAccount: !Ref 'AWS::AccountId'
+        SourceArn: !Sub 'arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:agent/${AirlineAgent}'
+
+    # Bedrock Agent
+    AirlineAgent:
+        Type: AWS::Bedrock::Agent
+        Properties:
+        AgentName: AirlineAgent
+        Description: 'A simple Airline agent'
+        FoundationModel: !Sub 'arn:aws:bedrock:us-west-2:${AWS::AccountId}:inference-profile/us.amazon.nova-pro-v1:0'
+        Instruction: |
+            You are an airport traffic control agent. You will be given a city name and you will return the airport code for that city.
+        AgentResourceRoleArn: !GetAtt AirlineAgentRole.Arn
+        AutoPrepare: true
+        ActionGroups:
+            - ActionGroupName: AirlineActionGroup
+            ActionGroupExecutor:
+                Lambda: !GetAtt AirlineAgentFunction.Arn
+            FunctionSchema:
+                Functions:
+                - Name: getAirportCodeForCity
+                    Description: 'Get the airport code for a given city'
+                    Parameters:
+                    city:
+                        Type: string
+                        Description: 'The name of the city to get the airport code for'
+                        Required: true
+    ```
 
 ## Basic Usage
 
 To create an agent, use the `BedrockAgentFunctionResolver` to register your tools and handle the requests. The resolver will automatically parse the request, route it to the appropriate function, and return a well-formed response that includes the tool's output and any existing session attributes.
 
-```csharp
-using Amazon.BedrockAgentRuntime.Model;
-using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.EventHandler;
+=== "Executable asembly"
 
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
+    ```csharp
+    using Amazon.Lambda.Core;
+    using Amazon.Lambda.RuntimeSupport;
+    using AWS.Lambda.Powertools.EventHandler.Resolvers;
+    using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 
-namespace MyLambdaFunction
-{
-    public class Function
+    var resolver = new BedrockAgentFunctionResolver();
+
+    resolver
+        .Tool("GetWeather", (string city) => $"The weather in {city} is sunny")
+        .Tool("CalculateSum", (int a, int b) => $"The sum of {a} and {b} is {a + b}")
+        .Tool("GetCurrentTime", () => $"The current time is {DateTime.Now}");
+
+    // The function handler that will be called for each Lambda event
+    var handler = async (BedrockFunctionRequest input, ILambdaContext context) =>
     {
-        private readonly BedrockAgentFunctionResolver _resolver;
-        
-        public Function()
+        return await resolver.ResolveAsync(input, context);
+    };
+
+    // Build the Lambda runtime client passing in the handler to call for each
+    // event and the JSON serializer to use for translating Lambda JSON documents
+    // to .NET types.
+    await LambdaBootstrapBuilder.Create(handler, new DefaultLambdaJsonSerializer())
+        .Build()
+        .RunAsync();
+    ```
+
+=== "Class Library"
+
+    ```csharp
+    using AWS.Lambda.Powertools.EventHandler.Resolvers;
+    using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
+    using Amazon.Lambda.Core;
+
+    [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
+
+    namespace MyLambdaFunction
+    {
+        public class Function
         {
-            _resolver = new BedrockAgentFunctionResolver();
+            private readonly BedrockAgentFunctionResolver _resolver;
             
-            // Register simple tool functions
-            _resolver
-                .Tool("GetWeather", (string city) => $"The weather in {city} is sunny")
-                .Tool("CalculateSum", (int a, int b) => $"The sum of {a} and {b} is {a + b}")
-                .Tool("GetCurrentTime", () => $"The current time is {DateTime.Now}");
-        }
-        
-        // Lambda handler function
-        public ActionGroupInvocationOutput FunctionHandler(
-            ActionGroupInvocationInput input, ILambdaContext context)
-        {
-            return _resolver.Resolve(input, context);
+            public Function()
+            {
+                _resolver = new BedrockAgentFunctionResolver();
+                
+                // Register simple tool functions
+                _resolver
+                    .Tool("GetWeather", (string city) => $"The weather in {city} is sunny")
+                    .Tool("CalculateSum", (int a, int b) => $"The sum of {a} and {b} is {a + b}")
+                    .Tool("GetCurrentTime", () => $"The current time is {DateTime.Now}");
+            }
+            
+            // Lambda handler function
+            public BedrockFunctionResponse FunctionHandler(
+                BedrockFunctionRequest input, ILambdaContext context)
+            {
+                return _resolver.Resolve(input, context);
+            }
         }
     }
-}
-```
-
+    ```
 When the Bedrock Agent invokes your Lambda function with a request to use the "GetWeather" tool and a parameter for "city", the resolver automatically extracts the parameter, passes it to your function, and formats the response.
+
+## How It Works with Amazon Bedrock Agents
+
+1. When a user interacts with a Bedrock Agent, the agent identifies when it needs to call an action to fulfill the user's request.
+2. The agent determines which function to call and what parameters are needed.
+3. Bedrock sends a request to your Lambda function with the function name and parameters.
+4. The BedrockAgentFunctionResolver automatically:
+   - Finds the registered handler for the requested function
+   - Extracts and converts parameters to the correct types
+   - Invokes your handler with the parameters
+   - Formats the response in the way Bedrock Agents expect
+5. The agent receives the response and uses it to continue the conversation with the user
 
 ## Advanced Usage
 
-### Functions with Descriptions
+### Custom type serialization
 
-Add descriptive information to your tool functions:
+You can have your own custom types as arguments to the tool function. The library will automatically handle serialization and deserialization of these types. In this case, you need to ensure that your custom type is serializable to JSON, if serialization fails, the object will be null.
 
-```csharp
-_resolver.Tool(
-    "CheckInventory", 
-    "Checks if a product is available in inventory",
-    (string productId, bool checkWarehouse) => 
+```csharp hl_lines="4"
+resolver.Tool(
+    name: "PriceCalculator",
+    description: "Calculate total price with tax",
+    handler: (MyCustomType myCustomType) =>
     {
-        return checkWarehouse 
-            ? $"Product {productId} has 15 units in warehouse" 
-            : $"Product {productId} has 5 units in store";
-    });
+        var withTax = myCustomType.Price * 1.2m;
+        return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
+    }
+);
+```
+
+### Custom type serialization native AOT
+
+For native AOT compilation, you can use JsonSerializerContext and pass it to `BedrockAgentFunctionResolver`. This allows the library to generate the necessary serialization code at compile time, ensuring compatibility with AOT.
+
+```csharp hl_lines="1 5 12-15"
+var resolver = new BedrockAgentFunctionResolver(MycustomSerializationContext.Default);
+resolver.Tool(
+    name: "PriceCalculator",
+    description: "Calculate total price with tax",
+    handler: (MyCustomType myCustomType) =>
+    {
+        var withTax = myCustomType.Price * 1.2m;
+        return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
+    }
+);
+
+[JsonSerializable(typeof(MyCustomType))]
+public partial class MycustomSerializationContext : JsonSerializerContext
+{
+}
 ```
 
 ### Accessing Lambda Context
@@ -134,7 +265,7 @@ _resolver.Tool(
 You can access to the original Lambda event or context for additional information. These are passed to the handler function as optional arguments.
 
 ```csharp
-_resolver.Tool(
+resolver.Tool(
     "LogRequest",
     "Logs request information and returns confirmation",
     (string requestId, ILambdaContext context) => 
@@ -177,6 +308,7 @@ resolver.Tool("CustomFailure", () =>
     };
 });
 ```
+
 ### Setting session attributes
 
 When Bedrock Agents invoke your Lambda function, it can pass session attributes that you can use to store information across multiple interactions with the user. You can access these attributes in your handler function and modify them as needed.
@@ -254,7 +386,7 @@ Access the raw Bedrock Agent request:
 _resolver.Tool(
     "ProcessRawRequest",
     "Processes the raw Bedrock Agent request", 
-    (ActionGroupInvocationInput input) => 
+    (BedrockFunctionRequest input) => 
     {
         var functionName = input.Function;
         var parameterCount = input.Parameters.Count;
@@ -287,30 +419,6 @@ resolver.Tool(
         return weatherService.GetForecast(city);
     });
 ```
-
-## How It Works with Amazon Bedrock Agents
-
-1. When a user interacts with a Bedrock Agent, the agent identifies when it needs to call an action to fulfill the user's request.
-2. The agent determines which function to call and what parameters are needed.
-3. Bedrock sends a request to your Lambda function with the function name and parameters.
-4. The BedrockAgentFunctionResolver automatically:
-   - Finds the registered handler for the requested function
-   - Extracts and converts parameters to the correct types
-   - Invokes your handler with the parameters
-   - Formats the response in the way Bedrock Agents expect
-5. The agent receives the response and uses it to continue the conversation with the user
-
-## Supported Parameter Types
-
-- `string`
-- `int`
-- `number`
-- `bool`
-- `enum` types
-- `ILambdaContext` (for accessing Lambda context)
-- `ActionGroupInvocationInput` (for accessing raw request)
-- Any service registered in dependency injection
-
 
 ## Using Attributes to Define Tools
 
@@ -360,6 +468,9 @@ var resolver = serviceProvider.GetRequiredService<BedrockAgentFunctionResolver>(
 ```
 
 ## Complete Example with Dependency Injection
+
+You can find examples in the [Powertools for AWS Lambda (.NET) GitHub repository](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/Event%20Handler/BedrockAgentFunction).
+
 
 ```csharp
 using Amazon.BedrockAgentRuntime.Model;

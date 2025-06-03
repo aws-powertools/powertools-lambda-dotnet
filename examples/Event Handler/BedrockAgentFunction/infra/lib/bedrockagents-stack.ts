@@ -7,7 +7,7 @@ import {
   Duration,
 } from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
-import { Runtime, Function, Code, Architecture } from 'aws-cdk-lib/aws-lambda';
+import { Runtime, Function as LambdaFunction, Code, Architecture } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { CfnAgent } from 'aws-cdk-lib/aws-bedrock';
 import {
@@ -29,7 +29,7 @@ export class BedrockAgentsStack extends Stack {
       retention: RetentionDays.ONE_DAY,
     });
 
-    const fn = new Function(this, 'MyFunction', {
+    const fn = new LambdaFunction(this, 'MyFunction', {
       functionName: fnName,
       logGroup,
       timeout: Duration.minutes(3),
