@@ -18,24 +18,14 @@ var resolver = new BedrockAgentFunctionResolver();
 
 resolver.Tool("getAirportCodeForCity", "Get airport code and full name for a specific city", (string city, ILambdaContext context) =>
 {
-    logger.LogInformation($"Getting airport code for city: {city}");
+    logger.LogInformation("Getting airport code for city: {City}", city);
     var airportService = new AirportService();
     var airportInfo = airportService.GetAirportInfoForCity(city);
 
-    logger.LogInformation($"Airport for {city}: {airportInfo.Code} - {airportInfo.Name}");
+    logger.LogInformation("Airport for {City}: {AirportInfoCode} - {AirportInfoName}", city, airportInfo.Code, airportInfo.Name);
     
     // Note: Best approach is to override the ToString method in the AirportInfo class
-    // public override string ToString()
-    // {
-    //     return $"{Name} ({Code}) in {City}";
-    // }
-    // This will return a string with properties Code and Name
     return airportInfo;
-    
-    //Alternatively, you can return an anonymous object
-    // return new {
-    //     airportInfo
-    // }; 
 });
 
 
