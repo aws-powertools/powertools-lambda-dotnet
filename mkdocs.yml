@@ -123,6 +123,7 @@ plugins:
           - utilities/parameters.md
           - utilities/jmespath-functions.md
           - core/event_handler/appsync_events.md
+          - core/event_handler/bedrock_agent_function.md
         Getting Started:
           - getting-started/logger/simple.md
           - getting-started/logger/aspnet.md
