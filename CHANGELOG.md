@@ -7,6 +7,103 @@ All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 
+<a name="1.50.2"></a>
+## [1.50.2] - 2025-05-20
+## Features
+
+* add DynamicallyAccessedMembers attribute to batch processor and handler types
+* **JsonTransformer:** add AOT support and configure JSON serializer options
+
+## Maintenance
+
+* **deps:** bump zgosalvez/github-actions-ensure-sha-pinned-actions
+* **deps:** bump github/codeql-action from 3.28.17 to 3.28.18
+* **deps:** bump codecov/codecov-action from 5.4.2 to 5.4.3
+* **deps:** bump aws-actions/configure-aws-credentials
+* **deps:** bump squidfunk/mkdocs-material in /docs
+* **deps:** bump squidfunk/mkdocs-material in /docs
+* **deps:** bump aws-actions/configure-aws-credentials
+
+## Pull Requests
+
+* Merge pull request [#891](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/891) from aws-powertools/patch-versio-release
+* Merge pull request [#889](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/889) from aws-powertools/dependabot/github_actions/zgosalvez/github-actions-ensure-sha-pinned-actions-3.0.25
+* Merge pull request [#888](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/888) from aws-powertools/dependabot/github_actions/github/codeql-action-3.28.18
+* Merge pull request [#885](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/885) from aws-powertools/dependabot/github_actions/codecov/codecov-action-5.4.3
+* Merge pull request [#883](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/883) from aws-powertools/dependabot/github_actions/aws-actions/configure-aws-credentials-4.2.1
+* Merge pull request [#880](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/880) from aws-powertools/dependabot/docker/docs/squidfunk/mkdocs-material-eb04b60c566a8862be6b553157c16a92fbbfc45d71b7e4e8593526aecca63f52
+* Merge pull request [#882](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/882) from aws-powertools/feature/parameters-aot-support
+* Merge pull request [#881](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/881) from aws-powertools/feature/batch-aot-support
+* Merge pull request [#879](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/879) from aws-powertools/dependabot/docker/docs/squidfunk/mkdocs-material-f6c81d538499f5755c8d1486f0abcda50bb631be391890ef823fcba18803114a
+* Merge pull request [#876](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/876) from aws-powertools/dependabot/github_actions/aws-actions/configure-aws-credentials-4.2.0
+
+
+<a name="1.50.1"></a>
+## [1.50.1] - 2025-05-06
+## Maintenance
+
+* **deps:** bump zgosalvez/github-actions-ensure-sha-pinned-actions
+* **deps:** bump github/codeql-action from 3.28.15 to 3.28.17
+* **deps:** bump actions/download-artifact from 4.2.1 to 4.3.0
+* **deps:** bump squidfunk/mkdocs-material in /docs
+* **deps:** bump actions/setup-python from 5.5.0 to 5.6.0
+* **deps:** bump aws-cdk-lib from 2.189.0 to 2.189.1
+* **deps:** bump codecov/codecov-action from 5.4.0 to 5.4.2
+
+## Pull Requests
+
+* Merge pull request [#872](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/872) from aws-powertools/chore/update-version
+* Merge pull request [#871](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/871) from aws-powertools/fix-workflow
+* Merge pull request [#869](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/869) from hjgraca/chore/logger-formatting-update
+* Merge pull request [#864](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/864) from aws-powertools/chore/update-docs
+* Merge pull request [#861](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/861) from aws-powertools/dependabot/docker/docs/squidfunk/mkdocs-material-95f2ff42251979c043d6cb5b1c82e6ae8189e57e02105813dd1ce124021a418b
+* Merge pull request [#853](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/853) from aws-powertools/dependabot/npm_and_yarn/aws-cdk-lib-2.189.1
+* Merge pull request [#856](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/856) from aws-powertools/dependabot/github_actions/actions/setup-python-5.6.0
+* Merge pull request [#852](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/852) from aws-powertools/dependabot/github_actions/codecov/codecov-action-5.4.2
+* Merge pull request [#862](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/862) from aws-powertools/dependabot/github_actions/actions/download-artifact-4.3.0
+* Merge pull request [#865](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/865) from aws-powertools/dependabot/github_actions/github/codeql-action-3.28.17
+* Merge pull request [#867](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/867) from aws-powertools/dependabot/github_actions/zgosalvez/github-actions-ensure-sha-pinned-actions-3.0.24
+
+
+<a name="1.50"></a>
+## [1.50] - 2025-04-24
+## Features
+
+* enhance AppSyncEventsResolver with async handlers. Add documentation. Fix nullabel fields
+* add JsonPropertyName attributes to AppSync event models for improved serialization
+* update AppSyncEventsResolver to use async handlers and improve error handling
+* refactor AppSync event handling to use nullable properties and rename event classes
+* refactor AppSync event handling with nullable properties and improved class structure. Unauthorized exception and null subscribe responses
+* enhance AppSyncEventsResolver with improved event handling and registration methods
+
+## Maintenance
+
+* **deps:** bump actions/setup-node from 4.3.0 to 4.4.0
+* **deps:** bump aws-cdk-lib from 2.186.0 to 2.189.0
+* **deps:** bump zgosalvez/github-actions-ensure-sha-pinned-actions
+* **deps:** bump actions/setup-python from 5.4.0 to 5.5.0
+* **deps:** bump github/codeql-action from 3.28.10 to 3.28.15
+* **deps:** bump squidfunk/mkdocs-material in /docs
+* **deps:** bump aws-cdk-lib from 2.180.0 to 2.186.0
+* **deps:** bump actions/download-artifact from 4.1.9 to 4.2.1
+* **deps:** bump actions/upload-artifact from 4.6.1 to 4.6.2
+
+## Pull Requests
+
+* Merge pull request [#858](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/858) from aws-powertools/feature/appsync-events
+* Merge pull request [#848](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/848) from aws-powertools/dependabot/npm_and_yarn/aws-cdk-lib-2.189.0
+* Merge pull request [#851](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/851) from aws-powertools/dependabot/github_actions/actions/setup-node-4.4.0
+* Merge pull request [#849](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/849) from aws-powertools/update-changelog-14379009990
+* Merge pull request [#847](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/847) from aws-powertools/fix/changelog-write
+* Merge pull request [#830](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/830) from aws-powertools/dependabot/docker/docs/squidfunk/mkdocs-material-23b69789b1dd836c53ea25b32f62ef8e1a23366037acd07c90959a219fd1f285
+* Merge pull request [#838](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/838) from aws-powertools/dependabot/github_actions/zgosalvez/github-actions-ensure-sha-pinned-actions-3.0.23
+* Merge pull request [#837](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/837) from aws-powertools/dependabot/github_actions/actions/setup-python-5.5.0
+* Merge pull request [#836](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/836) from aws-powertools/dependabot/github_actions/github/codeql-action-3.28.15
+* Merge pull request [#829](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/829) from aws-powertools/dependabot/npm_and_yarn/aws-cdk-lib-2.186.0
+* Merge pull request [#825](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/825) from aws-powertools/dependabot/github_actions/actions/download-artifact-4.2.1
+* Merge pull request [#823](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/823) from aws-powertools/dependabot/github_actions/actions/upload-artifact-4.6.2
+
+
 <a name="1.40"></a>
 ## [1.40] - 2025-04-08
 ## Bug Fixes
@@ -360,11 +457,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Merge pull request [#613](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/613) from hjgraca/fix-metrics-resolution-context
 
 
-<a name="1.11"></a>
-## [1.11] - 2024-07-09
-
 <a name="1.10.2"></a>
 ## [1.10.2] - 2024-07-09
+
+<a name="1.11"></a>
+## [1.11] - 2024-07-09
 ## Maintenance
 
 * **deps:** bump jinja2 from 3.1.3 to 3.1.4
@@ -979,7 +1076,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Merge pull request [#1](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1) from sliedig/develop
 
 
-[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.40...HEAD
+[Unreleased]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.50.2...HEAD
+[1.50.2]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.50.1...1.50.2
+[1.50.1]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.50...1.50.1
+[1.50]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.40...1.50
 [1.40]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.30...1.40
 [1.30]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.20...1.30
 [1.20]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.19...1.20
@@ -991,9 +1091,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 [1.14]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.13...1.14
 [1.13]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.12...1.13
 [1.12]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.11.1...1.12
-[1.11.1]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.11...1.11.1
-[1.11]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.10.2...1.11
-[1.10.2]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.10.1...1.10.2
+[1.11.1]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.10.2...1.11.1
+[1.10.2]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.11...1.10.2
+[1.11]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.10.1...1.11
 [1.10.1]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.10.0...1.10.1
 [1.10.0]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.9.2...1.10.0
 [1.9.2]: https://github.com/aws-powertools/powertools-lambda-dotnet/compare/1.9.1...1.9.2
