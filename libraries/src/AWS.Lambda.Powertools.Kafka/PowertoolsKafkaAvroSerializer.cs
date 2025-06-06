@@ -2,15 +2,35 @@ using Amazon.Lambda.Core;
 using Avro;
 using Avro.IO;
 using Avro.Specific;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
 namespace AWS.Lambda.Powertools.Kafka;
 
+/// <summary>
+/// A Lambda serializer for Kafka events that handles Avro-formatted data.
+/// This serializer automatically deserializes the Avro binary format from base64-encoded strings
+/// in Kafka records and converts them to strongly-typed objects.
+/// </summary>
+/// <example>
+/// <code>
+/// [assembly: LambdaSerializer(typeof(PowertoolsKafkaAvroSerializer))]
+/// 
+/// // Your Lambda handler will receive properly deserialized objects
+/// public class Function
+/// {
+///     public void Handler(ConsumerRecords&lt;Customer&gt; records, ILambdaContext context)
+///     {
+///         foreach (var record in records)
+///         {
+///             Customer customer = record.Value;
+///             context.Logger.LogInformation($"Processed customer {customer.Name}, age {customer.Age}");
+///         }
+///     }
+/// }
+/// </code>
+/// </example>
 public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
 {
     private readonly JsonSerializerOptions _jsonOptions = new()
@@ -18,6 +38,13 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
         PropertyNameCaseInsensitive = true
     };
 
+    /// <summary>
+    /// Deserializes the Lambda input stream into the specified type.
+    /// Specializes in handling Kafka events with Avro-serialized payloads.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize to. For Kafka events, typically ConsumerRecords&lt;TPayload&gt;.</typeparam>
+    /// <param name="requestStream">The stream containing the serialized Lambda event.</param>
+    /// <returns>The deserialized object of type T.</returns>
     public T Deserialize<T>(Stream requestStream)
     {
         using var reader = new StreamReader(requestStream);
@@ -64,7 +91,8 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                     string topicName = topicPartition.Name;
 
                     // Create list of records with correct generic type
-                    var listType = typeof(List<>).MakeGenericType(typeof(ConsumerRecord<>).MakeGenericType(payloadType));
+                    var listType =
+                        typeof(List<>).MakeGenericType(typeof(ConsumerRecord<>).MakeGenericType(payloadType));
                     var recordsList = Activator.CreateInstance(listType);
                     var listAddMethod = listType.GetMethod("Add");
 
@@ -167,14 +195,22 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                 }
             }
 
-            targetType.GetProperty("Records",BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.SetValue(typedEvent, records);
+            targetType.GetProperty("Records", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(typedEvent, records);
             return (T)typedEvent;
         }
 
         return JsonSerializer.Deserialize<T>(json, _jsonOptions);
     }
 
-
+    /// <summary>
+    /// Sets a property value on an object instance from a JsonElement.
+    /// </summary>
+    /// <param name="type">The type of the object.</param>
+    /// <param name="instance">The object instance.</param>
+    /// <param name="propertyName">The name of the property to set.</param>
+    /// <param name="element">The JsonElement containing the source data.</param>
+    /// <param name="jsonPropertyName">The property name within the JsonElement.</param>
     private void SetProperty(Type type, object instance, string propertyName,
         JsonElement element, string jsonPropertyName)
     {
@@ -198,6 +234,13 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
         property.SetValue(instance, value);
     }
 
+    /// <summary>
+    /// Gets the Avro schema for the specified type.
+    /// The type must have a public static _SCHEMA field defined.
+    /// </summary>
+    /// <param name="payloadType">The type to get the Avro schema for.</param>
+    /// <returns>The Avro Schema object.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if no schema is found for the type.</exception>
     private Schema GetAvroSchema(Type payloadType)
     {
         var schemaField = payloadType.GetField("_SCHEMA",
@@ -209,6 +252,12 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
         return schemaField.GetValue(null) as Schema;
     }
 
+    /// <summary>
+    /// Deserializes a base64-encoded Avro binary value into an object.
+    /// </summary>
+    /// <param name="base64Value">The base64-encoded Avro binary data.</param>
+    /// <param name="schema">The Avro schema to use for deserialization.</param>
+    /// <returns>The deserialized object.</returns>
     private object DeserializeAvroValue(string base64Value, Schema schema)
     {
         byte[] avroBytes = Convert.FromBase64String(base64Value);
@@ -218,6 +267,12 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
         return reader.Read(null, decoder);
     }
 
+    /// <summary>
+    /// Serializes an object to JSON and writes it to the provided stream.
+    /// </summary>
+    /// <typeparam name="T">The type of object to serialize.</typeparam>
+    /// <param name="response">The object to serialize.</param>
+    /// <param name="responseStream">The stream to write the serialized data to.</param>
     public void Serialize<T>(T response, Stream responseStream)
     {
         using var writer = new StreamWriter(responseStream);
