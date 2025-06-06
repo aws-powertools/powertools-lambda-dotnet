@@ -17,7 +17,7 @@ public class PowertoolsKafkaAvroSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
             
         // Act
-        var result = serializer.Deserialize<KafkaEvent<AvroProduct>>(stream);
+        var result = serializer.Deserialize<ConsumerRecords<AvroProduct>>(stream);
             
         // Assert
         Assert.NotNull(result);
@@ -56,13 +56,13 @@ public class PowertoolsKafkaAvroSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
         
         // Act
-        var result = serializer.Deserialize<KafkaEvent<AvroProduct>>(stream);
+        var result = serializer.Deserialize<ConsumerRecords<AvroProduct>>(stream);
     
         // Assert - Test enumeration
         int count = 0;
         var products = new List<string>();
     
-        // Directly iterate over KafkaEvent
+        // Directly iterate over ConsumerRecords
         foreach (var record in result)
         {
             count++;

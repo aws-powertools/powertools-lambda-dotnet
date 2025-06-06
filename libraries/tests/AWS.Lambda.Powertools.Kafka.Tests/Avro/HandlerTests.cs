@@ -20,7 +20,7 @@ public class KafkaHandlerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaJson));
 
         // Act - Deserialize and process
-        var kafkaEvent = serializer.Deserialize<KafkaEvent<AvroProduct>>(stream);
+        var kafkaEvent = serializer.Deserialize<ConsumerRecords<AvroProduct>>(stream);
         var response = await Handler(kafkaEvent, mockContext);
 
         // Assert
@@ -123,7 +123,7 @@ public class KafkaHandlerTests
     }
 
     // Define the test handler method
-    private async Task<string> Handler(KafkaEvent<AvroProduct> records, ILambdaContext context)
+    private async Task<string> Handler(ConsumerRecords<AvroProduct> records, ILambdaContext context)
     {
         foreach (var record in records)
         {
@@ -145,7 +145,7 @@ public class KafkaHandlerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaJson));
 
         // Act
-        var kafkaEvent = serializer.Deserialize<KafkaEvent<AvroProduct>>(stream);
+        var kafkaEvent = serializer.Deserialize<ConsumerRecords<AvroProduct>>(stream);
         var response = await HandlerWithNestedLoops(kafkaEvent, mockContext);
 
         // Assert
@@ -234,9 +234,9 @@ public class KafkaHandlerTests
     }}";
     }
 
-    private async Task<string> HandlerWithNestedLoops(KafkaEvent<AvroProduct> kafkaEvent, ILambdaContext context)
+    private async Task<string> HandlerWithNestedLoops(ConsumerRecords<AvroProduct> consumerRecords, ILambdaContext context)
     {
-        foreach (var record in kafkaEvent)
+        foreach (var record in consumerRecords)
         {
             var product = record.Value;
             context.Logger.LogInformation($"Processing {product.name} at ${product.price} from topic {record.Topic}");

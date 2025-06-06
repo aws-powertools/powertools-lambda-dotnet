@@ -25,7 +25,7 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
 
         var targetType = typeof(T);
 
-        if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(KafkaEvent<>))
+        if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(ConsumerRecords<>))
         {
             var payloadType = targetType.GetGenericArguments()[0];
             using var document = JsonDocument.Parse(json);
@@ -52,7 +52,7 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
             // Create records dictionary with correct generic type
             var dictType = typeof(Dictionary<,>).MakeGenericType(
                 typeof(string),
-                typeof(List<>).MakeGenericType(typeof(KafkaRecord<>).MakeGenericType(payloadType))
+                typeof(List<>).MakeGenericType(typeof(ConsumerRecord<>).MakeGenericType(payloadType))
             );
             var records = Activator.CreateInstance(dictType);
             var dictAddMethod = dictType.GetMethod("Add");
@@ -64,14 +64,14 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                     string topicName = topicPartition.Name;
 
                     // Create list of records with correct generic type
-                    var listType = typeof(List<>).MakeGenericType(typeof(KafkaRecord<>).MakeGenericType(payloadType));
+                    var listType = typeof(List<>).MakeGenericType(typeof(ConsumerRecord<>).MakeGenericType(payloadType));
                     var recordsList = Activator.CreateInstance(listType);
                     var listAddMethod = listType.GetMethod("Add");
 
                     foreach (var recordElement in topicPartition.Value.EnumerateArray())
                     {
                         // Create record instance of correct type
-                        var recordType = typeof(KafkaRecord<>).MakeGenericType(payloadType);
+                        var recordType = typeof(ConsumerRecord<>).MakeGenericType(payloadType);
                         var record = Activator.CreateInstance(recordType);
 
                         // Set basic properties
