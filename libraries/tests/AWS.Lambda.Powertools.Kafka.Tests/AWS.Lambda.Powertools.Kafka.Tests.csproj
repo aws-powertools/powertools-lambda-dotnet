@@ -56,9 +56,16 @@
       <Content Include="Avro\AvroProduct.avsc">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <None Remove="Protobuf\Product.proto" />
+        <None Remove="Protobuf\Key.proto" />
+      <Protobuf Include="Protobuf\Key.proto">
+        <GrpcServices>Client</GrpcServices>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Generator>MSBuild:Compile</Generator>
+      </Protobuf>
+        <None Remove="Protobuf\Product.proto" />
       <Protobuf Include="Protobuf\Product.proto" GrpcServices="Client">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      
       </Protobuf>
       <Content Update="Avro\AvroKey.avsc">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
