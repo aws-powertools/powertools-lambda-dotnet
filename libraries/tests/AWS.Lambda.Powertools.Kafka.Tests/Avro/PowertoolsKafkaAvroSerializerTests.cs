@@ -46,4 +46,38 @@ public class PowertoolsKafkaAvroSerializerTests
         var smartphone = secondRecord.Value;
         Assert.Equal("Smartphone", smartphone.name);
     }
+    
+    [Fact]
+    public void KafkaEvent_ImplementsIEnumerable_ForDirectIteration()
+    {
+        // Arrange
+        var serializer = new PowertoolsKafkaAvroSerializer();
+        string kafkaEventJson = File.ReadAllText("Avro/kafka-avro-event.json");
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+        
+        // Act
+        var result = serializer.Deserialize<KafkaEvent<AvroProduct>>(stream);
+    
+        // Assert - Test enumeration
+        int count = 0;
+        var products = new List<string>();
+    
+        // Directly iterate over KafkaEvent
+        foreach (var record in result)
+        {
+            count++;
+            products.Add(record.Value.name);
+        }
+    
+        // Verify correct count and values
+        Assert.Equal(3, count);
+        Assert.Contains("Laptop", products);
+        Assert.Contains("Smartphone", products);
+        Assert.Equal(3, products.Count);
+    
+        // Get first record directly through Linq extension
+        var firstRecord = result.First();
+        Assert.Equal("Laptop", firstRecord.Value.name);
+        Assert.Equal(1001, firstRecord.Value.id);
+    }
 }

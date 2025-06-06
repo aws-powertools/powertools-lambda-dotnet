@@ -36,7 +36,9 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
 
             // Set basic properties
             if (root.TryGetProperty("eventSource", out var eventSource))
-                targetType.GetProperty("EventSource").SetValue(typedEvent, eventSource.GetString());
+                targetType.GetProperty("EventSource",
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    ?.SetValue(typedEvent, eventSource.GetString());
 
             if (root.TryGetProperty("eventSourceArn", out var eventSourceArn))
                 targetType.GetProperty("EventSourceArn").SetValue(typedEvent, eventSourceArn.GetString());
@@ -120,12 +122,12 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                                 throw new Exception($"Failed to deserialize Avro data: {ex.Message}", ex);
                             }
                         }
-                        
-                        if (recordElement.TryGetProperty("headers", out var headersElement) && 
+
+                        if (recordElement.TryGetProperty("headers", out var headersElement) &&
                             headersElement.ValueKind == JsonValueKind.Array)
                         {
                             var decodedHeaders = new Dictionary<string, string>();
-    
+
                             foreach (var headerObj in headersElement.EnumerateArray())
                             {
                                 foreach (var header in headerObj.EnumerateObject())
@@ -140,15 +142,20 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                                         {
                                             headerBytes[i++] = (byte)byteVal.GetInt32();
                                         }
-                
+
                                         // Decode as UTF-8 string
                                         string headerValue = Encoding.UTF8.GetString(headerBytes);
                                         decodedHeaders[headerKey] = headerValue;
                                     }
                                 }
                             }
-    
-                            recordType.GetProperty("Headers").SetValue(record, decodedHeaders);
+
+                            var headersProperty = recordType.GetProperty("Headers",
+                                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                            if (headersProperty != null)
+                            {
+                                headersProperty.SetValue(record, decodedHeaders);
+                            }
                         }
 
                         // Add to records list
@@ -160,45 +167,48 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                 }
             }
 
-            targetType.GetProperty("Records").SetValue(typedEvent, records);
+            targetType.GetProperty("Records",BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.SetValue(typedEvent, records);
             return (T)typedEvent;
         }
 
         return JsonSerializer.Deserialize<T>(json, _jsonOptions);
     }
 
-    
-    private void SetProperty(Type type, object instance, string propertyName, 
+
+    private void SetProperty(Type type, object instance, string propertyName,
         JsonElement element, string jsonPropertyName)
     {
-        if (!element.TryGetProperty(jsonPropertyName, out var jsonValue) || 
+        if (!element.TryGetProperty(jsonPropertyName, out var jsonValue) ||
             jsonValue.ValueKind == JsonValueKind.Null)
             return;
-            
-        var property = type.GetProperty(propertyName);
+
+        // Add BindingFlags to find internal properties too
+        var property = type.GetProperty(propertyName,
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        if (property == null) return;
         var propertyType = property.PropertyType;
-        
+
         object value;
         if (propertyType == typeof(int)) value = jsonValue.GetInt32();
         else if (propertyType == typeof(long)) value = jsonValue.GetInt64();
         else if (propertyType == typeof(double)) value = jsonValue.GetDouble();
         else if (propertyType == typeof(string)) value = jsonValue.GetString();
         else return;
-        
+
         property.SetValue(instance, value);
     }
-    
+
     private Schema GetAvroSchema(Type payloadType)
     {
-        var schemaField = payloadType.GetField("_SCHEMA", 
+        var schemaField = payloadType.GetField("_SCHEMA",
             BindingFlags.Public | BindingFlags.Static);
-            
+
         if (schemaField == null)
             throw new InvalidOperationException($"No Avro schema found for type {payloadType.Name}");
-            
+
         return schemaField.GetValue(null) as Schema;
     }
-    
+
     private object DeserializeAvroValue(string base64Value, Schema schema)
     {
         byte[] avroBytes = Convert.FromBase64String(base64Value);
