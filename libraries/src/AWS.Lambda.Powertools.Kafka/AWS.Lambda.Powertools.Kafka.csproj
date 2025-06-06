@@ -15,6 +15,7 @@
     <ItemGroup>
       <PackageReference Include="Amazon.Lambda.Core" />
       <PackageReference Include="Apache.Avro" />
+      <PackageReference Include="Google.Protobuf" />
     </ItemGroup>
 
 </Project>

@@ -17,7 +17,7 @@ public class PowertoolsKafkaAvroSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
             
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<AvroProduct>>(stream);
+        var result = serializer.Deserialize<ConsumerRecords<int, AvroProduct>>(stream);
             
         // Assert
         Assert.NotNull(result);
@@ -33,7 +33,7 @@ public class PowertoolsKafkaAvroSerializerTests
         Assert.Equal("mytopic", firstRecord.Topic);
         Assert.Equal(0, firstRecord.Partition);
         Assert.Equal(15, firstRecord.Offset);
-        Assert.Equal("42", firstRecord.Key);
+        Assert.Equal(42, firstRecord.Key);
             
         // Verify deserialized Avro value
         var product = firstRecord.Value;
@@ -56,7 +56,7 @@ public class PowertoolsKafkaAvroSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
         
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<AvroProduct>>(stream);
+        var result = serializer.Deserialize<ConsumerRecords<int, AvroProduct>>(stream);
     
         // Assert - Test enumeration
         int count = 0;

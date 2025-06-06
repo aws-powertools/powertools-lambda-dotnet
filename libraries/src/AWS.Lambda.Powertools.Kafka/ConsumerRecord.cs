@@ -4,6 +4,7 @@ namespace AWS.Lambda.Powertools.Kafka;
 /// Represents a single record consumed from a Kafka topic.
 /// </summary>
 /// <typeparam name="T">The type of the record's value.</typeparam>
+/// <typeparam name="TK">The type of the key value</typeparam>
 /// <example>
 /// <code>
 /// var record = new ConsumerRecord&lt;Customer&gt;
@@ -15,7 +16,7 @@ namespace AWS.Lambda.Powertools.Kafka;
 /// };
 /// </code>
 /// </example>
-public class ConsumerRecord<T>
+public class ConsumerRecord<TK, T>
 {
     /// <summary>
     /// Gets or sets the Kafka topic name from which the record was consumed.
@@ -45,7 +46,7 @@ public class ConsumerRecord<T>
     /// <summary>
     /// Gets the key of the record (often used for partitioning).
     /// </summary>
-    public string Key { get; internal set; } = null!;
+    public TK Key { get; internal set; } = default!;
 
     /// <summary>
     /// Gets the deserialized value of the record.
