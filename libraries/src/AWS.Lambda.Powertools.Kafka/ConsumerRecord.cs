@@ -4,12 +4,23 @@ namespace AWS.Lambda.Powertools.Kafka;
 /// Represents a single record consumed from a Kafka topic.
 /// </summary>
 /// <typeparam name="T">The type of the record's value.</typeparam>
+/// <example>
+/// <code>
+/// var record = new ConsumerRecord&lt;Customer&gt;
+/// {
+///     Topic = "customers",
+///     Partition = 0,
+///     Offset = 42,
+///     Value = new Customer { Id = 123, Name = "John Doe" }
+/// };
+/// </code>
+/// </example>
 public class ConsumerRecord<T>
 {
     /// <summary>
-    /// Gets the Kafka topic name from which the record was consumed.
+    /// Gets or sets the Kafka topic name from which the record was consumed.
     /// </summary>
-    public string Topic { get; internal set; }
+    public string Topic { get; internal set; } = null!;
 
     /// <summary>
     /// Gets the Kafka partition from which the record was consumed.
@@ -29,20 +40,20 @@ public class ConsumerRecord<T>
     /// <summary>
     /// Gets the type of timestamp (e.g., "CREATE_TIME" or "LOG_APPEND_TIME").
     /// </summary>
-    public string TimestampType { get; internal set; }
+    public string TimestampType { get; internal set; } = null!;
 
     /// <summary>
     /// Gets the key of the record (often used for partitioning).
     /// </summary>
-    public string Key { get; internal set; }
+    public string Key { get; internal set; } = null!;
 
     /// <summary>
     /// Gets the deserialized value of the record.
     /// </summary>
-    public T Value { get; internal set; }
+    public T Value { get; internal set; } = default!;
 
     /// <summary>
     /// Gets the headers associated with the record.
     /// </summary>
-    public Dictionary<string, string> Headers { get; internal set; }
+    public Dictionary<string, string> Headers { get; internal set; } = null!;
 }

@@ -59,7 +59,8 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
             var root = document.RootElement;
 
             // Create the correctly typed instance
-            var typedEvent = Activator.CreateInstance(targetType);
+            var typedEvent = Activator.CreateInstance(targetType) ?? 
+                throw new InvalidOperationException($"Failed to create instance of {targetType.Name}");
 
             // Set basic properties
             if (root.TryGetProperty("eventSource", out var eventSource))
@@ -68,10 +69,10 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                     ?.SetValue(typedEvent, eventSource.GetString());
 
             if (root.TryGetProperty("eventSourceArn", out var eventSourceArn))
-                targetType.GetProperty("EventSourceArn").SetValue(typedEvent, eventSourceArn.GetString());
+                targetType.GetProperty("EventSourceArn")?.SetValue(typedEvent, eventSourceArn.GetString());
 
             if (root.TryGetProperty("bootstrapServers", out var bootstrapServers))
-                targetType.GetProperty("BootstrapServers").SetValue(typedEvent, bootstrapServers.GetString());
+                targetType.GetProperty("BootstrapServers")?.SetValue(typedEvent, bootstrapServers.GetString());
 
             // Get the schema for Avro deserialization
             Schema schema = GetAvroSchema(payloadType);
@@ -81,8 +82,10 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                 typeof(string),
                 typeof(List<>).MakeGenericType(typeof(ConsumerRecord<>).MakeGenericType(payloadType))
             );
-            var records = Activator.CreateInstance(dictType);
-            var dictAddMethod = dictType.GetMethod("Add");
+            var records = Activator.CreateInstance(dictType) ?? 
+                throw new InvalidOperationException($"Failed to create dictionary of type {dictType.Name}");
+            var dictAddMethod = dictType.GetMethod("Add") ?? 
+                throw new InvalidOperationException("Add method not found on dictionary type");
 
             if (root.TryGetProperty("records", out var recordsElement))
             {
@@ -93,14 +96,18 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                     // Create list of records with correct generic type
                     var listType =
                         typeof(List<>).MakeGenericType(typeof(ConsumerRecord<>).MakeGenericType(payloadType));
-                    var recordsList = Activator.CreateInstance(listType);
-                    var listAddMethod = listType.GetMethod("Add");
+                    var recordsList = Activator.CreateInstance(listType) ?? 
+                        throw new InvalidOperationException($"Failed to create list of type {listType.Name}");
+                    var listAddMethod = listType.GetMethod("Add") ?? 
+                        throw new InvalidOperationException("Add method not found on list type");
 
                     foreach (var recordElement in topicPartition.Value.EnumerateArray())
                     {
                         // Create record instance of correct type
                         var recordType = typeof(ConsumerRecord<>).MakeGenericType(payloadType);
                         var record = Activator.CreateInstance(recordType);
+                        if (record == null)
+                            continue;
 
                         // Set basic properties
                         SetProperty(recordType, record, "Topic", recordElement, "topic");
@@ -113,8 +120,10 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                         if (recordElement.TryGetProperty("key", out var keyElement) &&
                             keyElement.ValueKind == JsonValueKind.String)
                         {
-                            string base64Key = keyElement.GetString();
-                            recordType.GetProperty("Key").SetValue(record, base64Key);
+                            string? base64Key = keyElement.GetString();
+                            var keyProperty = recordType.GetProperty("Key");
+                            if (keyProperty != null)
+                                keyProperty.SetValue(record, base64Key);
 
                             // Base64 decode the key
                             if (!string.IsNullOrEmpty(base64Key))
@@ -123,7 +132,7 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                                 {
                                     byte[] keyBytes = Convert.FromBase64String(base64Key);
                                     string decodedKey = Encoding.UTF8.GetString(keyBytes);
-                                    recordType.GetProperty("Key").SetValue(record, decodedKey);
+                                    keyProperty?.SetValue(record, decodedKey);
                                 }
                                 catch (Exception)
                                 {
@@ -136,18 +145,21 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
                         if (recordElement.TryGetProperty("value", out var value) &&
                             value.ValueKind == JsonValueKind.String)
                         {
-                            string base64Value = value.GetString();
-                            // recordType.GetProperty("Value").SetValue(record, base64Value);
+                            string? base64Value = value.GetString();
+                            var valueProperty = recordType.GetProperty("Value");
 
                             // Deserialize Avro data
-                            try
+                            if (base64Value != null && valueProperty != null)
                             {
-                                var deserializedValue = DeserializeAvroValue(base64Value, schema);
-                                recordType.GetProperty("Value").SetValue(record, deserializedValue);
-                            }
-                            catch (Exception ex)
-                            {
-                                throw new Exception($"Failed to deserialize Avro data: {ex.Message}", ex);
+                                try
+                                {
+                                    var deserializedValue = DeserializeAvroValue(base64Value, schema);
+                                    valueProperty.SetValue(record, deserializedValue);
+                                }
+                                catch (Exception ex)
+                                {
+                                    throw new Exception($"Failed to deserialize Avro data: {ex.Message}", ex);
+                                }
                             }
                         }
 
@@ -180,10 +192,7 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
 
                             var headersProperty = recordType.GetProperty("Headers",
                                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                            if (headersProperty != null)
-                            {
-                                headersProperty.SetValue(record, decodedHeaders);
-                            }
+                            headersProperty?.SetValue(record, decodedHeaders);
                         }
 
                         // Add to records list
@@ -200,7 +209,8 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
             return (T)typedEvent;
         }
 
-        return JsonSerializer.Deserialize<T>(json, _jsonOptions);
+        var result = JsonSerializer.Deserialize<T>(json, _jsonOptions);
+        return result != null ? result : throw new InvalidOperationException($"Failed to deserialize to type {typeof(T).Name}");
     }
 
     /// <summary>
@@ -228,7 +238,7 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
         if (propertyType == typeof(int)) value = jsonValue.GetInt32();
         else if (propertyType == typeof(long)) value = jsonValue.GetInt64();
         else if (propertyType == typeof(double)) value = jsonValue.GetDouble();
-        else if (propertyType == typeof(string)) value = jsonValue.GetString();
+        else if (propertyType == typeof(string)) value = jsonValue.GetString()!;
         else return;
 
         property.SetValue(instance, value);
@@ -249,7 +259,11 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
         if (schemaField == null)
             throw new InvalidOperationException($"No Avro schema found for type {payloadType.Name}");
 
-        return schemaField.GetValue(null) as Schema;
+        var schema = schemaField.GetValue(null) as Schema;
+        if (schema == null)
+            throw new InvalidOperationException($"Avro schema for type {payloadType.Name} is null");
+
+        return schema;
     }
 
     /// <summary>
@@ -264,7 +278,8 @@ public class PowertoolsKafkaAvroSerializer : ILambdaSerializer
         using var stream = new MemoryStream(avroBytes);
         var decoder = new BinaryDecoder(stream);
         var reader = new SpecificDatumReader<object>(schema, schema);
-        return reader.Read(null, decoder);
+        var result = reader.Read(null!, decoder);
+        return result ?? throw new InvalidOperationException("Failed to deserialize Avro value");
     }
 
     /// <summary>
