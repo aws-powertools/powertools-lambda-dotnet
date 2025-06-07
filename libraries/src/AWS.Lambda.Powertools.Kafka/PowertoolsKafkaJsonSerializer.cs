@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace AWS.Lambda.Powertools.Kafka;
 
@@ -45,18 +48,44 @@ public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
     }
     
     /// <summary>
+    /// Initializes a new instance of the <see cref="PowertoolsKafkaJsonSerializer"/> class
+    /// with a JSON serializer context for AOT-compatible serialization.
+    /// </summary>
+    /// <param name="serializerContext">JSON serializer context for AOT compatibility.</param>
+    public PowertoolsKafkaJsonSerializer(JsonSerializerContext serializerContext) : base(serializerContext)
+    {
+    }
+    
+    /// <summary>
     /// Deserializes a base64-encoded JSON value into an object.
     /// </summary>
     /// <param name="base64Value">The base64-encoded JSON data.</param>
     /// <param name="valueType">The type to deserialize to.</param>
     /// <returns>The deserialized object.</returns>
-    protected override object DeserializeValue(string base64Value, Type valueType)
+    [RequiresDynamicCode("JSON deserialization might require runtime code generation.")]
+    [RequiresUnreferencedCode("JSON deserialization might require types that cannot be statically analyzed.")]
+    protected override object DeserializeValue(string base64Value, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
     {
-        byte[] jsonBytes = Convert.FromBase64String(base64Value);
-        string jsonString = Encoding.UTF8.GetString(jsonBytes);
+        var jsonBytes = Convert.FromBase64String(base64Value);
+        var jsonString = Encoding.UTF8.GetString(jsonBytes);
         
-        var result = JsonSerializer.Deserialize(jsonString, valueType, JsonOptions);
-        return result ?? throw new InvalidOperationException($"Failed to deserialize JSON to type {valueType.Name}");
+        if (SerializerContext != null)
+        {
+            // Try to get type info from context for AOT compatibility
+            var typeInfo = SerializerContext.GetTypeInfo(valueType);
+            if (typeInfo != null)
+            {
+                var result = JsonSerializer.Deserialize(jsonString, typeInfo);
+                return result ?? throw new InvalidOperationException($"Failed to deserialize JSON to type {valueType.Name}");
+            }
+        }
+        
+        // Fallback to regular deserialization
+        #pragma warning disable IL2026, IL3050
+        var fallbackResult = JsonSerializer.Deserialize(jsonString, valueType, JsonOptions);
+        #pragma warning restore IL2026, IL3050
+        
+        return fallbackResult ?? throw new InvalidOperationException($"Failed to deserialize JSON to type {valueType.Name}");
     }
 
     /// <summary>
@@ -65,13 +94,29 @@ public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
     /// <param name="keyBytes">The key bytes to deserialize.</param>
     /// <param name="keyType">The type to deserialize to.</param>
     /// <returns>The deserialized key object.</returns>
-    protected override object? DeserializeComplexKey(byte[] keyBytes, Type keyType)
+    [RequiresDynamicCode("JSON deserialization might require runtime code generation.")]
+    [RequiresUnreferencedCode("JSON deserialization might require types that cannot be statically analyzed.")]
+    protected override object? DeserializeComplexKey(byte[] keyBytes, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type keyType)
     {
         try
         {
-            // Convert bytes to JSON string and deserialize
-            string jsonStr = Encoding.UTF8.GetString(keyBytes);
+            // Convert bytes to JSON string
+            var jsonStr = Encoding.UTF8.GetString(keyBytes);
+            
+            if (SerializerContext != null)
+            {
+                // Try to get type info from context for AOT compatibility
+                var typeInfo = SerializerContext.GetTypeInfo(keyType);
+                if (typeInfo != null)
+                {
+                    return JsonSerializer.Deserialize(jsonStr, typeInfo);
+                }
+            }
+            
+            // Fallback to regular deserialization
+            #pragma warning disable IL2026, IL3050
             return JsonSerializer.Deserialize(jsonStr, keyType, JsonOptions);
+            #pragma warning restore IL2026, IL3050
         }
         catch
         {

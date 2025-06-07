@@ -1,7 +1,9 @@
-using Google.Protobuf;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Google.Protobuf;
 
 namespace AWS.Lambda.Powertools.Kafka;
 
@@ -48,14 +50,25 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
     }
     
     /// <summary>
+    /// Initializes a new instance of the <see cref="PowertoolsKafkaProtobufSerializer"/> class
+    /// with a JSON serializer context for AOT-compatible serialization.
+    /// </summary>
+    /// <param name="serializerContext">JSON serializer context for AOT compatibility.</param>
+    public PowertoolsKafkaProtobufSerializer(JsonSerializerContext serializerContext) : base(serializerContext)
+    {
+    }
+    
+    /// <summary>
     /// Deserializes a base64-encoded Protobuf binary value into an object.
     /// </summary>
     /// <param name="base64Value">The base64-encoded Protobuf binary data.</param>
     /// <param name="valueType">The type to deserialize to.</param>
     /// <returns>The deserialized object.</returns>
-    protected override object DeserializeValue(string base64Value, Type valueType)
+    [RequiresDynamicCode("Protobuf deserialization might require runtime code generation.")]
+    [RequiresUnreferencedCode("Protobuf deserialization might require types that cannot be statically analyzed.")]
+    protected override object DeserializeValue(string base64Value, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type valueType)
     {
-        byte[] protobufBytes = Convert.FromBase64String(base64Value);
+        var protobufBytes = Convert.FromBase64String(base64Value);
         return DeserializeProtobufValue(protobufBytes, valueType);
     }
 
@@ -65,7 +78,9 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
     /// <param name="protobufBytes">The Protobuf binary data.</param>
     /// <param name="messageType">The Protobuf message type to deserialize to.</param>
     /// <returns>The deserialized object.</returns>
-    private object DeserializeProtobufValue(byte[] protobufBytes, Type messageType)
+    [RequiresDynamicCode("Protobuf deserialization might require runtime code generation.")]
+    [RequiresUnreferencedCode("Protobuf deserialization might require types that cannot be statically analyzed.")]
+    private object DeserializeProtobufValue(byte[] protobufBytes, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type messageType)
     {
         // Find the Parser property which is available on all Protobuf generated classes
         var parserProperty = messageType.GetProperty("Parser", 
@@ -91,7 +106,9 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
     /// <param name="keyBytes">The key bytes to deserialize.</param>
     /// <param name="keyType">The type to deserialize to.</param>
     /// <returns>The deserialized key object.</returns>
-    protected override object? DeserializeComplexKey(byte[] keyBytes, Type keyType)
+    [RequiresDynamicCode("Protobuf and JSON deserialization might require runtime code generation.")]
+    [RequiresUnreferencedCode("Protobuf and JSON deserialization might require types that cannot be statically analyzed.")]
+    protected override object? DeserializeComplexKey(byte[] keyBytes, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type keyType)
     {
         try
         {
@@ -110,8 +127,22 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
             }
 
             // As a fallback, try JSON deserialization
-            string jsonStr = Encoding.UTF8.GetString(keyBytes);
+            var jsonStr = Encoding.UTF8.GetString(keyBytes);
+            
+            if (SerializerContext != null)
+            {
+                // Try to get type info from context for AOT compatibility
+                var typeInfo = SerializerContext.GetTypeInfo(keyType);
+                if (typeInfo != null)
+                {
+                    return JsonSerializer.Deserialize(jsonStr, typeInfo);
+                }
+            }
+            
+            // Fallback to regular deserialization
+            #pragma warning disable IL2026, IL3050
             return JsonSerializer.Deserialize(jsonStr, keyType, JsonOptions);
+            #pragma warning restore IL2026, IL3050
         }
         catch
         {
