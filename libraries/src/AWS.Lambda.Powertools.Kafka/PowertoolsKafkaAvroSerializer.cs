@@ -33,6 +33,23 @@ namespace AWS.Lambda.Powertools.Kafka;
 public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
 {
     /// <summary>
+    /// Initializes a new instance of the <see cref="PowertoolsKafkaAvroSerializer"/> class
+    /// with default JSON serialization options.
+    /// </summary>
+    public PowertoolsKafkaAvroSerializer() : base()
+    {
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PowertoolsKafkaAvroSerializer"/> class
+    /// with custom JSON serialization options.
+    /// </summary>
+    /// <param name="jsonOptions">Custom JSON serializer options to use during deserialization.</param>
+    public PowertoolsKafkaAvroSerializer(JsonSerializerOptions jsonOptions) : base(jsonOptions)
+    {
+    }
+    
+    /// <summary>
     /// Gets the Avro schema for the specified type.
     /// The type must have a public static _SCHEMA field defined.
     /// </summary>

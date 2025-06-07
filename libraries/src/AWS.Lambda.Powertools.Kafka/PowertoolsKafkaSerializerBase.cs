@@ -14,10 +14,31 @@ namespace AWS.Lambda.Powertools.Kafka;
 /// </example>
 public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
 {
-    protected readonly JsonSerializerOptions JsonOptions = new()
+    /// <summary>
+    /// JSON serializer options used for deserialization.
+    /// </summary>
+    protected readonly JsonSerializerOptions JsonOptions;
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PowertoolsKafkaSerializerBase"/> class
+    /// with default JSON serialization options.
+    /// </summary>
+    protected PowertoolsKafkaSerializerBase() : this(new JsonSerializerOptions 
     {
         PropertyNameCaseInsensitive = true
-    };
+    })
+    {
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PowertoolsKafkaSerializerBase"/> class
+    /// with custom JSON serialization options.
+    /// </summary>
+    /// <param name="jsonOptions">Custom JSON serializer options to use during deserialization.</param>
+    protected PowertoolsKafkaSerializerBase(JsonSerializerOptions jsonOptions)
+    {
+        JsonOptions = jsonOptions ?? new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+    }
 
     /// <summary>
     /// Deserializes the Lambda input stream into the specified type.

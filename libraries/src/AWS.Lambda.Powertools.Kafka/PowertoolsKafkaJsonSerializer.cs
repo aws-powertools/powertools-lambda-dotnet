@@ -28,6 +28,23 @@ namespace AWS.Lambda.Powertools.Kafka;
 public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
 {
     /// <summary>
+    /// Initializes a new instance of the <see cref="PowertoolsKafkaJsonSerializer"/> class
+    /// with default JSON serialization options.
+    /// </summary>
+    public PowertoolsKafkaJsonSerializer() : base()
+    {
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PowertoolsKafkaJsonSerializer"/> class
+    /// with custom JSON serialization options.
+    /// </summary>
+    /// <param name="jsonOptions">Custom JSON serializer options to use during deserialization.</param>
+    public PowertoolsKafkaJsonSerializer(JsonSerializerOptions jsonOptions) : base(jsonOptions)
+    {
+    }
+    
+    /// <summary>
     /// Deserializes a base64-encoded JSON value into an object.
     /// </summary>
     /// <param name="base64Value">The base64-encoded JSON data.</param>
