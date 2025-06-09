@@ -1,0 +1,10 @@
+{
+  "namespace": "AWS.Lambda.Powertools.Kafka.Tests",
+  "type": "record",
+  "name": "AvroProduct",
+  "fields": [
+    {"name": "id", "type": "int"},
+    {"name": "name", "type": "string"},
+    {"name": "price", "type": "double"}
+  ]
+}
