@@ -66,7 +66,8 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Protobuf deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("Protobuf deserialization might require types that cannot be statically analyzed.")]
-    protected override object DeserializeValue(string base64Value, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type valueType)
+    protected override object DeserializeComplexValue(string base64Value, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
     {
         var protobufBytes = Convert.FromBase64String(base64Value);
         return DeserializeProtobufValue(protobufBytes, valueType);

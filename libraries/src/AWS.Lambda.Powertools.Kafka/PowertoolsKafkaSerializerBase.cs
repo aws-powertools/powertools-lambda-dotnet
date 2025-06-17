@@ -76,8 +76,6 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <typeparam name="T">The type to deserialize to. For Kafka events, typically ConsumerRecords&lt;TKey,TValue&gt;.</typeparam>
     /// <param name="requestStream">The stream containing the serialized Lambda event.</param>
     /// <returns>The deserialized object of type T.</returns>
-    [RequiresUnreferencedCode("Kafka serializer uses reflection and may be incompatible with trimming. Use an overload that accepts a JsonTypeInfo or JsonSerializerContext for AOT compatibility.")]
-    [RequiresDynamicCode("Kafka serializer dynamically creates generic types and may be incompatible with NativeAOT. Use an overload that accepts a JsonTypeInfo or JsonSerializerContext for AOT compatibility.")]
     public T Deserialize<T>(Stream requestStream)
     {
         if (SerializerContext != null && typeof(T) != typeof(ConsumerRecords<,>))
@@ -294,57 +292,9 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         if (keyBytes == null || keyBytes.Length == 0)
             return null;
 
-        if (keyType == typeof(int))
+        if (IsPrimitiveOrSimpleType(keyType))
         {
-            // First try to interpret as a string representation and parse
-            var stringValue = Encoding.UTF8.GetString(keyBytes);
-            if (int.TryParse(stringValue, out var parsedValue))
-                return parsedValue;
-
-            return keyBytes.Length switch
-            {
-                // Fall back to binary representation if parsing fails
-                >= 4 => BitConverter.ToInt32(keyBytes, 0),
-                1 => keyBytes[0],
-                _ => 0
-            };
-        }
-
-        if (keyType == typeof(long))
-        {
-            // Try string parsing first
-            var stringValue = Encoding.UTF8.GetString(keyBytes);
-            if (long.TryParse(stringValue, out var parsedValue))
-                return parsedValue;
-
-            return keyBytes.Length switch
-            {
-                // Fall back to binary
-                >= 8 => BitConverter.ToInt64(keyBytes, 0),
-                >= 4 => BitConverter.ToInt32(keyBytes, 0),
-                _ => 0L
-            };
-        }
-
-        if (keyType == typeof(string))
-        {
-            // String conversion is safe regardless of length
-            return Encoding.UTF8.GetString(keyBytes);
-        }
-
-        if (keyType == typeof(double))
-        {
-            return keyBytes.Length >= 8 ? BitConverter.ToDouble(keyBytes, 0) : 0.0;
-        }
-
-        if (keyType == typeof(bool) && keyBytes.Length >= 1)
-        {
-            return keyBytes[0] != 0;
-        }
-
-        if (keyType == typeof(Guid) && keyBytes.Length >= 16)
-        {
-            return new Guid(keyBytes);
+            return DeserializePrimitiveValue(keyBytes, keyType);
         }
 
         // For complex types, try format-specific deserialization
@@ -393,9 +343,6 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <typeparam name="T">The type of object to serialize.</typeparam>
     /// <param name="response">The object to serialize.</param>
     /// <param name="responseStream">The stream to write the serialized data to.</param>
-    [RequiresDynamicCode(
-        "JSON serialization might require types that cannot be statically analyzed and might need runtime code generation.")]
-    [RequiresUnreferencedCode("JSON serialization might require types that cannot be statically analyzed.")]
     public void Serialize<T>(T response, Stream responseStream)
     {
         if (response == null)
@@ -415,7 +362,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         {
             // Attempt to get TypeInfo for the actual type of the response.
             // This is important if T is object or an interface.
-            JsonTypeInfo? typeInfo = SerializerContext.GetTypeInfo(response.GetType()); 
+            var typeInfo = SerializerContext.GetTypeInfo(response.GetType()); 
 
             if (typeInfo != null)
             {
@@ -438,12 +385,12 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         // StreamWriter by default uses UTF-8 encoding. We specify it explicitly for clarity.
         // The buffer size -1 can be used for default, or a specific size like 1024.
         // Crucially, leaveOpen: true prevents the StreamWriter from disposing responseStream.
-        using (var writer = new StreamWriter(responseStream, encoding: Encoding.UTF8, bufferSize: 1024, leaveOpen: true))
-        {
-            string jsonResponse = JsonSerializer.Serialize(response, JsonOptions);
-            writer.Write(jsonResponse);
-            writer.Flush(); // Ensure all data is written to the stream before writer is disposed.
-        }
+        using var writer = new StreamWriter(responseStream, encoding: Encoding.UTF8, bufferSize: 1024, leaveOpen: true);
+#pragma warning disable IL2026, IL3050
+        var jsonResponse = JsonSerializer.Serialize(response, JsonOptions);
+#pragma warning restore IL2026, IL3050
+        writer.Write(jsonResponse);
+        writer.Flush(); // Ensure all data is written to the stream before writer is disposed.
     }
 
     // Helper to get non-generic JsonTypeInfo from context based on a Type argument
@@ -484,10 +431,26 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Deserializing values might require runtime code generation depending on format.")]
     [RequiresUnreferencedCode("Deserializing values might require types that cannot be statically analyzed.")]
-    protected abstract object DeserializeValue(string base64Value,
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
-                                    DynamicallyAccessedMemberTypes.PublicFields)]
-        Type valueType);
+    protected virtual object DeserializeValue(string base64Value, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
+    {
+        // Handle primitive types first
+        if (IsPrimitiveOrSimpleType(valueType))
+        {
+            var bytes = Convert.FromBase64String(base64Value);
+            return DeserializePrimitiveValue(bytes, valueType);
+        }
+        
+        // For complex types, use format-specific deserialization
+        return DeserializeComplexValue(base64Value, valueType);
+    }
+    
+    /// <summary>
+    /// Deserializes complex value types using the appropriate format.
+    /// </summary>
+    protected abstract object DeserializeComplexValue(string base64Value, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type valueType);
+
 
     /// <summary>
     /// Deserializes complex key types using the appropriate format.
@@ -495,10 +458,77 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <param name="keyBytes">The key bytes to deserialize.</param>
     /// <param name="keyType">The type to deserialize to.</param>
     /// <returns>The deserialized key object.</returns>
-    [RequiresDynamicCode("Deserializing complex keys might require runtime code generation depending on format.")]
-    [RequiresUnreferencedCode("Deserializing complex keys might require types that cannot be statically analyzed.")]
-    protected abstract object? DeserializeComplexKey(byte[] keyBytes,
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
-                                    DynamicallyAccessedMemberTypes.PublicFields)]
-        Type keyType);
+    protected abstract object? DeserializeComplexKey(byte[] keyBytes, Type keyType);
+    
+    /// <summary>
+    /// Checks if the specified type is a primitive or simple type.
+    /// </summary>
+    private bool IsPrimitiveOrSimpleType(Type type)
+    {
+        return type.IsPrimitive ||
+               type == typeof(string) ||
+               type == typeof(decimal) ||
+               type == typeof(DateTime) ||
+               type == typeof(Guid);
+    }
+    
+    /// <summary>
+    /// Deserializes a primitive value from bytes based on the specified type.
+    /// Handles common primitive types like int, long, double, bool, string, and Guid.
+    /// If the bytes are empty or null, returns null.
+    /// If the type is not recognized, attempts to convert from string.
+    /// /// </summary>
+    private object DeserializePrimitiveValue(byte[] bytes, Type valueType)
+    {
+        if (bytes == null! || bytes.Length == 0)
+            return null!;
+            
+        if (valueType == typeof(string))
+        {
+            return Encoding.UTF8.GetString(bytes);
+        }
+        else if (valueType == typeof(int))
+        {
+            // First try to parse as string
+            var stringValue = Encoding.UTF8.GetString(bytes);
+            if (int.TryParse(stringValue, out var parsedValue))
+                return parsedValue;
+                
+            // Fall back to binary
+            return bytes.Length switch
+            {
+                >= 4 => BitConverter.ToInt32(bytes, 0),
+                1 => bytes[0],
+                _ => 0
+            };
+        }
+        else if (valueType == typeof(long))
+        {
+            var stringValue = Encoding.UTF8.GetString(bytes);
+            if (long.TryParse(stringValue, out var parsedValue))
+                return parsedValue;
+                
+            return bytes.Length switch
+            {
+                >= 8 => BitConverter.ToInt64(bytes, 0),
+                >= 4 => BitConverter.ToInt32(bytes, 0),
+                _ => 0L
+            };
+        }
+        else if (valueType == typeof(double))
+        {
+            return bytes.Length >= 8 ? BitConverter.ToDouble(bytes, 0) : 0.0;
+        }
+        else if (valueType == typeof(bool) && bytes.Length >= 1)
+        {
+            return bytes[0] != 0;
+        }
+        else if (valueType == typeof(Guid) && bytes.Length >= 16)
+        {
+            return new Guid(bytes);
+        }
+        
+        // For any other type, try to parse as string
+        return Convert.ChangeType(Encoding.UTF8.GetString(bytes), valueType);
+    }
 }

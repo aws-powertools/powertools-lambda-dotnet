@@ -48,6 +48,7 @@ Task<InvocationResponse> ToUpperAsync(InvocationRequest invocation)
 
     foreach (var record in records)
     {
+        Console.WriteLine("Record Key: {0}", record.Key);
         foreach (var header in record.Headers)
         {
             Console.WriteLine($"{header.Key}: {ToDecimalString(header.Value)}");

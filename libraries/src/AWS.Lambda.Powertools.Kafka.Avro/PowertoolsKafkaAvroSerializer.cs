@@ -92,7 +92,8 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Avro deserialization requires reflection which may be incompatible with AOT.")]
     [RequiresUnreferencedCode("Avro deserialization requires reflection which may be incompatible with trimming.")]
-    protected override object DeserializeValue(string base64Value, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
+    protected override object DeserializeComplexValue(string base64Value, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
     {
         var schema = GetAvroSchema(valueType);
         return DeserializeAvroValue(base64Value, schema);

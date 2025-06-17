@@ -92,5 +92,39 @@ public class PowertoolsKafkaJsonSerializerTests
         Assert.Equal(12345, firstRecord.Value.Id);
     }
     
-    
+    [Fact]
+    public void Primitive_Deserialization()
+    {
+        // Arrange
+        var serializer = new PowertoolsKafkaJsonSerializer();
+        string kafkaEventJson = @$"{{
+            ""eventSource"": ""aws:kafka"",
+            ""eventSourceArn"": ""arn:aws:kafka:us-east-1:0123456789019:cluster/SalesCluster/abcd1234-abcd-cafe-abab-9876543210ab-4"",
+            ""bootstrapServers"": ""b-2.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092,b-1.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092"",
+            ""records"": {{
+                ""mytopic-0"": [
+                    {{
+                        ""topic"": ""mytopic"",
+                        ""partition"": 0,
+                        ""offset"": 15,
+                        ""timestamp"": 1545084650987,
+                        ""timestampType"": ""CREATE_TIME"",
+                        ""key"": ""{Convert.ToBase64String(Encoding.UTF8.GetBytes("MyKey"))}"",
+                        ""value"": ""{Convert.ToBase64String(Encoding.UTF8.GetBytes("Myvalue"))}"",
+                        ""headers"": [
+                            {{ ""headerKey"": [104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101] }}
+                        ]
+                    }}
+                ]
+            }}
+        }}";
+        
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+        
+        // Act
+        var result = serializer.Deserialize<ConsumerRecords<string, string>>(stream);
+        var firstRecord = result.First();
+        Assert.Equal("Myvalue", firstRecord.Value);
+        Assert.Equal("MyKey", firstRecord.Key);
+    }
 }

@@ -63,7 +63,8 @@ public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("JSON deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("JSON deserialization might require types that cannot be statically analyzed.")]
-    protected override object DeserializeValue(string base64Value, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
+    protected override object DeserializeComplexValue(string base64Value, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
     {
         var jsonBytes = Convert.FromBase64String(base64Value);
         var jsonString = Encoding.UTF8.GetString(jsonBytes);
