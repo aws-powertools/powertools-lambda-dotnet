@@ -1,4 +1,5 @@
 using System.Text;
+using AWS.Lambda.Powertools.Kafka.Protobuf;
 using TestKafka;
 
 namespace AWS.Lambda.Powertools.Kafka.Tests.Protobuf;

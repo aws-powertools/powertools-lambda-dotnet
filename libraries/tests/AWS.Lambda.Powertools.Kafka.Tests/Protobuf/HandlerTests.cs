@@ -1,6 +1,7 @@
 using System.Text;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
+using AWS.Lambda.Powertools.Kafka.Protobuf;
 using Google.Protobuf;
 using TestKafka;
 
@@ -47,7 +48,7 @@ public class ProtobufHandlerTests
 
         // Verify decoded key and headers
         Assert.Equal(42, firstRecord.Key);
-        Assert.Equal("headerValue", firstRecord.Headers["headerKey"]);
+        Assert.Equal("headerValue", firstRecord.Headers["headerKey"].DecodedValue());
 
         var secondRecord = records[1];
         Assert.Equal(43, secondRecord.Key);
@@ -95,7 +96,7 @@ public class ProtobufHandlerTests
         Assert.Equal(TestKafka.Color.Green, firstRecord.Key.Color);
 
         // Verify headers
-        Assert.Equal("headerValue", firstRecord.Headers["headerKey"]);
+        Assert.Equal("headerValue", firstRecord.Headers["headerKey"].DecodedValue());
 
         var secondRecord = records[1];
         Assert.Equal(2, secondRecord.Key.Id);

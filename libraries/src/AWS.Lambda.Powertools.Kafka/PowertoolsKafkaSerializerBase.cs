@@ -21,7 +21,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// JSON serializer options used for deserialization.
     /// </summary>
     protected readonly JsonSerializerOptions JsonOptions;
-    
+
     /// <summary>
     /// JSON serializer context used for AOT-compatible serialization/deserialization.
     /// </summary>
@@ -31,13 +31,13 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// Initializes a new instance of the <see cref="PowertoolsKafkaSerializerBase"/> class
     /// with default JSON serialization options.
     /// </summary>
-    protected PowertoolsKafkaSerializerBase() : this(new JsonSerializerOptions 
+    protected PowertoolsKafkaSerializerBase() : this(new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true
     }, null)
     {
     }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PowertoolsKafkaSerializerBase"/> class
     /// with custom JSON serialization options.
@@ -52,7 +52,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// with a JSON serializer context for AOT-compatible serialization/deserialization.
     /// </summary>
     /// <param name="serializerContext">The JSON serializer context for AOT compatibility.</param>
-    protected PowertoolsKafkaSerializerBase(JsonSerializerContext serializerContext) : this(serializerContext.Options, serializerContext)
+    protected PowertoolsKafkaSerializerBase(JsonSerializerContext serializerContext) : this(serializerContext.Options,
+        serializerContext)
     {
     }
 
@@ -237,32 +238,34 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                     }
 
                     // Process headers
-                    if (recordElement.TryGetProperty("headers", out var headersElement) &&
+                    
+
+                    if (recordElement.TryGetProperty("headers", out var headersElement) && 
                         headersElement.ValueKind == JsonValueKind.Array)
                     {
-                        var decodedHeaders = new Dictionary<string, string>();
-
+                        var headers = new Dictionary<string, byte[]>();
+    
                         foreach (var headerObj in headersElement.EnumerateArray())
                         {
                             foreach (var header in headerObj.EnumerateObject())
                             {
                                 var headerKey = header.Name;
-                                if (header.Value.ValueKind != JsonValueKind.Array) continue;
-                                var headerBytes = new byte[header.Value.GetArrayLength()];
-                                var i = 0;
-                                foreach (var byteVal in header.Value.EnumerateArray())
+                                if (header.Value.ValueKind == JsonValueKind.Array)
                                 {
-                                    headerBytes[i++] = (byte)byteVal.GetInt32();
+                                    var headerBytes = new byte[header.Value.GetArrayLength()];
+                                    var i = 0;
+                                    foreach (var byteVal in header.Value.EnumerateArray())
+                                    {
+                                        headerBytes[i++] = (byte)byteVal.GetInt32();
+                                    }
+                                    headers[headerKey] = headerBytes;
                                 }
-
-                                var headerValue = Encoding.UTF8.GetString(headerBytes);
-                                decodedHeaders[headerKey] = headerValue;
                             }
                         }
-
+    
                         var headersProperty = recordType.GetProperty("Headers",
                             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                        headersProperty?.SetValue(record, decodedHeaders);
+                        headersProperty?.SetValue(record, headers);
                     }
 
                     // Add to records list
@@ -358,7 +361,10 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <param name="jsonPropertyName">The property name within the JsonElement.</param>
     [RequiresDynamicCode("Dynamically accesses properties which might be trimmed.")]
     [RequiresUnreferencedCode("Dynamically accesses properties which might be trimmed.")]
-    private void SetProperty([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties)] Type type, object instance, string propertyName,
+    private void SetProperty(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
+                                    DynamicallyAccessedMemberTypes.NonPublicProperties)]
+        Type type, object instance, string propertyName,
         JsonElement element, string jsonPropertyName)
     {
         if (!element.TryGetProperty(jsonPropertyName, out var jsonValue) ||
@@ -387,44 +393,79 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <typeparam name="T">The type of object to serialize.</typeparam>
     /// <param name="response">The object to serialize.</param>
     /// <param name="responseStream">The stream to write the serialized data to.</param>
-    [RequiresDynamicCode("JSON serialization might require types that cannot be statically analyzed and might need runtime code generation.")]
+    [RequiresDynamicCode(
+        "JSON serialization might require types that cannot be statically analyzed and might need runtime code generation.")]
     [RequiresUnreferencedCode("JSON serialization might require types that cannot be statically analyzed.")]
     public void Serialize<T>(T response, Stream responseStream)
     {
+        if (response == null)
+        {
+            // According to ILambdaSerializer contract, if response is null, an empty stream or "null" should be written.
+            // AWS's default System.Text.Json serializer writes "null".
+            // Let's ensure the stream is written to, as HandlerWrapper might expect some output.
+            if (responseStream.CanWrite)
+            {
+                var nullBytes = Encoding.UTF8.GetBytes("null");
+                responseStream.Write(nullBytes, 0, nullBytes.Length);
+            }
+            return;
+        }
+        
         if (SerializerContext != null)
         {
-            var typeInfo = GetJsonTypeInfo<T>();
+            // Attempt to get TypeInfo for the actual type of the response.
+            // This is important if T is object or an interface.
+            JsonTypeInfo? typeInfo = SerializerContext.GetTypeInfo(response.GetType()); 
+
             if (typeInfo != null)
             {
+                // JsonSerializer.Serialize to a stream does not close it by default.
                 JsonSerializer.Serialize(responseStream, response, typeInfo);
                 return;
             }
-            
-            // Try to find by type if generic match didn't work
-            var typeInfo2 = SerializerContext.GetTypeInfo(typeof(T));
-            if (typeInfo2 != null)
+            // Fallback: if specific type info not found, try with typeof(T) from context
+            // This might be useful if T is concrete and response.GetType() is the same.
+            typeInfo = GetJsonTypeInfoFromContext(typeof(T));
+            if (typeInfo != null)
             {
-                JsonSerializer.Serialize(responseStream, response, typeInfo2);
+                 // Need to cast typeInfo to non-generic JsonTypeInfo for the Serialize overload
+                JsonSerializer.Serialize(responseStream, response, typeInfo);
                 return;
             }
         }
 
-        // Fallback with warning
-        using var writer = new StreamWriter(responseStream);
-        #pragma warning disable IL2026, IL3050
-        writer.Write(JsonSerializer.Serialize(response, JsonOptions));
-        #pragma warning restore IL2026, IL3050
+        // Fallback to default JsonSerializer with options, ensuring the stream is left open.
+        // StreamWriter by default uses UTF-8 encoding. We specify it explicitly for clarity.
+        // The buffer size -1 can be used for default, or a specific size like 1024.
+        // Crucially, leaveOpen: true prevents the StreamWriter from disposing responseStream.
+        using (var writer = new StreamWriter(responseStream, encoding: Encoding.UTF8, bufferSize: 1024, leaveOpen: true))
+        {
+            string jsonResponse = JsonSerializer.Serialize(response, JsonOptions);
+            writer.Write(jsonResponse);
+            writer.Flush(); // Ensure all data is written to the stream before writer is disposed.
+        }
     }
 
-    /// <summary>
-    /// Tries to get JsonTypeInfo for type T from the SerializerContext.
-    /// </summary>
-    private JsonTypeInfo<T>? GetJsonTypeInfo<T>()
+    // Helper to get non-generic JsonTypeInfo from context based on a Type argument
+    private JsonTypeInfo? GetJsonTypeInfoFromContext(Type type)
     {
         if (SerializerContext == null)
             return null;
-            
+        
+        return SerializerContext.GetTypeInfo(type);
+    }
+
+    // Adjusted GetJsonTypeInfo<T> to return non-generic JsonTypeInfo for consistency,
+    // or keep it if it's used elsewhere for JsonTypeInfo<T> specifically.
+    // For Serialize, GetJsonTypeInfoFromContext(typeof(T)) is more direct.
+    private JsonTypeInfo<T>? GetJsonTypeInfo<T>() // This is the original generic helper
+    {
+        if (SerializerContext == null)
+            return null;
+
         // Use reflection to find the right JsonTypeInfo<T> property
+        // This is specific to how a user might structure their JsonSerializerContext.
+        // A more robust way for general types is SerializerContext.GetTypeInfo(typeof(T)).
         foreach (var prop in SerializerContext.GetType().GetProperties())
         {
             if (prop.PropertyType == typeof(JsonTypeInfo<T>))
@@ -432,7 +473,6 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 return prop.GetValue(SerializerContext) as JsonTypeInfo<T>;
             }
         }
-        
         return null;
     }
 
@@ -444,8 +484,11 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Deserializing values might require runtime code generation depending on format.")]
     [RequiresUnreferencedCode("Deserializing values might require types that cannot be statically analyzed.")]
-    protected abstract object DeserializeValue(string base64Value, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type valueType);
-    
+    protected abstract object DeserializeValue(string base64Value,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        Type valueType);
+
     /// <summary>
     /// Deserializes complex key types using the appropriate format.
     /// </summary>
@@ -454,5 +497,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <returns>The deserialized key object.</returns>
     [RequiresDynamicCode("Deserializing complex keys might require runtime code generation depending on format.")]
     [RequiresUnreferencedCode("Deserializing complex keys might require types that cannot be statically analyzed.")]
-    protected abstract object? DeserializeComplexKey(byte[] keyBytes, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type keyType);
+    protected abstract object? DeserializeComplexKey(byte[] keyBytes,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        Type keyType);
 }

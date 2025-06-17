@@ -36,7 +36,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka\AWS.Lambda.Powertools.Kafka.csproj" />
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka.Avro\AWS.Lambda.Powertools.Kafka.Avro.csproj" />
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka.Json\AWS.Lambda.Powertools.Kafka.Json.csproj" />
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka.Protobuf\AWS.Lambda.Powertools.Kafka.Protobuf.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Google.Protobuf;
 
-namespace AWS.Lambda.Powertools.Kafka;
+namespace AWS.Lambda.Powertools.Kafka.Protobuf;
 
 /// <summary>
 /// A Lambda serializer for Kafka events that handles Protobuf-formatted data.

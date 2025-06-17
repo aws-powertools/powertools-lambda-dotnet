@@ -7,7 +7,7 @@ using Avro;
 using Avro.IO;
 using Avro.Specific;
 
-namespace AWS.Lambda.Powertools.Kafka;
+namespace AWS.Lambda.Powertools.Kafka.Avro;
 
 /// <summary>
 /// A Lambda serializer for Kafka events that handles Avro-formatted data.

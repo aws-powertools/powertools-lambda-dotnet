@@ -1,0 +1,24 @@
+﻿<!--suppress MsbuildTargetFrameworkTagInspection -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>AWS.Lambda.Powertools.Kafka.Protobuf</PackageId>
+        <Description>Powertools for AWS Lambda (.NET) - Kafka Protobuf consumer package.</Description>
+        <AssemblyName>AWS.Lambda.Powertools.Kafka.Protobuf</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Kafka.Protobuf</RootNamespace>
+        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetMultiFramework>false</TargetMultiFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="Google.Protobuf" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\AWS.Lambda.Powertools.Kafka\AWS.Lambda.Powertools.Kafka.csproj" />
+    </ItemGroup>
+
+</Project>

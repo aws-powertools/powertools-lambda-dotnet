@@ -3,6 +3,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using Avro.IO;
 using Avro.Specific;
+using AWS.Lambda.Powertools.Kafka.Avro;
 
 namespace AWS.Lambda.Powertools.Kafka.Tests;
 
@@ -47,7 +48,7 @@ public class KafkaHandlerTests
 
         // Verify decoded key and headers
         Assert.Equal(42, firstRecord.Key);
-        Assert.Equal("headerValue", firstRecord.Headers["headerKey"]);
+        Assert.Equal("headerValue", firstRecord.Headers["headerKey"].DecodedValue());
 
         var secondRecord = records[1];
         Assert.Equal(43, secondRecord.Key);
@@ -180,9 +181,9 @@ public class KafkaHandlerTests
         Assert.Equal(999.99, firstRecord.Value.price);
         Assert.Equal(1, firstRecord.Key.id);
         Assert.Equal(Color.GREEN, firstRecord.Key.color);
-
+        
         // Verify headers
-        Assert.Equal("headerValue", firstRecord.Headers["headerKey"]);
+        Assert.Equal("headerValue", firstRecord.Headers["headerKey"].DecodedValue());
 
         var secondRecord = records[1];
         Assert.Equal(2, secondRecord.Key.id);

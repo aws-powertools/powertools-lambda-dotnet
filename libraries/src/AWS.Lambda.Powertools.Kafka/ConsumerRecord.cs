@@ -56,5 +56,5 @@ public class ConsumerRecord<TK, T>
     /// <summary>
     /// Gets the headers associated with the record.
     /// </summary>
-    public Dictionary<string, string> Headers { get; internal set; } = null!;
+    public Dictionary<string, byte[]> Headers { get; internal set; } = null!;
 }

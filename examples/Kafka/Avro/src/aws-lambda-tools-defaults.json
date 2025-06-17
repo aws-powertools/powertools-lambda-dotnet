@@ -6,12 +6,12 @@
     "All the command line options for the Lambda command can be specified in this file."
   ],
   "profile": "",
-  "region": "eu-west-3",
+  "region": "",
   "configuration": "Release",
   "function-runtime": "dotnet8",
-  "function-memory-size": 512,
+  "function-memory-size": 1024,
   "function-timeout": 30,
-  "function-handler": "Kafka",
-  "function-name": "dotnet-kafka-json",
+  "function-handler": "Avro.Example",
+  "function-name": "dotnet-kafka-avro-1024",
   "function-role": "arn:aws:iam::992382490249:role/dotnet-kafka-test-role"
 }

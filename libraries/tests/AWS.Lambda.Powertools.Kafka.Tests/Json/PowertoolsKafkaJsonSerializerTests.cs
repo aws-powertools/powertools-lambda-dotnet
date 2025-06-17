@@ -1,4 +1,5 @@
 using System.Text;
+using AWS.Lambda.Powertools.Kafka.Json;
 
 namespace AWS.Lambda.Powertools.Kafka.Tests.Json;
 
@@ -90,4 +91,6 @@ public class PowertoolsKafkaJsonSerializerTests
         Assert.Equal("product5", firstRecord.Value.Name);
         Assert.Equal(12345, firstRecord.Value.Id);
     }
+    
+    
 }

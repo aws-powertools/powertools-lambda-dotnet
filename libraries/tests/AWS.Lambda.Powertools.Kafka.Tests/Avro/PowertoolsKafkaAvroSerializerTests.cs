@@ -3,6 +3,7 @@ using Avro;
 using Avro.Generic;
 using Avro.IO;
 using Avro.Specific;
+using AWS.Lambda.Powertools.Kafka.Avro;
 
 namespace AWS.Lambda.Powertools.Kafka.Tests;
 

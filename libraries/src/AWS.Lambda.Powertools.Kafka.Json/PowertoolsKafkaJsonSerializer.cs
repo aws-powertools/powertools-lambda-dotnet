@@ -2,9 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 
-namespace AWS.Lambda.Powertools.Kafka;
+namespace AWS.Lambda.Powertools.Kafka.Json;
 
 /// <summary>
 /// A Lambda serializer for Kafka events that handles JSON-formatted data.
