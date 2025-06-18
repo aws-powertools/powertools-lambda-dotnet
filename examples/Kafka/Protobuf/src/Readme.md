@@ -102,7 +102,7 @@ This command simulates an invocation of the Lambda function with the provided ev
 
 ## Event Deserialization
 
-Pass the `PowertoolsKafkaProtobufSerializer` to the `LambdaBootstrapBuilder.Create()` method to enable JSON deserialization of Kafka records:
+Pass the `PowertoolsKafkaProtobufSerializer` to the `LambdaBootstrapBuilder.Create()` method to enable Protobuf deserialization of Kafka records:
 
 ```csharp
 await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,

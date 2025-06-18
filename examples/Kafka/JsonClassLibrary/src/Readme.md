@@ -1,22 +1,22 @@
-# AWS Powertools for AWS Lambda .NET - Kafka Avro Example
+# AWS Powertools for AWS Lambda .NET - Kafka Protobuf Example
 
 This project demonstrates how to use AWS Lambda Powertools for .NET with Amazon MSK (Managed Streaming for Kafka) to process events from Kafka topics.
 
 ## Overview
 
-This example showcases a Lambda functions that consume messages from Kafka topics with Avro serialization format.
+This example showcases a Lambda functions that consume messages from Kafka topics with Protocol Buffers serialization format.
 
-It uses the `AWS.Lambda.Powertools.Kafka.Avro` NuGet package to easily deserialize and process Kafka records.
+It uses the `AWS.Lambda.Powertools.Kafka.Protobuf` NuGet package to easily deserialize and process Kafka records.
 
 ## Project Structure
 
 ```bash
-examples/Kafka/Avro/src/
+examples/Kafka/Protobuf/src/
 ├── Function.cs         # Entry point for the Lambda function
 ├── aws-lambda-tools-defaults.json # Default argument settings for AWS Lambda deployment
 ├── template.yaml       # AWS SAM template for deploying the function
-├── CustomerProfile.avsc # Avro schema definition file for the data structure used in the Kafka messages
-└── kafka-avro-event.json # Sample Avro event to test the function
+├── CustomerProfile.proto # Protocol Buffers definition file for the data structure used in the Kafka messages
+└── kafka-protobuf-event.json # Sample Protocol Buffers event to test the function
 ```
 
 ## Prerequisites
@@ -26,8 +26,7 @@ examples/Kafka/Avro/src/
 - [AWS CLI](https://aws.amazon.com/cli/)
 - An AWS account with appropriate permissions
 - [Amazon MSK](https://aws.amazon.com/msk/) cluster set up with a topic to consume messages from
-- [AWS.Lambda.Powertools.Kafka.Avro](https://www.nuget.org/packages/AWS.Lambda.Powertools.Kafka.Avro/) NuGet package installed in your project
-- [Avro Tools](https://www.nuget.org/packages/Apache.Avro.Tools/) codegen tool to generate C# classes from the Avro schema
+- [AWS.Lambda.Powertools.Kafka.Protobuf](https://www.nuget.org/packages/AWS.Lambda.Powertools.Kafka.Protobuf/) NuGet package installed in your project
 
 ## Installation
 
@@ -40,7 +39,7 @@ examples/Kafka/Avro/src/
 2. Navigate to the project directory:
 
    ```bash
-   cd powertools-lambda-dotnet/examples/Kafka/Avro/src
+   cd powertools-lambda-dotnet/examples/Kafka/Protobuf/src
    ```
 
 3. Build the project:
@@ -48,11 +47,6 @@ examples/Kafka/Avro/src/
    ```bash
    dotnet build
    ```
-4. Install the Avro Tools globally to generate C# classes from the Avro schema:
-
-   ```bash
-    dotnet tool install --global Apache.Avro.Tools
-    ```
 
 ## Deployment
 
@@ -65,30 +59,37 @@ sam deploy --guided
 
 Follow the prompts to configure your deployment.
 
-## Avro Format
-Avro is a binary serialization format that provides a compact and efficient way to serialize structured data. It uses schemas to define the structure of the data, which allows for robust data evolution.
+## Protocol Buffers Format
 
-In this example we provide a schema called `CustomerProfile.avsc`. The schema is used to serialize and deserialize the data in the Kafka messages.
+The Protobuf example handles messages serialized with Protocol Buffers. The schema is defined in a `.proto` file (which would need to be created), and the C# code is generated from that schema.
 
-The classes are generated from the .cs file using the Avro Tools command:
+This requires the `Grpc.Tools` package to deserialize the messages correctly.
+
+And update the `.csproj` file to include the `.proto` files.
 
 ```xml
- <Target Name="GenerateAvroClasses" BeforeTargets="CoreCompile">
-     <Exec Command="avrogen -s $(ProjectDir)CustomerProfile.avsc $(ProjectDir)Generated"/>
- </Target>
+<Protobuf Include="CustomerProfile.proto">
+   <GrpcServices>Client</GrpcServices>
+   <Access>Public</Access>
+   <ProtoCompile>True</ProtoCompile>
+   <CompileOutputs>True</CompileOutputs>
+   <OutputDir>obj\Debug/net8.0/</OutputDir>
+   <Generator>MSBuild:Compile</Generator>
+   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Protobuf>
 ```
 
 ## Usage Examples
 
-Once deployed, you can test the Lambda function by sending a sample Avro event to the configured Kafka topic.
-You can use the `kafka-avro-event.json` file as a sample event to test the function.
+Once deployed, you can test the Lambda function by sending a sample Protocol Buffers event to the configured Kafka topic.
+You can use the `kafka-protobuf-event.json` file as a sample event to test the function.
 
 ### Testing
 
 You can test the function locally using the AWS SAM CLI (Requires Docker to be installed):
 
 ```bash
-sam local invoke AvroDeserializationFunction --event kafka-avro-event.json
+sam local invoke ProtobufDeserializationFunction --event kafka-protobuf-event.json
 ```
 
 This command simulates an invocation of the Lambda function with the provided event data.
@@ -101,20 +102,17 @@ This command simulates an invocation of the Lambda function with the provided ev
 
 ## Event Deserialization
 
-Pass the `PowertoolsKafkaAvroSerializer` to the `LambdaBootstrapBuilder.Create()` method to enable Avro deserialization of Kafka records:
+Pass the `PowertoolsKafkaProtobufSerializer` to the `[assembly: LambdaSerializer(typeof(PowertoolsKafkaProtobufSerializer))]`:
 
 ```csharp
-await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-        new PowertoolsKafkaAvroSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
-    .Build()
-    .RunAsync();
+[assembly: LambdaSerializer(typeof(PowertoolsKafkaProtobufSerializer))]
  ```
 
 ## Configuration
 
 The SAM template (`template.yaml`) defines three Lambda function:
 
-- **AvroDeserializationFunction**: Handles Avro-formatted Kafka messages
+- **ProtobufDeserializationFunction**: Handles Protobuf-formatted Kafka messages
 
 ## Customization
 
@@ -122,10 +120,11 @@ To customize the examples:
 
 1. Modify the schema definitions to match your data structures
 2. Update the handler logic to process the records according to your requirements
+3. Ensure you have the proper `.proto` files and that they are included in your project for Protocol Buffers serialization/deserialization.
 
 ## Resources
 
 - [AWS Lambda Powertools for .NET Documentation](https://docs.powertools.aws.dev/lambda/dotnet/)
 - [Amazon MSK Documentation](https://docs.aws.amazon.com/msk/)
 - [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/)
-- [Apache Avro Documentation](https://avro.apache.org/docs/)
+- [Protocol Buffers Documentation](https://developers.google.com/protocol-buffers)
