@@ -166,7 +166,10 @@ When using the Kafka consumer utility, you must specify the serializer in your L
 
 ### Processing Kafka events
 
-The Kafka consumer utility transforms raw Lambda Kafka events into an intuitive format for processing. To handle messages effectively, you'll need to configure a schema that matches your data format.
+The Kafka consumer utility transforms raw Lambda Kafka events into an intuitive format for processing. To handle messages effectively, you'll need to configure a schema that matches your data format. 
+
+The parameter for the handler funcion is `ConsumerRecords<TK, T>`, where `TK` is the type of the key and `T` is the type of the value.
+
 
 ???+ tip "Using Avro or Protocol Buffers is recommended"
     We recommend Avro or Protocol Buffers for production Kafka implementations due to its schema evolution capabilities, compact binary format, and integration with Schema Registry. This offers better type safety and forward/backward compatibility compared to JSON.
@@ -246,7 +249,9 @@ The Kafka consumer utility transforms raw Lambda Kafka events into an intuitive 
 
 ### Deserializing keys and values
 
-The `PowertoolsKafkaJsonSerializer`, `PowertoolsKafkaProtobufSerializer` and `PowertoolsKafkaAvroSerializer` serializers can deserialize both keys and values independently based on your schema configuration. This flexibility allows you to work with different data formats in the same message.
+The `PowertoolsKafkaJsonSerializer`, `PowertoolsKafkaProtobufSerializer` and `PowertoolsKafkaAvroSerializer` serializers can deserialize both keys and values independently based on your schema configuration. 
+
+This flexibility allows you to work with different data formats in the same message.
 
 === "Key and Value Deserialization"
 
@@ -296,7 +301,9 @@ The `PowertoolsKafkaJsonSerializer`, `PowertoolsKafkaProtobufSerializer` and `Po
 
 ### Handling primitive types
 
-When working with primitive data types (string, int, etc.) rather than complex types, you can use any deserialization type like `PowertoolsKafkaJsonSerializer`. Simply place the primitive type like `int` or `string` in the ` ConsumerRecords<TK,T>` type parameters, and the library will automatically handle primitive type deserialization.
+When working with primitive data types (string, int, etc.) rather than complex types, you can use any deserialization type like `PowertoolsKafkaJsonSerializer`. 
+
+Simply place the primitive type like `int` or `string` in the ` ConsumerRecords<TK,T>` type parameters, and the library will automatically handle primitive type deserialization.
 
 ???+ tip "Common pattern: Keys with primitive values"
     Using primitive types (strings, integers) as Kafka message keys is a common pattern for partitioning and identifying messages. Powertools automatically handles these primitive keys without requiring special configuration, making it easy to implement this popular design pattern.
@@ -604,6 +611,8 @@ Different workloads benefit from different batch configurations:
 #### Cross-language compatibility
 
 When using binary serialization formats across multiple programming languages, ensure consistent schema handling to prevent deserialization failures.
+
+In case where you have a Python producer and a C# consumer, you may need to adjust your C# code to handle Python's naming conventions (snake_case) and data types.
 
 === "Using Python naming convention"
 
