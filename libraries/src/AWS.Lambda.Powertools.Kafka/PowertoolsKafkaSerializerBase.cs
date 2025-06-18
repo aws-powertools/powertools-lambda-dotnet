@@ -1,6 +1,7 @@
 using Amazon.Lambda.Core;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -109,13 +110,16 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         }
 
         // Fallback to regular deserialization with warning
-        #pragma warning disable IL2026, IL3050
+#pragma warning disable IL2026, IL3050
         var result = JsonSerializer.Deserialize<T>(json, JsonOptions);
-        #pragma warning restore IL2026, IL3050
-        
-        return result != null
-            ? result
-            : throw new InvalidOperationException($"Failed to deserialize to type {typeof(T).Name}");
+#pragma warning restore IL2026, IL3050
+
+        if (!EqualityComparer<T>.Default.Equals(result, default(T)))
+        {
+            return result!;
+        }
+
+        throw new InvalidOperationException($"Failed to deserialize to type {typeof(T).Name}");
     }
 
     /// <summary>
@@ -125,7 +129,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized ConsumerRecords object.</returns>
     [RequiresUnreferencedCode("ConsumerRecords deserialization uses reflection and may be incompatible with trimming.")]
-    [RequiresDynamicCode("ConsumerRecords deserialization dynamically creates generic types and may be incompatible with NativeAOT.")]
+    [RequiresDynamicCode(
+        "ConsumerRecords deserialization dynamically creates generic types and may be incompatible with NativeAOT.")]
     private T DeserializeConsumerRecords<T>(string json)
     {
         var targetType = typeof(T);
@@ -136,23 +141,43 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
 
-        // Create the correctly typed instance
-        var typedEvent = Activator.CreateInstance(targetType) ??
-                         throw new InvalidOperationException($"Failed to create instance of {targetType.Name}");
+        // Create the typed instance and set basic properties
+        var typedEvent = CreateConsumerRecordsInstance<T>(targetType);
+        SetBasicProperties(root, typedEvent, targetType);
 
-        // Set basic properties
+        // Create and populate records dictionary
+        if (root.TryGetProperty("records", out var recordsElement))
+        {
+            var records = CreateRecordsDictionary(recordsElement, keyType, valueType);
+            targetType.GetProperty("Records", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                ?.SetValue(typedEvent, records);
+        }
+
+        return (T)typedEvent;
+    }
+
+    private object CreateConsumerRecordsInstance<T>(Type targetType)
+    {
+        return Activator.CreateInstance(targetType) ??
+               throw new InvalidOperationException($"Failed to create instance of {targetType.Name}");
+    }
+
+    private void SetBasicProperties(JsonElement root, object instance, Type targetType)
+    {
         if (root.TryGetProperty("eventSource", out var eventSource))
-            targetType.GetProperty("EventSource",
-                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.SetValue(typedEvent, eventSource.GetString());
+            targetType.GetProperty("EventSource", BindingFlags.Public | BindingFlags.Instance)
+                ?.SetValue(instance, eventSource.GetString());
 
         if (root.TryGetProperty("eventSourceArn", out var eventSourceArn))
-            targetType.GetProperty("EventSourceArn")?.SetValue(typedEvent, eventSourceArn.GetString());
+            targetType.GetProperty("EventSourceArn")?.SetValue(instance, eventSourceArn.GetString());
 
         if (root.TryGetProperty("bootstrapServers", out var bootstrapServers))
-            targetType.GetProperty("BootstrapServers")?.SetValue(typedEvent, bootstrapServers.GetString());
+            targetType.GetProperty("BootstrapServers")?.SetValue(instance, bootstrapServers.GetString());
+    }
 
-        // Create records dictionary with correct generic types
+    private object CreateRecordsDictionary(JsonElement recordsElement, Type keyType, Type valueType)
+    {
+        // Create dictionary with correct generic types
         var dictType = typeof(Dictionary<,>).MakeGenericType(
             typeof(string),
             typeof(List<>).MakeGenericType(typeof(ConsumerRecord<,>).MakeGenericType(keyType, valueType))
@@ -162,122 +187,144 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         var dictAddMethod = dictType.GetMethod("Add") ??
                             throw new InvalidOperationException("Add method not found on dictionary type");
 
-        if (root.TryGetProperty("records", out var recordsElement))
+        // Process each topic partition
+        foreach (var topicPartition in recordsElement.EnumerateObject())
         {
-            foreach (var topicPartition in recordsElement.EnumerateObject())
+            var topicName = topicPartition.Name;
+            var recordsList = ProcessTopicPartition(topicPartition.Value, keyType, valueType);
+            dictAddMethod.Invoke(records, new[] { topicName, recordsList });
+        }
+
+        return records;
+    }
+
+    private object ProcessTopicPartition(JsonElement partitionData, Type keyType, Type valueType)
+    {
+        // Create list type with correct generics
+        var listType = typeof(List<>).MakeGenericType(
+            typeof(ConsumerRecord<,>).MakeGenericType(keyType, valueType));
+        var recordsList = Activator.CreateInstance(listType) ??
+                          throw new InvalidOperationException($"Failed to create list of type {listType.Name}");
+        var listAddMethod = listType.GetMethod("Add") ??
+                            throw new InvalidOperationException("Add method not found on list type");
+
+        // Process each record
+        foreach (var recordElement in partitionData.EnumerateArray())
+        {
+            var record = CreateAndPopulateRecord(recordElement, keyType, valueType);
+            if (record != null)
             {
-                var topicName = topicPartition.Name;
-
-                // Create list of records with correct generic types
-                var listType =
-                    typeof(List<>).MakeGenericType(typeof(ConsumerRecord<,>).MakeGenericType(keyType, valueType));
-                var recordsList = Activator.CreateInstance(listType) ??
-                                  throw new InvalidOperationException(
-                                      $"Failed to create list of type {listType.Name}");
-                var listAddMethod = listType.GetMethod("Add") ??
-                                    throw new InvalidOperationException("Add method not found on list type");
-
-                foreach (var recordElement in topicPartition.Value.EnumerateArray())
-                {
-                    // Create record instance of correct type
-                    var recordType = typeof(ConsumerRecord<,>).MakeGenericType(keyType, valueType);
-                    var record = Activator.CreateInstance(recordType);
-                    if (record == null)
-                        continue;
-
-                    // Set basic properties
-                    SetProperty(recordType, record, "Topic", recordElement, "topic");
-                    SetProperty(recordType, record, "Partition", recordElement, "partition");
-                    SetProperty(recordType, record, "Offset", recordElement, "offset");
-                    SetProperty(recordType, record, "Timestamp", recordElement, "timestamp");
-                    SetProperty(recordType, record, "TimestampType", recordElement, "timestampType");
-
-                    // Handle key - base64 decode and convert to the correct type
-                    if (recordElement.TryGetProperty("key", out var keyElement) &&
-                        keyElement.ValueKind == JsonValueKind.String)
-                    {
-                        var base64Key = keyElement.GetString();
-                        if (!string.IsNullOrEmpty(base64Key))
-                        {
-                            try
-                            {
-                                var keyBytes = Convert.FromBase64String(base64Key);
-                                var decodedKey = DeserializeKey(keyBytes, keyType);
-
-                                var keyProperty = recordType.GetProperty("Key");
-                                keyProperty?.SetValue(record, decodedKey);
-                            }
-                            catch (Exception ex)
-                            {
-                                throw new Exception($"Failed to deserialize data: {ex.Message}", ex);
-                            }
-                        }
-                    }
-
-                    // Handle value
-                    if (recordElement.TryGetProperty("value", out var valueElement) &&
-                        valueElement.ValueKind == JsonValueKind.String)
-                    {
-                        var base64Value = valueElement.GetString();
-                        var valueProperty = recordType.GetProperty("Value");
-
-                        if (base64Value != null && valueProperty != null)
-                        {
-                            try
-                            {
-                                var deserializedValue = DeserializeValue(base64Value, valueType);
-                                valueProperty.SetValue(record, deserializedValue);
-                            }
-                            catch (Exception ex)
-                            {
-                                throw new Exception($"Failed to deserialize data: {ex.Message}", ex);
-                            }
-                        }
-                    }
-
-                    // Process headers
-                    
-
-                    if (recordElement.TryGetProperty("headers", out var headersElement) && 
-                        headersElement.ValueKind == JsonValueKind.Array)
-                    {
-                        var headers = new Dictionary<string, byte[]>();
-    
-                        foreach (var headerObj in headersElement.EnumerateArray())
-                        {
-                            foreach (var header in headerObj.EnumerateObject())
-                            {
-                                var headerKey = header.Name;
-                                if (header.Value.ValueKind == JsonValueKind.Array)
-                                {
-                                    var headerBytes = new byte[header.Value.GetArrayLength()];
-                                    var i = 0;
-                                    foreach (var byteVal in header.Value.EnumerateArray())
-                                    {
-                                        headerBytes[i++] = (byte)byteVal.GetInt32();
-                                    }
-                                    headers[headerKey] = headerBytes;
-                                }
-                            }
-                        }
-    
-                        var headersProperty = recordType.GetProperty("Headers",
-                            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                        headersProperty?.SetValue(record, headers);
-                    }
-
-                    // Add to records list
-                    listAddMethod.Invoke(recordsList, new[] { record });
-                }
-
-                // Add topic records to dictionary
-                dictAddMethod.Invoke(records, new[] { topicName, recordsList });
+                listAddMethod.Invoke(recordsList, new[] { record });
             }
         }
 
-        targetType.GetProperty("Records", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-            ?.SetValue(typedEvent, records);
-        return (T)typedEvent;
+        return recordsList;
+    }
+
+    private object? CreateAndPopulateRecord(JsonElement recordElement, Type keyType, Type valueType)
+    {
+        // Create record instance
+        var recordType = typeof(ConsumerRecord<,>).MakeGenericType(keyType, valueType);
+        var record = Activator.CreateInstance(recordType);
+        if (record == null)
+            return null;
+
+        // Set basic properties
+        SetProperty(recordType, record, "Topic", recordElement, "topic");
+        SetProperty(recordType, record, "Partition", recordElement, "partition");
+        SetProperty(recordType, record, "Offset", recordElement, "offset");
+        SetProperty(recordType, record, "Timestamp", recordElement, "timestamp");
+        SetProperty(recordType, record, "TimestampType", recordElement, "timestampType");
+
+        // Process key
+        ProcessKey(recordElement, record, recordType, keyType);
+
+        // Process value
+        ProcessValue(recordElement, record, recordType, valueType);
+
+        // Process headers
+        ProcessHeaders(recordElement, record, recordType);
+
+        return record;
+    }
+
+    private void ProcessKey(JsonElement recordElement, object record, Type recordType, Type keyType)
+    {
+        if (recordElement.TryGetProperty("key", out var keyElement) && keyElement.ValueKind == JsonValueKind.String)
+        {
+            var base64Key = keyElement.GetString();
+            if (!string.IsNullOrEmpty(base64Key))
+            {
+                try
+                {
+                    var keyBytes = Convert.FromBase64String(base64Key);
+                    var decodedKey = DeserializeKey(keyBytes, keyType);
+                    recordType.GetProperty("Key")?.SetValue(record, decodedKey);
+                }
+                catch (Exception ex)
+                {
+                    throw new SerializationException($"Failed to deserialize key data: {ex.Message}", ex);
+                }
+            }
+        }
+    }
+
+    private void ProcessValue(JsonElement recordElement, object record, Type recordType, Type valueType)
+    {
+        if (recordElement.TryGetProperty("value", out var valueElement) && valueElement.ValueKind == JsonValueKind.String)
+        {
+            var base64Value = valueElement.GetString();
+            var valueProperty = recordType.GetProperty("Value");
+
+            if (base64Value != null && valueProperty != null)
+            {
+                try
+                {
+                    var deserializedValue = DeserializeValue(base64Value, valueType);
+                    valueProperty.SetValue(record, deserializedValue);
+                }
+                catch (Exception ex)
+                {
+                    throw new SerializationException($"Failed to deserialize value data: {ex.Message}", ex);
+                }
+            }
+        }
+    }
+
+    private void ProcessHeaders(JsonElement recordElement, object record, Type recordType)
+    {
+        if (recordElement.TryGetProperty("headers", out var headersElement) &&
+            headersElement.ValueKind == JsonValueKind.Array)
+        {
+            var headers = new Dictionary<string, byte[]>();
+
+            foreach (var headerObj in headersElement.EnumerateArray())
+            {
+                foreach (var header in headerObj.EnumerateObject())
+                {
+                    if (header.Value.ValueKind == JsonValueKind.Array)
+                    {
+                        headers[header.Name] = ExtractHeaderBytes(header.Value);
+                    }
+                }
+            }
+
+            var headersProperty = recordType.GetProperty("Headers",
+                BindingFlags.Public | BindingFlags.Instance);
+            headersProperty?.SetValue(record, headers);
+        }
+    }
+
+    private byte[] ExtractHeaderBytes(JsonElement headerArray)
+    {
+        var headerBytes = new byte[headerArray.GetArrayLength()];
+        var i = 0;
+        foreach (var byteVal in headerArray.EnumerateArray())
+        {
+            headerBytes[i++] = (byte)byteVal.GetInt32();
+        }
+
+        return headerBytes;
     }
 
     /// <summary>
@@ -312,8 +359,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     [RequiresDynamicCode("Dynamically accesses properties which might be trimmed.")]
     [RequiresUnreferencedCode("Dynamically accesses properties which might be trimmed.")]
     private void SetProperty(
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
-                                    DynamicallyAccessedMemberTypes.NonPublicProperties)]
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
         Type type, object instance, string propertyName,
         JsonElement element, string jsonPropertyName)
     {
@@ -323,7 +369,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
 
         // Add BindingFlags to find internal properties too
         var property = type.GetProperty(propertyName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            BindingFlags.Public | BindingFlags.Instance);
         if (property == null) return;
         var propertyType = property.PropertyType;
 
@@ -345,7 +391,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <param name="responseStream">The stream to write the serialized data to.</param>
     public void Serialize<T>(T response, Stream responseStream)
     {
-        if (response == null)
+        if (EqualityComparer<T>.Default.Equals(response, default(T)))
         {
             // According to ILambdaSerializer contract, if response is null, an empty stream or "null" should be written.
             // AWS's default System.Text.Json serializer writes "null".
@@ -355,14 +401,15 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 var nullBytes = Encoding.UTF8.GetBytes("null");
                 responseStream.Write(nullBytes, 0, nullBytes.Length);
             }
+
             return;
         }
-        
+
         if (SerializerContext != null)
         {
             // Attempt to get TypeInfo for the actual type of the response.
             // This is important if T is object or an interface.
-            var typeInfo = SerializerContext.GetTypeInfo(response.GetType()); 
+            var typeInfo = SerializerContext.GetTypeInfo(response.GetType());
 
             if (typeInfo != null)
             {
@@ -370,12 +417,13 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 JsonSerializer.Serialize(responseStream, response, typeInfo);
                 return;
             }
+
             // Fallback: if specific type info not found, try with typeof(T) from context
             // This might be useful if T is concrete and response.GetType() is the same.
             typeInfo = GetJsonTypeInfoFromContext(typeof(T));
             if (typeInfo != null)
             {
-                 // Need to cast typeInfo to non-generic JsonTypeInfo for the Serialize overload
+                // Need to cast typeInfo to non-generic JsonTypeInfo for the Serialize overload
                 JsonSerializer.Serialize(responseStream, response, typeInfo);
                 return;
             }
@@ -398,7 +446,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     {
         if (SerializerContext == null)
             return null;
-        
+
         return SerializerContext.GetTypeInfo(type);
     }
 
@@ -420,6 +468,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 return prop.GetValue(SerializerContext) as JsonTypeInfo<T>;
             }
         }
+
         return null;
     }
 
@@ -431,8 +480,10 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Deserializing values might require runtime code generation depending on format.")]
     [RequiresUnreferencedCode("Deserializing values might require types that cannot be statically analyzed.")]
-    protected virtual object DeserializeValue(string base64Value, 
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
+    protected virtual object DeserializeValue(string base64Value,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        Type valueType)
     {
         // Handle primitive types first
         if (IsPrimitiveOrSimpleType(valueType))
@@ -440,16 +491,18 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             var bytes = Convert.FromBase64String(base64Value);
             return DeserializePrimitiveValue(bytes, valueType);
         }
-        
+
         // For complex types, use format-specific deserialization
         return DeserializeComplexValue(base64Value, valueType);
     }
-    
+
     /// <summary>
     /// Deserializes complex value types using the appropriate format.
     /// </summary>
-    protected abstract object DeserializeComplexValue(string base64Value, 
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type valueType);
+    protected abstract object DeserializeComplexValue(string base64Value,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        Type valueType);
 
 
     /// <summary>
@@ -459,7 +512,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <param name="keyType">The type to deserialize to.</param>
     /// <returns>The deserialized key object.</returns>
     protected abstract object? DeserializeComplexKey(byte[] keyBytes, Type keyType);
-    
+
     /// <summary>
     /// Checks if the specified type is a primitive or simple type.
     /// </summary>
@@ -471,7 +524,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                type == typeof(DateTime) ||
                type == typeof(Guid);
     }
-    
+
     /// <summary>
     /// Deserializes a primitive value from bytes based on the specified type.
     /// Handles common primitive types like int, long, double, bool, string, and Guid.
@@ -482,7 +535,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     {
         if (bytes == null! || bytes.Length == 0)
             return null!;
-            
+
         if (valueType == typeof(string))
         {
             return Encoding.UTF8.GetString(bytes);
@@ -493,7 +546,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             var stringValue = Encoding.UTF8.GetString(bytes);
             if (int.TryParse(stringValue, out var parsedValue))
                 return parsedValue;
-                
+
             // Fall back to binary
             return bytes.Length switch
             {
@@ -507,7 +560,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             var stringValue = Encoding.UTF8.GetString(bytes);
             if (long.TryParse(stringValue, out var parsedValue))
                 return parsedValue;
-                
+
             return bytes.Length switch
             {
                 >= 8 => BitConverter.ToInt64(bytes, 0),
@@ -527,7 +580,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         {
             return new Guid(bytes);
         }
-        
+
         // For any other type, try to parse as string
         return Convert.ChangeType(Encoding.UTF8.GetString(bytes), valueType);
     }
