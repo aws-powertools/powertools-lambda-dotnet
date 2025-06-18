@@ -29,6 +29,7 @@ nav:
             - core/event_handler/bedrock_agent_function.md
         - utilities/parameters.md
         - utilities/jmespath-functions.md
+        - utilities/kafka.md
     - Resources:
         - "llms.txt": ./llms.txt
         - "llms.txt (full version)": ./llms-full.txt
@@ -124,6 +125,7 @@ plugins:
           - utilities/jmespath-functions.md
           - core/event_handler/appsync_events.md
           - core/event_handler/bedrock_agent_function.md
+          - utilities/kafka.md
         Getting Started:
           - getting-started/logger/simple.md
           - getting-started/logger/aspnet.md
