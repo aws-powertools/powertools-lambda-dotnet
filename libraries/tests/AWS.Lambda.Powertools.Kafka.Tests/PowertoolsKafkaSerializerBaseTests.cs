@@ -445,10 +445,140 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             Assert.Contains("\"Id\":", result);
             Assert.Contains("\"Message\":\"Not in context\"", result);
         }
+
+        [Fact]
+        public void Deserialize_NonConsumerRecordWithSerializerContext_UsesTypeInfo()
+        {
+            // Arrange
+            var options = new JsonSerializerOptions();
+            var context = new TestSerializerContext(options);
+            var serializer = new TestKafkaSerializer(options, context);
+
+            var testModel = new TestModel { Name = "DirectDeserialization", Value = 42 };
+            var json = JsonSerializer.Serialize(testModel);
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            // Act
+            var result = serializer.Deserialize<TestModel>(stream);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("DirectDeserialization", result.Name);
+            Assert.Equal(42, result.Value);
+        }
+
+        [Fact]
+        public void Deserialize_NonConsumerRecordWithoutTypeInfo_UsesRegularDeserialize()
+        {
+            // Arrange
+            var options = new JsonSerializerOptions();
+            var context = new TestSerializerContext(options);
+            var serializer = new TestKafkaSerializer(options, context);
+
+            // Dictionary<string,int> is not registered in TestSerializerContext
+            var dict = new Dictionary<string, int> { ["test"] = 123 };
+            var json = JsonSerializer.Serialize(dict);
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            // Act
+            var result = serializer.Deserialize<Dictionary<string, int>>(stream);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(123, result["test"]);
+        }
+
+        [Fact]
+        public void Deserialize_NonConsumerRecordFailed_ThrowsException()
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+            var invalidJson = "{ invalid json";
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(invalidJson));
+
+            // Act & Assert
+            // With invalid JSON input, JsonSerializer throws JsonException directly
+            var ex = Assert.Throws<JsonException>(() =>
+                serializer.Deserialize<TestModel>(stream));
+        
+            // Check that we're getting a JSON parsing error
+            Assert.Contains("invalid", ex.Message.ToLower());
+        }
+
+        [Theory]
+        [InlineData(new byte[] { 42 }, 42)] // Single byte
+        [InlineData(new byte[] { 0x2A, 0x00, 0x00, 0x00 }, 42)] // Four bytes
+        public void DeserializePrimitiveValue_IntWithDifferentByteFormats_DeserializesCorrectly(byte[] bytes,
+            int expected)
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+
+            // Act
+            var result = serializer.TestDeserializePrimitiveValue(bytes, typeof(int));
+
+            // Assert
+            Assert.Equal(expected, result);
+        }
+
+        [Theory]
+        [InlineData(new byte[] { 0x2A, 0x00, 0x00, 0x00 }, 42L)] // Four bytes as int
+        [InlineData(new byte[] { 0x2A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 42L)] // Eight bytes as long
+        public void DeserializePrimitiveValue_LongWithDifferentByteFormats_DeserializesCorrectly(byte[] bytes,
+            long expected)
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+
+            // Act
+            var result = serializer.TestDeserializePrimitiveValue(bytes, typeof(long));
+
+            // Assert
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void DeserializePrimitiveValue_DoubleWithShortBytes_ReturnsZero()
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+            var shortBytes = new byte[] { 0x00, 0x00, 0x00, 0x00 }; // Less than 8 bytes
+
+            // Act
+            var result = serializer.TestDeserializePrimitiveValue(shortBytes, typeof(double));
+
+            // Assert
+            Assert.Equal(0.0, result);
+        }
+
+        [Fact]
+        public void Serialize_WithTypeInfoFromContext_WritesToStream()
+        {
+            // Arrange
+            var options = new JsonSerializerOptions();
+            var context = new TestSerializerContext(options);
+            var serializer = new TestKafkaSerializer(options, context);
+
+            var testModel = new TestModel { Name = "ContextSerialization", Value = 555 };
+            using var responseStream = new MemoryStream();
+
+            // Act
+            serializer.Serialize(testModel, responseStream);
+            responseStream.Position = 0;
+            string result = Encoding.UTF8.GetString(responseStream.ToArray());
+
+            // Assert
+            Assert.Contains("\"Name\":\"ContextSerialization\"", result);
+            Assert.Contains("\"Value\":555", result);
+        }
     }
 
     [JsonSerializable(typeof(TestModel))]
     [JsonSerializable(typeof(ConsumerRecords<string, TestModel>))]
+    [JsonSerializable(typeof(Dictionary<string, int>))]
     public partial class TestSerializerContext : JsonSerializerContext
     {
     }
