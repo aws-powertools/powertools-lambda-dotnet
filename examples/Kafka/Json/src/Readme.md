@@ -1,4 +1,4 @@
-# AWS Lambda Function Using Top Level Statements
+# Powertools Kafka JSON Lambda Function
 
 This starter project consists of:
 * Function.cs - file contain C# top level statements that define the function to be called for each event and starts the Lambda runtime client.
@@ -18,9 +18,10 @@ the Lambda runtime client add the `Amazon.Lambda.RuntimeSupport` NuGet package a
 of the file containing top-level statements to start the runtime.
 
 ```csharp
-await LambdaBootstrapBuilder.Create(handler, new DefaultLambdaJsonSerializer())
-        .Build()
-        .RunAsync();
+await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<JsonKey, Payload>, ILambdaContext, string>?)Handler,
+        new PowertoolsKafkaJsonSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
+    .Build()
+    .RunAsync();
 ```
 
 Pass into the Lambda runtime client a function handler as either an `Action<>` or `Func<>` for the code that 

@@ -1,64 +1,25 @@
-using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using AWS.Lambda.Powertools.Kafka;
 using AWS.Lambda.Powertools.Kafka.Json;
 using AWS.Lambda.Powertools.Logging;
-using AWS.Lambda.Powertools.Metrics;
 
-// string Handler(ConsumerRecords<JsonKey, JsonProduct> records, ILambdaContext context)
-// {
-//     Metrics.SetNamespace("Json");
-//     Metrics.AddMetric("NumberOfRequests", 1, MetricUnit.Count, MetricResolution.High);
-//     
-//     foreach (var record in records)
-//     {
-//         Logger.LogInformation("Record Key: {@record.Key}", record.Key);
-//         Logger.LogInformation("Record Value: {@record}", record.Value);
-//     }
-//     
-//     return "Processed " + records.Count() + " records";
-// }
-//
-//
-// await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<JsonKey, JsonProduct>, ILambdaContext, string>?)Handler,
-//         new PowertoolsKafkaJsonSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
-//     .Build()
-//     .RunAsync();
-
-var responseStream = new MemoryStream();
-var serializer = new PowertoolsKafkaJsonSerializer();
-
-Task<InvocationResponse> ToUpperAsync(InvocationRequest invocation)
+string Handler(ConsumerRecords<JsonKey, Payload> records, ILambdaContext context)
 {
-    var stopwatch = Stopwatch.StartNew();
-
-    var records = serializer.Deserialize<ConsumerRecords<JsonKey, Payload>>(invocation.InputStream);
-    
     foreach (var record in records)
     {
-        Console.WriteLine("Record UserId: {0}", record.Value.UserId);
+        Logger.LogInformation("Record Value: {@record}", record.Value);
     }
     
-    stopwatch.Stop();
-
-    Metrics.PushSingleMetric("JsonDeserialization-1024",
-        stopwatch.ElapsedMilliseconds, MetricUnit.Milliseconds, "kafka-dotnet", "service", null,
-        MetricResolution.High);
-
-    Console.WriteLine("Record Count: {0}", records.Count());
-    Console.WriteLine("Record UserId: {0}", records.First().Value.UserId);
-    Console.WriteLine("JsonDeserialization: {0:F2}", stopwatch.ElapsedMilliseconds);
-
-    responseStream.SetLength(0);
-    responseStream.Position = 0;
-
-    return Task.FromResult(new InvocationResponse(responseStream, false));
+    return "Processed " + records.Count() + " records";
 }
 
-var bootstrap = new LambdaBootstrap(ToUpperAsync);
-await bootstrap.RunAsync();
+
+await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<JsonKey, Payload>, ILambdaContext, string>?)Handler,
+        new PowertoolsKafkaJsonSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
+    .Build()
+    .RunAsync();
 
 
 public record JsonKey

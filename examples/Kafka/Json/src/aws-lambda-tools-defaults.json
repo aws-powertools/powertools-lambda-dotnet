@@ -9,9 +9,7 @@
   "region": "",
   "configuration": "Release",
   "function-runtime": "dotnet8",
-  "function-memory-size": 1024,
+  "function-memory-size": 512,
   "function-timeout": 30,
-  "function-handler": "Json",
-  "function-name": "dotnet-kafka-json-1024",
-  "function-role": "arn:aws:iam::992382490249:role/dotnet-kafka-test-role"
+  "function-handler": "Json"
 }

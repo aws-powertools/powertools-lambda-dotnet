@@ -11,7 +11,5 @@
   "function-runtime": "dotnet8",
   "function-memory-size": 512,
   "function-timeout": 30,
-  "function-handler": "Protobuf",
-  "function-name": "dotnet-kafka-proto",
-  "function-role": "arn:aws:iam::992382490249:role/dotnet-kafka-test-role"
+  "function-handler": "Protobuf"
 }
