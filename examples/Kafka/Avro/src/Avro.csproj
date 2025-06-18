@@ -24,12 +24,7 @@
         <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.Powertools.Kafka.Avro\AWS.Lambda.Powertools.Kafka.Avro.csproj" />
     </ItemGroup>
     <Target Name="GenerateAvroClasses" BeforeTargets="CoreCompile">
-        <Exec Command="avrogen -s $(ProjectDir)AvroProduct.avsc $(ProjectDir)Generated"/>
-        <Exec Command="avrogen -s $(ProjectDir)AvroKey.avsc $(ProjectDir)Generated"/>
-        <Exec Command="avrogen -s $(ProjectDir)Payload.avsc $(ProjectDir)Generated"/>
-        <ItemGroup>
-            <Compile Include="$(ProjectDir)Generated/**/*.cs"/>
-        </ItemGroup>
+        <Exec Command="avrogen -s $(ProjectDir)CustomerProfile.avsc $(ProjectDir)Generated"/>
     </Target>
     <ItemGroup>
         <None Remove="kafka-avro-event.json" />

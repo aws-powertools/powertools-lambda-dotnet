@@ -1,64 +1,133 @@
-# PowerTools Kafka Protobuf Lambda Function
+# AWS Powertools for AWS Lambda .NET - Kafka Protobuf Example
 
-This starter project consists of:
-* Function.cs - file contain C# top level statements that define the function to be called for each event and starts the Lambda runtime client.
-* aws-lambda-tools-defaults.json - default argument settings for use with Visual Studio and command line deployment tools for AWS
+This project demonstrates how to use AWS Lambda Powertools for .NET with Amazon MSK (Managed Streaming for Kafka) to process events from Kafka topics.
 
-You may also have a test project depending on the options selected.
+## Overview
 
-The generated function handler is a simple method accepting a string argument that returns the uppercase equivalent of the input string. Replace the body of this method, and parameters, to suit your needs.
+This example showcases a Lambda functions that consume messages from Kafka topics with Protocol Buffers serialization format. 
 
-## Executable Assembly
+It uses the `AWS.Lambda.Powertools.Kafka.Protobuf` NuGet package to easily deserialize and process Kafka records.
 
-.NET Lambda projects that use C# top level statements like this project must be deployed as an executable assembly instead of a class library. To indicate to Lambda that the .NET function is an executable assembly the 
-Lambda function handler value is set to the .NET Assembly name. This is different then deploying as a class library where the function handler string includes the assembly, type and method name.
+## Project Structure
 
-To deploy as an executable assembly the Lambda runtime client must be started to listen for incoming events to process. To start
-the Lambda runtime client add the `Amazon.Lambda.RuntimeSupport` NuGet package and add the following code at the end of the
-of the file containing top-level statements to start the runtime.
+```bash
+examples/Kafka/Protobuf/src/
+├── Function.cs         # Entry point for the Lambda function
+├── aws-lambda-tools-defaults.json # Default argument settings for AWS Lambda deployment
+├── template.yaml       # AWS SAM template for deploying the function
+├── CustomerProfile.proto # Protocol Buffers definition file for the data structure used in the Kafka messages
+└── kafka-protobuf-event.json # Sample Protocol Buffers event to test the function
+```
+
+## Prerequisites
+
+- [Dotnet](https://dotnet.microsoft.com/en-us/download/dotnet) (dotnet8 or later)
+- [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
+- [AWS CLI](https://aws.amazon.com/cli/)
+- An AWS account with appropriate permissions
+- [Amazon MSK](https://aws.amazon.com/msk/) cluster set up with a topic to consume messages from
+- [AWS.Lambda.Powertools.Kafka.Protobuf](https://www.nuget.org/packages/AWS.Lambda.Powertools.Kafka.Protobuf/) NuGet package installed in your project
+
+## Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/aws-powertools/powertools-lambda-dotnet.git
+   ```
+
+2. Navigate to the project directory:
+
+   ```bash
+   cd powertools-lambda-dotnet/examples/Kafka/Protobuf/src
+   ```
+
+3. Build the project:
+
+   ```bash
+   dotnet build
+   ```
+
+## Deployment
+
+Deploy the application using the AWS SAM CLI:
+
+```bash
+sam build
+sam deploy --guided
+```
+
+Follow the prompts to configure your deployment.
+
+## Protocol Buffers Format
+
+The Protobuf example handles messages serialized with Protocol Buffers. The schema is defined in a `.proto` file (which would need to be created), and the C# code is generated from that schema.
+
+This requires the `Grpc.Tools` package to deserialize the messages correctly.
+
+And update the `.csproj` file to include the `.proto` files.
+
+```xml
+<Protobuf Include="CustomerProfile.proto">
+   <GrpcServices>Client</GrpcServices>
+   <Access>Public</Access>
+   <ProtoCompile>True</ProtoCompile>
+   <CompileOutputs>True</CompileOutputs>
+   <OutputDir>obj\Debug/net8.0/</OutputDir>
+   <Generator>MSBuild:Compile</Generator>
+   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Protobuf>
+```
+
+## Usage Examples
+
+Once deployed, you can test the Lambda function by sending a sample Protocol Buffers event to the configured Kafka topic.
+You can use the `kafka-protobuf-event.json` file as a sample event to test the function.
+
+### Testing
+
+You can test the function locally using the AWS SAM CLI (Requires Docker to be installed):
+
+```bash
+sam local invoke ProtobufDeserializationFunction --event kafka-protobuf-event.json
+```
+
+This command simulates an invocation of the Lambda function with the provided event data.
+
+## How It Works
+
+1. **Event Source**: Configure your Lambda functions with an MSK or self-managed Kafka cluster as an event source.
+2. **Deserializing Records**: Powertools handles deserializing the records based on the specified format.
+3. **Processing**: Each record is processed within the handler function.
+
+## Event Deserialization
+
+Pass the `PowertoolsKafkaProtobufSerializer` to the `LambdaBootstrapBuilder.Create()` method to enable JSON deserialization of Kafka records:
 
 ```csharp
-await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<ProtobufKey, ProtobufProduct>, ILambdaContext, string>?)Handler,
+await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
         new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
     .Build()
     .RunAsync();
-```
+ ```
 
-Pass into the Lambda runtime client a function handler as either an `Action<>` or `Func<>` for the code that 
-should be called for each event. If the handler takes in an input event besides `System.IO.Stream` then
-the JSON serializer must also be passed into the `Create` method.
+## Configuration
 
+The SAM template (`template.yaml`) defines three Lambda function:
 
-## Here are some steps to follow from Visual Studio:
+- **ProtobufDeserializationFunction**: Handles Protobuf-formatted Kafka messages
 
-To deploy your function to AWS Lambda, right click the project in Solution Explorer and select *Publish to AWS Lambda*.
+## Customization
 
-To view your deployed function open its Function View window by double-clicking the function name shown beneath the AWS Lambda node in the AWS Explorer tree.
+To customize the examples:
 
-To perform testing against your deployed function use the Test Invoke tab in the opened Function View window.
+1. Modify the schema definitions to match your data structures
+2. Update the handler logic to process the records according to your requirements
+3. Ensure you have the proper `.proto` files and that they are included in your project for Protocol Buffers serialization/deserialization.
 
-To configure event sources for your deployed function, for example to have your function invoked when an object is created in an Amazon S3 bucket, use the Event Sources tab in the opened Function View window.
+## Resources
 
-To update the runtime configuration of your deployed function use the Configuration tab in the opened Function View window.
-
-To view execution logs of invocations of your function use the Logs tab in the opened Function View window.
-
-## Here are some steps to follow to get started from the command line:
-
-Once you have edited your template and code you can deploy your application using the [Amazon.Lambda.Tools Global Tool](https://github.com/aws/aws-extensions-for-dotnet-cli#aws-lambda-amazonlambdatools) from the command line.
-
-Install Amazon.Lambda.Tools Global Tools if not already installed.
-```
-    dotnet tool install -g Amazon.Lambda.Tools
-```
-
-If already installed check if new version is available.
-```
-    dotnet tool update -g Amazon.Lambda.Tools
-```
-
-Deploy function to AWS Lambda
-```
-    cd "Protobuf/src/Protobuf"
-    dotnet lambda deploy-function
-```
+- [AWS Lambda Powertools for .NET Documentation](https://docs.powertools.aws.dev/lambda/dotnet/)
+- [Amazon MSK Documentation](https://docs.aws.amazon.com/msk/)
+- [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/)
+- [Protocol Buffers Documentation](https://developers.google.com/protocol-buffers)

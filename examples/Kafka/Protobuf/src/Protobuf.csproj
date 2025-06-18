@@ -27,25 +27,7 @@
       </Content>
     </ItemGroup>
     <ItemGroup>
-      <Protobuf Include="Key.proto">
-        <GrpcServices>Client</GrpcServices>
-        <Access>Public</Access>
-        <ProtoCompile>True</ProtoCompile>
-        <CompileOutputs>True</CompileOutputs>
-        <OutputDir>obj\Debug/net8.0/</OutputDir>
-        <Generator>MSBuild:Compile</Generator>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Protobuf>
-      <Protobuf Include="Product.proto">
-        <GrpcServices>Client</GrpcServices>
-        <Access>Public</Access>
-        <ProtoCompile>True</ProtoCompile>
-        <CompileOutputs>True</CompileOutputs>
-        <OutputDir>obj\Debug/net8.0/</OutputDir>
-        <Generator>MSBuild:Compile</Generator>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Protobuf>
-        <Protobuf Include="Payload.proto">
+        <Protobuf Include="CustomerProfile.proto">
             <GrpcServices>Client</GrpcServices>
             <Access>Public</Access>
             <ProtoCompile>True</ProtoCompile>

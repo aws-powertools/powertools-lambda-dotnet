@@ -3,9 +3,9 @@ using Amazon.Lambda.RuntimeSupport;
 using AWS.Lambda.Powertools.Kafka;
 using AWS.Lambda.Powertools.Kafka.Protobuf;
 using AWS.Lambda.Powertools.Logging;
-using TestKafka;
+using Com.Example;
 
-string Handler(ConsumerRecords<ProtobufKey, ProtobufProduct> records, ILambdaContext context)
+string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
 {
     foreach (var record in records)
     {
@@ -21,7 +21,7 @@ string Handler(ConsumerRecords<ProtobufKey, ProtobufProduct> records, ILambdaCon
     return "Processed " + records.Count() + " records";
 }
 
-await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<ProtobufKey, ProtobufProduct>, ILambdaContext, string>?)Handler,
+await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
         new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
     .Build()
     .RunAsync();
