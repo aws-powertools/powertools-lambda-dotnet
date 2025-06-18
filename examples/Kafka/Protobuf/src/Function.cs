@@ -9,12 +9,6 @@ string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext 
 {
     foreach (var record in records)
     {
-        foreach (var header in record.Headers.DecodedValues())
-        {
-            Console.WriteLine($"{header.Key}: {header.Value}");
-        }
-        
-        Logger.LogInformation("Record Key: {@key}", record.Key);
         Logger.LogInformation("Record Value: {@record}", record.Value);
     }
 
@@ -22,7 +16,7 @@ string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext 
 }
 
 await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-        new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
+        new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
     .Build()
     .RunAsync();
 

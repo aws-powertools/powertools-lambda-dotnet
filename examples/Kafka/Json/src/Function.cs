@@ -16,6 +16,6 @@ string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext 
 }
 
 await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-        new PowertoolsKafkaJsonSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
+        new PowertoolsKafkaJsonSerializer()) // Use PowertoolsKafkaJsonSerializer for Json serialization
     .Build()
     .RunAsync();

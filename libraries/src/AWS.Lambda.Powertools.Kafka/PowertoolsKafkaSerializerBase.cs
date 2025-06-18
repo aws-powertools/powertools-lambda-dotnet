@@ -142,7 +142,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         var root = document.RootElement;
 
         // Create the typed instance and set basic properties
-        var typedEvent = CreateConsumerRecordsInstance<T>(targetType);
+        var typedEvent = CreateConsumerRecordsInstance(targetType);
         SetBasicProperties(root, typedEvent, targetType);
 
         // Create and populate records dictionary
@@ -156,7 +156,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         return (T)typedEvent;
     }
 
-    private object CreateConsumerRecordsInstance<T>(Type targetType)
+    private object CreateConsumerRecordsInstance(Type targetType)
     {
         return Activator.CreateInstance(targetType) ??
                throw new InvalidOperationException($"Failed to create instance of {targetType.Name}");
@@ -540,7 +540,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         {
             return Encoding.UTF8.GetString(bytes);
         }
-        else if (valueType == typeof(int))
+
+        if (valueType == typeof(int))
         {
             // First try to parse as string
             var stringValue = Encoding.UTF8.GetString(bytes);
@@ -555,7 +556,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 _ => 0
             };
         }
-        else if (valueType == typeof(long))
+
+        if (valueType == typeof(long))
         {
             var stringValue = Encoding.UTF8.GetString(bytes);
             if (long.TryParse(stringValue, out var parsedValue))
@@ -568,15 +570,18 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 _ => 0L
             };
         }
-        else if (valueType == typeof(double))
+
+        if (valueType == typeof(double))
         {
             return bytes.Length >= 8 ? BitConverter.ToDouble(bytes, 0) : 0.0;
         }
-        else if (valueType == typeof(bool) && bytes.Length >= 1)
+
+        if (valueType == typeof(bool))
         {
             return bytes[0] != 0;
         }
-        else if (valueType == typeof(Guid) && bytes.Length >= 16)
+
+        if (valueType == typeof(Guid) && bytes.Length >= 16)
         {
             return new Guid(bytes);
         }
