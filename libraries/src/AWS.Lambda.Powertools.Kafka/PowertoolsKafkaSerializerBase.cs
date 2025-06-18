@@ -259,8 +259,34 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
 
         // Process headers
         ProcessHeaders(recordElement, record, recordType);
+        
+        // Process schema metadata for both key and value
+        ProcessSchemaMetadata(recordElement, record, recordType, "keySchemaMetadata", "KeySchemaMetadata");
+        ProcessSchemaMetadata(recordElement, record, recordType, "valueSchemaMetadata", "ValueSchemaMetadata");
+
 
         return record;
+    }
+    
+    private void ProcessSchemaMetadata(JsonElement recordElement, object record, Type recordType, 
+        string jsonPropertyName, string recordPropertyName)
+    {
+        if (recordElement.TryGetProperty(jsonPropertyName, out var metadataElement))
+        {
+            var schemaMetadata = new SchemaMetadata();
+
+            if (metadataElement.TryGetProperty("dataFormat", out var dataFormatElement))
+            {
+                schemaMetadata.DataFormat = dataFormatElement.GetString() ?? string.Empty;
+            }
+
+            if (metadataElement.TryGetProperty("schemaId", out var schemaIdElement))
+            {
+                schemaMetadata.SchemaId = schemaIdElement.GetString() ?? string.Empty;
+            }
+
+            recordType.GetProperty(recordPropertyName)?.SetValue(record, schemaMetadata);
+        }
     }
 
     private void ProcessKey(JsonElement recordElement, object record, Type recordType, Type keyType)

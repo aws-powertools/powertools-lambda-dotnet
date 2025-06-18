@@ -514,7 +514,7 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             // With invalid JSON input, JsonSerializer throws JsonException directly
             var ex = Assert.Throws<JsonException>(() =>
                 serializer.Deserialize<TestModel>(stream));
-        
+
             // Check that we're getting a JSON parsing error
             Assert.Contains("invalid", ex.Message.ToLower());
         }
@@ -584,6 +584,62 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             // Assert
             Assert.Contains("\"Name\":\"ContextSerialization\"", result);
             Assert.Contains("\"Value\":555", result);
+        }
+
+        [Fact]
+        public void Deserialize_WithSchemaMetadata_PopulatesSchemaMetadataProperties()
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+
+            string kafkaEventJson = @$"{{
+        ""eventSource"": ""aws:kafka"",
+        ""eventSourceArn"": ""arn:aws:kafka:us-east-1:0123456789019:cluster/TestCluster/abcd1234"",
+        ""bootstrapServers"": ""b-1.test-cluster.kafka.us-east-1.amazonaws.com:9092"",
+        ""records"": {{
+            ""mytopic-0"": [
+                {{
+                    ""topic"": ""mytopic"",
+                    ""partition"": 0,
+                    ""offset"": 15,
+                    ""timestamp"": 1645084650987,
+                    ""timestampType"": ""CREATE_TIME"",
+                    ""key"": ""{Convert.ToBase64String(Encoding.UTF8.GetBytes("testKey"))}"",
+                    ""value"": ""{Convert.ToBase64String(Encoding.UTF8.GetBytes("testValue"))}"",
+                    ""headers"": [
+                        {{ ""headerKey"": [104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101] }}
+                    ],
+                    ""keySchemaMetadata"": {{
+                        ""dataFormat"": ""JSON"",
+                        ""schemaId"": ""key-schema-001""
+                    }},
+                    ""valueSchemaMetadata"": {{
+                        ""dataFormat"": ""AVRO"",
+                        ""schemaId"": ""value-schema-002""
+                    }}
+                }}
+            ]
+        }}
+    }}";
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+            // Act
+            var result = serializer.Deserialize<ConsumerRecords<string, string>>(stream);
+
+            // Assert
+            Assert.NotNull(result);
+            var record = result.First();
+
+            // Assert key schema metadata
+            Assert.NotNull(record.KeySchemaMetadata);
+            Assert.Equal("JSON", record.KeySchemaMetadata.DataFormat);
+            Assert.Equal("key-schema-001", record.KeySchemaMetadata.SchemaId);
+
+            // Assert value schema metadata
+            Assert.NotNull(record.ValueSchemaMetadata);
+            Assert.Equal("AVRO", record.ValueSchemaMetadata.DataFormat);
+            Assert.Equal("value-schema-002", record.ValueSchemaMetadata.SchemaId);
         }
     }
 

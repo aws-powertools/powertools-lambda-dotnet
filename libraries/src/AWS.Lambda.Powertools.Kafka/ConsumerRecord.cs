@@ -72,4 +72,14 @@ public class ConsumerRecord<TK, T>
     /// Gets the headers associated with the record.
     /// </summary>
     public Dictionary<string, byte[]> Headers { get; internal set; } = null!;
+
+    /// <summary>
+    /// Gets the schema metadata for the record's value.
+    /// </summary>
+    public SchemaMetadata ValueSchemaMetadata { get; internal set; } = null!;
+    
+    /// <summary>
+    /// Gets the schema metadata for the record's key.
+    /// </summary>
+    public SchemaMetadata KeySchemaMetadata { get; internal set; } = null!;
 }
