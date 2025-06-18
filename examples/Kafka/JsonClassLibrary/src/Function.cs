@@ -21,7 +21,16 @@ public class Function
     {
         foreach (var record in records)
         {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
+            Logger.LogInformation("Processing messagem from topic: {topic}", record.Topic);
+            Logger.LogInformation("Partition: {partition}, Offset: {offset}", record.Partition, record.Offset);
+            Logger.LogInformation("Produced at: {timestamp}", record.Timestamp);
+            
+            foreach (var header in record.Headers.DecodedValues())
+            {
+                Logger.LogInformation($"{header.Key}: {header.Value}");
+            }
+            
+            Logger.LogInformation("Processing order for: {fullName}", record.Value.FullName);
         }
     
         return "Processed " + records.Count() + " records";
