@@ -340,5 +340,122 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
                 }}
             }}";
         }
+
+        [Fact]
+        public void Deserialize_WithSerializerContext_UsesContextForRegisteredTypes()
+        {
+            // Arrange
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var context = new TestSerializerContext(options);
+            // Use only options for constructor, but we'll make the context available for the model deserialization
+            var serializer = new TestKafkaSerializer(options);
+
+            var testModel = new TestModel { Name = "Test", Value = 123 };
+            var modelJson = JsonSerializer.Serialize(testModel, context.TestModel);
+            var base64Value = Convert.ToBase64String(Encoding.UTF8.GetBytes(modelJson));
+
+            string kafkaEventJson = CreateKafkaEvent(
+                keyValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("testKey")),
+                valueValue: base64Value
+            );
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+            // Act
+            var result = serializer.Deserialize<ConsumerRecords<string, TestModel>>(stream);
+
+            // Assert
+            Assert.NotNull(result);
+            var record = result.First();
+            Assert.Equal("testKey", record.Key);
+            Assert.Equal("Test", record.Value.Name);
+            Assert.Equal(123, record.Value.Value);
+        }
+
+        [Fact]
+        public void Serialize_WithSerializerContext_UsesContextForRegisteredTypes()
+        {
+            // Arrange
+            var options = new JsonSerializerOptions();
+            var context = new TestSerializerContext(options);
+            var serializer = new TestKafkaSerializer(options, context);
+
+            var testModel = new TestModel { Name = "Test", Value = 123 };
+            using var responseStream = new MemoryStream();
+
+            // Act
+            serializer.Serialize(testModel, responseStream);
+            responseStream.Position = 0;
+            string result = Encoding.UTF8.GetString(responseStream.ToArray());
+
+            // Assert
+            Assert.Contains("\"Name\":\"Test\"", result);
+            Assert.Contains("\"Value\":123", result);
+        }
+
+        [Fact]
+        public void Deserialize_WithSerializerContext_FallsBackWhenTypeNotRegistered()
+        {
+            // Arrange
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var context = new TestSerializerContext(options);
+            var serializer = new TestKafkaSerializer(options, context);
+
+            // Using a non-registered type (Dictionary instead of TestModel)
+            var dictionary = new Dictionary<string, int> { ["Key"] = 42 };
+            var dictJson = JsonSerializer.Serialize(dictionary);
+            var base64Value = Convert.ToBase64String(Encoding.UTF8.GetBytes(dictJson));
+
+            string kafkaEventJson = CreateKafkaEvent(
+                keyValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("testKey")),
+                valueValue: base64Value
+            );
+
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+            // Act
+            var result = serializer.Deserialize<ConsumerRecords<string, Dictionary<string, int>>>(stream);
+
+            // Assert
+            Assert.NotNull(result);
+            var record = result.First();
+            Assert.Equal("testKey", record.Key);
+            Assert.Single(record.Value);
+            Assert.Equal(42, record.Value["Key"]);
+        }
+
+        [Fact]
+        public void Serialize_NonRegisteredType_FallsBackToRegularSerialization()
+        {
+            // Arrange
+            var options = new JsonSerializerOptions();
+            // Use serializer WITHOUT context to test the fallback path
+            var serializer = new TestKafkaSerializer(options);
+
+            // Using a non-registered type
+            var nonRegisteredType = new { Id = Guid.NewGuid(), Message = "Not in context" };
+            using var responseStream = new MemoryStream();
+
+            // Act
+            serializer.Serialize(nonRegisteredType, responseStream);
+            responseStream.Position = 0;
+            string result = Encoding.UTF8.GetString(responseStream.ToArray());
+
+            // Assert
+            Assert.Contains("\"Id\":", result);
+            Assert.Contains("\"Message\":\"Not in context\"", result);
+        }
+    }
+
+    [JsonSerializable(typeof(TestModel))]
+    [JsonSerializable(typeof(ConsumerRecords<string, TestModel>))]
+    public partial class TestSerializerContext : JsonSerializerContext
+    {
+    }
+
+    public class TestModel
+    {
+        public string Name { get; set; }
+        public int Value { get; set; }
     }
 }
