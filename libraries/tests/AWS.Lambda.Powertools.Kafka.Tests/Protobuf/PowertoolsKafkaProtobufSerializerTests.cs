@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -181,7 +182,7 @@ public class PowertoolsKafkaProtobufSerializerTests
     }
 
     [Fact]
-    public void DeserializeComplexKey_WhenAllDeserializationMethodsFail_ReturnsNull()
+    public void DeserializeComplexKey_WhenAllDeserializationMethodsFail_ReturnsException()
     {
         // Arrange
         var serializer = new PowertoolsKafkaProtobufSerializer();
@@ -196,12 +197,79 @@ public class PowertoolsKafkaProtobufSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        // This shouldn't throw but return a record with null key
-        var result = serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream);
+        var message = Assert.Throws<SerializationException>(() => serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream));
+        Assert.Equal("Failed to deserialize key data: Unsupported type for Protobuf deserialization: TestModel. Protobuf deserialization requires a type of com.google.protobuf.Message. Consider using an alternative Deserializer.", message.Message);
+    }
+
+    [Fact]
+    public void Deserialize_ConfluentMessageIndexFormats_AllFormatsDeserializeCorrectly()
+    {
+        // Arrange
+        var serializer = new PowertoolsKafkaProtobufSerializer();
+        string kafkaEventJson = File.ReadAllText("Protobuf/kafka-protobuf-confluent-event.json");
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+        // Act
+        var result = serializer.Deserialize<ConsumerRecords<int, ProtobufProduct>>(stream);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("aws:kafka", result.EventSource);
+
+        // Verify records
+        Assert.True(result.Records.ContainsKey("mytopic-0"));
+        var records = result.Records["mytopic-0"];
+        Assert.Equal(3, records.Count);
+
+        // Verify all records have been deserialized correctly (all should have the same content)
+        foreach (var record in records)
+        {
+            Assert.Equal("Laptop", record.Value.Name);
+            Assert.Equal(1001, record.Value.Id);
+            Assert.Equal(999.99, record.Value.Price);
+        }
+    }
+
+    [Theory]
+    [InlineData("COkHEgZMYXB0b3AZUrgehes/j0A=", "Standard Protobuf")] // Standard protobuf
+    [InlineData("AAjpBxIGTGFwdG9wGVK4HoXrP49A", "Single Index")] // Confluent with single 0 index
+    [InlineData("AgEACOkHEgZMYXB0b3AZUrgehes/j0A=", "Complex Index")] // Confluent with index array [1, 0]
+    public void Deserialize_SpecificConfluentFormats_EachFormatDeserializesCorrectly(string base64Value, string testCase)
+    {
+        // Arrange
+        var serializer = new PowertoolsKafkaProtobufSerializer();
+        string kafkaEventJson = CreateKafkaEvent("NDI=", base64Value); // Key is 42 in base64
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+        // Act
+        var result = serializer.Deserialize<ConsumerRecords<int, ProtobufProduct>>(stream);
 
         // Assert
         var record = result.First();
-        Assert.Null(record.Key);
+        Assert.NotNull(record);
+        Assert.Equal(42, record.Key); // Key should be 42
+
+        // Value should be the same regardless of message index format
+        Assert.Equal("Laptop", record.Value.Name);
+        Assert.Equal(1001, record.Value.Id);
+        Assert.Equal(999.99, record.Value.Price);
+    }
+
+    [Fact]
+    public void Deserialize_MessageIndexWithCorruptData_HandlesError()
+    {
+        // Arrange - Create invalid message index data (starts with 5 but doesn't have 5 entries)
+        byte[] invalidData = [5, 1, 2]; // Claims to have 5 entries but only has 2
+        string kafkaEventJson = CreateKafkaEvent("NDI=", Convert.ToBase64String(invalidData));
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+        var serializer = new PowertoolsKafkaProtobufSerializer();
+
+        // Act & Assert
+        var ex = Assert.Throws<SerializationException>(() => 
+            serializer.Deserialize<ConsumerRecords<int, ProtobufProduct>>(stream));
+        
+        // Verify the exception message contains useful information
+        Assert.Contains("Failed to deserialize value data:", ex.Message);
     }
 
     private string CreateKafkaEvent(string keyValue, string valueValue)

@@ -54,6 +54,10 @@
       <Content Include="Protobuf\kafka-protobuf-event.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+        <None Remove="Protobuf\kafka-protobuf-confluent-event.json" />
+        <Content Include="Protobuf\kafka-protobuf-confluent-event.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
       <None Remove="Avro\AvroProduct.avsc" />
       <Content Include="Avro\AvroProduct.avsc">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
