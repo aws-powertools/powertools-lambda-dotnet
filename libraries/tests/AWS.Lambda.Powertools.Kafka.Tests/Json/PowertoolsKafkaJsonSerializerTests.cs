@@ -391,6 +391,141 @@ public class PowertoolsKafkaJsonSerializerTests
                 }}
             }}";
     }
+
+    [Fact]
+    public void DirectJsonSerializerTest_InvokesFormatSpecificMethod()
+    {
+        // This test directly tests the JSON serializer methods
+        var serializer = new TestJsonDeserializer();
+
+        // Create test data with valid JSON
+        var testModel = new TestModel { Name = "DirectTest", Value = 555 };
+        var jsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(testModel));
+
+        // Act
+        var result = serializer.TestDeserializeFormatSpecific(jsonBytes, typeof(TestModel), false);
+
+        // Assert
+        Assert.NotNull(result);
+        var model = result as TestModel;
+        Assert.NotNull(model);
+        Assert.Equal("DirectTest", model!.Name);
+        Assert.Equal(555, model.Value);
+    }
+
+    [Fact]
+    public void DirectJsonSerializerTest_WithContext_UsesContext()
+    {
+        // Create a context that includes TestModel
+        var options = new JsonSerializerOptions();
+        var context = new TestJsonSerializerContext(options);
+        
+        // Create the serializer with context
+        var serializer = new TestJsonDeserializer(context);
+
+        // Create test data with valid JSON
+        var testModel = new TestModel { Name = "ContextTest", Value = 999 };
+        var jsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(testModel));
+
+        // Act - directly test the protected method
+        var result = serializer.TestDeserializeFormatSpecific(jsonBytes, typeof(TestModel), false);
+
+        // Assert
+        Assert.NotNull(result);
+        var model = result as TestModel;
+        Assert.NotNull(model);
+        Assert.Equal("ContextTest", model!.Name);
+        Assert.Equal(999, model.Value);
+    }
+
+    [Fact]
+    public void DirectJsonSerializerTest_WithInvalidJson_ReturnsNullForReferenceType()
+    {
+        // Create the serializer 
+        var serializer = new TestJsonDeserializer();
+
+        // Create invalid JSON data
+        var invalidJsonBytes = Encoding.UTF8.GetBytes("{ not valid json");
+
+        // Act - directly test the protected method
+        var result = serializer.TestDeserializeFormatSpecific(invalidJsonBytes, typeof(TestModel), false);
+
+        // Assert - should return null for reference type when JSON is invalid
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void DirectJsonSerializerTest_WithInvalidJson_ReturnsDefaultForValueType()
+    {
+        // Create the serializer 
+        var serializer = new TestJsonDeserializer();
+
+        // Create invalid JSON data
+        var invalidJsonBytes = Encoding.UTF8.GetBytes("{ not valid json");
+
+        // Act - directly test the protected method with a value type
+        var result = serializer.TestDeserializeFormatSpecific(invalidJsonBytes, typeof(int), false);
+
+        // Assert - should return default (0) for value type when JSON is invalid
+        Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public void DirectJsonSerializerTest_WithEmptyJson_ReturnsNullOrDefault()
+    {
+        // Create the serializer 
+        var serializer = new TestJsonDeserializer();
+
+        // Create empty JSON data
+        var emptyJsonBytes = Array.Empty<byte>();
+
+        // Act - test with reference type
+        var resultRef = serializer.TestDeserializeFormatSpecific(emptyJsonBytes, typeof(TestModel), false);
+        // Act - test with value type
+        var resultVal = serializer.TestDeserializeFormatSpecific(emptyJsonBytes, typeof(int), false);
+
+        // Assert
+        Assert.Null(resultRef); // Reference type should get null
+        Assert.Equal(0, resultVal); // Value type should get default
+    }
+    
+    [Fact]
+    public void DirectJsonSerializerTest_WithContextResultingInNull_ReturnsNull()
+    {
+        // Create context
+        var options = new JsonSerializerOptions();
+        var context = new TestJsonSerializerContext(options);
+        
+        // Create serializer with context
+        var serializer = new TestJsonDeserializer(context);
+
+        // Create JSON that is "null"
+        var jsonBytes = Encoding.UTF8.GetBytes("null");
+
+        // Act - even with context, null JSON should return null
+        var result = serializer.TestDeserializeFormatSpecific(jsonBytes, typeof(TestModel), false);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Test helper to directly access protected methods
+    /// </summary>
+    private class TestJsonDeserializer : PowertoolsKafkaJsonSerializer
+    {
+        public TestJsonDeserializer() : base() { }
+        
+        public TestJsonDeserializer(JsonSerializerOptions options) : base(options) { }
+        
+        public TestJsonDeserializer(JsonSerializerContext context) : base(context) { }
+
+        public object? TestDeserializeFormatSpecific(byte[] data, Type targetType, bool isKey)
+        {
+            // Call the protected method directly
+            return base.DeserializeComplexTypeFormat(data, targetType, isKey);
+        }
+    }
 }
 
 [JsonSerializable(typeof(TestModel))]

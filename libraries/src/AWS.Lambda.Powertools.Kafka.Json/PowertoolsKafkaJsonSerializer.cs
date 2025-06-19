@@ -54,57 +54,6 @@ public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
     }
     
     /// <summary>
-    /// Deserializes binary data using JSON format.
-    /// </summary>
-    /// <param name="data">The binary data to deserialize.</param>
-    /// <param name="targetType">The type to deserialize to.</param>
-    /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
-    /// <returns>The deserialized object.</returns>
-    [RequiresDynamicCode("JSON deserialization might require runtime code generation.")]
-    [RequiresUnreferencedCode("JSON deserialization might require types that cannot be statically analyzed.")]
-    protected override object? DeserializeFormatSpecific(byte[] data, 
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
-                                    DynamicallyAccessedMemberTypes.PublicFields)]
-        Type targetType, bool isKey)
-    {
-        try
-        {
-            // Handle primitive types directly
-            if (IsPrimitiveOrSimpleType(targetType))
-            {
-                return DeserializePrimitiveValue(data, targetType);
-            }
-            
-            // Convert bytes to JSON string
-            var jsonStr = Encoding.UTF8.GetString(data);
-            
-            if (SerializerContext != null)
-            {
-                // Try to get type info from context for AOT compatibility
-                var typeInfo = SerializerContext.GetTypeInfo(targetType);
-                if (typeInfo != null)
-                {
-                    var result = JsonSerializer.Deserialize(jsonStr, typeInfo);
-                    if (result != null)
-                    {
-                        return result;
-                    }
-                }
-            }
-            
-            // Fallback to regular deserialization
-            #pragma warning disable IL2026, IL3050
-            return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
-            #pragma warning restore IL2026, IL3050
-        }
-        catch
-        {
-            // If deserialization fails, return null or default
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-        }
-    }
-    
-    /// <summary>
     /// Deserializes complex (non-primitive) types using JSON format.
     /// </summary>
     /// <param name="data">The binary data to deserialize.</param>
@@ -118,33 +67,46 @@ public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
                                     DynamicallyAccessedMemberTypes.PublicFields)]
         Type targetType, bool isKey)
     {
+        if (data == null || data.Length == 0)
+        {
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+        }
+        
         try
         {
             // Convert bytes to JSON string
             var jsonStr = Encoding.UTF8.GetString(data);
-            
+
+            // First try context-based deserialization if available
             if (SerializerContext != null)
             {
                 // Try to get type info from context for AOT compatibility
                 var typeInfo = SerializerContext.GetTypeInfo(targetType);
                 if (typeInfo != null)
                 {
-                    var result = JsonSerializer.Deserialize(jsonStr, typeInfo);
-                    if (result != null)
+                    try
                     {
-                        return result;
+                        var result = JsonSerializer.Deserialize(jsonStr, typeInfo);
+                        if (result != null)
+                        {
+                            return result;
+                        }
+                    }
+                    catch
+                    {
+                        // Continue to fallback if context-based deserialization fails
                     }
                 }
             }
             
-            // Fallback to regular deserialization
+            // Fallback to regular deserialization - this should handle types not in the context
             #pragma warning disable IL2026, IL3050
             return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
             #pragma warning restore IL2026, IL3050
         }
         catch
         {
-            // If deserialization fails, return null or default
+            // If all deserialization attempts fail, return null or default
             return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
         }
     }
