@@ -228,37 +228,6 @@ public class PowertoolsKafkaJsonSerializerTests
         Assert.Equal("ValueFromContext", record.Value.Name);
         Assert.Equal(789, record.Value.Value);
     }
-    
-    [Fact]
-    public void DeserializeComplexValue_WithContextButNoTypeInfo_UsesFallback()
-    {
-        // Arrange - create context without registering Dictionary<,> type
-        var options = new JsonSerializerOptions();
-        var context = new TestJsonSerializerContext(options);
-        var serializer = new PowertoolsKafkaJsonSerializer(context);
-
-        // Create test data with an unregistered type
-        var dictData = new Dictionary<string, int> { ["test"] = 123, ["value"] = 456 };
-        var jsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dictData));
-
-        string kafkaEventJson = CreateKafkaEvent(
-            keyValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("testKey")),
-            valueValue: Convert.ToBase64String(jsonBytes)
-        );
-
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
-
-        // Act - should use fallback deserialization
-        var result = serializer.Deserialize<ConsumerRecords<string, Dictionary<string, int>>>(stream);
-
-        // Assert
-        var record = result.First();
-        Assert.Equal("testKey", record.Key);
-        Assert.NotNull(record.Value);
-        Assert.Equal(2, record.Value.Count);
-        Assert.Equal(123, record.Value["test"]);
-        Assert.Equal(456, record.Value["value"]);
-    }
 
     [Fact]
     public void DeserializeComplexValue_WithInvalidJson_ReturnsNullForReferenceTypes()

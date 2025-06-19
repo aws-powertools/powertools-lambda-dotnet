@@ -598,81 +598,104 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// </summary>
     protected object? DeserializePrimitiveValue(byte[] bytes, Type valueType)
     {
+        // Early return for empty data
         if (bytes == null! || bytes.Length == 0)
             return null!;
 
+        // String is the most common case, handle first
         if (valueType == typeof(string))
         {
             return Encoding.UTF8.GetString(bytes);
         }
 
+        // For numeric and boolean types, try string parsing first
+        var stringValue = Encoding.UTF8.GetString(bytes);
+
+        // Handle numeric types
         if (valueType == typeof(int))
-        {
-            // First try to parse as string
-            var stringValue = Encoding.UTF8.GetString(bytes);
-            if (int.TryParse(stringValue, out var parsedValue))
-                return parsedValue;
-
-            // Fall back to binary
-            return bytes.Length switch
-            {
-                >= 4 => BitConverter.ToInt32(bytes, 0),
-                1 => bytes[0],
-                _ => 0
-            };
-        }
-
+            return DeserializeIntValue(bytes, stringValue);
+            
         if (valueType == typeof(long))
-        {
-            var stringValue = Encoding.UTF8.GetString(bytes);
-            if (long.TryParse(stringValue, out var parsedValue))
-                return parsedValue;
-
-            return bytes.Length switch
-            {
-                >= 8 => BitConverter.ToInt64(bytes, 0),
-                >= 4 => BitConverter.ToInt32(bytes, 0),
-                _ => 0L
-            };
-        }
-
+            return DeserializeLongValue(bytes, stringValue);
+            
         if (valueType == typeof(double))
-        {
-            var stringValue = Encoding.UTF8.GetString(bytes);
-            if (double.TryParse(stringValue, out var doubleValue))
-                return doubleValue;
-                
-            return bytes.Length >= 8 ? BitConverter.ToDouble(bytes, 0) : 0.0;
-        }
-
+            return DeserializeDoubleValue(bytes, stringValue);
+            
         if (valueType == typeof(bool))
-        {
-            var stringValue = Encoding.UTF8.GetString(bytes);
-            if (bool.TryParse(stringValue, out var boolValue))
-                return boolValue;
-                
-            return bytes[0] != 0;
-        }
+            return DeserializeBoolValue(bytes, stringValue);
 
-        if (valueType == typeof(Guid) && bytes.Length >= 16)
-        {
-            try
-            {
-                return new Guid(bytes);
-            }
-            catch
-            {
-                // If binary parsing fails, try as string
-                var stringValue = Encoding.UTF8.GetString(bytes);
-                if (Guid.TryParse(stringValue, out var guidValue))
-                    return guidValue;
-            }
-        }
+        // Handle Guid values
+        if (valueType == typeof(Guid))
+            return DeserializeGuidValue(bytes, stringValue);
 
-        // For any other type, try to parse as string
+        // For any other type, try converting from string
+        return DeserializeGenericValue(stringValue, valueType);
+    }
+    
+    private object DeserializeIntValue(byte[] bytes, string stringValue)
+    {
+        // Try string parsing first
+        if (int.TryParse(stringValue, out var parsedValue))
+            return parsedValue;
+            
+        // Fall back to binary representation
+        return bytes.Length switch
+        {
+            >= 4 => BitConverter.ToInt32(bytes, 0),
+            1 => bytes[0],
+            _ => 0
+        };
+    }
+    
+    private object DeserializeLongValue(byte[] bytes, string stringValue)
+    {
+        if (long.TryParse(stringValue, out var parsedValue))
+            return parsedValue;
+            
+        return bytes.Length switch
+        {
+            >= 8 => BitConverter.ToInt64(bytes, 0),
+            >= 4 => BitConverter.ToInt32(bytes, 0),
+            _ => 0L
+        };
+    }
+    
+    private object DeserializeDoubleValue(byte[] bytes, string stringValue)
+    {
+        if (double.TryParse(stringValue, out var doubleValue))
+            return doubleValue;
+            
+        return bytes.Length >= 8 ? BitConverter.ToDouble(bytes, 0) : 0.0;
+    }
+    
+    private object DeserializeBoolValue(byte[] bytes, string stringValue)
+    {
+        if (bool.TryParse(stringValue, out var boolValue))
+            return boolValue;
+            
+        return bytes[0] != 0;
+    }
+    
+    private object? DeserializeGuidValue(byte[] bytes, string stringValue)
+    {
+        if (bytes.Length < 16)
+            return Guid.Empty;
+            
         try
         {
-            var stringValue = Encoding.UTF8.GetString(bytes);
+            return new Guid(bytes);
+        }
+        catch
+        {
+            // If binary parsing fails, try string parsing
+            return Guid.TryParse(stringValue, out var guidValue) ? guidValue : Guid.Empty;
+        }
+    }
+    
+    private object? DeserializeGenericValue(string stringValue, Type valueType)
+    {
+        try
+        {
             return Convert.ChangeType(stringValue, valueType);
         }
         catch
