@@ -1,0 +1,23 @@
+{
+  "eventSource": "aws:kafka",
+  "eventSourceArn": "arn:aws:kafka:us-east-1:0123456789019:cluster/CustomerCluster/abcd1234-abcd-cafe-abab-9876543210ab-4",
+  "bootstrapServers": "b-2.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092,b-1.demo-cluster-1.a1bcde.c1.kafka.us-east-1.amazonaws.com:9092",
+  "records": {
+    "customer-topic-0": [
+      {
+        "topic": "customer-topic",
+        "partition": 0,
+        "offset": 15,
+        "timestamp": 1545084650987,
+        "timestampType": "CREATE_TIME",
+        "key": "dXNlcl85NzU0",
+        "value": "eyJwaG9uZV9udW1iZXJzIjpbeyJudW1iZXIiOiIyNDQtNDA3LTg4NzEiLCJ0eXBlIjoiV09SSyJ9XSwicHJlZmVyZW5jZXMiOnsidGltZXpvbmUiOiJlbmFibGVkIiwibGFuZ3VhZ2UiOiJkaXNhYmxlZCIsIm5vdGlmaWNhdGlvbnMiOiJkYXJrIn0sImZ1bGxfbmFtZSI6IlVzZXIgdXNlcl85NzU0IiwiYWRkcmVzcyI6eyJjb3VudHJ5IjoiVVNBIiwiY2l0eSI6IlNhbiBKb3NlIiwic3RyZWV0IjoiOTM0MCBNYWluIFN0Iiwic3RhdGUiOiJDQSIsInppcF9jb2RlIjoiMzk1OTYifSwidXNlcl9pZCI6InVzZXJfOTc1NCIsImFjY291bnRfc3RhdHVzIjoiU1VTUEVOREVEIiwiYWdlIjo1MywiZW1haWwiOnsiYWRkcmVzcyI6InVzZXJfOTc1NEBpY2xvdWQuY29tIiwidmVyaWZpZWQiOmZhbHNlLCJwcmltYXJ5Ijp0cnVlfX0=",
+        "headers": [
+          {
+            "headerKey": [104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101]
+          }
+        ]
+      }
+    ]
+  }
+}

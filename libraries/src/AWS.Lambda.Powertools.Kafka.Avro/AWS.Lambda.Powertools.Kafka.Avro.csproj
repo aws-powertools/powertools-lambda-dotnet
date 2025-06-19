@@ -1,0 +1,21 @@
+﻿<!--suppress MsbuildTargetFrameworkTagInspection -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>AWS.Lambda.Powertools.Kafka.Avro</PackageId>
+        <Description>Powertools for AWS Lambda (.NET) - Kafka Avro consumer package.</Description>
+        <AssemblyName>AWS.Lambda.Powertools.Kafka.Avro</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Kafka.Avro</RootNamespace>
+        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetMultiFramework>false</TargetMultiFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Apache.Avro"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Kafka\AWS.Lambda.Powertools.Kafka.csproj"/>
+    </ItemGroup>
+</Project>
