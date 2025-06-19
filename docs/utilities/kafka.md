@@ -899,3 +899,73 @@ Testing Kafka consumer functions is straightforward with Xunit. You can create s
     }
 
     ```
+
+## Code Generation for Serialization
+
+This guide explains how to automatically generate C# classes from Avro and Protobuf schema files in your Lambda projects.
+
+### Avro Class Generation
+
+#### Prerequisites
+
+Install the Apache Avro Tools globally:
+
+```bash
+dotnet tool install --global Apache.Avro.Tools
+```
+
+#### MSBuild Integration
+
+Add the following target to your `.csproj` file to automatically generate Avro classes during compilation:
+
+```xml
+<Target Name="GenerateAvroClasses" BeforeTargets="CoreCompile">
+    <Exec Command="avrogen -s $(ProjectDir)CustomerProfile.avsc $(ProjectDir)Generated"/>
+</Target>
+```
+
+This target will:
+- Run before compilation
+- Generate C# classes from `CustomerProfile.avsc` schema file
+- Output generated classes to the `Generated` folder
+
+### Protobuf Class Generation
+
+#### Package Reference
+
+Add the Grpc.Tools package to your `.csproj` file:
+
+```xml
+<PackageReference Include="Grpc.Tools" Version="2.72.0">
+    <PrivateAssets>all</PrivateAssets>
+    <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+</PackageReference>
+```
+
+#### Schema Files Configuration
+
+Add your `.proto` files to the project with the following configuration:
+
+```xml
+<ItemGroup>
+    <Protobuf Include="CustomerProfile.proto">
+        <GrpcServices>Client</GrpcServices>
+        <Access>Public</Access>
+        <ProtoCompile>True</ProtoCompile>
+        <CompileOutputs>True</CompileOutputs>
+        <OutputDir>obj\Debug/net8.0/</OutputDir>
+        <Generator>MSBuild:Compile</Generator>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Protobuf>
+</ItemGroup>
+```
+
+This configuration will:
+- Generate client-side gRPC services
+- Make generated classes public
+- Automatically compile and include generated files
+- Copy proto files to output directory
+
+### Generated Code Usage
+
+Both Avro and Protobuf generators create strongly-typed C# classes that can be used with the PowerTools serialization utilities for efficient Lambda function processing.
