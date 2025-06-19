@@ -1,0 +1,19 @@
+﻿<!--suppress MsbuildTargetFrameworkTagInspection -->
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>AWS.Lambda.Powertools.Kafka.Json</PackageId>
+        <Description>Powertools for AWS Lambda (.NET) - Kafka Json consumer package.</Description>
+        <AssemblyName>AWS.Lambda.Powertools.Kafka.Json</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Kafka.Json</RootNamespace>
+        <TargetFrameworks>net8.0</TargetFrameworks>
+        <TargetMultiFramework>false</TargetMultiFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>    
+
+    <ItemGroup>
+      <ProjectReference Include="..\AWS.Lambda.Powertools.Kafka\AWS.Lambda.Powertools.Kafka.csproj" />
+    </ItemGroup>
+
+</Project>

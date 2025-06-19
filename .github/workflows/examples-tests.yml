@@ -33,6 +33,9 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
 
+      - name: Install global tools
+        run: dotnet tool install --global Apache.Avro.Tools
+
       - name: Build
         run: dotnet build --configuration Release --no-restore /tl
 

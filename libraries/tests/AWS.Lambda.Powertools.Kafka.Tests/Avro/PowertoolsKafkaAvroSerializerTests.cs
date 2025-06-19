@@ -1,0 +1,158 @@
+/*
+ * Copyright JsonCons.Net authors. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System.Runtime.Serialization;
+using System.Text;
+using AWS.Lambda.Powertools.Kafka.Avro;
+
+namespace AWS.Lambda.Powertools.Kafka.Tests.Avro;
+
+public class PowertoolsKafkaAvroSerializerTests
+{
+    [Fact]
+    public void Deserialize_KafkaEventWithAvroPayload_DeserializesToCorrectType()
+    {
+        // Arrange
+        var serializer = new PowertoolsKafkaAvroSerializer();
+        string kafkaEventJson = File.ReadAllText("Avro/kafka-avro-event.json");
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+        // Act
+        var result = serializer.Deserialize<ConsumerRecords<int, AvroProduct>>(stream);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("aws:kafka", result.EventSource);
+
+        // Verify records were deserialized
+        Assert.True(result.Records.ContainsKey("mytopic-0"));
+        var records = result.Records["mytopic-0"];
+        Assert.Equal(3, records.Count);
+
+        // Verify first record's content
+        var firstRecord = records[0];
+        Assert.Equal("mytopic", firstRecord.Topic);
+        Assert.Equal(0, firstRecord.Partition);
+        Assert.Equal(15, firstRecord.Offset);
+        Assert.Equal(42, firstRecord.Key);
+
+        // Verify deserialized Avro value
+        var product = firstRecord.Value;
+        Assert.Equal("Laptop", product.name);
+        Assert.Equal(1001, product.id);
+        Assert.Equal(999.99000000000001, product.price);
+
+        // Verify second record
+        var secondRecord = records[1];
+        var smartphone = secondRecord.Value;
+        Assert.Equal("Smartphone", smartphone.name);
+    }
+
+    [Fact]
+    public void KafkaEvent_ImplementsIEnumerable_ForDirectIteration()
+    {
+        // Arrange
+        var serializer = new PowertoolsKafkaAvroSerializer();
+        string kafkaEventJson = File.ReadAllText("Avro/kafka-avro-event.json");
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+        // Act
+        var result = serializer.Deserialize<ConsumerRecords<int, AvroProduct>>(stream);
+
+        // Assert - Test enumeration
+        int count = 0;
+        var products = new List<string>();
+
+        // Directly iterate over ConsumerRecords
+        foreach (var record in result)
+        {
+            count++;
+            products.Add(record.Value.name);
+        }
+
+        // Verify correct count and values
+        Assert.Equal(3, count);
+        Assert.Contains("Laptop", products);
+        Assert.Contains("Smartphone", products);
+        Assert.Equal(3, products.Count);
+
+        // Get first record directly through Linq extension
+        var firstRecord = result.First();
+        Assert.Equal("Laptop", firstRecord.Value.name);
+        Assert.Equal(1001, firstRecord.Value.id);
+    }
+
+    [Fact]
+    public void Primitive_Deserialization()
+    {
+        // Arrange
+        var serializer = new PowertoolsKafkaAvroSerializer();
+        string kafkaEventJson =
+            CreateKafkaEvent(Convert.ToBase64String("MyKey"u8.ToArray()),
+                             Convert.ToBase64String("Myvalue"u8.ToArray()));
+        
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+        // Act
+        var result = serializer.Deserialize<ConsumerRecords<string, string>>(stream);
+        var firstRecord = result.First();
+        Assert.Equal("Myvalue", firstRecord.Value);
+        Assert.Equal("MyKey", firstRecord.Key);
+    }
+
+    [Fact]
+    public void DeserializeComplexKey_WhenAllDeserializationMethodsFail_ReturnsException()
+    {
+        // Arrange
+        var serializer = new PowertoolsKafkaAvroSerializer();
+        // Invalid JSON and not Avro binary
+        byte[] invalidBytes = { 0xDE, 0xAD, 0xBE, 0xEF };
+
+        string kafkaEventJson = CreateKafkaEvent(
+            keyValue: Convert.ToBase64String(invalidBytes),
+            valueValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("test"))
+        );
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+        Assert.Throws<SerializationException>(() => 
+            serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream));
+    }
+    
+    private string CreateKafkaEvent(string keyValue, string valueValue)
+    {
+        return @$"{{
+        ""eventSource"": ""aws:kafka"",
+        ""eventSourceArn"": ""arn:aws:kafka:us-east-1:0123456789019:cluster/TestCluster/abcd1234"",
+        ""bootstrapServers"": ""b-1.test-cluster.kafka.us-east-1.amazonaws.com:9092"",
+        ""records"": {{
+            ""mytopic-0"": [
+                {{
+                    ""topic"": ""mytopic"",
+                    ""partition"": 0,
+                    ""offset"": 15,
+                    ""timestamp"": 1645084650987,
+                    ""timestampType"": ""CREATE_TIME"",
+                    ""key"": ""{keyValue}"",
+                    ""value"": ""{valueValue}"",
+                    ""headers"": [
+                        {{ ""headerKey"": [104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101] }}
+                    ]
+                }}
+            ]
+        }}
+    }}";
+    }
+}
