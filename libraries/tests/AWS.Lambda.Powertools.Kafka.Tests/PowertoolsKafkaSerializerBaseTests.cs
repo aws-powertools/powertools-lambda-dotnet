@@ -47,61 +47,56 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             {
             }
             
-            // Implement our own version that mimics the private method's behavior
-            public object TestDeserializePrimitiveValue(byte[] bytes, Type valueType)
+            // Implementation of the abstract method for test purposes
+            protected override object? DeserializeComplexTypeFormat(byte[] data, 
+                Type targetType, bool isKey)
             {
-                if (bytes == null || bytes.Length == 0)
-                    return null!;
-
-                if (valueType == typeof(string))
+                try
                 {
-                    return Encoding.UTF8.GetString(bytes);
-                }
-
-                if (valueType == typeof(int))
-                {
-                    var stringValue = Encoding.UTF8.GetString(bytes);
-                    if (int.TryParse(stringValue, out var parsedValue))
-                        return parsedValue;
-
-                    return bytes.Length switch
+                    // Test implementation using JSON for all complex types
+                    var jsonStr = Encoding.UTF8.GetString(data);
+                    
+                    if (SerializerContext != null)
                     {
-                        >= 4 => BitConverter.ToInt32(bytes, 0),
-                        1 => bytes[0],
-                        _ => 0
-                    };
+                        var typeInfo = SerializerContext.GetTypeInfo(targetType);
+                        if (typeInfo != null)
+                        {
+                            return JsonSerializer.Deserialize(jsonStr, typeInfo);
+                        }
+                    }
+                    
+                    return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
                 }
-
-                if (valueType == typeof(long))
+                catch
                 {
-                    var stringValue = Encoding.UTF8.GetString(bytes);
-                    if (long.TryParse(stringValue, out var parsedValue))
-                        return parsedValue;
-
-                    return bytes.Length switch
-                    {
-                        >= 8 => BitConverter.ToInt64(bytes, 0),
-                        >= 4 => BitConverter.ToInt32(bytes, 0),
-                        _ => 0L
-                    };
+                    return null;
                 }
-
-                if (valueType == typeof(double))
-                {
-                    return bytes.Length >= 8 ? BitConverter.ToDouble(bytes, 0) : 0.0;
-                }
-
-                if (valueType == typeof(bool))
-                {
-                    return bytes[0] != 0;
-                }
-
-                if (valueType == typeof(Guid) && bytes.Length >= 16)
-                {
-                    return new Guid(bytes);
-                }
-
-                return Convert.ChangeType(Encoding.UTF8.GetString(bytes), valueType);
+            }
+            
+            // Expose protected methods for direct testing
+            public object? TestDeserializeFormatSpecific(byte[] data, Type targetType, bool isKey)
+            {
+                return DeserializeFormatSpecific(data, targetType, isKey);
+            }
+            
+            public object? TestDeserializeComplexTypeFormat(byte[] data, Type targetType, bool isKey)
+            {
+                return DeserializeComplexTypeFormat(data, targetType, isKey);
+            }
+            
+            public object? TestDeserializePrimitiveValue(byte[] data, Type targetType)
+            {
+                return DeserializePrimitiveValue(data, targetType);
+            }
+            
+            public bool TestIsPrimitiveOrSimpleType(Type type)
+            {
+                return IsPrimitiveOrSimpleType(type);
+            }
+            
+            public object TestDeserializeValue(string base64Value, Type valueType)
+            {
+                return DeserializeValue(base64Value, valueType);
             }
         }
 
@@ -313,32 +308,6 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             Assert.Equal(2, record.Headers.Count);
             Assert.Equal("hello", Encoding.ASCII.GetString(record.Headers["header1"]));
             Assert.Equal("world", Encoding.ASCII.GetString(record.Headers["header2"]));
-        }
-
-        // Helper method to create Kafka event JSON with specified key and value
-        private string CreateKafkaEvent(string keyValue, string valueValue)
-        {
-            return @$"{{
-                ""eventSource"": ""aws:kafka"",
-                ""eventSourceArn"": ""arn:aws:kafka:us-east-1:0123456789019:cluster/TestCluster/abcd1234"",
-                ""bootstrapServers"": ""b-1.test-cluster.kafka.us-east-1.amazonaws.com:9092"",
-                ""records"": {{
-                    ""mytopic-0"": [
-                        {{
-                            ""topic"": ""mytopic"",
-                            ""partition"": 0,
-                            ""offset"": 15,
-                            ""timestamp"": 1645084650987,
-                            ""timestampType"": ""CREATE_TIME"",
-                            ""key"": ""{keyValue}"",
-                            ""value"": ""{valueValue}"",
-                            ""headers"": [
-                                {{ ""headerKey"": [104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101] }}
-                            ]
-                        }}
-                    ]
-                }}
-            }}";
         }
 
         [Fact]
@@ -630,6 +599,135 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             Assert.Equal("AVRO", record.ValueSchemaMetadata.DataFormat);
             Assert.Equal("value-schema-002", record.ValueSchemaMetadata.SchemaId);
         }
+
+        // NEW TESTS FOR LATEST CHANGES
+
+        [Fact]
+        public void DeserializeFormatSpecific_PrimitiveType_UsesDeserializePrimitiveValue()
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+            var stringBytes = Encoding.UTF8.GetBytes("primitive-test");
+
+            // Act
+            var result = serializer.TestDeserializeFormatSpecific(stringBytes, typeof(string), isKey: false);
+
+            // Assert
+            Assert.Equal("primitive-test", result);
+        }
+
+        [Fact]
+        public void DeserializeFormatSpecific_ComplexType_UsesDeserializeComplexTypeFormat()
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+            var complexObject = new TestModel { Name = "complex-test", Value = 42 };
+            var jsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(complexObject));
+
+            // Act
+            var result = serializer.TestDeserializeFormatSpecific(jsonBytes, typeof(TestModel), isKey: false);
+
+            // Assert
+            Assert.NotNull(result);
+            var testModel = (TestModel)result!;
+            Assert.Equal("complex-test", testModel.Name);
+            Assert.Equal(42, testModel.Value);
+        }
+
+        [Fact]
+        public void DeserializeComplexTypeFormat_ValidJson_DeserializesCorrectly()
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+            var complexObject = new TestModel { Name = "direct-test", Value = 123 };
+            var jsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(complexObject));
+
+            // Act
+            var result = serializer.TestDeserializeComplexTypeFormat(jsonBytes, typeof(TestModel), isKey: true);
+
+            // Assert
+            Assert.NotNull(result);
+            var testModel = (TestModel)result!;
+            Assert.Equal("direct-test", testModel.Name);
+            Assert.Equal(123, testModel.Value);
+        }
+
+        [Fact]
+        public void DeserializeComplexTypeFormat_InvalidJson_ReturnsNull()
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+            var invalidBytes = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF }; // Invalid JSON data
+
+            // Act
+            var result = serializer.TestDeserializeComplexTypeFormat(invalidBytes, typeof(TestModel), isKey: true);
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void DeserializeValue_Base64String_DeserializesCorrectly()
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+            var testValue = "test-value-123";
+            var base64Value = Convert.ToBase64String(Encoding.UTF8.GetBytes(testValue));
+
+            // Act
+            var result = serializer.TestDeserializeValue(base64Value, typeof(string));
+
+            // Assert
+            Assert.Equal(testValue, result);
+        }
+
+        [Fact]
+        public void IsPrimitiveOrSimpleType_ChecksVariousTypes()
+        {
+            // Arrange
+            var serializer = new TestKafkaSerializer();
+            
+            // Act & Assert
+            // Primitive types
+            Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(int)));
+            Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(long)));
+            Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(bool)));
+            
+            // Simple types
+            Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(string)));
+            Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(Guid)));
+            Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(DateTime)));
+            
+            // Complex types
+            Assert.False(serializer.TestIsPrimitiveOrSimpleType(typeof(TestModel)));
+            Assert.False(serializer.TestIsPrimitiveOrSimpleType(typeof(Dictionary<string, int>)));
+        }
+
+        // Helper method to create Kafka event JSON with specified key and value
+        private string CreateKafkaEvent(string keyValue, string valueValue)
+        {
+            return @$"{{
+                ""eventSource"": ""aws:kafka"",
+                ""eventSourceArn"": ""arn:aws:kafka:us-east-1:0123456789019:cluster/TestCluster/abcd1234"",
+                ""bootstrapServers"": ""b-1.test-cluster.kafka.us-east-1.amazonaws.com:9092"",
+                ""records"": {{
+                    ""mytopic-0"": [
+                        {{
+                            ""topic"": ""mytopic"",
+                            ""partition"": 0,
+                            ""offset"": 15,
+                            ""timestamp"": 1645084650987,
+                            ""timestampType"": ""CREATE_TIME"",
+                            ""key"": ""{keyValue}"",
+                            ""value"": ""{valueValue}"",
+                            ""headers"": [
+                                {{ ""headerKey"": [104, 101, 97, 100, 101, 114, 86, 97, 108, 117, 101] }}
+                            ]
+                        }}
+                    ]
+                }}
+            }}";
+        }
     }
 
     [JsonSerializable(typeof(TestModel))]
@@ -645,3 +743,4 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
         public int Value { get; set; }
     }
 }
+

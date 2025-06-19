@@ -540,7 +540,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
 
     /// <summary>
     /// Deserializes binary data into an object using the format-specific implementation.
-    /// This method must be overridden by derived classes to implement format-specific deserialization.
+    /// This method handles primitive types directly and delegates complex types to derived classes.
     /// </summary>
     /// <param name="data">The binary data to deserialize.</param>
     /// <param name="targetType">The target type to deserialize to.</param>
@@ -553,33 +553,35 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                                     DynamicallyAccessedMemberTypes.PublicFields)]
         Type targetType, bool isKey)
     {
-        try
+        // Handle primitive types directly in the base class
+        if (IsPrimitiveOrSimpleType(targetType))
         {
-            // Default implementation tries JSON
-            var jsonStr = Encoding.UTF8.GetString(data);
-            
-            if (SerializerContext != null)
-            {
-                var typeInfo = SerializerContext.GetTypeInfo(targetType);
-                if (typeInfo != null)
-                {
-                    return JsonSerializer.Deserialize(jsonStr, typeInfo);
-                }
-            }
-            
-            return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
+            return DeserializePrimitiveValue(data, targetType);
         }
-        catch
-        {
-            // If deserialization fails, return null or default value
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-        }
+
+        // For complex types, delegate to format-specific implementation in derived classes
+        return DeserializeComplexTypeFormat(data, targetType, isKey);
     }
+
+    /// <summary>
+    /// Deserializes complex (non-primitive) types using format-specific implementation.
+    /// Each derived class must implement this method to handle its specific format.
+    /// </summary>
+    /// <param name="data">The binary data to deserialize.</param>
+    /// <param name="targetType">The target type to deserialize to.</param>
+    /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
+    /// <returns>The deserialized object.</returns>
+    [RequiresDynamicCode("Format-specific deserialization might require runtime code generation.")]
+    [RequiresUnreferencedCode("Format-specific deserialization might require types that cannot be statically analyzed.")]
+    protected abstract object? DeserializeComplexTypeFormat(byte[] data, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
+                                   DynamicallyAccessedMemberTypes.PublicFields)]
+        Type targetType, bool isKey);
 
     /// <summary>
     /// Checks if the specified type is a primitive or simple type.
     /// </summary>
-    private bool IsPrimitiveOrSimpleType(Type type)
+    protected bool IsPrimitiveOrSimpleType(Type type)
     {
         return type.IsPrimitive ||
                type == typeof(string) ||
@@ -593,8 +595,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// Handles common primitive types like int, long, double, bool, string, and Guid.
     /// If the bytes are empty or null, returns null.
     /// If the type is not recognized, attempts to convert from string.
-    /// /// </summary>
-    private object DeserializePrimitiveValue(byte[] bytes, Type valueType)
+    /// </summary>
+    protected object? DeserializePrimitiveValue(byte[] bytes, Type valueType)
     {
         if (bytes == null! || bytes.Length == 0)
             return null!;
@@ -636,21 +638,47 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
 
         if (valueType == typeof(double))
         {
+            var stringValue = Encoding.UTF8.GetString(bytes);
+            if (double.TryParse(stringValue, out var doubleValue))
+                return doubleValue;
+                
             return bytes.Length >= 8 ? BitConverter.ToDouble(bytes, 0) : 0.0;
         }
 
         if (valueType == typeof(bool))
         {
+            var stringValue = Encoding.UTF8.GetString(bytes);
+            if (bool.TryParse(stringValue, out var boolValue))
+                return boolValue;
+                
             return bytes[0] != 0;
         }
 
         if (valueType == typeof(Guid) && bytes.Length >= 16)
         {
-            return new Guid(bytes);
+            try
+            {
+                return new Guid(bytes);
+            }
+            catch
+            {
+                // If binary parsing fails, try as string
+                var stringValue = Encoding.UTF8.GetString(bytes);
+                if (Guid.TryParse(stringValue, out var guidValue))
+                    return guidValue;
+            }
         }
 
         // For any other type, try to parse as string
-        return Convert.ChangeType(Encoding.UTF8.GetString(bytes), valueType);
+        try
+        {
+            var stringValue = Encoding.UTF8.GetString(bytes);
+            return Convert.ChangeType(stringValue, valueType);
+        }
+        catch
+        {
+            return valueType.IsValueType ? Activator.CreateInstance(valueType) : null;
+        }
     }
 }
 

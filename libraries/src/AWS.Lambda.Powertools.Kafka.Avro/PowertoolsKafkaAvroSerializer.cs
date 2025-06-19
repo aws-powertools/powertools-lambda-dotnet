@@ -15,7 +15,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Avro;
@@ -84,74 +83,52 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
     /// <exception cref="InvalidOperationException">Thrown if no schema is found for the type.</exception>
     [RequiresDynamicCode("Avro schema access requires reflection which may be incompatible with AOT.")]
     [RequiresUnreferencedCode("Avro schema access requires reflection which may be incompatible with trimming.")]
-    private Schema GetAvroSchema([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type payloadType)
+    private Schema? GetAvroSchema([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type payloadType)
     {
         var schemaField = payloadType.GetField("_SCHEMA",
             BindingFlags.Public | BindingFlags.Static);
 
         if (schemaField == null)
-            throw new InvalidOperationException($"No Avro schema found for type {payloadType.Name}");
+            return null;
 
-        var schema = schemaField.GetValue(null) as Schema;
-        if (schema == null)
-            throw new InvalidOperationException($"Avro schema for type {payloadType.Name} is null");
-
-        return schema;
+        return schemaField.GetValue(null) as Schema;
     }
 
     /// <summary>
-    /// Deserializes binary data using Avro format or falls back to JSON.
+    /// Deserializes complex (non-primitive) types using Avro format.
     /// </summary>
     /// <param name="data">The binary data to deserialize.</param>
     /// <param name="targetType">The type to deserialize to.</param>
     /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
     /// <returns>The deserialized object.</returns>
-    [RequiresDynamicCode("Avro and JSON deserialization might require runtime code generation.")]
-    [RequiresUnreferencedCode("Avro and JSON deserialization might require types that cannot be statically analyzed.")]
-    protected override object? DeserializeFormatSpecific(byte[] data, 
+    [RequiresDynamicCode("Avro deserialization might require runtime code generation.")]
+    [RequiresUnreferencedCode("Avro deserialization might require types that cannot be statically analyzed.")]
+    protected override object? DeserializeComplexTypeFormat(byte[] data, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] 
         Type targetType, bool isKey)
     {
         try
         {
             // Try to get Avro schema for the type
-            var schemaField = targetType.GetField("_SCHEMA",
-                BindingFlags.Public | BindingFlags.Static);
+            var schema = GetAvroSchema(targetType);
 
-            if (schemaField != null)
+            if (schema != null)
             {
-                var schema = schemaField.GetValue(null) as Schema;
-                if (schema != null)
-                {
-                    using var stream = new MemoryStream(data);
-                    var decoder = new BinaryDecoder(stream);
-                    var reader = new SpecificDatumReader<object>(schema, schema);
-                    return reader.Read(null!, decoder);
-                }
-            }
-
-            // As a fallback, try JSON deserialization
-            var jsonStr = Encoding.UTF8.GetString(data);
-            
-            if (SerializerContext != null)
-            {
-                // Try to get type info from context for AOT compatibility
-                var typeInfo = SerializerContext.GetTypeInfo(targetType);
-                if (typeInfo != null)
-                {
-                    return JsonSerializer.Deserialize(jsonStr, typeInfo);
-                }
+                using var stream = new MemoryStream(data);
+                var decoder = new BinaryDecoder(stream);
+                var reader = new SpecificDatumReader<object>(schema, schema);
+                return reader.Read(null!, decoder);
             }
             
-            // Fallback to regular deserialization
-            #pragma warning disable IL2026, IL3050
-            return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
-            #pragma warning restore IL2026, IL3050
+            // If no Avro schema was found, throw an exception
+            throw new InvalidOperationException($"Unsupported type for Avro deserialization: {targetType.Name}. " +
+                                               "Avro deserialization requires a type with a static _SCHEMA field. " +
+                                               "Consider using an alternative Deserializer.");
         }
-        catch
+        catch (Exception ex)
         {
-            // If all deserialization attempts fail, return null or default
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+            // Preserve the error message while wrapping in SerializationException for consistent error handling
+            throw new System.Runtime.Serialization.SerializationException($"Failed to deserialize {(isKey ? "key" : "value")} data: {ex.Message}", ex);
         }
     }
 }

@@ -20,7 +20,7 @@ using Avro.IO;
 using Avro.Specific;
 using AWS.Lambda.Powertools.Kafka.Avro;
 
-namespace AWS.Lambda.Powertools.Kafka.Tests;
+namespace AWS.Lambda.Powertools.Kafka.Tests.Avro;
 
 public class KafkaHandlerTests
 {

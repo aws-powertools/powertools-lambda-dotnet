@@ -22,26 +22,9 @@ namespace AWS.Lambda.Powertools.Kafka.Json;
 
 /// <summary>
 /// A Lambda serializer for Kafka events that handles JSON-formatted data.
-/// This serializer deserializes JSON data from Kafka records into strongly-typed objects.
+/// This serializer automatically deserializes the JSON format from base64-encoded strings
+/// in Kafka records and converts them to strongly-typed objects.
 /// </summary>
-/// <example>
-/// <code>
-/// [assembly: LambdaSerializer(typeof(PowertoolsKafkaJsonSerializer))]
-/// 
-/// // Your Lambda handler will receive properly deserialized objects
-/// public class Function
-/// {
-///     public void Handler(ConsumerRecords&lt;string, Customer&gt; records, ILambdaContext context)
-///     {
-///         foreach (var record in records)
-///         {
-///             Customer customer = record.Value;
-///             context.Logger.LogInformation($"Processed customer {customer.Name}");
-///         }
-///     }
-/// }
-/// </code>
-/// </example>
 public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
 {
     /// <summary>
@@ -80,6 +63,57 @@ public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
     [RequiresDynamicCode("JSON deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("JSON deserialization might require types that cannot be statically analyzed.")]
     protected override object? DeserializeFormatSpecific(byte[] data, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        Type targetType, bool isKey)
+    {
+        try
+        {
+            // Handle primitive types directly
+            if (IsPrimitiveOrSimpleType(targetType))
+            {
+                return DeserializePrimitiveValue(data, targetType);
+            }
+            
+            // Convert bytes to JSON string
+            var jsonStr = Encoding.UTF8.GetString(data);
+            
+            if (SerializerContext != null)
+            {
+                // Try to get type info from context for AOT compatibility
+                var typeInfo = SerializerContext.GetTypeInfo(targetType);
+                if (typeInfo != null)
+                {
+                    var result = JsonSerializer.Deserialize(jsonStr, typeInfo);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+            }
+            
+            // Fallback to regular deserialization
+            #pragma warning disable IL2026, IL3050
+            return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
+            #pragma warning restore IL2026, IL3050
+        }
+        catch
+        {
+            // If deserialization fails, return null or default
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+        }
+    }
+    
+    /// <summary>
+    /// Deserializes complex (non-primitive) types using JSON format.
+    /// </summary>
+    /// <param name="data">The binary data to deserialize.</param>
+    /// <param name="targetType">The type to deserialize to.</param>
+    /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
+    /// <returns>The deserialized object.</returns>
+    [RequiresDynamicCode("JSON deserialization might require runtime code generation.")]
+    [RequiresUnreferencedCode("JSON deserialization might require types that cannot be statically analyzed.")]
+    protected override object? DeserializeComplexTypeFormat(byte[] data, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
                                     DynamicallyAccessedMemberTypes.PublicFields)]
         Type targetType, bool isKey)

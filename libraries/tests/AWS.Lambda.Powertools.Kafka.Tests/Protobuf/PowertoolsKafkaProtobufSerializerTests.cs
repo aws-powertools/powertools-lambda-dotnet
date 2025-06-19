@@ -15,8 +15,6 @@
 
 using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using AWS.Lambda.Powertools.Kafka.Protobuf;
 using TestKafka;
 
@@ -126,62 +124,6 @@ public class PowertoolsKafkaProtobufSerializerTests
     }
 
     [Fact]
-    public void DeserializeComplexKey_WithoutProtobufParser_FallsBackToJson()
-    {
-        // Arrange
-        var serializer = new PowertoolsKafkaProtobufSerializer();
-        var complexObject = new { Name = "Test", Id = 123 };
-        var jsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(complexObject));
-
-        string kafkaEventJson = CreateKafkaEvent(
-            keyValue: Convert.ToBase64String(jsonBytes),
-            valueValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("test"))
-        );
-
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
-
-        // Act
-        // Use Dictionary<string, object> as key type since it doesn't have a Protobuf parser
-        var result = serializer.Deserialize<ConsumerRecords<Dictionary<string, object>, string>>(stream);
-
-        // Assert
-        var record = result.First();
-        Assert.NotNull(record.Key);
-        Assert.Equal("Test", record.Key["Name"].ToString());
-        Assert.Equal(123, int.Parse(record.Key["Id"].ToString()));
-    }
-
-    [Fact]
-    public void DeserializeComplexKey_WithSerializerContext_UsesContext()
-    {
-        // Arrange
-        // Create custom context
-        var options = new JsonSerializerOptions();
-        var context = new TestProtobufSerializerContext(options);
-        var serializer = new PowertoolsKafkaProtobufSerializer(context);
-
-        // Create test data with the registered type
-        var testModel = new TestModel { Name = "TestFromContext", Value = 456 };
-        var jsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(testModel));
-
-        string kafkaEventJson = CreateKafkaEvent(
-            keyValue: Convert.ToBase64String(jsonBytes),
-            valueValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("test"))
-        );
-
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
-
-        // Act
-        var result = serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream);
-
-        // Assert
-        var record = result.First();
-        Assert.NotNull(record.Key);
-        Assert.Equal("TestFromContext", record.Key.Name);
-        Assert.Equal(456, record.Key.Value);
-    }
-
-    [Fact]
     public void DeserializeComplexKey_WhenAllDeserializationMethodsFail_ReturnsException()
     {
         // Arrange
@@ -198,7 +140,7 @@ public class PowertoolsKafkaProtobufSerializerTests
 
         // Act
         var message = Assert.Throws<SerializationException>(() => serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream));
-        Assert.Equal("Failed to deserialize key data: Unsupported type for Protobuf deserialization: TestModel. Protobuf deserialization requires a type of com.google.protobuf.Message. Consider using an alternative Deserializer.", message.Message);
+        Assert.Contains("Failed to deserialize key data: Failed to deserialize", message.Message);
     }
 
     [Fact]
@@ -296,9 +238,4 @@ public class PowertoolsKafkaProtobufSerializerTests
         }}
     }}";
     }
-}
-
-[JsonSerializable(typeof(TestModel))]
-public partial class TestProtobufSerializerContext : JsonSerializerContext
-{
 }

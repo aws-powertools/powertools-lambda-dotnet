@@ -16,7 +16,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Google.Protobuf;
@@ -79,17 +78,17 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
     }
 
     /// <summary>
-    /// Deserializes binary data using Protobuf format or falls back to JSON.
+    /// Deserializes complex (non-primitive) types using Protobuf format.
     /// Handles both standard protobuf serialization and Confluent Schema Registry serialization.
     /// </summary>
     /// <param name="data">The binary data to deserialize.</param>
     /// <param name="targetType">The type to deserialize to.</param>
     /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
     /// <returns>The deserialized object.</returns>
-    [RequiresDynamicCode("Protobuf and JSON deserialization might require runtime code generation.")]
+    [RequiresDynamicCode("Protobuf deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode(
-        "Protobuf and JSON deserialization might require types that cannot be statically analyzed.")]
-    protected override object? DeserializeFormatSpecific(byte[] data,
+        "Protobuf deserialization might require types that cannot be statically analyzed.")]
+    protected override object? DeserializeComplexTypeFormat(byte[] data,
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
                                     DynamicallyAccessedMemberTypes.PublicFields)]
         Type targetType, bool isKey)
@@ -99,53 +98,46 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
             // Check if it's a Protobuf message type
             if (typeof(IMessage).IsAssignableFrom(targetType))
             {
-                // Get the parser from cache or create a new one
+                // This is a Protobuf message type - try to get the parser
                 var parser = GetProtobufParser(targetType);
-                if (parser != null)
+                if (parser == null)
+                {
+                    throw new InvalidOperationException($"Could not find Protobuf parser for type {targetType.Name}");
+                }
+                
+                try
+                {
+                    // First, try standard protobuf deserialization
+                    return parser.ParseFrom(data);
+                }
+                catch
                 {
                     try
                     {
-                        // First, try standard protobuf deserialization
-                        return parser.ParseFrom(data);
+                        // If standard deserialization fails, try message index handling
+                        return DeserializeWithMessageIndex(data, parser);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        try
-                        {
-                            // If standard deserialization fails, try message index handling
-                            var result = DeserializeWithMessageIndex(data, parser);
-                            if (result != null)
-                            {
-                                return result;
-                            }
-                        }
-                        catch
-                        {
-                            // Continue to JSON fallback if message index handling fails
-                        }
+                        // If both methods fail, throw with helpful message
+                        throw new InvalidOperationException(
+                            $"Failed to deserialize {targetType.Name} using Protobuf. " +
+                            "The data may not be in a valid Protobuf format.", ex);
                     }
                 }
             }
-
-            // If not a Protobuf message or parser not found, fall back to JSON
-            var jsonStr = Encoding.UTF8.GetString(data);
-
-            if (SerializerContext == null) return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
-
-            var typeInfo = SerializerContext.GetTypeInfo(targetType);
-            if (typeInfo != null)
+            else
             {
-                return JsonSerializer.Deserialize(jsonStr, typeInfo);
+                // For non-Protobuf complex types, throw the specific expected exception
+                throw new InvalidOperationException($"Unsupported type for Protobuf deserialization: {targetType.Name}. " +
+                                                   "Protobuf deserialization requires a type of com.google.protobuf.Message. " +
+                                                   "Consider using an alternative Deserializer.");
             }
-
-            return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
         }
         catch (Exception ex)
         {
-            // If all deserialization attempts fail, throw with more helpful message
-            throw new InvalidOperationException("Unsupported type for Protobuf deserialization: " + targetType.Name + ". "
-                                                + "Protobuf deserialization requires a type of com.google.protobuf.Message. "
-                                                + "Consider using an alternative Deserializer.", ex);
+            // Preserve the error message while wrapping in SerializationException for consistent error handling
+            throw new System.Runtime.Serialization.SerializationException($"Failed to deserialize {(isKey ? "key" : "value")} data: {ex.Message}", ex);
         }
     }
 
@@ -176,7 +168,7 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
 
                 return parser;
             }
-            catch (Exception ex)
+            catch
             {
                 return null!;
             }

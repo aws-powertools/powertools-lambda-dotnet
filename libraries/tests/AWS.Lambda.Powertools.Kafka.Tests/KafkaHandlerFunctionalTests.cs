@@ -39,13 +39,12 @@
    Accessing and parsing record headers
  */
 
+using System.Runtime.Serialization;
 using System.Text;
-using System.Text.Json;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Kafka.Json;
 using AWS.Lambda.Powertools.Kafka.Avro;
-using AWS.Lambda.Powertools.Kafka.Protobuf;
 using TestKafka;
 
 namespace AWS.Lambda.Powertools.Kafka.Tests;
@@ -386,7 +385,7 @@ public class KafkaHandlerFunctionalTests
     }
     
     [Fact]
-    public void Given_MissingAvroSchema_When_DeserializedWithAvroSerializer_Then_ReturnsNull()
+    public void Given_MissingAvroSchema_When_DeserializedWithAvroSerializer_Then_ReturnsException()
     {
         // Arrange
         var serializer = new PowertoolsKafkaAvroSerializer();
@@ -411,12 +410,8 @@ public class KafkaHandlerFunctionalTests
     }}";
 
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
-        var output = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
-        
-        // Act & Assert
-        Assert.Single(output.Records);
-        Assert.Equal("test-key", output.Records.First().Value[0].Key);
-        Assert.Null(output.Records.First().Value[0].Value);
+        Assert.Throws<SerializationException>(() => 
+            serializer.Deserialize<ConsumerRecords<string, AvroProduct>>(stream));
     }
     
     #endregion
@@ -507,40 +502,6 @@ public class KafkaHandlerFunctionalTests
         Assert.Contains("Key: 1, Value: Valid Product", mockLogger.Buffer.ToString());
         Assert.Contains("Key: null, Value: No Key", mockLogger.Buffer.ToString());
         Assert.Contains("Key: 3, Value: null", mockLogger.Buffer.ToString());
-    }
-    
-    [Fact]
-    public void Given_MissingProtobufParser_When_DeserializedWithProtobufSerializer_Then_FallsBackToJson()
-    {
-        // Arrange
-        var serializer = new PowertoolsKafkaProtobufSerializer();
-        
-        // Create regular JSON instead of Protobuf binary
-        string jsonData = "{\"Name\":\"Fallback Test\",\"Id\":789,\"Price\":59.99}";
-        string base64Json = Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonData));
-        
-        string kafkaEventJson = @$"{{
-            ""eventSource"": ""aws:kafka"",
-            ""records"": {{
-                ""mytopic-0"": [
-                    {{
-                        ""topic"": ""mytopic"",
-                        ""partition"": 0,
-                        ""offset"": 15,
-                        ""key"": ""{Convert.ToBase64String(Encoding.UTF8.GetBytes("42"))}"",
-                        ""value"": ""{base64Json}""
-                    }}
-                ]
-            }}
-        }}";
-        
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
-        var output = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
-        
-        // Act & Assert
-        Assert.Single(output.Records);
-        Assert.Equal("42", output.Records.First().Value[0].Key);
-        Assert.Equal(jsonData, JsonSerializer.Serialize(output.Records.First().Value[0].Value));
     }
     
     #endregion
