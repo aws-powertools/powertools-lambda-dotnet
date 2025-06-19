@@ -385,8 +385,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             return DeserializePrimitiveValue(keyBytes, keyType);
         }
 
-        // For complex types, try format-specific deserialization
-        return DeserializeComplexKey(keyBytes, keyType);
+        // For complex types, use format-specific deserialization
+        return DeserializeFormatSpecific(keyBytes, keyType, isKey: true);
     }
 
     /// <summary>
@@ -533,26 +533,48 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             return DeserializePrimitiveValue(bytes, valueType);
         }
 
-        // For complex types, use format-specific deserialization
-        return DeserializeComplexValue(base64Value, valueType);
+        // For complex types, decode base64 and use format-specific deserialization
+        var data = Convert.FromBase64String(base64Value);
+        return DeserializeFormatSpecific(data, valueType, isKey: false);
     }
 
     /// <summary>
-    /// Deserializes complex value types using the appropriate format.
+    /// Deserializes binary data into an object using the format-specific implementation.
+    /// This method must be overridden by derived classes to implement format-specific deserialization.
     /// </summary>
-    protected abstract object DeserializeComplexValue(string base64Value,
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
+    /// <param name="data">The binary data to deserialize.</param>
+    /// <param name="targetType">The target type to deserialize to.</param>
+    /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
+    /// <returns>The deserialized object.</returns>
+    [RequiresDynamicCode("Format-specific deserialization might require runtime code generation.")]
+    [RequiresUnreferencedCode("Format-specific deserialization might require types that cannot be statically analyzed.")]
+    protected virtual object? DeserializeFormatSpecific(byte[] data, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
                                     DynamicallyAccessedMemberTypes.PublicFields)]
-        Type valueType);
-
-
-    /// <summary>
-    /// Deserializes complex key types using the appropriate format.
-    /// </summary>
-    /// <param name="keyBytes">The key bytes to deserialize.</param>
-    /// <param name="keyType">The type to deserialize to.</param>
-    /// <returns>The deserialized key object.</returns>
-    protected abstract object? DeserializeComplexKey(byte[] keyBytes, Type keyType);
+        Type targetType, bool isKey)
+    {
+        try
+        {
+            // Default implementation tries JSON
+            var jsonStr = Encoding.UTF8.GetString(data);
+            
+            if (SerializerContext != null)
+            {
+                var typeInfo = SerializerContext.GetTypeInfo(targetType);
+                if (typeInfo != null)
+                {
+                    return JsonSerializer.Deserialize(jsonStr, typeInfo);
+                }
+            }
+            
+            return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
+        }
+        catch
+        {
+            // If deserialization fails, return null or default value
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+        }
+    }
 
     /// <summary>
     /// Checks if the specified type is a primitive or simple type.
@@ -631,3 +653,4 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         return Convert.ChangeType(Encoding.UTF8.GetString(bytes), valueType);
     }
 }
+

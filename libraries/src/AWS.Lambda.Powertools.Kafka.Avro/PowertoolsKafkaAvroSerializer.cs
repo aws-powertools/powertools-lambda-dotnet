@@ -100,50 +100,22 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
     }
 
     /// <summary>
-    /// Deserializes a base64-encoded Avro binary value into an object.
+    /// Deserializes binary data using Avro format or falls back to JSON.
     /// </summary>
-    /// <param name="base64Value">The base64-encoded Avro binary data.</param>
-    /// <param name="valueType">The type to deserialize to.</param>
+    /// <param name="data">The binary data to deserialize.</param>
+    /// <param name="targetType">The type to deserialize to.</param>
+    /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
     /// <returns>The deserialized object.</returns>
-    [RequiresDynamicCode("Avro deserialization requires reflection which may be incompatible with AOT.")]
-    [RequiresUnreferencedCode("Avro deserialization requires reflection which may be incompatible with trimming.")]
-    protected override object DeserializeComplexValue(string base64Value, 
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
-    {
-        var schema = GetAvroSchema(valueType);
-        return DeserializeAvroValue(base64Value, schema);
-    }
-
-    /// <summary>
-    /// Deserializes a base64-encoded Avro binary value into an object using the provided schema.
-    /// </summary>
-    /// <param name="base64Value">The base64-encoded Avro binary data.</param>
-    /// <param name="schema">The Avro schema to use for deserialization.</param>
-    /// <returns>The deserialized object.</returns>
-    private object DeserializeAvroValue(string base64Value, Schema schema)
-    {
-        var avroBytes = Convert.FromBase64String(base64Value);
-        using var stream = new MemoryStream(avroBytes);
-        var decoder = new BinaryDecoder(stream);
-        var reader = new SpecificDatumReader<object>(schema, schema);
-        var result = reader.Read(null!, decoder);
-        return result ?? throw new InvalidOperationException("Failed to deserialize Avro value");
-    }
-
-    /// <summary>
-    /// Deserializes complex key types using Avro format.
-    /// </summary>
-    /// <param name="keyBytes">The key bytes to deserialize.</param>
-    /// <param name="keyType">The type to deserialize to.</param>
-    /// <returns>The deserialized key object.</returns>
     [RequiresDynamicCode("Avro and JSON deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("Avro and JSON deserialization might require types that cannot be statically analyzed.")]
-    protected override object? DeserializeComplexKey(byte[] keyBytes, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type keyType)
+    protected override object? DeserializeFormatSpecific(byte[] data, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] 
+        Type targetType, bool isKey)
     {
         try
         {
-            // Try to get Avro schema for the key type
-            var schemaField = keyType.GetField("_SCHEMA",
+            // Try to get Avro schema for the type
+            var schemaField = targetType.GetField("_SCHEMA",
                 BindingFlags.Public | BindingFlags.Static);
 
             if (schemaField != null)
@@ -151,7 +123,7 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
                 var schema = schemaField.GetValue(null) as Schema;
                 if (schema != null)
                 {
-                    using var stream = new MemoryStream(keyBytes);
+                    using var stream = new MemoryStream(data);
                     var decoder = new BinaryDecoder(stream);
                     var reader = new SpecificDatumReader<object>(schema, schema);
                     return reader.Read(null!, decoder);
@@ -159,12 +131,12 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
             }
 
             // As a fallback, try JSON deserialization
-            var jsonStr = Encoding.UTF8.GetString(keyBytes);
+            var jsonStr = Encoding.UTF8.GetString(data);
             
             if (SerializerContext != null)
             {
                 // Try to get type info from context for AOT compatibility
-                var typeInfo = SerializerContext.GetTypeInfo(keyType);
+                var typeInfo = SerializerContext.GetTypeInfo(targetType);
                 if (typeInfo != null)
                 {
                     return JsonSerializer.Deserialize(jsonStr, typeInfo);
@@ -173,13 +145,13 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
             
             // Fallback to regular deserialization
             #pragma warning disable IL2026, IL3050
-            return JsonSerializer.Deserialize(jsonStr, keyType, JsonOptions);
+            return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
             #pragma warning restore IL2026, IL3050
         }
         catch
         {
-            // If all deserialization attempts fail, return null
-            return null;
+            // If all deserialization attempts fail, return null or default
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
         }
     }
 }

@@ -46,18 +46,7 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
                 : base(options, context)
             {
             }
-
-            protected override object? DeserializeComplexKey(byte[] keyBytes, Type keyType)
-            {
-                return JsonSerializer.Deserialize(keyBytes, keyType);
-            }
-
-            protected override object DeserializeComplexValue(string base64Value, Type valueType)
-            {
-                var bytes = Convert.FromBase64String(base64Value);
-                return JsonSerializer.Deserialize(bytes, valueType);
-            }
-
+            
             // Implement our own version that mimics the private method's behavior
             public object TestDeserializePrimitiveValue(byte[] bytes, Type valueType)
             {

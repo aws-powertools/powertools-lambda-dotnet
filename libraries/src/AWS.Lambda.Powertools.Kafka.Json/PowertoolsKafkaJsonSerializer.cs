@@ -71,72 +71,47 @@ public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
     }
     
     /// <summary>
-    /// Deserializes a base64-encoded JSON value into an object.
+    /// Deserializes binary data using JSON format.
     /// </summary>
-    /// <param name="base64Value">The base64-encoded JSON data.</param>
-    /// <param name="valueType">The type to deserialize to.</param>
+    /// <param name="data">The binary data to deserialize.</param>
+    /// <param name="targetType">The type to deserialize to.</param>
+    /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("JSON deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("JSON deserialization might require types that cannot be statically analyzed.")]
-    protected override object DeserializeComplexValue(string base64Value, 
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type valueType)
-    {
-        var jsonBytes = Convert.FromBase64String(base64Value);
-        var jsonString = Encoding.UTF8.GetString(jsonBytes);
-        
-        if (SerializerContext != null)
-        {
-            // Try to get type info from context for AOT compatibility
-            var typeInfo = SerializerContext.GetTypeInfo(valueType);
-            if (typeInfo != null)
-            {
-                var result = JsonSerializer.Deserialize(jsonString, typeInfo);
-                return result ?? throw new InvalidOperationException($"Failed to deserialize JSON to type {valueType.Name}");
-            }
-        }
-        
-        // Fallback to regular deserialization
-        #pragma warning disable IL2026, IL3050
-        var fallbackResult = JsonSerializer.Deserialize(jsonString, valueType, JsonOptions);
-        #pragma warning restore IL2026, IL3050
-        
-        return fallbackResult ?? throw new InvalidOperationException($"Failed to deserialize JSON to type {valueType.Name}");
-    }
-
-    /// <summary>
-    /// Deserializes complex key types from JSON.
-    /// </summary>
-    /// <param name="keyBytes">The key bytes to deserialize.</param>
-    /// <param name="keyType">The type to deserialize to.</param>
-    /// <returns>The deserialized key object.</returns>
-    [RequiresDynamicCode("JSON deserialization might require runtime code generation.")]
-    [RequiresUnreferencedCode("JSON deserialization might require types that cannot be statically analyzed.")]
-    protected override object? DeserializeComplexKey(byte[] keyBytes, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] Type keyType)
+    protected override object? DeserializeFormatSpecific(byte[] data, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        Type targetType, bool isKey)
     {
         try
         {
             // Convert bytes to JSON string
-            var jsonStr = Encoding.UTF8.GetString(keyBytes);
+            var jsonStr = Encoding.UTF8.GetString(data);
             
             if (SerializerContext != null)
             {
                 // Try to get type info from context for AOT compatibility
-                var typeInfo = SerializerContext.GetTypeInfo(keyType);
+                var typeInfo = SerializerContext.GetTypeInfo(targetType);
                 if (typeInfo != null)
                 {
-                    return JsonSerializer.Deserialize(jsonStr, typeInfo);
+                    var result = JsonSerializer.Deserialize(jsonStr, typeInfo);
+                    if (result != null)
+                    {
+                        return result;
+                    }
                 }
             }
             
             // Fallback to regular deserialization
             #pragma warning disable IL2026, IL3050
-            return JsonSerializer.Deserialize(jsonStr, keyType, JsonOptions);
+            return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
             #pragma warning restore IL2026, IL3050
         }
         catch
         {
-            // If deserialization fails, return null
-            return null;
+            // If deserialization fails, return null or default
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
         }
     }
 }

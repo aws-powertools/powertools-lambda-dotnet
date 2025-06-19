@@ -40,6 +40,7 @@
  */
 
 using System.Text;
+using System.Text.Json;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Kafka.Json;
@@ -225,7 +226,7 @@ public class KafkaHandlerFunctionalTests
     }
     
     [Fact]
-    public void Given_InvalidJsonData_When_DeserializedWithJsonSerializer_Then_ThrowsSerializationException()
+    public void Given_InvalidJsonData_When_DeserializedWithJsonSerializer_Then_Returns_Null()
     {
         // Given
         var serializer = new PowertoolsKafkaJsonSerializer();
@@ -246,13 +247,12 @@ public class KafkaHandlerFunctionalTests
     }";
 
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-
+        var output = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
+        
         // Act & Assert
-        var exception = Assert.Throws<System.Runtime.Serialization.SerializationException>(() => 
-            serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream));
-    
-        // Verify the exception message contains information about the JSON parsing error
-        Assert.Contains("invalid start of a property name", exception.Message);
+        Assert.Single(output.Records);
+        Assert.Equal("key1", output.Records.First().Value[0].Key);
+        Assert.Null(output.Records.First().Value[0].Value);
     }
     
     [Fact]
@@ -386,7 +386,7 @@ public class KafkaHandlerFunctionalTests
     }
     
     [Fact]
-    public void Given_MissingAvroSchema_When_DeserializedWithAvroSerializer_Then_ThrowsSerializationException()
+    public void Given_MissingAvroSchema_When_DeserializedWithAvroSerializer_Then_ReturnsNull()
     {
         // Arrange
         var serializer = new PowertoolsKafkaAvroSerializer();
@@ -411,10 +411,12 @@ public class KafkaHandlerFunctionalTests
     }}";
 
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
-
+        var output = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
+        
         // Act & Assert
-        Assert.Throws<System.Runtime.Serialization.SerializationException>(() =>
-            serializer.Deserialize<ConsumerRecords<string, AvroProduct>>(stream));
+        Assert.Single(output.Records);
+        Assert.Equal("test-key", output.Records.First().Value[0].Key);
+        Assert.Null(output.Records.First().Value[0].Value);
     }
     
     #endregion
@@ -533,10 +535,12 @@ public class KafkaHandlerFunctionalTests
         }}";
         
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+        var output = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
         
         // Act & Assert
-        Assert.Throws<System.Runtime.Serialization.SerializationException>(() =>
-            serializer.Deserialize<ConsumerRecords<int, ProtobufProduct>>(stream));
+        Assert.Single(output.Records);
+        Assert.Equal("42", output.Records.First().Value[0].Key);
+        Assert.Equal(jsonData, JsonSerializer.Serialize(output.Records.First().Value[0].Value));
     }
     
     #endregion
@@ -599,6 +603,6 @@ public class KafkaHandlerFunctionalTests
 public class JsonProduct
 {
     public string Name { get; set; }
-    public decimal Price { get; set; }
     public int Id { get; set; }
+    public decimal Price { get; set; }
 }
