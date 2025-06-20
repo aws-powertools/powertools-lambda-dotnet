@@ -21,6 +21,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.Kafka;
 
@@ -83,6 +84,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     {
         JsonOptions = jsonOptions ?? new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         SerializerContext = serializerContext;
+        
+        SystemWrapper.Instance.SetExecutionEnvironment(this);
     }
 
     /// <summary>
