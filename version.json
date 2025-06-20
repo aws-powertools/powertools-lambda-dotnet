@@ -11,8 +11,8 @@
 		"BatchProcessing": "1.2.1",
 		"EventHandler": "1.0.0",
 		"EventHandler.Resolvers.BedrockAgentFunction": "1.0.0",
-		"Kafka.Json" : "1.0.0",
-		"Kafka.Avro" : "1.0.0",
-		"Kafka.Protobuf" : "1.0.0"
+		"Kafka.Json" : "1.0.1",
+		"Kafka.Avro" : "1.0.1",
+		"Kafka.Protobuf" : "1.0.1"
 	}
 }
