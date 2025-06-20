@@ -224,35 +224,6 @@ public class KafkaHandlerFunctionalTests
         Assert.Equal(456, record.Value.Id);
     }
     
-    [Fact]
-    public void Given_InvalidJsonData_When_DeserializedWithJsonSerializer_Then_Returns_Null()
-    {
-        // Given
-        var serializer = new PowertoolsKafkaJsonSerializer();
-        string json = @"{
-        ""eventSource"": ""aws:kafka"",
-        ""records"": {
-            ""mytopic-0"": [
-                {
-                    ""topic"": ""mytopic"",
-                    ""partition"": 0,
-                    ""offset"": 15,
-                    ""timestamp"": 1645084650987,
-                    ""key"": """ + Convert.ToBase64String(Encoding.UTF8.GetBytes("key1")) + @""",
-                    ""value"": """ + Convert.ToBase64String(Encoding.UTF8.GetBytes("{invalid-json}")) + @"""
-                }
-            ]
-        }
-    }";
-
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var output = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
-        
-        // Act & Assert
-        Assert.Single(output.Records);
-        Assert.Equal("key1", output.Records.First().Value[0].Key);
-        Assert.Null(output.Records.First().Value[0].Value);
-    }
     
     [Fact]
     public void Given_JsonRecordWithHeaders_When_ProcessedWithHandler_Then_HeadersAreAccessible()

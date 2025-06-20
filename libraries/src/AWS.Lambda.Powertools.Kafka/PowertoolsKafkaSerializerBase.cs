@@ -89,9 +89,6 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// Deserializes the Lambda input stream into the specified type.
     /// Handles Kafka events with various serialization formats.
     /// </summary>
-    /// <typeparam name="T">The type to deserialize to. For Kafka events, typically ConsumerRecords&lt;TKey,TValue&gt;.</typeparam>
-    /// <param name="requestStream">The stream containing the serialized Lambda event.</param>
-    /// <returns>The deserialized object of type T.</returns>
     public T Deserialize<T>(Stream requestStream)
     {
         if (SerializerContext != null && typeof(T) != typeof(ConsumerRecords<,>))
@@ -116,7 +113,6 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
 
         if (SerializerContext != null)
         {
-            // Try to find type info in context
             var typeInfo = SerializerContext.GetTypeInfo(targetType);
             if (typeInfo != null)
             {
@@ -124,17 +120,11 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             }
         }
 
-        // Fallback to regular deserialization with warning
 #pragma warning disable IL2026, IL3050
         var result = JsonSerializer.Deserialize<T>(json, JsonOptions);
 #pragma warning restore IL2026, IL3050
 
-        if (!EqualityComparer<T>.Default.Equals(result, default(T)))
-        {
-            return result!;
-        }
-
-        throw new InvalidOperationException($"Failed to deserialize to type {typeof(T).Name}");
+        return result ?? throw new InvalidOperationException($"Failed to deserialize to type {typeof(T).Name}");
     }
 
     /// <summary>
@@ -404,59 +394,35 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <summary>
     /// Serializes an object to JSON and writes it to the provided stream.
     /// </summary>
-    /// <typeparam name="T">The type of object to serialize.</typeparam>
-    /// <param name="response">The object to serialize.</param>
-    /// <param name="responseStream">The stream to write the serialized data to.</param>
     public void Serialize<T>(T response, Stream responseStream)
     {
         if (EqualityComparer<T>.Default.Equals(response, default(T)))
         {
-            // According to ILambdaSerializer contract, if response is null, an empty stream or "null" should be written.
-            // AWS's default System.Text.Json serializer writes "null".
-            // Let's ensure the stream is written to, as HandlerWrapper might expect some output.
             if (responseStream.CanWrite)
             {
                 var nullBytes = Encoding.UTF8.GetBytes("null");
                 responseStream.Write(nullBytes, 0, nullBytes.Length);
             }
-
             return;
         }
 
         if (SerializerContext != null)
         {
-            // Attempt to get TypeInfo for the actual type of the response.
-            // This is important if T is object or an interface.
-            var typeInfo = SerializerContext.GetTypeInfo(response.GetType());
-
+            var typeInfo = SerializerContext.GetTypeInfo(response.GetType()) ?? 
+                          SerializerContext.GetTypeInfo(typeof(T));
             if (typeInfo != null)
             {
-                // JsonSerializer.Serialize to a stream does not close it by default.
-                JsonSerializer.Serialize(responseStream, response, typeInfo);
-                return;
-            }
-
-            // Fallback: if specific type info not found, try with typeof(T) from context
-            // This might be useful if T is concrete and response.GetType() is the same.
-            typeInfo = GetJsonTypeInfoFromContext(typeof(T));
-            if (typeInfo != null)
-            {
-                // Need to cast typeInfo to non-generic JsonTypeInfo for the Serialize overload
                 JsonSerializer.Serialize(responseStream, response, typeInfo);
                 return;
             }
         }
 
-        // Fallback to default JsonSerializer with options, ensuring the stream is left open.
-        // StreamWriter by default uses UTF-8 encoding. We specify it explicitly for clarity.
-        // The buffer size -1 can be used for default, or a specific size like 1024.
-        // Crucially, leaveOpen: true prevents the StreamWriter from disposing responseStream.
         using var writer = new StreamWriter(responseStream, encoding: Encoding.UTF8, bufferSize: 1024, leaveOpen: true);
 #pragma warning disable IL2026, IL3050
         var jsonResponse = JsonSerializer.Serialize(response, JsonOptions);
 #pragma warning restore IL2026, IL3050
         writer.Write(jsonResponse);
-        writer.Flush(); // Ensure all data is written to the stream before writer is disposed.
+        writer.Flush();
     }
 
     // Helper to get non-generic JsonTypeInfo from context based on a Type argument
@@ -468,17 +434,10 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         return SerializerContext.GetTypeInfo(type);
     }
 
-    // Adjusted GetJsonTypeInfo<T> to return non-generic JsonTypeInfo for consistency,
-    // or keep it if it's used elsewhere for JsonTypeInfo<T> specifically.
-    // For Serialize, GetJsonTypeInfoFromContext(typeof(T)) is more direct.
-    private JsonTypeInfo<T>? GetJsonTypeInfo<T>() // This is the original generic helper
+    private JsonTypeInfo<T>? GetJsonTypeInfo<T>()
     {
-        if (SerializerContext == null)
-            return null;
+        if (SerializerContext == null) return null;
 
-        // Use reflection to find the right JsonTypeInfo<T> property
-        // This is specific to how a user might structure their JsonSerializerContext.
-        // A more robust way for general types is SerializerContext.GetTypeInfo(typeof(T)).
         foreach (var prop in SerializerContext.GetType().GetProperties())
         {
             if (prop.PropertyType == typeof(JsonTypeInfo<T>))
@@ -486,45 +445,32 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 return prop.GetValue(SerializerContext) as JsonTypeInfo<T>;
             }
         }
-
         return null;
     }
 
     /// <summary>
     /// Deserializes a base64-encoded value into an object using the appropriate format.
     /// </summary>
-    /// <param name="base64Value">The base64-encoded binary data.</param>
-    /// <param name="valueType">The target type to deserialize to.</param>
-    /// <param name="valueSchemaMetadata">Optional schema metadata for the value.</param>
-    /// <returns>The deserialized object.</returns>
-    [RequiresDynamicCode("Deserializing values might require runtime code generation depending on format.")]
+    [RequiresDynamicCode("Deserializing values might require runtime code generation.")]
     [RequiresUnreferencedCode("Deserializing values might require types that cannot be statically analyzed.")]
     protected virtual object DeserializeValue(string base64Value,
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
                                     DynamicallyAccessedMemberTypes.PublicFields)]
         Type valueType, SchemaMetadata? valueSchemaMetadata = null)
     {
-        // Handle primitive types first
         if (IsPrimitiveOrSimpleType(valueType))
         {
             var bytes = Convert.FromBase64String(base64Value);
             return DeserializePrimitiveValue(bytes, valueType);
         }
 
-        // For complex types, decode base64 and use format-specific deserialization
         var data = Convert.FromBase64String(base64Value);
         return DeserializeFormatSpecific(data, valueType, isKey: false, valueSchemaMetadata);
     }
 
     /// <summary>
-    /// Deserializes binary data into an object using the format-specific implementation.
-    /// This method handles primitive types directly and delegates complex types to derived classes.
+    /// Deserializes binary data using format-specific implementation.
     /// </summary>
-    /// <param name="data">The binary data to deserialize.</param>
-    /// <param name="targetType">The target type to deserialize to.</param>
-    /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
-    /// <param name="schemaMetadata">Optional schema metadata for the data.</param>
-    /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Format-specific deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("Format-specific deserialization might require types that cannot be statically analyzed.")]
     protected virtual object? DeserializeFormatSpecific(byte[] data, 
@@ -532,13 +478,11 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                                     DynamicallyAccessedMemberTypes.PublicFields)]
         Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null)
     {
-        // Handle primitive types directly in the base class
         if (IsPrimitiveOrSimpleType(targetType))
         {
             return DeserializePrimitiveValue(data, targetType);
         }
 
-        // For complex types, delegate to format-specific implementation in derived classes
         return DeserializeComplexTypeFormat(data, targetType, isKey, schemaMetadata);
     }
 
@@ -546,11 +490,6 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// Deserializes complex (non-primitive) types using format-specific implementation.
     /// Each derived class must implement this method to handle its specific format.
     /// </summary>
-    /// <param name="data">The binary data to deserialize.</param>
-    /// <param name="targetType">The target type to deserialize to.</param>
-    /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
-    /// <param name="schemaMetadata">Optional schema metadata for the data.</param>
-    /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Format-specific deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("Format-specific deserialization might require types that cannot be statically analyzed.")]
     protected abstract object? DeserializeComplexTypeFormat(byte[] data, 
@@ -572,44 +511,26 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
 
     /// <summary>
     /// Deserializes a primitive value from bytes based on the specified type.
-    /// Handles common primitive types like int, long, double, bool, string, and Guid.
-    /// If the bytes are empty or null, returns null.
-    /// If the type is not recognized, attempts to convert from string.
     /// </summary>
     protected object? DeserializePrimitiveValue(byte[] bytes, Type valueType)
     {
-        // Early return for empty data
         if (bytes == null! || bytes.Length == 0)
             return null!;
 
-        // String is the most common case, handle first
         if (valueType == typeof(string))
-        {
             return Encoding.UTF8.GetString(bytes);
-        }
 
-        // For numeric and boolean types, try string parsing first
         var stringValue = Encoding.UTF8.GetString(bytes);
 
-        // Handle numeric types
-        if (valueType == typeof(int))
-            return DeserializeIntValue(bytes, stringValue);
-            
-        if (valueType == typeof(long))
-            return DeserializeLongValue(bytes, stringValue);
-            
-        if (valueType == typeof(double))
-            return DeserializeDoubleValue(bytes, stringValue);
-            
-        if (valueType == typeof(bool))
-            return DeserializeBoolValue(bytes, stringValue);
-
-        // Handle Guid values
-        if (valueType == typeof(Guid))
-            return DeserializeGuidValue(bytes, stringValue);
-
-        // For any other type, try converting from string
-        return DeserializeGenericValue(stringValue, valueType);
+        return valueType.Name switch
+        {
+            nameof(Int32) => DeserializeIntValue(bytes, stringValue),
+            nameof(Int64) => DeserializeLongValue(bytes, stringValue),
+            nameof(Double) => DeserializeDoubleValue(bytes, stringValue),
+            nameof(Boolean) => DeserializeBoolValue(bytes, stringValue),
+            nameof(Guid) => DeserializeGuidValue(bytes, stringValue),
+            _ => DeserializeGenericValue(stringValue, valueType)
+        };
     }
     
     private object DeserializeIntValue(byte[] bytes, string stringValue)

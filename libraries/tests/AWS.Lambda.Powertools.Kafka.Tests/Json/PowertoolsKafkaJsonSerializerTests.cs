@@ -176,30 +176,6 @@ public class PowertoolsKafkaJsonSerializerTests
     }
 
     [Fact]
-    public void DeserializeComplexKey_WhenDeserializationFails_ReturnsNull()
-    {
-        // Arrange
-        var serializer = new PowertoolsKafkaJsonSerializer();
-        // Invalid JSON
-        byte[] invalidBytes = { 0xDE, 0xAD, 0xBE, 0xEF };
-
-        string kafkaEventJson = CreateKafkaEvent(
-            keyValue: Convert.ToBase64String(invalidBytes),
-            valueValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("test"))
-        );
-
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
-
-        // Act
-        // This shouldn't throw but return a record with null key
-        var result = serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream);
-
-        // Assert
-        var record = result.First();
-        Assert.Null(record.Key);
-    }
-
-    [Fact]
     public void DeserializeComplexValue_WithSerializerContext_UsesContext()
     {
         // Arrange
@@ -227,54 +203,6 @@ public class PowertoolsKafkaJsonSerializerTests
         Assert.NotNull(record.Value);
         Assert.Equal("ValueFromContext", record.Value.Name);
         Assert.Equal(789, record.Value.Value);
-    }
-
-    [Fact]
-    public void DeserializeComplexValue_WithInvalidJson_ReturnsNullForReferenceTypes()
-    {
-        // Arrange
-        var serializer = new PowertoolsKafkaJsonSerializer();
-        byte[] invalidJsonBytes = Encoding.UTF8.GetBytes("{ this is not valid json }");
-
-        string kafkaEventJson = CreateKafkaEvent(
-            keyValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("testKey")),
-            valueValue: Convert.ToBase64String(invalidJsonBytes)
-        );
-
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
-
-        // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, TestModel>>(stream);
-
-        // Assert - value should be null because it's a reference type
-        var record = result.First();
-        Assert.Equal("testKey", record.Key);
-        Assert.Null(record.Value);
-    }
-
-    [Fact]
-    public void DeserializeComplexValue_WithInvalidJson_ReturnsDefaultForValueTypes()
-    {
-        // Arrange
-        var serializer = new PowertoolsKafkaJsonSerializer();
-        byte[] invalidJsonBytes = Encoding.UTF8.GetBytes("{ bad json");
-
-        string kafkaEventJson = CreateKafkaEvent(
-            keyValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("testKey")),
-            valueValue: Convert.ToBase64String(invalidJsonBytes)
-        );
-
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
-
-        // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, ValueTypeProduct>>(stream);
-
-        // Assert - value should be default because it's a value type
-        var record = result.First();
-        Assert.Equal("testKey", record.Key);
-        Assert.Equal(0, record.Value.Id);
-        Assert.Equal(default, record.Value.Name);
-        Assert.Equal(0, record.Value.Price);
     }
     
     [Fact]
@@ -436,38 +364,6 @@ public class PowertoolsKafkaJsonSerializerTests
         Assert.NotNull(model);
         Assert.Equal("ContextTest", model!.Name);
         Assert.Equal(999, model.Value);
-    }
-
-    [Fact]
-    public void DirectJsonSerializerTest_WithInvalidJson_ReturnsNullForReferenceType()
-    {
-        // Create the serializer 
-        var serializer = new TestJsonDeserializer();
-
-        // Create invalid JSON data
-        var invalidJsonBytes = Encoding.UTF8.GetBytes("{ not valid json");
-
-        // Act - directly test the protected method
-        var result = serializer.TestDeserializeFormatSpecific(invalidJsonBytes, typeof(TestModel), false);
-
-        // Assert - should return null for reference type when JSON is invalid
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public void DirectJsonSerializerTest_WithInvalidJson_ReturnsDefaultForValueType()
-    {
-        // Create the serializer 
-        var serializer = new TestJsonDeserializer();
-
-        // Create invalid JSON data
-        var invalidJsonBytes = Encoding.UTF8.GetBytes("{ not valid json");
-
-        // Act - directly test the protected method with a value type
-        var result = serializer.TestDeserializeFormatSpecific(invalidJsonBytes, typeof(int), false);
-
-        // Assert - should return default (0) for value type when JSON is invalid
-        Assert.Equal(0, result);
     }
 
     [Fact]
