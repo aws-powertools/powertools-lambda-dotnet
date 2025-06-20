@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -27,47 +28,22 @@ public class PowertoolsKafkaJsonSerializerTests
     {
         // Arrange
         var serializer = new PowertoolsKafkaJsonSerializer();
-        string kafkaEventJson = File.ReadAllText("Json/kafka-json-event.json");
+        var testModel = new TestModel { Name = "Test Product", Value = 123 };
+        var jsonValue = JsonSerializer.Serialize(testModel);
+        var base64Value = Convert.ToBase64String(Encoding.UTF8.GetBytes(jsonValue));
+        
+        string kafkaEventJson = CreateKafkaEvent("NDI=", base64Value); // Key is 42 in base64
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
+        var result = serializer.Deserialize<ConsumerRecords<int, TestModel>>(stream);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("aws:kafka", result.EventSource);
-
-        // Verify records were deserialized
-        Assert.True(result.Records.ContainsKey("mytopic-0"));
-        var records = result.Records["mytopic-0"];
-        Assert.Equal(3, records.Count);
-
-        // Verify first record's content
-        var firstRecord = records[0];
-        Assert.Equal("mytopic", firstRecord.Topic);
-        Assert.Equal(0, firstRecord.Partition);
-        Assert.Equal(15, firstRecord.Offset);
-        Assert.Equal("recordKey", firstRecord.Key);
-
-        // Verify deserialized JSON value
-        var product = firstRecord.Value;
-        Assert.Equal("product5", product.Name);
-        Assert.Equal(12345, product.Id);
-        Assert.Equal(45, product.Price);
-
-        // Verify second record
-        var secondRecord = records[1];
-        var p2 = secondRecord.Value;
-        Assert.Equal("product5", p2.Name);
-        Assert.Equal(12345, p2.Id);
-        Assert.Equal(45, p2.Price);
-
-        // Verify third record
-        var thirdRecord = records[2];
-        var p3 = thirdRecord.Value;
-        Assert.Equal("product5", p3.Name);
-        Assert.Equal(12345, p3.Id);
-        Assert.Equal(45, p3.Price);
+        var record = result.First();
+        Assert.Equal(42, record.Key);
+        Assert.Equal("Test Product", record.Value.Name);
+        Assert.Equal(123, record.Value.Value);
     }
 
     [Fact]

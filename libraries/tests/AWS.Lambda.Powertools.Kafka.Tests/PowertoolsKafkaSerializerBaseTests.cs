@@ -46,55 +46,51 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
                 : base(options, context)
             {
             }
-            
+
             // Implementation of the abstract method for test purposes
-            protected override object? DeserializeComplexTypeFormat(byte[] data, 
+            protected override object? DeserializeComplexTypeFormat(byte[] data,
                 Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null)
             {
-                try
+                // Test implementation using JSON for all complex types
+                var jsonStr = Encoding.UTF8.GetString(data);
+
+                if (SerializerContext != null)
                 {
-                    // Test implementation using JSON for all complex types
-                    var jsonStr = Encoding.UTF8.GetString(data);
-                    
-                    if (SerializerContext != null)
+                    var typeInfo = SerializerContext.GetTypeInfo(targetType);
+                    if (typeInfo != null)
                     {
-                        var typeInfo = SerializerContext.GetTypeInfo(targetType);
-                        if (typeInfo != null)
-                        {
-                            return JsonSerializer.Deserialize(jsonStr, typeInfo);
-                        }
+                        return JsonSerializer.Deserialize(jsonStr, typeInfo);
                     }
-                    
-                    return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
                 }
-                catch
-                {
-                    return null;
-                }
+
+                return JsonSerializer.Deserialize(jsonStr, targetType, JsonOptions);
             }
-            
+
             // Expose protected methods for direct testing
-            public object? TestDeserializeFormatSpecific(byte[] data, Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null)
+            public object? TestDeserializeFormatSpecific(byte[] data, Type targetType, bool isKey,
+                SchemaMetadata? schemaMetadata = null)
             {
                 return DeserializeFormatSpecific(data, targetType, isKey, schemaMetadata);
             }
-            
-            public object? TestDeserializeComplexTypeFormat(byte[] data, Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null)
+
+            public object? TestDeserializeComplexTypeFormat(byte[] data, Type targetType, bool isKey,
+                SchemaMetadata? schemaMetadata = null)
             {
                 return DeserializeComplexTypeFormat(data, targetType, isKey, schemaMetadata);
             }
-            
+
             public object? TestDeserializePrimitiveValue(byte[] data, Type targetType)
             {
                 return DeserializePrimitiveValue(data, targetType);
             }
-            
+
             public bool TestIsPrimitiveOrSimpleType(Type type)
             {
                 return IsPrimitiveOrSimpleType(type);
             }
-            
-            public object TestDeserializeValue(string base64Value, Type valueType, SchemaMetadata? schemaMetadata = null)
+
+            public object TestDeserializeValue(string base64Value, Type valueType,
+                SchemaMetadata? schemaMetadata = null)
             {
                 return DeserializeValue(base64Value, valueType, schemaMetadata);
             }
@@ -610,7 +606,9 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             var stringBytes = Encoding.UTF8.GetBytes("primitive-test");
 
             // Act
-            var result = serializer.TestDeserializeFormatSpecific(stringBytes, typeof(string), isKey: false, schemaMetadata: null);
+            var result =
+                serializer.TestDeserializeFormatSpecific(stringBytes, typeof(string), isKey: false,
+                    schemaMetadata: null);
 
             // Assert
             Assert.Equal("primitive-test", result);
@@ -625,7 +623,9 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             var jsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(complexObject));
 
             // Act
-            var result = serializer.TestDeserializeFormatSpecific(jsonBytes, typeof(TestModel), isKey: false, schemaMetadata: null);
+            var result =
+                serializer.TestDeserializeFormatSpecific(jsonBytes, typeof(TestModel), isKey: false,
+                    schemaMetadata: null);
 
             // Assert
             Assert.NotNull(result);
@@ -643,7 +643,9 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             var jsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(complexObject));
 
             // Act
-            var result = serializer.TestDeserializeComplexTypeFormat(jsonBytes, typeof(TestModel), isKey: true, schemaMetadata: null);
+            var result =
+                serializer.TestDeserializeComplexTypeFormat(jsonBytes, typeof(TestModel), isKey: true,
+                    schemaMetadata: null);
 
             // Assert
             Assert.NotNull(result);
@@ -653,17 +655,19 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
         }
 
         [Fact]
-        public void DeserializeComplexTypeFormat_InvalidJson_ReturnsNull()
+        public void DeserializeComplexTypeFormat_InvalidJson_ThrowsException()
         {
             // Arrange
             var serializer = new TestKafkaSerializer();
             var invalidBytes = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF }; // Invalid JSON data
 
-            // Act
-            var result = serializer.TestDeserializeComplexTypeFormat(invalidBytes, typeof(TestModel), isKey: true, schemaMetadata: null);
+            // Act & Assert
+            // The TestKafkaSerializer throws JsonException directly for invalid JSON
+            var ex = Assert.Throws<JsonException>(() =>
+                serializer.TestDeserializeComplexTypeFormat(invalidBytes, typeof(TestModel), isKey: true,
+                    schemaMetadata: null));
 
-            // Assert
-            Assert.Null(result);
+            Assert.Contains("invalid", ex.Message.ToLower());
         }
 
         [Fact]
@@ -702,18 +706,18 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
         {
             // Arrange
             var serializer = new TestKafkaSerializer();
-            
+
             // Act & Assert
             // Primitive types
             Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(int)));
             Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(long)));
             Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(bool)));
-            
+
             // Simple types
             Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(string)));
             Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(Guid)));
             Assert.True(serializer.TestIsPrimitiveOrSimpleType(typeof(DateTime)));
-            
+
             // Complex types
             Assert.False(serializer.TestIsPrimitiveOrSimpleType(typeof(TestModel)));
             Assert.False(serializer.TestIsPrimitiveOrSimpleType(typeof(Dictionary<string, int>)));
@@ -759,4 +763,3 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
         public int Value { get; set; }
     }
 }
-

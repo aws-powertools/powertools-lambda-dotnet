@@ -328,7 +328,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 }
                 catch (Exception ex)
                 {
-                    throw new SerializationException(ex.Message);
+                    throw new SerializationException($"Failed to deserialize value data: {ex.Message}", ex);
                 }
             }
         }

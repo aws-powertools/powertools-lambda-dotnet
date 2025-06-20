@@ -101,15 +101,7 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
             throw new InvalidOperationException($"Could not find Protobuf parser for type {targetType.Name}");
         }
 
-        try
-        {
-            return DeserializeByStrategy(data, parser, schemaMetadata);
-        }
-        catch (Exception ex)
-        {
-            throw new System.Runtime.Serialization.SerializationException(
-                $"Failed to deserialize {(isKey ? "key" : "value")} data: {ex.Message}", ex);
-        }
+        return DeserializeByStrategy(data, parser, schemaMetadata);
     }
 
     /// <summary>
@@ -156,6 +148,15 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
         using var inputStream = new MemoryStream(data);
         using var codedInput = new CodedInputStream(inputStream);
 
+        /*
+            ReadSInt32() behavior:
+               ReadSInt32() properly handles signed varint encoding using ZigZag encoding
+               ZigZag encoding maps signed integers to unsigned integers: (n << 1) ^ (n >> 31)
+               This allows both positive and negative numbers to be efficiently encoded
+               The key insight is that Confluent Schema Registry uses signed varint encoding for the message index count, not unsigned length encoding.
+               The ByteUtils.readVarint() in Java typically reads signed varints, which corresponds to ReadSInt32() in C# Google.Protobuf.
+         */
+        
         // Read number of message indexes
         var indexCount = codedInput.ReadSInt32();
         

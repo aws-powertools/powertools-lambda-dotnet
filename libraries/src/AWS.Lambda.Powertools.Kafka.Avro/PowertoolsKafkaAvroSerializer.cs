@@ -93,18 +93,10 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
                 "Consider using an alternative Deserializer.");
         }
 
-        try
-        {
-            using var stream = new MemoryStream(data);
-            var decoder = new BinaryDecoder(stream);
-            var reader = new SpecificDatumReader<object>(schema, schema);
-            return reader.Read(null!, decoder);
-        }
-        catch (Exception ex)
-        {
-            throw new System.Runtime.Serialization.SerializationException(
-                $"Failed to deserialize {(isKey ? "key" : "value")} data: {ex.Message}", ex);
-        }
+        using var stream = new MemoryStream(data);
+        var decoder = new BinaryDecoder(stream);
+        var reader = new SpecificDatumReader<object>(schema, schema);
+        return reader.Read(null!, decoder);
     }
 
     /// <summary>
