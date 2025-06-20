@@ -143,7 +143,7 @@ public class PowertoolsKafkaProtobufSerializerTests
         var message =
             Assert.Throws<SerializationException>(() =>
                 serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream));
-        Assert.Contains("Failed to deserialize key data: Failed to deserialize", message.Message);
+        Assert.Contains("Failed to deserialize key data: Unsupported", message.Message);
     }
 
     [Fact]

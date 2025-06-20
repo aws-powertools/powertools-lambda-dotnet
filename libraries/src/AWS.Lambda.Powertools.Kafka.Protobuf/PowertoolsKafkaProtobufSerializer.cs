@@ -13,10 +13,8 @@
  * permissions and limitations under the License.
  */
 
-using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Google.Protobuf;
@@ -49,9 +47,6 @@ namespace AWS.Lambda.Powertools.Kafka.Protobuf;
 /// </example>
 public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
 {
-    // Cache for Protobuf parsers to improve performance
-    private static readonly ConcurrentDictionary<Type, MessageParser> _parserCache = new();
-
     /// <summary>
     /// Initializes a new instance of the <see cref="PowertoolsKafkaProtobufSerializer"/> class
     /// with default JSON serialization options.
@@ -82,282 +77,106 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
     /// Deserializes complex (non-primitive) types using Protobuf format.
     /// Handles different parsing strategies based on schema metadata:
     /// - No schema ID: Pure Protobuf deserialization
-    /// - UUID schema ID (16+ chars): Glue format - strips first byte
-    /// - 4-character schema ID: Confluent format - strips message field numbers
+    /// - UUID schema ID (16+ chars): Glue format - removes magic uint32
+    /// - Short schema ID (≤10 chars): Confluent format - removes message indexes
     /// </summary>
-    /// <param name="data">The binary data to deserialize.</param>
-    /// <param name="targetType">The type to deserialize to.</param>
-    /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
-    /// <param name="schemaMetadata">Optional schema metadata for the data.</param>
-    /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Protobuf deserialization might require runtime code generation.")]
-    [RequiresUnreferencedCode(
-        "Protobuf deserialization might require types that cannot be statically analyzed.")]
+    [RequiresUnreferencedCode("Protobuf deserialization might require types that cannot be statically analyzed.")]
     protected override object? DeserializeComplexTypeFormat(byte[] data,
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
                                     DynamicallyAccessedMemberTypes.PublicFields)]
         Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null)
     {
+        if (!typeof(IMessage).IsAssignableFrom(targetType))
+        {
+            throw new InvalidOperationException(
+                $"Unsupported type for Protobuf deserialization: {targetType.Name}. " +
+                "Protobuf deserialization requires a type that implements IMessage. " +
+                "Consider using an alternative Deserializer.");
+        }
+
+        var parser = GetProtobufParser(targetType);
+        if (parser == null)
+        {
+            throw new InvalidOperationException($"Could not find Protobuf parser for type {targetType.Name}");
+        }
+
         try
         {
-            // Check if it's a Protobuf message type
-            if (typeof(IMessage).IsAssignableFrom(targetType))
-            {
-                // This is a Protobuf message type - try to get the parser
-                var parser = GetProtobufParser(targetType);
-                if (parser == null)
-                {
-                    throw new InvalidOperationException($"Could not find Protobuf parser for type {targetType.Name}");
-                }
-
-                // Determine parsing strategy based on schema metadata
-                var parsingStrategy = DetermineParsingStrategy(schemaMetadata);
-
-                try
-                {
-                    return parsingStrategy switch
-                    {
-                        ProtobufParsingStrategy.Pure => DeserializePureProtobuf(data, parser),
-                        ProtobufParsingStrategy.Glue => DeserializeGlueProtobuf(data, parser),
-                        ProtobufParsingStrategy.Confluent => DeserializeConfluentProtobuf(data, parser),
-                        _ => throw new InvalidOperationException($"Unknown parsing strategy: {parsingStrategy}")
-                    };
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException(
-                        $"Failed to deserialize {targetType.Name} using Protobuf with {parsingStrategy} strategy. " +
-                        "The data may not be in a valid Protobuf format.", ex);
-                }
-            }
-            else
-            {
-                // For non-Protobuf complex types, throw the specific expected exception
-                throw new InvalidOperationException(
-                    $"Unsupported type for Protobuf deserialization: {targetType.Name}. " +
-                    "Protobuf deserialization requires a type of com.google.protobuf.Message. " +
-                    "Consider using an alternative Deserializer.");
-            }
+            return DeserializeByStrategy(data, parser, schemaMetadata);
         }
         catch (Exception ex)
         {
-            // Preserve the error message while wrapping in SerializationException for consistent error handling
             throw new System.Runtime.Serialization.SerializationException(
                 $"Failed to deserialize {(isKey ? "key" : "value")} data: {ex.Message}", ex);
         }
     }
 
     /// <summary>
-    /// Determines the parsing strategy based on schema metadata.
+    /// Deserializes protobuf data using the appropriate strategy based on schema metadata.
     /// </summary>
-    /// <param name="schemaMetadata">The schema metadata to analyze.</param>
-    /// <returns>The appropriate parsing strategy.</returns>
-    private ProtobufParsingStrategy DetermineParsingStrategy(SchemaMetadata? schemaMetadata)
+    private IMessage DeserializeByStrategy(byte[] data, MessageParser parser, SchemaMetadata? schemaMetadata)
     {
-        if (schemaMetadata?.SchemaId == null || string.IsNullOrEmpty(schemaMetadata.SchemaId))
+        var schemaId = schemaMetadata?.SchemaId;
+        
+        if (string.IsNullOrEmpty(schemaId))
         {
-            return ProtobufParsingStrategy.Pure;
+            // Pure protobuf - no preprocessing needed
+            return parser.ParseFrom(data);
         }
 
-        var schemaId = schemaMetadata.SchemaId;
-
-        // Check for UUID format (longer than 10 characters indicates Glue Schema Registry)
         if (schemaId.Length > 10)
         {
-            return ProtobufParsingStrategy.Glue;
+            // Glue Schema Registry - remove magic uint32
+            return DeserializeGlueFormat(data, parser);
         }
 
-        // Check for Confluent format (numeric schema ID, typically shorter)
-        if (schemaId.Length <= 10)
-        {
-            return ProtobufParsingStrategy.Confluent;
-        }
-
-        // Default to pure protobuf for unknown formats
-        return ProtobufParsingStrategy.Pure;
+        // Confluent Schema Registry - remove message indexes
+        return DeserializeConfluentFormat(data, parser);
     }
 
     /// <summary>
-    /// Deserializes pure Protobuf data without any preprocessing.
+    /// Deserializes Glue Schema Registry format by removing the magic uint32.
     /// </summary>
-    /// <param name="data">The binary data to deserialize.</param>
-    /// <param name="parser">The Protobuf message parser.</param>
-    /// <returns>The deserialized Protobuf message.</returns>
-    private IMessage DeserializePureProtobuf(byte[] data, MessageParser parser)
-    {
-        return parser.ParseFrom(data);
-    }
-
-    /// <summary>
-    /// Deserializes Glue format Protobuf data by reading and skipping the magic uint32.
-    /// Based on Glue Schema Registry protobuf deserializer implementation.
-    /// </summary>
-    /// <param name="data">The binary data to deserialize.</param>
-    /// <param name="parser">The Protobuf message parser.</param>
-    /// <returns>The deserialized Protobuf message.</returns>
-    private IMessage DeserializeGlueProtobuf(byte[] data, MessageParser parser)
+    private IMessage DeserializeGlueFormat(byte[] data, MessageParser parser)
     {
         using var inputStream = new MemoryStream(data);
         using var codedInput = new CodedInputStream(inputStream);
         
-        try
-        {
-            // Seek one byte forward. Based on Glue Proto deserializer implementation
-            codedInput.ReadUInt32();
-            
-            // Parse the remaining data as protobuf
-            return parser.ParseFrom(codedInput);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Failed to parse Glue protobuf data after removing magic bytes", ex);
-        }
-    }
-
-    /// <summary>
-    /// Deserializes Confluent format Protobuf data by handling message index bytes.
-    /// Based on the TypeScript reference implementation for Confluent Schema Registry.
-    /// </summary>
-    /// <param name="data">The binary data to deserialize.</param>
-    /// <param name="parser">The Protobuf message parser.</param>
-    /// <returns>The deserialized Protobuf message.</returns>
-    private IMessage DeserializeConfluentProtobuf(byte[] data, MessageParser parser)
-    {
-        try
-        {
-            if (data.Length < 1)
-            {
-                throw new InvalidOperationException("Confluent data too short");
-            }
-
-            // Try int32 varint reading first (most common)
-            try
-            {
-                return ClipConfluentSchemaRegistryBuffer(data, parser, useSignedVarint: false);
-            }
-            catch (Exception)
-            {
-                // If int32 fails, try sint32 varint reading
-                try
-                {
-                    return ClipConfluentSchemaRegistryBuffer(data, parser, useSignedVarint: true);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException($"Failed to parse Confluent protobuf data with both int32 and sint32 varint types: {ex.Message}", ex);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Final fallback to direct parsing
-            try
-            {
-                return parser.ParseFrom(data);
-            }
-            catch (Exception directEx)
-            {
-                throw new InvalidOperationException(
-                    $"Failed to parse Confluent protobuf data: {ex.Message}. " +
-                    $"Direct parsing also failed: {directEx.Message}. " +
-                    $"Data (hex): {Convert.ToHexString(data.Take(20).ToArray())}", ex);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Clips the Confluent Schema Registry buffer to remove the index bytes.
-    /// Based on the Java reference implementation logic.
-    /// Uses signed varint encoding (ZigZag) as per Confluent Schema Registry specification.
-    /// </summary>
-    /// <param name="buffer">The buffer to clip.</param>
-    /// <param name="parser">The Protobuf message parser.</param>
-    /// <param name="useSignedVarint">Whether to use signed varint (sint32) or unsigned (int32).</param>
-    /// <returns>The deserialized Protobuf message.</returns>
-    private IMessage ClipConfluentSchemaRegistryBuffer(byte[] buffer, MessageParser parser, bool useSignedVarint)
-    {
-        using var inputStream = new MemoryStream(buffer);
-        using var codedInput = new CodedInputStream(inputStream);
-
-        // Read the first signed varint to get the size (number of message indexes)
-        // Confluent uses signed varint encoding (ZigZag) for the message index count
-        var size = codedInput.ReadSInt32();
-        
-        // Only if the size is greater than zero, continue reading varInt
-        // https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#wire-format
-        if (size > 0)
-        {
-            for (int i = 0; i < size; i++)
-            {
-                // Read and discard each message index varint
-                // These could be either signed or unsigned depending on the schema
-                if (useSignedVarint)
-                {
-                    codedInput.ReadSInt32();
-                }
-                else
-                {
-                    codedInput.ReadUInt32();
-                }
-            }
-        }
-
-        // Parse the remaining data as protobuf
+        codedInput.ReadUInt32(); // Skip magic bytes
         return parser.ParseFrom(codedInput);
     }
 
     /// <summary>
-    /// Gets a Protobuf parser for the specified type, using a cache for better performance.
+    /// Deserializes Confluent Schema Registry format by removing message indexes.
+    /// Based on Java reference implementation.
     /// </summary>
-    /// <param name="messageType">The Protobuf message type.</param>
-    /// <returns>A MessageParser for the specified type, or null if not found.</returns>
-    private MessageParser? GetProtobufParser(Type messageType)
+    private IMessage DeserializeConfluentFormat(byte[] data, MessageParser parser)
     {
-        return _parserCache.GetOrAdd(messageType, type =>
+        using var inputStream = new MemoryStream(data);
+        using var codedInput = new CodedInputStream(inputStream);
+
+        // Read number of message indexes
+        var indexCount = codedInput.ReadSInt32();
+        
+        // Skip message indexes if any exist
+        if (indexCount > 0)
         {
-            try
+            for (int i = 0; i < indexCount; i++)
             {
-                var parserProperty = type.GetProperty("Parser",
-                    BindingFlags.Public | BindingFlags.Static);
-
-                if (parserProperty == null)
-                {
-                    return null!;
-                }
-
-                var parser = parserProperty.GetValue(null) as MessageParser;
-                if (parser == null)
-                {
-                    return null!;
-                }
-
-                return parser;
+                codedInput.ReadSInt32(); // Read and discard each index
             }
-            catch
-            {
-                return null!;
-            }
-        });
+        }
+
+        return parser.ParseFrom(codedInput);
     }
 
     /// <summary>
-    /// Enum representing different Protobuf parsing strategies.
+    /// Gets the Protobuf parser for the specified type.
     /// </summary>
-    private enum ProtobufParsingStrategy
+    private MessageParser? GetProtobufParser(Type messageType)
     {
-        /// <summary>
-        /// Pure Protobuf deserialization without preprocessing.
-        /// </summary>
-        Pure,
-
-        /// <summary>
-        /// Glue format - strips the first byte before deserialization.
-        /// </summary>
-        Glue,
-
-        /// <summary>
-        /// Confluent format - strips message field numbers before deserialization.
-        /// </summary>
-        Confluent
+        var parserProperty = messageType.GetProperty("Parser", BindingFlags.Public | BindingFlags.Static);
+        return parserProperty?.GetValue(null) as MessageParser;
     }
 }
