@@ -100,12 +100,13 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
     /// <param name="data">The binary data to deserialize.</param>
     /// <param name="targetType">The type to deserialize to.</param>
     /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
+    /// <param name="schemaMetadata">Optional schema metadata for the data.</param>
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Avro deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("Avro deserialization might require types that cannot be statically analyzed.")]
     protected override object? DeserializeComplexTypeFormat(byte[] data, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] 
-        Type targetType, bool isKey)
+        Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null)
     {
         try
         {

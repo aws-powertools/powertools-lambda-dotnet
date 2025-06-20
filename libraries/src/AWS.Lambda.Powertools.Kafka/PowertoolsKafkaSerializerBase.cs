@@ -251,45 +251,57 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         SetProperty(recordType, record, "Timestamp", recordElement, "timestamp");
         SetProperty(recordType, record, "TimestampType", recordElement, "timestampType");
 
-        // Process key
-        ProcessKey(recordElement, record, recordType, keyType);
+        // Process schema metadata for both key and value FIRST
+        SchemaMetadata? keySchemaMetadata = null;
+        SchemaMetadata? valueSchemaMetadata = null;
+        
+        ProcessSchemaMetadata(recordElement, record, recordType, "keySchemaMetadata", "KeySchemaMetadata");
+        ProcessSchemaMetadata(recordElement, record, recordType, "valueSchemaMetadata", "ValueSchemaMetadata");
+        
+        // Get the schema metadata for use in deserialization
+        if (recordElement.TryGetProperty("keySchemaMetadata", out var keyMetadataElement))
+        {
+            keySchemaMetadata = ExtractSchemaMetadata(keyMetadataElement);
+        }
+        
+        if (recordElement.TryGetProperty("valueSchemaMetadata", out var valueMetadataElement))
+        {
+            valueSchemaMetadata = ExtractSchemaMetadata(valueMetadataElement);
+        }
 
-        // Process value
-        ProcessValue(recordElement, record, recordType, valueType);
+        // Process key with schema metadata context
+        ProcessKey(recordElement, record, recordType, keyType, keySchemaMetadata);
+
+        // Process value with schema metadata context
+        ProcessValue(recordElement, record, recordType, valueType, valueSchemaMetadata);
 
         // Process headers
         ProcessHeaders(recordElement, record, recordType);
-        
-        // Process schema metadata for both key and value
-        ProcessSchemaMetadata(recordElement, record, recordType, "keySchemaMetadata", "KeySchemaMetadata");
-        ProcessSchemaMetadata(recordElement, record, recordType, "valueSchemaMetadata", "ValueSchemaMetadata");
-
 
         return record;
     }
     
-    private void ProcessSchemaMetadata(JsonElement recordElement, object record, Type recordType, 
-        string jsonPropertyName, string recordPropertyName)
+    private SchemaMetadata? ExtractSchemaMetadata(JsonElement metadataElement)
     {
-        if (recordElement.TryGetProperty(jsonPropertyName, out var metadataElement))
+        var schemaMetadata = new SchemaMetadata();
+        var hasData = false;
+
+        if (metadataElement.TryGetProperty("dataFormat", out var dataFormatElement))
         {
-            var schemaMetadata = new SchemaMetadata();
-
-            if (metadataElement.TryGetProperty("dataFormat", out var dataFormatElement))
-            {
-                schemaMetadata.DataFormat = dataFormatElement.GetString() ?? string.Empty;
-            }
-
-            if (metadataElement.TryGetProperty("schemaId", out var schemaIdElement))
-            {
-                schemaMetadata.SchemaId = schemaIdElement.GetString() ?? string.Empty;
-            }
-
-            recordType.GetProperty(recordPropertyName)?.SetValue(record, schemaMetadata);
+            schemaMetadata.DataFormat = dataFormatElement.GetString() ?? string.Empty;
+            hasData = true;
         }
+
+        if (metadataElement.TryGetProperty("schemaId", out var schemaIdElement))
+        {
+            schemaMetadata.SchemaId = schemaIdElement.GetString() ?? string.Empty;
+            hasData = true;
+        }
+
+        return hasData ? schemaMetadata : null;
     }
 
-    private void ProcessKey(JsonElement recordElement, object record, Type recordType, Type keyType)
+    private void ProcessKey(JsonElement recordElement, object record, Type recordType, Type keyType, SchemaMetadata? keySchemaMetadata)
     {
         if (recordElement.TryGetProperty("key", out var keyElement) && keyElement.ValueKind == JsonValueKind.String)
         {
@@ -299,7 +311,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 try
                 {
                     var keyBytes = Convert.FromBase64String(base64Key);
-                    var decodedKey = DeserializeKey(keyBytes, keyType);
+                    var decodedKey = DeserializeKey(keyBytes, keyType, keySchemaMetadata);
                     recordType.GetProperty("Key")?.SetValue(record, decodedKey);
                 }
                 catch (Exception ex)
@@ -310,7 +322,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         }
     }
 
-    private void ProcessValue(JsonElement recordElement, object record, Type recordType, Type valueType)
+    private void ProcessValue(JsonElement recordElement, object record, Type recordType, Type valueType, SchemaMetadata? valueSchemaMetadata)
     {
         if (recordElement.TryGetProperty("value", out var valueElement) && valueElement.ValueKind == JsonValueKind.String)
         {
@@ -321,51 +333,15 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             {
                 try
                 {
-                    var deserializedValue = DeserializeValue(base64Value, valueType);
+                    var deserializedValue = DeserializeValue(base64Value, valueType, valueSchemaMetadata);
                     valueProperty.SetValue(record, deserializedValue);
                 }
                 catch (Exception ex)
                 {
-                    throw new SerializationException($"Failed to deserialize value data: {ex.Message}", ex);
+                    throw new SerializationException(ex.Message);
                 }
             }
         }
-    }
-
-    private void ProcessHeaders(JsonElement recordElement, object record, Type recordType)
-    {
-        if (recordElement.TryGetProperty("headers", out var headersElement) &&
-            headersElement.ValueKind == JsonValueKind.Array)
-        {
-            var headers = new Dictionary<string, byte[]>();
-
-            foreach (var headerObj in headersElement.EnumerateArray())
-            {
-                foreach (var header in headerObj.EnumerateObject())
-                {
-                    if (header.Value.ValueKind == JsonValueKind.Array)
-                    {
-                        headers[header.Name] = ExtractHeaderBytes(header.Value);
-                    }
-                }
-            }
-
-            var headersProperty = recordType.GetProperty("Headers",
-                BindingFlags.Public | BindingFlags.Instance);
-            headersProperty?.SetValue(record, headers);
-        }
-    }
-
-    private byte[] ExtractHeaderBytes(JsonElement headerArray)
-    {
-        var headerBytes = new byte[headerArray.GetArrayLength()];
-        var i = 0;
-        foreach (var byteVal in headerArray.EnumerateArray())
-        {
-            headerBytes[i++] = (byte)byteVal.GetInt32();
-        }
-
-        return headerBytes;
     }
 
     /// <summary>
@@ -373,8 +349,9 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// </summary>
     /// <param name="keyBytes">The key bytes to deserialize.</param>
     /// <param name="keyType">The target type for the key.</param>
+    /// <param name="keySchemaMetadata">Optional schema metadata for the key.</param>
     /// <returns>The deserialized key object.</returns>
-    private object? DeserializeKey(byte[] keyBytes, Type keyType)
+    private object? DeserializeKey(byte[] keyBytes, Type keyType, SchemaMetadata? keySchemaMetadata)
     {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (keyBytes == null || keyBytes.Length == 0)
@@ -386,7 +363,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         }
 
         // For complex types, use format-specific deserialization
-        return DeserializeFormatSpecific(keyBytes, keyType, isKey: true);
+        return DeserializeFormatSpecific(keyBytes, keyType, isKey: true, keySchemaMetadata);
     }
 
     /// <summary>
@@ -518,13 +495,14 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// </summary>
     /// <param name="base64Value">The base64-encoded binary data.</param>
     /// <param name="valueType">The target type to deserialize to.</param>
+    /// <param name="valueSchemaMetadata">Optional schema metadata for the value.</param>
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Deserializing values might require runtime code generation depending on format.")]
     [RequiresUnreferencedCode("Deserializing values might require types that cannot be statically analyzed.")]
     protected virtual object DeserializeValue(string base64Value,
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
                                     DynamicallyAccessedMemberTypes.PublicFields)]
-        Type valueType)
+        Type valueType, SchemaMetadata? valueSchemaMetadata = null)
     {
         // Handle primitive types first
         if (IsPrimitiveOrSimpleType(valueType))
@@ -535,7 +513,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
 
         // For complex types, decode base64 and use format-specific deserialization
         var data = Convert.FromBase64String(base64Value);
-        return DeserializeFormatSpecific(data, valueType, isKey: false);
+        return DeserializeFormatSpecific(data, valueType, isKey: false, valueSchemaMetadata);
     }
 
     /// <summary>
@@ -545,13 +523,14 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <param name="data">The binary data to deserialize.</param>
     /// <param name="targetType">The target type to deserialize to.</param>
     /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
+    /// <param name="schemaMetadata">Optional schema metadata for the data.</param>
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Format-specific deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("Format-specific deserialization might require types that cannot be statically analyzed.")]
     protected virtual object? DeserializeFormatSpecific(byte[] data, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
                                     DynamicallyAccessedMemberTypes.PublicFields)]
-        Type targetType, bool isKey)
+        Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null)
     {
         // Handle primitive types directly in the base class
         if (IsPrimitiveOrSimpleType(targetType))
@@ -560,7 +539,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         }
 
         // For complex types, delegate to format-specific implementation in derived classes
-        return DeserializeComplexTypeFormat(data, targetType, isKey);
+        return DeserializeComplexTypeFormat(data, targetType, isKey, schemaMetadata);
     }
 
     /// <summary>
@@ -570,13 +549,14 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <param name="data">The binary data to deserialize.</param>
     /// <param name="targetType">The target type to deserialize to.</param>
     /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
+    /// <param name="schemaMetadata">Optional schema metadata for the data.</param>
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("Format-specific deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("Format-specific deserialization might require types that cannot be statically analyzed.")]
     protected abstract object? DeserializeComplexTypeFormat(byte[] data, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
                                    DynamicallyAccessedMemberTypes.PublicFields)]
-        Type targetType, bool isKey);
+        Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null);
 
     /// <summary>
     /// Checks if the specified type is a primitive or simple type.
@@ -702,6 +682,63 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         {
             return valueType.IsValueType ? Activator.CreateInstance(valueType) : null;
         }
+    }
+
+    private void ProcessSchemaMetadata(JsonElement recordElement, object record, Type recordType, 
+        string jsonPropertyName, string recordPropertyName)
+    {
+        if (recordElement.TryGetProperty(jsonPropertyName, out var metadataElement))
+        {
+            var schemaMetadata = new SchemaMetadata();
+
+            if (metadataElement.TryGetProperty("dataFormat", out var dataFormatElement))
+            {
+                schemaMetadata.DataFormat = dataFormatElement.GetString() ?? string.Empty;
+            }
+
+            if (metadataElement.TryGetProperty("schemaId", out var schemaIdElement))
+            {
+                schemaMetadata.SchemaId = schemaIdElement.GetString() ?? string.Empty;
+            }
+
+            recordType.GetProperty(recordPropertyName)?.SetValue(record, schemaMetadata);
+        }
+    }
+
+    private void ProcessHeaders(JsonElement recordElement, object record, Type recordType)
+    {
+        if (recordElement.TryGetProperty("headers", out var headersElement) &&
+            headersElement.ValueKind == JsonValueKind.Array)
+        {
+            var headers = new Dictionary<string, byte[]>();
+
+            foreach (var headerObj in headersElement.EnumerateArray())
+            {
+                foreach (var header in headerObj.EnumerateObject())
+                {
+                    if (header.Value.ValueKind == JsonValueKind.Array)
+                    {
+                        headers[header.Name] = ExtractHeaderBytes(header.Value);
+                    }
+                }
+            }
+
+            var headersProperty = recordType.GetProperty("Headers",
+                BindingFlags.Public | BindingFlags.Instance);
+            headersProperty?.SetValue(record, headers);
+        }
+    }
+
+    private byte[] ExtractHeaderBytes(JsonElement headerArray)
+    {
+        var headerBytes = new byte[headerArray.GetArrayLength()];
+        var i = 0;
+        foreach (var byteVal in headerArray.EnumerateArray())
+        {
+            headerBytes[i++] = (byte)byteVal.GetInt32();
+        }
+
+        return headerBytes;
     }
 }
 

@@ -59,13 +59,14 @@ public class PowertoolsKafkaJsonSerializer : PowertoolsKafkaSerializerBase
     /// <param name="data">The binary data to deserialize.</param>
     /// <param name="targetType">The type to deserialize to.</param>
     /// <param name="isKey">Whether this data represents a key (true) or a value (false).</param>
+    /// <param name="schemaMetadata">Optional schema metadata for the data.</param>
     /// <returns>The deserialized object.</returns>
     [RequiresDynamicCode("JSON deserialization might require runtime code generation.")]
     [RequiresUnreferencedCode("JSON deserialization might require types that cannot be statically analyzed.")]
     protected override object? DeserializeComplexTypeFormat(byte[] data, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
                                     DynamicallyAccessedMemberTypes.PublicFields)]
-        Type targetType, bool isKey)
+        Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null)
     {
         if (data == null || data.Length == 0)
         {
