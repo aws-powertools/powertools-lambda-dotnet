@@ -15,7 +15,15 @@
 
 using System.Text;
 
+#if KAFKA_JSON
+namespace AWS.Lambda.Powertools.Kafka.Json;
+#elif KAFKA_AVRO
+namespace AWS.Lambda.Powertools.Kafka.Avro;
+#elif KAFKA_PROTOBUF
+namespace AWS.Lambda.Powertools.Kafka.Protobuf;
+#else
 namespace AWS.Lambda.Powertools.Kafka;
+#endif
 
 /// <summary>
 /// Extension methods for Kafka headers in ConsumerRecord.

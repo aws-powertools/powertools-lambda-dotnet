@@ -1,7 +1,10 @@
 ﻿<!--suppress MsbuildTargetFrameworkTagInspection -->
-
 <Project Sdk="Microsoft.NET.Sdk">
-
+    <Import Project="../KafkaDependencies.props" />
+    <PropertyGroup>
+        <IncludeKafkaFiles>true</IncludeKafkaFiles>
+        <DefineConstants>$(DefineConstants);KAFKA_AVRO</DefineConstants>
+    </PropertyGroup>
     <PropertyGroup>
         <PackageId>AWS.Lambda.Powertools.Kafka.Avro</PackageId>
         <Description>Powertools for AWS Lambda (.NET) - Kafka Avro consumer package.</Description>
@@ -15,7 +18,8 @@
     <ItemGroup>
         <PackageReference Include="Apache.Avro"/>
     </ItemGroup>
-    <ItemGroup>
+    <!-- Debug: Use project references -->
+    <ItemGroup Condition="'$(IncludeKafkaFiles)' != 'true'">
         <ProjectReference Include="..\AWS.Lambda.Powertools.Kafka\AWS.Lambda.Powertools.Kafka.csproj"/>
     </ItemGroup>
 </Project>

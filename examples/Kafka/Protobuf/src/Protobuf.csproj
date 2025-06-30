@@ -9,12 +9,14 @@
         <!-- This property makes the build directory similar to a publish directory and helps the AWS .NET Lambda Mock Test Tool find project dependencies. -->
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <!-- Generate ready to run images during publishing to improve cold start time. -->
-        <PublishReadyToRun>true</PublishReadyToRun>
+        <!-- <PublishReadyToRun>true</PublishReadyToRun> -->
+        <PublishAOT>true</PublishAOT>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.12.0" />
         <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
+        <!-- <PackageReference Include="AWS.Lambda.Powertools.Kafka.Protobuf" Version="1.0.1" /> -->
         <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="2.0.0" />
         <PackageReference Include="Grpc.Tools" Version="2.72.0">
             <PrivateAssets>all</PrivateAssets>
@@ -31,6 +33,7 @@
             <GrpcServices>Client</GrpcServices>
             <Access>Public</Access>
             <ProtoCompile>True</ProtoCompile>
+
             <CompileOutputs>True</CompileOutputs>
             <OutputDir>obj\Debug/net8.0/</OutputDir>
             <Generator>MSBuild:Compile</Generator>

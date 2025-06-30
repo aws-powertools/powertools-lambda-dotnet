@@ -16,58 +16,50 @@
 using System.Runtime.Serialization;
 using System.Text;
 using AWS.Lambda.Powertools.Kafka.Avro;
-using AWS.Lambda.Powertools.Kafka.Json;
-using AWS.Lambda.Powertools.Kafka.Protobuf;
 
 namespace AWS.Lambda.Powertools.Kafka.Tests;
 
-public class ErrorHandlingTests
+public class AvroErrorHandlingTests
 {
-    [Theory]
-    [InlineData(typeof(PowertoolsKafkaJsonSerializer))]
-    [InlineData(typeof(PowertoolsKafkaAvroSerializer))]
-    [InlineData(typeof(PowertoolsKafkaProtobufSerializer))]
-    public void AllSerializers_WithCorruptedKeyData_ThrowSerializationException(Type serializerType)
+    [Fact]
+    public void AvroSerializer_WithCorruptedKeyData_ThrowSerializationException()
     {
         // Arrange
-        var serializer = (PowertoolsKafkaSerializerBase)Activator.CreateInstance(serializerType)!;
+        var serializer = new PowertoolsKafkaAvroSerializer();
         var corruptedData = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
-        
+
         string kafkaEventJson = CreateKafkaEvent(
             Convert.ToBase64String(corruptedData),
             Convert.ToBase64String(Encoding.UTF8.GetBytes("valid-value"))
         );
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act & Assert
         var ex = Assert.Throws<SerializationException>(() =>
             serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream));
-        
+
         Assert.Contains("Failed to deserialize key data", ex.Message);
     }
 
-    [Theory]
-    [InlineData(typeof(PowertoolsKafkaJsonSerializer))]
-    [InlineData(typeof(PowertoolsKafkaAvroSerializer))]
-    [InlineData(typeof(PowertoolsKafkaProtobufSerializer))]
-    public void AllSerializers_WithCorruptedValueData_ThrowSerializationException(Type serializerType)
+    [Fact]
+    public void AvroSerializer_WithCorruptedValueData_ThrowSerializationException()
     {
         // Arrange
-        var serializer = (PowertoolsKafkaSerializerBase)Activator.CreateInstance(serializerType)!;
+        var serializer = new PowertoolsKafkaAvroSerializer();
         var corruptedData = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
-        
+
         string kafkaEventJson = CreateKafkaEvent(
             Convert.ToBase64String(Encoding.UTF8.GetBytes("valid-key")),
             Convert.ToBase64String(corruptedData)
         );
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act & Assert
         var ex = Assert.Throws<SerializationException>(() =>
             serializer.Deserialize<ConsumerRecords<string, TestModel>>(stream));
-        
+
         Assert.Contains("Failed to deserialize value data", ex.Message);
     }
 

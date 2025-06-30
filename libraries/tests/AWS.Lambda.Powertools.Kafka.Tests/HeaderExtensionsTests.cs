@@ -14,6 +14,7 @@
  */
 
 using System.Text;
+using AWS.Lambda.Powertools.Kafka.Avro;
 
 namespace AWS.Lambda.Powertools.Kafka.Tests
 {
