@@ -1,7 +1,7 @@
 ﻿<!--suppress MsbuildTargetFrameworkTagInspection -->
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="../KafkaDependencies.props" />
-    <PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <IncludeKafkaFiles>true</IncludeKafkaFiles>
         <DefineConstants>$(DefineConstants);KAFKA_PROTOBUF</DefineConstants>
     </PropertyGroup>
@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <!-- Debug: Use project references -->
-    <ItemGroup Condition="'$(IncludeKafkaFiles)' != 'true'">
+    <ItemGroup Condition="'$(Configuration)'=='Debug'">
         <ProjectReference Include="..\AWS.Lambda.Powertools.Kafka\AWS.Lambda.Powertools.Kafka.csproj"/>
     </ItemGroup>
     
