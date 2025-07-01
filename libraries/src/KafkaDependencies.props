@@ -1,0 +1,20 @@
+<Project>
+    <PropertyGroup>
+        <IncludeKafkaFiles Condition="'$(IncludeKafkaFiles)' == ''">false</IncludeKafkaFiles>
+    </PropertyGroup>
+
+    <!-- Include source files when IncludeKafkaFiles is true -->
+    <ItemGroup Condition="'$(IncludeKafkaFiles)' == 'true'">
+        <PackageReference Include="Amazon.Lambda.Core"/>
+        <PackageReference Include="AspectInjector"/>
+
+        <Compile Include="..\AWS.Lambda.Powertools.Kafka\**\*.cs">
+            <Link>Kafka\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        </Compile>
+        <Compile Include="..\AWS.Lambda.Powertools.Common\**\*.cs">
+            <Link>Common\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        </Compile>
+        <Compile Remove="..\AWS.Lambda.Powertools.Kafka\obj\**"/>
+        <Compile Remove="..\AWS.Lambda.Powertools.Common\obj\**"/>
+    </ItemGroup>
+</Project>

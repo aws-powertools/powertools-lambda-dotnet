@@ -1,4 +1,12 @@
+#if KAFKA_JSON
+namespace AWS.Lambda.Powertools.Kafka.Json;
+#elif KAFKA_AVRO
+namespace AWS.Lambda.Powertools.Kafka.Avro;
+#elif KAFKA_PROTOBUF
+namespace AWS.Lambda.Powertools.Kafka.Protobuf;
+#else
 namespace AWS.Lambda.Powertools.Kafka;
+#endif
 
 /// <summary>
 /// Represents metadata about the schema used for serializing the record's value or key.
