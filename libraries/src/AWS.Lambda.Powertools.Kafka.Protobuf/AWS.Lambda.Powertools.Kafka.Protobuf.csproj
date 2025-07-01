@@ -1,10 +1,6 @@
 ﻿<!--suppress MsbuildTargetFrameworkTagInspection -->
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="../KafkaDependencies.props" />
-    <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <IncludeKafkaFiles>true</IncludeKafkaFiles>
-        <DefineConstants>$(DefineConstants);KAFKA_PROTOBUF</DefineConstants>
-    </PropertyGroup>
     <PropertyGroup>
         <PackageId>AWS.Lambda.Powertools.Kafka.Protobuf</PackageId>
         <Description>Powertools for AWS Lambda (.NET) - Kafka Protobuf consumer package.</Description>
@@ -15,6 +11,12 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
+
+    <!-- Release: Use source file inclusion -->
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <IncludeKafkaFiles>true</IncludeKafkaFiles>
+        <DefineConstants>$(DefineConstants);KAFKA_PROTOBUF</DefineConstants>
+    </PropertyGroup>
     
     <ItemGroup>
         <PackageReference Include="Google.Protobuf" />
@@ -23,6 +25,7 @@
     <!-- Debug: Use project references -->
     <ItemGroup Condition="'$(Configuration)'=='Debug'">
         <ProjectReference Include="..\AWS.Lambda.Powertools.Kafka\AWS.Lambda.Powertools.Kafka.csproj"/>
+        <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj"/>
     </ItemGroup>
     
 </Project>
