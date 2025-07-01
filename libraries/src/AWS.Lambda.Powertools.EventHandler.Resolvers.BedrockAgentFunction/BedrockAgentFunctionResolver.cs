@@ -15,6 +15,7 @@
 
 using System.Text.Json.Serialization.Metadata;
 using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Helpers;
 
@@ -54,6 +55,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         public BedrockAgentFunctionResolver(IJsonTypeInfoResolver? typeResolver = null)
         {
             _parameterMapper = new ParameterMapper(typeResolver);
+            SystemWrapper.Instance.SetExecutionEnvironment(this);
         }
         
         /// <summary>
