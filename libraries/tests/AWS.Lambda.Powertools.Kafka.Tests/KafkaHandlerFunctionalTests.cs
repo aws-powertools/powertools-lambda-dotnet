@@ -2,8 +2,18 @@ using System.Runtime.Serialization;
 using System.Text;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
-using AWS.Lambda.Powertools.Kafka.Avro;
+using AWS.Lambda.Powertools.Kafka.Json;
 using TestKafka;
+
+#if DEBUG
+using KafkaAvro = AWS.Lambda.Powertools.Kafka;
+using KafkaProto = AWS.Lambda.Powertools.Kafka;
+using KafkaJson = AWS.Lambda.Powertools.Kafka;
+#else
+using KafkaAvro = AWS.Lambda.Powertools.Kafka.Avro;
+using KafkaProto = AWS.Lambda.Powertools.Kafka.Protobuf;
+using KafkaJson = AWS.Lambda.Powertools.Kafka.Json;
+#endif
 
 namespace AWS.Lambda.Powertools.Kafka.Tests;
 
@@ -15,7 +25,7 @@ public class KafkaHandlerFunctionalTests
     public void Given_SingleJsonRecord_When_ProcessedWithHandler_Then_SuccessfullyDeserializedAndProcessed()
     {
         // Given
-        string Handler(ConsumerRecords<string, JsonProduct> records, ILambdaContext context)
+        string Handler(KafkaJson.ConsumerRecords<string, JsonProduct> records, ILambdaContext context)
         {
             foreach (var record in records)
             {
@@ -28,11 +38,11 @@ public class KafkaHandlerFunctionalTests
         var mockContext = new TestLambdaContext { Logger = mockLogger };
         
         // Create a single record
-        var records = new ConsumerRecords<string, JsonProduct>
+        var records = new KafkaJson.ConsumerRecords<string, JsonProduct>
         {
-            Records = new Dictionary<string, List<ConsumerRecord<string, JsonProduct>>>
+            Records = new Dictionary<string, List<KafkaJson.ConsumerRecord<string, JsonProduct>>>
             {
-                { "mytopic-0", new List<ConsumerRecord<string, JsonProduct>>
+                { "mytopic-0", new List<KafkaJson.ConsumerRecord<string, JsonProduct>>
                     {
                         new()
                         {
@@ -66,7 +76,7 @@ public class KafkaHandlerFunctionalTests
     {
         // Given
         int processedCount = 0;
-        string Handler(ConsumerRecords<string, JsonProduct> records, ILambdaContext context)
+        string Handler(KafkaJson.ConsumerRecords<string, JsonProduct> records, ILambdaContext context)
         {
             foreach (var record in records)
             {
@@ -80,11 +90,11 @@ public class KafkaHandlerFunctionalTests
         var mockContext = new TestLambdaContext { Logger = mockLogger };
         
         // Create multiple records
-        var records = new ConsumerRecords<string, JsonProduct>
+        var records = new KafkaJson.ConsumerRecords<string, JsonProduct>
         {
-            Records = new Dictionary<string, List<ConsumerRecord<string, JsonProduct>>>
+            Records = new Dictionary<string, List<KafkaJson.ConsumerRecord<string, JsonProduct>>>
             {
-                { "mytopic-0", new List<ConsumerRecord<string, JsonProduct>>
+                { "mytopic-0", new List<KafkaJson.ConsumerRecord<string, JsonProduct>>
                     {
                         new() { Topic = "mytopic", Value = new JsonProduct { Name = "Laptop" } },
                         new() { Topic = "mytopic", Value = new JsonProduct { Name = "Phone" } },
@@ -108,7 +118,7 @@ public class KafkaHandlerFunctionalTests
     public void Given_JsonRecordWithMetadata_When_ProcessedWithHandler_Then_MetadataIsAccessible()
     {
         // Given
-        string Handler(ConsumerRecords<string, JsonProduct> records, ILambdaContext context)
+        string Handler(KafkaJson.ConsumerRecords<string, JsonProduct> records, ILambdaContext context)
         {
             var record = records.First();
             context.Logger.LogInformation($"Topic: {record.Topic}, Partition: {record.Partition}, Offset: {record.Offset}, Time: {record.Timestamp}");
@@ -118,11 +128,11 @@ public class KafkaHandlerFunctionalTests
         var mockLogger = new TestLambdaLogger();
         var mockContext = new TestLambdaContext { Logger = mockLogger };
         
-        var records = new ConsumerRecords<string, JsonProduct>
+        var records = new KafkaJson.ConsumerRecords<string, JsonProduct>
         {
-            Records = new Dictionary<string, List<ConsumerRecord<string, JsonProduct>>>
+            Records = new Dictionary<string, List<KafkaJson.ConsumerRecord<string, JsonProduct>>>
             {
-                { "mytopic-0", new List<ConsumerRecord<string, JsonProduct>>
+                { "mytopic-0", new List<KafkaJson.ConsumerRecord<string, JsonProduct>>
                     {
                         new()
                         {
@@ -150,7 +160,7 @@ public class KafkaHandlerFunctionalTests
     public void Given_JsonRecordWithHeaders_When_ProcessedWithHandler_Then_HeadersAreAccessible()
     {
         // Given
-        string Handler(ConsumerRecords<string, JsonProduct> records, ILambdaContext context)
+        string Handler(KafkaJson.ConsumerRecords<string, JsonProduct> records, ILambdaContext context)
         {
             var record = records.First();
             var source = record.Headers["source"].DecodedValue();
@@ -162,11 +172,11 @@ public class KafkaHandlerFunctionalTests
         var mockLogger = new TestLambdaLogger();
         var mockContext = new TestLambdaContext { Logger = mockLogger };
         
-        var records = new ConsumerRecords<string, JsonProduct>
+        var records = new KafkaJson.ConsumerRecords<string, JsonProduct>
         {
-            Records = new Dictionary<string, List<ConsumerRecord<string, JsonProduct>>>
+            Records = new Dictionary<string, List<KafkaJson.ConsumerRecord<string, JsonProduct>>>
             {
-                { "mytopic-0", new List<ConsumerRecord<string, JsonProduct>>
+                { "mytopic-0", new List<KafkaJson.ConsumerRecord<string, JsonProduct>>
                     {
                         new()
                         {
@@ -198,7 +208,7 @@ public class KafkaHandlerFunctionalTests
     public void Given_SingleAvroRecord_When_ProcessedWithHandler_Then_SuccessfullyDeserializedAndProcessed()
     {
         // Given
-        string Handler(ConsumerRecords<string, AvroProduct> records, ILambdaContext context)
+        string Handler(KafkaAvro.ConsumerRecords<string, AvroProduct> records, ILambdaContext context)
         {
             foreach (var record in records)
             {
@@ -211,11 +221,11 @@ public class KafkaHandlerFunctionalTests
         var mockContext = new TestLambdaContext { Logger = mockLogger };
         
         // Create a single record
-        var records = new ConsumerRecords<string, AvroProduct>
+        var records = new KafkaAvro.ConsumerRecords<string, AvroProduct>
         {
-            Records = new Dictionary<string, List<ConsumerRecord<string, AvroProduct>>>
+            Records = new Dictionary<string, List<KafkaAvro.ConsumerRecord<string, AvroProduct>>>
             {
-                { "mytopic-0", new List<ConsumerRecord<string, AvroProduct>>
+                { "mytopic-0", new List<KafkaAvro.ConsumerRecord<string, AvroProduct>>
                     {
                         new()
                         {
@@ -242,7 +252,7 @@ public class KafkaHandlerFunctionalTests
     public void Given_ComplexAvroKey_When_ProcessedWithHandler_Then_KeyIsCorrectlyDeserialized()
     {
         // Given
-        string Handler(ConsumerRecords<AvroKey, AvroProduct> records, ILambdaContext context)
+        string Handler(KafkaAvro.ConsumerRecords<AvroKey, AvroProduct> records, ILambdaContext context)
         {
             var record = records.First();
             context.Logger.LogInformation($"Processing product with key ID: {record.Key.id}, color: {record.Key.color}");
@@ -252,11 +262,11 @@ public class KafkaHandlerFunctionalTests
         var mockLogger = new TestLambdaLogger();
         var mockContext = new TestLambdaContext { Logger = mockLogger };
         
-        var records = new ConsumerRecords<AvroKey, AvroProduct>
+        var records = new KafkaAvro.ConsumerRecords<AvroKey, AvroProduct>
         {
-            Records = new Dictionary<string, List<ConsumerRecord<AvroKey, AvroProduct>>>
+            Records = new Dictionary<string, List<KafkaAvro.ConsumerRecord<AvroKey, AvroProduct>>>
             {
-                { "mytopic-0", new List<ConsumerRecord<AvroKey, AvroProduct>>
+                { "mytopic-0", new List<KafkaAvro.ConsumerRecord<AvroKey, AvroProduct>>
                     {
                         new()
                         {
@@ -280,7 +290,7 @@ public class KafkaHandlerFunctionalTests
     public void Given_MissingAvroSchema_When_DeserializedWithAvroSerializer_Then_ReturnsException()
     {
         // Arrange
-        var serializer = new PowertoolsKafkaAvroSerializer();
+        var serializer = new AWS.Lambda.Powertools.Kafka.Avro.PowertoolsKafkaAvroSerializer();
 
         // Create data that looks like Avro but without schema
         byte[] invalidAvroData = { 0x01, 0x02, 0x03, 0x04 }; // Just some random bytes
@@ -303,7 +313,7 @@ public class KafkaHandlerFunctionalTests
 
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
         Assert.Throws<SerializationException>(() => 
-            serializer.Deserialize<ConsumerRecords<string, AvroProduct>>(stream));
+            serializer.Deserialize<KafkaAvro.ConsumerRecords<string, AvroProduct>>(stream));
     }
     
     #endregion
@@ -314,7 +324,7 @@ public class KafkaHandlerFunctionalTests
     public void Given_SingleProtobufRecord_When_ProcessedWithHandler_Then_SuccessfullyDeserializedAndProcessed()
     {
         // Given
-        string Handler(ConsumerRecords<int, ProtobufProduct> records, ILambdaContext context)
+        string Handler(KafkaProto.ConsumerRecords<int, ProtobufProduct> records, ILambdaContext context)
         {
             foreach (var record in records)
             {
@@ -327,11 +337,11 @@ public class KafkaHandlerFunctionalTests
         var mockContext = new TestLambdaContext { Logger = mockLogger };
         
         // Create a single record
-        var records = new ConsumerRecords<int, ProtobufProduct>
+        var records = new KafkaProto.ConsumerRecords<int, ProtobufProduct>
         {
-            Records = new Dictionary<string, List<ConsumerRecord<int, ProtobufProduct>>>
+            Records = new Dictionary<string, List<KafkaProto.ConsumerRecord<int, ProtobufProduct>>>
             {
-                { "mytopic-0", new List<ConsumerRecord<int, ProtobufProduct>>
+                { "mytopic-0", new List<KafkaProto.ConsumerRecord<int, ProtobufProduct>>
                     {
                         new()
                         {
@@ -358,7 +368,7 @@ public class KafkaHandlerFunctionalTests
     public void Given_NullKeyOrValue_When_ProcessedWithHandler_Then_HandlesNullsCorrectly()
     {
         // Given
-        string Handler(ConsumerRecords<int?, ProtobufProduct> records, ILambdaContext context)
+        string Handler(KafkaProto.ConsumerRecords<int?, ProtobufProduct> records, ILambdaContext context)
         {
             foreach (var record in records)
             {
@@ -372,11 +382,11 @@ public class KafkaHandlerFunctionalTests
         var mockLogger = new TestLambdaLogger();
         var mockContext = new TestLambdaContext { Logger = mockLogger };
         
-        var records = new ConsumerRecords<int?, ProtobufProduct>
+        var records = new KafkaProto.ConsumerRecords<int?, ProtobufProduct>
         {
-            Records = new Dictionary<string, List<ConsumerRecord<int?, ProtobufProduct>>>
+            Records = new Dictionary<string, List<KafkaProto.ConsumerRecord<int?, ProtobufProduct>>>
             {
-                { "mytopic-0", new List<ConsumerRecord<int?, ProtobufProduct>>
+                { "mytopic-0", new List<KafkaProto.ConsumerRecord<int?, ProtobufProduct>>
                     {
                         new() { Key = 1, Value = new ProtobufProduct { Name = "Valid Product" } },
                         new() { Key = null, Value = new ProtobufProduct { Name = "No Key" } },

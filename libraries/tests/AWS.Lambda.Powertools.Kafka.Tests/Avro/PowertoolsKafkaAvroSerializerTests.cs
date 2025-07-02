@@ -2,6 +2,12 @@ using System.Runtime.Serialization;
 using System.Text;
 using AWS.Lambda.Powertools.Kafka.Avro;
 
+#if DEBUG
+using KafkaAlias = AWS.Lambda.Powertools.Kafka;
+#else
+using KafkaAlias = AWS.Lambda.Powertools.Kafka.Avro;
+#endif
+
 namespace AWS.Lambda.Powertools.Kafka.Tests.Avro;
 
 public class PowertoolsKafkaAvroSerializerTests
@@ -15,7 +21,7 @@ public class PowertoolsKafkaAvroSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<int, AvroProduct>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, AvroProduct>>(stream);
 
         // Assert
         Assert.NotNull(result);
@@ -54,7 +60,7 @@ public class PowertoolsKafkaAvroSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<int, AvroProduct>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, AvroProduct>>(stream);
 
         // Assert - Test enumeration
         int count = 0;
@@ -91,7 +97,7 @@ public class PowertoolsKafkaAvroSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, string>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, string>>(stream);
         var firstRecord = result.First();
         Assert.Equal("Myvalue", firstRecord.Value);
         Assert.Equal("MyKey", firstRecord.Key);
@@ -113,7 +119,7 @@ public class PowertoolsKafkaAvroSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         Assert.Throws<SerializationException>(() => 
-            serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream));
+            serializer.Deserialize<KafkaAlias.ConsumerRecords<TestModel, string>>(stream));
     }
     
     private string CreateKafkaEvent(string keyValue, string valueValue)

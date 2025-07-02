@@ -3,6 +3,12 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Kafka.Json;
 
+#if DEBUG
+using KafkaAlias = AWS.Lambda.Powertools.Kafka;
+#else
+using KafkaAlias = AWS.Lambda.Powertools.Kafka.Json;
+#endif
+
 namespace AWS.Lambda.Powertools.Kafka.Tests;
 
 public class JsonTests
@@ -31,7 +37,7 @@ public class JsonTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
         
         // When
-        var result = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, JsonProduct>>(stream);
         
         // Then
         Assert.Equal("aws:kafka", result.EventSource);
@@ -47,7 +53,7 @@ public class JsonTests
     public void Given_RawUtf8Data_When_ProcessedWithDefaultHandler_Then_DeserializesToStrings()
     {
         // Given
-        string Handler(ConsumerRecords<string, string> records, ILambdaContext context)
+        string Handler(KafkaAlias.ConsumerRecords<string, string> records, ILambdaContext context)
         {
             foreach (var record in records)
             {
@@ -82,7 +88,7 @@ public class JsonTests
         
         // Use the default serializer which handles base64 → UTF-8 conversion
         var serializer = new PowertoolsKafkaJsonSerializer();
-        var records = serializer.Deserialize<ConsumerRecords<string, string>>(stream);
+        var records = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, string>>(stream);
         
         // When
         var result = Handler(records, mockContext);
