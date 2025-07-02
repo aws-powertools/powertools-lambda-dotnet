@@ -2,6 +2,12 @@ using System.Runtime.Serialization;
 using System.Text;
 using AWS.Lambda.Powertools.Kafka.Json;
 
+#if DEBUG
+using KafkaAlias = AWS.Lambda.Powertools.Kafka;
+#else
+using KafkaAlias = AWS.Lambda.Powertools.Kafka.Json;
+#endif
+
 namespace AWS.Lambda.Powertools.Kafka.Tests;
 
 public class JsonErrorHandlingTests
@@ -22,7 +28,7 @@ public class JsonErrorHandlingTests
 
         // Act & Assert
         var ex = Assert.Throws<SerializationException>(() =>
-            serializer.Deserialize<ConsumerRecords<Json.TestModel, string>>(stream));
+            serializer.Deserialize<KafkaAlias.ConsumerRecords<Json.TestModel, string>>(stream));
 
         Assert.Contains("Failed to deserialize key data", ex.Message);
     }
@@ -43,7 +49,7 @@ public class JsonErrorHandlingTests
 
         // Act & Assert
         var ex = Assert.Throws<SerializationException>(() =>
-            serializer.Deserialize<ConsumerRecords<string, Json.TestModel>>(stream));
+            serializer.Deserialize<KafkaAlias.ConsumerRecords<string, Json.TestModel>>(stream));
 
         Assert.Contains("Failed to deserialize value data", ex.Message);
     }

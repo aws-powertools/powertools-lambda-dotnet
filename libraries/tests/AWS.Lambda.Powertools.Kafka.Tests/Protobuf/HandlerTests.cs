@@ -5,6 +5,12 @@ using AWS.Lambda.Powertools.Kafka.Protobuf;
 using Google.Protobuf;
 using TestKafka;
 
+#if DEBUG
+using KafkaAlias = AWS.Lambda.Powertools.Kafka;
+#else
+using KafkaAlias = AWS.Lambda.Powertools.Kafka.Protobuf;
+#endif
+
 namespace AWS.Lambda.Powertools.Kafka.Tests.Protobuf;
 
 public class ProtobufHandlerTests
@@ -21,7 +27,7 @@ public class ProtobufHandlerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaJson));
 
         // Act - Deserialize and process
-        var kafkaEvent = serializer.Deserialize<ConsumerRecords<int, ProtobufProduct>>(stream);
+        var kafkaEvent = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, ProtobufProduct>>(stream);
         var response = await Handler(kafkaEvent, mockContext);
 
         // Assert
@@ -69,7 +75,7 @@ public class ProtobufHandlerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaJson));
 
         // Act - Deserialize and process
-        var kafkaEvent = serializer.Deserialize<ConsumerRecords<ProtobufKey, ProtobufProduct>>(stream);
+        var kafkaEvent = serializer.Deserialize<KafkaAlias.ConsumerRecords<ProtobufKey, ProtobufProduct>>(stream);
         var response = await HandlerWithProtobufKeys(kafkaEvent, mockContext);
 
         // Assert
@@ -275,7 +281,7 @@ public class ProtobufHandlerTests
     }
 
     // Define the test handler method
-    private async Task<string> Handler(ConsumerRecords<int, ProtobufProduct> records, ILambdaContext context)
+    private async Task<string> Handler(KafkaAlias.ConsumerRecords<int, ProtobufProduct> records, ILambdaContext context)
     {
         foreach (var record in records)
         {
@@ -286,7 +292,7 @@ public class ProtobufHandlerTests
         return "Successfully processed Protobuf Kafka events";
     }
 
-    private async Task<string> HandlerWithProtobufKeys(ConsumerRecords<ProtobufKey, ProtobufProduct> records,
+    private async Task<string> HandlerWithProtobufKeys(KafkaAlias.ConsumerRecords<ProtobufKey, ProtobufProduct> records,
         ILambdaContext context)
     {
         foreach (var record in records)
@@ -302,7 +308,7 @@ public class ProtobufHandlerTests
     [Fact]
     public void SimpleHandlerTest()
     {
-        string Handler(ConsumerRecords<int, ProtobufProduct> records, ILambdaContext context)
+        string Handler(KafkaAlias.ConsumerRecords<int, ProtobufProduct> records, ILambdaContext context)
         {
             foreach (var record in records)
             {
@@ -319,11 +325,11 @@ public class ProtobufHandlerTests
             Logger = mockLogger
         };
 
-        var records = new ConsumerRecords<int, ProtobufProduct>
+        var records = new KafkaAlias.ConsumerRecords<int, ProtobufProduct>
         {
-            Records = new Dictionary<string, List<ConsumerRecord<int, ProtobufProduct>>>
+            Records = new Dictionary<string, List<KafkaAlias.ConsumerRecord<int, ProtobufProduct>>>
             {
-                { "mytopic-0", new List<ConsumerRecord<int, ProtobufProduct>>
+                { "mytopic-0", new List<KafkaAlias.ConsumerRecord<int, ProtobufProduct>>
                     {
                         new()
                         {

@@ -4,6 +4,12 @@ using AWS.Lambda.Powertools.Kafka.Protobuf;
 using Com.Example.Protobuf;
 using TestKafka;
 
+#if DEBUG
+using KafkaAlias = AWS.Lambda.Powertools.Kafka;
+#else
+using KafkaAlias = AWS.Lambda.Powertools.Kafka.Protobuf;
+#endif
+
 namespace AWS.Lambda.Powertools.Kafka.Tests.Protobuf;
 
 public class PowertoolsKafkaProtobufSerializerTests
@@ -17,7 +23,7 @@ public class PowertoolsKafkaProtobufSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<int, ProtobufProduct>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, ProtobufProduct>>(stream);
 
         // Assert
         Assert.NotNull(result);
@@ -65,7 +71,7 @@ public class PowertoolsKafkaProtobufSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<int, ProtobufProduct>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, ProtobufProduct>>(stream);
 
         // Assert - Test enumeration
         int count = 0;
@@ -103,7 +109,7 @@ public class PowertoolsKafkaProtobufSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, string>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, string>>(stream);
         var firstRecord = result.First();
         Assert.Equal("Myvalue", firstRecord.Value);
         Assert.Equal("MyKey", firstRecord.Key);
@@ -127,7 +133,7 @@ public class PowertoolsKafkaProtobufSerializerTests
         // Act
         var message =
             Assert.Throws<SerializationException>(() =>
-                serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream));
+                serializer.Deserialize<KafkaAlias.ConsumerRecords<TestModel, string>>(stream));
         Assert.Contains("Failed to deserialize key data: Unsupported", message.Message);
     }
 
@@ -140,7 +146,7 @@ public class PowertoolsKafkaProtobufSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<int, UserProfile>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, UserProfile>>(stream);
 
         // Assert
         Assert.NotNull(result);
@@ -179,7 +185,7 @@ public class PowertoolsKafkaProtobufSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<int, UserProfile>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, UserProfile>>(stream);
 
         // Assert
         Assert.NotNull(result);
@@ -220,7 +226,7 @@ public class PowertoolsKafkaProtobufSerializerTests
 
         // Act & Assert
         var ex = Assert.Throws<SerializationException>(() =>
-            serializer.Deserialize<ConsumerRecords<int, ProtobufProduct>>(stream));
+            serializer.Deserialize<KafkaAlias.ConsumerRecords<int, ProtobufProduct>>(stream));
 
         // Verify the exception message contains useful information
         Assert.Contains("Failed to deserialize value data:", ex.Message);
@@ -253,7 +259,7 @@ public class PowertoolsKafkaProtobufSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<int, UserProfile>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, UserProfile>>(stream);
 
         // Assert
         var record = result.First();

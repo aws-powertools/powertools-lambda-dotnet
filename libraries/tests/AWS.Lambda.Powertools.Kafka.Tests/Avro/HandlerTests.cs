@@ -5,6 +5,12 @@ using Avro.IO;
 using Avro.Specific;
 using AWS.Lambda.Powertools.Kafka.Avro;
 
+#if DEBUG
+using KafkaAlias = AWS.Lambda.Powertools.Kafka;
+#else
+using KafkaAlias = AWS.Lambda.Powertools.Kafka.Avro;
+#endif
+
 namespace AWS.Lambda.Powertools.Kafka.Tests.Avro;
 
 public class KafkaHandlerTests
@@ -21,7 +27,7 @@ public class KafkaHandlerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaJson));
 
         // Act - Deserialize and process
-        var kafkaEvent = serializer.Deserialize<ConsumerRecords<int, AvroProduct>>(stream);
+        var kafkaEvent = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, AvroProduct>>(stream);
         var response = await Handler(kafkaEvent, mockContext);
 
         // Assert
@@ -69,7 +75,7 @@ public class KafkaHandlerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaJson));
 
         // Act - Deserialize and process
-        var kafkaEvent = serializer.Deserialize<ConsumerRecords<int, string>>(stream);
+        var kafkaEvent = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, string>>(stream);
         var response = await HandlerSimple(kafkaEvent, mockContext);
 
         // Assert
@@ -240,7 +246,7 @@ public class KafkaHandlerTests
     }
 
     // Define the test handler method
-    private async Task<string> Handler(ConsumerRecords<int, AvroProduct> records, ILambdaContext context)
+    private async Task<string> Handler(KafkaAlias.ConsumerRecords<int, AvroProduct> records, ILambdaContext context)
     {
         foreach (var record in records)
         {
@@ -251,7 +257,7 @@ public class KafkaHandlerTests
         return "Successfully processed Kafka events";
     }
     
-    private async Task<string> HandlerSimple(ConsumerRecords<int, string> records, ILambdaContext context)
+    private async Task<string> HandlerSimple(KafkaAlias.ConsumerRecords<int, string> records, ILambdaContext context)
     {
         foreach (var record in records)
         {
@@ -274,7 +280,7 @@ public class KafkaHandlerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaJson));
 
         // Act - Deserialize and process
-        var kafkaEvent = serializer.Deserialize<ConsumerRecords<AvroKey, AvroProduct>>(stream);
+        var kafkaEvent = serializer.Deserialize<KafkaAlias.ConsumerRecords<AvroKey, AvroProduct>>(stream);
         var response = await HandlerWithAvroKeys(kafkaEvent, mockContext);
 
         // Assert
@@ -394,7 +400,7 @@ public class KafkaHandlerTests
         return Convert.ToBase64String(stream.ToArray());
     }
 
-    private async Task<string> HandlerWithAvroKeys(ConsumerRecords<AvroKey, AvroProduct> records,
+    private async Task<string> HandlerWithAvroKeys(KafkaAlias.ConsumerRecords<AvroKey, AvroProduct> records,
         ILambdaContext context)
     {
         foreach (var record in records)

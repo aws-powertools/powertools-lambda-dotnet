@@ -2,6 +2,12 @@ using System.Runtime.Serialization;
 using System.Text;
 using AWS.Lambda.Powertools.Kafka.Avro;
 
+#if DEBUG
+using KafkaAlias = AWS.Lambda.Powertools.Kafka;
+#else
+using KafkaAlias = AWS.Lambda.Powertools.Kafka.Avro;
+#endif
+
 namespace AWS.Lambda.Powertools.Kafka.Tests;
 
 public class AvroErrorHandlingTests
@@ -22,7 +28,7 @@ public class AvroErrorHandlingTests
 
         // Act & Assert
         var ex = Assert.Throws<SerializationException>(() =>
-            serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream));
+            serializer.Deserialize<KafkaAlias.ConsumerRecords<TestModel, string>>(stream));
 
         Assert.Contains("Failed to deserialize key data", ex.Message);
     }
@@ -43,7 +49,7 @@ public class AvroErrorHandlingTests
 
         // Act & Assert
         var ex = Assert.Throws<SerializationException>(() =>
-            serializer.Deserialize<ConsumerRecords<string, TestModel>>(stream));
+            serializer.Deserialize<KafkaAlias.ConsumerRecords<string, TestModel>>(stream));
 
         Assert.Contains("Failed to deserialize value data", ex.Message);
     }

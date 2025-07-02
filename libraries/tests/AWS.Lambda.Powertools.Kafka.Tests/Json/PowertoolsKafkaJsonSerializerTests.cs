@@ -3,6 +3,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AWS.Lambda.Powertools.Kafka.Json;
 
+#if DEBUG
+using KafkaAlias = AWS.Lambda.Powertools.Kafka;
+#else
+using KafkaAlias = AWS.Lambda.Powertools.Kafka.Json;
+#endif
+
 namespace AWS.Lambda.Powertools.Kafka.Tests.Json;
 
 public class PowertoolsKafkaJsonSerializerTests
@@ -20,7 +26,7 @@ public class PowertoolsKafkaJsonSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<int, TestModel>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<int, TestModel>>(stream);
 
         // Assert
         Assert.NotNull(result);
@@ -39,7 +45,7 @@ public class PowertoolsKafkaJsonSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, JsonProduct>>(stream);
 
         // Assert - Test enumeration
         int count = 0;
@@ -74,7 +80,7 @@ public class PowertoolsKafkaJsonSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, string>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, string>>(stream);
         var firstRecord = result.First();
         Assert.Equal("Myvalue", firstRecord.Value);
         Assert.Equal("MyKey", firstRecord.Key);
@@ -96,7 +102,7 @@ public class PowertoolsKafkaJsonSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<Dictionary<string, object>, string>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<Dictionary<string, object>, string>>(stream);
 
         // Assert
         var record = result.First();
@@ -126,7 +132,7 @@ public class PowertoolsKafkaJsonSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<TestModel, string>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<TestModel, string>>(stream);
 
         // Assert
         var record = result.First();
@@ -155,7 +161,7 @@ public class PowertoolsKafkaJsonSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, TestModel>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, TestModel>>(stream);
 
         // Assert
         var record = result.First();
@@ -187,7 +193,7 @@ public class PowertoolsKafkaJsonSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, JsonProduct>>(stream);
 
         // Assert
         var record = result.First();
@@ -212,7 +218,7 @@ public class PowertoolsKafkaJsonSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, JsonProduct>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, JsonProduct>>(stream);
 
         // Assert
         var record = result.First();
@@ -243,7 +249,7 @@ public class PowertoolsKafkaJsonSerializerTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
 
         // Act
-        var result = serializer.Deserialize<ConsumerRecords<string, TestModel>>(stream);
+        var result = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, TestModel>>(stream);
 
         // Assert
         var record = result.First();
