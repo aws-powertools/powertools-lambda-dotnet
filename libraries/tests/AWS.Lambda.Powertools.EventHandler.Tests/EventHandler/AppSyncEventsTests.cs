@@ -3,8 +3,10 @@ using System.Text.Json.Serialization;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
+#pragma warning disable CS8604 // Possible null reference argument.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
-namespace AWS.Lambda.Powertools.EventHandler.Tests;
+namespace AWS.Lambda.Powertools.EventHandler;
 
 public class AppSyncEventsTests
 {
@@ -74,10 +76,10 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublishAsync("/default/channel", async payload =>
+        app.OnPublishAsync("/default/channel", payload =>
         {
             // Handle channel1 events
-            return payload;
+            return Task.FromResult<object>(payload);
         });
 
         // Act
@@ -101,7 +103,7 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublishAsync("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", (payload) =>
         {
             // Throw exception for second event
             if (payload.ContainsKey("event_2"))
@@ -109,7 +111,7 @@ public class AppSyncEventsTests
                 throw new InvalidOperationException("Test error");
             }
 
-            return payload;
+            return Task.FromResult<object>(payload);
         });
 
         // Act
@@ -137,10 +139,10 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         int callCount = 0;
-        app.OnPublishAsync("/default/*", async (payload) =>
+        app.OnPublishAsync("/default/*", (payload) =>
         {
             callCount++;
-            return new Dictionary<string, object> { ["wildcard_matched"] = true };
+            return Task.FromResult<object>(new Dictionary<string, object> { ["wildcard_matched"] = true });
         });
 
         // Act
@@ -162,9 +164,9 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublishAsync("/default/channel", async (payload) => payload);
+        app.OnPublishAsync("/default/channel", (payload) => Task.FromResult<object>(payload));
 
-        app.OnSubscribeAsync("/default/*", async (info) => true);
+        app.OnSubscribeAsync("/default/*", (info) => Task.FromResult(true));
         var subscribeEvent = new AppSyncEventsRequest
         {
             Info = new Information
@@ -263,8 +265,7 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublishAggregateAsync("/default/channel",
-            async (evt, ctx) => { throw new InvalidOperationException("Aggregate error"); });
+        app.OnPublishAggregateAsync("/default/channel", (evt, ctx) => { throw new InvalidOperationException("Aggregate error"); });
 
         // Act
         var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
@@ -311,7 +312,7 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublishAsync("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", (payload) =>
         {
             // Transform each event payload
             var transformedPayload = new Dictionary<string, object>();
@@ -320,7 +321,7 @@ public class AppSyncEventsTests
                 transformedPayload[$"transformed_{key}"] = $"transformed_{payload[key]}";
             }
 
-            return transformedPayload;
+            return Task.FromResult<object>(transformedPayload);
         });
 
         // Act
@@ -462,11 +463,9 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublishAsync("/default/channel",
-            async (payload) => { return new Dictionary<string, object> { ["handler"] = "first" }; });
+        app.OnPublishAsync("/default/channel", (payload) => { return Task.FromResult<object>(new Dictionary<string, object> { ["handler"] = "first" }); });
 
-        app.OnPublishAsync("/default/channel",
-            async (payload) => { return new Dictionary<string, object> { ["handler"] = "second" }; });
+        app.OnPublishAsync("/default/channel", (payload) => { return Task.FromResult<object>(new Dictionary<string, object> { ["handler"] = "second" }); });
 
         // Act
         var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
@@ -513,7 +512,7 @@ public class AppSyncEventsTests
 
         app.OnPublishAsync("/default/channel12", (payload) => { throw new Exception("My custom exception"); });
 
-        app.OnPublishAggregateAsync("/default/channel", async (evt) =>
+        app.OnPublishAggregateAsync("/default/channel", (evt) =>
         {
             // Iterate through events and return individual results with IDs
             var results = new List<AppSyncEvent>();
@@ -555,7 +554,7 @@ public class AppSyncEventsTests
                 }
             }
 
-            return new AppSyncEventsResponse { Events = results };
+            return Task.FromResult(new AppSyncEventsResponse { Events = results });
         });
 
         // Act
@@ -583,13 +582,13 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         // Create handlers that throw exceptions for specific events
-        app.OnPublishAsync("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", (payload) =>
         {
             if (payload.ContainsKey("event_1"))
                 throw new InvalidOperationException("Error for event 1");
             if (payload.ContainsKey("event_3"))
                 throw new ArgumentException("Error for event 3");
-            return payload;
+            return Task.FromResult<object>(payload);
         });
 
         // Act
@@ -615,16 +614,16 @@ public class AppSyncEventsTests
         int firstHandlerCalls = 0;
         int secondHandlerCalls = 0;
 
-        app.OnPublishAsync("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", (payload) =>
         {
             firstHandlerCalls++;
-            return new Dictionary<string, object> { ["handler"] = "first" };
+            return Task.FromResult<object>(new Dictionary<string, object> { ["handler"] = "first" });
         });
 
-        app.OnPublishAsync("/default/*", async (payload) =>
+        app.OnPublishAsync("/default/*", (payload) =>
         {
             secondHandlerCalls++;
-            return new Dictionary<string, object> { ["handler"] = "second" };
+            return Task.FromResult<object>(new Dictionary<string, object> { ["handler"] = "second" });
         });
 
         // Act
@@ -667,18 +666,18 @@ public class AppSyncEventsTests
             ]
         };
 
-        app.OnPublishAsync("/default/channel", async (payload) =>
+        app.OnPublishAsync("/default/channel", (payload) =>
         {
             // Check that both keys are present
             Assert.Equal("data_1", payload["event_1"]);
             Assert.Equal("data_1a", payload["event_1a"]);
 
             // Return a processed result with both keys
-            return new Dictionary<string, object>
+            return Task.FromResult<object>(new Dictionary<string, object>
             {
                 ["processed_1"] = payload["event_1"],
                 ["processed_1a"] = payload["event_1a"]
-            };
+            });
         });
 
         // Act
@@ -699,14 +698,11 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         // Register handlers with different specificity
-        app.OnPublishAsync("/*", async (payload) =>
-            new Dictionary<string, object> { ["handler"] = "least-specific" });
+        app.OnPublishAsync("/*", (payload) => Task.FromResult<object>(new Dictionary<string, object> { ["handler"] = "least-specific" }));
 
-        app.OnPublishAsync("/default/*", async (payload) =>
-            new Dictionary<string, object> { ["handler"] = "more-specific" });
+        app.OnPublishAsync("/default/*", (payload) => Task.FromResult<object>(new Dictionary<string, object> { ["handler"] = "more-specific" }));
 
-        app.OnPublishAsync("/default/channel", async (payload) =>
-            new Dictionary<string, object> { ["handler"] = "most-specific" });
+        app.OnPublishAsync("/default/channel", (payload) => Task.FromResult<object>(new Dictionary<string, object> { ["handler"] = "most-specific" }));
 
         // Act
         var result = await app.ResolveAsync(_appSyncEvent, lambdaContext);
@@ -744,8 +740,7 @@ public class AppSyncEventsTests
             ]
         };
 
-        app.OnPublishAsync("/default/*", async (payload) =>
-            new Dictionary<string, object> { ["handler"] = "wildcard-handler" });
+        app.OnPublishAsync("/default/*", (payload) => Task.FromResult<object>(new Dictionary<string, object> { ["handler"] = "wildcard-handler" }));
 
         // Act
         var result = await app.ResolveAsync(fallbackEvent, lambdaContext);
@@ -763,7 +758,7 @@ public class AppSyncEventsTests
         var app = new AppSyncEventsResolver();
 
         // Only set up a subscribe handler without corresponding publish handler
-        app.OnSubscribeAsync("/subscribe-only", async (info) => true);
+        app.OnSubscribeAsync("/subscribe-only", (info) => Task.FromResult(true));
 
         var subscribeEvent = new AppSyncEventsRequest
         {
@@ -824,7 +819,7 @@ public class AppSyncEventsTests
         var lambdaContext = new TestLambdaContext();
         var app = new AppSyncEventsResolver();
 
-        app.OnPublishAsync(publishPath, async (payload) => payload);
+        app.OnPublishAsync(publishPath, (payload) => Task.FromResult<object>(payload));
         app.OnSubscribeAsync(subscribePath,
             (info, lambdaContext) => { throw new UnauthorizedException("OOPS"); });
 

@@ -1,0 +1,24 @@
+{
+  "namespace": "AWS.Lambda.Powertools.Kafka.Tests",
+  "type": "record",
+  "name": "AvroKey",
+  "fields": [
+    {
+      "name": "id",
+      "type": "int"
+    },
+    {
+      "name": "color",
+      "type": {
+        "type": "enum",
+        "name": "Color",
+        "symbols": [
+          "UNKNOWN",
+          "GREEN",
+          "RED"
+        ],
+        "default": "UNKNOWN"
+      }
+    }
+  ]
+}

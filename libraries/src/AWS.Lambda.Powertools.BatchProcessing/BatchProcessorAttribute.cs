@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -141,21 +142,25 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
     /// <summary>
     /// Type of batch processor.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     public Type BatchProcessor { get; set; }
 
     /// <summary>
     /// Type of batch processor provider.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     public Type BatchProcessorProvider { get; set; }
 
     /// <summary>
     /// Type of record handler.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     public Type RecordHandler { get; set; }
 
     /// <summary>
     /// Type of record handler provider.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     public Type RecordHandlerProvider { get; set; }
 
     /// <summary>

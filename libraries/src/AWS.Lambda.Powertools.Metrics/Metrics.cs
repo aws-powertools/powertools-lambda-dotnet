@@ -1,19 +1,4 @@
-﻿/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Amazon.Lambda.Core;
@@ -317,7 +302,7 @@ public class Metrics : IMetrics, IDisposable
     }
 
     /// <inheritdoc />
-    public void SetService(string service)
+    void IMetrics.SetService(string service)
     {
         // this needs to check if service is set through code or env variables
         // the default value service_undefined has to be ignored and return null so it is not added as default   
@@ -432,6 +417,15 @@ public class Metrics : IMetrics, IDisposable
     public static void SetNamespace(string nameSpace)
     {
         Instance.SetNamespace(nameSpace);
+    }
+    
+    /// <summary>
+    ///     Sets the service name for the metrics.
+    /// </summary>
+    /// <param name="service">The service name.</param>
+    public static void SetService(string service)
+    {
+        Instance.SetService(service);
     }
 
     /// <summary>
@@ -575,6 +569,55 @@ public class Metrics : IMetrics, IDisposable
             Options?.Service ?? "",
             dimensions
         );
+    }
+    
+    /// <inheritdoc />
+    void IMetrics.AddDimensions(params (string key, string value)[] dimensions)
+    {
+        if (dimensions == null || dimensions.Length == 0)
+            return;
+
+        // Validate all dimensions first
+        foreach (var (key, value) in dimensions)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentNullException(nameof(dimensions),
+                    "'AddDimensions' method requires valid dimension keys. 'Null' or empty values are not allowed.");
+
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentNullException(nameof(dimensions),
+                    "'AddDimensions' method requires valid dimension values. 'Null' or empty values are not allowed.");
+        }
+
+        // Create a new dimension set with all dimensions
+        var dimensionSet = new DimensionSet(dimensions[0].key, dimensions[0].value);
+    
+        // Add remaining dimensions to the same set
+        for (var i = 1; i < dimensions.Length; i++)
+        {
+            dimensionSet.Dimensions.Add(dimensions[i].key, dimensions[i].value);
+        }
+
+        // Add the dimensionSet to a list and pass it to AddDimensions
+        _context.AddDimensions([dimensionSet]);
+    }
+    
+    /// <summary>
+    ///     Adds multiple dimensions at once.
+    /// </summary>
+    /// <param name="dimensions">Array of key-value tuples representing dimensions.</param>
+    public static void AddDimensions(params (string key, string value)[] dimensions)
+    {
+        Instance.AddDimensions(dimensions);
+    }
+    
+    /// <summary>
+    ///     Flushes the metrics.
+    /// </summary>
+    /// <param name="metricsOverflow">If set to <c>true</c>, indicates a metrics overflow.</param>
+    public static void Flush(bool metricsOverflow = false)
+    {
+        Instance.Flush(metricsOverflow);
     }
 
     /// <summary>

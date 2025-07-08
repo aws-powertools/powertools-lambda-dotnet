@@ -1,18 +1,3 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -263,5 +248,115 @@ public class FunctionHandler
     public void HandleFunctionNameNoContext()
     {
         
+    }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    public void AddMultipleDimensionsInSameSet()
+    {
+        // Add multiple dimensions at once
+        Metrics.AddDimensions(
+            ("Environment", "test"), 
+            ("Region", "us-west-2")
+        );
+    
+        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
+    }
+
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    public void AddEmptyDimensions()
+    {
+        // Add empty dimensions array
+        Metrics.AddDimensions();
+    
+        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
+    }
+
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    public void AddDimensionsWithInvalidKey()
+    {
+        // Add dimension with null key
+        Metrics.AddDimensions(("", "value"));
+    }
+
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    public void AddDimensionsWithInvalidValue()
+    {
+        // Add dimension with null value
+        Metrics.AddDimensions(("key", ""));
+    }
+    
+    public void AddDimensionsWithOverwrite()
+    {
+        Metrics.SetNamespace("dotnet-powertools-test");
+        Metrics.SetService("testService");
+
+        // Add single dimension
+        Metrics.AddDimension("dimension1", "A");
+
+        // Then add multiple dimensions, including the same key
+        Metrics.AddDimensions(
+            ("dimension1", "B"),
+            ("dimension2", "2")
+        );
+
+        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
+        Metrics.Flush();
+    }
+
+    public void AddDimensionsWithDefaultDimensions()
+    {
+        Metrics.SetNamespace("dotnet-powertools-test");
+        Metrics.SetService("testService");
+    
+        // Set default dimensions
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
+        { 
+            { "environment", "prod" } 
+        });
+
+        // Add multiple dimensions
+        Metrics.AddDimensions(
+            ("dimension1", "1"),
+            ("dimension2", "2")
+        );
+
+        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
+        Metrics.Flush();
+    }
+
+    public void AddDefaultDimensionsAtRuntime()
+    {
+        Metrics.SetNamespace("dotnet-powertools-test");
+        Metrics.SetService("testService");
+    
+        // Set initial default dimensions
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
+        { 
+            { "environment", "prod" } 
+        });
+
+        // Add first set of dimensions
+        Metrics.AddDimensions(
+            ("dimension1", "1"),
+            ("dimension2", "2")
+        );
+        Metrics.AddMetric("FirstMetric", 1.0, MetricUnit.Count);
+        Metrics.Flush();
+
+        // Add more default dimensions
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
+        { 
+            { "environment", "prod" },
+            { "tenantId", "1" }
+        });
+
+        // Add second set of dimensions
+        Metrics.AddDimensions(
+            ("foo", "1"),
+            ("bar", "2")
+        );
+        Metrics.AddMetric("SecondMetric", 1.0, MetricUnit.Count);
+        
+        Metrics.Flush();
     }
 }

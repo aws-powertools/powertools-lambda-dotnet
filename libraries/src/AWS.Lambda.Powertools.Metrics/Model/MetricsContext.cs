@@ -132,7 +132,7 @@ public class MetricsContext : IDisposable
     /// <param name="value">Dimension value</param>
     public void AddDimension(string key, string value)
     {
-        _rootNode.AWS.AddDimensionSet(new DimensionSet(key, value));
+        _rootNode.AWS.AddDimension(new DimensionSet(key, value));
     }
 
     /// <summary>
@@ -141,10 +141,8 @@ public class MetricsContext : IDisposable
     /// <param name="dimensions">List of dimensions</param>
     public void AddDimensions(List<DimensionSet> dimensions)
     {
-        foreach (var dimension in dimensions)
-        {
-            _rootNode.AWS.AddDimensionSet(dimension);
-        }
+        // Call the AddDimensionSet method on the MetricDirective to add as a set
+        _rootNode.AWS.AddDimensionSet(dimensions);
     }
 
     /// <summary>

@@ -31,6 +31,10 @@ Powertools for AWS Lambda (.NET) provides three core utilities:
 
 * **[Batch Processing](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/)** - The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
 
+* **[Event Handler AppSync Events](https://docs.powertools.aws.dev/lambda/dotnet/core/event_handler/appsync_events/)** - The event handler AppSync Events utility provides a simple way to handle AppSync events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
+
+* **[Event Handler Bedrock Agent Functions](https://docs.powertools.aws.dev/lambda/dotnet/core/event_handler/bedrock_agent_function/)** - The event handler Bedrock Agent Functions utility provides a simple way to handle Amazon Bedrock agent function events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
+
 ### Installation
 
 The Powertools for AWS Lambda (.NET) utilities (.NET 6 and .NET 8) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*) or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
@@ -63,6 +67,14 @@ The Powertools for AWS Lambda (.NET) utilities (.NET 6 and .NET 8) are available
 
     `dotnet add package AWS.Lambda.Powertools.BatchProcessing`
 
+* [AWS.Lambda.Powertools.EventHandler.AppSyncEvents](https://www.nuget.org/packages/AWS.Lambda.Powertools.EventHandler):
+
+    `dotnet add package AWS.Lambda.Powertools.EventHandler`
+
+* [AWS.Lambda.Powertools.EventHandler.BedrockAgentFunction](https://www.nuget.org/packages/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction):
+
+    `dotnet add package AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction`
+
 ## Examples
 
 We have provided examples focused specifically on each of the utilities. Each solution comes with an AWS Serverless Application Model (AWS SAM) templates to run your functions as a Zip package using the AWS Lambda .NET 6 or .NET 8 managed runtime; or as a container package using the AWS base images for .NET.
@@ -92,6 +104,7 @@ Knowing which companies are using this library is important to help prioritize t
 The following companies, among others, use Powertools:
 
 * [Caylent](https://caylent.com/)
+* [Instil Software](https://instil.co/)
 * [Pushpay](https://pushpay.com/)
 
 ### Sharing your work
