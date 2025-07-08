@@ -114,9 +114,18 @@ public class Metadata
     ///     Adds new Dimension
     /// </summary>
     /// <param name="dimension">Dimension to add</param>
-    internal void AddDimensionSet(DimensionSet dimension)
+    internal void AddDimension(DimensionSet dimension)
     {
         _metricDirective.AddDimension(dimension);
+    }
+    
+    /// <summary>
+    ///     Adds new List of Dimensions
+    /// </summary>
+    /// <param name="dimension">Dimensions to add</param>
+    internal void AddDimensionSet(List<DimensionSet> dimension)
+    {
+        _metricDirective.AddDimensionSet(dimension);
     }
 
     /// <summary>

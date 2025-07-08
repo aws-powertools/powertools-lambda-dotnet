@@ -249,4 +249,114 @@ public class FunctionHandler
     {
         
     }
+    
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    public void AddMultipleDimensionsInSameSet()
+    {
+        // Add multiple dimensions at once
+        Metrics.AddDimensions(
+            ("Environment", "test"), 
+            ("Region", "us-west-2")
+        );
+    
+        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
+    }
+
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    public void AddEmptyDimensions()
+    {
+        // Add empty dimensions array
+        Metrics.AddDimensions();
+    
+        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
+    }
+
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    public void AddDimensionsWithInvalidKey()
+    {
+        // Add dimension with null key
+        Metrics.AddDimensions(("", "value"));
+    }
+
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
+    public void AddDimensionsWithInvalidValue()
+    {
+        // Add dimension with null value
+        Metrics.AddDimensions(("key", ""));
+    }
+    
+    public void AddDimensionsWithOverwrite()
+    {
+        Metrics.SetNamespace("dotnet-powertools-test");
+        Metrics.SetService("testService");
+
+        // Add single dimension
+        Metrics.AddDimension("dimension1", "A");
+
+        // Then add multiple dimensions, including the same key
+        Metrics.AddDimensions(
+            ("dimension1", "B"),
+            ("dimension2", "2")
+        );
+
+        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
+        Metrics.Flush();
+    }
+
+    public void AddDimensionsWithDefaultDimensions()
+    {
+        Metrics.SetNamespace("dotnet-powertools-test");
+        Metrics.SetService("testService");
+    
+        // Set default dimensions
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
+        { 
+            { "environment", "prod" } 
+        });
+
+        // Add multiple dimensions
+        Metrics.AddDimensions(
+            ("dimension1", "1"),
+            ("dimension2", "2")
+        );
+
+        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
+        Metrics.Flush();
+    }
+
+    public void AddDefaultDimensionsAtRuntime()
+    {
+        Metrics.SetNamespace("dotnet-powertools-test");
+        Metrics.SetService("testService");
+    
+        // Set initial default dimensions
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
+        { 
+            { "environment", "prod" } 
+        });
+
+        // Add first set of dimensions
+        Metrics.AddDimensions(
+            ("dimension1", "1"),
+            ("dimension2", "2")
+        );
+        Metrics.AddMetric("FirstMetric", 1.0, MetricUnit.Count);
+        Metrics.Flush();
+
+        // Add more default dimensions
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
+        { 
+            { "environment", "prod" },
+            { "tenantId", "1" }
+        });
+
+        // Add second set of dimensions
+        Metrics.AddDimensions(
+            ("foo", "1"),
+            ("bar", "2")
+        );
+        Metrics.AddMetric("SecondMetric", 1.0, MetricUnit.Count);
+        
+        Metrics.Flush();
+    }
 }

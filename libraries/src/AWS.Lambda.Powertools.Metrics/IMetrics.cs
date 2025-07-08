@@ -104,4 +104,10 @@ public interface IMetrics
     /// </summary>
     /// <param name="context"></param>
     void CaptureColdStartMetric(ILambdaContext context);
+    
+    /// <summary>
+    ///     Adds multiple dimensions at once.
+    /// </summary>
+    /// <param name="dimensions">Array of key-value tuples representing dimensions.</param>
+    void AddDimensions(params (string key, string value)[] dimensions);
 }
