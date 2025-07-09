@@ -136,14 +136,32 @@ public class FunctionTests
             ]
         };
 
-        var response = await cloudWatchClient.ListMetricsAsync(request);
+        // retry n amount of times to ensure metrics are available
+        var response = new ListMetricsResponse();
+        for (int i = 0; i < 5; i++)
+        {
+            try
+            {
+                response = await cloudWatchClient.ListMetricsAsync(request);
+                if (response.Metrics.Count > 6)
+                {
+                    break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _testOutputHelper.WriteLine($"Attempt {i + 1}: Failed to list metrics: {ex.Message}");
+            }
+
+            await Task.Delay(5000); // wait for 5 seconds before retrying
+        }
 
         Assert.Equal(7, response.Metrics.Count);
 
         foreach (var metric in response.Metrics)
         {
             Assert.Equal("Test", metric.Namespace);
-            
+
             switch (metric.MetricName)
             {
                 case "ColdStart":
