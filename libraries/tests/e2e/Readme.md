@@ -23,7 +23,7 @@ Navigate to the directory containing your CDK stacks and deploy them:
 cd infra
 cdk deploy --require-approval never
 cd ../infra-aot
-cdk deploy --require-approval never
+cdk deploy CoreStack  --require-approval never --context architecture=arm64
 ```
 ### 3. Run the tests
 

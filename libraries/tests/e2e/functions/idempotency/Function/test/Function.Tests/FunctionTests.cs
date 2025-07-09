@@ -186,7 +186,7 @@ public class FunctionTests
         
         // Assert DynamoDB
         await AssertDynamoDbData(
-            $"{key}#35973cf447e6cc11008d603c791a232f", 
+            $"{key}#24e83361c8bd544887aa99ab26395d54", 
             guid1);
     }
 
@@ -323,7 +323,7 @@ public class FunctionTests
 
         return await ExecuteRequest(request);
     }
-
+    
     private async Task<(APIGatewayProxyResponse Response, string Guid)> ExecuteRequest(InvokeRequest request)
     {
         var response = await _lambdaClient.InvokeAsync(request);

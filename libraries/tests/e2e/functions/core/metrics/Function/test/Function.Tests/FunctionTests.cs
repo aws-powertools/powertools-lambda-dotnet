@@ -27,8 +27,8 @@ public class FunctionTests
 
     [Trait("Category", "AOT")]
     [Theory]
-    [InlineData("E2ETestLambda_X64_AOT_NET8_metrics")]
-    [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics")]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_metrics_AOT-Function")]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_metrics_AOT-Function")]
     public async Task AotFunctionTest(string functionName)
     {
         _functionName = functionName;
@@ -136,14 +136,32 @@ public class FunctionTests
             ]
         };
 
-        var response = await cloudWatchClient.ListMetricsAsync(request);
+        // retry n amount of times to ensure metrics are available
+        var response = new ListMetricsResponse();
+        for (int i = 0; i < 5; i++)
+        {
+            try
+            {
+                response = await cloudWatchClient.ListMetricsAsync(request);
+                if (response.Metrics.Count > 6)
+                {
+                    break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _testOutputHelper.WriteLine($"Attempt {i + 1}: Failed to list metrics: {ex.Message}");
+            }
+
+            await Task.Delay(5000); // wait for 5 seconds before retrying
+        }
 
         Assert.Equal(7, response.Metrics.Count);
 
         foreach (var metric in response.Metrics)
         {
             Assert.Equal("Test", metric.Namespace);
-            
+
             switch (metric.MetricName)
             {
                 case "ColdStart":
@@ -317,6 +335,6 @@ public class FunctionTests
 
         _ = await _lambdaClient.UpdateFunctionConfigurationAsync(updateRequest);
 
-        await Task.Delay(2000);
+        await Task.Delay(15000);
     }
 }
