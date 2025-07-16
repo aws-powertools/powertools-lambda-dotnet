@@ -117,12 +117,12 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     /// </summary>
     /// <param name="assemblyName"></param>
     /// <returns></returns>
-    internal string ParseAssemblyName(string assemblyName)
+    internal static string ParseAssemblyName(string assemblyName)
     {
         // Use cache to avoid repeated string operations
-        return ParsedAssemblyNameCache.GetOrAdd(assemblyName, name =>
+        try
         {
-            try
+            return ParsedAssemblyNameCache.GetOrAdd(assemblyName, name =>
             {
                 var lastDotIndex = name.LastIndexOf('.');
                 if (lastDotIndex >= 0 && lastDotIndex < name.Length - 1)
@@ -130,13 +130,13 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
                     var parsedName = name.Substring(lastDotIndex + 1);
                     return $"{Constants.FeatureContextIdentifier}/{parsedName}";
                 }
-            }
-            catch
-            {
-                //NOOP
-            }
 
-            return $"{Constants.FeatureContextIdentifier}/{name}";
-        });
+                return $"{Constants.FeatureContextIdentifier}/{name}";
+            });
+        }
+        catch (Exception e)
+        {
+            return string.Empty;
+        }
     }
 }

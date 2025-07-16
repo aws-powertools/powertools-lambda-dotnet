@@ -235,11 +235,8 @@ public class PowertoolsEnvironmentTest : IDisposable
     [Fact]
     public void ParseAssemblyName_Should_Handle_Assembly_Without_Dots()
     {
-        // Arrange
-        var powertoolsEnv = new PowertoolsEnvironment();
-        
         // Act
-        var result = powertoolsEnv.ParseAssemblyName("SimpleAssemblyName");
+        var result = PowertoolsEnvironment.ParseAssemblyName("SimpleAssemblyName");
         
         // Assert
         Assert.Equal($"{Constants.FeatureContextIdentifier}/SimpleAssemblyName", result);
@@ -248,11 +245,8 @@ public class PowertoolsEnvironmentTest : IDisposable
     [Fact]
     public void ParseAssemblyName_Should_Handle_Assembly_With_Dots()
     {
-        // Arrange
-        var powertoolsEnv = new PowertoolsEnvironment();
-        
         // Act
-        var result = powertoolsEnv.ParseAssemblyName("AWS.Lambda.Powertools.Common");
+        var result = PowertoolsEnvironment.ParseAssemblyName("AWS.Lambda.Powertools.Common");
         
         // Assert
         Assert.Equal($"{Constants.FeatureContextIdentifier}/Common", result);
@@ -261,16 +255,23 @@ public class PowertoolsEnvironmentTest : IDisposable
     [Fact]
     public void ParseAssemblyName_Should_Use_Cache_For_Same_Assembly_Name()
     {
-        // Arrange
-        var powertoolsEnv = new PowertoolsEnvironment();
-        
         // Act - Call twice with same assembly name
-        var result1 = powertoolsEnv.ParseAssemblyName("AWS.Lambda.Powertools.Tests");
-        var result2 = powertoolsEnv.ParseAssemblyName("AWS.Lambda.Powertools.Tests");
+        var result1 = PowertoolsEnvironment.ParseAssemblyName("AWS.Lambda.Powertools.Tests");
+        var result2 = PowertoolsEnvironment.ParseAssemblyName("AWS.Lambda.Powertools.Tests");
         
         // Assert - Should return same result (cached)
         Assert.Equal(result1, result2);
         Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests", result1);
+    }
+    
+    [Fact]
+    public void ParseAssemblyName_Null_Return_Empty()
+    {
+        // Act - Call twice with same assembly name
+        var result = PowertoolsEnvironment.ParseAssemblyName(null);
+        
+        // Assert - Should return null
+        Assert.Empty(result);
     }
     
     [Fact]
