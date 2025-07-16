@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -92,8 +91,7 @@ public class PowertoolsEnvironmentTest : IDisposable
     {
         // Arrange
         var mockEnvironment = Substitute.For<IPowertoolsEnvironment>();
-        var testType = this.GetType();
-        
+
         // Mock the dependencies to return controlled values
         mockEnvironment.GetAssemblyName(Arg.Any<object>()).Returns("AWS.Lambda.Powertools.Common.Tests");
         mockEnvironment.GetAssemblyVersion(Arg.Any<object>()).Returns("1.2.3");
@@ -101,7 +99,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         
         // Setup the actual method call to use real implementation logic
         mockEnvironment.When(x => x.SetExecutionEnvironment(Arg.Any<object>()))
-            .Do(callInfo =>
+            .Do(_ =>
             {
                 var assemblyName = "PT/Tests"; // Parsed name
                 var assemblyVersion = "1.2.3";
@@ -131,7 +129,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         
         // Setup the method call
         mockEnvironment.When(x => x.SetExecutionEnvironment(Arg.Any<object>()))
-            .Do(callInfo =>
+            .Do(_ =>
             {
                 var currentEnv = "ExistingValue";
                 var assemblyName = "PT/Logging";
@@ -162,7 +160,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         
         // Setup the method call - should not add PTENV again
         mockEnvironment.When(x => x.SetExecutionEnvironment(Arg.Any<object>()))
-            .Do(callInfo =>
+            .Do(_ =>
             {
                 var currentEnv = "PT/Metrics/1.0.0 PTENV/AWS_LAMBDA_DOTNET8";
                 var assemblyName = "PT/Tracing";
@@ -180,10 +178,158 @@ public class PowertoolsEnvironmentTest : IDisposable
         mockEnvironment.Received(1).SetEnvironmentVariable("AWS_EXECUTION_ENV", "PT/Metrics/1.0.0 PTENV/AWS_LAMBDA_DOTNET8 PT/Tracing/1.5.0");
     }
     
+    [Fact]
+    public void GetAssemblyName_Should_Handle_Type_Object()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        var typeObject = typeof(PowertoolsEnvironment);
+        
+        // Act
+        var result = powertoolsEnv.GetAssemblyName(typeObject);
+        
+        // Assert
+        Assert.Equal("AWS.Lambda.Powertools.Common", result);
+    }
+    
+    [Fact]
+    public void GetAssemblyName_Should_Handle_Regular_Object()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        
+        // Act
+        var result = powertoolsEnv.GetAssemblyName(this);
+        
+        // Assert
+        Assert.Equal("AWS.Lambda.Powertools.Common.Tests", result);
+    }
+    
+    [Fact]
+    public void GetAssemblyVersion_Should_Handle_Type_Object()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        var typeObject = typeof(PowertoolsEnvironment);
+        
+        // Act
+        var result = powertoolsEnv.GetAssemblyVersion(typeObject);
+        
+        // Assert
+        Assert.Matches(@"\d+\.\d+\.\d+", result); // Should match version pattern like "1.0.0"
+    }
+    
+    [Fact]
+    public void GetAssemblyVersion_Should_Handle_Regular_Object()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        
+        // Act
+        var result = powertoolsEnv.GetAssemblyVersion(this);
+        
+        // Assert
+        Assert.Matches(@"\d+\.\d+\.\d+", result); // Should match version pattern like "1.0.0"
+    }
+    
+    [Fact]
+    public void ParseAssemblyName_Should_Handle_Assembly_Without_Dots()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        
+        // Act
+        var result = powertoolsEnv.ParseAssemblyName("SimpleAssemblyName");
+        
+        // Assert
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/SimpleAssemblyName", result);
+    }
+    
+    [Fact]
+    public void ParseAssemblyName_Should_Handle_Assembly_With_Dots()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        
+        // Act
+        var result = powertoolsEnv.ParseAssemblyName("AWS.Lambda.Powertools.Common");
+        
+        // Assert
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Common", result);
+    }
+    
+    [Fact]
+    public void ParseAssemblyName_Should_Use_Cache_For_Same_Assembly_Name()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        
+        // Act - Call twice with same assembly name
+        var result1 = powertoolsEnv.ParseAssemblyName("AWS.Lambda.Powertools.Tests");
+        var result2 = powertoolsEnv.ParseAssemblyName("AWS.Lambda.Powertools.Tests");
+        
+        // Assert - Should return same result (cached)
+        Assert.Equal(result1, result2);
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests", result1);
+    }
+    
+    [Fact]
+    public void SetExecutionEnvironment_Should_Handle_Empty_Current_Environment()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        Environment.SetEnvironmentVariable("AWS_EXECUTION_ENV", "");
+        
+        // Act
+        powertoolsEnv.SetExecutionEnvironment(this);
+        
+        // Assert
+        var result = powertoolsEnv.GetEnvironmentVariable("AWS_EXECUTION_ENV");
+        Assert.Contains($"{Constants.FeatureContextIdentifier}/Tests/", result);
+        Assert.Contains("PTENV/AWS_LAMBDA_DOTNET", result);
+    }
+    
+    [Fact]
+    public void SetExecutionEnvironment_Should_Add_PTENV_When_Not_Present()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        powertoolsEnv.SetEnvironmentVariable("AWS_EXECUTION_ENV", "SomeExistingValue");
+        
+        // Act
+        powertoolsEnv.SetExecutionEnvironment(this);
+        
+        // Assert
+        var result = powertoolsEnv.GetEnvironmentVariable("AWS_EXECUTION_ENV");
+        Assert.StartsWith("SomeExistingValue", result);
+        Assert.Contains("PTENV/AWS_LAMBDA_DOTNET", result);
+    }
+    
+    [Fact]
+    public void SetExecutionEnvironment_Should_Not_Add_PTENV_When_Already_Present()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        var existingValue = $"ExistingValue PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}";
+        powertoolsEnv.SetEnvironmentVariable("AWS_EXECUTION_ENV", existingValue);
+        
+        // Act
+        powertoolsEnv.SetExecutionEnvironment(this);
+        
+        // Assert
+        var result = powertoolsEnv.GetEnvironmentVariable("AWS_EXECUTION_ENV");
+        var ptenvCount = result.Split("PTENV/").Length - 1;
+        Assert.Equal(1, ptenvCount); // Should only have one PTENV entry
+    }
+
     public void Dispose()
     {
         //Do cleanup actions here
-        
         Environment.SetEnvironmentVariable("AWS_EXECUTION_ENV", null);
+        
+        // Clear the singleton instance to ensure fresh state for each test
+        var instanceField = typeof(PowertoolsEnvironment).GetField("_instance", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        instanceField?.SetValue(null, null);
     }
 }

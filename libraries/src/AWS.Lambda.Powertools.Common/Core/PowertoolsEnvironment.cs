@@ -117,7 +117,7 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     /// </summary>
     /// <param name="assemblyName"></param>
     /// <returns></returns>
-    private string ParseAssemblyName(string assemblyName)
+    internal string ParseAssemblyName(string assemblyName)
     {
         // Use cache to avoid repeated string operations
         return ParsedAssemblyNameCache.GetOrAdd(assemblyName, name =>
