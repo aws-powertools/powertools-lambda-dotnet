@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Text;
 
 namespace AWS.Lambda.Powertools.Common;
@@ -10,6 +11,16 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     ///     The instance
     /// </summary>
     private static IPowertoolsEnvironment _instance;
+    
+    /// <summary>
+    /// Cached runtime environment string
+    /// </summary>
+    private static readonly string CachedRuntimeEnvironment = $"PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}";
+    
+    /// <summary>
+    /// Cache for parsed assembly names to avoid repeated string operations
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, string> ParsedAssemblyNameCache = new();
     
     /// <summary>
     ///     Gets the instance.
@@ -32,13 +43,28 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     /// <inheritdoc />
     public string GetAssemblyName<T>(T type)
     {
+        if (type is Type typeObject)
+        {
+            return typeObject.Assembly.GetName().Name;
+        }
+        
         return type.GetType().Assembly.GetName().Name;
     }
 
     /// <inheritdoc />
     public string GetAssemblyVersion<T>(T type)
     {
-        var version = type.GetType().Assembly.GetName().Version;
+        Version version;
+        
+        if (type is Type typeObject)
+        {
+            version = typeObject.Assembly.GetName().Version;
+        }
+        else
+        {
+            version = type.GetType().Assembly.GetName().Version;
+        }
+        
         return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : string.Empty;
     }
     
@@ -46,27 +72,43 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     public void SetExecutionEnvironment<T>(T type)
     {
         const string envName = Constants.AwsExecutionEnvironmentVariableName;
-        var envValue = new StringBuilder();
         var currentEnvValue = GetEnvironmentVariable(envName);
         var assemblyName = ParseAssemblyName(GetAssemblyName(type));
 
-        // If there is an existing execution environment variable add the annotations package as a suffix.
-        if (!string.IsNullOrEmpty(currentEnvValue))
+        // Check for duplication early
+        if (!string.IsNullOrEmpty(currentEnvValue) && currentEnvValue.Contains(assemblyName))
         {
-            // Avoid duplication - should not happen since the calling Instances are Singletons - defensive purposes
-            if (currentEnvValue.Contains(assemblyName))
-            {
-                return;
-            }
-
-            envValue.Append($"{currentEnvValue} ");
+            return;
         }
 
         var assemblyVersion = GetAssemblyVersion(type);
+        var newEntry = $"{assemblyName}/{assemblyVersion}";
+        
+        string finalValue;
+        
+        if (string.IsNullOrEmpty(currentEnvValue))
+        {
+            // First entry: "PT/Assembly/1.0.0 PTENV/AWS_LAMBDA_DOTNET8"
+            finalValue = $"{newEntry} {CachedRuntimeEnvironment}";
+        }
+        else
+        {
+            // Check if PTENV already exists in one pass
+            var containsPtenv = currentEnvValue.Contains("PTENV/");
+            
+            if (containsPtenv)
+            {
+                // Just append the new entry: "existing PT/Assembly/1.0.0"
+                finalValue = $"{currentEnvValue} {newEntry}";
+            }
+            else
+            {
+                // Append new entry + PTENV: "existing PT/Assembly/1.0.0 PTENV/AWS_LAMBDA_DOTNET8"
+                finalValue = $"{currentEnvValue} {newEntry} {CachedRuntimeEnvironment}";
+            }
+        }
 
-        envValue.Append($"{assemblyName}/{assemblyVersion}");
-
-        SetEnvironmentVariable(envName, envValue.ToString());
+        SetEnvironmentVariable(envName, finalValue);
     }
     
     /// <summary>
@@ -77,16 +119,24 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     /// <returns></returns>
     private string ParseAssemblyName(string assemblyName)
     {
-        try
+        // Use cache to avoid repeated string operations
+        return ParsedAssemblyNameCache.GetOrAdd(assemblyName, name =>
         {
-            var parsedName = assemblyName.Substring(assemblyName.LastIndexOf(".", StringComparison.Ordinal) + 1);
-            return $"{Constants.FeatureContextIdentifier}/{parsedName}";
-        }
-        catch
-        {
-            //NOOP
-        }
+            try
+            {
+                var lastDotIndex = name.LastIndexOf('.');
+                if (lastDotIndex >= 0 && lastDotIndex < name.Length - 1)
+                {
+                    var parsedName = name.Substring(lastDotIndex + 1);
+                    return $"{Constants.FeatureContextIdentifier}/{parsedName}";
+                }
+            }
+            catch
+            {
+                //NOOP
+            }
 
-        return $"{Constants.FeatureContextIdentifier}/{assemblyName}";
+            return $"{Constants.FeatureContextIdentifier}/{name}";
+        });
     }
 }

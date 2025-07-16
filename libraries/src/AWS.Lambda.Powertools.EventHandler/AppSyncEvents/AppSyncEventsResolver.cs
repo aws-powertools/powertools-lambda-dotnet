@@ -21,7 +21,7 @@ public class AppSyncEventsResolver
     {
         _publishRoutes = new RouteHandlerRegistry<AppSyncEventsRequest, object>();
         _subscribeRoutes = new RouteHandlerRegistry<AppSyncEventsRequest, bool>();
-        SystemWrapper.Instance.SetExecutionEnvironment(this);
+        PowertoolsEnvironment.Instance.SetExecutionEnvironment(this);
     }
 
     #region OnPublish Methods
