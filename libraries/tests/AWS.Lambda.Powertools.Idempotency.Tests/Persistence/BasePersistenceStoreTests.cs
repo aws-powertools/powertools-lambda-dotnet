@@ -524,7 +524,7 @@ public class BasePersistenceStoreTests
         // Assert
         generatedHash.Should().Be(expectedHash);
     }
-    
+
     [Fact]
     public async Task When_Key_Prefix_Set_Should_Create_With_Prefix()
     {
@@ -562,5 +562,76 @@ public class BasePersistenceStoreTests
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    [Fact]
+    public async Task ProcessExistingRecord_WhenValidRecord_ShouldReturnRecordAndSaveToCache()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+        LRUCache<string, DataRecord> cache = new(2);
+
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithUseLocalCache(true)
+            .Build(), null, null, cache);
+
+        var now = DateTimeOffset.UtcNow;
+        var existingRecord = new DataRecord(
+            "testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6",
+            DataRecord.DataRecordStatus.COMPLETED,
+            now.AddSeconds(3600).ToUnixTimeSeconds(),
+            "existing response",
+            null);
+
+        // Act
+        var result =
+            persistenceStore.ProcessExistingRecord(existingRecord, JsonSerializer.SerializeToDocument(request)!);
+
+        // Assert
+        result.Should().Be(existingRecord);
+        cache.Count.Should().Be(1);
+        cache.TryGet("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6", out var cachedRecord).Should().BeTrue();
+        cachedRecord.Should().Be(existingRecord);
+    }
+
+    [Fact]
+    public void ProcessExistingRecord_WhenNullRecord_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
+
+        // Act
+        var act = () => persistenceStore.ProcessExistingRecord(null, JsonSerializer.SerializeToDocument(request)!);
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("exRecord")
+            .WithMessage("Existing record cannot be null*");
+    }
+
+    [Fact]
+    public void ProcessExistingRecord_WhenNullData_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
+
+        var existingRecord = new DataRecord(
+            "test-key",
+            DataRecord.DataRecordStatus.COMPLETED,
+            DateTimeOffset.UtcNow.AddSeconds(3600).ToUnixTimeSeconds(),
+            "response",
+            null);
+
+        // Act
+        var act = () => persistenceStore.ProcessExistingRecord(existingRecord, null);
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("data")
+            .WithMessage("Data cannot be null*");
     }
 }

@@ -191,6 +191,7 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
                 Item = item,
                 ConditionExpression = "attribute_not_exists(#id) OR #expiry < :now OR (attribute_exists(#in_progress_expiry) AND #in_progress_expiry < :now_milliseconds AND #status = :inprogress)",
                 ExpressionAttributeNames = expressionAttributeNames,
+                ReturnValuesOnConditionCheckFailure = ReturnValuesOnConditionCheckFailure.ALL_OLD,
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     {":now", new AttributeValue {N = now.ToUnixTimeSeconds().ToString()}},
@@ -202,8 +203,20 @@ public class DynamoDBPersistenceStore : BasePersistenceStore
         }
         catch (ConditionalCheckFailedException e)
         {
-            throw new IdempotencyItemAlreadyExistsException(
+            var ex = new IdempotencyItemAlreadyExistsException(
                 "Failed to put record for already existing idempotency key: " + record.IdempotencyKey, e);
+
+            if (e.Item != null)
+            {
+                ex.Record = new DataRecord(e.Item[_keyAttr].S,
+                    Enum.Parse<DataRecord.DataRecordStatus>(e.Item[_statusAttr].S),
+                    long.Parse(e.Item[_expiryAttr].N),
+                    e.Item.TryGetValue(_dataAttr, out var data) ? data?.S : null,
+                    e.Item.TryGetValue(_validationAttr, out var validation) ? validation?.S : null,
+                    e.Item.TryGetValue(_inProgressExpiryAttr, out var inProgExp) ? long.Parse(inProgExp.N) : null);
+            }
+
+            throw ex;
         }
     }
 

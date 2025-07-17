@@ -106,9 +106,25 @@ internal class IdempotencyAspectHandler<T>
             // already exists. If it succeeds, there's no need to call getRecord.
             await _persistenceStore.SaveInProgress(_data, DateTimeOffset.UtcNow, GetRemainingTimeInMillis());
         }
-        catch (IdempotencyItemAlreadyExistsException)
+        catch (IdempotencyItemAlreadyExistsException ex)
         {
-            var record = await GetIdempotencyRecord();
+            DataRecord record;
+    
+            if(ex.Record != null)
+            {
+                // If the error includes the existing record, we can use it to validate
+                // the record being processed and cache it in memory.
+                var existingRecord = _persistenceStore.ProcessExistingRecord(ex.Record, _data);
+                record = existingRecord;
+            }
+            else
+            {
+                // If the error doesn't include the existing record, we need to fetch
+                // it from the persistence layer. In doing so, we also call the processExistingRecord
+                // method to validate the record and cache it in memory.
+                record = await GetIdempotencyRecord();
+            }
+    
             return await HandleForStatus(record);
         }
         catch (IdempotencyKeyException)

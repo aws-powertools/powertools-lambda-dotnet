@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -33,7 +33,7 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
     private readonly DynamoDBPersistenceStore _dynamoDbPersistenceStore;
     private readonly AmazonDynamoDBClient _client;
     private readonly string _tableName;
-    
+
     public DynamoDbPersistenceStoreTests(DynamoDbFixture fixture)
     {
         _client = fixture.Client;
@@ -42,21 +42,23 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
             .WithTableName(_tableName)
             .WithDynamoDBClient(_client)
             .Build();
-        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null, keyPrefix: null);
+        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), functionName: null,
+            keyPrefix: null);
     }
-    
+
     //putRecord
     [Fact]
     public async Task PutRecord_WhenRecordDoesNotExist_ShouldCreateRecordInDynamoDB()
     {
         // Arrange
         var now = DateTimeOffset.UtcNow;
+        var uniqueKey = $"key_{Guid.NewGuid()}";
         var expiry = now.AddSeconds(3600).ToUnixTimeSeconds();
-        var key = CreateKey("key");
-        
+        var key = CreateKey(uniqueKey);
+
         // Act
         await _dynamoDbPersistenceStore
-            .PutRecord(new DataRecord("key", DataRecord.DataRecordStatus.COMPLETED, expiry, null, null), now);
+            .PutRecord(new DataRecord(uniqueKey, DataRecord.DataRecordStatus.COMPLETED, expiry, null, null), now);
 
         // Assert
         var getItemResponse =
@@ -73,7 +75,7 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
     }
 
     [Fact]
-    public async Task PutRecord_WhenRecordAlreadyExist_ShouldThrowIdempotencyItemAlreadyExistsException() 
+    public async Task PutRecord_WhenRecordAlreadyExist_ShouldThrowIdempotencyItemAlreadyExistsException()
     {
         // Arrange
         var key = CreateKey("key");
@@ -82,7 +84,7 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
         Dictionary<string, AttributeValue> item = new(key);
         var now = DateTimeOffset.UtcNow;
         var expiry = now.AddSeconds(30).ToUnixTimeSeconds();
-        item.Add("expiration", new AttributeValue {N = expiry.ToString()});
+        item.Add("expiration", new AttributeValue { N = expiry.ToString() });
         item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.COMPLETED.ToString()));
         item.Add("data", new AttributeValue("Fake Data"));
         await _client.PutItemAsync(new PutItemRequest
@@ -100,24 +102,24 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
                 null,
                 null
             ), now);
-        
+
         // Assert
         await act.Should().ThrowAsync<IdempotencyItemAlreadyExistsException>();
-        
+
         // item was not updated, retrieve the initial one
         var itemInDb = (await _client.GetItemAsync(new GetItemRequest
-            {
-                TableName = _tableName,
-                Key = key
-            })).Item;
+        {
+            TableName = _tableName,
+            Key = key
+        })).Item;
         itemInDb.Should().NotBeNull();
         itemInDb["status"].S.Should().Be("COMPLETED");
         itemInDb["expiration"].N.Should().Be(expiry.ToString());
         itemInDb["data"].S.Should().Be("Fake Data");
     }
-    
+
     [Fact]
-    public async Task PutRecord_ShouldBlockUpdate_IfRecordAlreadyExistAndProgressNotExpiredAfterLambdaTimedOut() 
+    public async Task PutRecord_ShouldBlockUpdate_IfRecordAlreadyExistAndProgressNotExpiredAfterLambdaTimedOut()
     {
         // Arrange
         var key = CreateKey("key");
@@ -127,18 +129,18 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
         var now = DateTimeOffset.UtcNow;
         var expiry = now.AddSeconds(30).ToUnixTimeSeconds();
         var progressExpiry = now.AddSeconds(30).ToUnixTimeMilliseconds();
-        
-        item.Add("expiration", new AttributeValue {N = expiry.ToString()});
+
+        item.Add("expiration", new AttributeValue { N = expiry.ToString() });
         item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.INPROGRESS.ToString()));
         item.Add("data", new AttributeValue("Fake Data"));
-        item.Add("in_progress_expiration", new AttributeValue {N = progressExpiry.ToString()});
-        
+        item.Add("in_progress_expiration", new AttributeValue { N = progressExpiry.ToString() });
+
         await _client.PutItemAsync(new PutItemRequest
         {
             TableName = _tableName,
             Item = item
         });
-        
+
         var expiry2 = now.AddSeconds(3600).ToUnixTimeSeconds();
         // Act
         var act = () => _dynamoDbPersistenceStore.PutRecord(
@@ -148,10 +150,10 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
                 "Fake Data 2",
                 null
             ), now);
-        
+
         // Assert
         await act.Should().ThrowAsync<IdempotencyItemAlreadyExistsException>();
-        
+
         // item was not updated, retrieve the initial one
         var itemInDb = (await _client.GetItemAsync(new GetItemRequest
         {
@@ -163,9 +165,9 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
         itemInDb["expiration"].N.Should().Be(expiry.ToString());
         itemInDb["data"].S.Should().Be("Fake Data");
     }
-    
+
     [Fact]
-    public async Task PutRecord_ShouldCreateRecordInDynamoDB_IfLambdaWasInProgressAndTimedOut() 
+    public async Task PutRecord_ShouldCreateRecordInDynamoDB_IfLambdaWasInProgressAndTimedOut()
     {
         // Arrange
         var key = CreateKey("key");
@@ -175,20 +177,20 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
         var now = DateTimeOffset.UtcNow;
         var expiry = now.AddSeconds(30).ToUnixTimeSeconds();
         var progressExpiry = now.AddSeconds(-30).ToUnixTimeMilliseconds();
-        
-        item.Add("expiration", new AttributeValue {N = expiry.ToString()});
+
+        item.Add("expiration", new AttributeValue { N = expiry.ToString() });
         item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.INPROGRESS.ToString()));
         item.Add("data", new AttributeValue("Fake Data"));
-        item.Add("in_progress_expiration", new AttributeValue {N = progressExpiry.ToString()});
-        
+        item.Add("in_progress_expiration", new AttributeValue { N = progressExpiry.ToString() });
+
         await _client.PutItemAsync(new PutItemRequest
         {
             TableName = _tableName,
             Item = item
         });
-        
+
         var expiry2 = now.AddSeconds(3600).ToUnixTimeSeconds();
-        
+
         // Act
         await _dynamoDbPersistenceStore.PutRecord(
             new DataRecord("key",
@@ -197,7 +199,7 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
                 null,
                 null
             ), now);
-        
+
         // Assert
         // an item is inserted
         var itemInDb = (await _client.GetItemAsync(new GetItemRequest
@@ -205,23 +207,23 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
             TableName = _tableName,
             Key = key
         })).Item;
-        
+
         itemInDb.Should().NotBeNull();
         itemInDb["status"].S.Should().Be("INPROGRESS");
         itemInDb["expiration"].N.Should().Be(expiry2.ToString());
     }
-    
+
     //getRecord
     [Fact]
     public async Task GetRecord_WhenRecordExistsInDynamoDb_ShouldReturnExistingRecord()
     {
         // Arrange
         //await InitializeAsync();
-        
+
         // Insert a fake item with same id
         Dictionary<string, AttributeValue> item = new()
         {
-            {"id", new AttributeValue("key")} //key
+            { "id", new AttributeValue("key") } //key
         };
         var now = DateTimeOffset.UtcNow;
         var expiry = now.AddSeconds(30).ToUnixTimeSeconds();
@@ -252,10 +254,10 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
     {
         //Arrange
         await _dynamoDbPersistenceStore.DeleteRecord("key");
-        
+
         // Act
         Func<Task> act = () => _dynamoDbPersistenceStore.GetRecord("key");
-        
+
         // Assert
         await act.Should().ThrowAsync<IdempotencyItemNotFoundException>();
     }
@@ -280,7 +282,8 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
             Item = item
         });
         // enable payload validation
-        _dynamoDbPersistenceStore.Configure(new IdempotencyOptionsBuilder().WithPayloadValidationJmesPath("path").Build(),
+        _dynamoDbPersistenceStore.Configure(
+            new IdempotencyOptionsBuilder().WithPayloadValidationJmesPath("path").Build(),
             null, null);
 
         // Act
@@ -303,14 +306,14 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
 
     //deleteRecord
     [Fact]
-    public async Task DeleteRecord_WhenRecordExistsInDynamoDb_ShouldDeleteRecord() 
+    public async Task DeleteRecord_WhenRecordExistsInDynamoDb_ShouldDeleteRecord()
     {
         // Arrange: Insert a fake item with same id
         var key = CreateKey("key");
         Dictionary<string, AttributeValue> item = new(key);
         var now = DateTimeOffset.UtcNow;
         var expiry = now.AddSeconds(360).ToUnixTimeSeconds();
-        item.Add("expiration", new AttributeValue {N=expiry.ToString()});
+        item.Add("expiration", new AttributeValue { N = expiry.ToString() });
         item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.INPROGRESS.ToString()));
         await _client.PutItemAsync(new PutItemRequest
         {
@@ -367,7 +370,7 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
                 .WithStatusAttr("state")
                 .WithValidationAttr("valid")
                 .Build();
-            persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(),functionName: null, keyPrefix: null);
+            persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), functionName: null, keyPrefix: null);
 
             var now = DateTimeOffset.UtcNow;
             var record = new DataRecord(
@@ -419,7 +422,6 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
             {
                 TableName = tableNameCustom
             })).Count.Should().Be(0);
-
         }
         finally
         {
@@ -438,18 +440,18 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
     }
 
     [Fact]
-    public async Task GetRecord_WhenIdempotencyDisabled_ShouldNotCreateClients() 
+    public async Task GetRecord_WhenIdempotencyDisabled_ShouldNotCreateClients()
     {
         try
         {
             // Arrange
             Environment.SetEnvironmentVariable(Constants.IdempotencyDisabledEnv, "true");
-            
+
             var store = new DynamoDBPersistenceStoreBuilder().WithTableName(_tableName).Build();
-            
+
             // Act
             Func<Task> act = () => store.GetRecord("fake");
-            
+
             // Assert
             await act.Should().ThrowAsync<NullReferenceException>();
         }
@@ -458,12 +460,136 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
             Environment.SetEnvironmentVariable(Constants.IdempotencyDisabledEnv, "false");
         }
     }
+
     private static Dictionary<string, AttributeValue> CreateKey(string keyValue)
     {
         var key = new Dictionary<string, AttributeValue>
         {
-            {"id", new AttributeValue(keyValue)}
+            { "id", new AttributeValue(keyValue) }
         };
         return key;
+    }
+
+    [Fact]
+    public async Task PutRecord_WhenRecordAlreadyExists_ShouldReturnExistingRecordInException()
+    {
+        // Arrange
+        var key = CreateKey("key");
+        var now = DateTimeOffset.UtcNow;
+        var expiry = now.AddSeconds(30).ToUnixTimeSeconds();
+
+        // Insert a fake item with same id
+        Dictionary<string, AttributeValue> item = new(key);
+        item.Add("expiration", new AttributeValue { N = expiry.ToString() });
+        item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.COMPLETED.ToString()));
+        item.Add("data", new AttributeValue("Existing Data"));
+        item.Add("validation", new AttributeValue("existing-hash"));
+
+        await _client.PutItemAsync(new PutItemRequest
+        {
+            TableName = _tableName,
+            Item = item
+        });
+
+        var newRecord = new DataRecord("key",
+            DataRecord.DataRecordStatus.INPROGRESS,
+            now.AddSeconds(3600).ToUnixTimeSeconds(),
+            null,
+            null);
+
+        // Act
+        var exception =
+            await Assert.ThrowsAsync<IdempotencyItemAlreadyExistsException>(() =>
+                _dynamoDbPersistenceStore.PutRecord(newRecord, now));
+
+        // Assert
+        exception.Record.Should().NotBeNull();
+        exception.Record.IdempotencyKey.Should().Be("key");
+        exception.Record.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
+        exception.Record.ResponseData.Should().Be("Existing Data");
+        exception.Record.PayloadHash.Should().Be("existing-hash");
+        exception.Record.ExpiryTimestamp.Should().Be(expiry);
+    }
+
+    [Fact]
+    public async Task PutRecord_WhenRecordWithInProgressExpiryExists_ShouldReturnExistingRecordInException()
+    {
+        // Arrange
+        var key = CreateKey("key");
+        var now = DateTimeOffset.UtcNow;
+        var expiry = now.AddSeconds(30).ToUnixTimeSeconds();
+        var inProgressExpiry = now.AddSeconds(30).ToUnixTimeMilliseconds();
+
+        // Insert a fake item with same id including in_progress_expiration
+        Dictionary<string, AttributeValue> item = new(key);
+        item.Add("expiration", new AttributeValue { N = expiry.ToString() });
+        item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.INPROGRESS.ToString()));
+        item.Add("data", new AttributeValue("In Progress Data"));
+        item.Add("in_progress_expiration", new AttributeValue { N = inProgressExpiry.ToString() });
+
+        await _client.PutItemAsync(new PutItemRequest
+        {
+            TableName = _tableName,
+            Item = item
+        });
+
+        var newRecord = new DataRecord("key",
+            DataRecord.DataRecordStatus.INPROGRESS,
+            now.AddSeconds(3600).ToUnixTimeSeconds(),
+            null,
+            null);
+
+        // Act
+        var exception =
+            await Assert.ThrowsAsync<IdempotencyItemAlreadyExistsException>(() =>
+                _dynamoDbPersistenceStore.PutRecord(newRecord, now));
+
+        // Assert
+        exception.Record.Should().NotBeNull();
+        exception.Record.IdempotencyKey.Should().Be("key");
+        exception.Record.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
+        exception.Record.ResponseData.Should().Be("In Progress Data");
+        exception.Record.InProgressExpiryTimestamp.Should().Be(inProgressExpiry);
+        exception.Record.ExpiryTimestamp.Should().Be(expiry);
+    }
+
+    [Fact]
+    public async Task PutRecord_WhenRecordExistsWithMissingOptionalFields_ShouldHandleNullValues()
+    {
+        // Arrange
+        var key = CreateKey("key");
+        var now = DateTimeOffset.UtcNow;
+        var expiry = now.AddSeconds(30).ToUnixTimeSeconds();
+
+        // Insert a minimal record without optional fields (data, validation, in_progress_expiration)
+        Dictionary<string, AttributeValue> item = new(key);
+        item.Add("expiration", new AttributeValue { N = expiry.ToString() });
+        item.Add("status", new AttributeValue(DataRecord.DataRecordStatus.INPROGRESS.ToString()));
+
+        await _client.PutItemAsync(new PutItemRequest
+        {
+            TableName = _tableName,
+            Item = item
+        });
+
+        var newRecord = new DataRecord("key",
+            DataRecord.DataRecordStatus.INPROGRESS,
+            now.AddSeconds(3600).ToUnixTimeSeconds(),
+            null,
+            null);
+
+        // Act
+        var exception =
+            await Assert.ThrowsAsync<IdempotencyItemAlreadyExistsException>(() =>
+                _dynamoDbPersistenceStore.PutRecord(newRecord, now));
+
+        // Assert
+        exception.Record.Should().NotBeNull();
+        exception.Record.IdempotencyKey.Should().Be("key");
+        exception.Record.Status.Should().Be(DataRecord.DataRecordStatus.INPROGRESS);
+        exception.Record.ResponseData.Should().BeNull();
+        exception.Record.PayloadHash.Should().BeNull();
+        exception.Record.InProgressExpiryTimestamp.Should().BeNull();
+        exception.Record.ExpiryTimestamp.Should().Be(expiry);
     }
 }
