@@ -134,7 +134,7 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
                 return $"{Constants.FeatureContextIdentifier}/{name}";
             });
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return string.Empty;
         }
