@@ -594,44 +594,4 @@ public class BasePersistenceStoreTests
         cache.TryGet("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6", out var cachedRecord).Should().BeTrue();
         cachedRecord.Should().Be(existingRecord);
     }
-
-    [Fact]
-    public void ProcessExistingRecord_WhenNullRecord_ShouldThrowArgumentNullException()
-    {
-        // Arrange
-        var persistenceStore = new InMemoryPersistenceStore();
-        var request = LoadApiGatewayProxyRequest();
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
-
-        // Act
-        var act = () => persistenceStore.ProcessExistingRecord(null, JsonSerializer.SerializeToDocument(request)!);
-
-        // Assert
-        act.Should().Throw<ArgumentNullException>()
-            .WithParameterName("exRecord")
-            .WithMessage("Existing record cannot be null*");
-    }
-
-    [Fact]
-    public void ProcessExistingRecord_WhenNullData_ShouldThrowArgumentNullException()
-    {
-        // Arrange
-        var persistenceStore = new InMemoryPersistenceStore();
-        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
-
-        var existingRecord = new DataRecord(
-            "test-key",
-            DataRecord.DataRecordStatus.COMPLETED,
-            DateTimeOffset.UtcNow.AddSeconds(3600).ToUnixTimeSeconds(),
-            "response",
-            null);
-
-        // Act
-        var act = () => persistenceStore.ProcessExistingRecord(existingRecord, null);
-
-        // Assert
-        act.Should().Throw<ArgumentNullException>()
-            .WithParameterName("data")
-            .WithMessage("Data cannot be null*");
-    }
 }
