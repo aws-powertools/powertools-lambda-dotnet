@@ -390,16 +390,6 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// </summary>
     public virtual DataRecord ProcessExistingRecord(DataRecord exRecord, JsonDocument data)
     {
-        if (exRecord == null)
-        {
-            throw new ArgumentNullException(nameof(exRecord), "Existing record cannot be null");
-        }
-
-        if (data == null)
-        {
-            throw new ArgumentNullException(nameof(data), "Data cannot be null");
-        }
-
         ValidatePayload(data, exRecord);
         SaveToCache(exRecord);
         return exRecord;
