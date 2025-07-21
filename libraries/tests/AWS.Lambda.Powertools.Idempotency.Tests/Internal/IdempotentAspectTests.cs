@@ -258,7 +258,7 @@ public class IdempotentAspectTests : IDisposable
 
         // Assert
         Assert.Contains($"{Constants.FeatureContextIdentifier}/Idempotency/",
-            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+            env.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
 
         Assert.NotNull(xRayRecorder);
     }

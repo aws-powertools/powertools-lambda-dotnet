@@ -36,7 +36,7 @@ public interface IPowertoolsEnvironment
     string GetAssemblyVersion<T>(T type);
     
     /// <summary>
-    /// Sets the execution Environment Variable (AWS_EXECUTION_ENV)
+    /// Sets the execution Environment Variable (AWS_SDK_UA_APP_ID)
     /// </summary>
     /// <param name="type"></param>
     void SetExecutionEnvironment<T>(T type);

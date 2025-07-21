@@ -21,7 +21,7 @@ public class BatchProcessingInternalTests
 
         // Assert
         Assert.Contains($"{Constants.FeatureContextIdentifier}/BatchProcessing/",
-            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+            env.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
         
         Assert.NotNull(sqsBatchProcessor);
     }
@@ -38,7 +38,7 @@ public class BatchProcessingInternalTests
 
         // Assert
         Assert.Contains($"{Constants.FeatureContextIdentifier}/BatchProcessing/",
-            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+            env.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
         
         Assert.NotNull(KinesisEventBatchProcessor);
     }
@@ -55,7 +55,7 @@ public class BatchProcessingInternalTests
 
         // Assert
         Assert.Contains($"{Constants.FeatureContextIdentifier}/BatchProcessing/",
-            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+            env.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
         
         Assert.NotNull(dynamoDbStreamBatchProcessor);
     }

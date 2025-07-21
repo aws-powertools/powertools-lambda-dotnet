@@ -25,7 +25,7 @@ public class MetricsTests
 
         // Assert
         Assert.Contains($"{Constants.FeatureContextIdentifier}/Metrics/",
-            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+            env.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
     }
 
     [Fact]

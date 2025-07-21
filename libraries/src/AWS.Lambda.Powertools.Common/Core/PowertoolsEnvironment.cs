@@ -71,7 +71,7 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     /// <inheritdoc />
     public void SetExecutionEnvironment<T>(T type)
     {
-        const string envName = Constants.AwsExecutionEnvironmentVariableName;
+        const string envName = Constants.AWSSdkUAAppId;
         var currentEnvValue = GetEnvironmentVariable(envName);
         var assemblyName = ParseAssemblyName(GetAssemblyName(type));
 

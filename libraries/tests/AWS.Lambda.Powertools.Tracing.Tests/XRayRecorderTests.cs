@@ -26,7 +26,7 @@ public class XRayRecorderTests
 
         // Assert
         Assert.Contains($"{Constants.FeatureContextIdentifier}/Tracing/",
-            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+            env.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
 
         Assert.NotNull(xRayRecorder);
     }
