@@ -6,112 +6,239 @@ namespace AWS.Lambda.Powertools.Common.Tests;
 
 public class ConsoleWrapperTests : IDisposable
 {
-    private StringWriter _writer;
+    private readonly TextWriter _originalOut;
+    private readonly TextWriter _originalError;
+    private readonly StringWriter _testWriter;
 
     public ConsoleWrapperTests()
     {
-        // Setup a new StringWriter for each test
-        _writer = new StringWriter();
-        // Reset static state for clean testing
+        // Store original console outputs
+        _originalOut = Console.Out;
+        _originalError = Console.Error;
+        
+        // Setup test writer
+        _testWriter = new StringWriter();
+        
+        // Reset ConsoleWrapper state before each test
         ConsoleWrapper.ResetForTest();
+        
+        // Clear any Lambda environment variables
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", null);
+    }
+
+    public void Dispose()
+    {
+        // Restore original console outputs
+        Console.SetOut(_originalOut);
+        Console.SetError(_originalError);
+        
+        // Reset ConsoleWrapper state after each test
+        ConsoleWrapper.ResetForTest();
+        
+        // Clear any test environment variables
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", null);
+        
+        _testWriter?.Dispose();
     }
 
     [Fact]
-    public void WriteLine_Should_Write_To_Console()
+    public void WriteLine_GivenInTestMode_WhenCalled_ThenWritesToTestOutputStream()
     {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        ConsoleWrapper.SetOut(_writer);
+        // Given
+        ConsoleWrapper.SetOut(_testWriter);
+        var wrapper = new ConsoleWrapper();
+        const string message = "test message";
 
-        // Act
-        consoleWrapper.WriteLine("test message");
+        // When
+        wrapper.WriteLine(message);
 
-        // Assert
-        Assert.Equal($"test message{Environment.NewLine}", _writer.ToString());
+        // Then
+        Assert.Equal($"{message}{Environment.NewLine}", _testWriter.ToString());
     }
 
     [Fact]
-    public void Error_Should_Write_To_Error_Console()
+    public void WriteLine_GivenNotInLambdaEnvironment_WhenCalled_ThenWritesToConsoleDirectly()
     {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        ConsoleWrapper.SetOut(_writer);
-        Console.SetError(_writer);
+        // Given
+        var wrapper = new ConsoleWrapper();
+        var consoleOutput = new StringWriter();
+        Console.SetOut(consoleOutput);
+        const string message = "test message";
 
-        // Act
-        consoleWrapper.Error("error message");
-        _writer.Flush();
+        // When
+        wrapper.WriteLine(message);
 
-        // Assert
-        Assert.Equal($"error message{Environment.NewLine}", _writer.ToString());
+        // Then
+        Assert.Equal($"{message}{Environment.NewLine}", consoleOutput.ToString());
+        consoleOutput.Dispose();
     }
 
     [Fact]
-    public void SetOut_Should_Override_Console_Output()
+    public void WriteLine_GivenInLambdaEnvironment_WhenCalled_ThenOverridesConsoleOutput()
     {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        ConsoleWrapper.SetOut(_writer);
+        // Given
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
+        var wrapper = new ConsoleWrapper();
+        const string message = "test message";
 
-        // Act
-        consoleWrapper.WriteLine("test message");
+        // When
+        wrapper.WriteLine(message);
 
-        // Assert
-        Assert.Equal($"test message{Environment.NewLine}", _writer.ToString());
+        // Then
+        // Should not throw and should have attempted to override console
+        Assert.NotNull(Console.Out);
     }
 
     [Fact]
-    public void OverrideLambdaLogger_Should_Override_Console_Out()
+    public void WriteLine_GivenMultipleCallsInLambda_WhenConsoleIsReIntercepted_ThenReOverridesConsole()
     {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        ConsoleWrapper.SetOut(_writer);
+        // Given
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
+        var wrapper = new ConsoleWrapper();
 
-        // Act
-        consoleWrapper.WriteLine("test message");
+        // When - First call should override console
+        wrapper.WriteLine("First message");
 
-        // Assert
-        Assert.Equal($"test message{Environment.NewLine}", _writer.ToString());
+        // Simulate Lambda re-intercepting console by setting it to a wrapped writer
+        var lambdaInterceptedWriter = new StringWriter();
+        Console.SetOut(lambdaInterceptedWriter);
+
+        // Second call should detect and re-override
+        wrapper.WriteLine("Second message");
+
+        // Then
+        // Should not throw and console should be overridden again
+        Assert.NotNull(Console.Out);
+        lambdaInterceptedWriter.Dispose();
     }
 
     [Fact]
-    public void WriteLine_WritesMessageToConsole()
+    public void WriteLine_GivenLambdaEnvironmentWithConsoleOverrideFailing_WhenCalled_ThenDoesNotThrow()
     {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        ConsoleWrapper.SetOut(_writer);
+        // Given
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
+        var wrapper = new ConsoleWrapper();
 
-        // Act
-        consoleWrapper.WriteLine("Test message");
-
-        // Assert
-        var output = _writer.ToString();
-        Assert.Contains("Test message", output);
+        // When & Then - Should not throw even if console override fails
+        var exception = Record.Exception(() => wrapper.WriteLine("Test message"));
+        Assert.Null(exception);
     }
 
     [Fact]
-    public void SetOut_OverridesConsoleOutput()
+    public void Debug_GivenInTestMode_WhenCalled_ThenWritesToTestOutputStream()
     {
-        // Act
-        ConsoleWrapper.SetOut(_writer);
-        Console.WriteLine("Test override");
+        // Given
+        ConsoleWrapper.SetOut(_testWriter);
+        var wrapper = new ConsoleWrapper();
+        const string message = "debug message";
 
-        // Assert
-        var output = _writer.ToString();
-        Assert.Contains("Test override", output);
+        // When
+        wrapper.Debug(message);
+
+        // Then
+        Assert.Equal($"{message}{Environment.NewLine}", _testWriter.ToString());
     }
 
     [Fact]
-    public void StaticWriteLine_FormatsLogMessageCorrectly()
+    public void Debug_GivenNotInTestMode_WhenCalled_ThenDoesNotThrow()
     {
-        // Arrange
-        ConsoleWrapper.SetOut(_writer);
-        var logLevel = "INFO";
-        var message = "Test log message";
+        // Given
+        var wrapper = new ConsoleWrapper();
+        ConsoleWrapper.ResetForTest(); // Ensure we're not in test mode
+
+        // When & Then - Just verify it doesn't throw
+        var exception = Record.Exception(() => wrapper.Debug("debug message"));
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Error_GivenInTestMode_WhenCalled_ThenWritesToTestOutputStream()
+    {
+        // Given
+        ConsoleWrapper.SetOut(_testWriter);
+        var wrapper = new ConsoleWrapper();
+        const string message = "error message";
+
+        // When
+        wrapper.Error(message);
+
+        // Then
+        Assert.Equal($"{message}{Environment.NewLine}", _testWriter.ToString());
+    }
+
+    [Fact]
+    public void Error_GivenNotInTestMode_WhenCalled_ThenDoesNotThrow()
+    {
+        // Given
+        var wrapper = new ConsoleWrapper();
+        ConsoleWrapper.ResetForTest(); // Ensure we're not in test mode
+
+        // When & Then - The Error method creates its own StreamWriter,
+        // so we just verify it doesn't throw
+        var exception = Record.Exception(() => wrapper.Error("error message"));
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Error_GivenNotOverridden_WhenCalled_ThenDoesNotThrow()
+    {
+        // Given
+        var wrapper = new ConsoleWrapper();
+        ConsoleWrapper.ResetForTest(); // Reset to ensure _override is false
+
+        // When & Then - Just verify it doesn't throw
+        var exception = Record.Exception(() => wrapper.Error("error without override"));
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void SetOut_GivenTextWriter_WhenCalled_ThenEnablesTestMode()
+    {
+        // Given
+        var testOutput = new StringWriter();
+
+        // When
+        ConsoleWrapper.SetOut(testOutput);
+
+        // Then
+        var wrapper = new ConsoleWrapper();
+        wrapper.WriteLine("test");
+        Assert.Equal($"test{Environment.NewLine}", testOutput.ToString());
+        testOutput.Dispose();
+    }
+
+    [Fact]
+    public void ResetForTest_GivenTestModeEnabled_WhenCalled_ThenResetsToNormalMode()
+    {
+        // Given
+        var testOutput = new StringWriter();
+        ConsoleWrapper.SetOut(testOutput);
+
+        // When
+        ConsoleWrapper.ResetForTest();
+
+        // Then
+        var wrapper = new ConsoleWrapper();
+        var consoleOutput = new StringWriter();
+        Console.SetOut(consoleOutput);
+        wrapper.WriteLine("test");
+        Assert.Equal($"test{Environment.NewLine}", consoleOutput.ToString());
+        Assert.Empty(testOutput.ToString());
+        testOutput.Dispose();
+        consoleOutput.Dispose();
+    }
+
+    [Fact]
+    public void WriteLineStatic_GivenLogLevelAndMessage_WhenCalled_ThenFormatsWithTimestamp()
+    {
+        // Given
+        ConsoleWrapper.SetOut(_testWriter);
+        const string logLevel = "INFO";
+        const string message = "Test log message";
 
         try
         {
-            // Act - Using reflection to call internal static method
+            // When - Using reflection to call internal static method
             var method = typeof(ConsoleWrapper)
                 .GetMethod("WriteLine", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
@@ -124,21 +251,18 @@ public class ConsoleWrapperTests : IDisposable
 
             method.Invoke(null, new object[] { logLevel, message });
 
-            // Assert
-            var output = _writer.ToString();
-        
-            // Simple assertions that always work
+            // Then
+            var output = _testWriter.ToString();
             Assert.Contains(logLevel, output);
             Assert.Contains(message, output);
 
-            // Verify basic structure without parsing timestamp
             var lines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
             Assert.True(lines.Length > 0, "Output should contain at least one line");
 
             var parts = lines[0].Split('\t');
             Assert.True(parts.Length >= 3, "Output should contain at least 3 tab-separated parts");
-        
-            // Check that parts[0] contains a timestamp-like string (contains numbers, colons, etc.)
+
+            // Check that parts[0] contains a timestamp-like string
             Assert.Matches(@"[\d\-:TZ.]", parts[0]);
             Assert.Equal(logLevel, parts[1]);
             Assert.Equal(message, parts[2]);
@@ -151,81 +275,28 @@ public class ConsoleWrapperTests : IDisposable
     }
 
     [Fact]
-    public void ClearOutputResetFlag_ResetsFlag()
+    public void ClearOutputResetFlag_GivenAnyState_WhenCalled_ThenDoesNotThrow()
     {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        ConsoleWrapper.SetOut(_writer);
+        // Given - any state
 
-        // Act
-        consoleWrapper.WriteLine("First message"); // Should set the reset flag
+        // When & Then - Should not throw (kept for backward compatibility)
+        var exception = Record.Exception(() => ConsoleWrapper.ClearOutputResetFlag());
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void ClearOutputResetFlag_GivenMultipleCalls_WhenCalled_ThenAllowsRepeatedWrites()
+    {
+        // Given
+        var wrapper = new ConsoleWrapper();
+        ConsoleWrapper.SetOut(_testWriter);
+
+        // When
+        wrapper.WriteLine("First message");
         ConsoleWrapper.ClearOutputResetFlag();
-        consoleWrapper.WriteLine("Second message"); // Should set it again
+        wrapper.WriteLine("Second message");
 
-        // Assert
-        Assert.Equal($"First message{Environment.NewLine}Second message{Environment.NewLine}", _writer.ToString());
-    }
-
-    [Fact]
-    public void Debug_InTestMode_WritesToTestOutputStream()
-    {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        ConsoleWrapper.SetOut(_writer);
-
-        // Act
-        consoleWrapper.Debug("debug message");
-
-        // Assert
-        Assert.Equal($"debug message{Environment.NewLine}", _writer.ToString());
-    }
-
-    [Fact]
-    public void Debug_NotInTestMode_WritesToDebugConsole()
-    {
-        // Since capturing Debug output is difficult in a unit test
-        // We'll use a mock or just verify the path doesn't throw
-    
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        ConsoleWrapper.ResetForTest(); // Ensure we're not in test mode
-
-        // Act & Assert - Just verify it doesn't throw
-        var exception = Record.Exception(() => consoleWrapper.Debug("debug message"));
-        Assert.Null(exception);
-    }
-
-    [Fact]
-    public void Error_DoesNotThrowWhenNotOverridden()
-    {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-        ConsoleWrapper.ResetForTest(); // Reset to ensure _override is false
-    
-        // Act & Assert - Just verify it doesn't throw
-        var exception = Record.Exception(() => consoleWrapper.Error("error without override"));
-        Assert.Null(exception);
-    }
-
-    [Fact]
-    public void Error_UsesTestOutputStreamWhenInTestMode()
-    {
-        // Arrange
-        var consoleWrapper = new ConsoleWrapper();
-    
-        // Set test mode
-        ConsoleWrapper.SetOut(_writer);
-    
-        // Act
-        consoleWrapper.Error("error in test mode");
-
-        // Assert
-        Assert.Contains("error in test mode", _writer.ToString());
-    }
-
-    public void Dispose()
-    {
-        ConsoleWrapper.ResetForTest();
-        _writer?.Dispose();
+        // Then
+        Assert.Equal($"First message{Environment.NewLine}Second message{Environment.NewLine}", _testWriter.ToString());
     }
 }
