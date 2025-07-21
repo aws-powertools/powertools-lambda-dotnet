@@ -78,7 +78,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         JsonOptions = jsonOptions ?? new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         SerializerContext = serializerContext;
         
-        SystemWrapper.Instance.SetExecutionEnvironment(this);
+        PowertoolsEnvironment.Instance.SetExecutionEnvironment(this);
     }
 
     /// <summary>
