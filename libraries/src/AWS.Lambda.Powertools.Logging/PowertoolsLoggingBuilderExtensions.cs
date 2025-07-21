@@ -56,6 +56,7 @@ public static class PowertoolsLoggingBuilderExtensions
     ///     Adds the Powertools logger to the logging builder with default configuration.
     /// </summary>
     /// <param name="builder">The logging builder to configure.</param>
+    /// <param name="clearExistingProviders">Opt-in to clear providers for Powertools-only output</param>
     /// <returns>The logging builder for further configuration.</returns>
     /// <remarks>
     ///     This method registers the Powertools logger with default settings. The logger will output 
@@ -78,8 +79,14 @@ public static class PowertoolsLoggingBuilderExtensions
     ///     </code>
     /// </example>
     public static ILoggingBuilder AddPowertoolsLogger(
-        this ILoggingBuilder builder)
+        this ILoggingBuilder builder,
+        bool clearExistingProviders = false)
     {
+        if (clearExistingProviders)
+        {
+            builder.ClearProviders();
+        }
+        
         builder.AddConfiguration();
 
         // register standard logging services
@@ -118,6 +125,7 @@ public static class PowertoolsLoggingBuilderExtensions
     /// </summary>
     /// <param name="builder">The logging builder to configure.</param>
     /// <param name="configure"></param>
+    /// <param name="clearExistingProviders">Opt-in to clear providers for Powertools-only output</param>
     /// <returns>The logging builder for further configuration.</returns>
     /// <remarks>
     ///     This method registers the Powertools logger with default settings. The logger will output 
@@ -162,10 +170,11 @@ public static class PowertoolsLoggingBuilderExtensions
     /// </example>
     public static ILoggingBuilder AddPowertoolsLogger(
         this ILoggingBuilder builder,
-        Action<PowertoolsLoggerConfiguration> configure)
+        Action<PowertoolsLoggerConfiguration> configure,
+        bool clearExistingProviders = false)
     {
         // Add configuration
-        builder.AddPowertoolsLogger();
+        builder.AddPowertoolsLogger(clearExistingProviders);
 
         // Create initial configuration
         var options = new PowertoolsLoggerConfiguration();
