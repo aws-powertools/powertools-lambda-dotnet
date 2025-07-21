@@ -82,9 +82,16 @@ public static class PowertoolsLoggingBuilderExtensions
     {
         builder.AddConfiguration();
 
+        // register standard logging services
+        builder.Services.AddLogging();
+        
         builder.Services.TryAddSingleton<IPowertoolsEnvironment, PowertoolsEnvironment>();
         builder.Services.TryAddSingleton<IPowertoolsConfigurations>(sp =>
             new PowertoolsConfigurations(sp.GetRequiredService<IPowertoolsEnvironment>()));
+
+        // automatically register ILogger
+        builder.Services.TryAddSingleton<ILogger>(provider =>
+            provider.GetRequiredService<ILoggerFactory>().CreatePowertoolsLogger());
 
         builder.Services.TryAddEnumerable(
             ServiceDescriptor.Singleton<ILoggerProvider, PowertoolsLoggerProvider>(provider =>
