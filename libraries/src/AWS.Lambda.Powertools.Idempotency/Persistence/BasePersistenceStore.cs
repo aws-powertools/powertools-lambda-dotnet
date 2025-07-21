@@ -378,4 +378,20 @@ public abstract class BasePersistenceStore : IPersistenceStore
 
     /// <inheritdoc />
     public abstract Task DeleteRecord(string idempotencyKey);
+
+    /// <summary>
+    /// Validates an existing record against the data payload being processed.
+    /// If the payload does not match the stored record, an `IdempotencyValidationError` error is thrown.
+    /// Whenever a record is retrieved from the persistence layer, it should be validated against the data payload
+    /// being processed. This is to ensure that the data payload being processed is the same as the one that was
+    /// used to create the record in the first place.
+    ///
+    /// The record is also saved to the local cache if local caching is enabled.
+    /// </summary>
+    public virtual DataRecord ProcessExistingRecord(DataRecord exRecord, JsonDocument data)
+    {
+        ValidatePayload(data, exRecord);
+        SaveToCache(exRecord);
+        return exRecord;
+    }
 }

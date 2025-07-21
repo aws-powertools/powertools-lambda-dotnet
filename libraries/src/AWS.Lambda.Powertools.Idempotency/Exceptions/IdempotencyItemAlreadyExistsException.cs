@@ -14,6 +14,7 @@
  */
 
 using System;
+using AWS.Lambda.Powertools.Idempotency.Persistence;
 
 namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 
@@ -22,6 +23,11 @@ namespace AWS.Lambda.Powertools.Idempotency.Exceptions;
 /// </summary>
 public class IdempotencyItemAlreadyExistsException : Exception
 {
+    /// <summary>
+    /// The record that already exists in the persistence layer.
+    /// </summary>
+    public DataRecord Record { get; set; }
+    
     /// <summary>
     /// Creates a new IdempotencyItemAlreadyExistsException
     /// </summary>
