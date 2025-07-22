@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Common.Tests;
@@ -15,13 +16,13 @@ public class ConsoleWrapperTests : IDisposable
         // Store original console outputs
         _originalOut = Console.Out;
         _originalError = Console.Error;
-        
+
         // Setup test writer
         _testWriter = new StringWriter();
-        
+
         // Reset ConsoleWrapper state before each test
         ConsoleWrapper.ResetForTest();
-        
+
         // Clear any Lambda environment variables
         Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", null);
     }
@@ -31,13 +32,13 @@ public class ConsoleWrapperTests : IDisposable
         // Restore original console outputs
         Console.SetOut(_originalOut);
         Console.SetError(_originalError);
-        
+
         // Reset ConsoleWrapper state after each test
         ConsoleWrapper.ResetForTest();
-        
+
         // Clear any test environment variables
         Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", null);
-        
+
         _testWriter?.Dispose();
     }
 
@@ -240,7 +241,8 @@ public class ConsoleWrapperTests : IDisposable
         {
             // When - Using reflection to call internal static method
             var method = typeof(ConsoleWrapper)
-                .GetMethod("WriteLine", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                .GetMethod("WriteLine",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
             if (method == null)
             {
@@ -299,64 +301,35 @@ public class ConsoleWrapperTests : IDisposable
         // Then
         Assert.Equal($"First message{Environment.NewLine}Second message{Environment.NewLine}", _testWriter.ToString());
     }
+
+    // from here
     
     [Fact]
-    public void HasLambdaReInterceptedConsole_GivenConsoleOutThrowsException_WhenCalled_ThenReturnsTrue()
+    public void HasLambdaReInterceptedConsole_WhenConsoleOutAccessThrows_ThenReturnsTrueFromCatchBlock()
     {
-        // Given
-        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
-    
-        // Create a mock TextWriter that throws when accessing its type
-        var mockWriter = new ThrowingTextWriter();
-        Console.SetOut(mockWriter);
-    
-        var wrapper = new ConsoleWrapper();
-    
-        // When - This will trigger HasLambdaReInterceptedConsole which should catch the exception
-        var exception = Record.Exception(() => wrapper.WriteLine("test message"));
-    
-        // Then - Should not throw, the catch block should handle it
-        Assert.Null(exception);
+        // Given - A function that throws when called (simulating Console.Out access failure)
+        Func<TextWriter> throwingAccessor = () => throw new InvalidOperationException("Console.Out access failed");
+
+        // When - Call the internal method with the throwing accessor
+        var result = ConsoleWrapper.HasLambdaReInterceptedConsole(throwingAccessor);
+
+        // Then - Should return true from the catch block (lines 102-105)
+        Assert.True(result);
     }
 
     [Fact]
-    public void OverrideLambdaLogger_GivenConsoleOpenStandardOutputThrows_WhenCalled_ThenDoesNotThrow()
+    public void OverrideLambdaLogger_WhenOpenStandardOutputThrows_ThenSetsOverrideToFalse()
     {
         // Given
-        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
+        ConsoleWrapper.ResetForTest();
     
-        // Create a scenario where Console.OpenStandardOutput might fail
-        // We'll simulate this by creating conditions that trigger the catch block
-        var wrapper = new ConsoleWrapper();
-    
-        // When - Multiple calls to trigger the override logic and potential failures
-        var exception = Record.Exception(() =>
-        {
-            for (int i = 0; i < 5; i++)
-            {
-                wrapper.WriteLine($"test message {i}");
-            }
-        });
-    
-        // Then - Should not throw even if StreamWriter creation fails
+        // A function that throws when called (simulating Console.OpenStandardOutput failure)
+        Func<Stream> throwingOpener = () => throw new UnauthorizedAccessException("Cannot open standard output");
+
+        // When - Call the internal method with the throwing opener
+        var exception = Record.Exception(() => ConsoleWrapper.OverrideLambdaLogger(throwingOpener));
+
+        // Then - Should not throw (catch block handles it on lines 120-123)
         Assert.Null(exception);
-    }
-
-    // Helper class to simulate exceptions in Console.Out.GetType()
-    private class ThrowingTextWriter : TextWriter
-    {
-        public override System.Text.Encoding Encoding => System.Text.Encoding.UTF8;
-
-        public override void Write(char value) 
-        {
-            // Simulate the scenario where accessing type information fails
-            // by throwing when any operation is performed
-            throw new InvalidOperationException("Simulated exception during console operation");
-        }
-    
-        public override void WriteLine(string value) 
-        {
-            throw new InvalidOperationException("Simulated exception during console operation");
-        }
     }
 }

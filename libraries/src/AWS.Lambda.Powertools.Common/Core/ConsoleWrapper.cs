@@ -89,12 +89,17 @@ public class ConsoleWrapper : IConsoleWrapper
         return isLambda && (!_override || HasLambdaReInterceptedConsole());
     }
 
-    private static bool HasLambdaReInterceptedConsole()
+    internal static bool HasLambdaReInterceptedConsole()
+    {
+        return HasLambdaReInterceptedConsole(() => Console.Out);
+    }
+    
+    internal static bool HasLambdaReInterceptedConsole(Func<TextWriter> consoleOutAccessor)
     {
         // Lambda might re-intercept console between init and handler execution
         try
         {
-            var currentOut = Console.Out;
+            var currentOut = consoleOutAccessor();
             // Check if current output stream looks like it might be Lambda's wrapper
             var typeName = currentOut.GetType().FullName ?? "";
             return typeName.Contains("Lambda") || typeName == "System.IO.TextWriter+SyncTextWriter";
@@ -105,12 +110,17 @@ public class ConsoleWrapper : IConsoleWrapper
         }
     }
     
-    private static void OverrideLambdaLogger()
+    internal static void OverrideLambdaLogger()
+    {
+        OverrideLambdaLogger(() => Console.OpenStandardOutput());
+    }
+    
+    internal static void OverrideLambdaLogger(Func<Stream> standardOutputOpener)
     {
         try
         {
             // Force override of LambdaLogger
-            var standardOutput = new StreamWriter(Console.OpenStandardOutput())
+            var standardOutput = new StreamWriter(standardOutputOpener())
             {
                 AutoFlush = true
             };
