@@ -446,7 +446,7 @@ When debugging in non-production environments, you can instruct Logger to log th
 parameter or via `POWERTOOLS_LOGGER_LOG_EVENT` environment variable.
 
 !!! warning
-Log event is disabled by default to prevent sensitive info being logged.
+    Log event is disabled by default to prevent sensitive info being logged.
 
 === "Function.cs"
 
@@ -471,8 +471,8 @@ You can set a Correlation ID using `CorrelationIdPath` parameter by passing
 a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-json-pointer-03){target="_blank"}.
 
 !!! Attention
-The JSON Pointer expression is `case sensitive`. In the bellow example `/headers/my_request_id_header` would work but
-`/Headers/my_request_id_header` would not find the element.
+    The JSON Pointer expression is `case sensitive`. In the bellow example `/headers/my_request_id_header` would work but
+    `/Headers/my_request_id_header` would not find the element.
 
 === "Function.cs"
 
@@ -577,8 +577,8 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
 ## Appending additional keys
 
 !!! info "Custom keys are persisted across warm invocations"
-Always set additional keys as part of your handler to ensure they have the latest value, or explicitly clear them with [
-`ClearState=true`](#clearing-all-state).
+    Always set additional keys as part of your handler to ensure they have the latest value, or explicitly clear them with [
+    `ClearState=true`](#clearing-all-state).
 
 You can append your own keys to your existing logs via `AppendKey`. Typically this value would be passed into the
 function via the event. Appended keys are added to all subsequent log entries in the current execution from the point
@@ -683,7 +683,7 @@ It accepts any dictionary, and all keyword arguments will be added as part of th
 log statement.
 
 !!! info
-Any keyword argument added using extra keys will not be persisted for subsequent messages.
+    Any keyword argument added using extra keys will not be persisted for subsequent messages.
 
 === "Function.cs"
 
@@ -782,8 +782,8 @@ You can dynamically set a percentage of your logs to **DEBUG** level via env var
 via `SamplingRate` parameter on attribute.
 
 !!! info
-Configuration on environment variable is given precedence over sampling rate configuration on attribute, provided it's
-in valid value range.
+    Configuration on environment variable is given precedence over sampling rate configuration on attribute, provided it's
+    in valid value range.
 
 === "Sampling via attribute parameter"
 
@@ -915,8 +915,8 @@ We support the following log levels:
 ### Using AWS Lambda Advanced Logging Controls (ALC)
 
 !!! question "When is it useful?"
-When you want to set a logging policy to drop informational or verbose logs for one or all AWS Lambda functions,
-regardless of runtime and logger used.
+    When you want to set a logging policy to drop informational or verbose logs for one or all AWS Lambda functions,
+    regardless of runtime and logger used.
 
 With [AWS Lambda Advanced Logging Controls (ALC)](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced)
 {target="_blank"}, you can enforce a minimum log level that Lambda will accept from your application code.
@@ -924,9 +924,9 @@ With [AWS Lambda Advanced Logging Controls (ALC)](https://docs.aws.amazon.com/la
 When enabled, you should keep `Logger` and ALC log level in sync to avoid data loss.
 
 !!! warning "When using AWS Lambda Advanced Logging Controls (ALC)"
-- When Powertools Logger output is set to `PascalCase` **`Level`**  property name will be replaced by **`LogLevel`** as
-  a property name.
-- ALC takes precedence over **`POWERTOOLS_LOG_LEVEL`** and when setting it in code using **`[Logging(LogLevel = )]`**
+    - When Powertools Logger output is set to `PascalCase` **`Level`**  property name will be replaced by **`LogLevel`** as
+    a property name.
+    - ALC takes precedence over **`POWERTOOLS_LOG_LEVEL`** and when setting it in code using **`[Logging(LogLevel = )]`**
 
 Here's a sequence diagram to demonstrate how ALC will drop both `Information` and `Debug` logs emitted from `Logger`,
 when ALC log level is stricter than `Logger`.
@@ -985,8 +985,8 @@ customize the serialization of Powertools Logger.
   This is useful when you want to change the casing of the property names or use a different naming convention.
 
 !!! info
-If you want to preserve the original casing of the property names (keys), you can set the `DictionaryKeyPolicy` to
-`null`.
+    If you want to preserve the original casing of the property names (keys), you can set the `DictionaryKeyPolicy` to
+    `null`.
 
 ```csharp
 builder.Logging.AddPowertoolsLogger(options => 
@@ -998,6 +998,19 @@ builder.Logging.AddPowertoolsLogger(options =>
     };
 });
 ```
+
+!!! warning
+    When using `builder.Logging.AddPowertoolsLogger` method it will use any already configured logging providers (file loggers, database loggers, third-party providers).
+    
+    If you want to use Powertools Logger as the only logging provider, you should call `builder.Logging.ClearProviders()` before adding Powertools Logger or the new method override
+    
+    ```csharp
+    builder.Logging.AddPowertoolsLogger(config =>
+        {
+        config.Service = "TestService";
+        config.LoggerOutputCase = LoggerOutputCase.PascalCase;
+        }, clearExistingProviders: true);
+    ```
 
 ### Custom Log formatter (Bring Your Own Formatter)
 
