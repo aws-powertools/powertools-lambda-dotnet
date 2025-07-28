@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="NSubstitute"/>
+        <PackageReference Include="xunit"/>
+        <PackageReference Include="xunit.runner.visualstudio">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.BatchProcessing\AWS.Lambda.Powertools.BatchProcessing.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler\AWS.Lambda.Powertools.EventHandler.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka.Avro\AWS.Lambda.Powertools.Kafka.Avro.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka.Json\AWS.Lambda.Powertools.Kafka.Json.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka.Protobuf\AWS.Lambda.Powertools.Kafka.Protobuf.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Parameters\AWS.Lambda.Powertools.Parameters.csproj" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Tracing\AWS.Lambda.Powertools.Tracing.csproj" OutputItemType="Analyzer"/>
+    </ItemGroup>
+
+</Project>

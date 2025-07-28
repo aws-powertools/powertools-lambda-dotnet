@@ -15,16 +15,16 @@ using AWS.Lambda.Powertools.Common;
 
 namespace PowertoolsGenerated
 {
-    internal static class UAModuleInitializerBatchProcessing
+    internal static class UAModuleInitializerBedrockAgentFunctionResolver
     {
         [ModuleInitializer]
         internal static void Initialize()
         {
-            PowertoolsEnvironment.Instance.SetExecutionEnvironment(typeof(AWS.Lambda.Powertools.BatchProcessing.ProcessingOptions));
+            PowertoolsEnvironment.Instance.SetExecutionEnvironment(typeof(AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunctionResolver));
         }
     }
 }";
-            ctx.AddSource("UAModuleInitializerBatchProcessing.g.cs", SourceText.From(source, Encoding.UTF8));
+            ctx.AddSource("UAModuleInitializerBedrockAgentFunctionResolver.g.cs", SourceText.From(source, Encoding.UTF8));
         });
     }
 }

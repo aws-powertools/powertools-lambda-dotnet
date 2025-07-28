@@ -15,17 +15,16 @@ using AWS.Lambda.Powertools.Common;
 
 namespace PowertoolsGenerated
 {
-    internal static class UAModuleInitializerBatchProcessing
+    internal static class UAModuleInitializerKafkaJson
     {
         [ModuleInitializer]
         internal static void Initialize()
         {
-            PowertoolsEnvironment.Instance.SetExecutionEnvironment(typeof(AWS.Lambda.Powertools.BatchProcessing.ProcessingOptions));
+            PowertoolsEnvironment.Instance.SetExecutionEnvironment(typeof(AWS.Lambda.Powertools.Kafka.Json.PowertoolsKafkaJsonSerializer), ""Kafka.Json"");
         }
     }
 }";
-            ctx.AddSource("UAModuleInitializerBatchProcessing.g.cs", SourceText.From(source, Encoding.UTF8));
+            ctx.AddSource("UAModuleInitializerKafkaJson.g.cs", SourceText.From(source, Encoding.UTF8));
         });
     }
 }
-
