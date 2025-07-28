@@ -17,7 +17,8 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <VersionSuffix>$(VersionSuffix)</VersionSuffix>
-
+        <NoWarn>RS1041</NoWarn>
+        <NoWarn>RS1036</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">

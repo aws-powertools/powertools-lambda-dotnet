@@ -15,8 +15,6 @@ namespace AWS.Lambda.Powertools.Tracing.Internal;
 internal class XRayRecorder : IXRayRecorder
 {
     private static IAWSXRayRecorder _awsxRayRecorder;
-    private static IPowertoolsConfigurations _powertoolsConfigurations;
-
     /// <summary>
     ///     The instance
     /// </summary>
@@ -32,9 +30,7 @@ internal class XRayRecorder : IXRayRecorder
     public XRayRecorder(IAWSXRayRecorder awsxRayRecorder, IPowertoolsConfigurations powertoolsConfigurations)
     {
         _instance = this;
-        _powertoolsConfigurations = powertoolsConfigurations;
-        _powertoolsConfigurations.SetExecutionEnvironment(this);
-        _isLambda = _powertoolsConfigurations.IsLambdaEnvironment;
+        _isLambda = powertoolsConfigurations.IsLambdaEnvironment;
         _awsxRayRecorder = awsxRayRecorder;
     }
 

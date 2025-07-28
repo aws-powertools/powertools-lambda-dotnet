@@ -61,8 +61,8 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                     }
                 }
             };
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            var batchProcessor = new SqsBatchProcessor(configurations);
+            
+            var batchProcessor = new SqsBatchProcessor();
             var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
             
             recordHandler.WhenForAnyArgs(x => x.HandleAsync(Arg.Any<SQSEvent.SQSMessage>(), Arg.Any<CancellationToken>()))
@@ -108,8 +108,8 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                     }
                 }
             };
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            var batchProcessor = new SqsBatchProcessor(configurations);
+
+            var batchProcessor = new SqsBatchProcessor();
             var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
             
             
@@ -159,8 +159,8 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                     }
                 }
             };
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            var batchProcessor = new SqsBatchProcessor(configurations);
+
+            var batchProcessor = new SqsBatchProcessor();
             var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
 
             recordHandler.WhenForAnyArgs(x => x.HandleAsync(Arg.Any<SQSEvent.SQSMessage>(), Arg.Any<CancellationToken>()))
@@ -209,8 +209,8 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
                     }
                 }
             };
-            var configurations = Substitute.For<IPowertoolsConfigurations>();
-            var batchProcessor = new SqsBatchProcessor(configurations);
+
+            var batchProcessor = new SqsBatchProcessor();
             var recordHandler = Substitute.For<IRecordHandler<SQSEvent.SQSMessage>>();
             
             recordHandler.WhenForAnyArgs(x => x.HandleAsync(Arg.Any<SQSEvent.SQSMessage>(), Arg.Any<CancellationToken>()))

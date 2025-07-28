@@ -13,22 +13,6 @@ namespace AWS.Lambda.Powertools.Metrics.Tests;
 public class MetricsTests
 {
     [Fact]
-    public void Metrics_Set_Execution_Environment_Context()
-    {
-        // Arrange
-        Metrics.ResetForTest();
-        var env = new PowertoolsEnvironment();
-
-        var conf = new PowertoolsConfigurations(env);
-
-        _ = new Metrics(conf);
-
-        // Assert
-        Assert.Contains($"{Constants.FeatureContextIdentifier}/Metrics/",
-            env.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
-    }
-
-    [Fact]
     public void Before_When_RaiseOnEmptyMetricsNotSet_Should_Configure_Null()
     {
         // Arrange

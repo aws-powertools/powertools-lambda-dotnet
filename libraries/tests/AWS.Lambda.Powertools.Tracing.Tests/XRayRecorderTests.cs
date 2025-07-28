@@ -13,25 +13,6 @@ namespace AWS.Lambda.Powertools.Tracing.Tests;
 public class XRayRecorderTests
 {
     [Fact]
-    public void Tracing_Set_Execution_Environment_Context()
-    {
-        // Arrange
-        var env = new PowertoolsEnvironment();
-
-        var conf = new PowertoolsConfigurations(env);
-        var awsXray = Substitute.For<IAWSXRayRecorder>();
-
-        // Act
-        var xRayRecorder = new XRayRecorder(awsXray, conf);
-
-        // Assert
-        Assert.Contains($"{Constants.FeatureContextIdentifier}/Tracing/",
-            env.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
-
-        Assert.NotNull(xRayRecorder);
-    }
-
-    [Fact]
     public void Tracing_Instance()
     {
         // Arrange

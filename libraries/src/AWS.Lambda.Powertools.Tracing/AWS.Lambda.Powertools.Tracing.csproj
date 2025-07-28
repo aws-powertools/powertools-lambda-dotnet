@@ -6,7 +6,6 @@
         <Description>Powertools for AWS Lambda (.NET) - Tracing package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Tracing</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Tracing</RootNamespace>
-
         <IncludeCommonFiles>true</IncludeCommonFiles>
     </PropertyGroup>
    

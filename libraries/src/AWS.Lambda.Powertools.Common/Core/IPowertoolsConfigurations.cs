@@ -128,12 +128,6 @@ public interface IPowertoolsConfigurations
     bool GetEnvironmentVariableOrDefault(string variable, bool defaultValue);
     
     /// <summary>
-    /// Sets the execution Environment Variable (AWS_SDK_UA_APP_ID)
-    /// </summary>
-    /// <param name="type"></param>
-    void SetExecutionEnvironment<T>(T type);
-    
-    /// <summary>
     ///     Gets a value indicating whether [Idempotency is disabled].
     /// </summary>
     /// <value><c>true</c> if [Idempotency is disabled]; otherwise, <c>false</c>.</value>

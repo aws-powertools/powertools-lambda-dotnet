@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Parameters.Cache;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using AWS.Lambda.Powertools.Parameters.Internal.Cache;
@@ -90,16 +89,13 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
     /// <param name="getAsyncHandler">The parameter provider GetAsync callback handler.</param>
     /// <param name="getMultipleAsyncHandler">The parameter provider GetMultipleAsync callback handler.</param>
     /// <param name="cacheMode">The CacheMode.</param>
-    /// <param name="powertoolsConfigurations">The Powertools for AWS Lambda (.NET) configurations.</param>
     internal ParameterProviderBaseHandler(GetAsyncDelegate getAsyncHandler,
         GetMultipleAsyncDelegate getMultipleAsyncHandler,
-        ParameterProviderCacheMode cacheMode,
-        IPowertoolsConfigurations powertoolsConfigurations)
+        ParameterProviderCacheMode cacheMode)
     {
         _getAsyncHandler = getAsyncHandler;
         _getMultipleAsyncHandler = getMultipleAsyncHandler;
         _cacheMode = cacheMode;
-        powertoolsConfigurations.SetExecutionEnvironment(this);
     }
 
     /// <summary>
