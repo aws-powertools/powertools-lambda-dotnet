@@ -110,6 +110,48 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
 
         SetEnvironmentVariable(envName, finalValue);
     }
+
+    /// <inheritdoc />
+    public void SetExecutionEnvironment(string assemblyName, string assemblyVersion)
+    {
+        const string envName = Constants.AWSSdkUAAppId;
+        var currentEnvValue = GetEnvironmentVariable(envName);
+        var parsedAssemblyName = ParseAssemblyName(assemblyName);
+
+        // Check for duplication early
+        if (!string.IsNullOrEmpty(currentEnvValue) && currentEnvValue.Contains(parsedAssemblyName))
+        {
+            return;
+        }
+
+        var newEntry = $"{parsedAssemblyName}/{assemblyVersion}";
+        
+        string finalValue;
+        
+        if (string.IsNullOrEmpty(currentEnvValue))
+        {
+            // First entry: "PT/Assembly/1.0.0 PTENV/AWS_LAMBDA_DOTNET8"
+            finalValue = $"{newEntry} {CachedRuntimeEnvironment}";
+        }
+        else
+        {
+            // Check if PTENV already exists in one pass
+            var containsPtenv = currentEnvValue.Contains("PTENV/");
+            
+            if (containsPtenv)
+            {
+                // Just append the new entry: "existing PT/Assembly/1.0.0"
+                finalValue = $"{currentEnvValue} {newEntry}";
+            }
+            else
+            {
+                // Append new entry + PTENV: "existing PT/Assembly/1.0.0 PTENV/AWS_LAMBDA_DOTNET8"
+                finalValue = $"{currentEnvValue} {newEntry} {CachedRuntimeEnvironment}";
+            }
+        }
+
+        SetEnvironmentVariable(envName, finalValue);
+    }
     
     /// <summary>
     /// Parsing the name to conform with the required naming convention for the UserAgent header (PTFeature/Name/Version)

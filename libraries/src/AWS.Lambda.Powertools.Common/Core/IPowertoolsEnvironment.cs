@@ -40,4 +40,11 @@ public interface IPowertoolsEnvironment
     /// </summary>
     /// <param name="type"></param>
     void SetExecutionEnvironment<T>(T type);
+
+    /// <summary>
+    /// Sets the execution environment using assembly name and version strings directly
+    /// </summary>
+    /// <param name="assemblyName">The assembly name</param>
+    /// <param name="assemblyVersion">The assembly version</param>
+    void SetExecutionEnvironment(string assemblyName, string assemblyVersion);
 }
