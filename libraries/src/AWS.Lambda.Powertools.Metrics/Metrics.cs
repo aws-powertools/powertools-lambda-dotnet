@@ -182,6 +182,10 @@ public class Metrics : IMetrics, IDisposable
                 throw new ArgumentNullException(
                     nameof(key),
                     "'AddMetric' method requires a valid metrics key. 'Null' or empty values are not allowed.");
+            if (key.Length > 255)
+                throw new ArgumentOutOfRangeException(
+                    nameof(key),
+                    "'AddMetric' method requires a valid metrics key. Key exceeds the allowed length constraint.");
 
             if (value < 0)
             {
