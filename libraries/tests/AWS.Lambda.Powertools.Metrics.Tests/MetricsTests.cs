@@ -156,6 +156,21 @@ public class MetricsTests
     }
 
     [Fact]
+    public void When_AddMetric_With_TooLongKey_Should_ThrowArgumentOutOfRangeException()
+    {
+        // Arrange
+        Substitute.For<IMetrics>();
+        var powertoolsConfigMock = Substitute.For<IPowertoolsConfigurations>();
+        IMetrics metrics = new Metrics(powertoolsConfigMock);
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => metrics.AddMetric("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.", 1.0));
+        Assert.Equal("key", exception.ParamName);
+        Assert.Contains("'AddMetric' method requires a valid metrics key. Key exceeds the allowed length constraint.",
+            exception.Message);
+    }
+
+    [Fact]
     public void When_SetDefaultDimensions_With_InvalidKeyOrValue_Should_ThrowArgumentNullException()
     {
         // Arrange
