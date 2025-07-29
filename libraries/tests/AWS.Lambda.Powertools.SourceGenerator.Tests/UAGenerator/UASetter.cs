@@ -1,13 +1,16 @@
 using System.Text.RegularExpressions;
+using Xunit.Abstractions;
 
 namespace AWS.Lambda.Powertools.SourceGenerator.Tests;
 
 public class UASetter
 {
+    private readonly ITestOutputHelper _output;
     private readonly string? _appId;
 
-    public UASetter()
+    public UASetter(ITestOutputHelper output)
     {
+        _output = output;
         _appId = Environment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
     }
     
@@ -17,6 +20,9 @@ public class UASetter
         Assert.NotNull(_appId);
         Assert.Contains("PTENV/AWS_LAMBDA_DOTNET8", _appId);
         CheckUtilityOnlyAppearsOnce(_appId);
+        _output.WriteLine(_appId);
+        // check that it is last in the string
+        Assert.EndsWith("PTENV/AWS_LAMBDA_DOTNET8", _appId, StringComparison.OrdinalIgnoreCase);
     }
     
     [Theory]
@@ -38,6 +44,7 @@ public class UASetter
         Assert.Contains($"PT/{utility}/1.0.0", appId);
         
         CheckUtilityOnlyAppearsOnce(appId);
+        _output.WriteLine(_appId);
     }
     
     private static void CheckUtilityOnlyAppearsOnce(string appId)

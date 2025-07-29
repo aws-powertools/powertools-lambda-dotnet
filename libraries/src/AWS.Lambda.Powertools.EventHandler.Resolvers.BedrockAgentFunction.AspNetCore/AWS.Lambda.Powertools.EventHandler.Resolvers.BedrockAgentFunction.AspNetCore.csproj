@@ -15,6 +15,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Http" />
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     </ItemGroup>
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />

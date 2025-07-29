@@ -9,6 +9,7 @@
     </PropertyGroup>
     
     <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" />
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
 

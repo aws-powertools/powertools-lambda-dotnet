@@ -14,8 +14,6 @@
         <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
         <PackageReference Include="Amazon.Lambda.Core"/>
         <PackageReference Include="AspectInjector"/>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp"/>
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers"/>
     </ItemGroup>
     
 </Project>

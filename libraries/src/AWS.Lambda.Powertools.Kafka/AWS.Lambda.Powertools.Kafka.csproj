@@ -17,9 +17,4 @@
         <PackageReference Include="Amazon.Lambda.Core"/>
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="SourceGenerators\UASourceGenerator.cs" />
-    </ItemGroup>
-
 </Project>
