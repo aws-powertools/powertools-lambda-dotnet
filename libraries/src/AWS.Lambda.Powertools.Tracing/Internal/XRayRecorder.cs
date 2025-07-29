@@ -38,7 +38,7 @@ internal class XRayRecorder : IXRayRecorder
     ///     Checks whether current execution is in AWS Lambda.
     /// </summary>
     /// <returns>Returns true if current execution is in AWS Lambda.</returns>
-    private static bool _isLambda;
+    private readonly bool _isLambda;
 
     /// <summary>
     ///     Gets the emitter.

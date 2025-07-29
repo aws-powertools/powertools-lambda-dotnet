@@ -24,10 +24,7 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
     {
         _powertoolsConfigurations = powertoolsConfigurations;
         _currentConfig = config;
-        
-        // Remove this line - the source generator now handles setting execution environment
-        // _powertoolsConfigurations.SetExecutionEnvironment(this);
-        
+
         // Apply environment configurations if available
         ConfigureFromEnvironment();
     }
