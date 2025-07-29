@@ -10,6 +10,7 @@
         <TargetMultiFramework>false</TargetMultiFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <IncludeExecutionEnvironment>true</IncludeExecutionEnvironment>
     </PropertyGroup>
 
     <!-- Release: Use source file inclusion -->

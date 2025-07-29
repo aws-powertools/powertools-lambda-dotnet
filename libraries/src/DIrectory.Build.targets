@@ -1,0 +1,30 @@
+<Project>
+    <Target Name="GenerateEnvWrapper" BeforeTargets="BeforeCompile" Condition="'$(IncludeExecutionEnvironment)' == 'true' AND '$(Configuration)'=='Release'">
+        <PropertyGroup>
+            <EnvWrapperNamespace>$(RootNamespace)</EnvWrapperNamespace>
+            <EnvWrapperOutput>$(ProjectDir)Internal/EnvWrapper.cs</EnvWrapperOutput>
+        </PropertyGroup>
+<ItemGroup>
+    <EnvWrapperSource Include="using AWS.Lambda.Powertools.Common%3B" />
+    <EnvWrapperSource Include=" " />
+    <EnvWrapperSource Include="namespace $(EnvWrapperNamespace).Internal" />
+    <EnvWrapperSource Include="{" />
+    <EnvWrapperSource Include="    public static class EnvWrapper" />
+    <EnvWrapperSource Include="    {" />
+    <EnvWrapperSource Include="        public static void SetExecutionEnvironment()" />
+    <EnvWrapperSource Include="        {" />
+    <EnvWrapperSource Include="            PowertoolsEnvironment.Instance.SetExecutionEnvironment(typeof(EnvWrapper))%3B" />
+    <EnvWrapperSource Include="        }" />
+    <EnvWrapperSource Include="    }" />
+    <EnvWrapperSource Include="}" />
+</ItemGroup>
+        <WriteLinesToFile
+            File="$(EnvWrapperOutput)"
+            Lines="@(EnvWrapperSource)"
+            Overwrite="true"
+            Condition="!Exists('$(EnvWrapperOutput)')" />
+        <ItemGroup>
+            <Compile Include="$(EnvWrapperOutput)" />
+        </ItemGroup>
+    </Target>
+</Project>

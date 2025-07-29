@@ -7,6 +7,7 @@
         <AssemblyName>AWS.Lambda.Powertools.Tracing</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Tracing</RootNamespace>
         <IncludeCommonFiles>true</IncludeCommonFiles>
+        <IncludeExecutionEnvironment>true</IncludeExecutionEnvironment>
     </PropertyGroup>
    
     <ItemGroup>
@@ -19,6 +20,4 @@
         <PackageReference Include="Microsoft.CodeAnalysis.Common" />
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
-
-
 </Project>

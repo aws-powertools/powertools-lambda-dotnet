@@ -9,6 +9,7 @@
         <AssemblyName>AWS.Lambda.Powertools.Parameters</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Parameters</RootNamespace>
         <IncludeCommonFiles>true</IncludeCommonFiles>
+        <IncludeExecutionEnvironment>true</IncludeExecutionEnvironment>
     </PropertyGroup>
 
     <ItemGroup>
