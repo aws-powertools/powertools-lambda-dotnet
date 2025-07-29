@@ -2,6 +2,8 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
+namespace AWS.Lambda.Powertools.Kafka.Avro.SourceGenerators;
+
 /// <summary>
 /// Source generator that automatically sets the AWS_SDK_UA_APP_ID environment variable
 /// </summary>
