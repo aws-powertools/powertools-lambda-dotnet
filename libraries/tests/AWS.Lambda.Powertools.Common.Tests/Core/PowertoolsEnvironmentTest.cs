@@ -63,7 +63,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         powertoolsEnv.SetExecutionEnvironment(powertoolsEnv.GetType());
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major} {Constants.FeatureContextIdentifier}/Common/1.0.0", 
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 {Constants.FeatureContextIdentifier}/Common/1.0.0 PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}", 
             powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
     }
     
