@@ -51,7 +51,7 @@ jobs:
           node-version: "22"
 
       - name: Setup dependencies
-        uses: aws-powertools/actions/.github/actions/cached-node-modules@743fa57a003787b157991ea5c6e3cf0d40468676
+        uses: aws-powertools/actions/.github/actions/cached-node-modules@3b5b8e2e58b7af07994be982e83584a94e8c76c5
 
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -95,7 +95,7 @@ jobs:
           node-version: "22"
           
       - name: Setup dependencies
-        uses: aws-powertools/actions/.github/actions/cached-node-modules@743fa57a003787b157991ea5c6e3cf0d40468676
+        uses: aws-powertools/actions/.github/actions/cached-node-modules@3b5b8e2e58b7af07994be982e83584a94e8c76c5
 
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -163,7 +163,7 @@ jobs:
           node-version: "22"
           
       - name: Setup dependencies
-        uses: aws-powertools/actions/.github/actions/cached-node-modules@743fa57a003787b157991ea5c6e3cf0d40468676
+        uses: aws-powertools/actions/.github/actions/cached-node-modules@3b5b8e2e58b7af07994be982e83584a94e8c76c5
         
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -204,7 +204,7 @@ jobs:
           node-version: "22"
           
       - name: Setup dependencies
-        uses: aws-powertools/actions/.github/actions/cached-node-modules@743fa57a003787b157991ea5c6e3cf0d40468676
+        uses: aws-powertools/actions/.github/actions/cached-node-modules@3b5b8e2e58b7af07994be982e83584a94e8c76c5
         
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
