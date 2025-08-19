@@ -396,14 +396,26 @@ internal sealed class PowertoolsLogger : ILogger
             return false;
 
 #if NET8_0_OR_GREATER
-        var stateKeys = (state as IEnumerable<KeyValuePair<string, object>>)?
-            .ToDictionary(i => i.Key, i => PowertoolsLoggerHelpers.ObjectToDictionary(i.Value));
+        var stateKeys = new Dictionary<string, object>();
+        if (state is IEnumerable<KeyValuePair<string, object>> keyValuePairs)
+        {
+            foreach (var kvp in keyValuePairs)
+            {
+                stateKeys[kvp.Key] = PowertoolsLoggerHelpers.ObjectToDictionary(kvp.Value);
+            }
+        }
 #else
-        var stateKeys = (state as IEnumerable<KeyValuePair<string, object>>)?
-            .ToDictionary(i => i.Key, i => i.Value);
+var stateKeys = new Dictionary<string, object>();
+if (state is IEnumerable<KeyValuePair<string, object>> keyValuePairs)
+{
+    foreach (var kvp in keyValuePairs)
+    {
+        stateKeys[kvp.Key] = kvp.Value;
+    }
+}
 #endif
 
-        if (stateKeys is null || stateKeys.Count != 2)
+        if (stateKeys.Count != 2)
             return false;
 
         if (!stateKeys.TryGetValue(_originalformat, out var originalFormat))

@@ -1750,6 +1750,48 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Assert
             Assert.Contains($"\"coldStart\":{willLog.ToString().ToLower()}", outPut);
         }
+        
+        [Fact]
+        public void Log_WhenDuplicateKeysInState_LastValueWins()
+        {
+            // Arrange
+            var loggerName = Guid.NewGuid().ToString();
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Information;
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            configurations.Service.Returns(service);
+            configurations.LogLevel.Returns(logLevel.ToString());
+            configurations.LoggerOutputCase.Returns(LoggerOutputCase.PascalCase.ToString());
+
+            var systemWrapper = Substitute.For<IConsoleWrapper>();
+
+            var loggerConfiguration = new PowertoolsLoggerConfiguration
+            {
+                Service = service,
+                MinimumLogLevel = logLevel,
+                LoggerOutputCase = LoggerOutputCase.PascalCase,
+                LogOutput = systemWrapper
+            };
+
+            var provider = new PowertoolsLoggerProvider(loggerConfiguration, configurations);
+            var logger = provider.CreateLogger(loggerName);
+
+            // Create state with duplicate keys (simulating duplicate HTTP headers)
+            var stateWithDuplicates = new List<KeyValuePair<string, object>>
+            {
+                new("Content-Type", "application/json"),
+                new("Content-Type", "application/x-www-form-urlencoded"), // This should win
+                new("Accept", "text/html"),
+                new("Accept", "*/*") // This should win
+            };
+
+            // Act - This should not throw an exception
+            logger.Log(logLevel, new EventId(), stateWithDuplicates, null, (state, ex) => "Test message");
+
+            // Assert
+            systemWrapper.Received(1).WriteLine(Arg.Any<string>());
+        }
 
         public void Dispose()
         {
