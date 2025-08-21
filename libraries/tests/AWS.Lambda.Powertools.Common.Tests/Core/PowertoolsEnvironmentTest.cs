@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using NSubstitute;
 using Xunit;
 
@@ -10,6 +11,11 @@ namespace AWS.Lambda.Powertools.Common.Tests;
 
 public class PowertoolsEnvironmentTest : IDisposable
 {
+    public PowertoolsEnvironmentTest()
+    {
+        Environment.SetEnvironmentVariable("AWS_EXECUTION_ENV", $"AWS_LAMBDA_DOTNET{Environment.Version.Major}");
+    }
+    
     [Fact]
     public void Set_Execution_Environment()
     {
@@ -30,6 +36,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         var powertoolsEnv = new PowertoolsEnvironment();
         
         powertoolsEnv.SetEnvironmentVariable("AWS_SDK_UA_APP_ID", "ExistingValuesInUserAgent");
+        powertoolsEnv.SetEnvironmentVariable("AWS_EXECUTION_ENV", $"AWS_LAMBDA_DOTNET{Environment.Version.Major}");
         
         // Act
         powertoolsEnv.SetExecutionEnvironment(this);

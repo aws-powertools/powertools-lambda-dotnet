@@ -15,7 +15,7 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     /// <summary>
     /// Cached runtime environment string
     /// </summary>
-    private static readonly string CachedRuntimeEnvironment = $"PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}";
+    private static readonly string CachedRuntimeEnvironment = $"PTENV/{Environment.GetEnvironmentVariable(Constants.AwsExecutionEnvironmentVariableName)}";
     
     /// <summary>
     /// Cache for parsed assembly names to avoid repeated string operations

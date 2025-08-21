@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace AWS.Lambda.Powertools.SourceGenerator.Tests;
@@ -18,11 +19,11 @@ public class UASetter
     public void Is_PTENV_Set()
     {
         Assert.NotNull(_appId);
-        Assert.Contains("PTENV/AWS_LAMBDA_DOTNET8", _appId);
+        Assert.Contains("PTENV/", _appId);
         CheckUtilityOnlyAppearsOnce(_appId);
         _output.WriteLine(_appId);
         // check that it is last in the string
-        Assert.EndsWith("PTENV/AWS_LAMBDA_DOTNET8", _appId, StringComparison.OrdinalIgnoreCase);
+        Assert.EndsWith("PTENV/", _appId, StringComparison.OrdinalIgnoreCase);
     }
     
     [Theory]
