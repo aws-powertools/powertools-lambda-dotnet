@@ -10,7 +10,7 @@ public class IdempotencyOptionsBuilder
     /// <summary>
     /// Default maximum number of items in the local cache.
     /// </summary>
-    private readonly int _localCacheMaxItems = 256;
+    private int _localCacheMaxItems = 256;
 
     /// <summary>
     /// Local cache enabled
@@ -48,6 +48,46 @@ public class IdempotencyOptionsBuilder
     private Func<object, AWS.Lambda.Powertools.Idempotency.Persistence.DataRecord, object> _responseHook;
 
     /// <summary>
+    /// Gets the event key JMESPath expression.
+    /// </summary>
+    internal string EventKeyJmesPath => _eventKeyJmesPath;
+
+    /// <summary>
+    /// Gets the payload validation JMESPath expression.
+    /// </summary>
+    internal string PayloadValidationJmesPath => _payloadValidationJmesPath;
+
+    /// <summary>
+    /// Gets whether to throw exception if no idempotency key is found.
+    /// </summary>
+    internal bool ThrowOnNoIdempotencyKey => _throwOnNoIdempotencyKey;
+
+    /// <summary>
+    /// Gets whether local cache is enabled.
+    /// </summary>
+    internal bool UseLocalCache => _useLocalCache;
+
+    /// <summary>
+    /// Gets the maximum number of items in the local cache.
+    /// </summary>
+    internal int LocalCacheMaxItems => _localCacheMaxItems;
+
+    /// <summary>
+    /// Gets the expiration in seconds.
+    /// </summary>
+    internal long ExpirationInSeconds => _expirationInSeconds;
+
+    /// <summary>
+    /// Gets the hash function.
+    /// </summary>
+    internal string HashFunction => _hashFunction;
+
+    /// <summary>
+    /// Gets the response hook function.
+    /// </summary>
+    internal Func<object, AWS.Lambda.Powertools.Idempotency.Persistence.DataRecord, object> ResponseHook => _responseHook;
+
+    /// <summary>
     /// Initialize and return an instance of IdempotencyOptions.
     /// Example:
     /// new IdempotencyOptionsBuilder().WithUseLocalCache().Build();
@@ -55,15 +95,7 @@ public class IdempotencyOptionsBuilder
     /// Idempotency.Configure(builder => builder.WithOptions(options));
     /// </summary>
     /// <returns>an instance of IdempotencyOptions</returns>
-    public IdempotencyOptions Build() =>
-        new(_eventKeyJmesPath,
-            _payloadValidationJmesPath,
-            _throwOnNoIdempotencyKey,
-            _useLocalCache,
-            _localCacheMaxItems,
-            _expirationInSeconds,
-            _hashFunction,
-            _responseHook);
+    public IdempotencyOptions Build() => new(this);
 
     /// <summary>
     /// A JMESPath expression to extract the idempotency key from the event record.

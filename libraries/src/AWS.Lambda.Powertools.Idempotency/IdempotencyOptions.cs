@@ -67,31 +67,16 @@ public class IdempotencyOptions
     /// <summary>
     /// Constructor of <see cref="IdempotencyOptions"/>.
     /// </summary>
-    /// <param name="eventKeyJmesPath"></param>
-    /// <param name="payloadValidationJmesPath"></param>
-    /// <param name="throwOnNoIdempotencyKey"></param>
-    /// <param name="useLocalCache"></param>
-    /// <param name="localCacheMaxItems"></param>
-    /// <param name="expirationInSeconds"></param>
-    /// <param name="hashFunction"></param>
-    /// <param name="responseHook"></param>
-    internal IdempotencyOptions(
-        string eventKeyJmesPath, 
-        string payloadValidationJmesPath, 
-        bool throwOnNoIdempotencyKey, 
-        bool useLocalCache, 
-        int localCacheMaxItems, 
-        long expirationInSeconds, 
-        string hashFunction,
-        Func<object, Persistence.DataRecord, object> responseHook = null)
+    /// <param name="builder">The builder containing the configuration values</param>
+    internal IdempotencyOptions(IdempotencyOptionsBuilder builder)
     {
-        EventKeyJmesPath = eventKeyJmesPath;
-        PayloadValidationJmesPath = payloadValidationJmesPath;
-        ThrowOnNoIdempotencyKey = throwOnNoIdempotencyKey;
-        UseLocalCache = useLocalCache;
-        LocalCacheMaxItems = localCacheMaxItems;
-        ExpirationInSeconds = expirationInSeconds;
-        HashFunction = hashFunction;
-        ResponseHook = responseHook;
+        EventKeyJmesPath = builder.EventKeyJmesPath;
+        PayloadValidationJmesPath = builder.PayloadValidationJmesPath;
+        ThrowOnNoIdempotencyKey = builder.ThrowOnNoIdempotencyKey;
+        UseLocalCache = builder.UseLocalCache;
+        LocalCacheMaxItems = builder.LocalCacheMaxItems;
+        ExpirationInSeconds = builder.ExpirationInSeconds;
+        HashFunction = builder.HashFunction;
+        ResponseHook = builder.ResponseHook;
     }
 }
