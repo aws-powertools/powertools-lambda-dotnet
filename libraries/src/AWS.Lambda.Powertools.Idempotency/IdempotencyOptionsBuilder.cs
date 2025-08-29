@@ -10,7 +10,7 @@ public class IdempotencyOptionsBuilder
     /// <summary>
     /// Default maximum number of items in the local cache.
     /// </summary>
-    private int _localCacheMaxItems = 256;
+    private readonly int _localCacheMaxItems = 256;
 
     /// <summary>
     /// Local cache enabled
