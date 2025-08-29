@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using System;
+
 namespace AWS.Lambda.Powertools.Idempotency;
 
 /// <summary>
@@ -57,6 +59,10 @@ public class IdempotencyOptions
     /// as supported by <see cref="System.Security.Cryptography.HashAlgorithm"/> (eg. SHA1, SHA-256, ...)
     /// </summary>
     public string HashFunction { get; }
+    /// <summary>
+    /// Delegate for manipulating idempotent responses.
+    /// </summary>
+    public Func<object, Persistence.DataRecord, object> ResponseHook { get; }
 
     /// <summary>
     /// Constructor of <see cref="IdempotencyOptions"/>.
@@ -68,6 +74,7 @@ public class IdempotencyOptions
     /// <param name="localCacheMaxItems"></param>
     /// <param name="expirationInSeconds"></param>
     /// <param name="hashFunction"></param>
+    /// <param name="responseHook"></param>
     internal IdempotencyOptions(
         string eventKeyJmesPath, 
         string payloadValidationJmesPath, 
@@ -75,7 +82,8 @@ public class IdempotencyOptions
         bool useLocalCache, 
         int localCacheMaxItems, 
         long expirationInSeconds, 
-        string hashFunction)
+        string hashFunction,
+        Func<object, Persistence.DataRecord, object> responseHook = null)
     {
         EventKeyJmesPath = eventKeyJmesPath;
         PayloadValidationJmesPath = payloadValidationJmesPath;
@@ -84,5 +92,6 @@ public class IdempotencyOptions
         LocalCacheMaxItems = localCacheMaxItems;
         ExpirationInSeconds = expirationInSeconds;
         HashFunction = hashFunction;
+        ResponseHook = responseHook;
     }
 }

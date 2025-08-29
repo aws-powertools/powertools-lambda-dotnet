@@ -43,13 +43,18 @@ public class IdempotencyOptionsBuilder
     private string _hashFunction = "MD5";
 
     /// <summary>
-    /// Initialize and return an instance of IdempotencyConfig.
-    /// Example:
-    /// IdempotencyConfig.Builder().WithUseLocalCache().Build();
-    /// This instance must then be passed to the Idempotency.Config:
-    /// Idempotency.Config().WithConfig(config).Configure();
+    /// Response hook function
     /// </summary>
-    /// <returns>an instance of IdempotencyConfig</returns>
+    private Func<object, AWS.Lambda.Powertools.Idempotency.Persistence.DataRecord, object> _responseHook;
+
+    /// <summary>
+    /// Initialize and return an instance of IdempotencyOptions.
+    /// Example:
+    /// new IdempotencyOptionsBuilder().WithUseLocalCache().Build();
+    /// This instance can then be passed to Idempotency.Configure:
+    /// Idempotency.Configure(builder => builder.WithOptions(options));
+    /// </summary>
+    /// <returns>an instance of IdempotencyOptions</returns>
     public IdempotencyOptions Build() =>
         new(_eventKeyJmesPath,
             _payloadValidationJmesPath,
@@ -57,7 +62,8 @@ public class IdempotencyOptionsBuilder
             _useLocalCache,
             _localCacheMaxItems,
             _expirationInSeconds,
-            _hashFunction);
+            _hashFunction,
+            _responseHook);
 
     /// <summary>
     /// A JMESPath expression to extract the idempotency key from the event record.
@@ -131,6 +137,17 @@ public class IdempotencyOptionsBuilder
         // for backward compability keep this code in .net 6
         _hashFunction = hashFunction;
 #endif
+        return this;
+    }
+
+    /// <summary>
+    /// Set a response hook function, to be called with the response and the data record.
+    /// </summary>
+    /// <param name="hook">The response hook function</param>
+    /// <returns>the instance of the builder (to chain operations)</returns>
+    public IdempotencyOptionsBuilder WithResponseHook(Func<object, AWS.Lambda.Powertools.Idempotency.Persistence.DataRecord, object> hook)
+    {
+        _responseHook = hook;
         return this;
     }
 }
