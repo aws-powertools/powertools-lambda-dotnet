@@ -877,7 +877,7 @@ Idempotency.Config()
 
 ???+ info "Info: Using custom de-serialization?"
 
-    The response hook is called after de-serialization so the payload you process will be the de-serialized Java object.
+    The response hook is called after de-serialization so the payload you process will be the de-serialized C# object.
 
 #### Being a good citizen
 
