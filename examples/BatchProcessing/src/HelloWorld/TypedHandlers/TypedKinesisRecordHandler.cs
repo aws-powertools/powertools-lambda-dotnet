@@ -27,7 +27,7 @@ namespace HelloWorld.TypedHandlers;
 /// </summary>
 public class TypedKinesisRecordHandler : ITypedRecordHandler<Order>
 {
-    public async Task<RecordHandlerResult> HandleAsync(Order order, CancellationToken cancellationToken)
+    public static async Task<RecordHandlerResult> HandleAsync(Order order, CancellationToken cancellationToken)
     {
         Logger.LogInformation($"Processing order {order.OrderId} for customer {order.CustomerId}");
         Logger.LogInformation($"Order contains {order.Items.Count} items with total amount {order.TotalAmount}");

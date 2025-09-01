@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -15,7 +15,6 @@
 
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
@@ -99,20 +98,20 @@ internal static class ContextInjectionHelper
         {
             return await asyncResult;
         }
-        else if (result is RecordHandlerResult syncResult)
+
+        if (result is RecordHandlerResult syncResult)
         {
             return syncResult;
         }
-        else if (result is Task task)
+
+        if (result is Task task)
         {
             await task;
             return RecordHandlerResult.None;
         }
-        else
-        {
-            throw new InvalidOperationException(
-                $"Handler method must return either {nameof(RecordHandlerResult)} or Task<{nameof(RecordHandlerResult)}>.");
-        }
+
+        throw new InvalidOperationException(
+            $"Handler method must return either {nameof(RecordHandlerResult)} or Task<{nameof(RecordHandlerResult)}>.");
     }
 
     /// <summary>
@@ -186,7 +185,7 @@ internal static class ContextInjectionHelper
     /// <summary>
     /// Internal wrapper class that implements ITypedRecordHandlerWithContext for any delegate.
     /// </summary>
-    private class DelegateContextAwareWrapper<T> : ITypedRecordHandlerWithContext<T>
+    private sealed class DelegateContextAwareWrapper<T> : ITypedRecordHandlerWithContext<T>
     {
         private readonly Delegate _handler;
 

@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -14,10 +14,9 @@
  */
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Internal;
@@ -102,7 +101,7 @@ internal static class AotCompatibilityHelper
         }
 
         // Use reflection-based deserialization as fallback
-        return System.Text.Json.JsonSerializer.Deserialize<T>(data, options?.JsonSerializerOptions);
+        return JsonSerializer.Deserialize<T>(data, options?.JsonSerializerOptions);
     }
 
     /// <summary>
@@ -142,7 +141,7 @@ internal static class AotCompatibilityHelper
         // This provides early validation regardless of runtime mode
         if (options?.JsonSerializerContext != null)
         {
-            ValidateTypeInContext<T>(options.JsonSerializerContext, true);
+            ValidateTypeInContext<T>(options.JsonSerializerContext);
         }
     }
 }

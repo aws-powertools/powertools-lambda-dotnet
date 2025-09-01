@@ -234,15 +234,6 @@ public class TypedFunction
     [Logging(LogEvent = true)]
     public async Task<BatchItemFailuresResponse> MigrationExample(SQSEvent sqsEvent, ILambdaContext context)
     {
-        // Traditional approach (before typed handlers)
-        /*
-        var result = await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent, RecordHandler<SQSEvent.SQSMessage>.From(record =>
-        {
-            var product = JsonSerializer.Deserialize<Product>(record.Body);
-            Logger.LogInformation($"Processing product {product.Id}");
-        }));
-        */
-
         // New typed approach (with automatic deserialization)
         var result = await TypedSqsBatchProcessor.Instance
             .Handler<Product>((product, ct) =>

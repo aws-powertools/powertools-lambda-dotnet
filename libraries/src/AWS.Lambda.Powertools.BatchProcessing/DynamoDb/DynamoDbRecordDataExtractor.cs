@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -42,13 +42,13 @@ public class DynamoDbRecordDataExtractor : IRecordDataExtractor<DynamoDBEvent.Dy
         // Create a simplified representation of the DynamoDB record for deserialization
         var recordData = new
         {
-            EventName = record.EventName,
-            Keys = record.Dynamodb.Keys,
-            NewImage = record.Dynamodb.NewImage,
-            OldImage = record.Dynamodb.OldImage,
-            SequenceNumber = record.Dynamodb.SequenceNumber,
-            SizeBytes = record.Dynamodb.SizeBytes,
-            StreamViewType = record.Dynamodb.StreamViewType
+            record.EventName,
+            record.Dynamodb.Keys,
+            record.Dynamodb.NewImage,
+            record.Dynamodb.OldImage,
+            record.Dynamodb.SequenceNumber,
+            record.Dynamodb.SizeBytes,
+            record.Dynamodb.StreamViewType
         };
 
         return JsonSerializer.Serialize(recordData);

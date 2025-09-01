@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -14,7 +14,6 @@
  */
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
@@ -46,7 +45,7 @@ public class JsonDeserializationService : IDeserializationService
     /// <param name="options">The deserialization options.</param>
     /// <returns>The deserialized object.</returns>
 
-    private T DeserializeWithFallback<T>(string data, DeserializationOptions options)
+    private static T DeserializeWithFallback<T>(string data, DeserializationOptions options)
     {
         // Check if we're in AOT mode and provide appropriate guidance
         if (AotCompatibilityHelper.IsAotMode())
@@ -72,7 +71,7 @@ public class JsonDeserializationService : IDeserializationService
             if (options?.JsonSerializerContext != null)
             {
                 // Validate AOT compatibility when JsonSerializerContext is provided
-                AotCompatibilityHelper.ValidateTypeInContext<T>(options.JsonSerializerContext, true);
+                AotCompatibilityHelper.ValidateTypeInContext<T>(options.JsonSerializerContext);
                 return (T)JsonSerializer.Deserialize(data, typeof(T), options.JsonSerializerContext);
             }
 
@@ -87,16 +86,6 @@ public class JsonDeserializationService : IDeserializationService
             }
 
             throw new DeserializationException(data, typeof(T), ex);
-        }
-        catch (AotCompatibilityException)
-        {
-            // Re-throw AOT compatibility exceptions without wrapping
-            throw;
-        }
-        catch (AotTypeValidationException)
-        {
-            // Re-throw AOT type validation exceptions without wrapping
-            throw;
         }
     }
 
@@ -123,7 +112,7 @@ public class JsonDeserializationService : IDeserializationService
             if (options?.JsonSerializerContext != null)
             {
                 // Validate AOT compatibility when JsonSerializerContext is provided
-                AotCompatibilityHelper.ValidateTypeInContext<T>(options.JsonSerializerContext, true);
+                AotCompatibilityHelper.ValidateTypeInContext<T>(options.JsonSerializerContext);
                 result = (T)JsonSerializer.Deserialize(data, typeof(T), options.JsonSerializerContext);
             }
             else

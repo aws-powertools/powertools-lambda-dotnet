@@ -122,7 +122,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
         }
 
         [Fact]
-        public void BatchProcessorAttribute_WithInvalidJsonSerializerContext_ThrowsArgumentException()
+        public void BatchProcessorAttribute_WithInvalidJsonSerializerContext_ThrowsInvalidOperationException()
         {
             // Arrange
             var attribute = new BatchProcessorAttribute
@@ -132,7 +132,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             };
 
             // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() => 
+            var exception = Assert.Throws<InvalidOperationException>(() => 
                 attribute.CreateAspectHandler(new object[] { new SQSEvent() }));
             
             Assert.Contains("The provided JsonSerializerContext must inherit from", exception.Message);

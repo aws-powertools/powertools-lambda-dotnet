@@ -27,7 +27,7 @@ namespace HelloWorld.TypedHandlers;
 /// </summary>
 public class TypedDynamoDbRecordHandler : ITypedRecordHandler<Customer>
 {
-    public async Task<RecordHandlerResult> HandleAsync(Customer customer, CancellationToken cancellationToken)
+    public static async Task<RecordHandlerResult> HandleAsync(Customer customer, CancellationToken cancellationToken)
     {
         Logger.LogInformation($"Processing customer change: {customer.CustomerId} - {customer.Name}");
         Logger.LogInformation($"Customer email: {customer.Email}, Created: {customer.CreatedAt}");

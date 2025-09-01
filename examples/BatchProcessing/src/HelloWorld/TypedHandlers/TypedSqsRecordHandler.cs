@@ -27,7 +27,7 @@ namespace HelloWorld.TypedHandlers;
 /// </summary>
 public class TypedSqsRecordHandler : ITypedRecordHandler<Product>
 {
-    public async Task<RecordHandlerResult> HandleAsync(Product product, CancellationToken cancellationToken)
+    public static async Task<RecordHandlerResult> HandleAsync(Product product, CancellationToken cancellationToken)
     {
         Logger.LogInformation($"Processing product with ID: {product.Id}, Name: {product.Name}, Price: {product.Price}");
 

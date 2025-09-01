@@ -1,12 +1,12 @@
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/apache2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
  * express or implied. See the License for the specific language governing
@@ -58,7 +58,6 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
     {
         _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
         _recordDataExtractor = recordDataExtractor ?? DynamoDbRecordDataExtractor.Instance;
-        _typedInstance = this;
     }
 
     /// <summary>
@@ -184,7 +183,7 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
     /// <summary>
     /// Wrapper class that adapts ITypedRecordHandler to IRecordHandler.
     /// </summary>
-    private class TypedRecordHandlerWrapper<T> : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
+    private sealed class TypedRecordHandlerWrapper<T> : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
     {
         private readonly ITypedRecordHandler<T> _typedHandler;
         private readonly IDeserializationService _deserializationService;
@@ -227,11 +226,6 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
                     return await _typedHandler.HandleAsync(deserializedData, cancellationToken);
                 }
             }
-            catch (AotTypeValidationException)
-            {
-                // Re-throw AOT validation exceptions without wrapping
-                throw;
-            }
             catch (DeserializationException ex)
             {
                 // Handle deserialization errors based on policy
@@ -249,7 +243,7 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
     /// <summary>
     /// Wrapper class that adapts ITypedRecordHandlerWithContext to IRecordHandler.
     /// </summary>
-    private class TypedRecordHandlerWithContextWrapper<T> : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
+    private sealed class TypedRecordHandlerWithContextWrapper<T> : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
     {
         private readonly ITypedRecordHandlerWithContext<T> _typedHandler;
         private readonly ILambdaContext _context;
@@ -294,11 +288,6 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
                     var deserializedData = _deserializationService.Deserialize<T>(recordData, _deserializationOptions);
                     return await _typedHandler.HandleAsync(deserializedData, _context, cancellationToken);
                 }
-            }
-            catch (AotTypeValidationException)
-            {
-                // Re-throw AOT validation exceptions without wrapping
-                throw;
             }
             catch (DeserializationException ex)
             {

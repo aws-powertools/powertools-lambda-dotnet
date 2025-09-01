@@ -28,7 +28,7 @@ namespace HelloWorld.TypedHandlers;
 /// </summary>
 public class TypedSqsRecordHandlerWithContext : ITypedRecordHandlerWithContext<Product>
 {
-    public async Task<RecordHandlerResult> HandleAsync(Product product, ILambdaContext context, CancellationToken cancellationToken)
+    public static async Task<RecordHandlerResult> HandleAsync(Product product, ILambdaContext context, CancellationToken cancellationToken)
     {
         Logger.LogInformation($"Processing product {product.Id} in request {context.AwsRequestId}");
         Logger.LogInformation($"Remaining time: {context.RemainingTime.TotalMilliseconds}ms");
