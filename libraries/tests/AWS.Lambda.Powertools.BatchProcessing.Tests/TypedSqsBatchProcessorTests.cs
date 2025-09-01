@@ -571,6 +571,263 @@ public class TypedSqsBatchProcessorTests
     }
 
     #endregion
+
+    #region Delegate Processing Tests
+
+    [Fact]
+    public async Task ProcessAsync_WithDelegate_ProcessesSuccessfully()
+    {
+        // Arrange
+        var testData = new TestMessage { Id = 1, Name = "Delegate Test" };
+        var messageBody = JsonSerializer.Serialize(testData);
+
+        var @event = new SQSEvent
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    MessageId = "msg-1",
+                    Body = messageBody
+                }
+            }
+        };
+
+        var handlerCalled = false;
+        Task<RecordHandlerResult> DelegateHandler(TestMessage message, CancellationToken ct)
+        {
+            handlerCalled = true;
+            Assert.Equal(1, message.Id);
+            Assert.Equal("Delegate Test", message.Name);
+            return Task.FromResult(RecordHandlerResult.None);
+        }
+
+        // Act
+        var result = await _processor.ProcessAsync<TestMessage>(@event, DelegateHandler);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(handlerCalled);
+        Assert.Empty(result.BatchItemFailuresResponse.BatchItemFailures);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithDelegateAndContext_ProcessesSuccessfully()
+    {
+        // Arrange
+        var testData = new TestMessage { Id = 2, Name = "Delegate Context Test" };
+        var messageBody = JsonSerializer.Serialize(testData);
+
+        var @event = new SQSEvent
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    MessageId = "msg-1",
+                    Body = messageBody
+                }
+            }
+        };
+
+        var context = Substitute.For<ILambdaContext>();
+        var handlerCalled = false;
+        
+        Task<RecordHandlerResult> DelegateHandler(TestMessage message, ILambdaContext ctx, CancellationToken ct)
+        {
+            handlerCalled = true;
+            Assert.Equal(2, message.Id);
+            Assert.Equal("Delegate Context Test", message.Name);
+            Assert.Equal(context, ctx);
+            return Task.FromResult(RecordHandlerResult.None);
+        }
+
+        // Act
+        var result = await _processor.ProcessAsync<TestMessage>(@event, DelegateHandler, context);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(handlerCalled);
+        Assert.Empty(result.BatchItemFailuresResponse.BatchItemFailures);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithNullDelegate_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var @event = new SQSEvent { Records = new List<SQSEvent.SQSMessage>() };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            _processor.ProcessAsync<TestMessage>(@event, (Delegate)null));
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithDelegateAndDeserializationOptions_ProcessesSuccessfully()
+    {
+        // Arrange
+        var testData = new TestMessage { Id = 3, Name = "Delegate Options Test" };
+        var messageBody = JsonSerializer.Serialize(testData);
+
+        var @event = new SQSEvent
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    MessageId = "msg-1",
+                    Body = messageBody
+                }
+            }
+        };
+
+        var deserializationOptions = new DeserializationOptions
+        {
+            JsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        };
+
+        var handlerCalled = false;
+        Task<RecordHandlerResult> DelegateHandler(TestMessage message, CancellationToken ct)
+        {
+            handlerCalled = true;
+            Assert.Equal(3, message.Id);
+            return Task.FromResult(RecordHandlerResult.None);
+        }
+
+        // Act
+        var result = await _processor.ProcessAsync<TestMessage>(@event, DelegateHandler, null, deserializationOptions);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(handlerCalled);
+        Assert.Empty(result.BatchItemFailuresResponse.BatchItemFailures);
+    }
+
+    #endregion
+
+    #region Constructor and Instance Tests
+
+    [Fact]
+    public void TypedInstance_ReturnsSameInstance()
+    {
+        // Act
+        var instance1 = TypedSqsBatchProcessor.TypedInstance;
+        var instance2 = TypedSqsBatchProcessor.TypedInstance;
+
+        // Assert
+        Assert.Same(instance1, instance2);
+    }
+
+    [Fact]
+    public void Constructor_WithCustomServices_InitializesCorrectly()
+    {
+        // Arrange
+        var mockDeserializationService = Substitute.For<IDeserializationService>();
+        var mockRecordDataExtractor = Substitute.For<IRecordDataExtractor<SQSEvent.SQSMessage>>();
+
+        // Act
+        var processor = new TypedSqsBatchProcessor(
+            _mockConfigurations,
+            mockDeserializationService,
+            mockRecordDataExtractor);
+
+        // Assert
+        Assert.NotNull(processor);
+    }
+
+    [Fact]
+    public void DefaultConstructor_InitializesCorrectly()
+    {
+        // Act & Assert - Should not throw
+        var processor = new TestableTypedSqsBatchProcessor();
+        Assert.NotNull(processor);
+    }
+
+    // Helper class to test protected constructor
+    private class TestableTypedSqsBatchProcessor : TypedSqsBatchProcessor
+    {
+        public TestableTypedSqsBatchProcessor() : base()
+        {
+        }
+    }
+
+    #endregion
+
+    #region Wrapper Class Coverage Tests
+
+    [Fact]
+    public async Task ProcessAsync_WithIgnoreErrorPolicy_SkipsInvalidRecords()
+    {
+        // Arrange
+        var @event = new SQSEvent
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    MessageId = "msg-1",
+                    Body = "invalid-json"
+                },
+                new()
+                {
+                    MessageId = "msg-2",
+                    Body = JsonSerializer.Serialize(new TestMessage { Id = 1, Name = "Valid" })
+                }
+            }
+        };
+
+        var deserializationOptions = new DeserializationOptions
+        {
+            ErrorPolicy = DeserializationErrorPolicy.IgnoreRecord
+        };
+
+        var handler = Substitute.For<ITypedRecordHandler<TestMessage>>();
+        handler.HandleAsync(Arg.Any<TestMessage>(), Arg.Any<CancellationToken>())
+            .Returns(RecordHandlerResult.None);
+
+        // Act
+        var result = await _processor.ProcessAsync(@event, handler, deserializationOptions);
+
+        // Assert
+        Assert.NotNull(result);
+        // Should only process the valid record
+        await handler.Received(1).HandleAsync(Arg.Any<TestMessage>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithContextHandlerAndIgnoreErrorPolicy_SkipsInvalidRecords()
+    {
+        // Arrange
+        var @event = new SQSEvent
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    MessageId = "msg-1",
+                    Body = "invalid-json"
+                }
+            }
+        };
+
+        var context = Substitute.For<ILambdaContext>();
+        var deserializationOptions = new DeserializationOptions
+        {
+            ErrorPolicy = DeserializationErrorPolicy.IgnoreRecord
+        };
+
+        var handler = Substitute.For<ITypedRecordHandlerWithContext<TestMessage>>();
+
+        // Act
+        var result = await _processor.ProcessAsync(@event, handler, context, deserializationOptions);
+
+        // Assert
+        Assert.NotNull(result);
+        // Should not call handler for invalid record
+        await handler.DidNotReceive().HandleAsync(Arg.Any<TestMessage>(), Arg.Any<ILambdaContext>(), Arg.Any<CancellationToken>());
+    }
+
+    #endregion
 }
 
 // JsonSerializerContext needs to be outside the test class and partial for source generation

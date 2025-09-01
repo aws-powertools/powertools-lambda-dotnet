@@ -152,6 +152,64 @@ public class AotCompatibilityTests
         AotCompatibilityHelper.ValidateAotCompatibility<TestAotModel>(options);
     }
 
+    [Fact]
+    public void ValidateAotCompatibility_WithJsonSerializerContext_ValidatesType()
+    {
+        // Arrange
+        var options = new DeserializationOptions(TestAotJsonSerializerContext.Default);
+
+        // Act & Assert - Should not throw for registered type
+        AotCompatibilityHelper.ValidateAotCompatibility<TestAotModel>(options);
+    }
+
+    [Fact]
+    public void ValidateAotCompatibility_WithUnregisteredType_ThrowsException()
+    {
+        // Arrange
+        var options = new DeserializationOptions(TestAotJsonSerializerContext.Default);
+
+        // Act & Assert
+        var exception = Assert.Throws<AotTypeValidationException>(() =>
+            AotCompatibilityHelper.ValidateAotCompatibility<UnregisteredModel>(options));
+
+        Assert.Equal(typeof(UnregisteredModel), exception.TargetType);
+        Assert.Contains("UnregisteredModel", exception.Message);
+    }
+
+    [Fact]
+    public void FallbackDeserialize_WithJsonSerializerOptions_Succeeds()
+    {
+        // Arrange
+        var json = """{"Id":1,"Name":"Test","CreatedAt":"2023-01-01T00:00:00Z"}""";
+        var options = new DeserializationOptions
+        {
+            JsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        };
+
+        // Act
+        var result = AotCompatibilityHelper.FallbackDeserialize<TestAotModel>(json, options);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Id);
+        Assert.Equal("Test", result.Name);
+    }
+
+    [Fact]
+    public void FallbackDeserialize_WithNullOptions_Succeeds()
+    {
+        // Arrange
+        var json = """{"Id":1,"Name":"Test","CreatedAt":"2023-01-01T00:00:00Z"}""";
+
+        // Act
+        var result = AotCompatibilityHelper.FallbackDeserialize<TestAotModel>(json, null);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Id);
+        Assert.Equal("Test", result.Name);
+    }
+
     #endregion
 
     #region JsonDeserializationService AOT Tests
