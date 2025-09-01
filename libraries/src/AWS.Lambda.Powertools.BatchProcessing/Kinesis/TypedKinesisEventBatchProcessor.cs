@@ -212,7 +212,7 @@ public class TypedKinesisEventBatchProcessor : KinesisEventBatchProcessor, IType
                 if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord || 
                     _deserializationOptions?.IgnoreDeserializationErrors == true)
                 {
-                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out var exception, _deserializationOptions))
+                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out _, _deserializationOptions))
                     {
                         // Deserialization failed and we're ignoring errors, don't call the handler
                         return RecordHandlerResult.None;
@@ -243,7 +243,7 @@ public class TypedKinesisEventBatchProcessor : KinesisEventBatchProcessor, IType
     /// <summary>
     /// Wrapper class that adapts ITypedRecordHandlerWithContext to IRecordHandler.
     /// </summary>
-    private class TypedRecordHandlerWithContextWrapper<T> : IRecordHandler<KinesisEvent.KinesisEventRecord>
+    private sealed class TypedRecordHandlerWithContextWrapper<T> : IRecordHandler<KinesisEvent.KinesisEventRecord>
     {
         private readonly ITypedRecordHandlerWithContext<T> _typedHandler;
         private readonly ILambdaContext _context;
@@ -275,7 +275,7 @@ public class TypedKinesisEventBatchProcessor : KinesisEventBatchProcessor, IType
                 if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord || 
                     _deserializationOptions?.IgnoreDeserializationErrors == true)
                 {
-                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out var exception, _deserializationOptions))
+                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out _, _deserializationOptions))
                     {
                         // Deserialization failed and we're ignoring errors, don't call the handler
                         return RecordHandlerResult.None;

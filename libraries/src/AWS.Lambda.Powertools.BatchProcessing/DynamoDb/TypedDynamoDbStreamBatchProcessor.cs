@@ -212,7 +212,7 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
                 if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord || 
                     _deserializationOptions?.IgnoreDeserializationErrors == true)
                 {
-                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out var exception, _deserializationOptions))
+                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out _, _deserializationOptions))
                     {
                         // Deserialization failed and we're ignoring errors, don't call the handler
                         return RecordHandlerResult.None;
@@ -275,7 +275,7 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
                 if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord || 
                     _deserializationOptions?.IgnoreDeserializationErrors == true)
                 {
-                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out var exception, _deserializationOptions))
+                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out _, _deserializationOptions))
                     {
                         // Deserialization failed and we're ignoring errors, don't call the handler
                         return RecordHandlerResult.None;

@@ -58,7 +58,6 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
     {
         _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
         _recordDataExtractor = recordDataExtractor ?? SqsRecordDataExtractor.Instance;
-        _typedInstance = this;
     }
 
     /// <summary>
@@ -210,7 +209,7 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
     /// <summary>
     /// Wrapper class that adapts ITypedRecordHandler to IRecordHandler.
     /// </summary>
-    private class TypedRecordHandlerWrapper<T> : IRecordHandler<SQSEvent.SQSMessage>
+    private sealed class TypedRecordHandlerWrapper<T> : IRecordHandler<SQSEvent.SQSMessage>
     {
         private readonly ITypedRecordHandler<T> _typedHandler;
         private readonly IDeserializationService _deserializationService;
@@ -239,7 +238,7 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
                 if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord || 
                     _deserializationOptions?.IgnoreDeserializationErrors == true)
                 {
-                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out var exception, _deserializationOptions))
+                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out _, _deserializationOptions))
                     {
                         // Deserialization failed and we're ignoring errors, don't call the handler
                         return RecordHandlerResult.None;
@@ -270,7 +269,7 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
     /// <summary>
     /// Enhanced wrapper class that can adapt any delegate to IRecordHandler with automatic context injection.
     /// </summary>
-    private class DelegateRecordHandlerWrapper<T> : IRecordHandler<SQSEvent.SQSMessage>
+    private sealed class DelegateRecordHandlerWrapper<T> : IRecordHandler<SQSEvent.SQSMessage>
     {
         private readonly Delegate _handler;
         private readonly ILambdaContext _context;
@@ -359,7 +358,7 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
                 if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord || 
                     _deserializationOptions?.IgnoreDeserializationErrors == true)
                 {
-                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out var exception, _deserializationOptions))
+                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out _, _deserializationOptions))
                     {
                         // Deserialization failed and we're ignoring errors, don't call the handler
                         return RecordHandlerResult.None;
