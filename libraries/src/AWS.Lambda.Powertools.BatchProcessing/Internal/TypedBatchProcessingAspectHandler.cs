@@ -71,7 +71,7 @@ internal class TypedBatchProcessingAspectHandler<TEvent, TRecord, T> : IBatchPro
             if (context != null)
             {
                 // Create a wrapper that can handle context injection
-                var contextWrapper = new TypedRecordHandlerWrapper<T>(_typedRecordHandler);
+                var contextWrapper = new AWS.Lambda.Powertools.BatchProcessing.TypedRecordHandlerWrapper<T>(_typedRecordHandler);
                 await _batchProcessor.ProcessAsync(@event, contextWrapper, context, _deserializationOptions, _processingOptions);
             }
             else
