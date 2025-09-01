@@ -326,7 +326,7 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
     /// <summary>
     /// Wrapper class that adapts ITypedRecordHandlerWithContext to IRecordHandler.
     /// </summary>
-    private class TypedRecordHandlerWithContextWrapper<T> : IRecordHandler<SQSEvent.SQSMessage>
+    private sealed class TypedRecordHandlerWithContextWrapper<T> : IRecordHandler<SQSEvent.SQSMessage>
     {
         private readonly ITypedRecordHandlerWithContext<T> _typedHandler;
         private readonly ILambdaContext _context;

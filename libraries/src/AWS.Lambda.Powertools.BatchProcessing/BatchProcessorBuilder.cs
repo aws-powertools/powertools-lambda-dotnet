@@ -50,6 +50,7 @@ internal class TypedRecordHandlerWrapper<T> : ITypedRecordHandlerWithContext<T>
 /// <typeparam name="TEvent">Type of batch event.</typeparam>
 /// <typeparam name="TRecord">Type of batch record.</typeparam>
 public class BatchProcessorBuilder<TEvent, TRecord>
+    where TEvent : class
 {
     private readonly ITypedBatchProcessor<TEvent, TRecord> _batchProcessor;
     private readonly DeserializationOptions _deserializationOptions;
