@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.DynamoDBEvents;
@@ -164,6 +165,41 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
     public Type RecordHandlerProvider { get; set; }
 
     /// <summary>
+    /// Type of typed record handler for strongly-typed processing.
+    /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    public Type TypedRecordHandler { get; set; }
+
+    /// <summary>
+    /// Type of typed record handler provider for strongly-typed processing.
+    /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    public Type TypedRecordHandlerProvider { get; set; }
+
+    /// <summary>
+    /// Type of typed record handler with context for strongly-typed processing.
+    /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    public Type TypedRecordHandlerWithContext { get; set; }
+
+    /// <summary>
+    /// Type of typed record handler with context provider for strongly-typed processing.
+    /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    public Type TypedRecordHandlerWithContextProvider { get; set; }
+
+    /// <summary>
+    /// JsonSerializerContext type for AOT-compatible deserialization.
+    /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    public Type JsonSerializerContext { get; set; }
+
+    /// <summary>
+    /// Policy for handling deserialization errors.
+    /// </summary>
+    public DeserializationErrorPolicy DeserializationErrorPolicy { get; set; } = DeserializationErrorPolicy.FailRecord;
+
+    /// <summary>
     /// Error handling policy.
     /// </summary>
     public BatchProcessorErrorHandlingPolicy ErrorHandlingPolicy { get; set; }
@@ -215,6 +251,12 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
         {BatchEventType.KinesisDataStream, typeof(IRecordHandlerProvider<KinesisEvent.KinesisEventRecord>)},
         {BatchEventType.Sqs,               typeof(IRecordHandlerProvider<SQSEvent.SQSMessage>)}
     };
+    private static readonly Dictionary<BatchEventType, Type> TypedBatchProcessorTypes = new()
+    {
+        {BatchEventType.DynamoDbStream,    typeof(ITypedBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord>)},
+        {BatchEventType.KinesisDataStream, typeof(ITypedBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord>)},
+        {BatchEventType.Sqs,               typeof(ITypedBatchProcessor<SQSEvent, SQSEvent.SQSMessage>)}
+    };
 
     /// <inheritdoc />
     protected internal override T WrapSync<T>(Func<object[], T> target, object[] args, AspectEventArgs eventArgs)
@@ -235,7 +277,7 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
         return await target(args);
     }
 
-    private IBatchProcessingAspectHandler CreateAspectHandler(IReadOnlyList<object> args)
+    internal IBatchProcessingAspectHandler CreateAspectHandler(IReadOnlyList<object> args)
     {
         // Try get event type
         if (args == null || args.Count == 0 || !EventTypes.TryGetValue(args[0].GetType(), out var eventType))
@@ -265,6 +307,15 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
         if (RecordHandlerProvider != null && !RecordHandlerProvider.IsAssignableTo(RecordHandlerProviderTypes[eventType]))
         {
             throw new ArgumentException($"The provided record handler provider must implement: '{RecordHandlerProviderTypes[eventType]}'.", nameof(RecordHandlerProvider));
+        }
+
+        // Validate typed handler configurations
+        ValidateTypedHandlerConfiguration();
+
+        // Check if typed handlers are configured (not yet fully supported in attributes)
+        if (IsTypedHandlerConfigured())
+        {
+            throw new NotSupportedException("Typed record handlers are not yet fully supported with BatchProcessorAttribute. Please use the fluent API or direct typed batch processor calls for typed processing.");
         }
 
         // Create aspect handler
@@ -355,5 +406,41 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
             BatchParallelProcessingEnabled = BatchParallelProcessingEnabled,
             ThrowOnFullBatchFailure = ThrowOnFullBatchFailure
         });
+    }
+
+    private void ValidateTypedHandlerConfiguration()
+    {
+        // Ensure only one type of handler is configured
+        var handlerCount = 0;
+        if (RecordHandler != null) handlerCount++;
+        if (RecordHandlerProvider != null) handlerCount++;
+        if (TypedRecordHandler != null) handlerCount++;
+        if (TypedRecordHandlerProvider != null) handlerCount++;
+        if (TypedRecordHandlerWithContext != null) handlerCount++;
+        if (TypedRecordHandlerWithContextProvider != null) handlerCount++;
+
+        if (handlerCount == 0)
+        {
+            throw new InvalidOperationException("A record handler, record handler provider, typed record handler, or typed record handler provider is required.");
+        }
+
+        if (handlerCount > 1)
+        {
+            throw new InvalidOperationException("Only one type of handler (traditional or typed) can be configured at a time.");
+        }
+
+        // Validate JsonSerializerContext type if provided
+        if (JsonSerializerContext != null && !JsonSerializerContext.IsAssignableTo(typeof(JsonSerializerContext)))
+        {
+            throw new ArgumentException($"The provided JsonSerializerContext must inherit from: '{typeof(JsonSerializerContext)}'.", nameof(JsonSerializerContext));
+        }
+    }
+
+    private bool IsTypedHandlerConfigured()
+    {
+        return TypedRecordHandler != null || 
+               TypedRecordHandlerProvider != null || 
+               TypedRecordHandlerWithContext != null || 
+               TypedRecordHandlerWithContextProvider != null;
     }
 }
