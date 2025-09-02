@@ -208,6 +208,24 @@ internal class IdempotencyAspectHandler<T>
                     {
                         throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);
                     }
+                    // Response hook logic
+                    var responseHook = Idempotency.Instance.IdempotencyOptions?.ResponseHook;
+                    if (responseHook != null)
+                    {
+                        try
+                        {
+                            var hooked = responseHook(result, record);
+                            if (hooked is T typedHooked)
+                            {
+                                return Task.FromResult(typedHooked);
+                            }
+                            // If hook returns wrong type, fallback to original result
+                        }
+                        catch (Exception)
+                        {
+                            // If hook throws, fallback to original result
+                        }
+                    }
                     return Task.FromResult(result);
                 }
                 catch (Exception e)

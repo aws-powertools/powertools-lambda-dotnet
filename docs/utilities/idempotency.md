@@ -846,6 +846,50 @@ Data would then be stored in DynamoDB like this:
 | idempotency#MyLambdaFunction | f091d2527ad1c78f05d54cc3f363be80 | 1636549585 | IN_PROGRESS |                                      |
 
 
+### Manipulating the Idempotent Response
+
+You can set up a response hook in the Idempotency configuration to manipulate the returned data when an operation is idempotent. The hook function will be called with the current deserialized response object and the Idempotency `DataRecord`.
+
+#### Using Response Hooks
+
+The example below shows how to append HTTP headers to an `APIGatewayProxyResponse`:
+
+```csharp
+Idempotency.Config()
+    .WithConfig(IdempotencyOptions.Builder()
+        .WithEventKeyJmesPath("powertools_json(body).address")
+        .WithResponseHook((responseData, dataRecord) => {
+            if (responseData is APIGatewayProxyResponse proxyResponse)
+            {
+                proxyResponse.Headers ??= new Dictionary<string, string>();
+                proxyResponse.Headers["x-idempotency-response"] = "true";
+                proxyResponse.Headers["x-idempotency-expiration"] = dataRecord.ExpiryTimestamp.ToString();
+                return proxyResponse;
+            }
+            return responseData;
+        })
+        .Build())
+    .WithPersistenceStore(DynamoDBPersistenceStore.Builder()
+        .WithTableName(Environment.GetEnvironmentVariable("IDEMPOTENCY_TABLE"))
+        .Build())
+    .Configure();
+```
+
+???+ info "Info: Using custom de-serialization?"
+
+    The response hook is called after de-serialization so the payload you process will be the de-serialized C# object.
+
+#### Being a good citizen
+
+When using response hooks to manipulate returned data from idempotent operations, it's important to follow best practices to avoid introducing complexity or issues. Keep these guidelines in mind:
+
+1. **Response hook works exclusively when operations are idempotent.** The hook will not be called when an operation is not idempotent, or when the idempotent logic fails.
+
+2. **Catch and Handle Exceptions.** Your response hook code should catch and handle any exceptions that may arise from your logic. Unhandled exceptions will cause the Lambda function to fail unexpectedly.
+
+3. **Keep Hook Logic Simple** Response hooks should consist of minimal and straightforward logic for manipulating response data. Avoid complex conditional branching and aim for hooks that are easy to reason about.
+
+
 ## AOT Support
 
 Native AOT trims your application code as part of the compilation to ensure that the binary is as small as possible. .NET 8 for Lambda provides improved trimming support compared to previous versions of .NET.

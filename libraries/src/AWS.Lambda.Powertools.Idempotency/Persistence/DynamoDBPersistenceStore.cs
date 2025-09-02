@@ -370,9 +370,9 @@ public class DynamoDBPersistenceStoreBuilder
     private AmazonDynamoDBClient _dynamoDbClient;
 
     /// <summary>
-    /// Initialize and return a new instance of {@link DynamoDBPersistenceStore}.
+    /// Initialize and return a new instance of <see cref="DynamoDBPersistenceStore"/>.
     /// Example:
-    ///    DynamoDBPersistenceStore.builder().withTableName("idempotency_store").build();
+    ///    new DynamoDBPersistenceStoreBuilder().WithTableName("idempotency_store").Build();
     /// </summary>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
