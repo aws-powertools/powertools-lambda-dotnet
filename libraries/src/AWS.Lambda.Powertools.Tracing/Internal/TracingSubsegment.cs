@@ -1,5 +1,4 @@
 using Amazon.XRay.Recorder.Core.Internal.Entities;
-using System.Collections.Generic;
 
 namespace AWS.Lambda.Powertools.Tracing.Internal;
 
@@ -13,6 +12,6 @@ public class TracingSubsegment : Subsegment
     /// <summary>
     /// Wrapper constructor
     /// </summary>
-    /// <param name="name"></param>
+    /// <param name="name"></param> 
     public TracingSubsegment(string name) : base(name) { }
 }
