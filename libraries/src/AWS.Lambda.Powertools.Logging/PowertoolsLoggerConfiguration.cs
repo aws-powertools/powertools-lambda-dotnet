@@ -327,34 +327,44 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     
     internal bool RefreshSampleRateCalculation()
     {
-        if (SamplingRefreshCount == 0)
-        {
-            SamplingRefreshCount++;
-            return false;
-        }
+        return RefreshSampleRateCalculation(out _);
+    }
 
+    internal bool RefreshSampleRateCalculation(out double samplerValue)
+    {
+        samplerValue = 0.0;
+        
         if (SamplingRate <= 0)
             return false;
 
-        var shouldEnableDebugSampling = ShouldEnableDebugSampling();
+        var shouldEnableDebugSampling = ShouldEnableDebugSampling(out samplerValue);
 
         if (shouldEnableDebugSampling && MinimumLogLevel > LogLevel.Trace)
         {
             MinimumLogLevel = LogLevel.Debug;
             return true;
         }
-        else
+        else if (SamplingRefreshCount > 0)
         {
             MinimumLogLevel = InitialLogLevel;
-            return false;
         }
+        
+        SamplingRefreshCount++;
+        return shouldEnableDebugSampling && MinimumLogLevel == LogLevel.Debug;
     }
 
     internal bool ShouldEnableDebugSampling()
     {
+        return ShouldEnableDebugSampling(out _);
+    }
+
+    internal bool ShouldEnableDebugSampling(out double samplerValue)
+    {
+        samplerValue = 0.0;
         if (SamplingRate <= 0) return false;
-        var random = new Random();
-        return random.Next(0, 100) / 100.0 <= SamplingRate;
+        
+        samplerValue = GetRandom();
+        return samplerValue <= SamplingRate;
     }
     
     internal static double GetSafeRandom()

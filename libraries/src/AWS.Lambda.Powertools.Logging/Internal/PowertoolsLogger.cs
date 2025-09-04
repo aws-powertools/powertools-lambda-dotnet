@@ -119,10 +119,10 @@ internal sealed class PowertoolsLogger : ILogger
         var config = _currentConfig();
         if (config.SamplingRate > 0)
         {
-            var samplingActivated = config.RefreshSampleRateCalculation();
+            var samplingActivated = config.RefreshSampleRateCalculation(out double samplerValue);
             if (samplingActivated)
             {
-                LogDebug("Setting log level to DEBUG due to sampling rate");
+                config.LogOutput.WriteLine($"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {config.SamplingRate}, Sampler Value: {samplerValue}.");
             }
         }
 
