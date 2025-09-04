@@ -116,17 +116,35 @@ internal sealed class PowertoolsLogger : ILogger
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
         Func<TState, Exception, string> formatter)
     {
+        var config = _currentConfig();
+        if (config.SamplingRate > 0)
+        {
+            var samplingActivated = config.RefreshSampleRateCalculation();
+            if (samplingActivated)
+            {
+                LogDebug("Setting log level to DEBUG due to sampling rate");
+            }
+        }
+
         if (!IsEnabled(logLevel))
         {
             return;
         }
 
-        _currentConfig().LogOutput.WriteLine(LogEntryString(logLevel, state, exception, formatter));
+        config.LogOutput.WriteLine(LogEntryString(logLevel, state, exception, formatter));
     }
 
     internal void LogLine(string message)
     {
         _currentConfig().LogOutput.WriteLine(message);
+    }
+
+    private void LogDebug(string message)
+    {
+        if (IsEnabled(LogLevel.Debug))
+        {
+            Log(LogLevel.Debug, new EventId(), message, null, (msg, ex) => msg);
+        }
     }
 
     internal string LogEntryString<TState>(LogLevel logLevel, TState state, Exception exception,

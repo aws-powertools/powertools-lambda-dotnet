@@ -58,9 +58,12 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
             _currentConfig.LoggerOutputCase = loggerOutputCase;
         }
 
-        // Set log level from environment ONLY if not explicitly set
         var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
-        _currentConfig.MinimumLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
+        var effectiveLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
+        
+        _currentConfig.InitialLogLevel = effectiveLogLevel;
+        _currentConfig.MinimumLogLevel = effectiveLogLevel;
+        
         _currentConfig.XRayTraceId = _powertoolsConfigurations.XRayTraceId;
         _currentConfig.LogEvent = _powertoolsConfigurations.LoggerLogEvent;
         
@@ -85,20 +88,6 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
             
         samplingRate = ValidateSamplingRate(samplingRate, config);
         config.SamplingRate = samplingRate;
-
-        // Only notify if sampling is configured
-        if (samplingRate > 0)
-        {
-            double sample = config.GetRandom();
-            
-            // Instead of changing log level, just indicate sampling status
-            if (sample <= samplingRate)
-            {
-                config.LogOutput.WriteLine(
-                    $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
-                config.MinimumLogLevel = LogLevel.Debug;
-            }
-        }
     }
 
     /// <summary>

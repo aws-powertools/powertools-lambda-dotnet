@@ -313,7 +313,8 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     internal string XRayTraceId { get; set; }
     internal bool LogEvent { get; set; }
 
-    internal double Random { get; set; } = GetSafeRandom();
+    internal int SamplingRefreshCount { get; set; } = 0;
+    internal LogLevel InitialLogLevel { get; set; } = LogLevel.Information;
 
     /// <summary>
     ///     Gets random number
@@ -321,14 +322,47 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// <returns>System.Double.</returns>
     internal virtual double GetRandom()
     {
-        return Random;
+        return GetSafeRandom();
+    }
+    
+    internal bool RefreshSampleRateCalculation()
+    {
+        if (SamplingRefreshCount == 0)
+        {
+            SamplingRefreshCount++;
+            return false;
+        }
+
+        if (SamplingRate <= 0)
+            return false;
+
+        var shouldEnableDebugSampling = ShouldEnableDebugSampling();
+
+        if (shouldEnableDebugSampling && MinimumLogLevel > LogLevel.Trace)
+        {
+            MinimumLogLevel = LogLevel.Debug;
+            return true;
+        }
+        else
+        {
+            MinimumLogLevel = InitialLogLevel;
+            return false;
+        }
+    }
+
+    internal bool ShouldEnableDebugSampling()
+    {
+        if (SamplingRate <= 0) return false;
+        var random = new Random();
+        return random.Next(0, 100) / 100.0 <= SamplingRate;
     }
     
     internal static double GetSafeRandom()
     {
         var randomGenerator = RandomNumberGenerator.Create();
-        byte[] data = new byte[16];
+        byte[] data = new byte[4];
         randomGenerator.GetBytes(data);
-        return BitConverter.ToDouble(data);
+        uint randomUInt = BitConverter.ToUInt32(data, 0);
+        return (double)randomUInt / uint.MaxValue;
     }
 }
