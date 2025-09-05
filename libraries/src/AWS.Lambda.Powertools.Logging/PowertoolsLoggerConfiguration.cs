@@ -337,20 +337,28 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
         if (SamplingRate <= 0)
             return false;
 
+        // Increment counter at the beginning for proper cold start protection
+        SamplingRefreshCount++;
+        
+        // Skip first call for cold start protection
+        if (SamplingRefreshCount == 1)
+        {
+            return false;
+        }
+
         var shouldEnableDebugSampling = ShouldEnableDebugSampling(out samplerValue);
 
-        if (shouldEnableDebugSampling && MinimumLogLevel > LogLevel.Trace)
+        if (shouldEnableDebugSampling && MinimumLogLevel > LogLevel.Debug)
         {
             MinimumLogLevel = LogLevel.Debug;
             return true;
         }
-        else if (SamplingRefreshCount > 0)
+        else if (!shouldEnableDebugSampling)
         {
             MinimumLogLevel = InitialLogLevel;
         }
         
-        SamplingRefreshCount++;
-        return shouldEnableDebugSampling && MinimumLogLevel == LogLevel.Debug;
+        return shouldEnableDebugSampling;
     }
 
     internal bool ShouldEnableDebugSampling()

@@ -297,8 +297,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Arrange
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
-            var loggerSampleRate = 0.7;
-            var randomSampleRate = 0.5;
+            var loggerSampleRate = 1.0; // Use 100% to guarantee activation
 
             var configurations = Substitute.For<IPowertoolsConfigurations>();
             configurations.Service.Returns(service);
@@ -317,16 +316,19 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             // Act
             var provider = new PowertoolsLoggerProvider(loggerConfiguration, configurations);
-
             var logger = provider.CreateLogger("test");
 
-            logger.LogInformation("Test");
+            // First call - skipped due to cold start protection
+            logger.LogInformation("Test1");
+            
+            // Second call - should trigger sampling with 100% rate
+            logger.LogInformation("Test2");
 
-            // Assert
+            // Assert - Check that the debug message was printed (with any sampler value since it's random)
             systemWrapper.Received(1).WriteLine(
                 Arg.Is<string>(s =>
-                    s ==
-                    $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {loggerSampleRate}, Sampler Value: {randomSampleRate}."
+                    s.Contains("Changed log level to DEBUG based on Sampling configuration") &&
+                    s.Contains($"Sampling Rate: {loggerSampleRate}")
                 )
             );
         }
@@ -1846,6 +1848,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Act
             var provider = new PowertoolsLoggerProvider(loggerConfiguration, configurations);
             var logger = provider.CreateLogger("test");
+
+            // First call - skipped due to cold start protection
+            logger.LogError("Test1");
+            
+            // Second call - should trigger sampling with 100% rate
+            logger.LogError("Test2");
 
             // Assert - With 100% sampling rate, should always activate sampling
             systemWrapper.Received(1).WriteLine(
