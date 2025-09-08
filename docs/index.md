@@ -154,23 +154,6 @@ There are many ways you can help us gain future investments to improve everyone'
 
 </div>
 
-### Becoming a reference customer
-
-Knowing which companies are using this library is important to help prioritize the project internally. The following companies, among others, use Powertools:
-
-<div class="grid" style="text-align:center;" markdown>
-
-[**Caylent**](https://caylent.com/){target="_blank" rel="nofollow"}
-{ .card }
-
-[**Instil Software**](https://instil.co/){target="_blank" rel="nofollow"}
-{ .card }
-
-[**Pushpay**](https://pushpay.com/){target="_blank" rel="nofollow"}
-{ .card }
-
-</div>
-
 ## Tenets
 
 These are our core principles to guide our decision making.
