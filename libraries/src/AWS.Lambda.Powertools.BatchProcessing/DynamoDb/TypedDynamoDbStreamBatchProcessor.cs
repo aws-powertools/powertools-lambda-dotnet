@@ -160,73 +160,37 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
     /// <summary>
     /// Wrapper class that adapts ITypedRecordHandler to IRecordHandler.
     /// </summary>
-    private sealed class TypedRecordHandlerWrapper<T> : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
+    private sealed class TypedRecordHandlerWrapper<T> : TypedRecordHandlerWrapperBase<DynamoDBEvent.DynamodbStreamRecord, T>
     {
         private readonly ITypedRecordHandler<T> _typedHandler;
-        private readonly IDeserializationService _deserializationService;
-        private readonly IRecordDataExtractor<DynamoDBEvent.DynamodbStreamRecord> _recordDataExtractor;
-        private readonly DeserializationOptions _deserializationOptions;
 
         public TypedRecordHandlerWrapper(
             ITypedRecordHandler<T> typedHandler,
             IDeserializationService deserializationService,
             IRecordDataExtractor<DynamoDBEvent.DynamodbStreamRecord> recordDataExtractor,
             DeserializationOptions deserializationOptions)
+            : base(deserializationService, recordDataExtractor, deserializationOptions)
         {
             _typedHandler = typedHandler ?? throw new ArgumentNullException(nameof(typedHandler));
-            _deserializationService = deserializationService ?? throw new ArgumentNullException(nameof(deserializationService));
-            _recordDataExtractor = recordDataExtractor ?? throw new ArgumentNullException(nameof(recordDataExtractor));
-            _deserializationOptions = deserializationOptions;
         }
 
-        public async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
+        protected override async Task<RecordHandlerResult> HandleTypedRecordAsync(T deserializedData, CancellationToken cancellationToken)
         {
-            try
-            {
-                var recordData = _recordDataExtractor.ExtractData(record);
-                
-                // Use TryDeserialize to check if deserialization was successful
-                if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord || 
-                    _deserializationOptions?.IgnoreDeserializationErrors == true)
-                {
-                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out _, _deserializationOptions))
-                    {
-                        // Deserialization failed and we're ignoring errors, don't call the handler
-                        return RecordHandlerResult.None;
-                    }
-                    return await _typedHandler.HandleAsync(deserializedData, cancellationToken);
-                }
-                else
-                {
-                    // Use regular deserialize which will throw on errors
-                    var deserializedData = _deserializationService.Deserialize<T>(recordData, _deserializationOptions);
-                    return await _typedHandler.HandleAsync(deserializedData, cancellationToken);
-                }
-            }
-            catch (DeserializationException ex)
-            {
-                // Handle deserialization errors based on policy
-                if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord)
-                {
-                    return RecordHandlerResult.None;
-                }
-                
-                // For FailRecord policy or default, re-throw the exception
-                throw new RecordProcessingException($"Failed to deserialize DynamoDB stream record '{record.Dynamodb.SequenceNumber}' to type '{typeof(T).Name}'. See inner exception for details.", ex);
-            }
+            return await _typedHandler.HandleAsync(deserializedData, cancellationToken);
+        }
+
+        protected override string GetDeserializationErrorMessage(DynamoDBEvent.DynamodbStreamRecord record, DeserializationException ex)
+        {
+            return $"Failed to deserialize DynamoDB stream record '{record.Dynamodb.SequenceNumber}' to type '{typeof(T).Name}'. See inner exception for details.";
         }
     }
 
     /// <summary>
     /// Wrapper class that adapts ITypedRecordHandlerWithContext to IRecordHandler.
     /// </summary>
-    private sealed class TypedRecordHandlerWithContextWrapper<T> : IRecordHandler<DynamoDBEvent.DynamodbStreamRecord>
+    private sealed class TypedRecordHandlerWithContextWrapper<T> : TypedRecordHandlerWithContextWrapperBase<DynamoDBEvent.DynamodbStreamRecord, T>
     {
         private readonly ITypedRecordHandlerWithContext<T> _typedHandler;
-        private readonly ILambdaContext _context;
-        private readonly IDeserializationService _deserializationService;
-        private readonly IRecordDataExtractor<DynamoDBEvent.DynamodbStreamRecord> _recordDataExtractor;
-        private readonly DeserializationOptions _deserializationOptions;
 
         public TypedRecordHandlerWithContextWrapper(
             ITypedRecordHandlerWithContext<T> typedHandler,
@@ -234,49 +198,19 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
             IDeserializationService deserializationService,
             IRecordDataExtractor<DynamoDBEvent.DynamodbStreamRecord> recordDataExtractor,
             DeserializationOptions deserializationOptions)
+            : base(context, deserializationService, recordDataExtractor, deserializationOptions)
         {
             _typedHandler = typedHandler ?? throw new ArgumentNullException(nameof(typedHandler));
-            _context = context; // Context can be null
-            _deserializationService = deserializationService ?? throw new ArgumentNullException(nameof(deserializationService));
-            _recordDataExtractor = recordDataExtractor ?? throw new ArgumentNullException(nameof(recordDataExtractor));
-            _deserializationOptions = deserializationOptions;
         }
 
-        public async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
+        protected override async Task<RecordHandlerResult> HandleTypedRecordWithContextAsync(T deserializedData, ILambdaContext context, CancellationToken cancellationToken)
         {
-            try
-            {
-                var recordData = _recordDataExtractor.ExtractData(record);
-                
-                // Use TryDeserialize to check if deserialization was successful
-                if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord || 
-                    _deserializationOptions?.IgnoreDeserializationErrors == true)
-                {
-                    if (!_deserializationService.TryDeserialize<T>(recordData, out var deserializedData, out _, _deserializationOptions))
-                    {
-                        // Deserialization failed and we're ignoring errors, don't call the handler
-                        return RecordHandlerResult.None;
-                    }
-                    return await _typedHandler.HandleAsync(deserializedData, _context, cancellationToken);
-                }
-                else
-                {
-                    // Use regular deserialize which will throw on errors
-                    var deserializedData = _deserializationService.Deserialize<T>(recordData, _deserializationOptions);
-                    return await _typedHandler.HandleAsync(deserializedData, _context, cancellationToken);
-                }
-            }
-            catch (DeserializationException ex)
-            {
-                // Handle deserialization errors based on policy
-                if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord)
-                {
-                    return RecordHandlerResult.None;
-                }
-                
-                // For FailRecord policy or default, re-throw the exception
-                throw new RecordProcessingException($"Failed to deserialize DynamoDB stream record '{record.Dynamodb.SequenceNumber}' to type '{typeof(T).Name}'. See inner exception for details.", ex);
-            }
+            return await _typedHandler.HandleAsync(deserializedData, context, cancellationToken);
+        }
+
+        protected override string GetDeserializationErrorMessage(DynamoDBEvent.DynamodbStreamRecord record, DeserializationException ex)
+        {
+            return $"Failed to deserialize DynamoDB stream record '{record.Dynamodb.SequenceNumber}' to type '{typeof(T).Name}'. See inner exception for details.";
         }
     }
 }
