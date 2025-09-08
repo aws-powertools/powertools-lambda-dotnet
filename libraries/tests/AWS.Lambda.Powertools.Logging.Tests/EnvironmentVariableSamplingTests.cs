@@ -167,4 +167,86 @@ public class EnvironmentVariableSamplingTests : IDisposable
         Assert.Contains("This is an error message", logOutput);
         Assert.DoesNotContain("This is an info message — should NOT appear with 0% sampling", logOutput);
     }
+
+    /// <summary>
+    /// Test the ShouldEnableDebugSampling() method without out parameter
+    /// </summary>
+    [Fact]
+    public void ShouldEnableDebugSampling_WithoutOutParameter_ShouldReturnCorrectValue()
+    {
+        // Arrange
+        var config = new PowertoolsLoggerConfiguration
+        {
+            SamplingRate = 1.0 // 100% sampling
+        };
+
+        // Act
+        var result = config.ShouldEnableDebugSampling();
+
+        // Assert
+        Assert.True(result);
+    }
+
+    /// <summary>
+    /// Test the ShouldEnableDebugSampling() method with zero sampling rate
+    /// </summary>
+    [Fact]
+    public void ShouldEnableDebugSampling_WithZeroSamplingRate_ShouldReturnFalse()
+    {
+        // Arrange
+        var config = new PowertoolsLoggerConfiguration
+        {
+            SamplingRate = 0.0 // 0% sampling
+        };
+
+        // Act
+        var result = config.ShouldEnableDebugSampling();
+
+        // Assert
+        Assert.False(result);
+    }
+
+    /// <summary>
+    /// Test the RefreshSampleRateCalculation() method without out parameter
+    /// </summary>
+    [Fact]
+    public void RefreshSampleRateCalculation_WithoutOutParameter_ShouldReturnCorrectValue()
+    {
+        // Arrange
+        var config = new PowertoolsLoggerConfiguration
+        {
+            SamplingRate = 1.0, // 100% sampling
+            InitialLogLevel = LogLevel.Error,
+            MinimumLogLevel = LogLevel.Error
+        };
+
+        // Act - First call should return false due to cold start protection
+        var firstResult = config.RefreshSampleRateCalculation();
+        
+        // Second call should return true with 100% sampling
+        var secondResult = config.RefreshSampleRateCalculation();
+
+        // Assert
+        Assert.False(firstResult); // Cold start protection
+        Assert.True(secondResult); // Should enable sampling
+    }
+
+    /// <summary>
+    /// Test the RefreshSampleRateCalculation() method with zero sampling rate
+    /// </summary>
+    [Fact]
+    public void RefreshSampleRateCalculation_WithZeroSamplingRate_ShouldReturnFalse()
+    {
+        // Arrange
+        var config = new PowertoolsLoggerConfiguration
+        {
+            SamplingRate = 0.0 // 0% sampling
+        };
+
+        // Act
+        var result = config.RefreshSampleRateCalculation();
+
+        // Assert
+        Assert.False(result);
+    }
 }
