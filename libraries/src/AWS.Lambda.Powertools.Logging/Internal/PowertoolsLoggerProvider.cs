@@ -61,7 +61,11 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
         var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
         var effectiveLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
         
-        _currentConfig.InitialLogLevel = effectiveLogLevel;
+        // Only set InitialLogLevel if it hasn't been explicitly configured
+        if (_currentConfig.InitialLogLevel == LogLevel.Information)
+        {
+            _currentConfig.InitialLogLevel = effectiveLogLevel;
+        }
         _currentConfig.MinimumLogLevel = effectiveLogLevel;
         
         _currentConfig.XRayTraceId = _powertoolsConfigurations.XRayTraceId;

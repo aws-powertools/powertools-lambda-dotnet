@@ -21,6 +21,7 @@ internal static class LoggerFactoryHelper
                 config.Service = configuration.Service;
                 config.TimestampFormat = configuration.TimestampFormat;
                 config.MinimumLogLevel = configuration.MinimumLogLevel;
+                config.InitialLogLevel = configuration.InitialLogLevel;
                 config.SamplingRate = configuration.SamplingRate;
                 config.LoggerOutputCase = configuration.LoggerOutputCase;
                 config.LogLevelKey = configuration.LogLevelKey;
@@ -32,8 +33,14 @@ internal static class LoggerFactoryHelper
                 config.LogEvent = configuration.LogEvent;
             });
             
-            // Use current filter level or level from config
-            if (configuration.MinimumLogLevel != LogLevel.None)
+            // When sampling is enabled, set the factory minimum level to Debug
+            // so that all logs can reach our PowertoolsLogger for dynamic filtering
+            if (configuration.SamplingRate > 0)
+            {
+                builder.AddFilter(null, LogLevel.Debug);
+                builder.SetMinimumLevel(LogLevel.Debug);
+            }
+            else if (configuration.MinimumLogLevel != LogLevel.None)
             {
                 builder.AddFilter(null, configuration.MinimumLogLevel);
                 builder.SetMinimumLevel(configuration.MinimumLogLevel);

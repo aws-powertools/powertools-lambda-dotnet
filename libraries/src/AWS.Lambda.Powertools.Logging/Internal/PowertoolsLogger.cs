@@ -80,7 +80,18 @@ internal sealed class PowertoolsLogger : ILogger
     public bool IsEnabled(LogLevel logLevel)
     {
         var config = _currentConfig();
+        return IsEnabledForConfig(logLevel, config);
+    }
 
+    /// <summary>
+    ///     Determines whether the specified log level is enabled for a specific configuration.
+    /// </summary>
+    /// <param name="logLevel">The log level.</param>
+    /// <param name="config">The configuration to check against.</param>
+    /// <returns>bool.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool IsEnabledForConfig(LogLevel logLevel, PowertoolsLoggerConfiguration config)
+    {
         //if Buffering is enabled and the log level is below the buffer threshold, skip logging only if bellow error
         if (logLevel <= config.LogBuffering?.BufferAtLogLevel
             && config.LogBuffering?.BufferAtLogLevel != LogLevel.Error
@@ -126,7 +137,8 @@ internal sealed class PowertoolsLogger : ILogger
             }
         }
 
-        if (!IsEnabled(logLevel))
+        // Use the same config reference for IsEnabled check to ensure we see the updated MinimumLogLevel
+        if (!IsEnabledForConfig(logLevel, config))
         {
             return;
         }
