@@ -302,7 +302,7 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
         // Check if typed handlers are configured (not yet fully supported in attributes)
         if (IsTypedHandlerConfigured())
         {
-            throw new NotSupportedException("Typed record handlers are not yet fully supported with BatchProcessorAttribute. Please use the fluent API or direct typed batch processor calls for typed processing.");
+            throw new NotSupportedException("Typed record handlers are not yet fully supported with BatchProcessorAttribute. Please use direct typed batch processor calls for typed processing.");
         }
 
         // Create aspect handler

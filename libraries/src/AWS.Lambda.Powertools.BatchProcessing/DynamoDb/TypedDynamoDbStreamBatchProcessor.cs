@@ -19,17 +19,7 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
     private readonly IDeserializationService _deserializationService;
     private readonly IRecordDataExtractor<DynamoDBEvent.DynamodbStreamRecord> _recordDataExtractor;
 
-    /// <summary>
-    /// The singleton instance of the typed DynamoDB stream batch processor.
-    /// </summary>
-    private static ITypedBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord> _typedInstance;
 
-    /// <summary>
-    /// Gets the typed instance.
-    /// </summary>
-    /// <value>The typed instance.</value>
-    public static ITypedBatchProcessor<DynamoDBEvent, DynamoDBEvent.DynamodbStreamRecord> TypedInstance => 
-        _typedInstance ??= new TypedDynamoDbStreamBatchProcessor(PowertoolsConfigurations.Instance);
 
     /// <summary>
     /// Initializes a new instance of the TypedDynamoDbStreamBatchProcessor class.

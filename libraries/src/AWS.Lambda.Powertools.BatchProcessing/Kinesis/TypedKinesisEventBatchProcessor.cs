@@ -19,17 +19,7 @@ public class TypedKinesisEventBatchProcessor : KinesisEventBatchProcessor, IType
     private readonly IDeserializationService _deserializationService;
     private readonly IRecordDataExtractor<KinesisEvent.KinesisEventRecord> _recordDataExtractor;
 
-    /// <summary>
-    /// The singleton instance of the typed Kinesis batch processor.
-    /// </summary>
-    private static ITypedBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord> _typedInstance;
 
-    /// <summary>
-    /// Gets the typed instance.
-    /// </summary>
-    /// <value>The typed instance.</value>
-    public static ITypedBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord> TypedInstance => 
-        _typedInstance ??= new TypedKinesisEventBatchProcessor(PowertoolsConfigurations.Instance);
 
     /// <summary>
     /// Initializes a new instance of the TypedKinesisEventBatchProcessor class.

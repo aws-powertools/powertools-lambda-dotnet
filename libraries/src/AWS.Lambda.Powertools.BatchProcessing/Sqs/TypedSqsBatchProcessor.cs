@@ -19,17 +19,7 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
     private readonly IDeserializationService _deserializationService;
     private readonly IRecordDataExtractor<SQSEvent.SQSMessage> _recordDataExtractor;
 
-    /// <summary>
-    /// The singleton instance of the typed SQS batch processor.
-    /// </summary>
-    private static ITypedBatchProcessor<SQSEvent, SQSEvent.SQSMessage> _typedInstance;
 
-    /// <summary>
-    /// Gets the typed instance.
-    /// </summary>
-    /// <value>The typed instance.</value>
-    public static ITypedBatchProcessor<SQSEvent, SQSEvent.SQSMessage> TypedInstance => 
-        _typedInstance ??= new TypedSqsBatchProcessor(PowertoolsConfigurations.Instance);
 
     /// <summary>
     /// Initializes a new instance of the TypedSqsBatchProcessor class.
@@ -167,31 +157,7 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
         return await ProcessAsync(@event, wrappedHandler, processingOptions);
     }
 
-    /// <summary>
-    /// Processes a batch event using a delegate with automatic context injection.
-    /// </summary>
-    /// <typeparam name="T">The type to deserialize record data to.</typeparam>
-    /// <param name="event">The SQS event to process.</param>
-    /// <param name="handler">The handler delegate (any supported signature).</param>
-    /// <param name="context">The Lambda context (optional).</param>
-    /// <param name="deserializationOptions">Options for controlling deserialization behavior.</param>
-    /// <param name="processingOptions">Processing options to control settings such as cancellation, error handling policy and parallelism.</param>
-    /// <returns>The processing result.</returns>
-    public async Task<ProcessingResult<SQSEvent.SQSMessage>> ProcessAsync<T>(
-        SQSEvent @event,
-        Delegate handler,
-        ILambdaContext context = null,
-        DeserializationOptions deserializationOptions = null,
-        ProcessingOptions processingOptions = null)
-    {
-        if (handler == null) throw new ArgumentNullException(nameof(handler));
-        
-        // Validate AOT compatibility before processing
-        AotCompatibilityHelper.ValidateAotCompatibility<T>(deserializationOptions);
-        
-        var wrappedHandler = new DelegateRecordHandlerWrapper<T>(handler, context, _deserializationService, _recordDataExtractor, deserializationOptions);
-        return await ProcessAsync(@event, wrappedHandler, processingOptions ?? new ProcessingOptions());
-    }
+
 
     /// <summary>
     /// Wrapper class that adapts ITypedRecordHandler to IRecordHandler.
@@ -253,62 +219,7 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
         }
     }
 
-    /// <summary>
-    /// Enhanced wrapper class that can adapt any delegate to IRecordHandler with automatic context injection.
-    /// </summary>
-    private sealed class DelegateRecordHandlerWrapper<T> : IRecordHandler<SQSEvent.SQSMessage>
-    {
-        private readonly Delegate _handler;
-        private readonly ILambdaContext _context;
-        private readonly IDeserializationService _deserializationService;
-        private readonly IRecordDataExtractor<SQSEvent.SQSMessage> _recordDataExtractor;
-        private readonly DeserializationOptions _deserializationOptions;
 
-        public DelegateRecordHandlerWrapper(
-            Delegate handler,
-            ILambdaContext context,
-            IDeserializationService deserializationService,
-            IRecordDataExtractor<SQSEvent.SQSMessage> recordDataExtractor,
-            DeserializationOptions deserializationOptions)
-        {
-            _handler = handler ?? throw new ArgumentNullException(nameof(handler));
-            _context = context; // Context can be null
-            _deserializationService = deserializationService ?? throw new ArgumentNullException(nameof(deserializationService));
-            _recordDataExtractor = recordDataExtractor ?? throw new ArgumentNullException(nameof(recordDataExtractor));
-            _deserializationOptions = deserializationOptions;
-            
-            // Validate handler signature at construction time
-            ContextInjectionHelper.ValidateHandlerSignature<T>(_handler);
-        }
-
-        public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var recordData = _recordDataExtractor.ExtractData(record);
-                var deserializedData = _deserializationService.Deserialize<T>(recordData, _deserializationOptions);
-                
-                // Use context injection helper to invoke the handler with appropriate parameters
-                return await ContextInjectionHelper.InvokeWithContextInjection(_handler, deserializedData, _context, cancellationToken);
-            }
-            catch (DeserializationException ex)
-            {
-                // Handle deserialization errors based on policy
-                if (_deserializationOptions?.ErrorPolicy == DeserializationErrorPolicy.IgnoreRecord)
-                {
-                    return RecordHandlerResult.None;
-                }
-                
-                // For FailRecord policy or default, re-throw the exception
-                throw new RecordProcessingException($"Failed to deserialize SQS message '{record.MessageId}' to type '{typeof(T).Name}'. See inner exception for details.", ex);
-            }
-            catch (Exception ex) when (ex is not DeserializationException)
-            {
-                // Handle other exceptions that might occur during handler execution
-                throw new RecordProcessingException($"Failed to process SQS message '{record.MessageId}' with type '{typeof(T).Name}'. See inner exception for details.", ex);
-            }
-        }
-    }
 
     /// <summary>
     /// Wrapper class that adapts ITypedRecordHandlerWithContext to IRecordHandler.

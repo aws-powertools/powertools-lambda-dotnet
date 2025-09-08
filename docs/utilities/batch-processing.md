@@ -36,7 +36,7 @@ stateDiagram-v2
 - Typed batch processing with automatic deserialization
 - Lambda context injection for typed handlers
 - AOT (Ahead-of-Time) compilation support
-- Fluent API for inline handler configuration
+
 - Bring your own batch processor
 - Parallel processing
 
@@ -357,53 +357,9 @@ Processing batches from SQS using Lambda handler decorator works in three stages
 When using [SQS FIFO queues](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html){target="_blank"}, we will stop processing messages after the first failure, and return all failed and unprocessed messages in `batchItemFailures`.
 This helps preserve the ordering of messages in your queue. Powertools automatically detects a FIFO queue.
 
-#### Using Fluent API with Typed Handlers
 
-You can also use the fluent API for more flexible inline handler configuration:
 
-=== "Function.cs"
 
-    ```csharp hl_lines="3-13"
-    public async Task<BatchItemFailuresResponse> HandlerUsingFluentApi(SQSEvent sqsEvent, ILambdaContext context)
-    {
-        var result = await TypedSqsBatchProcessor.Instance
-            .Handler<Product>((product, ct) =>
-            {
-                Logger.LogInformation($"Processing product {product.Id} - {product.Name}");
-
-                if (product.Price < 0)
-                    throw new ArgumentException("Invalid product price");
-
-                return Task.FromResult(RecordHandlerResult.None);
-            })
-            .ProcessAsync(sqsEvent, context);
-
-        return result.BatchItemFailuresResponse;
-    }
-    ```
-
-#### Using Fluent API with Lambda Context
-
-For handlers that need access to Lambda context:
-
-=== "Function.cs"
-
-    ```csharp hl_lines="3-11"
-    public async Task<BatchItemFailuresResponse> HandlerWithContext(SQSEvent sqsEvent, ILambdaContext context)
-    {
-        var result = await TypedSqsBatchProcessor.Instance
-            .Handler<Product>((product, lambdaContext, ct) =>
-            {
-                Logger.LogInformation($"Processing product {product.Id} in request {lambdaContext.AwsRequestId}");
-                Logger.LogInformation($"Remaining time: {lambdaContext.RemainingTime.TotalSeconds}s");
-
-                return Task.FromResult(RecordHandlerResult.None);
-            })
-            .ProcessAsync(sqsEvent, context);
-
-        return result.BatchItemFailuresResponse;
-    }
-    ```
 
 ### Processing messages from Kinesis
 
@@ -1032,23 +988,7 @@ For Native AOT scenarios, you can configure JsonSerializerContext:
     }
     ```
 
-=== "Using with Fluent API"
 
-    ```csharp hl_lines="3"
-    public async Task<BatchItemFailuresResponse> ProcessWithAot(SQSEvent sqsEvent, ILambdaContext context)
-    {
-        var result = await TypedSqsBatchProcessor.Instance
-            .WithJsonSerializerContext(MyJsonSerializerContext.Default)
-            .Handler<Product>((product, ct) =>
-            {
-                Logger.LogInformation($"AOT processing product {product.Id}");
-                return Task.FromResult(RecordHandlerResult.None);
-            })
-            .ProcessAsync(sqsEvent, context);
-
-        return result.BatchItemFailuresResponse;
-    }
-    ```
 
 ### Lambda Context Injection
 
@@ -1143,24 +1083,6 @@ You can gradually migrate from traditional to typed handlers:
 ### Error Handling with Typed Processors
 
 Typed processors support the same error handling policies as traditional processors:
-
-=== "Deserialization Error Handling"
-
-    ```csharp hl_lines="3"
-    public async Task<BatchItemFailuresResponse> HandleWithErrorPolicy(SQSEvent sqsEvent, ILambdaContext context)
-    {
-        var result = await TypedSqsBatchProcessor.Instance
-            .IgnoreDeserializationErrors(false) // Fail on deserialization errors (default)
-            .Handler<Product>((product, ct) =>
-            {
-                Logger.LogInformation($"Processing product {product.Id}");
-                return Task.FromResult(RecordHandlerResult.None);
-            })
-            .ProcessAsync(sqsEvent, context);
-
-        return result.BatchItemFailuresResponse;
-    }
-    ```
 
 === "Custom Error Handling"
 

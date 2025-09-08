@@ -280,17 +280,7 @@ public class TypedDynamoDbStreamBatchProcessorTests
         Assert.IsType<OperationCanceledException>(exception.InnerExceptions.First().InnerException);
     }
 
-    [Fact]
-    public void TypedInstance_ReturnsSingletonInstance()
-    {
-        // Act
-        var instance1 = TypedDynamoDbStreamBatchProcessor.TypedInstance;
-        var instance2 = TypedDynamoDbStreamBatchProcessor.TypedInstance;
 
-        // Assert
-        Assert.Same(instance1, instance2);
-        Assert.IsType<TypedDynamoDbStreamBatchProcessor>(instance1);
-    }
 
     [Fact]
     public async Task ProcessAsync_WithNullContext_HandlesGracefully()
