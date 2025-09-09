@@ -35,9 +35,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     public PowertoolsLoggingSerializerTests()
     {
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
-#if NET8_0_OR_GREATER
         PowertoolsLoggingSerializer.ClearContext();
-#endif
     }
     
     [Fact]
@@ -61,18 +59,12 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             converter => Assert.IsType<ConstantClassConverter>(converter),
             converter => Assert.IsType<DateOnlyConverter>(converter),
             converter => Assert.IsType<TimeOnlyConverter>(converter),
-#if NET8_0_OR_GREATER
             converter => Assert.IsType<LogLevelJsonConverter>(converter));
-#elif NET6_0
-            converter => Assert.IsType<LogLevelJsonConverter>(converter));
-#endif
 
         Assert.Equal(JavaScriptEncoder.UnsafeRelaxedJsonEscaping, options.Encoder);
 
-#if NET8_0_OR_GREATER
         Assert.Collection(options.TypeInfoResolverChain,
             resolver => Assert.IsType<PowertoolsLoggingSerializationContext>(resolver));
-#endif
     }
     
     [Fact]
@@ -89,17 +81,11 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             converter => Assert.IsType<ConstantClassConverter>(converter),
             converter => Assert.IsType<DateOnlyConverter>(converter),
             converter => Assert.IsType<TimeOnlyConverter>(converter),
-#if NET8_0_OR_GREATER
             converter => Assert.IsType<LogLevelJsonConverter>(converter));
-#elif NET6_0
-            converter => Assert.IsType<LogLevelJsonConverter>(converter));
-#endif
 
         Assert.Equal(JavaScriptEncoder.UnsafeRelaxedJsonEscaping, options.Encoder);
 
-#if NET8_0_OR_GREATER
         Assert.Empty(options.TypeInfoResolverChain);
-#endif
     }
 
     [Fact]
@@ -167,7 +153,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         Assert.Contains("\"level\":\"Error\"", json);
     }
 
-#if NET8_0_OR_GREATER
     [Fact]
     public void Serialize_UnknownType_ThrowsInvalidOperationException()
     {
@@ -201,7 +186,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     {
         public string SomeProperty { get; set; }
     }
-#endif
 
     private string SerializeTestObject(LoggerOutputCase? outputCase)
     {
@@ -217,9 +201,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     public void Dispose()
     {
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
-#if NET8_0_OR_GREATER
         PowertoolsLoggingSerializer.ClearContext();
-#endif
         PowertoolsLoggingSerializer.ClearOptions();
         RuntimeFeatureWrapper.Reset();
     }

@@ -41,9 +41,7 @@ public class IdempotentAspectTests : IDisposable
         var store = Substitute.For<BasePersistenceStore>();
         Idempotency.Configure(builder =>
             builder
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithPersistenceStore(store)
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
@@ -89,9 +87,7 @@ public class IdempotentAspectTests : IDisposable
         // GIVEN
         Idempotency.Configure(builder =>
             builder
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithPersistenceStore(store)
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
@@ -128,9 +124,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 
@@ -169,9 +163,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 
@@ -212,9 +204,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 
@@ -242,9 +232,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 
@@ -360,9 +348,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 

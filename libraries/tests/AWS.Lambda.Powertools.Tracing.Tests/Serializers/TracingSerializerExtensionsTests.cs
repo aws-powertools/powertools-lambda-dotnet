@@ -14,7 +14,6 @@
  */
 
 
-#if NET8_0_OR_GREATER
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Tracing.Serializers;
 using Xunit;
@@ -41,4 +40,3 @@ public class TracingSerializerExtensionsTests
         Assert.Contains("\"Name\":\"Test\"", serialized);
     }
 }
-#endif

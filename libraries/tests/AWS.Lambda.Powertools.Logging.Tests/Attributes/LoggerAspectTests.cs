@@ -41,10 +41,8 @@ public class LoggerAspectTests : IDisposable
     public void OnEntry_ShouldInitializeLogger_WhenCalledWithValidArguments()
     {
         // Arrange
-#if NET8_0_OR_GREATER
         // Add seriolization context for AOT
         PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
 
         var instance = new object();
         var name = "TestMethod";
@@ -84,11 +82,8 @@ public class LoggerAspectTests : IDisposable
     public void OnEntry_ShouldLog_Event_When_EnvironmentVariable_Set()
     {
         // Arrange
-#if NET8_0_OR_GREATER
-
         // Add seriolization context for AOT
         PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
 
         var instance = new object();
         var name = "TestMethod";
@@ -134,11 +129,8 @@ public class LoggerAspectTests : IDisposable
     public void OnEntry_ShouldLog_SamplingRate_When_EnvironmentVariable_Set()
     {
         // Arrange
-#if NET8_0_OR_GREATER
-
         // Add seriolization context for AOT
         PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
 
         var instance = new object();
         var name = "TestMethod";
@@ -209,11 +201,8 @@ public class LoggerAspectTests : IDisposable
     public void OnEntry_ShouldNot_Log_Info_When_LogLevel_Higher_EnvironmentVariable()
     {
         // Arrange
-#if NET8_0_OR_GREATER
-
         // Add seriolization context for AOT
         PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
 
         var instance = new object();
         var name = "TestMethod";
@@ -253,11 +242,8 @@ public class LoggerAspectTests : IDisposable
     public void OnEntry_Should_LogDebug_WhenSet_EnvironmentVariable()
     {
         // Arrange
-#if NET8_0_OR_GREATER
-
         // Add seriolization context for AOT
         PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
 
         var instance = new object();
         var name = "TestMethod";

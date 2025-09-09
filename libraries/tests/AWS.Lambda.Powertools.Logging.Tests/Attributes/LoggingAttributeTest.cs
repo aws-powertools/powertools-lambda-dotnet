@@ -119,11 +119,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             SystemWrapper.Instance.SetOut(consoleOut);
             var correlationId = Guid.NewGuid().ToString();
                 
-#if NET8_0_OR_GREATER
-
             // Add seriolization context for AOT
             PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
             var context = new TestLambdaContext()
             {
                 FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
@@ -152,11 +149,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             var consoleOut = Substitute.For<StringWriter>();
             SystemWrapper.Instance.SetOut(consoleOut);
             
-#if NET8_0_OR_GREATER
-
             // Add seriolization context for AOT
             PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
             var context = new TestLambdaContext()
             {
                 FunctionName = "PowertoolsLoggingSample-HelloWorldFunction-Gg8rhPwO7Wa1"
@@ -209,11 +203,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var correlationId = Guid.NewGuid().ToString();
 
-#if NET8_0_OR_GREATER
-
             // Add seriolization context for AOT
             PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
 
             // Act
             switch (correlationIdPath)
@@ -270,11 +261,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var correlationId = Guid.NewGuid().ToString();
 
-#if NET8_0_OR_GREATER
-
             // Add seriolization context for AOT
             PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
 
             // Act
             switch (outputCase)
@@ -325,11 +313,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
             // Arrange
             var correlationId = Guid.NewGuid().ToString();
 
-#if NET8_0_OR_GREATER
-
             // Add seriolization context for AOT
             PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default);
-#endif
 
             // Act
             switch (outputCase)

@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-#if NET8_0_OR_GREATER
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -252,4 +251,3 @@ public class TestArrayObject
 {
     public int[] Values { get; set; }
 }
-#endif

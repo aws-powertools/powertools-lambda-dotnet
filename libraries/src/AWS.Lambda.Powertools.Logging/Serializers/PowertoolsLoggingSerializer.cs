@@ -83,7 +83,6 @@ internal static class PowertoolsLoggingSerializer
         return JsonSerializer.Serialize(value, typeInfo);
     }
 
-#if NET8_0_OR_GREATER
     /// <summary>
     /// Adds a JsonSerializerContext to the serializer options.
     /// </summary>
@@ -109,7 +108,6 @@ internal static class PowertoolsLoggingSerializer
         var options = GetSerializerOptions();
         return options.TypeInfoResolver?.GetTypeInfo(type, options);
     }
-#endif
 
     /// <summary>
     /// Builds and configures the JsonSerializerOptions.
@@ -147,8 +145,6 @@ internal static class PowertoolsLoggingSerializer
         _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         _jsonOptions.PropertyNameCaseInsensitive = true;
 
-#if NET8_0_OR_GREATER
-
         // Only add TypeInfoResolver if AOT mode
         if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
@@ -158,11 +154,9 @@ internal static class PowertoolsLoggingSerializer
                 _jsonOptions.TypeInfoResolverChain.Add(context);
             }
         }
-#endif
         return _jsonOptions;
     }
 
-#if NET8_0_OR_GREATER
     internal static bool HasContext(JsonSerializerContext customContext)
     {
         return AdditionalContexts.Contains(customContext);
@@ -172,7 +166,6 @@ internal static class PowertoolsLoggingSerializer
     {
         AdditionalContexts.Clear();
     }
-#endif
 
     /// <summary>
     /// Clears options for tests

@@ -20,8 +20,6 @@ using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.Logging.Serializers;
 
-#if NET8_0_OR_GREATER
-
 /// <summary>
 /// Custom JSON serializer context for AWS.Lambda.Powertools.Logging
 /// </summary>
@@ -44,5 +42,3 @@ public partial class PowertoolsLoggingSerializationContext : JsonSerializerConte
 {
 }
 
-
-#endif

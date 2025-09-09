@@ -18,8 +18,6 @@ using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.JMESPath.Serializers;
 
-#if NET8_0_OR_GREATER
-
 /// <summary>
 /// The source generated JsonSerializerContext to be used to Serialize JMESPath types 
 /// </summary>
@@ -32,5 +30,3 @@ namespace AWS.Lambda.Powertools.JMESPath.Serializers;
 public partial class JmesPathSerializationContext : JsonSerializerContext
 {
 }
-
-#endif

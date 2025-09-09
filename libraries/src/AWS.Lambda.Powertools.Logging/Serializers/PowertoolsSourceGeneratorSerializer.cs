@@ -13,8 +13,6 @@
  * permissions and limitations under the License.
  */
 
-#if NET8_0_OR_GREATER
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
@@ -77,5 +75,3 @@ public sealed class PowertoolsSourceGeneratorSerializer<
         PowertoolsLoggingSerializer.AddSerializerContext(jsonSerializerContext);
     }
 }
-
-#endif

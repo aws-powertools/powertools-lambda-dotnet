@@ -30,7 +30,6 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Serializers;
 
 public class PowertoolsLambdaSerializerTests : IDisposable
 {
-#if NET8_0_OR_GREATER
     [Fact]
     public void Constructor_ShouldNotThrowException()
     {
@@ -221,7 +220,6 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     }
 
 
-#endif
     public void Dispose()
     {
         PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);

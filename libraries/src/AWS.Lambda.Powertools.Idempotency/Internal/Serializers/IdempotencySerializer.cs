@@ -44,22 +44,18 @@ internal static class IdempotencySerializer
         {
             PropertyNameCaseInsensitive = true
         };
-#if NET8_0_OR_GREATER
         if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
             _jsonOptions.TypeInfoResolverChain.Add(IdempotencySerializationContext.Default);
         }
-#endif
     }
-
-#if NET8_0_OR_GREATER
 
     /// <summary>
     /// Adds a JsonTypeInfoResolver to the JsonSerializerOptions.
     /// </summary>
     /// <param name="context">The JsonTypeInfoResolver to add.</param>
     /// <remarks>
-    /// This method is only available in .NET 8.0 and later versions.
+    /// This method is available in .NET 8.0 and later versions.
     /// </remarks>
     internal static void AddTypeInfoResolver(JsonSerializerContext context)
     {
@@ -88,7 +84,6 @@ internal static class IdempotencySerializer
     {
         _jsonOptions = options;
     }
-#endif
 
     /// <summary>
     /// Serializes the specified object to a JSON string.

@@ -168,7 +168,6 @@ public class TracingAspect
         // Skip if the result is VoidTaskResult
         if (result.GetType().Name == "VoidTaskResult") return;
 
-#if NET8_0_OR_GREATER
         if (!RuntimeFeatureWrapper.IsDynamicCodeSupported) // is AOT
         {
             _xRayRecorder.AddMetadata(
@@ -178,7 +177,6 @@ public class TracingAspect
             );
             return;
         }
-#endif
 
         _xRayRecorder.AddMetadata(
             @namespace,

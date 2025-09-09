@@ -14,8 +14,6 @@
  */
 
 
-#if NET8_0_OR_GREATER
-
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -104,5 +102,3 @@ public static class PowertoolsTracingSerializer
         }
     }
 }
-
-#endif

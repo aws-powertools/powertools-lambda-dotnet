@@ -17,8 +17,6 @@ using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 
-#if NET8_0_OR_GREATER
-
 
 /// <summary>
 /// The source generated JsonSerializerContext to be used to Serialize Idempotency types 
@@ -29,4 +27,3 @@ public partial class IdempotencySerializationContext : JsonSerializerContext
 {
     
 }
-#endif

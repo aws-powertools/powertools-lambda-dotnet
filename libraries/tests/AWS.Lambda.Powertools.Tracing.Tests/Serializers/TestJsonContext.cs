@@ -13,8 +13,6 @@
  * permissions and limitations under the License.
  */
 
-#if NET8_0_OR_GREATER
-
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -43,7 +41,6 @@ public class TestComplexObject
     public Dictionary<string, object> NestedObject { get; set; }
 }
 
-#endif
 
 public class TestResponse
 {

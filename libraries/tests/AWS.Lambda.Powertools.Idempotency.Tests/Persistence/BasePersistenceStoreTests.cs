@@ -566,9 +566,7 @@ public class BasePersistenceStoreTests
         var eventJson = File.ReadAllText("./resources/apigw_event.json");
         try
         {
-#if NET8_0_OR_GREATER
             IdempotencySerializer.AddTypeInfoResolver(TestJsonSerializerContext.Default);
-#endif
             var request = IdempotencySerializer.Deserialize<APIGatewayProxyRequest>(eventJson);
             return request!;
         }
