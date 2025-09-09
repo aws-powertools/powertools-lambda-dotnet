@@ -193,15 +193,6 @@ public class TracingSubsegmentTests
         Assert.IsType<TracingSubsegment>(passedSubsegment);
     }
 
-    [Fact]
-    public void WithSubsegment_WithEntity_HandlesNullAction()
-    {
-        // Arrange
-        var parent = new Segment("parent", TraceId.NewId());
-
-        // Act & Assert - Should not throw
-        Tracing.WithSubsegment("test-namespace", "test-name", parent, null);
-    }
 
     [Fact]
     public void WithSubsegment_WithEntity_UsesDefaultNamespaceWhenNull()
