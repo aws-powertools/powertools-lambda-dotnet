@@ -96,12 +96,8 @@ public class Logger
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(nameof(key));
             
-#if NET8_0_OR_GREATER
         Scope[key] = PowertoolsLoggerHelpers.ObjectToDictionary(value) ??
                      throw new ArgumentNullException(nameof(value));
-#else
-        Scope[key] = value ?? throw new ArgumentNullException(nameof(value));
-#endif
     }
 
     /// <summary>

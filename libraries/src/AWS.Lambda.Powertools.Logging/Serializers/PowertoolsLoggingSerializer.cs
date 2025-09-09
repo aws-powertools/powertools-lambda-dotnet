@@ -66,10 +66,6 @@ internal static class PowertoolsLoggingSerializer
     /// <exception cref="InvalidOperationException">Thrown when the input type is not known to the serializer.</exception>
     internal static string Serialize(object value, Type inputType)
     {
-#if NET6_0
-        var options = GetSerializerOptions();
-        return JsonSerializer.Serialize(value, options);
-#else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
             var options = GetSerializerOptions();
@@ -85,7 +81,6 @@ internal static class PowertoolsLoggingSerializer
         }
 
         return JsonSerializer.Serialize(value, typeInfo);
-#endif
     }
 
 #if NET8_0_OR_GREATER
@@ -135,13 +130,8 @@ internal static class PowertoolsLoggingSerializer
                 _jsonOptions.DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance;
                 break;
             default: // Snake case
-#if NET8_0_OR_GREATER
                 _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
                 _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
-#else
-                _jsonOptions.PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance;
-                _jsonOptions.DictionaryKeyPolicy = SnakeCaseNamingPolicy.Instance;
-#endif
                 break;
         }
 
@@ -152,11 +142,7 @@ internal static class PowertoolsLoggingSerializer
         _jsonOptions.Converters.Add(new DateOnlyConverter());
         _jsonOptions.Converters.Add(new TimeOnlyConverter());
 
-#if NET8_0_OR_GREATER
         _jsonOptions.Converters.Add(new LogLevelJsonConverter());
-#elif NET6_0
-        _jsonOptions.Converters.Add(new LogLevelJsonConverter());
-#endif
 
         _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         _jsonOptions.PropertyNameCaseInsensitive = true;

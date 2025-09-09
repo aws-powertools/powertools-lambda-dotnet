@@ -127,10 +127,6 @@ public class IdempotencyOptionsBuilder
 #endif
     public IdempotencyOptionsBuilder WithHashFunction(string hashFunction)
     {
-#if NET6_0
-        // for backward compability keep this code in .net 6
-        _hashFunction = hashFunction;
-#endif
         return this;
     }
 }

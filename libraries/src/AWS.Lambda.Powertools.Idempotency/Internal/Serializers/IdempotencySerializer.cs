@@ -98,9 +98,6 @@ internal static class IdempotencySerializer
     /// <returns>A JSON string representation of the object.</returns>
     internal static string Serialize(object value, Type inputType)
     {
-#if NET6_0
-        return JsonSerializer.Serialize(value, _jsonOptions);
-#else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
 #pragma warning disable
@@ -115,7 +112,6 @@ internal static class IdempotencySerializer
         }
 
         return JsonSerializer.Serialize(value, typeInfo);
-#endif
     }
 
     /// <summary>
@@ -128,15 +124,11 @@ internal static class IdempotencySerializer
     [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "False positive")]
     internal static T Deserialize<T>(string value)
     {
-#if NET6_0
-        return JsonSerializer.Deserialize<T>(value,_jsonOptions);
-#else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
             return JsonSerializer.Deserialize<T>(value, _jsonOptions);
         }
 
         return (T)JsonSerializer.Deserialize(value, GetTypeInfo(typeof(T)));
-#endif
     }
 }

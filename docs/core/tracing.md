@@ -44,7 +44,7 @@ To enable active tracing on an AWS Serverless Application Model (AWS SAM) AWS::S
             Type: AWS::Serverless::Function
             Properties:
             ...
-            Runtime: dotnet6.0
+            Runtime: dotnet8.0
     
             Tracing: Active
             Environment:

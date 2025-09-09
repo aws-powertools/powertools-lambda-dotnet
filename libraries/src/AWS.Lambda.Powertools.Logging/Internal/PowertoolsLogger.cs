@@ -261,11 +261,7 @@ internal sealed class PowertoolsLogger : ILogger
             var logObject = logFormatter.FormatLogEntry(logEntry);
             if (logObject is null)
                 throw new LogFormatException($"{logFormatter.GetType().FullName} returned Null value.");
-#if NET8_0_OR_GREATER
             return PowertoolsLoggerHelpers.ObjectToDictionary(logObject);
-#else
-            return logObject;
-#endif
         }
         catch (Exception e)
         {
@@ -289,13 +285,8 @@ internal sealed class PowertoolsLogger : ILogger
         if (exception is not null)
             return false;
 
-#if NET8_0_OR_GREATER
         var stateKeys = (state as IEnumerable<KeyValuePair<string, object>>)?
             .ToDictionary(i => i.Key, i => PowertoolsLoggerHelpers.ObjectToDictionary(i.Value));
-#else
-        var stateKeys = (state as IEnumerable<KeyValuePair<string, object>>)?
-            .ToDictionary(i => i.Key, i => i.Value);
-#endif
 
         if (stateKeys is null || stateKeys.Count != 2)
             return false;

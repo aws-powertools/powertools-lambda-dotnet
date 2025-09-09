@@ -244,19 +244,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             // serializer works differently in .net 8 and AOT. In .net 6 it writes properties that have null
             // in .net 8 it removes null properties
 
-#if NET8_0_OR_GREATER
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i.Contains(
                         "\"correlation_ids\":{\"aws_request_id\":\"requestId\"},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_mb\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\""))
             );
-#else
-            consoleOut.Received(1).WriteLine(
-                Arg.Is<string>(i =>
-                    i.Contains(
-                    "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":\"requestId\",\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_m_b\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\""))
-            );
-#endif
         }
 
         [Fact]
@@ -280,19 +272,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             // serializer works differently in .net 8 and AOT. In .net 6 it writes properties that have null
             // in .net 8 it removes null properties
 
-#if NET8_0_OR_GREATER
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i ==
                     "{\"message\":\"test\",\"service\":\"service_undefined\",\"correlation_ids\":{},\"lambda_function\":{\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0}}")
             );
-#else
-            consoleOut.Received(1).WriteLine(
-                Arg.Is<string>(i =>
-                    i ==
-                    "{\"message\":\"test\",\"service\":\"service_undefined\",\"correlation_ids\":{\"aws_request_id\":null,\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":null,\"arn\":null,\"memory_limit_in_m_b\":null,\"version\":null,\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0}}")
-            );
-#endif
         }
 
         [Fact]
@@ -305,19 +289,11 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
 
             _testHandler.TestCustomFormatterWithDecoratorNoContext("test");
 
-#if NET8_0_OR_GREATER
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i ==
                     "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{},\"lambda_function\":{\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
             );
-#else
-            consoleOut.Received(1).WriteLine(
-                Arg.Is<string>(i =>
-                    i ==
-                    "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":null,\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":null,\"arn\":null,\"memory_limit_in_m_b\":null,\"version\":null,\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
-            );
-#endif
         }
 
         public void Dispose()
