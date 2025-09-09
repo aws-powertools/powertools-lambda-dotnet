@@ -7,7 +7,7 @@
   },
   "Utilities": {
     "Parameters": "1.3.1",
-    "Idempotency": "1.3.1",
+    "Idempotency": "1.4.0",
     "BatchProcessing": "1.2.1",
     "EventHandler": "1.0.1",
     "EventHandler.Resolvers.BedrockAgentFunction": "1.0.1",
