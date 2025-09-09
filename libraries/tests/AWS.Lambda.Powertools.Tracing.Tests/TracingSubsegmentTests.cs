@@ -1,6 +1,7 @@
 using AWS.Lambda.Powertools.Tracing.Internal;
 using Xunit;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
+using System;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
@@ -84,5 +85,160 @@ public class TracingSubsegmentTests
 
         // Assert
         Assert.True(delegateInvoked);
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenNameIsNull()
+    {
+        // Arrange
+        var parent = new Segment("parent", TraceId.NewId());
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => 
+            Tracing.WithSubsegment(null, null, parent, _ => { }));
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenNameIsEmpty()
+    {
+        // Arrange
+        var parent = new Segment("parent", TraceId.NewId());
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => 
+            Tracing.WithSubsegment(null, "", parent, _ => { }));
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenEntityIsNull()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => 
+            Tracing.WithSubsegment(null, "test", null, _ => { }));
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_CreatesSubsegmentWithCorrectName()
+    {
+        // Arrange
+        var parent = new Segment("parent", TraceId.NewId());
+        TracingSubsegment capturedSubsegment = null;
+
+        // Act
+        Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
+        {
+            capturedSubsegment = subsegment;
+        });
+
+        // Assert
+        Assert.NotNull(capturedSubsegment);
+        Assert.Equal("## test-name", capturedSubsegment.Name);
+        Assert.Equal("test-namespace", capturedSubsegment.Namespace);
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_SetsSubsegmentProperties()
+    {
+        // Arrange
+        var parent = new Segment("parent", TraceId.NewId());
+        TracingSubsegment capturedSubsegment = null;
+
+        // Act
+        Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
+        {
+            capturedSubsegment = subsegment;
+        });
+
+        // Assert
+        Assert.NotNull(capturedSubsegment);
+        Assert.Equal(parent.Sampled, capturedSubsegment.Sampled);
+        Assert.False(capturedSubsegment.IsInProgress);
+        Assert.True(capturedSubsegment.StartTime > 0);
+        Assert.True(capturedSubsegment.EndTime > 0);
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_AddsSubsegmentToParent()
+    {
+        // Arrange
+        var parent = new Segment("parent", TraceId.NewId());
+        var initialSubsegmentCount = parent.Subsegments?.Count ?? 0;
+
+        // Act
+        Tracing.WithSubsegment("test-namespace", "test-name", parent, _ => { });
+
+        // Assert
+        Assert.True(parent.IsSubsegmentsAdded);
+        Assert.Equal(initialSubsegmentCount + 1, parent.Subsegments.Count);
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_InvokesActionWithSubsegment()
+    {
+        // Arrange
+        var parent = new Segment("parent", TraceId.NewId());
+        bool actionInvoked = false;
+        TracingSubsegment passedSubsegment = null;
+
+        // Act
+        Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
+        {
+            actionInvoked = true;
+            passedSubsegment = subsegment;
+        });
+
+        // Assert
+        Assert.True(actionInvoked);
+        Assert.NotNull(passedSubsegment);
+        Assert.IsType<TracingSubsegment>(passedSubsegment);
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_HandlesNullAction()
+    {
+        // Arrange
+        var parent = new Segment("parent", TraceId.NewId());
+
+        // Act & Assert - Should not throw
+        Tracing.WithSubsegment("test-namespace", "test-name", parent, null);
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_UsesDefaultNamespaceWhenNull()
+    {
+        // Arrange
+        var parent = new Segment("parent", TraceId.NewId());
+        TracingSubsegment capturedSubsegment = null;
+
+        // Act
+        Tracing.WithSubsegment(null, "test-name", parent, subsegment =>
+        {
+            capturedSubsegment = subsegment;
+        });
+
+        // Assert
+        Assert.NotNull(capturedSubsegment);
+        Assert.NotNull(capturedSubsegment.Namespace);
+    }
+
+    [Fact]
+    public void WithSubsegment_WithEntity_HandlesExceptionInAction()
+    {
+        // Arrange
+        var parent = new Segment("parent", TraceId.NewId());
+        var expectedException = new InvalidOperationException("Test exception");
+
+        // Act & Assert
+        var actualException = Assert.Throws<InvalidOperationException>(() =>
+        {
+            Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
+            {
+                throw expectedException;
+            });
+        });
+
+        Assert.Equal(expectedException, actualException);
+        // Verify subsegment was still properly cleaned up
+        Assert.True(parent.IsSubsegmentsAdded);
     }
 }
