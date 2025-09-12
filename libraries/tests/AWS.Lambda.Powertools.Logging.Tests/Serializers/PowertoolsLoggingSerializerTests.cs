@@ -24,9 +24,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     {
         _serializer = new PowertoolsLoggingSerializer();
         _serializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
-#if NET8_0_OR_GREATER
         ClearContext();
-#endif
     }
 
     [Fact]
@@ -50,18 +48,12 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             converter => Assert.IsType<ConstantClassConverter>(converter),
             converter => Assert.IsType<DateOnlyConverter>(converter),
             converter => Assert.IsType<TimeOnlyConverter>(converter),
-#if NET8_0_OR_GREATER
             converter => Assert.IsType<LogLevelJsonConverter>(converter));
-#elif NET6_0
-            converter => Assert.IsType<LogLevelJsonConverter>(converter));
-#endif
 
         Assert.Equal(JavaScriptEncoder.UnsafeRelaxedJsonEscaping, options.Encoder);
 
-#if NET8_0_OR_GREATER
         Assert.Collection(options.TypeInfoResolverChain,
             resolver => Assert.IsType<CompositeJsonTypeInfoResolver>(resolver));
-#endif
     }
 
     [Fact]
@@ -78,17 +70,11 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             converter => Assert.IsType<ConstantClassConverter>(converter),
             converter => Assert.IsType<DateOnlyConverter>(converter),
             converter => Assert.IsType<TimeOnlyConverter>(converter),
-#if NET8_0_OR_GREATER
             converter => Assert.IsType<LogLevelJsonConverter>(converter));
-#elif NET6_0
-            converter => Assert.IsType<LogLevelJsonConverter>(converter));
-#endif
 
         Assert.Equal(JavaScriptEncoder.UnsafeRelaxedJsonEscaping, options.Encoder);
 
-#if NET8_0_OR_GREATER
         Assert.Empty(options.TypeInfoResolverChain);
-#endif
     }
 
     [Fact]
@@ -156,7 +142,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         Assert.Contains("\"level\":\"Error\"", json);
     }
 
-#if NET8_0_OR_GREATER
     [Fact]
     public void Serialize_UnknownType_ThrowsInvalidOperationException()
     {
@@ -236,7 +221,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         // Create a new serializer to clear any existing contexts
         _serializer.SetOptions(new JsonSerializerOptions());
     }
-#endif
 
     private string SerializeTestObject(LoggerOutputCase? outputCase)
     {
@@ -304,7 +288,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         Assert.Contains("\"level\":\"Warning\"", json);
     }
 
-#if NET6_0_OR_GREATER
     [Fact]
     public void DateOnlyConverter_ShouldSerializeToIsoDate()
     {
@@ -332,7 +315,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         // Assert
         Assert.Contains("\"time\":\"13:45:30\"", json);
     }
-#endif
 
     [Fact]
     public void LogLevelJsonConverter_ShouldSerializeAllLogLevels()
@@ -370,10 +352,8 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             Exception = new ArgumentException("Test argument"),
             Stream = new MemoryStream(new byte[] { 4, 5, 6 }),
             Level = LogLevel.Information,
-#if NET6_0_OR_GREATER
             Date = new DateOnly(2023, 1, 15),
             Time = new TimeOnly(14, 30, 0),
-#endif
         };
 
         // Act
@@ -384,10 +364,8 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         Assert.Contains("\"exception\":{\"type\":\"System.ArgumentException\"", json);
         Assert.Contains("\"stream\":\"BAUG\"", json);
         Assert.Contains("\"level\":\"Information\"", json);
-#if NET6_0_OR_GREATER
         Assert.Contains("\"date\":\"2023-01-15\"", json);
         Assert.Contains("\"time\":\"14:30:00\"", json);
-#endif
     }
 
     private class ComplexTestObject
@@ -396,10 +374,8 @@ public class PowertoolsLoggingSerializerTests : IDisposable
         public Exception Exception { get; set; }
         public MemoryStream Stream { get; set; }
         public LogLevel Level { get; set; }
-#if NET6_0_OR_GREATER
         public DateOnly Date { get; set; }
         public TimeOnly Time { get; set; }
-#endif
     }
     
     [Fact]
@@ -455,8 +431,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             Assert.Contains("Test", json);
         }
 
-#if NET8_0_OR_GREATER
-
         [Fact]
         public void SetOptions_WithTypeInfoResolver_SetsCustomResolver()
         {
@@ -479,7 +453,6 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             // Assert - options are properly configured
             Assert.NotNull(serializerOptions.TypeInfoResolver);
         }
-#endif
 
         [Fact]
         public void SetOutputCase_CamelCase_SetsPoliciesCorrectly()
@@ -521,15 +494,9 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             // Act
             var options = serializer.GetSerializerOptions();
 
-#if NET8_0_OR_GREATER
             // Assert - in .NET 8 we use built-in SnakeCaseLower
             Assert.Equal(JsonNamingPolicy.SnakeCaseLower, options.PropertyNamingPolicy);
             Assert.Equal(JsonNamingPolicy.SnakeCaseLower, options.DictionaryKeyPolicy);
-#else
-            // Assert - in earlier versions, we use custom SnakeCaseNamingPolicy
-            Assert.IsType<SnakeCaseNamingPolicy>(options.PropertyNamingPolicy);
-            Assert.IsType<SnakeCaseNamingPolicy>(options.DictionaryKeyPolicy);
-#endif
         }
 
         [Fact]
@@ -548,9 +515,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
             Assert.Contains(options.Converters, c => c is ConstantClassConverter);
             Assert.Contains(options.Converters, c => c is DateOnlyConverter);
             Assert.Contains(options.Converters, c => c is TimeOnlyConverter);
-#if NET8_0_OR_GREATER || NET6_0
             Assert.Contains(options.Converters, c => c is LogLevelJsonConverter);
-#endif
         }
 
         // Test class for serialization
@@ -565,9 +530,7 @@ public class PowertoolsLoggingSerializerTests : IDisposable
 
     public void Dispose()
     {
-#if NET8_0_OR_GREATER
         ClearContext();
-#endif
         _serializer.SetOptions(null);
         RuntimeFeatureWrapper.Reset();
     }

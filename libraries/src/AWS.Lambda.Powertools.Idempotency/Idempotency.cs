@@ -166,9 +166,8 @@ public sealed class Idempotency
             return this;
         }
 
-#if NET8_0_OR_GREATER
         /// <summary>
-        /// Set Customer JsonSerializerContext to append to IdempotencySerializationContext 
+        /// Set Customer JsonSerializerContext to append to IdempotencySerializationContext
         /// </summary>
         /// <param name="context"></param>
         /// <returns>IdempotencyBuilder</returns>
@@ -177,6 +176,5 @@ public sealed class Idempotency
             IdempotencySerializer.AddTypeInfoResolver(context);
             return this;
         }
-#endif
     }
 }

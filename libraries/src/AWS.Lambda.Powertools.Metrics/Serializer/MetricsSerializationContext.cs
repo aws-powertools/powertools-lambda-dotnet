@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
-#if NET8_0_OR_GREATER
 /// <summary>
 /// Source generator for Metrics types
 /// </summary>
@@ -22,4 +21,3 @@ public partial class MetricsSerializationContext : JsonSerializerContext
 {
 
 }
-#endif

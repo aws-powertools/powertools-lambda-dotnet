@@ -37,8 +37,6 @@ public class FunctionTests
     }
 
     [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_metrics")]
-    [InlineData("E2ETestLambda_ARM_NET6_metrics")]
     [InlineData("E2ETestLambda_X64_NET8_metrics")]
     [InlineData("E2ETestLambda_ARM_NET8_metrics")]
     public async Task FunctionTest(string functionName)
