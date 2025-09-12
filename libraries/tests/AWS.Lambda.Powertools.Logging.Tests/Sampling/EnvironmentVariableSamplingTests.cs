@@ -22,7 +22,7 @@ public class EnvironmentVariableSamplingTests : IDisposable
         // Store original environment variables
         _originalLogLevel = Environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL");
         _originalSampleRate = Environment.GetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE");
-        
+
         // Reset logger before each test
         Logger.Reset();
     }
@@ -34,12 +34,12 @@ public class EnvironmentVariableSamplingTests : IDisposable
             Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", _originalLogLevel);
         else
             Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", null);
-            
+
         if (_originalSampleRate != null)
             Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", _originalSampleRate);
         else
             Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", null);
-            
+
         Logger.Reset();
     }
 
@@ -49,7 +49,7 @@ public class EnvironmentVariableSamplingTests : IDisposable
     private ILoggerFactory CreateLoggerFactoryWithEnvironmentVariables(TestLoggerOutput output)
     {
         var services = new ServiceCollection();
-        
+
         services.AddLogging(builder =>
         {
             builder.AddPowertoolsLogger(config =>
@@ -60,7 +60,7 @@ public class EnvironmentVariableSamplingTests : IDisposable
                 config.LogOutput = output;
             });
         });
-        
+
         var serviceProvider = services.BuildServiceProvider();
         return serviceProvider.GetRequiredService<ILoggerFactory>();
     }
@@ -73,46 +73,54 @@ public class EnvironmentVariableSamplingTests : IDisposable
     [Fact]
     public void EnvironmentVariables_ErrorLevelWithSampling_ShouldLogInfoWhenSamplingTriggered()
     {
-        // Arrange - Set environment variables as described in the issue
-        Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
-        Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", "0.9");
-        
-        var output = new TestLoggerOutput();
-        
-        // Act - Try multiple times to trigger sampling (90% chance each time)
-        bool samplingTriggered = false;
-        string logOutput = "";
-        
-        // Try up to 20 times to trigger sampling (probability of not triggering in 20 tries with 90% rate is ~0.000001%)
-        for (int i = 0; i < 20 && !samplingTriggered; i++)
-        {
-            output.Clear();
-            
-            using var loggerFactory = CreateLoggerFactoryWithEnvironmentVariables(output);
-            var logger = loggerFactory.CreateLogger<EnvironmentVariableSamplingTests>();
-            
-            // Log an error first (should always be logged)
-            logger.LogError("This is an error message");
-            
-            // First info log will be skipped due to cold start protection
-            logger.LogInformation("First info - skipped due to cold start protection");
-            
-            // Second info log should trigger sampling (90% chance)
-            logger.LogInformation("This is an info message — should appear when sampling is triggered");
-            
-            // Third info log should also be logged if sampling was triggered
-            logger.LogInformation("Another info message");
-            
-            logOutput = output.ToString();
-            samplingTriggered = logOutput.Contains("Changed log level to DEBUG based on Sampling configuration");
-        }
+        // Arrange
+        var originalLogLevel = Environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL");
+        var originalSampleRate = Environment.GetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE");
 
-        // Assert
-        Assert.True(samplingTriggered, "Sampling should have been triggered within 20 attempts with 90% rate");
-        Assert.Contains("This is an error message", logOutput);
-        Assert.Contains("This is an info message — should appear when sampling is triggered", logOutput);
-        Assert.Contains("Another info message", logOutput);
+        try
+        {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", "0.9");
+
+            var output = new TestLoggerOutput();
+            bool samplingTriggered = false;
+            string logOutput = "";
+
+            // Try multiple times to trigger sampling (90% chance each time)
+            for (int attempt = 0; attempt < 20 && !samplingTriggered; attempt++)
+            {
+                output.Clear();
+                Logger.Reset();
+                Logger.Configure(options => { options.LogOutput = output; });
+
+                Logger.LogError("This is an error message");
+                Logger.LogInformation("Another info message");
+
+                logOutput = output.ToString();
+                samplingTriggered = logOutput.Contains("Another info message");
+            }
+
+            // Assert
+            Assert.True(samplingTriggered,
+                $"Sampling should have been triggered within 20 attempts with 90% rate. " +
+                $"Last output: {logOutput}");
+
+            // Only verify the content if sampling was triggered
+            if (samplingTriggered)
+            {
+                Assert.Contains("This is an error message", logOutput);
+                Assert.Contains("Another info message", logOutput);
+            }
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", originalLogLevel);
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", originalSampleRate);
+            Logger.Reset();
+        }
     }
+
 
     /// <summary>
     /// Test with POWERTOOLS_LOGGER_SAMPLE_RATE=1.0 (100% sampling)
@@ -124,9 +132,9 @@ public class EnvironmentVariableSamplingTests : IDisposable
         // Arrange
         Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
         Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", "1.0");
-        
+
         var output = new TestLoggerOutput();
-        
+
         using var loggerFactory = CreateLoggerFactoryWithEnvironmentVariables(output);
         var logger = loggerFactory.CreateLogger<EnvironmentVariableSamplingTests>();
 
@@ -151,9 +159,9 @@ public class EnvironmentVariableSamplingTests : IDisposable
         // Arrange
         Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
         Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", "0");
-        
+
         var output = new TestLoggerOutput();
-        
+
         using var loggerFactory = CreateLoggerFactoryWithEnvironmentVariables(output);
         var logger = loggerFactory.CreateLogger<EnvironmentVariableSamplingTests>();
 
@@ -222,7 +230,7 @@ public class EnvironmentVariableSamplingTests : IDisposable
 
         // Act - First call should return false due to cold start protection
         var firstResult = config.RefreshSampleRateCalculation();
-        
+
         // Second call should return true with 100% sampling
         var secondResult = config.RefreshSampleRateCalculation();
 

@@ -24,10 +24,10 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
     {
         _powertoolsConfigurations = powertoolsConfigurations;
         _currentConfig = config;
-        
+
         // Set execution environment
         _powertoolsConfigurations.SetExecutionEnvironment(this);
-        
+
         // Apply environment configurations if available
         ConfigureFromEnvironment();
     }
@@ -60,36 +60,37 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
 
         var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
         var effectiveLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
-        
+
         // Only set InitialLogLevel if it hasn't been explicitly configured
         if (_currentConfig.InitialLogLevel == LogLevel.Information)
         {
             _currentConfig.InitialLogLevel = effectiveLogLevel;
         }
+
         _currentConfig.MinimumLogLevel = effectiveLogLevel;
-        
+
         _currentConfig.XRayTraceId = _powertoolsConfigurations.XRayTraceId;
         _currentConfig.LogEvent = _powertoolsConfigurations.LoggerLogEvent;
-        
+
         // Configure the log level key based on output case
         _currentConfig.LogLevelKey = _powertoolsConfigurations.LambdaLogLevelEnabled() &&
                                      _currentConfig.LoggerOutputCase == LoggerOutputCase.PascalCase
             ? "LogLevel"
             : LoggingConstants.KeyLogLevel;
-            
+
         ProcessSamplingRate(_currentConfig, _powertoolsConfigurations);
         _environmentConfigured = true;
     }
-    
+
     /// <summary>
     /// Process sampling rate configuration
     /// </summary>
     private void ProcessSamplingRate(PowertoolsLoggerConfiguration config, IPowertoolsConfigurations configurations)
     {
-        var samplingRate = config.SamplingRate > 0 
-            ? config.SamplingRate 
+        var samplingRate = config.SamplingRate > 0
+            ? config.SamplingRate
             : configurations.LoggerSampleRate;
-            
+
         samplingRate = ValidateSamplingRate(samplingRate, config);
         config.SamplingRate = samplingRate;
     }
@@ -122,16 +123,25 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
     }
 
     internal PowertoolsLoggerConfiguration GetCurrentConfig() => _currentConfig;
-    
+
     public void UpdateConfiguration(PowertoolsLoggerConfiguration config)
     {
         _currentConfig = config;
-        
+
         // Apply environment configurations if available
         if (_powertoolsConfigurations != null && !_environmentConfigured)
         {
             ConfigureFromEnvironment();
         }
+    }
+
+    /// <summary>
+    ///   Refresh the sampling calculation and update the minimum log level if needed
+    /// </summary>
+    /// <returns>True if debug sampling was enabled, false otherwise</returns>
+    internal bool RefreshSampleRateCalculation()
+    {
+        return _currentConfig.RefreshSampleRateCalculation();
     }
 
     public virtual void Dispose()

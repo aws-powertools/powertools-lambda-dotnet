@@ -12,6 +12,7 @@ namespace AWS.Lambda.Powertools.Logging;
 /// </summary>
 public static partial class Logger
 {
+    private static PowertoolsLoggerConfiguration _config;
     private static ILogger _loggerInstance;
     private static readonly object Lock = new object();
 
@@ -58,9 +59,9 @@ public static partial class Logger
     {
         lock (Lock)
         {
-            var config = new PowertoolsLoggerConfiguration();
-            configure(config);
-            _loggerInstance = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
+            _config = new PowertoolsLoggerConfiguration();
+            configure(_config);
+            _loggerInstance = LoggerFactoryHelper.CreateAndConfigureFactory(_config).CreatePowertoolsLogger();
         }
     }
     

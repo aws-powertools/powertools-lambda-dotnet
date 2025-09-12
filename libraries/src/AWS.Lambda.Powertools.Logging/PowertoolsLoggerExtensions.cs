@@ -257,4 +257,13 @@ public static class PowertoolsLoggerExtensions
         // Direct call to the buffer manager to avoid any recursion
         LogBufferManager.ClearCurrentBuffer();
     }
+    
+    /// <summary>
+    ///   Refresh the sampling calculation and update the minimum log level if needed
+    /// </summary>
+    /// <returns></returns>
+    public static bool RefreshSampleRateCalculation(this ILogger logger)
+    {
+        return Logger.RefreshSampleRateCalculation();
+    }
 }

@@ -324,22 +324,31 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     {
         return GetSafeRandom();
     }
-    
+
+    /// <summary>
+    ///   Refresh the sampling calculation and update the minimum log level if needed
+    /// </summary>
+    /// <returns>True if debug sampling was enabled, false otherwise</returns>
     internal bool RefreshSampleRateCalculation()
     {
         return RefreshSampleRateCalculation(out _);
     }
 
+    /// <summary>
+    ///   Refresh the sampling calculation and update the minimum log level if needed
+    /// </summary>
+    /// <param name="samplerValue"></param>
+    /// <returns>True if debug sampling was enabled, false otherwise</returns>
     internal bool RefreshSampleRateCalculation(out double samplerValue)
     {
         samplerValue = 0.0;
-        
+
         if (SamplingRate <= 0)
             return false;
 
         // Increment counter at the beginning for proper cold start protection
         SamplingRefreshCount++;
-        
+
         // Skip first call for cold start protection
         if (SamplingRefreshCount == 1)
         {
@@ -357,9 +366,10 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
         {
             MinimumLogLevel = InitialLogLevel;
         }
-        
+
         return shouldEnableDebugSampling;
     }
+
 
     internal bool ShouldEnableDebugSampling()
     {
@@ -370,11 +380,11 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     {
         samplerValue = 0.0;
         if (SamplingRate <= 0) return false;
-        
+
         samplerValue = GetRandom();
         return samplerValue <= SamplingRate;
     }
-    
+
     internal static double GetSafeRandom()
     {
         var randomGenerator = RandomNumberGenerator.Create();
