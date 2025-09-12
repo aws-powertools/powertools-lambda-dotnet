@@ -40,7 +40,7 @@ public class IdempotencyOptionsBuilder
     /// <summary>
     /// Default Hash function
     /// </summary>
-    private string _hashFunction = "MD5";
+    private readonly string _hashFunction = "MD5";
 
     /// <summary>
     /// Response hook function
