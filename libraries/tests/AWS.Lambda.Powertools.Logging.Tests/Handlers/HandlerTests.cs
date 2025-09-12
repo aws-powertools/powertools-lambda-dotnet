@@ -426,6 +426,136 @@ public class HandlerTests
         Assert.Contains("\n", logOutput);
         Assert.Contains("  ", logOutput);
     }
+
+    /// <summary>
+    /// Test sampling behavior with environment variables using the [Logging] attribute
+    /// POWERTOOLS_LOG_LEVEL=Error and POWERTOOLS_LOGGER_SAMPLE_RATE=0.9
+    /// </summary>
+    [Fact]
+    public void EnvironmentVariableSampling_HandlerWithSampling_ShouldElevateInfoLogs()
+    {
+        // Arrange - Set environment variables for sampling test
+        var originalLogLevel = Environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL");
+        var originalSampleRate = Environment.GetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE");
+        
+        try
+        {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", "0.9");
+            
+            var output = new TestLoggerOutput();
+            Logger.Configure(options => { options.LogOutput = output; });
+            
+            var handler = new EnvironmentVariableSamplingHandler();
+            
+            // Act - Try multiple times to trigger sampling (90% chance each time)
+            bool samplingTriggered = false;
+            string logOutput = "";
+            
+            // Try up to 20 times to trigger sampling
+            for (int i = 0; i < 20 && !samplingTriggered; i++)
+            {
+                output.Clear();
+                Logger.Reset();
+                Logger.Configure(options => { options.LogOutput = output; });
+                
+                handler.HandleWithSampling(new string[] { });
+                
+                logOutput = output.ToString();
+                samplingTriggered = logOutput.Contains("Changed log level to DEBUG based on Sampling configuration");
+            }
+
+            // Assert
+            Assert.True(samplingTriggered, "Sampling should have been triggered within 20 attempts with 90% rate");
+            Assert.Contains("This is an info message — should not appear", logOutput);
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", originalLogLevel);
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", originalSampleRate);
+            Logger.Reset();
+        }
+    }
+
+    /// <summary>
+    /// Test with 100% sampling rate to guarantee sampling works consistently
+    /// </summary>
+    [Fact]
+    public void EnvironmentVariableSampling_HandlerWithFullSampling_ShouldAlwaysElevateInfoLogs()
+    {
+        // Arrange
+        var originalLogLevel = Environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL");
+        var originalSampleRate = Environment.GetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE");
+        
+        try
+        {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", "1.0");
+            
+            var output = new TestLoggerOutput();
+            Logger.Configure(options => { options.LogOutput = output; });
+            
+            var handler = new EnvironmentVariableSamplingHandler();
+
+            // Act
+            handler.HandleWithFullSampling(new string[] { });
+
+            // Assert
+            var logOutput = output.ToString();
+            _output.WriteLine(logOutput);
+            
+            Assert.Contains("Changed log level to DEBUG based on Sampling configuration", logOutput);
+            Assert.Contains("This is an info message — should appear with 100% sampling", logOutput);
+            Assert.Contains("\"service\":\"HelloWorldService\"", logOutput);
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", originalLogLevel);
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", originalSampleRate);
+            Logger.Reset();
+        }
+    }
+
+    /// <summary>
+    /// Test with 0% sampling rate to ensure info logs are not elevated
+    /// </summary>
+    [Fact]
+    public void EnvironmentVariableSampling_HandlerWithNoSampling_ShouldNotElevateInfoLogs()
+    {
+        // Arrange
+        var originalLogLevel = Environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL");
+        var originalSampleRate = Environment.GetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE");
+        
+        try
+        {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Error");
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", "0");
+            
+            var output = new TestLoggerOutput();
+            Logger.Configure(options => { options.LogOutput = output; });
+            
+            var handler = new EnvironmentVariableSamplingHandler();
+
+            // Act
+            handler.HandleWithNoSampling(new string[] { });
+
+            // Assert
+            var logOutput = output.ToString();
+            _output.WriteLine(logOutput);
+            
+            Assert.DoesNotContain("Changed log level to DEBUG based on Sampling configuration", logOutput);
+            Assert.DoesNotContain("This is an info message — should NOT appear with 0% sampling", logOutput);
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", originalLogLevel);
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE", originalSampleRate);
+            Logger.Reset();
+        }
+    }
 }
 
 #endif

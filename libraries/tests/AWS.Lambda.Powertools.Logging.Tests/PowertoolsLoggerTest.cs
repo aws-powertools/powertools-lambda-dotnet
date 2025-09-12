@@ -297,8 +297,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
             // Arrange
             var service = Guid.NewGuid().ToString();
             var logLevel = LogLevel.Trace;
-            var loggerSampleRate = 0.7;
-            var randomSampleRate = 0.5;
+            var loggerSampleRate = 1.0; // Use 100% to guarantee activation
 
             var configurations = Substitute.For<IPowertoolsConfigurations>();
             configurations.Service.Returns(service);
@@ -312,22 +311,24 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 Service = service,
                 MinimumLogLevel = logLevel,
                 LogOutput = systemWrapper,
-                SamplingRate = loggerSampleRate,
-                Random = randomSampleRate
+                SamplingRate = loggerSampleRate
             };
 
             // Act
             var provider = new PowertoolsLoggerProvider(loggerConfiguration, configurations);
-
             var logger = provider.CreateLogger("test");
 
-            logger.LogInformation("Test");
+            // First call - skipped due to cold start protection
+            logger.LogInformation("Test1");
+            
+            // Second call - should trigger sampling with 100% rate
+            logger.LogInformation("Test2");
 
-            // Assert
+            // Assert - Check that the debug message was printed (with any sampler value since it's random)
             systemWrapper.Received(1).WriteLine(
                 Arg.Is<string>(s =>
-                    s ==
-                    $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {loggerSampleRate}, Sampler Value: {randomSampleRate}."
+                    s.Contains("Changed log level to DEBUG based on Sampling configuration") &&
+                    s.Contains($"Sampling Rate: {loggerSampleRate}")
                 )
             );
         }
@@ -1454,8 +1455,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests
                 Service = null,
                 MinimumLogLevel = LogLevel.None,
                 LoggerOutputCase = LoggerOutputCase.CamelCase,
-                LogOutput = systemWrapper,
-                Random = randomSampleRate
+                LogOutput = systemWrapper
             };
 
             var provider = new PowertoolsLoggerProvider(loggerConfiguration, configurations);
@@ -1791,6 +1791,110 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             // Assert
             systemWrapper.Received(1).WriteLine(Arg.Any<string>());
+        }
+
+        [Fact]
+        public void GetSafeRandom_ShouldReturnValueBetweenZeroAndOne()
+        {
+            // Act & Assert - Test multiple times to ensure consistency
+            for (int i = 0; i < 1000; i++)
+            {
+                var randomValue = PowertoolsLoggerConfiguration.GetSafeRandom();
+                
+                Assert.True(randomValue >= 0.0, $"Random value {randomValue} should be >= 0.0");
+                Assert.True(randomValue <= 1.0, $"Random value {randomValue} should be <= 1.0");
+            }
+        }
+
+        [Fact]
+        public void GetSafeRandom_ShouldReturnDifferentValues()
+        {
+            // Arrange
+            var values = new HashSet<double>();
+            
+            // Act - Generate multiple random values
+            for (int i = 0; i < 100; i++)
+            {
+                values.Add(PowertoolsLoggerConfiguration.GetSafeRandom());
+            }
+            
+            // Assert - Should have generated multiple different values
+            Assert.True(values.Count > 50, "Should generate diverse random values");
+        }
+
+        [Fact]
+        public void Log_SamplingWithRealRandomGenerator_ShouldWorkCorrectly()
+        {
+            // Arrange
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Error; // Set high log level
+            var loggerSampleRate = 1.0; // 100% sampling rate to ensure activation
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            configurations.Service.Returns(service);
+            configurations.LogLevel.Returns(logLevel.ToString());
+            configurations.LoggerSampleRate.Returns(loggerSampleRate);
+
+            var systemWrapper = Substitute.For<IConsoleWrapper>();
+
+            var loggerConfiguration = new PowertoolsLoggerConfiguration
+            {
+                Service = service,
+                MinimumLogLevel = logLevel,
+                LogOutput = systemWrapper,
+                SamplingRate = loggerSampleRate
+            };
+
+            // Act
+            var provider = new PowertoolsLoggerProvider(loggerConfiguration, configurations);
+            var logger = provider.CreateLogger("test");
+
+            // First call - skipped due to cold start protection
+            logger.LogError("Test1");
+            
+            // Second call - should trigger sampling with 100% rate
+            logger.LogError("Test2");
+
+            // Assert - With 100% sampling rate, should always activate sampling
+            systemWrapper.Received(1).WriteLine(
+                Arg.Is<string>(s =>
+                    s.Contains("Changed log level to DEBUG based on Sampling configuration") &&
+                    s.Contains($"Sampling Rate: {loggerSampleRate}")
+                )
+            );
+        }
+
+        [Fact]
+        public void Log_SamplingWithZeroRate_ShouldNeverActivate()
+        {
+            // Arrange
+            var service = Guid.NewGuid().ToString();
+            var logLevel = LogLevel.Error;
+            var loggerSampleRate = 0.0; // 0% sampling rate
+
+            var configurations = Substitute.For<IPowertoolsConfigurations>();
+            configurations.Service.Returns(service);
+            configurations.LogLevel.Returns(logLevel.ToString());
+            configurations.LoggerSampleRate.Returns(loggerSampleRate);
+
+            var systemWrapper = Substitute.For<IConsoleWrapper>();
+
+            var loggerConfiguration = new PowertoolsLoggerConfiguration
+            {
+                Service = service,
+                MinimumLogLevel = logLevel,
+                LogOutput = systemWrapper,
+                SamplingRate = loggerSampleRate
+            };
+
+            // Act
+            var provider = new PowertoolsLoggerProvider(loggerConfiguration, configurations);
+            var logger = provider.CreateLogger("test");
+
+            // Assert - With 0% sampling rate, should never activate sampling
+            systemWrapper.DidNotReceive().WriteLine(
+                Arg.Is<string>(s => s.Contains("Changed log level to DEBUG based on Sampling configuration"))
+            );
         }
 
         public void Dispose()

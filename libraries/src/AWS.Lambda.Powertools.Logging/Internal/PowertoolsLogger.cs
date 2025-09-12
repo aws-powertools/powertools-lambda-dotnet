@@ -80,7 +80,18 @@ internal sealed class PowertoolsLogger : ILogger
     public bool IsEnabled(LogLevel logLevel)
     {
         var config = _currentConfig();
+        return IsEnabledForConfig(logLevel, config);
+    }
 
+    /// <summary>
+    ///     Determines whether the specified log level is enabled for a specific configuration.
+    /// </summary>
+    /// <param name="logLevel">The log level.</param>
+    /// <param name="config">The configuration to check against.</param>
+    /// <returns>bool.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool IsEnabledForConfig(LogLevel logLevel, PowertoolsLoggerConfiguration config)
+    {
         //if Buffering is enabled and the log level is below the buffer threshold, skip logging only if bellow error
         if (logLevel <= config.LogBuffering?.BufferAtLogLevel
             && config.LogBuffering?.BufferAtLogLevel != LogLevel.Error
@@ -116,17 +127,36 @@ internal sealed class PowertoolsLogger : ILogger
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
         Func<TState, Exception, string> formatter)
     {
-        if (!IsEnabled(logLevel))
+        var config = _currentConfig();
+        if (config.SamplingRate > 0)
+        {
+            var samplingActivated = config.RefreshSampleRateCalculation(out double samplerValue);
+            if (samplingActivated)
+            {
+                config.LogOutput.WriteLine($"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {config.SamplingRate}, Sampler Value: {samplerValue}.");
+            }
+        }
+
+        // Use the same config reference for IsEnabled check to ensure we see the updated MinimumLogLevel
+        if (!IsEnabledForConfig(logLevel, config))
         {
             return;
         }
 
-        _currentConfig().LogOutput.WriteLine(LogEntryString(logLevel, state, exception, formatter));
+        config.LogOutput.WriteLine(LogEntryString(logLevel, state, exception, formatter));
     }
 
     internal void LogLine(string message)
     {
         _currentConfig().LogOutput.WriteLine(message);
+    }
+
+    private void LogDebug(string message)
+    {
+        if (IsEnabled(LogLevel.Debug))
+        {
+            Log(LogLevel.Debug, new EventId(), message, null, (msg, ex) => msg);
+        }
     }
 
     internal string LogEntryString<TState>(LogLevel logLevel, TState state, Exception exception,
