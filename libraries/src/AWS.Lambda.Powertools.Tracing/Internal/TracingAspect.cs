@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -5,7 +20,6 @@ using System.Text;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
-using AWS.Lambda.Powertools.Common.Core;
 using AWS.Lambda.Powertools.Common.Utils;
 
 namespace AWS.Lambda.Powertools.Tracing.Internal;
@@ -26,6 +40,11 @@ public class TracingAspect
     ///     X-Ray Recorder
     /// </summary>
     private readonly IXRayRecorder _xRayRecorder;
+
+    /// <summary>
+    ///     If true, then is cold start
+    /// </summary>
+    private static bool _isColdStart = true;
 
     /// <summary>
     ///     If true, capture annotations
@@ -129,7 +148,7 @@ public class TracingAspect
 
         if (_captureAnnotations)
         {
-            _xRayRecorder.AddAnnotation("ColdStart", LambdaLifecycleTracker.IsColdStart);
+            _xRayRecorder.AddAnnotation("ColdStart", _isColdStart);
 
             _captureAnnotations = false;
             _isAnnotationsCaptured = true;
@@ -137,6 +156,8 @@ public class TracingAspect
             if (_powertoolsConfigurations.IsServiceDefined)
                 _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
         }
+
+        _isColdStart = false;
     }
 
     private void HandleResponse(string name, object result, TracingCaptureMode captureMode, string @namespace)
@@ -147,7 +168,6 @@ public class TracingAspect
         // Skip if the result is VoidTaskResult
         if (result.GetType().Name == "VoidTaskResult") return;
 
-#if NET8_0_OR_GREATER
         if (!RuntimeFeatureWrapper.IsDynamicCodeSupported) // is AOT
         {
             _xRayRecorder.AddMetadata(
@@ -157,7 +177,6 @@ public class TracingAspect
             );
             return;
         }
-#endif
 
         _xRayRecorder.AddMetadata(
             @namespace,
@@ -232,7 +251,7 @@ public class TracingAspect
 
     internal static void ResetForTest()
     {
-        LambdaLifecycleTracker.Reset();
+        _isColdStart = true;
         _captureAnnotations = true;
     }
 }

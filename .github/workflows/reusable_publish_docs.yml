@@ -22,13 +22,12 @@ on:
         type: boolean
 
 permissions:
-  contents: read
+  id-token: write
+  contents: write
+  pages: write
 
 jobs:
   publish_docs:
-    permissions:
-      id-token: write
-      contents: write
     # Force Github action to run only a single job at a time (based on the group name)
     # This is to prevent "race-condition" in publishing a new version of doc to `gh-pages`
     concurrency:
@@ -36,13 +35,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: Docs
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           fetch-depth: 0
       - name: Install poetry
         run: pipx install poetry
       - name: Set up Python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: "3.12"
           cache: "poetry"
@@ -68,7 +67,7 @@ jobs:
           poetry run mike set-default --push latest
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
           aws-region: us-east-1
           role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}
@@ -81,9 +80,6 @@ jobs:
 
 
   apidocs:
-    permissions:
-      id-token: write
-      contents: write
     # Force Github action to run only a single job at a time (based on the group name)
     # This is to prevent "race-condition" in publishing a new version of doc to `gh-pages`
     concurrency:
@@ -91,7 +87,7 @@ jobs:
     runs-on: macos-latest
     environment: Docs
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           fetch-depth: 0
       - name: Configure and build api docs generator
@@ -99,7 +95,7 @@ jobs:
           brew install -f docfx --skip-cask-deps --ignore-dependencies
           docfx apidocs/docfx.json
       - name: Configure AWS credentials 
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
           aws-region: us-east-1
           role-to-assume: ${{ secrets.AWS_DOCS_ROLE_ARN }}

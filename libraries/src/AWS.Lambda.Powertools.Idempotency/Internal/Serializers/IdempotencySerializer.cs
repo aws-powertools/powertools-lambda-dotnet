@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
@@ -29,22 +44,18 @@ internal static class IdempotencySerializer
         {
             PropertyNameCaseInsensitive = true
         };
-#if NET8_0_OR_GREATER
         if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
             _jsonOptions.TypeInfoResolverChain.Add(IdempotencySerializationContext.Default);
         }
-#endif
     }
-
-#if NET8_0_OR_GREATER
 
     /// <summary>
     /// Adds a JsonTypeInfoResolver to the JsonSerializerOptions.
     /// </summary>
     /// <param name="context">The JsonTypeInfoResolver to add.</param>
     /// <remarks>
-    /// This method is only available in .NET 8.0 and later versions.
+    /// This method is available in .NET 8.0 and later versions.
     /// </remarks>
     internal static void AddTypeInfoResolver(JsonSerializerContext context)
     {
@@ -73,7 +84,6 @@ internal static class IdempotencySerializer
     {
         _jsonOptions = options;
     }
-#endif
 
     /// <summary>
     /// Serializes the specified object to a JSON string.
@@ -83,9 +93,6 @@ internal static class IdempotencySerializer
     /// <returns>A JSON string representation of the object.</returns>
     internal static string Serialize(object value, Type inputType)
     {
-#if NET6_0
-        return JsonSerializer.Serialize(value, _jsonOptions);
-#else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
 #pragma warning disable
@@ -100,7 +107,6 @@ internal static class IdempotencySerializer
         }
 
         return JsonSerializer.Serialize(value, typeInfo);
-#endif
     }
 
     /// <summary>
@@ -113,15 +119,11 @@ internal static class IdempotencySerializer
     [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "False positive")]
     internal static T Deserialize<T>(string value)
     {
-#if NET6_0
-        return JsonSerializer.Deserialize<T>(value,_jsonOptions);
-#else
         if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
             return JsonSerializer.Deserialize<T>(value, _jsonOptions);
         }
 
         return (T)JsonSerializer.Deserialize(value, GetTypeInfo(typeof(T)));
-#endif
     }
 }

@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 
 using AWS.Lambda.Powertools.Logging.Serializers;
 using System;
@@ -15,21 +30,27 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Serializers;
 
 public class PowertoolsLambdaSerializerTests : IDisposable
 {
-    private readonly PowertoolsLoggingSerializer _serializer;
-
-    public PowertoolsLambdaSerializerTests()
-    {
-        _serializer = new PowertoolsLoggingSerializer();
-    }
-    
-#if NET8_0_OR_GREATER
     [Fact]
     public void Constructor_ShouldNotThrowException()
     {
         // Arrange & Act & Assert
         var exception =
-            Record.Exception(() => _serializer.AddSerializerContext(TestJsonContext.Default));
+            Record.Exception(() => PowertoolsLoggingSerializer.AddSerializerContext(TestJsonContext.Default));
         Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Constructor_ShouldAddCustomerContext()
+    {
+        // Arrange
+        var customerContext = new TestJsonContext();
+
+        // Act
+        PowertoolsLoggingSerializer.AddSerializerContext(customerContext);
+        ;
+
+        // Assert
+        Assert.True(PowertoolsLoggingSerializer.HasContext(customerContext));
     }
 
     [Theory]
@@ -59,7 +80,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
         var serializer = new PowertoolsSourceGeneratorSerializer<TestJsonContext>();
         ;
 
-        _serializer.ConfigureNamingPolicy(LoggerOutputCase.PascalCase);
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase.PascalCase);
 
         var json = "{\"FullName\":\"John\",\"Age\":30}";
         var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
@@ -187,7 +208,7 @@ public class PowertoolsLambdaSerializerTests : IDisposable
         stream.Position = 0;
         var outputExternalSerializer = new StreamReader(stream).ReadToEnd();
 
-        var outptuMySerializer = _serializer.Serialize(log, typeof(LogEntry));
+        var outptuMySerializer = PowertoolsLoggingSerializer.Serialize(log, typeof(LogEntry));
 
         // Assert
         Assert.Equal(
@@ -199,40 +220,10 @@ public class PowertoolsLambdaSerializerTests : IDisposable
     }
 
 
-#endif
     public void Dispose()
     {
-
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
+        PowertoolsLoggingSerializer.ClearOptions();
     }
 
-#if NET6_0
-
-    [Fact]
-    public void Should_Serialize_Net6()
-    {
-        // Arrange
-        _serializer.ConfigureNamingPolicy(LoggingConstants.DefaultLoggerOutputCase);
-        var testObject = new APIGatewayProxyRequest
-        {
-            Path = "asda",
-            RequestContext = new APIGatewayProxyRequest.ProxyRequestContext
-            {
-                RequestId = "asdas"
-            }
-        };
-
-        var log = new LogEntry
-        {
-            Name = "dasda",
-            Message = testObject
-        };
-
-        var outptuMySerializer = _serializer.Serialize(log, null);
-
-        // Assert
-        Assert.Equal(
-            "{\"cold_start\":false,\"x_ray_trace_id\":null,\"correlation_id\":null,\"timestamp\":\"0001-01-01T00:00:00\",\"level\":\"Trace\",\"service\":null,\"name\":\"dasda\",\"message\":{\"resource\":null,\"path\":\"asda\",\"http_method\":null,\"headers\":null,\"multi_value_headers\":null,\"query_string_parameters\":null,\"multi_value_query_string_parameters\":null,\"path_parameters\":null,\"stage_variables\":null,\"request_context\":{\"path\":null,\"account_id\":null,\"resource_id\":null,\"stage\":null,\"request_id\":\"asdas\",\"identity\":null,\"resource_path\":null,\"http_method\":null,\"api_id\":null,\"extended_request_id\":null,\"connection_id\":null,\"connected_at\":0,\"domain_name\":null,\"domain_prefix\":null,\"event_type\":null,\"message_id\":null,\"route_key\":null,\"authorizer\":null,\"operation_name\":null,\"error\":null,\"integration_latency\":null,\"message_direction\":null,\"request_time\":null,\"request_time_epoch\":0,\"status\":null},\"body\":null,\"is_base64_encoded\":false},\"sampling_rate\":null,\"extra_keys\":null,\"exception\":null,\"lambda_context\":null}",
-            outptuMySerializer);
-    }
-#endif
 }

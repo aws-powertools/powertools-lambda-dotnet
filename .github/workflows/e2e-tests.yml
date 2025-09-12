@@ -22,36 +22,30 @@ concurrency:
   group: e2e
 
 permissions:
+  id-token: write
   contents: read
 
 jobs:
   deploy-stack:
-    permissions:
-      id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
           mask-aws-account-id: true
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # 5.0.0
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
         with:
           dotnet-version: '8.x'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: "22"
-
-      - name: Setup dependencies
-        uses: aws-powertools/actions/.github/actions/cached-node-modules@3b5b8e2e58b7af07994be982e83584a94e8c76c5
+      - name: Install CDK
+        run: npm install -g aws-cdk
 
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -59,11 +53,9 @@ jobs:
       - name: Deploy Stack
         run: |
           cd libraries/tests/e2e/infra
-          npx cdk deploy --all --require-approval never
+          cdk deploy --all --require-approval never
 
   deploy-aot-stack:
-    permissions:
-      id-token: write
     strategy:
       matrix:
         os: [ubuntu-24.04-arm, ubuntu-latest]
@@ -75,27 +67,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
           mask-aws-account-id: true
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # 5.0.0
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
         with:
           dotnet-version: '8.x'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: "22"
-          
-      - name: Setup dependencies
-        uses: aws-powertools/actions/.github/actions/cached-node-modules@3b5b8e2e58b7af07994be982e83584a94e8c76c5
+      - name: Install CDK
+        run: npm install -g aws-cdk
 
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -103,11 +90,9 @@ jobs:
       - name: Deploy AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          npx cdk deploy --all -c architecture=${{ matrix.arch }} --require-approval never
+          cdk deploy --all -c architecture=${{ matrix.arch }} --require-approval never
 
   run-tests:
-    permissions:
-      id-token: write 
     strategy:
       matrix:
         utility: [core, idempotency]
@@ -116,17 +101,17 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
           mask-aws-account-id: true
           
       - name: Set up .NET
-        uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # 5.0.0
+        uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab # 4.3.0
         with:
           dotnet-version: '8.x'
 
@@ -141,29 +126,22 @@ jobs:
           dotnet test --filter Category=AOT
 
   destroy-stack:
-    permissions:
-      id-token: write
     runs-on: ubuntu-latest
     needs: run-tests
     if: always()
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
           mask-aws-account-id: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: "22"
-          
-      - name: Setup dependencies
-        uses: aws-powertools/actions/.github/actions/cached-node-modules@3b5b8e2e58b7af07994be982e83584a94e8c76c5
+      - name: Install CDK
+        run: npm install -g aws-cdk
         
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -171,11 +149,9 @@ jobs:
       - name: Destroy Stack
         run: |
           cd libraries/tests/e2e/infra
-          npx cdk destroy --all --force
+          cdk destroy --all --force
 
   destroy-aot-stack:
-    permissions:
-      id-token: write
     strategy:
       matrix:
         os: [ubuntu-24.04-arm, ubuntu-latest]
@@ -189,22 +165,17 @@ jobs:
     if: always()
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # v5.0.0
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
           role-to-assume: ${{ secrets.E2E_DEPLOY_ROLE }}
           aws-region: us-east-1
           mask-aws-account-id: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: "22"
-          
-      - name: Setup dependencies
-        uses: aws-powertools/actions/.github/actions/cached-node-modules@3b5b8e2e58b7af07994be982e83584a94e8c76c5
+      - name: Install CDK
+        run: npm install -g aws-cdk
         
       - name: Install AWS Lambda .NET CLI Tools
         run: dotnet tool install -g Amazon.Lambda.Tools
@@ -212,5 +183,5 @@ jobs:
       - name: Destroy arm64 AOT Stack
         run: |
           cd libraries/tests/e2e/infra-aot
-          npx cdk destroy --all -c architecture=${{ matrix.arch }} --force
+          cdk destroy --all -c architecture=${{ matrix.arch }} --force
       

@@ -7,7 +7,7 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 /// <summary>
 /// Lambda Context
 /// </summary>
-internal class LoggingLambdaContext
+public class LoggingLambdaContext
 {
     /// <summary>
     /// The AWS request ID associated with the request.
@@ -74,21 +74,24 @@ internal class LoggingLambdaContext
             return false;
         
         var index = Array.FindIndex(args.Method.GetParameters(), p => p.ParameterType == typeof(ILambdaContext));
-        if (index < 0 || args.Args[index] == null || args.Args[index] is not ILambdaContext) return false;
-        
-        var x = (ILambdaContext)args.Args[index];
-
-        Instance = new LoggingLambdaContext
+        if (index >= 0)
         {
-            AwsRequestId = x.AwsRequestId,
-            FunctionName = x.FunctionName,
-            FunctionVersion = x.FunctionVersion,
-            InvokedFunctionArn = x.InvokedFunctionArn,
-            LogGroupName = x.LogGroupName,
-            LogStreamName = x.LogStreamName,
-            MemoryLimitInMB = x.MemoryLimitInMB
-        };
-        return true;
+            var x = (ILambdaContext)args.Args[index];
+
+            Instance = new LoggingLambdaContext
+            {
+                AwsRequestId = x.AwsRequestId,
+                FunctionName = x.FunctionName,
+                FunctionVersion = x.FunctionVersion,
+                InvokedFunctionArn = x.InvokedFunctionArn,
+                LogGroupName = x.LogGroupName,
+                LogStreamName = x.LogStreamName,
+                MemoryLimitInMB = x.MemoryLimitInMB
+            };
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

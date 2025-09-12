@@ -13,7 +13,7 @@ public class ClearDimensionsTests
     {
         // Arrange
         var consoleOut = new StringWriter();
-        ConsoleWrapper.SetOut(consoleOut);
+        SystemWrapper.Instance.SetOut(consoleOut);
         
         // Act
         var handler = new FunctionHandler();
@@ -22,7 +22,7 @@ public class ClearDimensionsTests
         var metricsOutput = consoleOut.ToString();
 
         // Assert
-        Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name\",\"Unit\":\"Count\"}],\"Dimensions\":[[]]", metricsOutput);
+        Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name\",\"Unit\":\"Count\"}],\"Dimensions\":[]", metricsOutput);
         
         // Reset
         MetricsAspect.ResetForTest();

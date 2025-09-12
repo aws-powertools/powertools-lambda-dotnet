@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -26,9 +41,7 @@ public class IdempotentAspectTests : IDisposable
         var store = Substitute.For<BasePersistenceStore>();
         Idempotency.Configure(builder =>
             builder
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithPersistenceStore(store)
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
@@ -74,9 +87,7 @@ public class IdempotentAspectTests : IDisposable
         // GIVEN
         Idempotency.Configure(builder =>
             builder
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithPersistenceStore(store)
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
@@ -113,9 +124,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 
@@ -154,9 +163,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 
@@ -197,9 +204,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 
@@ -227,9 +232,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 
@@ -249,16 +252,25 @@ public class IdempotentAspectTests : IDisposable
     public void Idempotency_Set_Execution_Environment_Context()
     {
         // Arrange
+        var assemblyName = "AWS.Lambda.Powertools.Idempotency";
+        var assemblyVersion = "1.0.0";
 
-        var env = new PowertoolsEnvironment();
-        var conf = new PowertoolsConfigurations(env);
+        var env = Substitute.For<IPowertoolsEnvironment>();
+        env.GetAssemblyName(Arg.Any<Idempotency>()).Returns(assemblyName);
+        env.GetAssemblyVersion(Arg.Any<Idempotency>()).Returns(assemblyVersion);
+
+        var conf = new PowertoolsConfigurations(new SystemWrapper(env));
 
         // Act
         var xRayRecorder = new Idempotency(conf);
 
         // Assert
-        Assert.Contains($"{Constants.FeatureContextIdentifier}/Idempotency/",
-            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
+        env.Received(1).SetEnvironmentVariable(
+            "AWS_EXECUTION_ENV",
+            $"{Constants.FeatureContextIdentifier}/Idempotency/{assemblyVersion}"
+        );
+
+        env.Received(1).GetEnvironmentVariable("AWS_EXECUTION_ENV");
 
         Assert.NotNull(xRayRecorder);
     }
@@ -336,9 +348,7 @@ public class IdempotentAspectTests : IDisposable
         Idempotency.Configure(builder =>
             builder
                 .WithPersistenceStore(store)
-#if NET8_0_OR_GREATER
                 .WithJsonSerializationContext(TestJsonSerializerContext.Default)
-#endif
                 .WithOptions(optionsBuilder => optionsBuilder.WithEventKeyJmesPath("Id"))
         );
 

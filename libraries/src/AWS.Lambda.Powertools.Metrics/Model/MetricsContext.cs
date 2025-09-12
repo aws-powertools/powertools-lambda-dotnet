@@ -132,17 +132,7 @@ public class MetricsContext : IDisposable
     /// <param name="value">Dimension value</param>
     public void AddDimension(string key, string value)
     {
-        _rootNode.AWS.AddDimension(new DimensionSet(key, value));
-    }
-
-    /// <summary>
-    ///     Adds new dimensions to memory
-    /// </summary>
-    /// <param name="dimensions">List of dimensions</param>
-    public void AddDimensions(List<DimensionSet> dimensions)
-    {
-        // Call the AddDimensionSet method on the MetricDirective to add as a set
-        _rootNode.AWS.AddDimensionSet(dimensions);
+        _rootNode.AWS.AddDimensionSet(new DimensionSet(key, value));
     }
 
     /// <summary>
@@ -179,13 +169,5 @@ public class MetricsContext : IDisposable
     public void ClearDefaultDimensions()
     {
         _rootNode.AWS.ClearDefaultDimensions();
-    }
-    
-    /// <summary>
-    ///     Retrieves default dimensions list
-    /// </summary>
-    internal List<DimensionSet> GetDefaultDimensions()
-    {
-        return _rootNode.AWS.GetDefaultDimensions();
     }
 }

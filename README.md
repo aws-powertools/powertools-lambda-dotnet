@@ -4,7 +4,7 @@
 [![Build](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml)
 [![codecov.io](https://codecov.io/github/aws-powertools/powertools-lambda-dotnet/branch/develop/graphs/badge.svg)](https://app.codecov.io/gh/aws-powertools/powertools-lambda-dotnet)
 [![dotnet support](https://img.shields.io/static/v1?label=dotnet&message=%20NET6.0|NET8.0&color=blue?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/AWS.Lambda.Powertools.Logging.svg)](https://www.nuget.org/packages?q=AWS.Lambda.Powertools) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/aws-powertools/powertools-lambda-dotnet/badge)](https://scorecard.dev/viewer/?uri=github.com/aws-powertools/powertools-lambda-dotnet)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/AWS.Lambda.Powertools.Logging.svg)](https://www.nuget.org/packages?q=AWS.Lambda.Powertools)
 [![Join our Discord](https://dcbadge.vercel.app/api/server/B8zZKbbyET?style=flat-square)](https://discord.gg/B8zZKbbyET)
 
 Powertools for AWS Lambda (.NET) is a developer toolkit to implement Serverless [best practices and increase developer velocity](https://docs.powertools.aws.dev/lambda-dotnet/#features).
@@ -31,53 +31,37 @@ Powertools for AWS Lambda (.NET) provides three core utilities:
 
 * **[Batch Processing](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/)** - The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
 
-* **[Event Handler AppSync Events](https://docs.powertools.aws.dev/lambda/dotnet/core/event_handler/appsync_events/)** - The event handler AppSync Events utility provides a simple way to handle AppSync events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
-
-* **[Event Handler Bedrock Agent Functions](https://docs.powertools.aws.dev/lambda/dotnet/core/event_handler/bedrock_agent_function/)** - The event handler Bedrock Agent Functions utility provides a simple way to handle Amazon Bedrock agent function events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
-
 ### Installation
 
-The Powertools for AWS Lambda (.NET) utilities (.NET 6 and .NET 8) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*) or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+The Powertools for AWS Lambda (.NET) utilities (.NET 8) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*) or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
 
-* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages/AWS.Lambda.Powertools.Logging):
+* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Logging):
 
     `dotnet add package AWS.Lambda.Powertools.Logging`
 
-* [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics):
+* [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Metrics):
 
     `dotnet add package AWS.Lambda.Powertools.Metrics`
 
-* [AWS.Lambda.Powertools.Metrics.AspNetCore](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics.AspNetCore):
-
-    `dotnet add package AWS.Lambda.Powertools.Metrics.AspNetCore`
-
-* [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages/AWS.Lambda.Powertools.Tracing):
+* [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Tracing):
 
     `dotnet add package AWS.Lambda.Powertools.Tracing`
 
-* [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages/AWS.Lambda.Powertools.Parameters):
+* [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Parameters):
 
     `dotnet add package AWS.Lambda.Powertools.Parameters`
 
-* [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages/AWS.Lambda.Powertools.Idempotency):
+* [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.Idempotency):
 
     `dotnet add package AWS.Lambda.Powertools.Idempotency`
 
-* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages/AWS.Lambda.Powertools.BatchProcessing):
+* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages?q=AWS.Lambda.Powertools.BatchProcessing):
 
     `dotnet add package AWS.Lambda.Powertools.BatchProcessing`
 
-* [AWS.Lambda.Powertools.EventHandler.AppSyncEvents](https://www.nuget.org/packages/AWS.Lambda.Powertools.EventHandler):
-
-    `dotnet add package AWS.Lambda.Powertools.EventHandler`
-
-* [AWS.Lambda.Powertools.EventHandler.BedrockAgentFunction](https://www.nuget.org/packages/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction):
-
-    `dotnet add package AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction`
-
 ## Examples
 
-We have provided examples focused specifically on each of the utilities. Each solution comes with an AWS Serverless Application Model (AWS SAM) templates to run your functions as a Zip package using the AWS Lambda .NET 6 or .NET 8 managed runtime; or as a container package using the AWS base images for .NET.
+We have provided examples focused specifically on each of the utilities. Each solution comes with an AWS Serverless Application Model (AWS SAM) templates to run your functions as a Zip package using the AWS Lambda .NET 8 managed runtime; or as a container package using the AWS base images for .NET.
 
 * **[Logging example](examples/Logging/)**
 * **[Metrics example](examples/Metrics/)**
@@ -104,7 +88,6 @@ Knowing which companies are using this library is important to help prioritize t
 The following companies, among others, use Powertools:
 
 * [Caylent](https://caylent.com/)
-* [Instil Software](https://instil.co/)
 * [Pushpay](https://pushpay.com/)
 
 ### Sharing your work

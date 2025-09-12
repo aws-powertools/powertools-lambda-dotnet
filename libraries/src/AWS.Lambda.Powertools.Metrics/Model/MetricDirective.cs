@@ -105,39 +105,25 @@ public class MetricDirective
     /// </summary>
     /// <value>All dimension keys.</value>
     [JsonPropertyName("Dimensions")]
-    public List<List<string>> AllDimensionKeys
+    public List<string> AllDimensionKeys
     {
         get
         {
-            var result = new List<List<string>>();
-            var allDimKeys = new List<string>();
+            var defaultKeys = DefaultDimensions
+                .Where(d => d.DimensionKeys.Any())
+                .SelectMany(s => s.DimensionKeys)
+                .ToList();
 
-            // Add default dimensions keys
-            if (DefaultDimensions.Any())
-            {
-                foreach (var dimensionSet in DefaultDimensions)
-                {
-                    foreach (var key in dimensionSet.DimensionKeys.Where(key => !allDimKeys.Contains(key)))
-                    {
-                        allDimKeys.Add(key);
-                    }
-                }
-            }
+            var keys = Dimensions
+                .Where(d => d.DimensionKeys.Any())
+                .SelectMany(s => s.DimensionKeys)
+                .ToList();
 
-            // Add all regular dimensions to the same array
-            foreach (var dimensionSet in Dimensions)
-            {
-                foreach (var key in dimensionSet.DimensionKeys.Where(key => !allDimKeys.Contains(key)))
-                {
-                    allDimKeys.Add(key);
-                }
-            }
+            defaultKeys.AddRange(keys);
 
-            // Add non-empty dimension arrays
-            // When no dimensions exist, add an empty array
-            result.Add(allDimKeys.Any() ? allDimKeys : []);
+            if (defaultKeys.Count == 0) defaultKeys = new List<string>();
 
-            return result;
+            return defaultKeys;
         }
     }
     
@@ -205,37 +191,19 @@ public class MetricDirective
     /// <exception cref="System.ArgumentOutOfRangeException">Dimensions - Cannot add more than 9 dimensions at the same time.</exception>
     internal void AddDimension(DimensionSet dimension)
     {
-        // Check if we already have any dimensions
-        if (Dimensions.Count > 0)
+        if (Dimensions.Count < PowertoolsConfigurations.MaxDimensions)
         {
-            // Get the first dimension set where we now store all dimensions
-            var firstDimensionSet = Dimensions[0];
-        
-            // Check the actual dimension count inside the first dimension set
-            if (firstDimensionSet.Dimensions.Count >= PowertoolsConfigurations.MaxDimensions)
-            {
-                throw new ArgumentOutOfRangeException(nameof(dimension),
-                    $"Cannot add more than {PowertoolsConfigurations.MaxDimensions} dimensions at the same time.");
-            }
-
-            // Add to the first dimension set instead of creating a new one
-            foreach (var pair in dimension.Dimensions)
-            {
-                if (!firstDimensionSet.Dimensions.ContainsKey(pair.Key))
-                {
-                    firstDimensionSet.Dimensions.Add(pair.Key, pair.Value);
-                }
-                else
-                {
-                    Console.WriteLine(
-                        $"##WARNING##: Failed to Add dimension '{pair.Key}'. Dimension already exists.");
-                }
-            }
+            var matchingKeys = AllDimensionKeys.Where(x => x.Contains(dimension.DimensionKeys[0]));
+            if (!matchingKeys.Any())
+                Dimensions.Add(dimension);
+            else
+                Console.WriteLine(
+                    $"##WARNING##: Failed to Add dimension '{dimension.DimensionKeys[0]}'. Dimension already exists.");
         }
         else
         {
-            // No dimensions yet, add the new one
-            Dimensions.Add(dimension);
+            throw new ArgumentOutOfRangeException(nameof(Dimensions),
+                "Cannot add more than 9 dimensions at the same time.");
         }
     }
 
@@ -259,43 +227,17 @@ public class MetricDirective
     /// <returns>Dictionary with dimension and default dimension list appended</returns>
     internal Dictionary<string, string> ExpandAllDimensionSets()
     {
-        // if a key appears multiple times, the last value will be the one that's used in the output.
         var dimensions = new Dictionary<string, string>();
 
         foreach (var dimensionSet in DefaultDimensions)
         foreach (var (key, value) in dimensionSet.Dimensions)
-            dimensions[key] = value;
+            dimensions.TryAdd(key, value);
 
         foreach (var dimensionSet in Dimensions)
         foreach (var (key, value) in dimensionSet.Dimensions)
-            dimensions[key] = value;
+            dimensions.TryAdd(key, value);
 
         return dimensions;
-    }
-    
-    /// <summary>
-    ///     Adds multiple dimensions as a complete dimension set to memory.
-    /// </summary>
-    /// <param name="dimensionSets">List of dimension sets to add</param>
-    internal void AddDimensionSet(List<DimensionSet> dimensionSets)
-    {
-        if (dimensionSets == null || !dimensionSets.Any())
-            return;
-
-        if (Dimensions.Count + dimensionSets.Count <= PowertoolsConfigurations.MaxDimensions)
-        {
-            // Simply add the dimension sets without checking for existing keys
-            // This ensures dimensions added together stay together
-            foreach (var dimensionSet in dimensionSets.Where(dimensionSet => dimensionSet.DimensionKeys.Any()))
-            {
-                Dimensions.Add(dimensionSet);
-            }
-        }
-        else
-        {
-            throw new ArgumentOutOfRangeException(nameof(Dimensions),
-                $"Cannot add more than {PowertoolsConfigurations.MaxDimensions} dimensions at the same time.");
-        }
     }
 
     /// <summary>

@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -8,10 +23,8 @@ using AWS.Lambda.Powertools.Tracing.Internal;
 using NSubstitute;
 using Xunit;
 
-#if NET8_0_OR_GREATER
 using AWS.Lambda.Powertools.Tracing.Serializers;
 using AWS.Lambda.Powertools.Tracing.Tests.Serializers;
-#endif
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
@@ -98,7 +111,6 @@ public class TracingAspectTests
         _mockXRayRecorder.Received(1).EndSubsegment();
     }
 
-#if NET8_0_OR_GREATER
     [Fact]
     public void Around_SyncMethod_HandlesResponseAndSegmentCorrectly_AOT()
     {
@@ -162,7 +174,6 @@ public class TracingAspectTests
             PowertoolsTracingSerializer.Serialize(result));
         _mockXRayRecorder.Received(1).EndSubsegment();
     }
-#endif
 
     [Fact]
     public async Task Around_VoidAsyncMethod_HandlesSegmentCorrectly()

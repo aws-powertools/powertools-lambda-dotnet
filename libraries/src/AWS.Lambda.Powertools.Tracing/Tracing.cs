@@ -130,7 +130,7 @@ public static class Tracing
     /// <param name="name">The name of the subsegment.</param>
     /// <param name="subsegment">The AWS X-Ray subsegment for the wrapped consumer.</param>
     /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
-    public static void WithSubsegment(string name, Action<TracingSubsegment> subsegment)
+    public static void WithSubsegment(string name, Action<Subsegment> subsegment)
     {
         WithSubsegment(null, name, subsegment);
     }
@@ -145,7 +145,7 @@ public static class Tracing
     /// <param name="name">The name of the subsegment.</param>
     /// <param name="subsegment">The AWS X-Ray subsegment for the wrapped consumer.</param>
     /// <exception cref="System.ArgumentNullException">name</exception>
-    public static void WithSubsegment(string nameSpace, string name, Action<TracingSubsegment> subsegment)
+    public static void WithSubsegment(string nameSpace, string name, Action<Subsegment> subsegment)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentNullException(nameof(name));
@@ -154,8 +154,7 @@ public static class Tracing
         XRayRecorder.Instance.SetNamespace(GetNamespaceOrDefault(nameSpace));
         try
         {
-            var entity = XRayRecorder.Instance.GetEntity() as TracingSubsegment;
-            subsegment?.Invoke(entity);
+            subsegment?.Invoke((Subsegment) XRayRecorder.Instance.GetEntity());
         }
         finally
         {
@@ -175,7 +174,7 @@ public static class Tracing
     /// <param name="subsegment">The AWS X-Ray subsegment for the wrapped consumer.</param>
     /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
     /// <exception cref="ArgumentNullException">Thrown when the entity is not provided.</exception>
-    public static void WithSubsegment(string name, Entity entity, Action<TracingSubsegment> subsegment)
+    public static void WithSubsegment(string name, Entity entity, Action<Subsegment> subsegment)
     {
         WithSubsegment(null, name, subsegment);
     }
@@ -192,7 +191,7 @@ public static class Tracing
     /// <param name="subsegment">The AWS X-Ray subsegment for the wrapped consumer.</param>
     /// <exception cref="System.ArgumentNullException">name</exception>
     /// <exception cref="System.ArgumentNullException">entity</exception>
-    public static void WithSubsegment(string nameSpace, string name, Entity entity, Action<TracingSubsegment> subsegment)
+    public static void WithSubsegment(string nameSpace, string name, Entity entity, Action<Subsegment> subsegment)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentNullException(nameof(name));
@@ -200,7 +199,7 @@ public static class Tracing
         if (entity is null)
             throw new ArgumentNullException(nameof(entity));
 
-        var childSubsegment = new TracingSubsegment($"## {name}");
+        var childSubsegment = new Subsegment($"## {name}");
         entity.AddSubsegment(childSubsegment);
         childSubsegment.Sampled = entity.Sampled;
         childSubsegment.SetStartTimeToNow();
@@ -241,7 +240,7 @@ public static class Tracing
 
         return PowertoolsConfigurations.Instance.Service;
     }
-
+    
     /// <summary>
     ///     Registers X-Ray for all instances of <see cref="Amazon.Runtime.AmazonServiceClient"/>.
     /// </summary>

@@ -1,12 +1,25 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.CloudWatchEvents.S3Events;
 using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Tests.Serializers;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -176,103 +189,23 @@ public class TestServiceHandler
 {
     public void LogWithEnv()
     {
+        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "Environment Service");
+        
         Logger.LogInformation("Service: Environment Service");
+    }
+    
+    public void LogWithAndWithoutEnv()
+    {
+        Logger.LogInformation("Service: service_undefined");
+        
+        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "Environment Service");
+        
+        Logger.LogInformation("Service: service_undefined");
     }
 
     [Logging(Service = "Attribute Service")]
     public void Handler()
     {
         Logger.LogInformation("Service: Attribute Service");
-    }
-}
-
-public class SimpleFunctionWithStaticConfigure
-{
-    public SimpleFunctionWithStaticConfigure(IConsoleWrapper output)
-    {
-        // Constructor logic can go here if needed
-        Logger.Configure(logger =>
-        {
-            logger.LogOutput = output;
-            logger.Service = "MyServiceName";
-            logger.LogBuffering = new LogBufferingOptions
-            {
-                BufferAtLogLevel = LogLevel.Debug,
-            };
-        });
-    }
-
-    [Logging]
-    public static async Task<APIGatewayHttpApiV2ProxyResponse> FunctionHandler()
-    {
-        // only set on handler
-        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
-
-        Logger.LogInformation("Starting up!");
-        
-        return new APIGatewayHttpApiV2ProxyResponse
-        {
-            Body = "Hello",
-            StatusCode = 200
-        };
-    }
-    
-    [Logging(FlushBufferOnUncaughtError = true)]
-    public APIGatewayHttpApiV2ProxyResponse SyncException()
-    {
-        // only set on handler
-        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
-
-        Logger.LogDebug("Debug!!");
-        Logger.LogInformation("Starting up!");
-
-        throw new Exception();
-    }
-    
-    [Logging(FlushBufferOnUncaughtError = true)]
-    public async Task<APIGatewayHttpApiV2ProxyResponse> AsyncException()
-    {
-        // only set on handler
-        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
-
-        Logger.LogDebug("Debug!!");
-        Logger.LogInformation("Starting up!");
-
-        throw new Exception();
-    }
-}
-
-public class EnvironmentVariableSamplingHandler
-{
-    /// <summary>
-    /// Handler that tests sampling behavior with environment variables:
-    /// Using environment variables POWERTOOLS_LOG_LEVEL=Error and POWERTOOLS_LOGGER_SAMPLE_RATE=0.9
-    /// </summary>
-    [Logging(Service = "HelloWorldService", LoggerOutputCase = LoggerOutputCase.CamelCase, LogEvent = true)]
-    public void HandleWithSampling(string[] args)
-    {
-        var logLevel = Environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL");
-        var sampleRate = Environment.GetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE");
-        
-        // This should NOT be logged (Info < Error) unless sampling elevates the log level
-        Logger.LogInformation("This is an info message — should not appear");
-    }
-    
-    /// <summary>
-    /// Handler for testing with guaranteed sampling (100%)
-    /// </summary>
-    [Logging(Service = "HelloWorldService", LoggerOutputCase = LoggerOutputCase.CamelCase, LogEvent = true)]
-    public void HandleWithFullSampling(string[] args)
-    {
-        Logger.LogInformation("This is an info message — should appear with 100% sampling");
-    }
-    
-    /// <summary>
-    /// Handler for testing with no sampling (0%)
-    /// </summary>
-    [Logging(Service = "HelloWorldService", LoggerOutputCase = LoggerOutputCase.CamelCase, LogEvent = true)]
-    public void HandleWithNoSampling(string[] args)
-    {
-        Logger.LogInformation("This is an info message — should NOT appear with 0% sampling");
     }
 }

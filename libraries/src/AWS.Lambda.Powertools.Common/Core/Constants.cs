@@ -21,14 +21,6 @@ namespace AWS.Lambda.Powertools.Common;
 internal static class Constants
 {
     /// <summary>
-    ///     Constant for AWS_LAMBDA_INITIALIZATION_TYPE environment variable
-    ///     This is used to determine if the Lambda function is running in provisioned concurrency mode
-    ///     or not. If the value is "provisioned-concurrency", it indicates that the function is running in provisioned
-    ///     concurrency mode. Otherwise, it is running in standard mode.
-    /// </summary>
-    internal const string AWSInitializationTypeEnv = "AWS_LAMBDA_INITIALIZATION_TYPE";
-
-    /// <summary>
     ///     Constant for POWERTOOLS_SERVICE_NAME environment variable
     /// </summary>
     internal const string ServiceNameEnv = "POWERTOOLS_SERVICE_NAME";
@@ -138,9 +130,4 @@ internal static class Constants
     /// Constant for POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE environment variable
     /// </summary>
     internal const string BatchThrowOnFullBatchFailureEnv = "POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE";
-    
-    /// <summary>
-    /// Constant for POWERTOOLS_METRICS_DISABLED environment variable
-    /// </summary>
-    internal const string PowertoolsMetricsDisabledEnv = "POWERTOOLS_METRICS_DISABLED";
 }

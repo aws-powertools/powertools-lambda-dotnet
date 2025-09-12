@@ -43,59 +43,21 @@ public class IdempotencyOptionsBuilder
     private string _hashFunction = "MD5";
 
     /// <summary>
-    /// Response hook function
-    /// </summary>
-    private Func<object, AWS.Lambda.Powertools.Idempotency.Persistence.DataRecord, object> _responseHook;
-
-    /// <summary>
-    /// Gets the event key JMESPath expression.
-    /// </summary>
-    internal string EventKeyJmesPath => _eventKeyJmesPath;
-
-    /// <summary>
-    /// Gets the payload validation JMESPath expression.
-    /// </summary>
-    internal string PayloadValidationJmesPath => _payloadValidationJmesPath;
-
-    /// <summary>
-    /// Gets whether to throw exception if no idempotency key is found.
-    /// </summary>
-    internal bool ThrowOnNoIdempotencyKey => _throwOnNoIdempotencyKey;
-
-    /// <summary>
-    /// Gets whether local cache is enabled.
-    /// </summary>
-    internal bool UseLocalCache => _useLocalCache;
-
-    /// <summary>
-    /// Gets the maximum number of items in the local cache.
-    /// </summary>
-    internal int LocalCacheMaxItems => _localCacheMaxItems;
-
-    /// <summary>
-    /// Gets the expiration in seconds.
-    /// </summary>
-    internal long ExpirationInSeconds => _expirationInSeconds;
-
-    /// <summary>
-    /// Gets the hash function.
-    /// </summary>
-    internal string HashFunction => _hashFunction;
-
-    /// <summary>
-    /// Gets the response hook function.
-    /// </summary>
-    internal Func<object, AWS.Lambda.Powertools.Idempotency.Persistence.DataRecord, object> ResponseHook => _responseHook;
-
-    /// <summary>
-    /// Initialize and return an instance of IdempotencyOptions.
+    /// Initialize and return an instance of IdempotencyConfig.
     /// Example:
-    /// new IdempotencyOptionsBuilder().WithUseLocalCache().Build();
-    /// This instance can then be passed to Idempotency.Configure:
-    /// Idempotency.Configure(builder => builder.WithOptions(options));
+    /// IdempotencyConfig.Builder().WithUseLocalCache().Build();
+    /// This instance must then be passed to the Idempotency.Config:
+    /// Idempotency.Config().WithConfig(config).Configure();
     /// </summary>
-    /// <returns>an instance of IdempotencyOptions</returns>
-    public IdempotencyOptions Build() => new(this);
+    /// <returns>an instance of IdempotencyConfig</returns>
+    public IdempotencyOptions Build() =>
+        new(_eventKeyJmesPath,
+            _payloadValidationJmesPath,
+            _throwOnNoIdempotencyKey,
+            _useLocalCache,
+            _localCacheMaxItems,
+            _expirationInSeconds,
+            _hashFunction);
 
     /// <summary>
     /// A JMESPath expression to extract the idempotency key from the event record.
@@ -160,26 +122,9 @@ public class IdempotencyOptionsBuilder
     /// </summary>
     /// <param name="hashFunction">Can be any algorithm supported by HashAlgorithm.Create</param>
     /// <returns>the instance of the builder (to chain operations)</returns>
-#if NET8_0_OR_GREATER
     [Obsolete("Idempotency uses MD5 and does not support other hash algorithms.")]
-#endif
     public IdempotencyOptionsBuilder WithHashFunction(string hashFunction)
     {
-#if NET6_0
-        // for backward compability keep this code in .net 6
-        _hashFunction = hashFunction;
-#endif
-        return this;
-    }
-
-    /// <summary>
-    /// Set a response hook function, to be called with the response and the data record.
-    /// </summary>
-    /// <param name="hook">The response hook function</param>
-    /// <returns>the instance of the builder (to chain operations)</returns>
-    public IdempotencyOptionsBuilder WithResponseHook(Func<object, AWS.Lambda.Powertools.Idempotency.Persistence.DataRecord, object> hook)
-    {
-        _responseHook = hook;
         return this;
     }
 }
