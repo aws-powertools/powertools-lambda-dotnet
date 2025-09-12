@@ -7,7 +7,7 @@
       "attributes": {
         "ApproximateReceiveCount": "1",
         "SentTimestamp": "1545082649183",
-        "SenderId": "AIDAIENQZJOLO23YVJ4VO",
+        "SenderId": "SENDER_ID",
         "ApproximateFirstReceiveTimestamp": "1545082649185"
       },
       "messageAttributes": {},
@@ -23,7 +23,7 @@
       "attributes": {
         "ApproximateReceiveCount": "1",
         "SentTimestamp": "1545082649183",
-        "SenderId": "AIDAIENQZJOLO23YVJ4VO",
+        "SenderId": "SENDER_ID",
         "ApproximateFirstReceiveTimestamp": "1545082649185"
       },
       "messageAttributes": {},
