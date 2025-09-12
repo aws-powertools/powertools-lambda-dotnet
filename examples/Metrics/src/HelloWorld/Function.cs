@@ -82,11 +82,11 @@ public class Function
 
         // Add Metric to capture the amount of time 
         Metrics.PushSingleMetric(
-            name: "CallingIP",
+            metricName: "CallingIP",
             value: 1,
             unit: MetricUnit.Count,
             service: "lambda-powertools-metrics-example",
-            dimensions: new Dictionary<string, string>
+            defaultDimensions: new Dictionary<string, string>
             {
                 { "Metric Type", "Single" }
             });
@@ -104,11 +104,11 @@ public class Function
         try
         {
             Metrics.PushSingleMetric(
-                name: "RecordsSaved",
+                metricName: "RecordsSaved",
                 value: 1,
                 unit: MetricUnit.Count,
                 service: "lambda-powertools-metrics-example",
-                dimensions: new Dictionary<string, string>
+                defaultDimensions: new Dictionary<string, string>
                 {
                     { "Metric Type", "Single" }
                 });

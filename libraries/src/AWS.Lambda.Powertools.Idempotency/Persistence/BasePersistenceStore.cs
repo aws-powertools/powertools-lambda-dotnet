@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Security.Cryptography;
 using System.Text;
@@ -324,12 +339,8 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <exception cref="ArgumentException"></exception>
     internal string GenerateHash(JsonElement data)
     {
-#if NET8_0_OR_GREATER
         // starting .NET 8 no option to change hash algorithm
         using var hashAlgorithm = MD5.Create();
-#else
-        using var hashAlgorithm = HashAlgorithm.Create(_idempotencyOptions.HashFunction);
-#endif
         if (hashAlgorithm == null)
         {
             throw new ArgumentException("Invalid HashAlgorithm");
@@ -378,20 +389,4 @@ public abstract class BasePersistenceStore : IPersistenceStore
 
     /// <inheritdoc />
     public abstract Task DeleteRecord(string idempotencyKey);
-
-    /// <summary>
-    /// Validates an existing record against the data payload being processed.
-    /// If the payload does not match the stored record, an `IdempotencyValidationError` error is thrown.
-    /// Whenever a record is retrieved from the persistence layer, it should be validated against the data payload
-    /// being processed. This is to ensure that the data payload being processed is the same as the one that was
-    /// used to create the record in the first place.
-    ///
-    /// The record is also saved to the local cache if local caching is enabled.
-    /// </summary>
-    public virtual DataRecord ProcessExistingRecord(DataRecord exRecord, JsonDocument data)
-    {
-        ValidatePayload(data, exRecord);
-        SaveToCache(exRecord);
-        return exRecord;
-    }
 }

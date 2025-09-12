@@ -162,20 +162,4 @@ public interface IPowertoolsConfigurations
     /// </summary>
     /// <value>Defaults to true</value>
     bool BatchThrowOnFullBatchFailureEnabled { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether Metrics are disabled.
-    /// </summary>
-    bool MetricsDisabled { get; }
-    
-    /// <summary>
-    /// Indicates if the current execution is a cold start.
-    /// </summary>
-    bool IsColdStart { get; }
-
-    /// <summary>
-    /// AWS Lambda initialization type.
-    /// This is set to "on-demand" for on-demand Lambda functions and "provisioned-concurrency" for provisioned concurrency.
-    /// </summary>
-    string AwsInitializationType { get; }
 }

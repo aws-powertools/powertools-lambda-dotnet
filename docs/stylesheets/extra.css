@@ -33,9 +33,3 @@
 [data-md-color-scheme="slate"] {
     --md-typeset-a-color: rgb(28, 152, 152)
 }
-
-/*.md-nav__link[for] {*/
-/*    font-weight: bold*/
-/*}*/
-.md-nav__link[for] { color: var(--md-default-fg-color) !important; }
-

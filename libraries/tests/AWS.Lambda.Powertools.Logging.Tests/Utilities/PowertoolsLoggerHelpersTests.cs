@@ -1,19 +1,16 @@
-#if NET8_0_OR_GREATER
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using AWS.Lambda.Powertools.Logging.Serializers;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Utilities;
 
 public class PowertoolsLoggerHelpersTests : IDisposable
-{   
+{
     [Fact]
     public void ObjectToDictionary_AnonymousObjectWithSimpleProperties_ReturnsDictionary()
     {
@@ -74,12 +71,9 @@ public class PowertoolsLoggerHelpersTests : IDisposable
     [Fact]
     public void Should_Log_With_Anonymous()
     {
-        var consoleOut = Substitute.For<IConsoleWrapper>();
-        Logger.Configure(options =>
-        {
-            options.LogOutput = consoleOut;
-        });
-        
+        var consoleOut = Substitute.For<StringWriter>();
+        SystemWrapper.Instance.SetOut(consoleOut);
+
         // Act & Assert
         Logger.AppendKey("newKey", new
         {
@@ -97,12 +91,9 @@ public class PowertoolsLoggerHelpersTests : IDisposable
     [Fact]
     public void Should_Log_With_Complex_Anonymous()
     {
-        var consoleOut = Substitute.For<IConsoleWrapper>();
-        Logger.Configure(options =>
-        {
-            options.LogOutput = consoleOut;
-        });
-        
+        var consoleOut = Substitute.For<StringWriter>();
+        SystemWrapper.Instance.SetOut(consoleOut);
+
         // Act & Assert
         Logger.AppendKey("newKey", new
         {
@@ -208,28 +199,7 @@ public class PowertoolsLoggerHelpersTests : IDisposable
 
     public void Dispose()
     {
-        ResetAllState();
-    }
-
-    private static void ResetAllState()
-    {
-        // Clear environment variables
-        Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", null);
-        Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
-        Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", null);
-
-        // Reset all logging components
-        Logger.Reset();
-        PowertoolsLoggingBuilderExtensions.ResetAllProviders();
-
-        // Force default configuration
-        var config = new PowertoolsLoggerConfiguration
-        {
-            MinimumLogLevel = LogLevel.Information,
-            LoggerOutputCase = LoggerOutputCase.SnakeCase
-        };
-        PowertoolsLoggingBuilderExtensions.UpdateConfiguration(config);
+        PowertoolsLoggingSerializer.ConfigureNamingPolicy(LoggerOutputCase.Default);
+        PowertoolsLoggingSerializer.ClearOptions();
     }
 }
-
-#endif

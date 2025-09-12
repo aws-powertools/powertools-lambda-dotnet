@@ -1,10 +1,27 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text.Json;
+using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
-using AWS.Lambda.Powertools.Logging.Internal.Helpers;
+using AWS.Lambda.Powertools.Logging.Serializers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -14,8 +31,14 @@ namespace AWS.Lambda.Powertools.Logging.Internal;
 ///     Scope.Global is singleton
 /// </summary>
 /// <seealso cref="IMethodAspectHandler" />
-public class LoggingAspect : IMethodAspectHandler
+[Aspect(Scope.Global, Factory = typeof(LoggingAspectFactory))]
+public class LoggingAspect
 {
+    /// <summary>
+    ///     The is cold start
+    /// </summary>
+    private bool _isColdStart = true;
+
     /// <summary>
     ///     The initialize context
     /// </summary>
@@ -27,6 +50,21 @@ public class LoggingAspect : IMethodAspectHandler
     private bool _clearState;
 
     /// <summary>
+    ///     The correlation identifier path
+    /// </summary>
+    private string _correlationIdPath;
+
+    /// <summary>
+    ///     The Powertools for AWS Lambda (.NET) configurations
+    /// </summary>
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
+
+    /// <summary>
+    ///     The system wrapper
+    /// </summary>
+    private readonly ISystemWrapper _systemWrapper;
+
+    /// <summary>
     ///     The is context initialized
     /// </summary>
     private bool _isContextInitialized;
@@ -36,48 +74,133 @@ public class LoggingAspect : IMethodAspectHandler
     /// </summary>
     private bool _clearLambdaContext;
 
-    private ILogger _logger;
-    private bool _isDebug;
-    private bool _bufferingEnabled;
-    private PowertoolsLoggerConfiguration _currentConfig;
-    private bool _flushBufferOnUncaughtError;
+    /// <summary>
+    ///     The configuration
+    /// </summary>
+    private LoggerConfiguration _config;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LoggingAspect" /> class.
     /// </summary>
-    public LoggingAspect(ILogger logger)
+    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
+    /// <param name="systemWrapper">The system wrapper.</param>
+    public LoggingAspect(IPowertoolsConfigurations powertoolsConfigurations, ISystemWrapper systemWrapper)
     {
-        _logger = logger ?? LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
+        _powertoolsConfigurations = powertoolsConfigurations;
+        _systemWrapper = systemWrapper;
     }
 
-    private void InitializeLogger(LoggingAttribute trigger)
+    /// <summary>
+    /// Runs before the execution of the method marked with the Logging Attribute
+    /// </summary>
+    /// <param name="instance"></param>
+    /// <param name="name"></param>
+    /// <param name="args"></param>
+    /// <param name="hostType"></param>
+    /// <param name="method"></param>
+    /// <param name="returnType"></param>
+    /// <param name="triggers"></param>
+    [Advice(Kind.Before)]
+    public void OnEntry(
+        [Argument(Source.Instance)] object instance,
+        [Argument(Source.Name)] string name,
+        [Argument(Source.Arguments)] object[] args,
+        [Argument(Source.Type)] Type hostType,
+        [Argument(Source.Metadata)] MethodBase method,
+        [Argument(Source.ReturnType)] Type returnType,
+        [Argument(Source.Triggers)] Attribute[] triggers)
     {
-        // Check which settings are explicitly provided in the attribute
-        var hasLogLevel = trigger.LogLevel != LogLevel.None;
-        var hasService = !string.IsNullOrEmpty(trigger.Service);
-        var hasOutputCase = trigger.LoggerOutputCase != LoggerOutputCase.Default;
-        var hasSamplingRate = trigger.SamplingRate > 0;
+        // Called before the method
+        var trigger = triggers.OfType<LoggingAttribute>().First();
 
-        // Only update configuration if any settings were provided
-        var needsReconfiguration = hasLogLevel || hasService || hasOutputCase || hasSamplingRate;
-        _currentConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
-
-        if (needsReconfiguration)
+        try
         {
-            // Apply each setting directly using the existing Logger static methods
-            if (hasLogLevel) _currentConfig.MinimumLogLevel = trigger.LogLevel;
-            if (hasService) _currentConfig.Service = trigger.Service;
-            if (hasOutputCase) _currentConfig.LoggerOutputCase = trigger.LoggerOutputCase;
-            if (hasSamplingRate) _currentConfig.SamplingRate = trigger.SamplingRate;
+            var eventArgs = new AspectEventArgs
+            {
+                Instance = instance,
+                Type = hostType,
+                Method = method,
+                Name = name,
+                Args = args,
+                ReturnType = returnType,
+                Triggers = triggers
+            };
 
-            // Need to refresh the logger after configuration changes
-            _logger = LoggerFactoryHelper.CreateAndConfigureFactory(_currentConfig).CreatePowertoolsLogger();
-            Logger.ClearInstance();
+            _config = new LoggerConfiguration
+            {
+                Service = trigger.Service,
+                LoggerOutputCase = trigger.LoggerOutputCase,
+                SamplingRate = trigger.SamplingRate,
+                MinimumLevel = trigger.LogLevel
+            };
+
+            var logEvent = trigger.LogEvent;
+            _correlationIdPath = trigger.CorrelationIdPath;
+            _clearState = trigger.ClearState;
+
+            Logger.LoggerProvider = new LoggerProvider(_config, _powertoolsConfigurations, _systemWrapper);
+
+            if (!_initializeContext)
+                return;
+
+            Logger.AppendKey(LoggingConstants.KeyColdStart, _isColdStart);
+
+            _isColdStart = false;
+            _initializeContext = false;
+            _isContextInitialized = true;
+
+            var eventObject = eventArgs.Args.FirstOrDefault();
+            CaptureXrayTraceId();
+            CaptureLambdaContext(eventArgs);
+            CaptureCorrelationId(eventObject);
+            if (logEvent || _powertoolsConfigurations.LoggerLogEvent)
+                LogEvent(eventObject);
         }
+        catch (Exception exception)
+        {
+            // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
+            // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
+            ExceptionDispatchInfo.Capture(exception).Throw();
+        }
+    }
 
-        // Set operational flags based on current configuration
-        _isDebug = _currentConfig.MinimumLogLevel <= LogLevel.Debug;
-        _bufferingEnabled = _currentConfig.LogBuffering != null;
+    /// <summary>
+    ///     Handles the Kind.After event.
+    /// </summary>
+    [Advice(Kind.After)]
+    public void OnExit()
+    {
+        if (!_isContextInitialized)
+            return;
+        if (_clearLambdaContext)
+            LoggingLambdaContext.Clear();
+        if (_clearState)
+            Logger.RemoveAllKeys();
+        _initializeContext = true;
+    }
+
+    /// <summary>
+    ///     Determines whether this instance is debug.
+    /// </summary>
+    /// <returns><c>true</c> if this instance is debug; otherwise, <c>false</c>.</returns>
+    private bool IsDebug()
+    {
+        return LogLevel.Debug >= _powertoolsConfigurations.GetLogLevel(_config.MinimumLevel);
+    }
+
+    /// <summary>
+    ///     Captures the xray trace identifier.
+    /// </summary>
+    private void CaptureXrayTraceId()
+    {
+        var xRayTraceId = _powertoolsConfigurations.XRayTraceId;
+        if (string.IsNullOrWhiteSpace(xRayTraceId))
+            return;
+
+        xRayTraceId = xRayTraceId
+            .Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", "");
+
+        Logger.AppendKey(LoggingConstants.KeyXRayTraceId, xRayTraceId);
     }
 
     /// <summary>
@@ -90,8 +213,8 @@ public class LoggingAspect : IMethodAspectHandler
     private void CaptureLambdaContext(AspectEventArgs eventArgs)
     {
         _clearLambdaContext = LoggingLambdaContext.Extract(eventArgs);
-        if (LoggingLambdaContext.Instance is null && _isDebug)
-            ConsoleWrapper.WriteLine(LogLevel.Warning.ToLambdaLogLevel(),
+        if (LoggingLambdaContext.Instance is null && IsDebug())
+            _systemWrapper.LogLine(
                 "Skipping Lambda Context injection because ILambdaContext context parameter not found.");
     }
 
@@ -99,13 +222,12 @@ public class LoggingAspect : IMethodAspectHandler
     ///     Captures the correlation identifier.
     /// </summary>
     /// <param name="eventArg">The event argument.</param>
-    /// <param name="correlationIdPath"></param>
-    private void CaptureCorrelationId(object eventArg, string correlationIdPath)
+    private void CaptureCorrelationId(object eventArg)
     {
-        if (string.IsNullOrWhiteSpace(correlationIdPath))
+        if (string.IsNullOrWhiteSpace(_correlationIdPath))
             return;
 
-        var correlationIdPaths = correlationIdPath
+        var correlationIdPaths = _correlationIdPath
             .Split(CorrelationIdPaths.Separator, StringSplitOptions.RemoveEmptyEntries);
 
         if (!correlationIdPaths.Any())
@@ -113,8 +235,8 @@ public class LoggingAspect : IMethodAspectHandler
 
         if (eventArg is null)
         {
-            if (_isDebug)
-                ConsoleWrapper.WriteLine(LogLevel.Warning.ToLambdaLogLevel(),
+            if (IsDebug())
+                _systemWrapper.LogLine(
                     "Skipping CorrelationId capture because event parameter not found.");
             return;
         }
@@ -124,16 +246,16 @@ public class LoggingAspect : IMethodAspectHandler
             var correlationId = string.Empty;
 
             var jsonDoc =
-                JsonDocument.Parse(_currentConfig.Serializer.Serialize(eventArg, eventArg.GetType()));
+                JsonDocument.Parse(PowertoolsLoggingSerializer.Serialize(eventArg, eventArg.GetType()));
 
             var element = jsonDoc.RootElement;
 
             for (var i = 0; i < correlationIdPaths.Length; i++)
             {
-                // TODO: For casing parsing to be removed from Logging v2 when we get rid of outputcase without this CorrelationIdPaths.ApiGatewayRest would not work
-                // TODO: This will be removed and replaced by JMesPath
-
-                var pathWithOutputCase = correlationIdPaths[i].ToCase(_currentConfig.LoggerOutputCase);
+                // For casing parsing to be removed from Logging v2 when we get rid of outputcase
+                // without this CorrelationIdPaths.ApiGatewayRest would not work
+                var pathWithOutputCase =
+                    _powertoolsConfigurations.ConvertToOutputCase(correlationIdPaths[i], _config.LoggerOutputCase);
                 if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
                     break;
 
@@ -143,12 +265,12 @@ public class LoggingAspect : IMethodAspectHandler
             }
 
             if (!string.IsNullOrWhiteSpace(correlationId))
-                _logger.AppendKey(LoggingConstants.KeyCorrelationId, correlationId);
+                Logger.AppendKey(LoggingConstants.KeyCorrelationId, correlationId);
         }
         catch (Exception e)
         {
-            if (_isDebug)
-                ConsoleWrapper.WriteLine(LogLevel.Warning.ToLambdaLogLevel(),
+            if (IsDebug())
+                _systemWrapper.LogLine(
                     $"Skipping CorrelationId capture because of error caused while parsing the event object {e.Message}.");
         }
     }
@@ -163,30 +285,30 @@ public class LoggingAspect : IMethodAspectHandler
         {
             case null:
             {
-                if (_isDebug)
-                    ConsoleWrapper.WriteLine(LogLevel.Warning.ToLambdaLogLevel(),
+                if (IsDebug())
+                    _systemWrapper.LogLine(
                         "Skipping Event Log because event parameter not found.");
                 break;
             }
             case Stream:
                 try
                 {
-                    _logger.LogInformation(eventArg);
+                    Logger.LogInformation(eventArg);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Failed to log event from supplied input stream.");
+                    Logger.LogError(e, "Failed to log event from supplied input stream.");
                 }
 
                 break;
             default:
                 try
                 {
-                    _logger.LogInformation(eventArg);
+                    Logger.LogInformation(eventArg);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Failed to log event from supplied input object.");
+                    Logger.LogError(e, "Failed to log event from supplied input object.");
                 }
 
                 break;
@@ -199,95 +321,8 @@ public class LoggingAspect : IMethodAspectHandler
     internal static void ResetForTest()
     {
         LoggingLambdaContext.Clear();
-    }
-
-    /// <summary>
-    /// Entry point for the aspect.
-    /// </summary>
-    /// <param name="eventArgs"></param>
-    public void OnEntry(AspectEventArgs eventArgs)
-    {
-        var trigger = eventArgs.Triggers.OfType<LoggingAttribute>().First();
-        try
-        {
-            _clearState = trigger.ClearState;
-
-            InitializeLogger(trigger);
-
-            if (!_initializeContext)
-                return;
-
-            _initializeContext = false;
-            _isContextInitialized = true;
-            _flushBufferOnUncaughtError = trigger.FlushBufferOnUncaughtError;
-
-            var eventObject = eventArgs.Args.FirstOrDefault();
-            CaptureLambdaContext(eventArgs);
-            CaptureCorrelationId(eventObject, trigger.CorrelationIdPath);
-
-            switch (trigger.IsLogEventSet)
-            {
-                case true when trigger.LogEvent:
-                case false when _currentConfig.LogEvent:
-                    LogEvent(eventObject);
-                    break;
-            }
-        }
-        catch (Exception exception)
-        {
-            if (_bufferingEnabled && _flushBufferOnUncaughtError)
-            {
-                _logger.FlushBuffer();
-            }
-
-            // The purpose of ExceptionDispatchInfo.Capture is to capture a potentially mutating exception's StackTrace at a point in time:
-            // https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions#capture-exceptions-to-rethrow-later
-            ExceptionDispatchInfo.Capture(exception).Throw();
-        }
-    }
-
-    /// <summary>
-    /// When the method returns successfully, this method is called.
-    /// </summary>
-    /// <param name="eventArgs"></param>
-    /// <param name="result"></param>
-    public void OnSuccess(AspectEventArgs eventArgs, object result)
-    {
-        
-    }
-
-    /// <summary>
-    /// When the method throws an exception, this method is called.
-    /// </summary>
-    /// <param name="eventArgs"></param>
-    /// <param name="exception"></param>
-    public void OnException(AspectEventArgs eventArgs, Exception exception)
-    {
-        if (_bufferingEnabled && _flushBufferOnUncaughtError)
-        {
-            _logger.FlushBuffer();
-        }
-        ExceptionDispatchInfo.Capture(exception).Throw();
-    }
-
-    /// <summary>
-    /// WHen the method exits, this method is called even if it throws an exception.
-    /// </summary>
-    /// <param name="eventArgs"></param>
-    public void OnExit(AspectEventArgs eventArgs)
-    {
-        if (!_isContextInitialized)
-            return;
-        if (_clearLambdaContext)
-            LoggingLambdaContext.Clear();
-        if (_clearState)
-            _logger.RemoveAllKeys();
-        _initializeContext = true;
-        
-        if (_bufferingEnabled)
-        {
-            // clear the buffer after the handler has finished
-            _logger.ClearBuffer();
-        }
+        Logger.LoggerProvider = null;
+        Logger.RemoveAllKeys();
+        Logger.ClearLoggerInstance();
     }
 }

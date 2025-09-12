@@ -1,5 +1,19 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ * 
+ *  http://aws.amazon.com/apache2.0
+ * 
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System.Globalization;
-using AWS.Lambda.Powertools.Common.Core;
 
 namespace AWS.Lambda.Powertools.Common;
 
@@ -10,12 +24,10 @@ namespace AWS.Lambda.Powertools.Common;
 /// <seealso cref="IPowertoolsConfigurations" />
 public class PowertoolsConfigurations : IPowertoolsConfigurations
 {
-    private readonly IPowertoolsEnvironment _powertoolsEnvironment;
-
     /// <summary>
     ///     The maximum dimensions
     /// </summary>
-    public const int MaxDimensions = 29;
+    public const int MaxDimensions = 9;
 
     /// <summary>
     ///     The maximum metrics
@@ -28,12 +40,17 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     private static IPowertoolsConfigurations _instance;
 
     /// <summary>
+    ///     The system wrapper
+    /// </summary>
+    private readonly ISystemWrapper _systemWrapper;
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="PowertoolsConfigurations" /> class.
     /// </summary>
-    /// <param name="powertoolsEnvironment"></param>
-    internal PowertoolsConfigurations(IPowertoolsEnvironment powertoolsEnvironment)
+    /// <param name="systemWrapper">The system wrapper.</param>
+    internal PowertoolsConfigurations(ISystemWrapper systemWrapper)
     {
-        _powertoolsEnvironment = powertoolsEnvironment;
+        _systemWrapper = systemWrapper;
     }
 
     /// <summary>
@@ -41,7 +58,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// </summary>
     /// <value>The instance.</value>
     public static IPowertoolsConfigurations Instance =>
-        _instance ??= new PowertoolsConfigurations(PowertoolsEnvironment.Instance);
+        _instance ??= new PowertoolsConfigurations(SystemWrapper.Instance);
 
     /// <summary>
     ///     Gets the environment variable.
@@ -50,7 +67,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <returns>System.String.</returns>
     public string GetEnvironmentVariable(string variable)
     {
-        return _powertoolsEnvironment.GetEnvironmentVariable(variable);
+        return _systemWrapper.GetEnvironmentVariable(variable);
     }
 
     /// <summary>
@@ -61,7 +78,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <returns>System.String.</returns>
     public string GetEnvironmentVariableOrDefault(string variable, string defaultValue)
     {
-        var result = _powertoolsEnvironment.GetEnvironmentVariable(variable);
+        var result = _systemWrapper.GetEnvironmentVariable(variable);
         return string.IsNullOrWhiteSpace(result) ? defaultValue : result;
     }
 
@@ -73,7 +90,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <returns>System.Int32.</returns>
     public int GetEnvironmentVariableOrDefault(string variable, int defaultValue)
     {
-        var result = _powertoolsEnvironment.GetEnvironmentVariable(variable);
+        var result = _systemWrapper.GetEnvironmentVariable(variable);
         return int.TryParse(result, out var parsedValue) ? parsedValue : defaultValue;
     }
 
@@ -85,7 +102,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
     public bool GetEnvironmentVariableOrDefault(string variable, bool defaultValue)
     {
-        return bool.TryParse(_powertoolsEnvironment.GetEnvironmentVariable(variable), out var result)
+        return bool.TryParse(_systemWrapper.GetEnvironmentVariable(variable), out var result)
             ? result
             : defaultValue;
     }
@@ -143,8 +160,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// </summary>
     /// <value>The logger sample rate.</value>
     public double LoggerSampleRate =>
-        double.TryParse(_powertoolsEnvironment.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv),
-            NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var result)
+        double.TryParse(_systemWrapper.GetEnvironmentVariable(Constants.LoggerSampleRateNameEnv), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture,  out var result)
             ? result
             : 0;
 
@@ -174,7 +190,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// </summary>
     /// <value><c>true</c> if this instance is Lambda; otherwise, <c>false</c>.</value>
     public bool IsLambdaEnvironment => GetEnvironmentVariable(Constants.LambdaTaskRoot) is not null;
-
+    
     /// <summary>
     ///     Gets a value indicating whether [tracing is disabled].
     /// </summary>
@@ -185,7 +201,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <inheritdoc />
     public void SetExecutionEnvironment<T>(T type)
     {
-        _powertoolsEnvironment.SetExecutionEnvironment(type);
+        _systemWrapper.SetExecutionEnvironment(type);
     }
 
     /// <inheritdoc />
@@ -193,28 +209,14 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
         GetEnvironmentVariableOrDefault(Constants.IdempotencyDisabledEnv, false);
 
     /// <inheritdoc />
-    public string BatchProcessingErrorHandlingPolicy =>
-        GetEnvironmentVariableOrDefault(Constants.BatchErrorHandlingPolicyEnv, "DeriveFromEvent");
+    public string BatchProcessingErrorHandlingPolicy => GetEnvironmentVariableOrDefault(Constants.BatchErrorHandlingPolicyEnv, "DeriveFromEvent");
 
     /// <inheritdoc />
-    public bool BatchParallelProcessingEnabled =>
-        GetEnvironmentVariableOrDefault(Constants.BatchParallelProcessingEnabled, false);
+    public bool BatchParallelProcessingEnabled => GetEnvironmentVariableOrDefault(Constants.BatchParallelProcessingEnabled, false);
 
     /// <inheritdoc />
-    public int BatchProcessingMaxDegreeOfParallelism =>
-        GetEnvironmentVariableOrDefault(Constants.BatchMaxDegreeOfParallelismEnv, 1);
+    public int BatchProcessingMaxDegreeOfParallelism => GetEnvironmentVariableOrDefault(Constants.BatchMaxDegreeOfParallelismEnv, 1);
 
     /// <inheritdoc />
-    public bool BatchThrowOnFullBatchFailureEnabled =>
-        GetEnvironmentVariableOrDefault(Constants.BatchThrowOnFullBatchFailureEnv, true);
-
-    /// <inheritdoc />
-    public bool MetricsDisabled => GetEnvironmentVariableOrDefault(Constants.PowertoolsMetricsDisabledEnv, false);
-
-    /// <inheritdoc />
-    public bool IsColdStart => LambdaLifecycleTracker.IsColdStart;
-    
-    /// <inheritdoc />
-    public string AwsInitializationType =>
-        GetEnvironmentVariable(Constants.AWSInitializationTypeEnv);
+    public bool BatchThrowOnFullBatchFailureEnabled => GetEnvironmentVariableOrDefault(Constants.BatchThrowOnFullBatchFailureEnv, true);
 }

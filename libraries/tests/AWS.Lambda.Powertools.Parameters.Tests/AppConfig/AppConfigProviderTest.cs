@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -33,7 +32,6 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Parameters.Tests.AppConfig;
 
-[SuppressMessage("Usage", "xUnit1030:Do not call ConfigureAwait(false) in test method")]
 public class AppConfigProviderTest
 {
     [Fact]

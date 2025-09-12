@@ -5,7 +5,6 @@ using Xunit;
 using Amazon.Lambda.Model;
 using TestUtils;
 using Xunit.Abstractions;
-using Environment = Amazon.Lambda.Model.Environment;
 
 namespace Function.Tests;
 
@@ -23,21 +22,10 @@ public class FunctionTests
     
     [Trait("Category", "AOT")]
     [Theory]
-    [InlineData("E2ETestLambda_X64_AOT_NET8_logging_AOT-Function")]
-    [InlineData("E2ETestLambda_ARM_AOT_NET8_logging_AOT-Function")]
+    [InlineData("E2ETestLambda_X64_AOT_NET8_logging")]
+    [InlineData("E2ETestLambda_ARM_AOT_NET8_logging")]
     public async Task AotFunctionTest(string functionName)
     {
-        // await ResetFunction(functionName);
-        await TestFunction(functionName);
-    }
-    
-    [Trait("Category", "AOT")]
-    [Theory]
-    [InlineData("E2ETestLambda_X64_AOT_NET8_logging_AOT-Function-ILogger")]
-    [InlineData("E2ETestLambda_ARM_AOT_NET8_logging_AOT-Function-ILogger")]
-    public async Task AotILoggerFunctionTest(string functionName)
-    {
-        // await ResetFunction(functionName);
         await TestFunction(functionName);
     }
 
@@ -48,51 +36,6 @@ public class FunctionTests
     [InlineData("E2ETestLambda_ARM_NET8_logging")]
     public async Task FunctionTest(string functionName)
     {
-        await UpdateFunctionHandler(functionName, "Function::Function.Function::FunctionHandler");
-        await TestFunction(functionName);
-    }
-    
-    [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_logging")]
-    [InlineData("E2ETestLambda_ARM_NET6_logging")]
-    [InlineData("E2ETestLambda_X64_NET8_logging")]
-    [InlineData("E2ETestLambda_ARM_NET8_logging")]
-    public async Task StaticConfigurationFunctionTest(string functionName)
-    {
-        await UpdateFunctionHandler(functionName, "Function::StaticConfiguration.Function::FunctionHandler");
-        await TestFunction(functionName);
-    }
-    
-    [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_logging")]
-    [InlineData("E2ETestLambda_ARM_NET6_logging")]
-    [InlineData("E2ETestLambda_X64_NET8_logging")]
-    [InlineData("E2ETestLambda_ARM_NET8_logging")]
-    public async Task StaticILoggerConfigurationFunctionTest(string functionName)
-    {
-        await UpdateFunctionHandler(functionName, "Function::StaticILoggerConfiguration.Function::FunctionHandler");
-        await TestFunction(functionName);
-    }
-    
-    [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_logging")]
-    [InlineData("E2ETestLambda_ARM_NET6_logging")]
-    [InlineData("E2ETestLambda_X64_NET8_logging")]
-    [InlineData("E2ETestLambda_ARM_NET8_logging")]
-    public async Task ILoggerConfigurationFunctionTest(string functionName)
-    {
-        await UpdateFunctionHandler(functionName, "Function::ILoggerConfiguration.Function::FunctionHandler");
-        await TestFunction(functionName);
-    }
-    
-    [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_logging")]
-    [InlineData("E2ETestLambda_ARM_NET6_logging")]
-    [InlineData("E2ETestLambda_X64_NET8_logging")]
-    [InlineData("E2ETestLambda_ARM_NET8_logging")]
-    public async Task ILoggerBuilderFunctionTest(string functionName)
-    {
-        await UpdateFunctionHandler(functionName, "Function::ILoggerBuilder.Function::FunctionHandler");
         await TestFunction(functionName);
     }
 
@@ -173,23 +116,53 @@ public class FunctionTests
 
         Assert.True(messageElement.TryGetProperty("HttpMethod", out JsonElement httpMethodElement));
         Assert.Equal("POST", httpMethodElement.GetString());
-        
+
+        Assert.True(messageElement.TryGetProperty("Headers", out JsonElement headersElement));
+        Assert.True(headersElement.TryGetProperty("Accept-Encoding", out JsonElement acceptEncodingElement));
+        Assert.Equal("gzip, deflate, sdch", acceptEncodingElement.GetString());
+
+        Assert.True(headersElement.TryGetProperty("Accept-Language", out JsonElement acceptLanguageElement));
+        Assert.Equal("en-US,en;q=0.8", acceptLanguageElement.GetString());
+
+        Assert.True(headersElement.TryGetProperty("Cache-Control", out JsonElement cacheControlElement));
+        Assert.Equal("max-age=0", cacheControlElement.GetString());
+
+        Assert.True(
+            messageElement.TryGetProperty("QueryStringParameters", out JsonElement queryStringParametersElement));
+        Assert.True(queryStringParametersElement.TryGetProperty("Foo", out JsonElement fooElement));
+        Assert.Equal("bar", fooElement.GetString());
+
         Assert.True(messageElement.TryGetProperty("RequestContext", out JsonElement requestContextElement));
         Assert.True(requestContextElement.TryGetProperty("Path", out JsonElement requestContextPathElement));
         Assert.Equal("/prod/path/to/resource", requestContextPathElement.GetString());
 
+        Assert.True(requestContextElement.TryGetProperty("AccountId", out JsonElement accountIdElement));
+        Assert.Equal("123456789012", accountIdElement.GetString());
+
         Assert.True(requestContextElement.TryGetProperty("ResourceId", out JsonElement resourceIdElement));
         Assert.Equal("123456", resourceIdElement.GetString());
-        
+
+        Assert.True(requestContextElement.TryGetProperty("Stage", out JsonElement stageElement));
+        Assert.Equal("prod", stageElement.GetString());
+
         Assert.True(requestContextElement.TryGetProperty("RequestId", out JsonElement requestIdElement));
         Assert.Equal("c6af9ac6-7b61-11e6-9a41-93e8deadbeef", requestIdElement.GetString());
-        
+
+        Assert.True(requestContextElement.TryGetProperty("ResourcePath", out JsonElement resourcePathElement));
+        Assert.Equal("/{proxy+}", resourcePathElement.GetString());
+
         Assert.True(
             requestContextElement.TryGetProperty("HttpMethod", out JsonElement requestContextHttpMethodElement));
         Assert.Equal("POST", requestContextHttpMethodElement.GetString());
 
         Assert.True(requestContextElement.TryGetProperty("ApiId", out JsonElement apiIdElement));
         Assert.Equal("1234567890", apiIdElement.GetString());
+
+        Assert.True(requestContextElement.TryGetProperty("RequestTime", out JsonElement requestTimeElement));
+        Assert.Equal("09/Apr/2015:12:34:56 +0000", requestTimeElement.GetString());
+
+        Assert.True(requestContextElement.TryGetProperty("RequestTimeEpoch", out JsonElement requestTimeEpochElement));
+        Assert.Equal(1428582896000, requestTimeEpochElement.GetInt64());
 
         Assert.True(messageElement.TryGetProperty("Body", out JsonElement bodyElement));
         Assert.Equal("hello world", bodyElement.GetString());
@@ -269,49 +242,5 @@ public class FunctionTests
         
         Assert.False(root.TryGetProperty("Test1", out JsonElement _));
         Assert.False(root.TryGetProperty("Test2", out JsonElement _));
-    }
-    
-    private async Task UpdateFunctionHandler(string functionName, string handler)
-    {
-        var updateRequest = new UpdateFunctionConfigurationRequest
-        {
-            FunctionName = functionName,
-            Handler = handler
-        };
-
-        var updateResponse = await _lambdaClient.UpdateFunctionConfigurationAsync(updateRequest);
-        
-        if (updateResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
-        {
-            Console.WriteLine($"Successfully updated the handler for function {functionName} to {handler}");
-        }
-        else
-        {
-            Assert.Fail(
-                $"Failed to update the handler for function {functionName}. Status code: {updateResponse.HttpStatusCode}");
-        }
-        
-        //wait a few seconds for the changes to take effect
-        await Task.Delay(1000);
-    }
-    
-    private async Task ResetFunction(string functionName)
-    {
-        var updateRequest = new UpdateFunctionConfigurationRequest
-        {
-            FunctionName = functionName,
-            Environment = new Environment 
-            {
-                Variables = 
-                {
-                    {"Updated", DateTime.UtcNow.ToString("G")}
-                }
-            }
-        };
-
-        await _lambdaClient.UpdateFunctionConfigurationAsync(updateRequest);
-        
-        //wait a few seconds for the changes to take effect
-        await Task.Delay(1000);
     }
 }

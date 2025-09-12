@@ -34,30 +34,31 @@ internal class ByteArrayConverter : JsonConverter<byte[]>
     /// <exception cref="NotSupportedException"></exception>
     public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-            return [];
-            
-        if (reader.TokenType == JsonTokenType.String)
-            return Convert.FromBase64String(reader.GetString()!);
-            
-        throw new JsonException("Expected string value for byte array");
+        throw new NotSupportedException("Deserializing ByteArray is not allowed");
     }
 
     /// <summary>
     ///     Write the exception value as JSON. 
     /// </summary>
     /// <param name="writer">The unicode JsonWriter.</param>
-    /// <param name="value"></param>
+    /// <param name="values">The byte array.</param>
     /// <param name="options">The JsonSerializer options.</param>
-    public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, byte[] values, JsonSerializerOptions options)
     {
-        if (value == null)
+        if (values == null)
         {
             writer.WriteNullValue();
-            return;
         }
-            
-        string base64 = Convert.ToBase64String(value);
-        writer.WriteStringValue(base64);
+        else
+        {
+            writer.WriteStartArray();
+
+            foreach (var value in values)
+            {
+                writer.WriteNumberValue(value);
+            }
+
+            writer.WriteEndArray();
+        }
     }
 }

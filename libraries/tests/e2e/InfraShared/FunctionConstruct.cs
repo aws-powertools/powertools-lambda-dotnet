@@ -27,7 +27,6 @@ public class FunctionConstruct : Construct
             Tracing = Tracing.ACTIVE,
             Timeout = Duration.Seconds(10),
             Environment = props.Environment,
-            LoggingFormat = LoggingFormat.TEXT,
             Code = Code.FromCustomCommand(distPath,
                 [
                     command

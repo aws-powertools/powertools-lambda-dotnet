@@ -1,5 +1,21 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -10,8 +26,6 @@ using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Serializers;
 using AWS.Lambda.Powertools.Logging.Tests.Handlers;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReturnsExtensions;
@@ -33,12 +47,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
         [Fact]
         public void Serialize_ShouldHandleEnumValues()
         {
-            var consoleOut = Substitute.For<IConsoleWrapper>();
-            Logger.Configure(options =>
-            {
-                options.LogOutput = consoleOut;
-            });
-            
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
             var lambdaContext = new TestLambdaContext
             {
                 FunctionName = "funtionName",
@@ -58,7 +68,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 i.Contains("\"message\":\"Dog\"")
             ));
 
-            var json = JsonSerializer.Serialize(Pet.Dog, new PowertoolsLoggingSerializer().GetSerializerOptions());
+            var json = JsonSerializer.Serialize(Pet.Dog, PowertoolsLoggingSerializer.GetSerializerOptions());
             Assert.Contains("Dog", json);
         }
 
@@ -96,6 +106,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
 
             var configurations = Substitute.For<IPowertoolsConfigurations>();
             configurations.Service.Returns(service);
+
+            var loggerConfiguration = new LoggerConfiguration
+            {
+                Service = service,
+                MinimumLevel = minimumLevel,
+                LoggerOutputCase = LoggerOutputCase.PascalCase
+            };
 
             var globalExtraKeys = new Dictionary<string, object>
             {
@@ -156,20 +173,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 }
             };
 
-            var systemWrapper = Substitute.For<IConsoleWrapper>();
             logFormatter.FormatLogEntry(new LogEntry()).ReturnsForAnyArgs(formattedLogEntry);
-            
-            var config = new PowertoolsLoggerConfiguration
-            {
-                Service = service,
-                MinimumLogLevel = minimumLevel,
-                LoggerOutputCase = LoggerOutputCase.PascalCase,
-                LogFormatter = logFormatter,
-                LogOutput = systemWrapper
-            };
+            Logger.UseFormatter(logFormatter);
 
+            var systemWrapper = Substitute.For<ISystemWrapper>();
 
-            var provider = new PowertoolsLoggerProvider(config, configurations);
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
             var logger = provider.CreateLogger(loggerName);
 
             var scopeExtraKeys = new Dictionary<string, object>
@@ -179,7 +188,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             };
 
             // Act
-            logger.LogInformation(message, scopeExtraKeys);
+            logger.LogInformation(scopeExtraKeys, message);
 
             // Assert
             logFormatter.Received(1).FormatLogEntry(Arg.Is<LogEntry>
@@ -212,20 +221,14 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                     x.LambdaContext.AwsRequestId == lambdaContext.AwsRequestId
             ));
 
-            systemWrapper.Received(1).WriteLine(JsonSerializer.Serialize(formattedLogEntry));
+            systemWrapper.Received(1).LogLine(JsonSerializer.Serialize(formattedLogEntry));
         }
 
         [Fact]
         public void Should_Log_CustomFormatter_When_Decorated()
         {
-            ResetAllState();
-            var consoleOut = Substitute.For<IConsoleWrapper>();
-            Logger.Configure(options =>
-            {
-                options.LogOutput = consoleOut;
-                options.LogFormatter = new CustomLogFormatter();
-            });
-            
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
             var lambdaContext = new TestLambdaContext
             {
                 FunctionName = "funtionName",
@@ -235,38 +238,24 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 MemoryLimitInMB = 128
             };
 
-            // Logger.UseFormatter(new CustomLogFormatter());
+            Logger.UseFormatter(new CustomLogFormatter());
             _testHandler.TestCustomFormatterWithDecorator("test", lambdaContext);
 
             // serializer works differently in .net 8 and AOT. In .net 6 it writes properties that have null
             // in .net 8 it removes null properties
 
-#if NET8_0_OR_GREATER
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i.Contains(
                         "\"correlation_ids\":{\"aws_request_id\":\"requestId\"},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_mb\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\""))
             );
-#else
-            consoleOut.Received(1).WriteLine(
-                Arg.Is<string>(i =>
-                    i.Contains(
-                    "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":\"requestId\",\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":\"funtionName\",\"arn\":\"function::arn\",\"memory_limit_in_m_b\":128,\"version\":\"version\",\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\""))
-            );
-#endif
         }
 
         [Fact]
         public void Should_Log_CustomFormatter_When_No_Decorated_Just_Log()
         {
-            ResetAllState();
-            var consoleOut = Substitute.For<IConsoleWrapper>();
-            Logger.Configure(options =>
-            {
-                options.LogOutput = consoleOut;
-                options.LogFormatter = new CustomLogFormatter();
-            });
-            
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
             var lambdaContext = new TestLambdaContext
             {
                 FunctionName = "funtionName",
@@ -276,82 +265,44 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
                 MemoryLimitInMB = 128
             };
 
-            // Logger.UseFormatter(new CustomLogFormatter());
+            Logger.UseFormatter(new CustomLogFormatter());
 
             _testHandler.TestCustomFormatterNoDecorator("test", lambdaContext);
 
             // serializer works differently in .net 8 and AOT. In .net 6 it writes properties that have null
             // in .net 8 it removes null properties
 
-#if NET8_0_OR_GREATER
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i ==
                     "{\"message\":\"test\",\"service\":\"service_undefined\",\"correlation_ids\":{},\"lambda_function\":{\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0}}")
             );
-#else
-            consoleOut.Received(1).WriteLine(
-                Arg.Is<string>(i =>
-                    i ==
-                    "{\"message\":\"test\",\"service\":\"service_undefined\",\"correlation_ids\":{\"aws_request_id\":null,\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":null,\"arn\":null,\"memory_limit_in_m_b\":null,\"version\":null,\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0}}")
-            );
-#endif
         }
 
         [Fact]
         public void Should_Log_CustomFormatter_When_Decorated_No_Context()
         {
-            var consoleOut = Substitute.For<IConsoleWrapper>();
-            Logger.Configure(options =>
-            {
-                options.LogOutput = consoleOut;
-                options.LogFormatter = new CustomLogFormatter();
-            });
-            
-            // Logger.UseFormatter(new CustomLogFormatter());
+            var consoleOut = Substitute.For<StringWriter>();
+            SystemWrapper.Instance.SetOut(consoleOut);
+
+            Logger.UseFormatter(new CustomLogFormatter());
 
             _testHandler.TestCustomFormatterWithDecoratorNoContext("test");
 
-#if NET8_0_OR_GREATER
             consoleOut.Received(1).WriteLine(
                 Arg.Is<string>(i =>
                     i ==
                     "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{},\"lambda_function\":{\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
             );
-#else
-            consoleOut.Received(1).WriteLine(
-                Arg.Is<string>(i =>
-                    i ==
-                    "{\"message\":\"test\",\"service\":\"my_service\",\"correlation_ids\":{\"aws_request_id\":null,\"x_ray_trace_id\":null,\"correlation_id\":null},\"lambda_function\":{\"name\":null,\"arn\":null,\"memory_limit_in_m_b\":null,\"version\":null,\"cold_start\":true},\"level\":\"Information\",\"timestamp\":\"2024-01-01T00:00:00.0000000\",\"logger\":{\"name\":\"AWS.Lambda.Powertools.Logging.Logger\",\"sample_rate\":0.2}}")
-            );
-#endif
         }
 
         public void Dispose()
         {
-            ResetAllState();
-        }
-
-        private static void ResetAllState()
-        {
-            // Clear environment variables
-            Environment.SetEnvironmentVariable("POWERTOOLS_LOGGER_CASE", null);
-            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
-            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", null);
-
-            // Reset all logging components
+            Logger.UseDefaultFormatter();
+            Logger.RemoveAllKeys();
+            LoggingLambdaContext.Clear();
             LoggingAspect.ResetForTest();
-            Logger.Reset();
-            PowertoolsLoggingBuilderExtensions.ResetAllProviders();
-            LoggerFactoryHolder.Reset();
-
-            // Force default configuration
-            var config = new PowertoolsLoggerConfiguration
-            {
-                MinimumLogLevel = LogLevel.Information,
-                LoggerOutputCase = LoggerOutputCase.SnakeCase
-            };
-            PowertoolsLoggingBuilderExtensions.UpdateConfiguration(config);
+            PowertoolsLoggingSerializer.ClearOptions();
         }
     }
 
@@ -375,16 +326,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             logFormatter.FormatLogEntry(new LogEntry()).ReturnsNullForAnyArgs();
             Logger.UseFormatter(logFormatter);
 
-            var systemWrapper = Substitute.For<IConsoleWrapper>();
-            var config = new PowertoolsLoggerConfiguration
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+            var loggerConfiguration = new LoggerConfiguration
             {
                 Service = service,
-                MinimumLogLevel = LogLevel.Information,
-                LoggerOutputCase = LoggerOutputCase.PascalCase,
-                LogFormatter = logFormatter
+                MinimumLevel = LogLevel.Information,
+                LoggerOutputCase = LoggerOutputCase.PascalCase
             };
 
-            var provider = new PowertoolsLoggerProvider(config, configurations);
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
             var logger = provider.CreateLogger(loggerName);
 
             // Act
@@ -393,7 +343,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             // Assert
             Assert.Throws<LogFormatException>(Act);
             logFormatter.Received(1).FormatLogEntry(Arg.Any<LogEntry>());
-            systemWrapper.DidNotReceiveWithAnyArgs().WriteLine(Arg.Any<string>());
+            systemWrapper.DidNotReceiveWithAnyArgs().LogLine(Arg.Any<string>());
 
             //Clean up
             Logger.UseDefaultFormatter();
@@ -419,17 +369,17 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
 
             var logFormatter = Substitute.For<ILogFormatter>();
             logFormatter.FormatLogEntry(new LogEntry()).ThrowsForAnyArgs(new Exception(errorMessage));
+            Logger.UseFormatter(logFormatter);
 
-            var systemWrapper = Substitute.For<IConsoleWrapper>();
-            var config = new PowertoolsLoggerConfiguration
+            var systemWrapper = Substitute.For<ISystemWrapper>();
+            var loggerConfiguration = new LoggerConfiguration
             {
                 Service = service,
-                MinimumLogLevel = LogLevel.Information,
-                LoggerOutputCase = LoggerOutputCase.PascalCase,
-                LogFormatter = logFormatter
+                MinimumLevel = LogLevel.Information,
+                LoggerOutputCase = LoggerOutputCase.PascalCase
             };
 
-            var provider = new PowertoolsLoggerProvider(config, configurations);
+            var provider = new LoggerProvider(loggerConfiguration, configurations, systemWrapper);
             var logger = provider.CreateLogger(loggerName);
 
             // Act
@@ -438,7 +388,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Formatter
             // Assert
             Assert.Throws<LogFormatException>(Act);
             logFormatter.Received(1).FormatLogEntry(Arg.Any<LogEntry>());
-            systemWrapper.DidNotReceiveWithAnyArgs().WriteLine(Arg.Any<string>());
+            systemWrapper.DidNotReceiveWithAnyArgs().LogLine(Arg.Any<string>());
 
             //Clean up
             Logger.UseDefaultFormatter();

@@ -106,25 +106,9 @@ internal class IdempotencyAspectHandler<T>
             // already exists. If it succeeds, there's no need to call getRecord.
             await _persistenceStore.SaveInProgress(_data, DateTimeOffset.UtcNow, GetRemainingTimeInMillis());
         }
-        catch (IdempotencyItemAlreadyExistsException ex)
+        catch (IdempotencyItemAlreadyExistsException)
         {
-            DataRecord record;
-    
-            if(ex.Record != null)
-            {
-                // If the error includes the existing record, we can use it to validate
-                // the record being processed and cache it in memory.
-                var existingRecord = _persistenceStore.ProcessExistingRecord(ex.Record, _data);
-                record = existingRecord;
-            }
-            else
-            {
-                // If the error doesn't include the existing record, we need to fetch
-                // it from the persistence layer. In doing so, we also call the processExistingRecord
-                // method to validate the record and cache it in memory.
-                record = await GetIdempotencyRecord();
-            }
-    
+            var record = await GetIdempotencyRecord();
             return await HandleForStatus(record);
         }
         catch (IdempotencyKeyException)
@@ -207,24 +191,6 @@ internal class IdempotencyAspectHandler<T>
                     if (result is null)
                     {
                         throw new IdempotencyPersistenceLayerException("Unable to cast function response as " + typeof(T).Name);
-                    }
-                    // Response hook logic
-                    var responseHook = Idempotency.Instance.IdempotencyOptions?.ResponseHook;
-                    if (responseHook != null)
-                    {
-                        try
-                        {
-                            var hooked = responseHook(result, record);
-                            if (hooked is T typedHooked)
-                            {
-                                return Task.FromResult(typedHooked);
-                            }
-                            // If hook returns wrong type, fallback to original result
-                        }
-                        catch (Exception)
-                        {
-                            // If hook throws, fallback to original result
-                        }
                     }
                     return Task.FromResult(result);
                 }

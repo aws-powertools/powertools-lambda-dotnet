@@ -1,9 +1,26 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
+using Amazon.Lambda.TestUtilities;
 
 namespace AWS.Lambda.Powertools.Metrics.Tests.Handlers;
 
@@ -22,67 +39,25 @@ public class FunctionHandler
         Metrics.AddMetric("TestMetric", 1, MetricUnit.Count);
     }
     
-    [Metrics(Namespace = "dotnet-powertools-test", Service = "ServiceName", CaptureColdStart = true)]
+    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
     public void AddMultipleDimensions()
     {
-        Metrics.PushSingleMetric("SingleMetric1", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            dimensions: new Dictionary<string, string> {
-                { "Default1", "SingleMetric1" }
-            });
-        
-        Metrics.PushSingleMetric("SingleMetric2", 1, MetricUnit.Count, resolution: MetricResolution.High,  nameSpace: "ns2",
-            dimensions: new Dictionary<string, string> {
-                { "Default1", "SingleMetric2" },
-                { "Default2", "SingleMetric2" }
-            });
-        Metrics.AddMetric("AddMetric", 1, MetricUnit.Count, MetricResolution.High);
-        Metrics.AddMetric("AddMetric2", 1, MetricUnit.Count, MetricResolution.High);
-    }
-    
-    [Metrics(Namespace = "ExampleApplication")]
-    public void PushSingleMetricWithNamespace()
-    {
-        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            dimensions: new Dictionary<string, string> {
-                { "Default", "SingleMetric" }
-            });
-    }
-    
-    [Metrics(Namespace = "ExampleApplication")]
-    public void PushSingleMetricNoDefaultDimensions()
-    {
-        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count);
-    }
-    
-    [Metrics(Namespace = "ExampleApplication")]
-    public void PushSingleMetricDefaultDimensions()
-    {
-        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
-        {
-            { "Default", "SingleMetric" }
+        Metrics.SetDefaultDimensions(new Dictionary<string, string> {
+            { "Default", "Initial" }
         });
-        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, dimensions: Metrics.DefaultDimensions );
-    }
-    
-    [Metrics]
-    public void PushSingleMetricWithEnvNamespace()
-    {
-        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            dimensions: new Dictionary<string, string> {
-                { "Default", "SingleMetric" }
+        Metrics.PushSingleMetric("Lambda Execute", 1, MetricUnit.Count, metricResolution: MetricResolution.High, nameSpace: "ns1",
+            defaultDimensions: new Dictionary<string, string> {
+                { "Type", "Start" }
             });
         
-        Metrics.PushSingleMetric("SingleMetric2", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            service: "service1",
-            dimensions: new Dictionary<string, string> {
-                { "Default", "SingleMetric" }
+        Metrics.PushSingleMetric("Lambda Execute", 1, MetricUnit.Count, metricResolution: MetricResolution.High,  nameSpace: "ns2",
+            defaultDimensions: new Dictionary<string, string> {
+                { "Type", "Start" },
+                { "SessionId", "Unset" }
             });
-
-        Metrics.PushSingleMetric("SingleMetric3", 1, MetricUnit.Count, resolution: MetricResolution.High,
-            service: "service2",
-            dimensions: new Dictionary<string, string> {
-                { "Default", "SingleMetric" }
-            });
+        Metrics.AddMetric("Lambda Execute", 1, MetricUnit.Count, MetricResolution.High);
+        Metrics.AddDimension("SessionId", "MySessionId");
+        Metrics.AddDimension("Type", "Start");
     }
 
     [Metrics(Namespace = "dotnet-powertools-test", Service = "testService")]
@@ -224,139 +199,5 @@ public class FunctionHandler
     public void HandleWithParamAndLambdaContext(string input, ILambdaContext context)
     {
         
-    }
-    
-    [Metrics(Namespace = "ns", Service = "svc", RaiseOnEmptyMetrics = true)]
-    public void HandlerRaiseOnEmptyMetrics()
-    {
-        
-    }
-    
-    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true)]
-    public void HandleOnlyDimensionsInColdStart(ILambdaContext context)
-    {
-        Metrics.AddMetric("MyMetric", 1);
-    }
-    
-    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true, FunctionName = "MyFunction")]
-    public void HandleFunctionNameWithContext(ILambdaContext context)
-    {
-        
-    }
-    
-    [Metrics(Namespace = "ns", Service = "svc", CaptureColdStart = true, FunctionName = "MyFunction")]
-    public void HandleFunctionNameNoContext()
-    {
-        
-    }
-    
-    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
-    public void AddMultipleDimensionsInSameSet()
-    {
-        // Add multiple dimensions at once
-        Metrics.AddDimensions(
-            ("Environment", "test"), 
-            ("Region", "us-west-2")
-        );
-    
-        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
-    }
-
-    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
-    public void AddEmptyDimensions()
-    {
-        // Add empty dimensions array
-        Metrics.AddDimensions();
-    
-        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
-    }
-
-    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
-    public void AddDimensionsWithInvalidKey()
-    {
-        // Add dimension with null key
-        Metrics.AddDimensions(("", "value"));
-    }
-
-    [Metrics(Namespace = "dotnet-powertools-test", Service = "testService", CaptureColdStart = true)]
-    public void AddDimensionsWithInvalidValue()
-    {
-        // Add dimension with null value
-        Metrics.AddDimensions(("key", ""));
-    }
-    
-    public void AddDimensionsWithOverwrite()
-    {
-        Metrics.SetNamespace("dotnet-powertools-test");
-        Metrics.SetService("testService");
-
-        // Add single dimension
-        Metrics.AddDimension("dimension1", "A");
-
-        // Then add multiple dimensions, including the same key
-        Metrics.AddDimensions(
-            ("dimension1", "B"),
-            ("dimension2", "2")
-        );
-
-        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
-        Metrics.Flush();
-    }
-
-    public void AddDimensionsWithDefaultDimensions()
-    {
-        Metrics.SetNamespace("dotnet-powertools-test");
-        Metrics.SetService("testService");
-    
-        // Set default dimensions
-        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
-        { 
-            { "environment", "prod" } 
-        });
-
-        // Add multiple dimensions
-        Metrics.AddDimensions(
-            ("dimension1", "1"),
-            ("dimension2", "2")
-        );
-
-        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
-        Metrics.Flush();
-    }
-
-    public void AddDefaultDimensionsAtRuntime()
-    {
-        Metrics.SetNamespace("dotnet-powertools-test");
-        Metrics.SetService("testService");
-    
-        // Set initial default dimensions
-        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
-        { 
-            { "environment", "prod" } 
-        });
-
-        // Add first set of dimensions
-        Metrics.AddDimensions(
-            ("dimension1", "1"),
-            ("dimension2", "2")
-        );
-        Metrics.AddMetric("FirstMetric", 1.0, MetricUnit.Count);
-        Metrics.Flush();
-
-        // Add more default dimensions
-        Metrics.SetDefaultDimensions(new Dictionary<string, string> 
-        { 
-            { "environment", "prod" },
-            { "tenantId", "1" }
-        });
-
-        // Add second set of dimensions
-        Metrics.AddDimensions(
-            ("foo", "1"),
-            ("bar", "2")
-        );
-        Metrics.AddMetric("SecondMetric", 1.0, MetricUnit.Count);
-        
-        Metrics.Flush();
     }
 }

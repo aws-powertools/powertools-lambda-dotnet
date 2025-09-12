@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 using System;
 using System.IO;
 using System.Text.Json;
@@ -524,7 +539,7 @@ public class BasePersistenceStoreTests
         // Assert
         generatedHash.Should().Be(expectedHash);
     }
-
+    
     [Fact]
     public async Task When_Key_Prefix_Set_Should_Create_With_Prefix()
     {
@@ -551,9 +566,7 @@ public class BasePersistenceStoreTests
         var eventJson = File.ReadAllText("./resources/apigw_event.json");
         try
         {
-#if NET8_0_OR_GREATER
             IdempotencySerializer.AddTypeInfoResolver(TestJsonSerializerContext.Default);
-#endif
             var request = IdempotencySerializer.Deserialize<APIGatewayProxyRequest>(eventJson);
             return request!;
         }
@@ -562,36 +575,5 @@ public class BasePersistenceStoreTests
             Console.WriteLine(e);
             throw;
         }
-    }
-
-    [Fact]
-    public async Task ProcessExistingRecord_WhenValidRecord_ShouldReturnRecordAndSaveToCache()
-    {
-        // Arrange
-        var persistenceStore = new InMemoryPersistenceStore();
-        var request = LoadApiGatewayProxyRequest();
-        LRUCache<string, DataRecord> cache = new(2);
-
-        persistenceStore.Configure(new IdempotencyOptionsBuilder()
-            .WithUseLocalCache(true)
-            .Build(), null, null, cache);
-
-        var now = DateTimeOffset.UtcNow;
-        var existingRecord = new DataRecord(
-            "testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6",
-            DataRecord.DataRecordStatus.COMPLETED,
-            now.AddSeconds(3600).ToUnixTimeSeconds(),
-            "existing response",
-            null);
-
-        // Act
-        var result =
-            persistenceStore.ProcessExistingRecord(existingRecord, JsonSerializer.SerializeToDocument(request)!);
-
-        // Assert
-        result.Should().Be(existingRecord);
-        cache.Count.Should().Be(1);
-        cache.TryGet("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6", out var cachedRecord).Should().BeTrue();
-        cachedRecord.Should().Be(existingRecord);
     }
 }

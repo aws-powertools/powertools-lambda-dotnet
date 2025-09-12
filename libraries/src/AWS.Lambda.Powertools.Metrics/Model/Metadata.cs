@@ -1,4 +1,19 @@
-﻿using System;
+﻿/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -114,18 +129,9 @@ public class Metadata
     ///     Adds new Dimension
     /// </summary>
     /// <param name="dimension">Dimension to add</param>
-    internal void AddDimension(DimensionSet dimension)
+    internal void AddDimensionSet(DimensionSet dimension)
     {
         _metricDirective.AddDimension(dimension);
-    }
-    
-    /// <summary>
-    ///     Adds new List of Dimensions
-    /// </summary>
-    /// <param name="dimension">Dimensions to add</param>
-    internal void AddDimensionSet(List<DimensionSet> dimension)
-    {
-        _metricDirective.AddDimensionSet(dimension);
     }
 
     /// <summary>
@@ -177,13 +183,5 @@ public class Metadata
     internal void ClearDefaultDimensions()
     {
         _metricDirective.ClearDefaultDimensions();
-    }
-    
-    /// <summary>
-    ///     Retrieves default dimensions list
-    /// </summary>
-    internal List<DimensionSet> GetDefaultDimensions()
-    {
-        return _metricDirective.DefaultDimensions;
     }
 }
