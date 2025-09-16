@@ -22,13 +22,12 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests;
 [Collection("Sequential")]
 public class TypedKinesisEventBatchProcessorTests
 {
-    private readonly IPowertoolsConfigurations _mockConfigurations;
     private readonly TypedKinesisEventBatchProcessor _processor;
 
     public TypedKinesisEventBatchProcessorTests()
     {
-        _mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
-        _processor = new TypedKinesisEventBatchProcessor(_mockConfigurations);
+        Substitute.For<IPowertoolsConfigurations>();
+        _processor = new TypedKinesisEventBatchProcessor();
     }
 
     [Fact]

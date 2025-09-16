@@ -1,5 +1,3 @@
-#if NET8_0_OR_GREATER
-
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -40,6 +38,4 @@ public class UASourceGenerator : IIncrementalGenerator
         });
     }
 }
-
-#endif
 

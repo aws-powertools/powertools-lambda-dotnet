@@ -7,7 +7,6 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
-using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Sqs;
 
@@ -20,28 +19,16 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
     private readonly IRecordDataExtractor<SQSEvent.SQSMessage> _recordDataExtractor;
 
 
-
     /// <summary>
     /// Initializes a new instance of the TypedSqsBatchProcessor class.
     /// </summary>
-    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
     /// <param name="recordDataExtractor">The record data extractor. If null, uses SqsRecordDataExtractor.Instance.</param>
-    public TypedSqsBatchProcessor(
-        IPowertoolsConfigurations powertoolsConfigurations,
-        IDeserializationService deserializationService = null,
+    public TypedSqsBatchProcessor(IDeserializationService deserializationService = null,
         IRecordDataExtractor<SQSEvent.SQSMessage> recordDataExtractor = null) 
-        : base(powertoolsConfigurations)
     {
         _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
         _recordDataExtractor = recordDataExtractor ?? SqsRecordDataExtractor.Instance;
-    }
-
-    /// <summary>
-    /// Default constructor for when consumers create a custom typed batch processor.
-    /// </summary>
-    protected TypedSqsBatchProcessor() : this(PowertoolsConfigurations.Instance)
-    {
     }
 
     /// <inheritdoc />

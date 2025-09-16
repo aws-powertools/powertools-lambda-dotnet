@@ -20,13 +20,12 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests;
 [Collection("Sequential")]
 public class TypedSqsBatchProcessorTests
 {
-    private readonly IPowertoolsConfigurations _mockConfigurations;
     private readonly TypedSqsBatchProcessor _processor;
 
     public TypedSqsBatchProcessorTests()
     {
-        _mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
-        _processor = new TypedSqsBatchProcessor(_mockConfigurations);
+        Substitute.For<IPowertoolsConfigurations>();
+        _processor = new TypedSqsBatchProcessor();
     }
 
     [Fact]
@@ -561,9 +560,7 @@ public class TypedSqsBatchProcessorTests
         var mockRecordDataExtractor = Substitute.For<IRecordDataExtractor<SQSEvent.SQSMessage>>();
 
         // Act
-        var processor = new TypedSqsBatchProcessor(
-            _mockConfigurations,
-            mockDeserializationService,
+        var processor = new TypedSqsBatchProcessor(mockDeserializationService,
             mockRecordDataExtractor);
 
         // Assert
