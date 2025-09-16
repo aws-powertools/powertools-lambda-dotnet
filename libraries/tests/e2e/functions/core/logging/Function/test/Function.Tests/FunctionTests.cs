@@ -42,8 +42,6 @@ public class FunctionTests
     }
 
     [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_logging")]
-    [InlineData("E2ETestLambda_ARM_NET6_logging")]
     [InlineData("E2ETestLambda_X64_NET8_logging")]
     [InlineData("E2ETestLambda_ARM_NET8_logging")]
     public async Task FunctionTest(string functionName)
@@ -53,8 +51,6 @@ public class FunctionTests
     }
     
     [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_logging")]
-    [InlineData("E2ETestLambda_ARM_NET6_logging")]
     [InlineData("E2ETestLambda_X64_NET8_logging")]
     [InlineData("E2ETestLambda_ARM_NET8_logging")]
     public async Task StaticConfigurationFunctionTest(string functionName)
@@ -64,8 +60,6 @@ public class FunctionTests
     }
     
     [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_logging")]
-    [InlineData("E2ETestLambda_ARM_NET6_logging")]
     [InlineData("E2ETestLambda_X64_NET8_logging")]
     [InlineData("E2ETestLambda_ARM_NET8_logging")]
     public async Task StaticILoggerConfigurationFunctionTest(string functionName)
@@ -75,8 +69,6 @@ public class FunctionTests
     }
     
     [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_logging")]
-    [InlineData("E2ETestLambda_ARM_NET6_logging")]
     [InlineData("E2ETestLambda_X64_NET8_logging")]
     [InlineData("E2ETestLambda_ARM_NET8_logging")]
     public async Task ILoggerConfigurationFunctionTest(string functionName)
@@ -86,8 +78,6 @@ public class FunctionTests
     }
     
     [Theory]
-    [InlineData("E2ETestLambda_X64_NET6_logging")]
-    [InlineData("E2ETestLambda_ARM_NET6_logging")]
     [InlineData("E2ETestLambda_X64_NET8_logging")]
     [InlineData("E2ETestLambda_ARM_NET8_logging")]
     public async Task ILoggerBuilderFunctionTest(string functionName)

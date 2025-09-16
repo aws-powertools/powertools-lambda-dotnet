@@ -42,12 +42,10 @@ internal class JsonTransformer : ITransformer
     /// <param name="value">JSON string.</param>
     /// <typeparam name="T">JSON value type.</typeparam>
     /// <returns>JSON value.</returns>
-#if NET6_0_OR_GREATER
     [System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
         Justification = "Types are expected to be known at compile time")]
     [System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
         Justification = "Types are expected to be preserved")]
-#endif
     public T? Transform<T>(string value)
     {
         if (typeof(T) == typeof(string))

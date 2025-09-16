@@ -57,8 +57,6 @@ public class FunctionTests
     [Theory]
     [InlineData("E2ETestLambda_X64_NET8_idempotency")]
     [InlineData("E2ETestLambda_ARM_NET8_idempotency")]
-    [InlineData("E2ETestLambda_X64_NET6_idempotency")]
-    [InlineData("E2ETestLambda_ARM_NET6_idempotency")]
     public async Task IdempotencyPayloadSubsetTest(string functionName)
     {
         _tableName = "IdempotencyTable";
@@ -69,8 +67,6 @@ public class FunctionTests
     [Theory]
     [InlineData("E2ETestLambda_X64_NET8_idempotency")]
     [InlineData("E2ETestLambda_ARM_NET8_idempotency")]
-    [InlineData("E2ETestLambda_X64_NET6_idempotency")]
-    [InlineData("E2ETestLambda_ARM_NET6_idempotency")]
     public async Task IdempotencyAttributeTest(string functionName)
     {
         _tableName = "IdempotencyTable";
@@ -81,8 +77,6 @@ public class FunctionTests
     [Theory]
     [InlineData("E2ETestLambda_X64_NET8_idempotency")]
     [InlineData("E2ETestLambda_ARM_NET8_idempotency")]
-    [InlineData("E2ETestLambda_X64_NET6_idempotency")]
-    [InlineData("E2ETestLambda_ARM_NET6_idempotency")]
     public async Task IdempotencyHandlerTest(string functionName)
     {
         _tableName = "IdempotencyTable";
@@ -93,8 +87,6 @@ public class FunctionTests
     [Theory]
     [InlineData("E2ETestLambda_X64_NET8_idempotency")]
     [InlineData("E2ETestLambda_ARM_NET8_idempotency")]
-    [InlineData("E2ETestLambda_X64_NET6_idempotency")]
-    [InlineData("E2ETestLambda_ARM_NET6_idempotency")]
     public async Task IdempotencyHandlerCustomKey(string functionName)
     {
         _tableName = "IdempotencyTable";

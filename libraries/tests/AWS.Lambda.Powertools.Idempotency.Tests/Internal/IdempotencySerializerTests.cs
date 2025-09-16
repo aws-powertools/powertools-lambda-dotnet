@@ -14,9 +14,7 @@ public class IdempotencySerializerTests
 {
     public IdempotencySerializerTests()
     {
-#if NET8_0_OR_GREATER
         IdempotencySerializer.AddTypeInfoResolver(TestJsonSerializerContext.Default);
-#endif
     }
 
     [Fact]
@@ -58,8 +56,6 @@ public class IdempotencySerializerTests
         // Assert
         Assert.True(options.PropertyNameCaseInsensitive);
     }
-
-#if NET8_0_OR_GREATER
 
     [Fact]
     public void GetTypeInfo_UnknownType_ThrowsException()
@@ -155,5 +151,4 @@ public class IdempotencySerializerTests
         Assert.Same(newOptions, options);
     }
     
-#endif
 }

@@ -8,10 +8,8 @@ using AWS.Lambda.Powertools.Tracing.Internal;
 using NSubstitute;
 using Xunit;
 
-#if NET8_0_OR_GREATER
 using AWS.Lambda.Powertools.Tracing.Serializers;
 using AWS.Lambda.Powertools.Tracing.Tests.Serializers;
-#endif
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
@@ -98,7 +96,6 @@ public class TracingAspectTests
         _mockXRayRecorder.Received(1).EndSubsegment();
     }
 
-#if NET8_0_OR_GREATER
     [Fact]
     public void Around_SyncMethod_HandlesResponseAndSegmentCorrectly_AOT()
     {
@@ -162,7 +159,6 @@ public class TracingAspectTests
             PowertoolsTracingSerializer.Serialize(result));
         _mockXRayRecorder.Received(1).EndSubsegment();
     }
-#endif
 
     [Fact]
     public async Task Around_VoidAsyncMethod_HandlesSegmentCorrectly()

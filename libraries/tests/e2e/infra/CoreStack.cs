@@ -44,8 +44,6 @@ namespace Infra
 
             CreateFunctionConstruct(new ConstructArgs(this, $"{utility}_X64_net8", Runtime.DOTNET_8, Architecture.X86_64, $"E2ETestLambda_X64_NET8_{utility}", basePath, distPath));
             CreateFunctionConstruct(new ConstructArgs(this, $"{utility}_arm_net8", Runtime.DOTNET_8, Architecture.ARM_64, $"E2ETestLambda_ARM_NET8_{utility}", basePath, distPath));
-            CreateFunctionConstruct(new ConstructArgs(this, $"{utility}_X64_net6", Runtime.DOTNET_6, Architecture.X86_64, $"E2ETestLambda_X64_NET6_{utility}", basePath, distPath));
-            CreateFunctionConstruct(new ConstructArgs(this, $"{utility}_arm_net6", Runtime.DOTNET_6, Architecture.ARM_64, $"E2ETestLambda_ARM_NET6_{utility}", basePath, distPath));
         }
 
         private void CreateFunctionConstruct(ConstructArgs constructArgs)

@@ -40,7 +40,7 @@ public class IdempotencyOptionsBuilder
     /// <summary>
     /// Default Hash function
     /// </summary>
-    private string _hashFunction = "MD5";
+    private readonly string _hashFunction = "MD5";
 
     /// <summary>
     /// Response hook function
@@ -160,15 +160,9 @@ public class IdempotencyOptionsBuilder
     /// </summary>
     /// <param name="hashFunction">Can be any algorithm supported by HashAlgorithm.Create</param>
     /// <returns>the instance of the builder (to chain operations)</returns>
-#if NET8_0_OR_GREATER
     [Obsolete("Idempotency uses MD5 and does not support other hash algorithms.")]
-#endif
     public IdempotencyOptionsBuilder WithHashFunction(string hashFunction)
     {
-#if NET6_0
-        // for backward compability keep this code in .net 6
-        _hashFunction = hashFunction;
-#endif
         return this;
     }
 
