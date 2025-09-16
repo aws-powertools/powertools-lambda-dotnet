@@ -32,4 +32,8 @@
         </Compile>
         <Compile Remove="..\AWS.Lambda.Powertools.JMESPath\obj\**"/>
     </ItemGroup>
+    <ItemGroup>
+        <Analyzer Include="SourceGenerators\UASourceGenerator.cs" />
+    </ItemGroup>
+    
 </Project>
