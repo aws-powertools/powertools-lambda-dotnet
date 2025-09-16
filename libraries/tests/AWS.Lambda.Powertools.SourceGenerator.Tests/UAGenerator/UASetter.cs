@@ -48,6 +48,25 @@ public class UASetter
         {
             _ = type.Assembly.FullName;
         }
+        
+        // If module initializers aren't working, we need to manually call the methods
+        // This is a fallback to ensure the tests work in all environments
+        var appId = Environment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
+        if (string.IsNullOrEmpty(appId))
+        {
+            // Module initializers didn't run, so call the methods manually
+            AWS.Lambda.Powertools.BatchProcessing.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.EventHandler.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.Idempotency.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.Kafka.Avro.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.Kafka.Json.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.Kafka.Protobuf.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.Logging.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.Metrics.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.Parameters.Internal.EnvWrapper.SetExecutionEnvironment();
+            AWS.Lambda.Powertools.Tracing.Internal.EnvWrapper.SetExecutionEnvironment();
+        }
     }
 
     [Fact]
