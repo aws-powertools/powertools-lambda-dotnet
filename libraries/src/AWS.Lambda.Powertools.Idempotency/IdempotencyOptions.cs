@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using System;
+
 namespace AWS.Lambda.Powertools.Idempotency;
 
 /// <summary>
@@ -57,32 +59,24 @@ public class IdempotencyOptions
     /// as supported by <see cref="System.Security.Cryptography.HashAlgorithm"/> (eg. SHA1, SHA-256, ...)
     /// </summary>
     public string HashFunction { get; }
+    /// <summary>
+    /// Delegate for manipulating idempotent responses.
+    /// </summary>
+    public Func<object, Persistence.DataRecord, object> ResponseHook { get; }
 
     /// <summary>
     /// Constructor of <see cref="IdempotencyOptions"/>.
     /// </summary>
-    /// <param name="eventKeyJmesPath"></param>
-    /// <param name="payloadValidationJmesPath"></param>
-    /// <param name="throwOnNoIdempotencyKey"></param>
-    /// <param name="useLocalCache"></param>
-    /// <param name="localCacheMaxItems"></param>
-    /// <param name="expirationInSeconds"></param>
-    /// <param name="hashFunction"></param>
-    internal IdempotencyOptions(
-        string eventKeyJmesPath, 
-        string payloadValidationJmesPath, 
-        bool throwOnNoIdempotencyKey, 
-        bool useLocalCache, 
-        int localCacheMaxItems, 
-        long expirationInSeconds, 
-        string hashFunction)
+    /// <param name="builder">The builder containing the configuration values</param>
+    internal IdempotencyOptions(IdempotencyOptionsBuilder builder)
     {
-        EventKeyJmesPath = eventKeyJmesPath;
-        PayloadValidationJmesPath = payloadValidationJmesPath;
-        ThrowOnNoIdempotencyKey = throwOnNoIdempotencyKey;
-        UseLocalCache = useLocalCache;
-        LocalCacheMaxItems = localCacheMaxItems;
-        ExpirationInSeconds = expirationInSeconds;
-        HashFunction = hashFunction;
+        EventKeyJmesPath = builder.EventKeyJmesPath;
+        PayloadValidationJmesPath = builder.PayloadValidationJmesPath;
+        ThrowOnNoIdempotencyKey = builder.ThrowOnNoIdempotencyKey;
+        UseLocalCache = builder.UseLocalCache;
+        LocalCacheMaxItems = builder.LocalCacheMaxItems;
+        ExpirationInSeconds = builder.ExpirationInSeconds;
+        HashFunction = builder.HashFunction;
+        ResponseHook = builder.ResponseHook;
     }
 }

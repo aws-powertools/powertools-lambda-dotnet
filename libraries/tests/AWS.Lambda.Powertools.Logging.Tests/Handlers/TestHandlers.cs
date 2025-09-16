@@ -241,3 +241,38 @@ public class SimpleFunctionWithStaticConfigure
         throw new Exception();
     }
 }
+
+public class EnvironmentVariableSamplingHandler
+{
+    /// <summary>
+    /// Handler that tests sampling behavior with environment variables:
+    /// Using environment variables POWERTOOLS_LOG_LEVEL=Error and POWERTOOLS_LOGGER_SAMPLE_RATE=0.9
+    /// </summary>
+    [Logging(Service = "HelloWorldService", LoggerOutputCase = LoggerOutputCase.CamelCase, LogEvent = true)]
+    public void HandleWithSampling(string[] args)
+    {
+        var logLevel = Environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL");
+        var sampleRate = Environment.GetEnvironmentVariable("POWERTOOLS_LOGGER_SAMPLE_RATE");
+        
+        // This should NOT be logged (Info < Error) unless sampling elevates the log level
+        Logger.LogInformation("This is an info message — should not appear");
+    }
+    
+    /// <summary>
+    /// Handler for testing with guaranteed sampling (100%)
+    /// </summary>
+    [Logging(Service = "HelloWorldService", LoggerOutputCase = LoggerOutputCase.CamelCase, LogEvent = true)]
+    public void HandleWithFullSampling(string[] args)
+    {
+        Logger.LogInformation("This is an info message — should appear with 100% sampling");
+    }
+    
+    /// <summary>
+    /// Handler for testing with no sampling (0%)
+    /// </summary>
+    [Logging(Service = "HelloWorldService", LoggerOutputCase = LoggerOutputCase.CamelCase, LogEvent = true)]
+    public void HandleWithNoSampling(string[] args)
+    {
+        Logger.LogInformation("This is an info message — should NOT appear with 0% sampling");
+    }
+}

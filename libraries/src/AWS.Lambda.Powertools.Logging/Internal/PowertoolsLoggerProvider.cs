@@ -55,47 +55,41 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
             _currentConfig.LoggerOutputCase = loggerOutputCase;
         }
 
-        // Set log level from environment ONLY if not explicitly set
         var minLogLevel = lambdaLogLevelEnabled ? lambdaLogLevel : logLevel;
-        _currentConfig.MinimumLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
+        var effectiveLogLevel = minLogLevel != LogLevel.None ? minLogLevel : LoggingConstants.DefaultLogLevel;
+
+        // Only set InitialLogLevel if it hasn't been explicitly configured
+        if (_currentConfig.InitialLogLevel == LogLevel.Information)
+        {
+            _currentConfig.InitialLogLevel = effectiveLogLevel;
+        }
+
+        _currentConfig.MinimumLogLevel = effectiveLogLevel;
+
         _currentConfig.XRayTraceId = _powertoolsConfigurations.XRayTraceId;
         _currentConfig.LogEvent = _powertoolsConfigurations.LoggerLogEvent;
-        
+
         // Configure the log level key based on output case
         _currentConfig.LogLevelKey = _powertoolsConfigurations.LambdaLogLevelEnabled() &&
                                      _currentConfig.LoggerOutputCase == LoggerOutputCase.PascalCase
             ? "LogLevel"
             : LoggingConstants.KeyLogLevel;
-            
+
         ProcessSamplingRate(_currentConfig, _powertoolsConfigurations);
         _environmentConfigured = true;
     }
-    
+
     /// <summary>
     /// Process sampling rate configuration
     /// </summary>
     private void ProcessSamplingRate(PowertoolsLoggerConfiguration config, IPowertoolsConfigurations configurations)
     {
-        var samplingRate = config.SamplingRate > 0 
-            ? config.SamplingRate 
+        var samplingRate = config.SamplingRate > 0
+            ? config.SamplingRate
             : configurations.LoggerSampleRate;
-            
+
         samplingRate = ValidateSamplingRate(samplingRate, config);
         config.SamplingRate = samplingRate;
-
-        // Only notify if sampling is configured
-        if (samplingRate > 0)
-        {
-            double sample = config.GetRandom();
-            
-            // Instead of changing log level, just indicate sampling status
-            if (sample <= samplingRate)
-            {
-                config.LogOutput.WriteLine(
-                    $"Changed log level to DEBUG based on Sampling configuration. Sampling Rate: {samplingRate}, Sampler Value: {sample}.");
-                config.MinimumLogLevel = LogLevel.Debug;
-            }
-        }
     }
 
     /// <summary>
@@ -126,16 +120,25 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
     }
 
     internal PowertoolsLoggerConfiguration GetCurrentConfig() => _currentConfig;
-    
+
     public void UpdateConfiguration(PowertoolsLoggerConfiguration config)
     {
         _currentConfig = config;
-        
+
         // Apply environment configurations if available
         if (_powertoolsConfigurations != null && !_environmentConfigured)
         {
             ConfigureFromEnvironment();
         }
+    }
+
+    /// <summary>
+    ///   Refresh the sampling calculation and update the minimum log level if needed
+    /// </summary>
+    /// <returns>True if debug sampling was enabled, false otherwise</returns>
+    internal bool RefreshSampleRateCalculation()
+    {
+        return _currentConfig.RefreshSampleRateCalculation();
     }
 
     public virtual void Dispose()

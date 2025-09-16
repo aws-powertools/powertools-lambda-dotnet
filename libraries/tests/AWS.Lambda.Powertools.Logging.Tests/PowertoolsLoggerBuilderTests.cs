@@ -78,7 +78,6 @@ public class PowertoolsLoggerBuilderTests
         Assert.Contains("Warning message", logOutput);
     }
 
-#if NET8_0_OR_GREATER
     [Fact]
     public void WithJsonOptions_AppliesFormatting()
     {
@@ -107,7 +106,6 @@ public class PowertoolsLoggerBuilderTests
         Assert.Contains("\"name\":\"TestName\"", logOutput);
         Assert.Contains("\n", logOutput); // Indentation includes newlines
     }
-#endif
 
     [Fact]
     public void WithTimestampFormat_FormatsTimestamp()

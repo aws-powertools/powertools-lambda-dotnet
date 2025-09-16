@@ -324,12 +324,8 @@ public abstract class BasePersistenceStore : IPersistenceStore
     /// <exception cref="ArgumentException"></exception>
     internal string GenerateHash(JsonElement data)
     {
-#if NET8_0_OR_GREATER
         // starting .NET 8 no option to change hash algorithm
         using var hashAlgorithm = MD5.Create();
-#else
-        using var hashAlgorithm = HashAlgorithm.Create(_idempotencyOptions.HashFunction);
-#endif
         if (hashAlgorithm == null)
         {
             throw new ArgumentException("Invalid HashAlgorithm");

@@ -313,7 +313,8 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     internal string XRayTraceId { get; set; }
     internal bool LogEvent { get; set; }
 
-    internal double Random { get; set; } = GetSafeRandom();
+    internal int SamplingRefreshCount { get; set; } = 0;
+    internal LogLevel InitialLogLevel { get; set; } = LogLevel.Information;
 
     /// <summary>
     ///     Gets random number
@@ -321,14 +322,75 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     /// <returns>System.Double.</returns>
     internal virtual double GetRandom()
     {
-        return Random;
+        return GetSafeRandom();
     }
-    
+
+    /// <summary>
+    ///   Refresh the sampling calculation and update the minimum log level if needed
+    /// </summary>
+    /// <returns>True if debug sampling was enabled, false otherwise</returns>
+    internal bool RefreshSampleRateCalculation()
+    {
+        return RefreshSampleRateCalculation(out _);
+    }
+
+    /// <summary>
+    ///   Refresh the sampling calculation and update the minimum log level if needed
+    /// </summary>
+    /// <param name="samplerValue"></param>
+    /// <returns>True if debug sampling was enabled, false otherwise</returns>
+    internal bool RefreshSampleRateCalculation(out double samplerValue)
+    {
+        samplerValue = 0.0;
+
+        if (SamplingRate <= 0)
+            return false;
+
+        // Increment counter at the beginning for proper cold start protection
+        SamplingRefreshCount++;
+
+        // Skip first call for cold start protection
+        if (SamplingRefreshCount == 1)
+        {
+            return false;
+        }
+
+        var shouldEnableDebugSampling = ShouldEnableDebugSampling(out samplerValue);
+
+        if (shouldEnableDebugSampling && MinimumLogLevel > LogLevel.Debug)
+        {
+            MinimumLogLevel = LogLevel.Debug;
+            return true;
+        }
+        else if (!shouldEnableDebugSampling)
+        {
+            MinimumLogLevel = InitialLogLevel;
+        }
+
+        return shouldEnableDebugSampling;
+    }
+
+
+    internal bool ShouldEnableDebugSampling()
+    {
+        return ShouldEnableDebugSampling(out _);
+    }
+
+    internal bool ShouldEnableDebugSampling(out double samplerValue)
+    {
+        samplerValue = 0.0;
+        if (SamplingRate <= 0) return false;
+
+        samplerValue = GetRandom();
+        return samplerValue <= SamplingRate;
+    }
+
     internal static double GetSafeRandom()
     {
         var randomGenerator = RandomNumberGenerator.Create();
-        byte[] data = new byte[16];
+        byte[] data = new byte[4];
         randomGenerator.GetBytes(data);
-        return BitConverter.ToDouble(data);
+        uint randomUInt = BitConverter.ToUInt32(data, 0);
+        return (double)randomUInt / uint.MaxValue;
     }
 }

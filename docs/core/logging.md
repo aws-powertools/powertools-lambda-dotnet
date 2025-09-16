@@ -778,12 +778,16 @@ custom keys can be persisted across invocations. If you want all custom keys to 
 
 ## Sampling debug logs
 
-You can dynamically set a percentage of your logs to **DEBUG** level via env var `POWERTOOLS_LOGGER_SAMPLE_RATE` or
-via `SamplingRate` parameter on attribute.
+Use sampling when you want to dynamically change your log level to **DEBUG** based on a **percentage of the Lambda function invocations**.
 
-!!! info
-    Configuration on environment variable is given precedence over sampling rate configuration on attribute, provided it's
-    in valid value range.
+You can use values ranging from `0.0` to `1` (100%) when setting `POWERTOOLS_LOGGER_SAMPLE_RATE` env var, or `SamplingRate` parameter in Logger.
+
+???+ tip "Tip: When is this useful?"
+    Log sampling allows you to capture debug information for a fraction of your requests, helping you diagnose rare or intermittent issues without increasing the overall verbosity of your logs.
+
+    Example: Imagine an e-commerce checkout process where you want to understand rare payment gateway errors. With 10% sampling, you'll log detailed information for a small subset of transactions, making troubleshooting easier without generating excessive logs.
+
+The sampling decision happens automatically with each invocation when using `Logger` decorator.  When not using the decorator, you're in charge of refreshing it via `RefreshSampleRateCalculation` method. Skipping both may lead to unexpected sampling results.
 
 === "Sampling via attribute parameter"
 
@@ -797,6 +801,30 @@ via `SamplingRate` parameter on attribute.
         public async Task<APIGatewayProxyResponse> FunctionHandler
             (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
         {
+            ...
+        }
+    }
+    ```
+
+=== "Sampling Logger.Configure"
+
+    ```c# hl_lines="5-10 16"
+    public class Function
+    {
+        public Function()
+        {
+            Logger.Configure(options =>
+            {
+                options.MinimumLogLevel = LogLevel.Information;
+                options.LoggerOutputCase = LoggerOutputCase.CamelCase;
+                options.SamplingRate = 0.1; // 10% sampling
+            });
+        }
+
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            Logger.RefreshSampleRateCalculation();            
             ...
         }
     }

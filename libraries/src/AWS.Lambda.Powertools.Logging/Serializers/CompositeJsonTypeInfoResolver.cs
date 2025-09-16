@@ -1,5 +1,3 @@
-#if NET8_0_OR_GREATER
-
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -41,4 +39,3 @@ namespace AWS.Lambda.Powertools.Logging.Serializers
         }
     }
 }
-#endif
