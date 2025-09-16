@@ -17,8 +17,5 @@
     <ItemGroup>
       <PackageReference Include="Amazon.Lambda.Core" />
     </ItemGroup>
-    <ItemGroup>
-        <Analyzer Include="SourceGenerators\UASourceGenerator.cs" />
-    </ItemGroup>
 
 </Project>

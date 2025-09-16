@@ -20,8 +20,5 @@
 
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
-    <ItemGroup>
-        <Analyzer Include="SourceGenerators\UASourceGenerator.cs" />
-    </ItemGroup>
 
 </Project>
