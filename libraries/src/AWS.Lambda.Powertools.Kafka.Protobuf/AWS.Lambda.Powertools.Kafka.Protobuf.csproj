@@ -21,7 +21,6 @@
     
     <ItemGroup>
         <PackageReference Include="Google.Protobuf" />
-        <PackageReference Include="Microsoft.CodeAnalysis.Common" />
     </ItemGroup>
 
     <!-- Debug: Use project references -->

@@ -19,9 +19,7 @@
         <DefineConstants>$(DefineConstants);KAFKA_JSON</DefineConstants>
     </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.Common" />
-    </ItemGroup>
+
 
     <!-- Debug: Use project references -->
     <ItemGroup Condition="'$(Configuration)'=='Debug'">

@@ -17,7 +17,6 @@
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" />
         <PackageReference Include="Microsoft.Extensions.Logging" />
         <PackageReference Include="Microsoft.Extensions.Logging.Configuration" />
-        <PackageReference Include="Microsoft.CodeAnalysis.Common" />
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
 

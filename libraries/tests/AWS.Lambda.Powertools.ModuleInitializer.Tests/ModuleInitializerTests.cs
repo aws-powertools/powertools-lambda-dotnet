@@ -1,9 +1,10 @@
-using System.Reflection;
+using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace AWS.Lambda.Powertools.SourceGenerator.Tests;
+namespace AWS.Lambda.Powertools.ModuleInitializer.Tests;
 
 public class UASetter
 {
@@ -23,15 +24,9 @@ public class UASetter
         _output = output;
         _appId = Environment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
     }
-    
+
     private static void ForceAssemblyLoading()
     {
-        Console.WriteLine("DEBUG: Starting ForceAssemblyLoading");
-        
-        // Check if environment variable is already set before we do anything
-        var initialAppId = Environment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
-        Console.WriteLine($"DEBUG: Initial AWS_SDK_UA_APP_ID = '{initialAppId}'");
-        
         // Force loading of all the assemblies by accessing their types
         // This should trigger any module initializers that exist
         var types = new[]
@@ -53,28 +48,16 @@ public class UASetter
         // and trigger any module initializers
         foreach (var type in types)
         {
-            Console.WriteLine($"DEBUG: Loading assembly for {type.Name}");
             _ = type.Assembly.FullName;
-        }
-        
-        var afterLoadingAppId = Environment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
-        Console.WriteLine($"DEBUG: After loading assemblies AWS_SDK_UA_APP_ID = '{afterLoadingAppId}'");
-        
-        // If still empty, try manually calling one method to see what happens
-        if (string.IsNullOrEmpty(afterLoadingAppId))
-        {
-            Console.WriteLine("DEBUG: Environment variable still empty, calling one method manually");
-            AWS.Lambda.Powertools.Logging.Internal.EnvWrapper.SetExecutionEnvironment();
-            var afterManualCallAppId = Environment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
-            Console.WriteLine($"DEBUG: After manual call AWS_SDK_UA_APP_ID = '{afterManualCallAppId}'");
         }
     }
 
     [Fact]
-    public void SourceGenerators_Should_Generate_ModuleInitializers()
+    public void ModuleInitializers_Should_Be_Working()
     {
-        // This test verifies that source generators are actually working by checking for generated types
-        
+        // This test verifies that module initializers are working by checking for the presence
+        // of the environment variable that should be set by the module initializers
+        // This is informational - if it fails, it means module initializers aren't running properly
         var assemblies = new[]
         {
             typeof(AWS.Lambda.Powertools.BatchProcessing.Internal.EnvWrapper).Assembly,
@@ -95,32 +78,15 @@ public class UASetter
         {
             try
             {
-                // Try to find UAModuleInitializer in any namespace
-                var allTypes = assembly.GetTypes();
-                var initializerTypes = allTypes.Where(t => t.Name == "UAModuleInitializer").ToList();
-                
-                if (initializerTypes.Any())
+                var initializerType = assembly.GetTypes().FirstOrDefault(t => t.Name == "ModuleInitializer");
+                if (initializerType != null)
                 {
-                    foundInitializers += initializerTypes.Count;
-                    foreach (var initType in initializerTypes)
-                    {
-                        _output.WriteLine($"✓ Found generated UAModuleInitializer in {assembly.GetName().Name} at {initType.FullName}");
-                        
-                        // Check if it has the Initialize method with ModuleInitializer attribute
-                        var initMethod = initType.GetMethod("Initialize", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-                        if (initMethod != null)
-                        {
-                            var hasModuleInitializerAttribute = initMethod.GetCustomAttributes(false)
-                                .Any(attr => attr.GetType().Name == "ModuleInitializerAttribute");
-                            _output.WriteLine($"  - Initialize method found with ModuleInitializerAttribute: {hasModuleInitializerAttribute}");
-                        }
-                    }
+                    foundInitializers++;
+                    _output.WriteLine($"✓ Found ModuleInitializer in {assembly.GetName().Name}");
                 }
                 else
                 {
-                    _output.WriteLine($"⚠ No UAModuleInitializer found in {assembly.GetName().Name}");
-                    // List all types for debugging
-                    _output.WriteLine($"  Available types: {string.Join(", ", allTypes.Take(10).Select(t => t.Name))}...");
+                    _output.WriteLine($"⚠ No ModuleInitializer found in {assembly.GetName().Name} (module initializer may not exist)");
                 }
             }
             catch (Exception ex)
@@ -128,23 +94,18 @@ public class UASetter
                 _output.WriteLine($"⚠ Error checking {assembly.GetName().Name}: {ex.Message}");
             }
         }
-        
-        _output.WriteLine($"Found {foundInitializers} generated UAModuleInitializer classes total");
-        
-        // Since we know the functionality works (environment variable is set), 
-        // we can be more confident about whether source generators are working
-        var appId = Environment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
-        if (!string.IsNullOrEmpty(appId) && foundInitializers > 0)
+
+        _output.WriteLine($"Found {foundInitializers} out of {assemblies.Length} ModuleInitializer classes");
+
+        // This is informational - we don't fail the test if module initializers aren't found
+        // because the functionality still works
+        if (foundInitializers == 0)
         {
-            _output.WriteLine($"✓ Source generators are working - found {foundInitializers} generated classes and environment variable is set");
-        }
-        else if (!string.IsNullOrEmpty(appId) && foundInitializers == 0)
-        {
-            _output.WriteLine("⚠ Environment variable is set but no UAModuleInitializer classes found - they may be in a different location or generated differently");
+            _output.WriteLine("⚠ WARNING: No ModuleInitializer classes found. Module initializers may not be working properly, but functionality is preserved via other mechanisms.");
         }
         else
         {
-            _output.WriteLine("⚠ Neither environment variable nor generated classes found - source generators may not be working");
+            _output.WriteLine($"✓ Module initializers are working - found {foundInitializers} classes");
         }
     }
 
@@ -155,10 +116,11 @@ public class UASetter
         Assert.Contains("PTENV/", _appId);
         CheckUtilityOnlyAppearsOnce(_appId);
         _output.WriteLine(_appId);
+        
         // check that it is last in the string
         Assert.EndsWith("PTENV/", _appId, StringComparison.OrdinalIgnoreCase);
     }
-    
+
     [Theory]
     [InlineData("Logging")]
     [InlineData("Tracing")]
@@ -176,16 +138,14 @@ public class UASetter
         var appId = Environment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
         Assert.NotNull(appId);
         Assert.Contains($"PT/{utility}/1.0.0", appId);
-        
         CheckUtilityOnlyAppearsOnce(appId);
         _output.WriteLine(_appId);
     }
-    
+
     private static void CheckUtilityOnlyAppearsOnce(string appId)
     {
         // Check that each utility appears only once
-        var utilities = new[] { "BatchProcessing", "BedrockAgentFunction", "EventHandler", "Idempotency", 
-                               "Kafka.Avro", "Kafka.Json", "Kafka.Protobuf", "Logging", "Metrics", "Parameters", "Tracing" };
+        var utilities = new[] { "BatchProcessing", "BedrockAgentFunction", "EventHandler", "Idempotency", "Kafka.Avro", "Kafka.Json", "Kafka.Protobuf", "Logging", "Metrics", "Parameters", "Tracing" };
         
         foreach (var utility in utilities)
         {

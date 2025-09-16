@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>AWS.Lambda.Powertools.ModuleInitializer.Tests</AssemblyName>
+    <RootNamespace>AWS.Lambda.Powertools.ModuleInitializer.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
+    <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.BatchProcessing\AWS.Lambda.Powertools.BatchProcessing.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler\AWS.Lambda.Powertools.EventHandler.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka.Avro\AWS.Lambda.Powertools.Kafka.Avro.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka.Json\AWS.Lambda.Powertools.Kafka.Json.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Kafka.Protobuf\AWS.Lambda.Powertools.Kafka.Protobuf.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Parameters\AWS.Lambda.Powertools.Parameters.csproj" />
+    <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Tracing\AWS.Lambda.Powertools.Tracing.csproj" />
+  </ItemGroup>
+
+</Project>
