@@ -16,4 +16,9 @@
       <PackageReference Include="Amazon.Lambda.Core" />
     </ItemGroup>
 
+    <!-- Include MSBuild targets in the NuGet package -->
+    <ItemGroup>
+        <None Include="build\AWS.Lambda.Powertools.Metrics.targets" Pack="true" PackagePath="build\AWS.Lambda.Powertools.Metrics.targets" />
+    </ItemGroup>
+
 </Project>
