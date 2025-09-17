@@ -7,7 +7,6 @@
         <AssemblyName>AWS.Lambda.Powertools.Tracing</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Tracing</RootNamespace>
         <IncludeCommonFiles>true</IncludeCommonFiles>
-        <IncludeExecutionEnvironment>true</IncludeExecutionEnvironment>
     </PropertyGroup>
    
     <ItemGroup>

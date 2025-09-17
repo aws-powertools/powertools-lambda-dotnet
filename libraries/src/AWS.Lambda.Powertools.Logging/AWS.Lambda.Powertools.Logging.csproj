@@ -7,7 +7,6 @@
         <AssemblyName>AWS.Lambda.Powertools.Logging</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Logging</RootNamespace>
         <IncludeCommonFiles>true</IncludeCommonFiles>
-        <IncludeExecutionEnvironment>true</IncludeExecutionEnvironment>
     </PropertyGroup>
 
     <ItemGroup>

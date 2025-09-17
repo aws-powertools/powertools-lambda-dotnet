@@ -6,7 +6,6 @@
         <AssemblyName>AWS.Lambda.Powertools.BatchProcessing</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.BatchProcessing</RootNamespace>
         <IncludeCommonFiles>true</IncludeCommonFiles>
-        <IncludeExecutionEnvironment>true</IncludeExecutionEnvironment>
     </PropertyGroup>
     <ItemGroup>
         <!--   Package versions are Centrally managed in Directory.Packages.props file  -->

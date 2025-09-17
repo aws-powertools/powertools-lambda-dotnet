@@ -10,7 +10,6 @@
         <Nullable>enable</Nullable>
         <RunAOTCompilation>true</RunAOTCompilation>
         <IncludeCommonFiles>true</IncludeCommonFiles>
-        <IncludeExecutionEnvironment>true</IncludeExecutionEnvironment>
     </PropertyGroup>
 
     <ItemGroup>

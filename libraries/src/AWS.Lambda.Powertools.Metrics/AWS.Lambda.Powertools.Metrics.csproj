@@ -6,7 +6,6 @@
         <AssemblyName>AWS.Lambda.Powertools.Metrics</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Metrics</RootNamespace>
         <IncludeCommonFiles>true</IncludeCommonFiles>
-        <IncludeExecutionEnvironment>true</IncludeExecutionEnvironment>
     </PropertyGroup>
     
     <ItemGroup>

@@ -7,7 +7,6 @@
         <AssemblyName>AWS.Lambda.Powertools.Idempotency</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Idempotency</RootNamespace>
         <IncludeCommonFiles>true</IncludeCommonFiles>
-        <IncludeExecutionEnvironment>true</IncludeExecutionEnvironment>
     </PropertyGroup>
 
 
