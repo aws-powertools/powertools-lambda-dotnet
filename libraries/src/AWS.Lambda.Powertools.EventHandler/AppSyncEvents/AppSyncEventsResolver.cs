@@ -1,5 +1,4 @@
 using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.EventHandler.Internal;
 
 namespace AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
@@ -21,7 +20,6 @@ public class AppSyncEventsResolver
     {
         _publishRoutes = new RouteHandlerRegistry<AppSyncEventsRequest, object>();
         _subscribeRoutes = new RouteHandlerRegistry<AppSyncEventsRequest, bool>();
-        PowertoolsEnvironment.Instance.SetExecutionEnvironment(this);
     }
 
     #region OnPublish Methods

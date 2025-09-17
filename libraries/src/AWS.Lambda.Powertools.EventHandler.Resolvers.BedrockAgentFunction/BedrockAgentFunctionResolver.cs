@@ -40,7 +40,6 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         public BedrockAgentFunctionResolver(IJsonTypeInfoResolver? typeResolver = null)
         {
             _parameterMapper = new ParameterMapper(typeResolver);
-            PowertoolsEnvironment.Instance.SetExecutionEnvironment(this);
         }
         
         /// <summary>
