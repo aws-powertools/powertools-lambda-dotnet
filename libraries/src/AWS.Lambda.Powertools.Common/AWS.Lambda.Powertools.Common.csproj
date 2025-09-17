@@ -15,5 +15,5 @@
         <PackageReference Include="Amazon.Lambda.Core"/>
         <PackageReference Include="AspectInjector"/>
     </ItemGroup>
-    
+
 </Project>

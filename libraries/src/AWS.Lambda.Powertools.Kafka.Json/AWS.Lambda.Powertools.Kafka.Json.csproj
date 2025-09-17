@@ -18,8 +18,6 @@
         <DefineConstants>$(DefineConstants);KAFKA_JSON</DefineConstants>
     </PropertyGroup>
 
-
-
     <!-- Debug: Use project references -->
     <ItemGroup Condition="'$(Configuration)'=='Debug'">
         <ProjectReference Include="..\AWS.Lambda.Powertools.Kafka\AWS.Lambda.Powertools.Kafka.csproj"/>
