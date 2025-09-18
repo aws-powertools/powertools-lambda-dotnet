@@ -35,6 +35,7 @@ namespace HelloWorld.Tests
 
         public FunctionTest(ITestOutputHelper testOutputHelper)
         {
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
             _testOutputHelper = testOutputHelper;
         }
 
