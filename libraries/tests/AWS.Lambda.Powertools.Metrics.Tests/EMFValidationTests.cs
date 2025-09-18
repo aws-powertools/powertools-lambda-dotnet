@@ -333,6 +333,9 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
             var result = _consoleOut.ToString();
 
+            // Debug output to see what's actually being written
+            System.Diagnostics.Debug.WriteLine($"Actual output: {result}");
+
             // Assert
             Assert.Contains("\"Metrics\":[{\"Name\":\"Time\",\"Unit\":\"Milliseconds\"}]"
                 , result);

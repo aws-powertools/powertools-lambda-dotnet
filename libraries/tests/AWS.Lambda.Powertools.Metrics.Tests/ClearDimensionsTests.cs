@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Metrics.Tests.Handlers;
@@ -6,7 +7,7 @@ using Xunit;
 namespace AWS.Lambda.Powertools.Metrics.Tests;
 
 [Collection("Sequential")]
-public class ClearDimensionsTests
+public class ClearDimensionsTests : IDisposable
 {
     [Fact]
     public void WhenClearAllDimensions_NoDimensionsInOutput()
@@ -23,8 +24,12 @@ public class ClearDimensionsTests
 
         // Assert
         Assert.Contains("{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"Metric Name\",\"Unit\":\"Count\"}],\"Dimensions\":[[]]", metricsOutput);
-        
-        // Reset
+    }
+
+    public void Dispose()
+    {
+        // Reset metrics state after each test
+        Metrics.ResetForTest();
         MetricsAspect.ResetForTest();
     }
 }

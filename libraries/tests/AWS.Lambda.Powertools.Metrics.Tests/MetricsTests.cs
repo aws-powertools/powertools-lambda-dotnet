@@ -10,7 +10,7 @@ using Xunit;
 namespace AWS.Lambda.Powertools.Metrics.Tests;
 
 [Collection("Sequential")]
-public class MetricsTests
+public class MetricsTests : IDisposable
 {
     [Fact]
     public void Metrics_Set_Execution_Environment_Context()
@@ -422,5 +422,12 @@ public class MetricsTests
 
         // Assert
         Assert.Equal("TestFunction", metrics.Options.FunctionName);
+    }
+
+    public void Dispose()
+    {
+        // Reset metrics state after each test
+        Metrics.ResetForTest();
+        MetricsAspect.ResetForTest();
     }
 }
