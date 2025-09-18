@@ -24,6 +24,7 @@ using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 using AWS.Lambda.Powertools.Parameters.Transform;
 using NSubstitute;
 using Xunit;
+#pragma warning disable CS8629 // Nullable value type may be null.
 
 namespace AWS.Lambda.Powertools.Parameters.Tests.SimpleSystemsManagement;
 
@@ -350,7 +351,7 @@ public class SsmProviderTest
         await client
             .Received(1)
             .GetParameterAsync(
-                Arg.Is<GetParameterRequest>(x => x.Name == key && !x.WithDecryption),
+                Arg.Is<GetParameterRequest>(x => x.Name == key && !x.WithDecryption.Value),
                 Arg.Any<CancellationToken>());
         Assert.NotNull(result);
         Assert.Equal(value, result);
@@ -392,7 +393,7 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1)
             .GetParameterAsync(Arg.Is<GetParameterRequest>(x =>
-                x.Name == key && !x.WithDecryption), Arg.Any<CancellationToken>());
+                x.Name == key && !x.WithDecryption.Value), Arg.Any<CancellationToken>());
         cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
@@ -435,7 +436,7 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1)
             .GetParameterAsync(Arg.Is<GetParameterRequest>(x =>
-                x.Name == key && !x.WithDecryption), Arg.Any<CancellationToken>());
+                x.Name == key && !x.WithDecryption.Value), Arg.Any<CancellationToken>());
         cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
@@ -481,7 +482,7 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1)
             .GetParameterAsync(Arg.Is<GetParameterRequest>(x =>
-                x.Name == key && !x.WithDecryption), Arg.Any<CancellationToken>());
+                x.Name == key && !x.WithDecryption.Value), Arg.Any<CancellationToken>());
         cacheManager.Received(1).Set(key, value, duration);
         Assert.NotNull(result);
         Assert.Equal(value, result);
@@ -524,7 +525,7 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1)
             .GetParameterAsync(Arg.Is<GetParameterRequest>(x =>
-                x.Name == key && x.WithDecryption), Arg.Any<CancellationToken>());
+                x.Name == key && x.WithDecryption.Value), Arg.Any<CancellationToken>());
         Assert.NotNull(result);
         Assert.Equal(value, result);
     }
@@ -918,7 +919,7 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1).GetParametersByPathAsync(
             Arg.Is<GetParametersByPathRequest>(x =>
-                x.Path == key && !x.WithDecryption
+                x.Path == key && !x.WithDecryption.Value
             ),
             Arg.Any<CancellationToken>()
         );
@@ -980,7 +981,7 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1).GetParametersByPathAsync(
             Arg.Is<GetParametersByPathRequest>(x =>
-                x.Path == key && !x.WithDecryption
+                x.Path == key && !x.WithDecryption.Value
             ),
             Arg.Any<CancellationToken>()
         );
@@ -1045,7 +1046,7 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1).GetParametersByPathAsync(
             Arg.Is<GetParametersByPathRequest>(x =>
-                x.Path == key && !x.WithDecryption
+                x.Path == key && !x.WithDecryption.Value
             ),
             Arg.Any<CancellationToken>()
         );
@@ -1108,7 +1109,7 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1).GetParametersByPathAsync(
             Arg.Is<GetParametersByPathRequest>(x =>
-                x.Path == key && x.WithDecryption
+                x.Path == key && x.WithDecryption.Value
             ),
             Arg.Any<CancellationToken>()
         );
@@ -1167,7 +1168,7 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1).GetParametersByPathAsync(
             Arg.Is<GetParametersByPathRequest>(x =>
-                x.Path == key && x.Recursive
+                x.Path == key && x.Recursive.Value
             ),
             Arg.Any<CancellationToken>()
         );
@@ -1241,14 +1242,14 @@ public class SsmProviderTest
         cacheManager.Received(1).Get(key);
         await client.Received(1).GetParametersByPathAsync(
             Arg.Is<GetParametersByPathRequest>(x =>
-                x.Path == key && x.Recursive && x.WithDecryption && string.IsNullOrEmpty(x.NextToken)
+                x.Path == key && x.Recursive.Value && x.WithDecryption.Value && string.IsNullOrEmpty(x.NextToken)
             ),
             Arg.Any<CancellationToken>()
         );
 
         await client.Received(1).GetParametersByPathAsync(
             Arg.Is<GetParametersByPathRequest>(x =>
-                x.Path == key && x.Recursive && x.WithDecryption && x.NextToken == nextToken
+                x.Path == key && x.Recursive.Value && x.WithDecryption.Value && x.NextToken == nextToken
             ),
             Arg.Any<CancellationToken>()
         );
