@@ -220,6 +220,67 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             CleanupMetrics();
         }
         
+        [Fact]
+        public async Task AddMetric_ConcurrentModificationDuringIteration_ShouldHandleArgumentOutOfRangeException()
+        {
+            // Arrange
+            Metrics.ResetForTest();
+            Metrics.SetNamespace("TestNamespace");
+            var exceptions = new List<Exception>();
+            var tasks = new List<Task>();
+            
+            // Act - Create a scenario where collection modification happens during iteration
+            // This test specifically targets the ArgumentOutOfRangeException catch block in GetExistingMetric
+            for (int i = 0; i < 20; i++)
+            {
+                var taskId = i;
+                tasks.Add(Task.Run(() =>
+                {
+                    try
+                    {
+                        // Rapidly add and flush metrics to create timing conditions
+                        // where GetExistingMetric might access an index that becomes invalid
+                        for (int j = 0; j < 200; j++)
+                        {
+                            // Add metrics with the same key to trigger GetExistingMetric calls
+                            Metrics.AddMetric("SharedMetricKey", 1.0, MetricUnit.Count);
+                            
+                            // Occasionally add many metrics to trigger flush (which clears the collection)
+                            if (j % 50 == 0)
+                            {
+                                // Add enough metrics to trigger overflow and flush
+                                for (int k = 0; k < 105; k++) // Exceeds MaxMetrics (100)
+                                {
+                                    Metrics.AddMetric($"OverflowMetric_{taskId}_{k}", 1.0, MetricUnit.Count);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        lock (exceptions)
+                        {
+                            exceptions.Add(ex);
+                        }
+                    }
+                }));
+            }
+            
+            await Task.WhenAll(tasks);
+            
+            // Assert - Should not have any exceptions, even if ArgumentOutOfRangeException occurs internally
+            foreach (var ex in exceptions)
+            {
+                Console.WriteLine($"Exception: {ex.GetType().Name}: {ex.Message}");
+                if (ex.StackTrace != null)
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+            Assert.Empty(exceptions);
+            
+            // Cleanup after test
+            CleanupMetrics();
+        }
+        
         /// <summary>
         /// Cleanup method to ensure no state leaks between tests
         /// </summary>
