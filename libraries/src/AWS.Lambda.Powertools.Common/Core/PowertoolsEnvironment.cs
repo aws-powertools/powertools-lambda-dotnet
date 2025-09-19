@@ -80,7 +80,7 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
         // Only set if not already present and only allows one utility
         // this will change when bitwise is supported
         if (!string.IsNullOrEmpty(currentEnvValue) && (currentEnvValue.Contains(assemblyName)
-                                        || currentEnvValue.Contains("PTEnv/")))
+                                        || currentEnvValue.Contains("PT/")))
         {
             return;
         }
