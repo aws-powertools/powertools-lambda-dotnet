@@ -26,7 +26,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         powertoolsEnv.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}", powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 PTEnv/AWS_LAMBDA_DOTNET{Environment.Version.Major}", powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
     }
     
     [Fact]
@@ -42,7 +42,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         powertoolsEnv.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal($"ExistingValuesInUserAgent {Constants.FeatureContextIdentifier}/Tests/1.0.0 PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}", powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
+        Assert.Equal($"ExistingValuesInUserAgent {Constants.FeatureContextIdentifier}/Tests/1.0.0 PTEnv/AWS_LAMBDA_DOTNET{Environment.Version.Major}", powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
     }
     
     [Fact]
@@ -56,10 +56,10 @@ public class PowertoolsEnvironmentTest : IDisposable
         powertoolsEnv.SetExecutionEnvironment(this);
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}", powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 PTEnv/AWS_LAMBDA_DOTNET{Environment.Version.Major}", powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
     }
     
-    [Fact]
+    [Fact(Skip = "This will be added back when we have bitwise")]
     public void Set_Multiple_Execution_Environment()
     {
         // Arrange
@@ -70,7 +70,22 @@ public class PowertoolsEnvironmentTest : IDisposable
         powertoolsEnv.SetExecutionEnvironment(powertoolsEnv.GetType());
 
         // Assert
-        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 {Constants.FeatureContextIdentifier}/Common/1.0.0 PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}", 
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 {Constants.FeatureContextIdentifier}/Common/1.0.0 PTEnv/AWS_LAMBDA_DOTNET{Environment.Version.Major}", 
+            powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
+    }
+    
+    [Fact]
+    public void When_Multiple_Only_Set_One_Utility()
+    {
+        // Arrange
+        var powertoolsEnv = new PowertoolsEnvironment();
+        
+        // Act
+        powertoolsEnv.SetExecutionEnvironment(this);
+        powertoolsEnv.SetExecutionEnvironment(powertoolsEnv.GetType());
+
+        // Assert
+        Assert.Equal($"{Constants.FeatureContextIdentifier}/Tests/1.0.0 PTEnv/AWS_LAMBDA_DOTNET{Environment.Version.Major}", 
             powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
     }
     
@@ -110,7 +125,7 @@ public class PowertoolsEnvironmentTest : IDisposable
             {
                 var assemblyName = "PT/Tests"; // Parsed name
                 var assemblyVersion = "1.2.3";
-                var runtimeEnv = "PTENV/AWS_LAMBDA_DOTNET8"; // Assuming .NET 8
+                var runtimeEnv = "PTEnv/AWS_LAMBDA_DOTNET8"; // Assuming .NET 8
                 var expectedValue = $"{assemblyName}/{assemblyVersion} {runtimeEnv}";
                 
                 mockEnvironment.SetEnvironmentVariable("AWS_SDK_UA_APP_ID", expectedValue);
@@ -120,7 +135,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         mockEnvironment.SetExecutionEnvironment(this);
         
         // Assert
-        mockEnvironment.Received(1).SetEnvironmentVariable("AWS_SDK_UA_APP_ID", "PT/Tests/1.2.3 PTENV/AWS_LAMBDA_DOTNET8");
+        mockEnvironment.Received(1).SetEnvironmentVariable("AWS_SDK_UA_APP_ID", "PT/Tests/1.2.3 PTEnv/AWS_LAMBDA_DOTNET8");
     }
     
     [Fact]
@@ -141,7 +156,7 @@ public class PowertoolsEnvironmentTest : IDisposable
                 var currentEnv = "ExistingValue";
                 var assemblyName = "PT/Logging";
                 var assemblyVersion = "2.1.0";
-                var runtimeEnv = "PTENV/AWS_LAMBDA_DOTNET8";
+                var runtimeEnv = "PTEnv/AWS_LAMBDA_DOTNET8";
                 var expectedValue = $"{currentEnv} {assemblyName}/{assemblyVersion} {runtimeEnv}";
                 
                 mockEnvironment.SetEnvironmentVariable("AWS_SDK_UA_APP_ID", expectedValue);
@@ -151,28 +166,28 @@ public class PowertoolsEnvironmentTest : IDisposable
         mockEnvironment.SetExecutionEnvironment(this);
         
         // Assert
-        mockEnvironment.Received(1).SetEnvironmentVariable("AWS_SDK_UA_APP_ID", "ExistingValue PT/Logging/2.1.0 PTENV/AWS_LAMBDA_DOTNET8");
+        mockEnvironment.Received(1).SetEnvironmentVariable("AWS_SDK_UA_APP_ID", "ExistingValue PT/Logging/2.1.0 PTEnv/AWS_LAMBDA_DOTNET8");
     }
     
     [Fact]
-    public void SetExecutionEnvironment_Should_Not_Add_PTENV_Twice_With_Mocked_Values()
+    public void SetExecutionEnvironment_Should_Not_Add_PTEnv_Twice_With_Mocked_Values()
     {
         // Arrange
         var mockEnvironment = Substitute.For<IPowertoolsEnvironment>();
         
-        // Mock existing environment value that already contains PTENV
-        mockEnvironment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID").Returns("PT/Metrics/1.0.0 PTENV/AWS_LAMBDA_DOTNET8");
+        // Mock existing environment value that already contains PTEnv
+        mockEnvironment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID").Returns("PT/Metrics/1.0.0 PTEnv/AWS_LAMBDA_DOTNET8");
         mockEnvironment.GetAssemblyName(Arg.Any<object>()).Returns("AWS.Lambda.Powertools.Tracing");
         mockEnvironment.GetAssemblyVersion(Arg.Any<object>()).Returns("1.5.0");
         
-        // Setup the method call - should not add PTENV again
+        // Setup the method call - should not add PTEnv again
         mockEnvironment.When(x => x.SetExecutionEnvironment(Arg.Any<object>()))
             .Do(_ =>
             {
-                var currentEnv = "PT/Metrics/1.0.0 PTENV/AWS_LAMBDA_DOTNET8";
+                var currentEnv = "PT/Metrics/1.0.0 PTEnv/AWS_LAMBDA_DOTNET8";
                 var assemblyName = "PT/Tracing";
                 var assemblyVersion = "1.5.0";
-                // No PTENV added since it already exists
+                // No PTEnv added since it already exists
                 var expectedValue = $"{currentEnv} {assemblyName}/{assemblyVersion}";
                 
                 mockEnvironment.SetEnvironmentVariable("AWS_SDK_UA_APP_ID", expectedValue);
@@ -182,7 +197,7 @@ public class PowertoolsEnvironmentTest : IDisposable
         mockEnvironment.SetExecutionEnvironment(this);
         
         // Assert
-        mockEnvironment.Received(1).SetEnvironmentVariable("AWS_SDK_UA_APP_ID", "PT/Metrics/1.0.0 PTENV/AWS_LAMBDA_DOTNET8 PT/Tracing/1.5.0");
+        mockEnvironment.Received(1).SetEnvironmentVariable("AWS_SDK_UA_APP_ID", "PT/Metrics/1.0.0 PTEnv/AWS_LAMBDA_DOTNET8 PT/Tracing/1.5.0");
     }
     
     [Fact]
@@ -294,11 +309,11 @@ public class PowertoolsEnvironmentTest : IDisposable
         // Assert
         var result = powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
         Assert.Contains($"{Constants.FeatureContextIdentifier}/Tests/", result);
-        Assert.Contains("PTENV/AWS_LAMBDA_DOTNET", result);
+        Assert.Contains("PTEnv/AWS_LAMBDA_DOTNET", result);
     }
     
     [Fact]
-    public void SetExecutionEnvironment_Should_Add_PTENV_When_Not_Present()
+    public void SetExecutionEnvironment_Should_Add_PTEnv_When_Not_Present()
     {
         // Arrange
         var powertoolsEnv = new PowertoolsEnvironment();
@@ -310,15 +325,15 @@ public class PowertoolsEnvironmentTest : IDisposable
         // Assert
         var result = powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
         Assert.StartsWith("SomeExistingValue", result);
-        Assert.Contains("PTENV/AWS_LAMBDA_DOTNET", result);
+        Assert.Contains("PTEnv/AWS_LAMBDA_DOTNET", result);
     }
     
     [Fact]
-    public void SetExecutionEnvironment_Should_Not_Add_PTENV_When_Already_Present()
+    public void SetExecutionEnvironment_Should_Not_Add_PTEnv_When_Already_Present()
     {
         // Arrange
         var powertoolsEnv = new PowertoolsEnvironment();
-        var existingValue = $"ExistingValue PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}";
+        var existingValue = $"ExistingValue PTEnv/AWS_LAMBDA_DOTNET{Environment.Version.Major}";
         powertoolsEnv.SetEnvironmentVariable("AWS_SDK_UA_APP_ID", existingValue);
         
         // Act
@@ -326,8 +341,8 @@ public class PowertoolsEnvironmentTest : IDisposable
         
         // Assert
         var result = powertoolsEnv.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
-        var ptenvCount = result.Split("PTENV/").Length - 1;
-        Assert.Equal(1, ptenvCount); // Should only have one PTENV entry
+        var ptenvCount = result.Split("PTEnv/").Length - 1;
+        Assert.Equal(1, ptenvCount); // Should only have one PTEnv entry
     }
 
     public void Dispose()

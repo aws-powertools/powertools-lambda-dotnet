@@ -15,7 +15,7 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     /// <summary>
     /// Cached runtime environment string
     /// </summary>
-    private static readonly string CachedRuntimeEnvironment = $"PTENV/{Environment.GetEnvironmentVariable(Constants.AwsExecutionEnvironmentVariableName)}";
+    private static readonly string CachedRuntimeEnvironment = $"PTEnv/{Environment.GetEnvironmentVariable(Constants.AwsExecutionEnvironmentVariableName)}";
     
     /// <summary>
     /// Cache for parsed assembly names to avoid repeated string operations
@@ -77,13 +77,16 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
         var assemblyVersion = GetAssemblyVersion(type);
         var newEntry = $"{assemblyName}/{assemblyVersion}";
 
-        if (!string.IsNullOrEmpty(currentEnvValue) && currentEnvValue.Contains(assemblyName))
+        // Only set if not already present and only allows one utility
+        // this will change when bitwise is supported
+        if (!string.IsNullOrEmpty(currentEnvValue) && (currentEnvValue.Contains(assemblyName)
+                                        || currentEnvValue.Contains("PTEnv/")))
         {
             return;
         }
 
         string finalValue;
-        var ptenvIndex = currentEnvValue?.IndexOf("PTENV/") ?? -1;
+        var ptenvIndex = currentEnvValue?.IndexOf("PTEnv/") ?? -1;
 
         if (string.IsNullOrEmpty(currentEnvValue))
         {

@@ -51,10 +51,10 @@ public class EnvWrapperTests
     public void Is_PTENV_Set()
     {
         Assert.NotNull(_appId);
-        Assert.Contains("PTENV/", _appId);
+        Assert.Contains("PTEnv/", _appId);
         _output.WriteLine(_appId);
         // check that it is last in the string
-        Assert.EndsWith("PTENV/", _appId, StringComparison.OrdinalIgnoreCase);
+        Assert.EndsWith("PTEnv/", _appId, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -71,8 +71,8 @@ public class EnvWrapperTests
     {
         Assert.NotNull(_appId);
         
-        // Should end with PTENV/
-        Assert.EndsWith("PTENV/", _appId);
+        // Should end with PTEnv/
+        Assert.EndsWith("PTEnv/", _appId);
         
         // Should contain at least one PT/ entry
         var ptEntries = Regex.Matches(_appId, @"PT/[^/]+/\d+\.\d+\.\d+");
@@ -125,7 +125,7 @@ public class EnvWrapperTests
         _output.WriteLine($"Second call: {secondCall}");
     }
 
-    [Fact]
+    [Fact(Skip = "This will be added back when we have bitwise")]
     public void SetExecutionEnvironment_All_Libraries_Should_Set_All_Utilities()
     {
         // Clear environment variable to start fresh
@@ -172,8 +172,8 @@ public class EnvWrapperTests
             _output.WriteLine($"✓ Found utility: {utility}");
         }
         
-        // Verify PTENV/ is at the end
-        Assert.EndsWith("PTENV/", appId);
+        // Verify PTEnv/ is at the end
+        Assert.EndsWith("PTEnv/", appId);
         
         // Verify each utility appears exactly once
         foreach (var utility in expectedUtilities)
@@ -186,6 +186,63 @@ public class EnvWrapperTests
         // Count total PT/ entries
         var ptEntries = Regex.Matches(appId, @"PT/[^/]+/\d+\.\d+\.\d+");
         Assert.Equal(expectedUtilities.Length, ptEntries.Count);
+        
+        _output.WriteLine($"Total utilities found: {ptEntries.Count}");
+    }
+    
+    [Fact]
+    public void SetExecutionEnvironment_All_Libraries_Should_Set_Only_One_Utility()
+    {
+        // Clear environment variable to start fresh
+        Environment.SetEnvironmentVariable("AWS_SDK_UA_APP_ID", null);
+        
+        // Call SetExecutionEnvironment from all EnvWrapper classes to simulate
+        // what would happen when all libraries are used in a real application
+        AWS.Lambda.Powertools.Logging.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.Tracing.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.BatchProcessing.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.Idempotency.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.Metrics.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.Parameters.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.EventHandler.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.Kafka.Avro.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.Kafka.Json.Internal.EnvWrapper.SetExecutionEnvironment();
+        AWS.Lambda.Powertools.Kafka.Protobuf.Internal.EnvWrapper.SetExecutionEnvironment();
+        
+        var appId = Environment.GetEnvironmentVariable("AWS_SDK_UA_APP_ID");
+        Assert.NotNull(appId);
+        
+        _output.WriteLine($"Complete environment variable: {appId}");
+        
+        // Verify all expected utilities are present
+        var utilitiesThatShouldNotBePresent = new[]
+        {
+            // "Logging",
+            "Tracing", 
+            "BatchProcessing",
+            "Idempotency",
+            "Metrics",
+            "Parameters",
+            "EventHandler",
+            "BedrockAgentFunction",
+            "Kafka.Avro",
+            "Kafka.Json",
+            "Kafka.Protobuf"
+        };
+
+        foreach (var utility in utilitiesThatShouldNotBePresent)
+        {
+            Assert.DoesNotContain($"PT/{utility}/", appId);
+            _output.WriteLine($"✓ Not Found utility: {utility}");
+        }
+        
+        // Verify PTEnv/ is at the end
+        Assert.EndsWith("PTEnv/", appId);
+        
+        // Count total PT/ entries
+        var ptEntries = Regex.Matches(appId, @"PT/[^/]+/\d+\.\d+\.\d+");
+        Assert.Single(ptEntries);
         
         _output.WriteLine($"Total utilities found: {ptEntries.Count}");
     }
@@ -251,8 +308,8 @@ public class EnvWrapperTests
         // Verify the specific utility is present
         Assert.Contains($"PT/{expectedUtility}/", appId);
         
-        // Verify PTENV/ is at the end
-        Assert.EndsWith("PTENV/", appId);
+        // Verify PTEnv/ is at the end
+        Assert.EndsWith("PTEnv/", appId);
         
         _output.WriteLine($"Testing {expectedUtility}: {appId}");
     }
