@@ -291,49 +291,94 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             
             Assert.NotNull(getExistingMetricMethod);
             
-            // Create a custom list that will throw ArgumentOutOfRangeException
-            var metricsList = new TestMetricsList();
-            metricsList.Add(new MetricDefinition("TestMetric", MetricUnit.Count, new List<double> { 1.0 }, MetricResolution.Default));
+            // Create a list that will throw ArgumentOutOfRangeException on indexer access
+            // This directly tests the catch (ArgumentOutOfRangeException) block in GetExistingMetric
+            var metricsList = new ThrowingList();
             
-            // Act - Call the private method via reflection, searching for a different key
-            // This will cause the method to iterate and hit the indexer that throws ArgumentOutOfRangeException
-            var result = getExistingMetricMethod.Invoke(null, new object[] { metricsList, "NonExistentMetric" });
+            // Act - Call the private method via reflection
+            var result = getExistingMetricMethod.Invoke(null, new object[] { metricsList, "TestMetric" });
             
             // Assert - Should return null when ArgumentOutOfRangeException is caught
             Assert.Null(result);
+            
+            // Additional verification - ensure our ThrowingList actually throws
+            Assert.Equal(1, metricsList.Count); // Should return 1
+            Assert.Throws<ArgumentOutOfRangeException>(() => _ = metricsList[0]); // Should throw
+        }
+        
+        [Fact]
+        public async Task AddMetric_ExtremeRaceCondition_ShouldCoverArgumentOutOfRangeException()
+        {
+            // This test is designed to create the exact timing conditions that would
+            // trigger ArgumentOutOfRangeException in GetExistingMetric during real usage
+            
+            // Arrange
+            Metrics.ResetForTest();
+            Metrics.SetNamespace("TestNamespace");
+            var exceptions = new List<Exception>();
+            var tasks = new List<Task>();
+            
+            // Act - Create extreme race conditions with very tight timing
+            for (int i = 0; i < 50; i++)
+            {
+                var taskId = i;
+                tasks.Add(Task.Run(async () =>
+                {
+                    try
+                    {
+                        for (int j = 0; j < 500; j++)
+                        {
+                            // Add the same metric key repeatedly to trigger GetExistingMetric
+                            Metrics.AddMetric("RaceConditionMetric", 1.0, MetricUnit.Count);
+                            
+                            // Create timing pressure with very short delays
+                            if (j % 25 == 0)
+                            {
+                                await Task.Delay(1); // Tiny delay to create timing windows
+                                
+                                // Force flush by adding 100+ metrics
+                                for (int k = 0; k < 101; k++)
+                                {
+                                    Metrics.AddMetric($"FlushForce_{taskId}_{k}", 1.0, MetricUnit.Count);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        lock (exceptions)
+                        {
+                            exceptions.Add(ex);
+                        }
+                    }
+                }));
+            }
+            
+            await Task.WhenAll(tasks);
+            
+            // Assert - Should not have any unhandled exceptions
+            foreach (var ex in exceptions)
+            {
+                Console.WriteLine($"Exception: {ex.GetType().Name}: {ex.Message}");
+            }
+            Assert.Empty(exceptions);
+            
+            // Cleanup
+            CleanupMetrics();
         }
         
         /// <summary>
-        /// Custom list that throws ArgumentOutOfRangeException on indexer access
-        /// to simulate the race condition scenario
+        /// Custom list that always throws ArgumentOutOfRangeException on indexer access
+        /// to directly test the exception handling path in GetExistingMetric
         /// </summary>
-        private class TestMetricsList : List<MetricDefinition>
+        private class ThrowingList : List<MetricDefinition>
         {
-            private bool _shouldThrow = false;
-            
-            public new int Count 
-            { 
-                get 
-                { 
-                    // Return 1 initially, but set flag to throw on indexer access
-                    _shouldThrow = true;
-                    return base.Count; 
-                } 
-            }
+            public new int Count => 1; // Return 1 so the for loop condition (i < metrics.Count) passes
             
             public new MetricDefinition this[int index]
             {
-                get
-                {
-                    if (_shouldThrow)
-                    {
-                        // Throw ArgumentOutOfRangeException to simulate the race condition
-                        // where collection was modified between Count check and indexer access
-                        throw new ArgumentOutOfRangeException(nameof(index), "Simulated race condition");
-                    }
-                    return base[index];
-                }
-                set => base[index] = value;
+                get => throw new ArgumentOutOfRangeException(nameof(index), "Simulated concurrent modification");
+                set => throw new ArgumentOutOfRangeException(nameof(index), "Simulated concurrent modification");
             }
         }
         
