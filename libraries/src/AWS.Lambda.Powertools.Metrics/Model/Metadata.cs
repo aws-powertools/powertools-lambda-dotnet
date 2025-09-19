@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -15,7 +16,7 @@ public class Metadata
     public Metadata()
     {
         CloudWatchMetrics = new List<MetricDirective> { new() };
-        CustomMetadata = new Dictionary<string, object>();
+        CustomMetadata = new ConcurrentDictionary<string, object>();
     }
 
     /// <summary>
@@ -43,7 +44,7 @@ public class Metadata
     /// </summary>
     /// <value>The custom metadata.</value>
     [JsonIgnore]
-    public Dictionary<string, object> CustomMetadata { get; }
+    public ConcurrentDictionary<string, object> CustomMetadata { get; }
 
     /// <summary>
     ///     Deletes all metrics from memory

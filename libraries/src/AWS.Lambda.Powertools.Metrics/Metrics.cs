@@ -199,8 +199,7 @@ public class Metrics : IMetrics, IDisposable
 
                 if (metrics.Count > 0 &&
                     (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
-                     metrics.FirstOrDefault(x => x.Name == key)
-                         ?.Values.Count == PowertoolsConfigurations.MaxMetrics))
+                     GetExistingMetric(metrics, key)?.Values.Count == PowertoolsConfigurations.MaxMetrics))
                 {
                     Instance.Flush(true);
                 }
@@ -622,6 +621,35 @@ public class Metrics : IMetrics, IDisposable
     public static void Flush(bool metricsOverflow = false)
     {
         Instance.Flush(metricsOverflow);
+    }
+
+    /// <summary>
+    ///     Safely searches for an existing metric by name without using LINQ enumeration
+    /// </summary>
+    /// <param name="metrics">The metrics collection to search</param>
+    /// <param name="key">The metric name to search for</param>
+    /// <returns>The found metric or null if not found</returns>
+    private static MetricDefinition GetExistingMetric(List<MetricDefinition> metrics, string key)
+    {
+        // Use a traditional for loop instead of LINQ to avoid enumeration issues
+        // when the collection is modified concurrently
+        for (int i = 0; i < metrics.Count; i++)
+        {
+            try
+            {
+                var metric = metrics[i];
+                if (metric?.Name == key)
+                {
+                    return metric;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // Collection was modified during iteration, return null to be safe
+                return null;
+            }
+        }
+        return null;
     }
 
     /// <summary>
