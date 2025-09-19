@@ -13,7 +13,7 @@
     <PackageVersion Include="AWSSDK.BedrockAgentRuntime" Version="4.0.2.2" />
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="4.0.6.2" />
     <PackageVersion Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.13.0" />
-    <PackageVersion Include="Google.Protobuf" Version="3.31.1" />
+    <PackageVersion Include="Google.Protobuf" Version="3.32.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
