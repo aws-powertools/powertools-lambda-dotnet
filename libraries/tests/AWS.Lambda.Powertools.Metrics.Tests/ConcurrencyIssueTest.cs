@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Metrics;
 using Xunit;
@@ -279,6 +280,61 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
             
             // Cleanup after test
             CleanupMetrics();
+        }
+        
+        [Fact]
+        public void GetExistingMetric_ArgumentOutOfRangeException_ShouldReturnNull()
+        {
+            // Arrange - Use reflection to test the private GetExistingMetric method directly
+            var getExistingMetricMethod = typeof(Metrics).GetMethod("GetExistingMetric", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            
+            Assert.NotNull(getExistingMetricMethod);
+            
+            // Create a custom list that will throw ArgumentOutOfRangeException
+            var metricsList = new TestMetricsList();
+            metricsList.Add(new MetricDefinition("TestMetric", MetricUnit.Count, new List<double> { 1.0 }, MetricResolution.Default));
+            
+            // Act - Call the private method via reflection, searching for a different key
+            // This will cause the method to iterate and hit the indexer that throws ArgumentOutOfRangeException
+            var result = getExistingMetricMethod.Invoke(null, new object[] { metricsList, "NonExistentMetric" });
+            
+            // Assert - Should return null when ArgumentOutOfRangeException is caught
+            Assert.Null(result);
+        }
+        
+        /// <summary>
+        /// Custom list that throws ArgumentOutOfRangeException on indexer access
+        /// to simulate the race condition scenario
+        /// </summary>
+        private class TestMetricsList : List<MetricDefinition>
+        {
+            private bool _shouldThrow = false;
+            
+            public new int Count 
+            { 
+                get 
+                { 
+                    // Return 1 initially, but set flag to throw on indexer access
+                    _shouldThrow = true;
+                    return base.Count; 
+                } 
+            }
+            
+            public new MetricDefinition this[int index]
+            {
+                get
+                {
+                    if (_shouldThrow)
+                    {
+                        // Throw ArgumentOutOfRangeException to simulate the race condition
+                        // where collection was modified between Count check and indexer access
+                        throw new ArgumentOutOfRangeException(nameof(index), "Simulated race condition");
+                    }
+                    return base[index];
+                }
+                set => base[index] = value;
+            }
         }
         
         /// <summary>
