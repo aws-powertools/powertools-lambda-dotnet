@@ -177,24 +177,21 @@ public class MetricDirective
             }
             
             var metric = GetExistingMetric(Metrics, name);
-            if (metric != null)
+            if (metric?.Values != null)
             {
-                try
+                if (metric.Values.Count < PowertoolsConfigurations.MaxMetrics)
                 {
-                    if (metric.Values != null && metric.Values.Count < PowertoolsConfigurations.MaxMetrics)
-                        metric.AddValue(value);
-                    else
-                        throw new ArgumentOutOfRangeException(nameof(metric),
-                            $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metric data points at the same time.");
+                    metric.AddValue(value);
                 }
-                catch (NullReferenceException)
+                else
                 {
-                    // If metric became null due to concurrent access, create a new one
-                    Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
+                    throw new ArgumentOutOfRangeException(nameof(metric),
+                        $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metric data points at the same time.");
                 }
             }
             else
             {
+                // Either no existing metric found or metric/Values became null due to concurrent access
                 Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
             }
         }
