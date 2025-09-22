@@ -44,24 +44,36 @@ public class RootNode
             var targetMembers = new Dictionary<string, object>();
 
             // Create snapshots to avoid concurrent modification issues
-            var dimensionsSnapshot = AWS.ExpandAllDimensionSets();
-            foreach (var dimension in dimensionsSnapshot) 
-                targetMembers.Add(dimension.Key, dimension.Value);
-            
-            var metricsSnapshot = new List<MetricDefinition>(AWS.GetMetrics());
-            foreach (var metricDefinition in metricsSnapshot)
+            var dimensionsSnapshot = AWS?.ExpandAllDimensionSets();
+            if (dimensionsSnapshot != null)
             {
-                List<double> values;
-                lock (metricDefinition.Values)
-                {
-                    values = new List<double>(metricDefinition.Values);
-                }
-                targetMembers.Add(metricDefinition.Name, values.Count == 1 ? values[0] : values);
+                foreach (var dimension in dimensionsSnapshot) 
+                    targetMembers.Add(dimension.Key, dimension.Value);
             }
             
-            var metadataSnapshot = new Dictionary<string, object>(AWS.CustomMetadata);
-            foreach (var metadata in metadataSnapshot) 
-                targetMembers.TryAdd(metadata.Key, metadata.Value);
+            var metricsSnapshot = AWS?.GetMetrics();
+            if (metricsSnapshot != null)
+            {
+                foreach (var metricDefinition in metricsSnapshot)
+                {
+                    if (metricDefinition?.Values != null)
+                    {
+                        List<double> values;
+                        lock (metricDefinition.Values)
+                        {
+                            values = new List<double>(metricDefinition.Values);
+                        }
+                        targetMembers.Add(metricDefinition.Name, values.Count == 1 ? values[0] : values);
+                    }
+                }
+            }
+            
+            var metadataSnapshot = AWS?.CustomMetadata;
+            if (metadataSnapshot != null)
+            {
+                foreach (var metadata in metadataSnapshot) 
+                    targetMembers.TryAdd(metadata.Key, metadata.Value);
+            }
 
             return targetMembers;
         }
@@ -90,34 +102,45 @@ public class RootNode
         var snapshot = new RootNode();
         
         // Copy namespace
-        snapshot.AWS.SetNamespace(AWS.GetNamespace());
+        var namespaceValue = AWS?.GetNamespace();
+        if (!string.IsNullOrWhiteSpace(namespaceValue))
+        {
+            snapshot.AWS.SetNamespace(namespaceValue);
+        }
         
         // Copy service if set
-        if (!string.IsNullOrEmpty(AWS.GetService()))
+        var serviceValue = AWS?.GetService();
+        if (!string.IsNullOrEmpty(serviceValue))
         {
-            snapshot.AWS.SetService(AWS.GetService());
+            snapshot.AWS.SetService(serviceValue);
         }
         
         // Copy metrics with their values
-        var metricsSnapshot = AWS.GetMetrics();
-        foreach (var metric in metricsSnapshot)
+        var metricsSnapshot = AWS?.GetMetrics();
+        if (metricsSnapshot != null)
         {
-            List<double> valuesCopy;
-            lock (metric.Values)
+            foreach (var metric in metricsSnapshot)
             {
-                valuesCopy = new List<double>(metric.Values);
-            }
-            
-            // Add each value individually to ensure proper metric creation
-            foreach (var value in valuesCopy)
-            {
-                snapshot.AWS.AddMetric(metric.Name, value, metric.Unit, metric.StorageResolution);
+                if (metric?.Values != null)
+                {
+                    List<double> valuesCopy;
+                    lock (metric.Values)
+                    {
+                        valuesCopy = new List<double>(metric.Values);
+                    }
+                    
+                    // Add each value individually to ensure proper metric creation
+                    foreach (var value in valuesCopy)
+                    {
+                        snapshot.AWS.AddMetric(metric.Name, value, metric.Unit, metric.StorageResolution);
+                    }
+                }
             }
         }
         
         // Copy dimensions
-        var dimensionsSnapshot = AWS.ExpandAllDimensionSets();
-        if (dimensionsSnapshot.Count > 0)
+        var dimensionsSnapshot = AWS?.ExpandAllDimensionSets();
+        if (dimensionsSnapshot != null && dimensionsSnapshot.Count > 0)
         {
             // Create dimension set with first key-value pair, then add the rest
             var firstKvp = dimensionsSnapshot.First();
@@ -132,10 +155,14 @@ public class RootNode
         }
         
         // Copy custom metadata
-        var metadataSnapshot = new Dictionary<string, object>(AWS.CustomMetadata);
-        foreach (var kvp in metadataSnapshot)
+        var customMetadata = AWS?.CustomMetadata;
+        if (customMetadata != null)
         {
-            snapshot.AWS.AddMetadata(kvp.Key, kvp.Value);
+            var metadataSnapshot = new Dictionary<string, object>(customMetadata);
+            foreach (var kvp in metadataSnapshot)
+            {
+                snapshot.AWS.AddMetadata(kvp.Key, kvp.Value);
+            }
         }
         
         return snapshot;
