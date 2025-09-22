@@ -93,6 +93,9 @@ public class MetricDefinition
     /// <param name="value">Metric value to add to existing key</param>
     public void AddValue(double value)
     {
-        Values.Add(value);
+        lock (Values)
+        {
+            Values.Add(value);
+        }
     }
 }

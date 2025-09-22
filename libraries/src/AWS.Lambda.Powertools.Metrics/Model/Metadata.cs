@@ -51,7 +51,10 @@ public class Metadata
     /// </summary>
     internal void ClearMetrics()
     {
-        _metricDirective.Metrics.Clear();
+        lock (_metricDirective._lockObj)
+        {
+            _metricDirective.Metrics.Clear();
+        }
         CustomMetadata?.Clear();
     }
 
@@ -60,7 +63,10 @@ public class Metadata
     /// </summary>
     internal void ClearNonDefaultDimensions()
     {
-        _metricDirective.Dimensions.Clear();
+        lock (_metricDirective._lockObj)
+        {
+            _metricDirective.Dimensions.Clear();
+        }
     }
 
     /// <summary>
@@ -144,7 +150,11 @@ public class Metadata
     /// <returns>List of metrics stored in memory</returns>
     internal List<MetricDefinition> GetMetrics()
     {
-        return _metricDirective.Metrics;
+        // Return a snapshot to avoid concurrent modification issues during serialization
+        lock (_metricDirective._lockObj)
+        {
+            return new List<MetricDefinition>(_metricDirective.Metrics);
+        }
     }
 
     /// <summary>

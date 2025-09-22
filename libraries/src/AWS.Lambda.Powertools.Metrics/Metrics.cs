@@ -535,9 +535,17 @@ public class Metrics : IMetrics, IDisposable
         var dictionary = new Dictionary<string, string>();
         try
         {
-            return dimensions != null
-                ? new Dictionary<string, string>(dimensions.SelectMany(x => x.Dimensions))
-                : dictionary;
+            if (dimensions != null)
+            {
+                foreach (var dimensionSet in dimensions)
+                {
+                    foreach (var kvp in dimensionSet.Dimensions)
+                    {
+                        dictionary[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+            return dictionary;
         }
         catch (Exception e)
         {
@@ -633,12 +641,21 @@ public class Metrics : IMetrics, IDisposable
     {
         // Use a traditional for loop instead of LINQ to avoid enumeration issues
         // when the collection is modified concurrently
-        for (int i = 0; i < metrics.Count; i++)
+        if (metrics == null || string.IsNullOrEmpty(key))
+            return null;
+            
+        // Create a snapshot of the count to avoid issues with concurrent modifications
+        var count = metrics.Count;
+        for (int i = 0; i < count; i++)
         {
             try
             {
+                // Check bounds again in case collection was modified
+                if (i >= metrics.Count)
+                    break;
+                    
                 var metric = metrics[i];
-                if (metric?.Name == key)
+                if (metric != null && string.Equals(metric.Name, key, StringComparison.Ordinal))
                 {
                     return metric;
                 }
@@ -646,7 +663,12 @@ public class Metrics : IMetrics, IDisposable
             catch (ArgumentOutOfRangeException)
             {
                 // Collection was modified during iteration, return null to be safe
-                return null;
+                break;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                // Collection was modified during iteration, return null to be safe
+                break;
             }
         }
         return null;
