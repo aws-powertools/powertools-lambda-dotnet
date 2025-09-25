@@ -199,8 +199,7 @@ public class Metrics : IMetrics, IDisposable
 
                 if (metrics.Count > 0 &&
                     (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
-                     metrics.FirstOrDefault(x => x.Name == key)
-                         ?.Values.Count == PowertoolsConfigurations.MaxMetrics))
+                     GetExistingMetric(metrics, key)?.Values.Count == PowertoolsConfigurations.MaxMetrics))
                 {
                     Instance.Flush(true);
                 }
@@ -536,9 +535,17 @@ public class Metrics : IMetrics, IDisposable
         var dictionary = new Dictionary<string, string>();
         try
         {
-            return dimensions != null
-                ? new Dictionary<string, string>(dimensions.SelectMany(x => x.Dimensions))
-                : dictionary;
+            if (dimensions != null)
+            {
+                foreach (var dimensionSet in dimensions)
+                {
+                    foreach (var kvp in dimensionSet.Dimensions)
+                    {
+                        dictionary[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+            return dictionary;
         }
         catch (Exception e)
         {
@@ -622,6 +629,49 @@ public class Metrics : IMetrics, IDisposable
     public static void Flush(bool metricsOverflow = false)
     {
         Instance.Flush(metricsOverflow);
+    }
+
+    /// <summary>
+    ///     Safely searches for an existing metric by name without using LINQ enumeration
+    /// </summary>
+    /// <param name="metrics">The metrics collection to search</param>
+    /// <param name="key">The metric name to search for</param>
+    /// <returns>The found metric or null if not found</returns>
+    private static MetricDefinition GetExistingMetric(List<MetricDefinition> metrics, string key)
+    {
+        // Use a traditional for loop instead of LINQ to avoid enumeration issues
+        // when the collection is modified concurrently
+        if (metrics == null || string.IsNullOrEmpty(key))
+            return null;
+            
+        // Create a snapshot of the count to avoid issues with concurrent modifications
+        var count = metrics.Count;
+        for (int i = 0; i < count; i++)
+        {
+            try
+            {
+                // Check bounds again in case collection was modified
+                if (i >= metrics.Count)
+                    break;
+                    
+                var metric = metrics[i];
+                if (metric != null && string.Equals(metric.Name, key, StringComparison.Ordinal))
+                {
+                    return metric;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // Collection was modified during iteration, return null to be safe
+                break;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                // Collection was modified during iteration, return null to be safe
+                break;
+            }
+        }
+        return null;
     }
 
     /// <summary>
