@@ -420,8 +420,8 @@ public class AppConfigProvider : ParameterProvider<AppConfigProviderConfiguratio
             await Client.GetLatestConfigurationAsync(request)
                 .ConfigureAwait(false);
 
-        result.PollConfigurationToken = response.NextPollConfigurationToken;
-        result.NextAllowedPollTime = _dateTimeWrapper.UtcNow.AddSeconds(response.NextPollIntervalInSeconds);
+        if (response.NextPollIntervalInSeconds != null)
+            result.NextAllowedPollTime = _dateTimeWrapper.UtcNow.AddSeconds((double)response.NextPollIntervalInSeconds);
 
         if (!string.Equals(response.ContentType, "application/json", StringComparison.CurrentCultureIgnoreCase))
             throw new NotImplementedException($"Not implemented AppConfig type: {response.ContentType}");
