@@ -7,7 +7,6 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.KinesisEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
-using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 
@@ -20,28 +19,16 @@ public class TypedKinesisEventBatchProcessor : KinesisEventBatchProcessor, IType
     private readonly IRecordDataExtractor<KinesisEvent.KinesisEventRecord> _recordDataExtractor;
 
 
-
     /// <summary>
     /// Initializes a new instance of the TypedKinesisEventBatchProcessor class.
     /// </summary>
-    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
     /// <param name="recordDataExtractor">The record data extractor. If null, uses KinesisRecordDataExtractor.Instance.</param>
-    public TypedKinesisEventBatchProcessor(
-        IPowertoolsConfigurations powertoolsConfigurations,
-        IDeserializationService deserializationService = null,
+    public TypedKinesisEventBatchProcessor(IDeserializationService deserializationService = null,
         IRecordDataExtractor<KinesisEvent.KinesisEventRecord> recordDataExtractor = null) 
-        : base(powertoolsConfigurations)
     {
         _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
         _recordDataExtractor = recordDataExtractor ?? KinesisRecordDataExtractor.Instance;
-    }
-
-    /// <summary>
-    /// Default constructor for when consumers create a custom typed batch processor.
-    /// </summary>
-    protected TypedKinesisEventBatchProcessor() : this(PowertoolsConfigurations.Instance)
-    {
     }
 
     /// <inheritdoc />

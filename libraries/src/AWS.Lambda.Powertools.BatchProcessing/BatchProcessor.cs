@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
-using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
@@ -16,14 +15,6 @@ namespace AWS.Lambda.Powertools.BatchProcessing;
 /// <typeparam name="TRecord">Type of batch record.</typeparam>
 public abstract class BatchProcessor<TEvent, TRecord> : IBatchProcessor<TEvent, TRecord>
 {
-    /// <summary>
-    /// Default constructor
-    /// </summary>
-    protected BatchProcessor(IPowertoolsConfigurations powertoolsConfigurations)
-    {
-        powertoolsConfigurations.SetExecutionEnvironment(this);
-    }
-
     /// <inheritdoc />
     public ProcessingResult<TRecord> ProcessingResult { get; protected set; }
 

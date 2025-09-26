@@ -17,7 +17,8 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <VersionSuffix>$(VersionSuffix)</VersionSuffix>
-
+        <NoWarn>RS1041</NoWarn>
+        <NoWarn>RS1036</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
@@ -39,6 +40,7 @@
 
         <ProjectReference Remove="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj"/>
         <PackageReference Include="AspectInjector"/>
+        
         <Compile Include="..\AWS.Lambda.Powertools.Common\**\*.cs">
             <Link>Common\%(RecursiveDir)%(Filename)%(Extension)</Link>
         </Compile>

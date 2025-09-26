@@ -1335,38 +1335,13 @@ namespace AWS.Lambda.Powertools.Logging.Tests
         }
 
         [Fact]
-        public void Log_Set_Execution_Environment_Context()
-        {
-            // Arrange
-            var loggerName = Guid.NewGuid().ToString();
-
-            var env = new PowertoolsEnvironment();
-            // Act
-            var configurations = new PowertoolsConfigurations(env);
-
-            var loggerConfiguration = new PowertoolsLoggerConfiguration
-            {
-                Service = null,
-                MinimumLogLevel = LogLevel.None
-            };
-
-            var provider = new PowertoolsLoggerProvider(loggerConfiguration, configurations);
-            var logger = provider.CreateLogger(loggerName);
-            logger.LogInformation("Test");
-
-            // Assert
-            Assert.Contains($"{Constants.FeatureContextIdentifier}/Logging/",
-                env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
-        }
-
-        [Fact]
         public void Log_Skip_If_Exists_Execution_Environment_Context()
         {
             // Arrange
             var loggerName = Guid.NewGuid().ToString();
 
             var env = new PowertoolsEnvironment();
-            env.SetEnvironmentVariable("AWS_EXECUTION_ENV",
+            env.SetEnvironmentVariable("AWS_SDK_UA_APP_ID",
                 $"{Constants.FeatureContextIdentifier}/Logging/AlreadyThere");
 
             // Act
@@ -1384,8 +1359,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests
 
             // Assert
             Assert.Equal($"{Constants.FeatureContextIdentifier}/Logging/AlreadyThere",
-                env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
-            env.SetEnvironmentVariable("AWS_EXECUTION_ENV", null);
+                env.GetEnvironmentVariable("AWS_SDK_UA_APP_ID"));
+            env.SetEnvironmentVariable("AWS_SDK_UA_APP_ID", null);
         }
 
         [Fact]

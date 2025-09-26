@@ -30,4 +30,10 @@
         </Compile>
         <Compile Remove="..\AWS.Lambda.Powertools.JMESPath\obj\**"/>
     </ItemGroup>
+
+    <!-- Include MSBuild targets in the NuGet package -->
+    <ItemGroup>
+        <None Include="build\AWS.Lambda.Powertools.Idempotency.targets" Pack="true" PackagePath="build\AWS.Lambda.Powertools.Idempotency.targets" />
+    </ItemGroup>
+
 </Project>

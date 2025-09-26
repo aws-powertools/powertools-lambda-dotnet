@@ -7,7 +7,6 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.DynamoDBEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
-using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
@@ -20,28 +19,16 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
     private readonly IRecordDataExtractor<DynamoDBEvent.DynamodbStreamRecord> _recordDataExtractor;
 
 
-
     /// <summary>
     /// Initializes a new instance of the TypedDynamoDbStreamBatchProcessor class.
     /// </summary>
-    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
     /// <param name="recordDataExtractor">The record data extractor. If null, uses DynamoDbRecordDataExtractor.Instance.</param>
-    public TypedDynamoDbStreamBatchProcessor(
-        IPowertoolsConfigurations powertoolsConfigurations,
-        IDeserializationService deserializationService = null,
+    public TypedDynamoDbStreamBatchProcessor(IDeserializationService deserializationService = null,
         IRecordDataExtractor<DynamoDBEvent.DynamodbStreamRecord> recordDataExtractor = null) 
-        : base(powertoolsConfigurations)
     {
         _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
         _recordDataExtractor = recordDataExtractor ?? DynamoDbRecordDataExtractor.Instance;
-    }
-
-    /// <summary>
-    /// Default constructor for when consumers create a custom typed batch processor.
-    /// </summary>
-    protected TypedDynamoDbStreamBatchProcessor() : this(PowertoolsConfigurations.Instance)
-    {
     }
 
     /// <inheritdoc />

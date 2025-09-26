@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+// ReSharper disable InconsistentNaming
 namespace AWS.Lambda.Powertools.Common;
 
 /// <summary>
@@ -143,4 +144,12 @@ internal static class Constants
     /// Constant for POWERTOOLS_METRICS_DISABLED environment variable
     /// </summary>
     internal const string PowertoolsMetricsDisabledEnv = "POWERTOOLS_METRICS_DISABLED";
+    
+    /// <summary>
+    /// A unique and opaque application ID that is appended to the
+    /// User-Agent header as app/sdk_ua_app_id. It should have a
+    /// maximum length of 50. This variable is sourced from environment
+    /// variable AWS_SDK_UA_APP_ID
+    /// </summary>
+    internal const string AWSSdkUAAppId = "AWS_SDK_UA_APP_ID";
 }

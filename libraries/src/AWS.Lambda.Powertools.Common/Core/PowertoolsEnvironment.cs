@@ -15,7 +15,7 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     /// <summary>
     /// Cached runtime environment string
     /// </summary>
-    private static readonly string CachedRuntimeEnvironment = $"PTENV/AWS_LAMBDA_DOTNET{Environment.Version.Major}";
+    private static readonly string CachedRuntimeEnvironment = $"PTEnv/{Environment.GetEnvironmentVariable(Constants.AwsExecutionEnvironmentVariableName)}";
     
     /// <summary>
     /// Cache for parsed assembly names to avoid repeated string operations
@@ -69,43 +69,37 @@ public class PowertoolsEnvironment : IPowertoolsEnvironment
     }
     
     /// <inheritdoc />
-    public void SetExecutionEnvironment<T>(T type)
+    public void SetExecutionEnvironment<T>(T type, string utilityName = null)
     {
-        const string envName = Constants.AwsExecutionEnvironmentVariableName;
+        const string envName = Constants.AWSSdkUAAppId;
         var currentEnvValue = GetEnvironmentVariable(envName);
-        var assemblyName = ParseAssemblyName(GetAssemblyName(type));
+        var assemblyName = utilityName != null ? $"{Constants.FeatureContextIdentifier}/{utilityName}" : ParseAssemblyName(GetAssemblyName(type));
+        var assemblyVersion = GetAssemblyVersion(type);
+        var newEntry = $"{assemblyName}/{assemblyVersion}";
 
-        // Check for duplication early
-        if (!string.IsNullOrEmpty(currentEnvValue) && currentEnvValue.Contains(assemblyName))
+        // Only set if not already present and only allows one utility
+        // this will change when bitwise is supported
+        if (!string.IsNullOrEmpty(currentEnvValue) && (currentEnvValue.Contains(assemblyName)
+                                        || currentEnvValue.Contains("PT/")))
         {
             return;
         }
 
-        var assemblyVersion = GetAssemblyVersion(type);
-        var newEntry = $"{assemblyName}/{assemblyVersion}";
-        
         string finalValue;
-        
+        var ptenvIndex = currentEnvValue?.IndexOf("PTEnv/") ?? -1;
+
         if (string.IsNullOrEmpty(currentEnvValue))
         {
-            // First entry: "PT/Assembly/1.0.0 PTENV/AWS_LAMBDA_DOTNET8"
             finalValue = $"{newEntry} {CachedRuntimeEnvironment}";
+        }
+        else if (ptenvIndex >= 0)
+        {
+            // Insert newEntry before PTENV
+            finalValue = $"{currentEnvValue.Substring(0, ptenvIndex).TrimEnd()} {newEntry} {currentEnvValue.Substring(ptenvIndex)}".Trim();
         }
         else
         {
-            // Check if PTENV already exists in one pass
-            var containsPtenv = currentEnvValue.Contains("PTENV/");
-            
-            if (containsPtenv)
-            {
-                // Just append the new entry: "existing PT/Assembly/1.0.0"
-                finalValue = $"{currentEnvValue} {newEntry}";
-            }
-            else
-            {
-                // Append new entry + PTENV: "existing PT/Assembly/1.0.0 PTENV/AWS_LAMBDA_DOTNET8"
-                finalValue = $"{currentEnvValue} {newEntry} {CachedRuntimeEnvironment}";
-            }
+            finalValue = $"{currentEnvValue} {newEntry} {CachedRuntimeEnvironment}";
         }
 
         SetEnvironmentVariable(envName, finalValue);

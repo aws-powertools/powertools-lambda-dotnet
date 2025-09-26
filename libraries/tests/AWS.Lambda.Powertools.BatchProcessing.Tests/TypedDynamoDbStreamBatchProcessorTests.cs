@@ -20,13 +20,12 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests;
 [Collection("Sequential")]
 public class TypedDynamoDbStreamBatchProcessorTests
 {
-    private readonly IPowertoolsConfigurations _mockConfigurations;
     private readonly TypedDynamoDbStreamBatchProcessor _processor;
 
     public TypedDynamoDbStreamBatchProcessorTests()
     {
-        _mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
-        _processor = new TypedDynamoDbStreamBatchProcessor(_mockConfigurations);
+        Substitute.For<IPowertoolsConfigurations>();
+        _processor = new TypedDynamoDbStreamBatchProcessor();
     }
 
     [Fact]
@@ -169,7 +168,7 @@ public class TypedDynamoDbStreamBatchProcessorTests
         mockDeserializationService.Deserialize<TestDynamoDbRecord>(Arg.Any<string>(), Arg.Any<DeserializationOptions>())
             .Returns(callInfo => throw new DeserializationException("Test deserialization failure", typeof(TestDynamoDbRecord), "seq-5", new JsonException("Invalid JSON")));
 
-        var processor = new TypedDynamoDbStreamBatchProcessor(_mockConfigurations, mockDeserializationService);
+        var processor = new TypedDynamoDbStreamBatchProcessor(mockDeserializationService);
         var handler = Substitute.For<ITypedRecordHandler<TestDynamoDbRecord>>();
 
         // Act & Assert
@@ -193,7 +192,7 @@ public class TypedDynamoDbStreamBatchProcessorTests
         mockDeserializationService.Deserialize<TestDynamoDbRecord>(Arg.Any<string>(), Arg.Any<DeserializationOptions>())
             .Returns(callInfo => throw new DeserializationException("Test deserialization failure", typeof(TestDynamoDbRecord), "seq-6", new JsonException("Invalid JSON")));
 
-        var processor = new TypedDynamoDbStreamBatchProcessor(_mockConfigurations, mockDeserializationService);
+        var processor = new TypedDynamoDbStreamBatchProcessor(mockDeserializationService);
 
         var deserializationOptions = new DeserializationOptions
         {

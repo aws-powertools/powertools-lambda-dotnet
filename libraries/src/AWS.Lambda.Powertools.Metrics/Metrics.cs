@@ -163,7 +163,6 @@ public class Metrics : IMetrics, IDisposable
         _disabled = _powertoolsConfigurations.MetricsDisabled;
         
         Instance = this;
-        _powertoolsConfigurations.SetExecutionEnvironment(this);
 
         // set namespace and service always
         SetNamespace(nameSpace);
