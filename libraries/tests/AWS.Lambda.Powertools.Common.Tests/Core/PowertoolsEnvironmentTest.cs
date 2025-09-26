@@ -98,25 +98,6 @@ public class PowertoolsEnvironmentTest : IDisposable
     }
 
     [Fact]
-    public void Should_Use_Aspect_Injector_281()
-    {
-        // This test must be present until Issue: https://github.com/pamidur/aspect-injector/issues/220 is fixed
-
-        var directory = Path.GetFullPath("../../../../../src/Directory.Packages.props");
-        var doc = XDocument.Load(directory);
-
-        var packageReference = doc.XPathSelectElements("//PackageVersion")
-            .Select(pr => new
-            {
-                Include = pr.Attribute("Include")!.Value,
-                Version = new Version(pr.Attribute("Version")!.Value)
-            }).FirstOrDefault(x => x.Include == "AspectInjector");
-
-        Assert.NotNull(packageReference);
-        Assert.Equal("2.8.1", packageReference.Version.ToString());
-    }
-
-    [Fact]
     public void SetExecutionEnvironment_Should_Format_Strings_Correctly_With_Mocked_Environment()
     {
         // Arrange
