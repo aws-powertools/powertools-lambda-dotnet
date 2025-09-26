@@ -43,5 +43,16 @@ public class DimensionSet
     ///     Gets the dimension keys.
     /// </summary>
     /// <value>The dimension keys.</value>
-    public List<string> DimensionKeys => Dimensions.Keys.ToList();
+    public List<string> DimensionKeys 
+    { 
+        get 
+        {
+            var keys = new List<string>();
+            foreach (var key in Dimensions.Keys)
+            {
+                keys.Add(key);
+            }
+            return keys;
+        }
+    }
 }

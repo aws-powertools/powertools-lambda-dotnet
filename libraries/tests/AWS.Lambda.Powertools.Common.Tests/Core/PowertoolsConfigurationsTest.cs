@@ -533,27 +533,6 @@ namespace AWS.Lambda.Powertools.Common.Tests
             Assert.True(result);
         }
         
-        [Fact]
-        public void Set_Lambda_Execution_Context()
-        {
-            // Arrange
-            var environment = Substitute.For<IPowertoolsEnvironment>();
-
-            // environment.Setup(c =>
-            //     c.SetExecutionEnvironment(GetType())
-            // );
-            
-            var configurations = new PowertoolsConfigurations(environment);
-            
-            // Act
-            configurations.SetExecutionEnvironment(typeof(PowertoolsConfigurations));
-
-            // Assert
-            // method with correct type was called
-            environment.Received(1)
-                .SetExecutionEnvironment(Arg.Is<Type>(i => i == typeof(PowertoolsConfigurations)));
-        }
-        
         #endregion
     }
 }

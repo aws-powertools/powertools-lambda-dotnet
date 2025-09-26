@@ -2,7 +2,6 @@
 
 using System.Collections.Generic;
 using Amazon.Lambda.DynamoDBEvents;
-using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
@@ -20,23 +19,16 @@ public class DynamoDbStreamBatchProcessor : BatchProcessor<DynamoDBEvent, Dynamo
     /// The singleton instance of the batch processor.
     /// </summary>
     public static IDynamoDbStreamBatchProcessor Instance =>
-        _instance ??= new DynamoDbStreamBatchProcessor(PowertoolsConfigurations.Instance);
+        _instance ??= new DynamoDbStreamBatchProcessor();
     
-    /// <summary>
-    /// This is the default constructor
-    /// </summary>
-    /// <param name="powertoolsConfigurations"></param>
-    public DynamoDbStreamBatchProcessor(IPowertoolsConfigurations powertoolsConfigurations) : base(powertoolsConfigurations)
-    {
-        _instance = this;
-    }
-
+    
     /// <summary>
     /// Need default constructor for when consumers create a custom batch processor
     /// </summary>
     // ReSharper disable once MemberCanBePrivate.Global
-    protected DynamoDbStreamBatchProcessor() : this(PowertoolsConfigurations.Instance)
+    protected DynamoDbStreamBatchProcessor()
     {
+        _instance = this;
     }
 
     /// <summary>

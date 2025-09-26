@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -15,7 +16,7 @@ public class Metadata
     public Metadata()
     {
         CloudWatchMetrics = new List<MetricDirective> { new() };
-        CustomMetadata = new Dictionary<string, object>();
+        CustomMetadata = new ConcurrentDictionary<string, object>();
     }
 
     /// <summary>
@@ -43,14 +44,17 @@ public class Metadata
     /// </summary>
     /// <value>The custom metadata.</value>
     [JsonIgnore]
-    public Dictionary<string, object> CustomMetadata { get; }
+    public ConcurrentDictionary<string, object> CustomMetadata { get; }
 
     /// <summary>
     ///     Deletes all metrics from memory
     /// </summary>
     internal void ClearMetrics()
     {
-        _metricDirective.Metrics.Clear();
+        lock (_metricDirective._lockObj)
+        {
+            _metricDirective.Metrics.Clear();
+        }
         CustomMetadata?.Clear();
     }
 
@@ -59,7 +63,10 @@ public class Metadata
     /// </summary>
     internal void ClearNonDefaultDimensions()
     {
-        _metricDirective.Dimensions.Clear();
+        lock (_metricDirective._lockObj)
+        {
+            _metricDirective.Dimensions.Clear();
+        }
     }
 
     /// <summary>
@@ -143,7 +150,11 @@ public class Metadata
     /// <returns>List of metrics stored in memory</returns>
     internal List<MetricDefinition> GetMetrics()
     {
-        return _metricDirective.Metrics;
+        // Return a snapshot to avoid concurrent modification issues during serialization
+        lock (_metricDirective._lockObj)
+        {
+            return new List<MetricDefinition>(_metricDirective.Metrics);
+        }
     }
 
     /// <summary>

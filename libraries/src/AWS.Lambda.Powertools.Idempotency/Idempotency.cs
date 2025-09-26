@@ -27,15 +27,6 @@ public sealed class Idempotency
     public BasePersistenceStore PersistenceStore { get; private set; } = null!;
 
     /// <summary>
-    /// Idempotency Constructor
-    /// </summary>
-    /// <param name="powertoolsConfigurations"></param>
-    internal Idempotency(IPowertoolsConfigurations powertoolsConfigurations)
-    {
-        powertoolsConfigurations.SetExecutionEnvironment(this);
-    }
-
-    /// <summary>
     /// Set Idempotency options
     /// </summary>
     /// <param name="options"></param>
@@ -56,7 +47,7 @@ public sealed class Idempotency
     /// <summary>
     /// Holds the idempotency Instance:
     /// </summary>
-    internal static Idempotency Instance { get; } = new(PowertoolsConfigurations.Instance);
+    internal static Idempotency Instance { get; } = new();
 
     /// <summary>
     /// Use this method to configure persistence layer (mandatory) and idempotency options (optional)

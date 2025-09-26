@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Amazon.Lambda.KinesisEvents;
-using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 
@@ -18,25 +17,16 @@ public class KinesisEventBatchProcessor : BatchProcessor<KinesisEvent, KinesisEv
     /// The singleton instance of the batch processor.
     /// </summary>
     public static IKinesisEventBatchProcessor Instance =>
-        _instance ??= new KinesisEventBatchProcessor(PowertoolsConfigurations.Instance);
-
-    /// <summary>
-    /// This is the default constructor
-    /// </summary>
-    /// <param name="powertoolsConfigurations"></param>
-    public KinesisEventBatchProcessor(IPowertoolsConfigurations powertoolsConfigurations) : base(powertoolsConfigurations)
-    {
-        _instance = this;
-    }
+        _instance ??= new KinesisEventBatchProcessor();
 
     /// <summary>
     /// Need default constructor for when consumers create a custom batch processor
     /// </summary>
-    // ReSharper disable once MemberCanBePrivate.Global
-    protected KinesisEventBatchProcessor() : this(PowertoolsConfigurations.Instance)
+    protected KinesisEventBatchProcessor()
     {
+        _instance = this;
     }
-
+    
     /// <summary>
     /// Return the instance ProcessingResult
     /// </summary>

@@ -112,12 +112,17 @@ public class MetricDirective
             var result = new List<List<string>>();
             var allDimKeys = new List<string>();
 
+            // Create snapshots to avoid concurrent modification issues
+            var defaultDimensionsSnapshot = new List<DimensionSet>(DefaultDimensions);
+            var dimensionsSnapshot = new List<DimensionSet>(Dimensions);
+
             // Add default dimensions keys
-            if (DefaultDimensions.Any())
+            foreach (var dimensionSet in defaultDimensionsSnapshot)
             {
-                foreach (var dimensionSet in DefaultDimensions)
+                var keysSnapshot = dimensionSet.DimensionKeys;
+                foreach (var key in keysSnapshot)
                 {
-                    foreach (var key in dimensionSet.DimensionKeys.Where(key => !allDimKeys.Contains(key)))
+                    if (!allDimKeys.Contains(key))
                     {
                         allDimKeys.Add(key);
                     }
@@ -125,17 +130,21 @@ public class MetricDirective
             }
 
             // Add all regular dimensions to the same array
-            foreach (var dimensionSet in Dimensions)
+            foreach (var dimensionSet in dimensionsSnapshot)
             {
-                foreach (var key in dimensionSet.DimensionKeys.Where(key => !allDimKeys.Contains(key)))
+                var keysSnapshot = dimensionSet.DimensionKeys;
+                foreach (var key in keysSnapshot)
                 {
-                    allDimKeys.Add(key);
+                    if (!allDimKeys.Contains(key))
+                    {
+                        allDimKeys.Add(key);
+                    }
                 }
             }
 
             // Add non-empty dimension arrays
             // When no dimensions exist, add an empty array
-            result.Add(allDimKeys.Any() ? allDimKeys : []);
+            result.Add(allDimKeys.Count > 0 ? allDimKeys : []);
 
             return result;
         }
@@ -144,7 +153,7 @@ public class MetricDirective
     /// <summary>
     /// Shared synchronization object
     /// </summary>
-    private readonly object _lockObj = new();
+    internal readonly object _lockObj = new();
 
     /// <summary>
     ///     Adds metric to memory
@@ -156,27 +165,35 @@ public class MetricDirective
     /// <exception cref="System.ArgumentOutOfRangeException">Metrics - Cannot add more than 100 metrics at the same time.</exception>
     public void AddMetric(string name, double value, MetricUnit unit, MetricResolution metricResolution)
     {
-        if (Metrics.Count < PowertoolsConfigurations.MaxMetrics)
+        if (string.IsNullOrEmpty(name))
+            return;
+            
+        lock (_lockObj)
         {
-            lock (_lockObj)
+            if (Metrics.Count >= PowertoolsConfigurations.MaxMetrics)
             {
-                var metric = Metrics.FirstOrDefault(m => m.Name == name);
-                if (metric != null)
+                throw new ArgumentOutOfRangeException(nameof(Metrics),
+                    $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metrics at the same time.");
+            }
+            
+            var metric = GetExistingMetric(Metrics, name);
+            if (metric?.Values != null)
+            {
+                if (metric.Values.Count < PowertoolsConfigurations.MaxMetrics)
                 {
-                    if (metric.Values.Count < PowertoolsConfigurations.MaxMetrics)
-                        metric.AddValue(value);
-                    else
-                        throw new ArgumentOutOfRangeException(nameof(metric),
-                            $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metric data points at the same time.");
+                    metric.AddValue(value);
                 }
                 else
-                    Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
+                {
+                    throw new ArgumentOutOfRangeException(nameof(metric),
+                        $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metric data points at the same time.");
+                }
             }
-        }
-        else
-        {
-            throw new ArgumentOutOfRangeException(nameof(Metrics),
-                $"Cannot add more than {PowertoolsConfigurations.MaxMetrics} metrics at the same time.");
+            else
+            {
+                // Either no existing metric found or metric/Values became null due to concurrent access
+                Metrics.Add(new MetricDefinition(name, unit, value, metricResolution));
+            }
         }
     }
 
@@ -205,37 +222,53 @@ public class MetricDirective
     /// <exception cref="System.ArgumentOutOfRangeException">Dimensions - Cannot add more than 9 dimensions at the same time.</exception>
     internal void AddDimension(DimensionSet dimension)
     {
-        // Check if we already have any dimensions
-        if (Dimensions.Count > 0)
+        if (dimension?.Dimensions == null)
+            return;
+            
+        lock (_lockObj)
         {
-            // Get the first dimension set where we now store all dimensions
-            var firstDimensionSet = Dimensions[0];
-        
-            // Check the actual dimension count inside the first dimension set
-            if (firstDimensionSet.Dimensions.Count >= PowertoolsConfigurations.MaxDimensions)
+            // Check if we already have any dimensions
+            if (Dimensions.Count > 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(dimension),
-                    $"Cannot add more than {PowertoolsConfigurations.MaxDimensions} dimensions at the same time.");
-            }
+                // Get the first dimension set where we now store all dimensions
+                var firstDimensionSet = Dimensions[0];
+                
+                // Null check for thread safety
+                if (firstDimensionSet?.Dimensions == null)
+                {
+                    // If first dimension set is null, replace it with the new one
+                    Dimensions[0] = dimension;
+                    return;
+                }
+            
+                // Check the actual dimension count inside the first dimension set
+                if (firstDimensionSet.Dimensions.Count >= PowertoolsConfigurations.MaxDimensions)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(dimension),
+                        $"Cannot add more than {PowertoolsConfigurations.MaxDimensions} dimensions at the same time.");
+                }
 
-            // Add to the first dimension set instead of creating a new one
-            foreach (var pair in dimension.Dimensions)
-            {
-                if (!firstDimensionSet.Dimensions.ContainsKey(pair.Key))
+                // Add to the first dimension set instead of creating a new one
+                // Create a snapshot to avoid concurrent modification issues
+                var dimensionSnapshot = new Dictionary<string, string>(dimension.Dimensions);
+                foreach (var pair in dimensionSnapshot)
                 {
-                    firstDimensionSet.Dimensions.Add(pair.Key, pair.Value);
-                }
-                else
-                {
-                    Console.WriteLine(
-                        $"##WARNING##: Failed to Add dimension '{pair.Key}'. Dimension already exists.");
+                    if (!firstDimensionSet.Dimensions.ContainsKey(pair.Key))
+                    {
+                        firstDimensionSet.Dimensions.Add(pair.Key, pair.Value);
+                    }
+                    else
+                    {
+                        Console.WriteLine(
+                            $"##WARNING##: Failed to Add dimension '{pair.Key}'. Dimension already exists.");
+                    }
                 }
             }
-        }
-        else
-        {
-            // No dimensions yet, add the new one
-            Dimensions.Add(dimension);
+            else
+            {
+                // No dimensions yet, add the new one
+                Dimensions.Add(dimension);
+            }
         }
     }
 
@@ -245,12 +278,35 @@ public class MetricDirective
     /// <param name="defaultDimensions">Default dimensions list</param>
     internal void SetDefaultDimensions(List<DimensionSet> defaultDimensions)
     {
-        if (!DefaultDimensions.Any())
+        if (DefaultDimensions.Count == 0)
             DefaultDimensions = defaultDimensions;
         else
+        {
             foreach (var item in defaultDimensions)
-                if (!DefaultDimensions.Any(d => d.DimensionKeys.Contains(item.DimensionKeys[0])))
+            {
+                if (item.DimensionKeys.Count == 0)
+                    continue;
+                    
+                bool exists = false;
+                var itemFirstKey = item.DimensionKeys[0];
+                
+                foreach (var existing in DefaultDimensions)
+                {
+                    var existingKeys = existing.DimensionKeys;
+                    for (int i = 0; i < existingKeys.Count; i++)
+                    {
+                        if (existingKeys[i] == itemFirstKey)
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (exists) break;
+                }
+                if (!exists)
                     DefaultDimensions.Add(item);
+            }
+        }
     }
 
     /// <summary>
@@ -262,13 +318,29 @@ public class MetricDirective
         // if a key appears multiple times, the last value will be the one that's used in the output.
         var dimensions = new Dictionary<string, string>();
 
-        foreach (var dimensionSet in DefaultDimensions)
-        foreach (var (key, value) in dimensionSet.Dimensions)
-            dimensions[key] = value;
+        // Create snapshots to avoid concurrent modification issues
+        var defaultDimensionsSnapshot = new List<DimensionSet>(DefaultDimensions);
+        var dimensionsSnapshot = new List<DimensionSet>(Dimensions);
 
-        foreach (var dimensionSet in Dimensions)
-        foreach (var (key, value) in dimensionSet.Dimensions)
-            dimensions[key] = value;
+        foreach (var dimensionSet in defaultDimensionsSnapshot)
+        {
+            if (dimensionSet?.Dimensions != null)
+            {
+                var dimensionSnapshot = new Dictionary<string, string>(dimensionSet.Dimensions);
+                foreach (var (key, value) in dimensionSnapshot)
+                    dimensions[key] = value;
+            }
+        }
+
+        foreach (var dimensionSet in dimensionsSnapshot)
+        {
+            if (dimensionSet?.Dimensions != null)
+            {
+                var dimensionSnapshot = new Dictionary<string, string>(dimensionSet.Dimensions);
+                foreach (var (key, value) in dimensionSnapshot)
+                    dimensions[key] = value;
+            }
+        }
 
         return dimensions;
     }
@@ -279,16 +351,19 @@ public class MetricDirective
     /// <param name="dimensionSets">List of dimension sets to add</param>
     internal void AddDimensionSet(List<DimensionSet> dimensionSets)
     {
-        if (dimensionSets == null || !dimensionSets.Any())
+        if (dimensionSets == null || dimensionSets.Count == 0)
             return;
 
         if (Dimensions.Count + dimensionSets.Count <= PowertoolsConfigurations.MaxDimensions)
         {
             // Simply add the dimension sets without checking for existing keys
             // This ensures dimensions added together stay together
-            foreach (var dimensionSet in dimensionSets.Where(dimensionSet => dimensionSet.DimensionKeys.Any()))
+            foreach (var dimensionSet in dimensionSets)
             {
-                Dimensions.Add(dimensionSet);
+                if (dimensionSet.DimensionKeys.Count > 0)
+                {
+                    Dimensions.Add(dimensionSet);
+                }
             }
         }
         else
@@ -296,6 +371,49 @@ public class MetricDirective
             throw new ArgumentOutOfRangeException(nameof(Dimensions),
                 $"Cannot add more than {PowertoolsConfigurations.MaxDimensions} dimensions at the same time.");
         }
+    }
+
+    /// <summary>
+    ///     Safely searches for an existing metric by name without using LINQ enumeration
+    /// </summary>
+    /// <param name="metrics">The metrics collection to search</param>
+    /// <param name="name">The metric name to search for</param>
+    /// <returns>The found metric or null if not found</returns>
+    private static MetricDefinition GetExistingMetric(List<MetricDefinition> metrics, string name)
+    {
+        // Use a traditional for loop instead of LINQ to avoid enumeration issues
+        // when the collection is modified concurrently
+        if (metrics == null || string.IsNullOrEmpty(name))
+            return null;
+            
+        // Create a snapshot of the count to avoid issues with concurrent modifications
+        var count = metrics.Count;
+        for (int i = 0; i < count; i++)
+        {
+            try
+            {
+                // Check bounds again in case collection was modified
+                if (i >= metrics.Count)
+                    break;
+                    
+                var metric = metrics[i];
+                if (metric != null && string.Equals(metric.Name, name, StringComparison.Ordinal))
+                {
+                    return metric;
+                }
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // Collection was modified during iteration, return null to be safe
+                break;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                // Collection was modified during iteration, return null to be safe
+                break;
+            }
+        }
+        return null;
     }
 
     /// <summary>

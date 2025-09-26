@@ -14,6 +14,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -42,15 +43,37 @@ public class RootNode
         {
             var targetMembers = new Dictionary<string, object>();
 
-            foreach (var dimension in AWS.ExpandAllDimensionSets()) targetMembers.Add(dimension.Key, dimension.Value);
-            
-            foreach (var metricDefinition in AWS.GetMetrics())
+            // Create snapshots to avoid concurrent modification issues
+            var dimensionsSnapshot = AWS?.ExpandAllDimensionSets();
+            if (dimensionsSnapshot != null)
             {
-                var values = metricDefinition.Values;
-                targetMembers.Add(metricDefinition.Name, values.Count == 1 ? values[0] : values);
+                foreach (var dimension in dimensionsSnapshot) 
+                    targetMembers.Add(dimension.Key, dimension.Value);
             }
             
-            foreach (var metadata in AWS.CustomMetadata) targetMembers.TryAdd(metadata.Key, metadata.Value);
+            var metricsSnapshot = AWS?.GetMetrics();
+            if (metricsSnapshot != null)
+            {
+                foreach (var metricDefinition in metricsSnapshot)
+                {
+                    if (metricDefinition?.Values != null)
+                    {
+                        List<double> values;
+                        lock (metricDefinition.Values)
+                        {
+                            values = new List<double>(metricDefinition.Values);
+                        }
+                        targetMembers.Add(metricDefinition.Name, values.Count == 1 ? values[0] : values);
+                    }
+                }
+            }
+            
+            var metadataSnapshot = AWS?.CustomMetadata;
+            if (metadataSnapshot != null)
+            {
+                foreach (var metadata in metadataSnapshot) 
+                    targetMembers.TryAdd(metadata.Key, metadata.Value);
+            }
 
             return targetMembers;
         }
@@ -65,6 +88,83 @@ public class RootNode
     {
         if (string.IsNullOrWhiteSpace(AWS.GetNamespace())) throw new SchemaValidationException("namespace");
 
-        return JsonSerializer.Serialize(this, typeof(RootNode), MetricsSerializationContext.Default);
+        // Create a complete snapshot for serialization to avoid concurrent modification issues
+        var snapshot = CreateSerializationSnapshot();
+        return JsonSerializer.Serialize(snapshot, typeof(RootNode), MetricsSerializationContext.Default);
+    }
+
+    /// <summary>
+    ///     Creates a complete snapshot of the current state for thread-safe serialization
+    /// </summary>
+    /// <returns>A snapshot RootNode with all data copied</returns>
+    private RootNode CreateSerializationSnapshot()
+    {
+        var snapshot = new RootNode();
+        
+        // Copy namespace
+        var namespaceValue = AWS?.GetNamespace();
+        if (!string.IsNullOrWhiteSpace(namespaceValue))
+        {
+            snapshot.AWS.SetNamespace(namespaceValue);
+        }
+        
+        // Copy service if set
+        var serviceValue = AWS?.GetService();
+        if (!string.IsNullOrEmpty(serviceValue))
+        {
+            snapshot.AWS.SetService(serviceValue);
+        }
+        
+        // Copy metrics with their values
+        var metricsSnapshot = AWS?.GetMetrics();
+        if (metricsSnapshot != null)
+        {
+            foreach (var metric in metricsSnapshot)
+            {
+                if (metric?.Values != null)
+                {
+                    List<double> valuesCopy;
+                    lock (metric.Values)
+                    {
+                        valuesCopy = new List<double>(metric.Values);
+                    }
+                    
+                    // Add each value individually to ensure proper metric creation
+                    foreach (var value in valuesCopy)
+                    {
+                        snapshot.AWS.AddMetric(metric.Name, value, metric.Unit, metric.StorageResolution);
+                    }
+                }
+            }
+        }
+        
+        // Copy dimensions
+        var dimensionsSnapshot = AWS?.ExpandAllDimensionSets();
+        if (dimensionsSnapshot != null && dimensionsSnapshot.Count > 0)
+        {
+            // Create dimension set with first key-value pair, then add the rest
+            var firstKvp = dimensionsSnapshot.First();
+            var dimensionSet = new DimensionSet(firstKvp.Key, firstKvp.Value);
+            
+            // Add remaining dimensions
+            foreach (var kvp in dimensionsSnapshot.Skip(1))
+            {
+                dimensionSet.Dimensions[kvp.Key] = kvp.Value;
+            }
+            snapshot.AWS.AddDimension(dimensionSet);
+        }
+        
+        // Copy custom metadata
+        var customMetadata = AWS?.CustomMetadata;
+        if (customMetadata != null)
+        {
+            var metadataSnapshot = new Dictionary<string, object>(customMetadata);
+            foreach (var kvp in metadataSnapshot)
+            {
+                snapshot.AWS.AddMetadata(kvp.Key, kvp.Value);
+            }
+        }
+        
+        return snapshot;
     }
 }

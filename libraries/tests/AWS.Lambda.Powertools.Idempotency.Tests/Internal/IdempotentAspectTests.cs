@@ -234,24 +234,6 @@ public class IdempotentAspectTests : IDisposable
     }
 
     [Fact]
-    public void Idempotency_Set_Execution_Environment_Context()
-    {
-        // Arrange
-
-        var env = new PowertoolsEnvironment();
-        var conf = new PowertoolsConfigurations(env);
-
-        // Act
-        var xRayRecorder = new Idempotency(conf);
-
-        // Assert
-        Assert.Contains($"{Constants.FeatureContextIdentifier}/Idempotency/",
-            env.GetEnvironmentVariable("AWS_EXECUTION_ENV"));
-
-        Assert.NotNull(xRayRecorder);
-    }
-
-    [Fact]
     public async Task Handle_WhenIdempotencyOnSubMethodAnnotated_AndFirstCall_ShouldPutInStore()
     {
         // Arrange

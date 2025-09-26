@@ -183,12 +183,6 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
         GetEnvironmentVariableOrDefault(Constants.TracingDisabledEnv, false);
 
     /// <inheritdoc />
-    public void SetExecutionEnvironment<T>(T type)
-    {
-        _powertoolsEnvironment.SetExecutionEnvironment(type);
-    }
-
-    /// <inheritdoc />
     public bool IdempotencyDisabled =>
         GetEnvironmentVariableOrDefault(Constants.IdempotencyDisabledEnv, false);
 

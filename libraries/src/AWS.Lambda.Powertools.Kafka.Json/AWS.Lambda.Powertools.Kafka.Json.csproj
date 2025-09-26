@@ -23,4 +23,9 @@
         <ProjectReference Include="..\AWS.Lambda.Powertools.Kafka\AWS.Lambda.Powertools.Kafka.csproj"/>
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj"/>
     </ItemGroup>
+
+    <!-- Include MSBuild targets in the NuGet package -->
+    <ItemGroup>
+        <None Include="build\AWS.Lambda.Powertools.Kafka.Json.targets" Pack="true" PackagePath="build\AWS.Lambda.Powertools.Kafka.Json.targets" />
+    </ItemGroup>
 </Project>

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Amazon.Lambda.SQSEvents;
-using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Sqs;
 
@@ -20,22 +19,14 @@ public class SqsBatchProcessor : BatchProcessor<SQSEvent, SQSEvent.SQSMessage>, 
     /// Gets the instance.
     /// </summary>
     /// <value>The instance.</value>
-    public static ISqsBatchProcessor Instance => _instance ??= new SqsBatchProcessor(PowertoolsConfigurations.Instance);
-
-    /// <summary>
-    /// This is the default constructor
-    /// </summary>
-    /// <param name="powertoolsConfigurations"></param>
-    public SqsBatchProcessor(IPowertoolsConfigurations powertoolsConfigurations) : base(powertoolsConfigurations)
-    {
-        _instance = this;
-    }
-
+    public static ISqsBatchProcessor Instance => _instance ??= new SqsBatchProcessor();
+    
     /// <summary>
     /// Need default constructor for when consumers create a custom batch processor
     /// </summary>
-    protected SqsBatchProcessor() : this(PowertoolsConfigurations.Instance)
+    public SqsBatchProcessor()
     {
+        _instance = this;
     }
     
     /// <summary>

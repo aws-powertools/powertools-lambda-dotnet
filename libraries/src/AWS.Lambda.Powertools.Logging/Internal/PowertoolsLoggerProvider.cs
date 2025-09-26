@@ -25,9 +25,6 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
         _powertoolsConfigurations = powertoolsConfigurations;
         _currentConfig = config;
 
-        // Set execution environment
-        _powertoolsConfigurations.SetExecutionEnvironment(this);
-
         // Apply environment configurations if available
         ConfigureFromEnvironment();
     }

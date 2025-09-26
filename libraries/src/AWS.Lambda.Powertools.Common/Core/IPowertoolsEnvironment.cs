@@ -34,10 +34,11 @@ public interface IPowertoolsEnvironment
     /// <typeparam name="T"></typeparam>
     /// <returns>Assembly Version in the Major.Minor.Build format</returns>
     string GetAssemblyVersion<T>(T type);
-    
+
     /// <summary>
-    /// Sets the execution Environment Variable (AWS_EXECUTION_ENV)
+    /// Sets the execution Environment Variable (AWS_SDK_UA_APP_ID)
     /// </summary>
     /// <param name="type"></param>
-    void SetExecutionEnvironment<T>(T type);
+    /// <param name="utilityName"></param>
+    void SetExecutionEnvironment<T>(T type, string utilityName = null);
 }

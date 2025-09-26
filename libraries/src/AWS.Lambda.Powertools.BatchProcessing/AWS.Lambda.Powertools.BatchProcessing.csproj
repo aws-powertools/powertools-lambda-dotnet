@@ -16,4 +16,10 @@
         <PackageReference Include="Amazon.Lambda.SQSEvents" />
         <ProjectReference Include="..\AWS.Lambda.Powertools.Common\AWS.Lambda.Powertools.Common.csproj" Condition="'$(Configuration)'=='Debug'"/>
     </ItemGroup>
+
+    <!-- Include MSBuild targets in the NuGet package -->
+    <ItemGroup>
+        <None Include="build\AWS.Lambda.Powertools.BatchProcessing.targets" Pack="true" PackagePath="build\AWS.Lambda.Powertools.BatchProcessing.targets" />
+    </ItemGroup>
+
 </Project>
