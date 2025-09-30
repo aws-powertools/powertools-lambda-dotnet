@@ -87,26 +87,17 @@ public class TracingSubsegmentTests
         Assert.True(delegateInvoked);
     }
 
-    [Fact]
-    public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenNameIsNull()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenNameIsInvalid(string invalidName)
     {
         // Arrange
         var parent = new Segment("parent", TraceId.NewId());
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => 
-            Tracing.WithSubsegment(null, null, parent, _ => { }));
-    }
-
-    [Fact]
-    public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenNameIsEmpty()
-    {
-        // Arrange
-        var parent = new Segment("parent", TraceId.NewId());
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
-            Tracing.WithSubsegment(null, "", parent, _ => { }));
+            Tracing.WithSubsegment(null, invalidName, parent, _ => { }));
     }
 
     [Fact]
@@ -235,39 +226,15 @@ public class TracingSubsegmentTests
 
     #region BeginSubsegment Tests
 
-    [Fact]
-    public void BeginSubsegment_WithName_ThrowsArgumentNullException_WhenNameIsNull()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void BeginSubsegment_WithInvalidName_ThrowsArgumentNullException(string invalidName)
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment(null));
-    }
-
-    [Fact]
-    public void BeginSubsegment_WithName_ThrowsArgumentNullException_WhenNameIsEmpty()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment(""));
-    }
-
-    [Fact]
-    public void BeginSubsegment_WithName_ThrowsArgumentNullException_WhenNameIsWhitespace()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment("   "));
-    }
-
-    [Fact]
-    public void BeginSubsegment_WithNamespaceAndName_ThrowsArgumentNullException_WhenNameIsNull()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment("namespace", null));
-    }
-
-    [Fact]
-    public void BeginSubsegment_WithNamespaceAndName_ThrowsArgumentNullException_WhenNameIsEmpty()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment("namespace", ""));
+        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment(invalidName));
+        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment("namespace", invalidName));
     }
 
     [Fact]

@@ -413,8 +413,12 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Assert.Empty(subSegment.Metadata);
         }
 
-        [Fact]
-        public void OnSuccess_WhenTracerCaptureModeIsResponse_CapturesResponse()
+        [Theory]
+        [InlineData(TracingCaptureMode.Response, true)]
+        [InlineData(TracingCaptureMode.ResponseAndError, true)]
+        [InlineData(TracingCaptureMode.Error, false)]
+        [InlineData(TracingCaptureMode.Disabled, false)]
+        public void OnSuccess_WithDifferentCaptureModes_CapturesResponseCorrectly(TracingCaptureMode mode, bool shouldCaptureResponse)
         {
             // Arrange
             Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
@@ -423,88 +427,38 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             
             // Act
             var segment = GetOrCreateSegment();
-            _handler.HandleWithCaptureModeResponse();
-            var subSegment = segment.Subsegments.Count > 0 ? segment.Subsegments[0] : null;
-
-            // Assert
-            Assert.True(segment.IsSubsegmentsAdded);
-            Assert.Single(segment.Subsegments);
-            Assert.NotNull(subSegment);
-            Assert.True(subSegment.IsMetadataAdded);
-            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
-
-            var metadata = subSegment.Metadata["POWERTOOLS"];
-            Assert.Equal("HandleWithCaptureModeResponse response", metadata.Keys.Cast<string>().First());
-            var handlerResponse = metadata.Values.Cast<string[]>().First();
-            Assert.Equal("A", handlerResponse[0]);
-            Assert.Equal("B", handlerResponse[1]);
-        }
-
-        [Fact]
-        public void OnSuccess_WhenTracerCaptureModeIsResponseAndError_CapturesResponse()
-        {
-            // Arrange
-            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
-            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
-            SetupLambdaEnvironment();
+            switch (mode)
+            {
+                case TracingCaptureMode.Response:
+                    _handler.HandleWithCaptureModeResponse();
+                    break;
+                case TracingCaptureMode.ResponseAndError:
+                    _handler.HandleWithCaptureModeResponseAndError();
+                    break;
+                case TracingCaptureMode.Error:
+                    _handler.HandleWithCaptureModeError();
+                    break;
+                case TracingCaptureMode.Disabled:
+                    _handler.HandleWithCaptureModeDisabled();
+                    break;
+            }
             
-            // Act
-            var segment = GetOrCreateSegment();
-            _handler.HandleWithCaptureModeResponseAndError();
             var subSegment = segment.Subsegments.Count > 0 ? segment.Subsegments[0] : null;
 
             // Assert
             Assert.True(segment.IsSubsegmentsAdded);
             Assert.Single(segment.Subsegments);
             Assert.NotNull(subSegment);
-            Assert.True(subSegment.IsMetadataAdded);
-            Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
-
-            var metadata = subSegment.Metadata["POWERTOOLS"];
-            Assert.Equal("HandleWithCaptureModeResponseAndError response", metadata.Keys.Cast<string>().First());
-            var handlerResponse = metadata.Values.Cast<string[]>().First();
-            Assert.Equal("A", handlerResponse[0]);
-            Assert.Equal("B", handlerResponse[1]);
-        }
-
-        [Fact]
-        public void OnSuccess_WhenTracerCaptureModeIsError_DoesNotCaptureResponse()
-        {
-            // Arrange
-            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
-            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
-            SetupLambdaEnvironment();
+            Assert.Equal(shouldCaptureResponse, subSegment.IsMetadataAdded);
             
-            // Act
-            var segment = GetOrCreateSegment();
-            _handler.HandleWithCaptureModeError();
-            var subSegment = segment.Subsegments.Count > 0 ? segment.Subsegments[0] : null;
-
-            // Assert
-            Assert.True(segment.IsSubsegmentsAdded);
-            Assert.Single(segment.Subsegments);
-            Assert.NotNull(subSegment);
-            Assert.False(subSegment.IsMetadataAdded); // does not add metadata
-        }
-
-        [Fact]
-        public void OnSuccess_WhenTracerCaptureModeIsDisabled_DoesNotCaptureResponse()
-        {
-            // Arrange
-            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", "AWS");
-            Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "POWERTOOLS");
-            SetupLambdaEnvironment();
-            
-            // Act
-            var segment = GetOrCreateSegment();
-            _handler.HandleWithCaptureModeDisabled();
-            var subSegment = segment.Subsegments.Count > 0 ? segment.Subsegments[0] : null;
-
-            // Assert
-            Assert.True(segment.IsSubsegmentsAdded);
-            Assert.Single(segment.Subsegments);
-            Assert.NotNull(subSegment);
-            Assert.False(subSegment.IsMetadataAdded); // does not add metadata
+            if (shouldCaptureResponse)
+            {
+                Assert.True(subSegment.Metadata.ContainsKey("POWERTOOLS"));
+                var metadata = subSegment.Metadata["POWERTOOLS"];
+                var handlerResponse = metadata.Values.Cast<string[]>().First();
+                Assert.Equal("A", handlerResponse[0]);
+                Assert.Equal("B", handlerResponse[1]);
+            }
         }
         
         [Fact]

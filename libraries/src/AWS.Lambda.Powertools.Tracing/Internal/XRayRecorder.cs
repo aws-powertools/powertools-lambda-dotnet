@@ -348,7 +348,7 @@ internal class XRayRecorder : IXRayRecorder
         {
             // If sanitization fails, return a safe string representation
             // This ensures we don't break the tracing functionality
-            return $"[Sanitization failed: {ex.Message}] {value?.ToString() ?? "null"}";
+            return $"[Sanitization failed: {ex.Message}] {value.ToString()}";
         }
     }
 
@@ -369,95 +369,180 @@ internal class XRayRecorder : IXRayRecorder
 
         var type = value.GetType();
 
-        // Handle primitive types and strings - only convert problematic ones
-        if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal))
-        {
-            // Handle problematic numeric types that cause JSON serialization issues
-            if (type == typeof(IntPtr) || type == typeof(UIntPtr))
-                return value.ToString();
-            
-            // Handle unsigned types that might cause issues with LitJson
-            if (type == typeof(uint) || type == typeof(ulong) || type == typeof(ushort) || type == typeof(byte) || type == typeof(sbyte))
-                return value.ToString();
+        // Handle primitive and simple types
+        var primitiveResult = SanitizePrimitiveTypes(value, type);
+        if (primitiveResult != null)
+            return primitiveResult;
 
-            // Keep safe primitive types as-is
-            return value;
+        // Handle special types (DateTime, TimeSpan, Guid, Enum)
+        var specialResult = SanitizeSpecialTypes(value, type);
+        if (specialResult != null)
+            return specialResult;
+
+        // Handle collections (arrays, dictionaries, enumerables)
+        var collectionResult = SanitizeCollectionTypes(value, type, depth);
+        if (collectionResult != null)
+            return collectionResult;
+
+        // Handle complex objects
+        return SanitizeComplexObject(value, type, depth);
+    }
+
+    /// <summary>
+    ///     Sanitizes primitive types and strings.
+    /// </summary>
+    /// <param name="value">The value to sanitize</param>
+    /// <param name="type">The type of the value</param>
+    /// <returns>Sanitized value or null if not a primitive type</returns>
+    private static object SanitizePrimitiveTypes(object value, Type type)
+    {
+        if (!type.IsPrimitive && type != typeof(string) && type != typeof(decimal))
+            return null;
+
+        // Handle problematic numeric types that cause JSON serialization issues
+        if (type == typeof(IntPtr) || type == typeof(UIntPtr) ||
+            type == typeof(uint) || type == typeof(ulong) || 
+            type == typeof(ushort) || type == typeof(byte) || type == typeof(sbyte))
+        {
+            return value.ToString();
         }
 
-        // Handle DateTime and TimeSpan - these can cause serialization issues
+        // Keep safe primitive types as-is
+        return value;
+    }
+
+    /// <summary>
+    ///     Sanitizes special types like DateTime, TimeSpan, Guid, and Enums.
+    /// </summary>
+    /// <param name="value">The value to sanitize</param>
+    /// <param name="type">The type of the value</param>
+    /// <returns>Sanitized value or null if not a special type</returns>
+    private static object SanitizeSpecialTypes(object value, Type type)
+    {
         if (type == typeof(DateTime))
             return ((DateTime)value).ToString("O"); // ISO 8601 format
         
         if (type == typeof(TimeSpan))
             return ((TimeSpan)value).ToString();
 
-        // Handle Guid - convert to string for safety
         if (type == typeof(Guid))
             return value.ToString();
 
-        // Handle enums - convert to string for safety
         if (type.IsEnum)
             return value.ToString();
 
-        // Handle arrays - only sanitize if elements need sanitization
+        return null;
+    }
+
+    /// <summary>
+    ///     Sanitizes collection types (arrays, dictionaries, enumerables).
+    /// </summary>
+    /// <param name="value">The value to sanitize</param>
+    /// <param name="type">The type of the value</param>
+    /// <param name="depth">Current recursion depth</param>
+    /// <returns>Sanitized value or null if not a collection type</returns>
+    private static object SanitizeCollectionTypes(object value, Type type, int depth)
+    {
+        // Handle arrays
         if (type.IsArray)
-        {
-            var array = (Array)value;
-            var elementType = type.GetElementType();
-            
-            // If it's an array of safe types, return as-is
-            if (elementType != null && IsSafeType(elementType))
-            {
-                // Check if all elements are actually safe
-                bool allElementsSafe = true;
-                for (int i = 0; i < array.Length; i++)
-                {
-                    var element = array.GetValue(i);
-                    if (element != null && NeedsTypeSanitization(element.GetType()))
-                    {
-                        allElementsSafe = false;
-                        break;
-                    }
-                }
-                
-                if (allElementsSafe)
-                    return value; // Return original array
-            }
-            
-            // Otherwise, sanitize to object array
-            var sanitizedArray = new object[array.Length];
-            for (int i = 0; i < array.Length; i++)
-            {
-                sanitizedArray[i] = SanitizeValueRecursive(array.GetValue(i), depth + 1);
-            }
-            return sanitizedArray;
-        }
+            return SanitizeArray((Array)value, type, depth);
 
-        // Handle dictionaries - always sanitize for maximum safety
+        // Handle dictionaries
         if (value is System.Collections.IDictionary dict)
-        {
-            var sanitizedDict = new System.Collections.Generic.Dictionary<string, object>();
-            foreach (System.Collections.DictionaryEntry entry in dict)
-            {
-                var key = entry.Key?.ToString() ?? "null";
-                sanitizedDict[key] = SanitizeValueRecursive(entry.Value, depth + 1);
-            }
-            return sanitizedDict;
-        }
+            return SanitizeDictionary(dict, depth);
 
-        // Handle other collections (List, etc.) - always sanitize for maximum safety
+        // Handle other collections (List, etc.)
         if (value is System.Collections.IEnumerable enumerable && !(value is string))
-        {
-            var sanitizedList = new System.Collections.Generic.List<object>();
-            foreach (var item in enumerable)
-            {
-                sanitizedList.Add(SanitizeValueRecursive(item, depth + 1));
-            }
-            return sanitizedList;
-        }
+            return SanitizeEnumerable(enumerable, depth);
 
-        // Handle complex objects - always convert to dictionary for maximum safety
-        // This ensures we have complete control over serialization
+        return null;
+    }
+
+    /// <summary>
+    ///     Sanitizes array values.
+    /// </summary>
+    /// <param name="array">The array to sanitize</param>
+    /// <param name="type">The array type</param>
+    /// <param name="depth">Current recursion depth</param>
+    /// <returns>Sanitized array</returns>
+    private static object SanitizeArray(Array array, Type type, int depth)
+    {
+        var elementType = type.GetElementType();
+        
+        // If it's an array of safe types, check if all elements are actually safe
+        if (elementType != null && IsSafeType(elementType))
+        {
+            if (IsArrayElementsSafe(array))
+                return array; // Return original array
+        }
+        
+        // Otherwise, sanitize to object array
+        var sanitizedArray = new object[array.Length];
+        for (int i = 0; i < array.Length; i++)
+        {
+            sanitizedArray[i] = SanitizeValueRecursive(array.GetValue(i), depth + 1);
+        }
+        return sanitizedArray;
+    }
+
+    /// <summary>
+    ///     Checks if all elements in an array are safe types.
+    /// </summary>
+    /// <param name="array">The array to check</param>
+    /// <returns>True if all elements are safe</returns>
+    private static bool IsArrayElementsSafe(Array array)
+    {
+        for (int i = 0; i < array.Length; i++)
+        {
+            var element = array.GetValue(i);
+            if (element != null && NeedsTypeSanitization(element.GetType()))
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    ///     Sanitizes dictionary values.
+    /// </summary>
+    /// <param name="dict">The dictionary to sanitize</param>
+    /// <param name="depth">Current recursion depth</param>
+    /// <returns>Sanitized dictionary</returns>
+    private static object SanitizeDictionary(System.Collections.IDictionary dict, int depth)
+    {
+        var sanitizedDict = new System.Collections.Generic.Dictionary<string, object>();
+        foreach (System.Collections.DictionaryEntry entry in dict)
+        {
+            var key = entry.Key?.ToString() ?? "null";
+            sanitizedDict[key] = SanitizeValueRecursive(entry.Value, depth + 1);
+        }
+        return sanitizedDict;
+    }
+
+    /// <summary>
+    ///     Sanitizes enumerable values.
+    /// </summary>
+    /// <param name="enumerable">The enumerable to sanitize</param>
+    /// <param name="depth">Current recursion depth</param>
+    /// <returns>Sanitized list</returns>
+    private static object SanitizeEnumerable(System.Collections.IEnumerable enumerable, int depth)
+    {
+        var sanitizedList = new System.Collections.Generic.List<object>();
+        foreach (var item in enumerable)
+        {
+            sanitizedList.Add(SanitizeValueRecursive(item, depth + 1));
+        }
+        return sanitizedList;
+    }
+
+    /// <summary>
+    ///     Sanitizes complex objects by converting them to dictionaries.
+    /// </summary>
+    /// <param name="value">The object to sanitize</param>
+    /// <param name="type">The object type</param>
+    /// <param name="depth">Current recursion depth</param>
+    /// <returns>Sanitized dictionary representation</returns>
+    private static object SanitizeComplexObject(object value, Type type, int depth)
+    {
         try
         {
             var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
@@ -465,18 +550,10 @@ internal class XRayRecorder : IXRayRecorder
 
             foreach (var prop in properties)
             {
-                try
+                var propertyValue = GetPropertyValueSafely(prop, value, depth);
+                if (propertyValue != null)
                 {
-                    if (prop.CanRead && prop.GetIndexParameters().Length == 0) // Skip indexers
-                    {
-                        var propValue = prop.GetValue(value);
-                        sanitizedObject[prop.Name] = SanitizeValueRecursive(propValue, depth + 1);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // If we can't read a property, record the error
-                    sanitizedObject[prop.Name] = $"[Error reading property: {ex.Message}]";
+                    sanitizedObject[prop.Name] = propertyValue;
                 }
             }
 
@@ -485,8 +562,34 @@ internal class XRayRecorder : IXRayRecorder
         catch (Exception ex)
         {
             // If all else fails, convert to string
-            return $"[Object conversion failed: {ex.Message}] {value?.ToString() ?? "null"}";
+            return $"[Object conversion failed: {ex.Message}] {value.ToString()}";
         }
+    }
+
+    /// <summary>
+    ///     Safely gets a property value from an object.
+    /// </summary>
+    /// <param name="prop">The property to read</param>
+    /// <param name="value">The object to read from</param>
+    /// <param name="depth">Current recursion depth</param>
+    /// <returns>The property value or null if it can't be read</returns>
+    private static object GetPropertyValueSafely(System.Reflection.PropertyInfo prop, object value, int depth)
+    {
+        try
+        {
+            if (prop.CanRead && prop.GetIndexParameters().Length == 0) // Skip indexers
+            {
+                var propValue = prop.GetValue(value);
+                return SanitizeValueRecursive(propValue, depth + 1);
+            }
+        }
+        catch (Exception ex)
+        {
+            // If we can't read a property, record the error
+            return $"[Error reading property: {ex.Message}]";
+        }
+        
+        return null;
     }
 
     /// <summary>
@@ -566,7 +669,7 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes the metadata in an entity
     /// </summary>
-    private void SanitizeEntityMetadata(Entity entity)
+    private static void SanitizeEntityMetadata(Entity entity)
     {
         try
         {
@@ -610,7 +713,7 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes the annotations in an entity
     /// </summary>
-    private void SanitizeEntityAnnotations(Entity entity)
+    private static void SanitizeEntityAnnotations(Entity entity)
     {
         try
         {
@@ -639,7 +742,7 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes HTTP information in an entity
     /// </summary>
-    private void SanitizeEntityHttpInformation(Entity entity)
+    private static void SanitizeEntityHttpInformation(Entity entity)
     {
         try
         {
@@ -668,7 +771,7 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes other properties in an entity that might contain problematic data
     /// </summary>
-    private void SanitizeEntityOtherProperties(Entity entity)
+    private static void SanitizeEntityOtherProperties(Entity entity)
     {
         try
         {
