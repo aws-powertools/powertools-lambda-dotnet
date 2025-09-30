@@ -13,7 +13,7 @@ using AWS.Lambda.Powertools.Tracing.Tests.Serializers;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
-[Collection("Sequential")]
+[Collection("TracingTests")]
 public class TracingAspectTests
 {
     private readonly IXRayRecorder _mockXRayRecorder;

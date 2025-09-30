@@ -14,11 +14,20 @@ namespace AWS.Lambda.Powertools.Tracing.Internal;
 /// <seealso cref="IXRayRecorder" />
 internal class XRayRecorder : IXRayRecorder
 {
-    private static IAWSXRayRecorder _awsxRayRecorder;
+    /// <summary>
+    ///     Maximum recursion depth for sanitization to prevent infinite loops
+    /// </summary>
+    private const int MaxSanitizationDepth = 10;
+    
     /// <summary>
     ///     The instance
     /// </summary>
     private static IXRayRecorder _instance;
+    
+    /// <summary>
+    ///     The AWS X-Ray recorder instance
+    /// </summary>
+    private readonly IAWSXRayRecorder _awsxRayRecorder;
 
     /// <summary>
     ///     Gets the instance.
@@ -32,6 +41,14 @@ internal class XRayRecorder : IXRayRecorder
         _instance = this;
         _isLambda = powertoolsConfigurations.IsLambdaEnvironment;
         _awsxRayRecorder = awsxRayRecorder;
+    }
+
+    /// <summary>
+    /// Resets the singleton instance. This method is intended for testing purposes only.
+    /// </summary>
+    internal static void ResetInstance()
+    {
+        _instance = null;
     }
 
     /// <summary>
@@ -82,7 +99,10 @@ internal class XRayRecorder : IXRayRecorder
     public void AddAnnotation(string key, object value)
     {
         if (_isLambda)
-            _awsxRayRecorder.AddAnnotation(key, value);
+        {
+            var sanitizedValue = SanitizeValueForAnnotation(value);
+            _awsxRayRecorder.AddAnnotation(key, sanitizedValue);
+        }
     }
 
     /// <summary>
@@ -94,7 +114,10 @@ internal class XRayRecorder : IXRayRecorder
     public void AddMetadata(string nameSpace, string key, object value)
     {
         if (_isLambda)
-            _awsxRayRecorder.AddMetadata(nameSpace, key, value);
+        {
+            var sanitizedValue = SanitizeValueForMetadata(value);
+            _awsxRayRecorder.AddMetadata(nameSpace, key, sanitizedValue);
+        }
     }
     
     /// <summary>
@@ -103,22 +126,114 @@ internal class XRayRecorder : IXRayRecorder
     public void EndSubsegment()
     {
         if (!_isLambda) return;
+        
         try
         {
+            // First attempt: Sanitize the entire entity before ending the subsegment
+            SanitizeCurrentEntitySafely();
             _awsxRayRecorder.EndSubsegment();
+        }
+        catch (Exception e) when (IsSerializationError(e))
+        {
+            // This is a JSON serialization error - handle it aggressively
+            Console.WriteLine("JSON serialization error detected in Tracing utility - attempting recovery");
+            Console.WriteLine($"Error: {e.Message}");
+            
+            HandleSerializationError(e);
         }
         catch (Exception e)
         {
-            // if it fails at this stage the data is lost
-            // so lets create a new subsegment with the error
-
+            // Handle other types of errors with the original logic
             Console.WriteLine("Error in Tracing utility - see Exceptions tab in Cloudwatch Traces");
+            Console.WriteLine(e.StackTrace);
 
+            try
+            {
+                _awsxRayRecorder.TraceContext.ClearEntity();
+                _awsxRayRecorder.BeginSubsegment("Error in Tracing utility - see Exceptions tab");
+                _awsxRayRecorder.AddException(e);
+                _awsxRayRecorder.MarkError();
+                _awsxRayRecorder.EndSubsegment();
+            }
+            catch
+            {
+                // If even error handling fails, give up gracefully
+                Console.WriteLine("Failed to handle tracing error");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Determines if an exception is related to JSON serialization
+    /// </summary>
+    private static bool IsSerializationError(Exception e)
+    {
+        if (e == null) return false;
+        
+        var message = e.Message ?? string.Empty;
+        var stackTrace = e.StackTrace ?? string.Empty;
+        var typeName = e.GetType().Name ?? string.Empty;
+        
+        return message.Contains("LitJson") || 
+               message.Contains("JsonMapper") || 
+               stackTrace.Contains("JsonMapper") ||
+               stackTrace.Contains("LitJson") ||
+               stackTrace.Contains("JsonSegmentMarshaller") ||
+               typeName.Contains("Json");
+    }
+
+    /// <summary>
+    /// Handles serialization errors by progressively trying different recovery strategies
+    /// </summary>
+    private void HandleSerializationError(Exception originalException)
+    {
+        try
+        {
+            // Strategy 1: Try to clear and recreate with minimal data
+            Console.WriteLine("Attempting serialization error recovery - Strategy 1: Clear and recreate");
+            
             _awsxRayRecorder.TraceContext.ClearEntity();
-            _awsxRayRecorder.BeginSubsegment("Error in Tracing utility - see Exceptions tab");
-            _awsxRayRecorder.AddException(e);
-            _awsxRayRecorder.MarkError();
+            _awsxRayRecorder.BeginSubsegment("Tracing_Sanitized");
+            _awsxRayRecorder.AddAnnotation("SerializationError", true);
+            _awsxRayRecorder.AddMetadata("Error", "Type", "JSON Serialization Error");
+            _awsxRayRecorder.AddMetadata("Error", "Message", SanitizeValueForMetadata(originalException.Message));
             _awsxRayRecorder.EndSubsegment();
+            
+            Console.WriteLine("Serialization error recovery successful");
+        }
+        catch (Exception e2)
+        {
+            try
+            {
+                // Strategy 2: Even more minimal approach
+                Console.WriteLine("Strategy 1 failed, attempting Strategy 2: Minimal segment");
+                
+                _awsxRayRecorder.TraceContext.ClearEntity();
+                _awsxRayRecorder.BeginSubsegment("Tracing_Error");
+                _awsxRayRecorder.AddAnnotation("Error", "SerializationFailed");
+                _awsxRayRecorder.EndSubsegment();
+                
+                Console.WriteLine("Minimal serialization error recovery successful");
+            }
+            catch (Exception e3)
+            {
+                // Strategy 3: Complete failure - just log and give up
+                Console.WriteLine("All serialization error recovery strategies failed");
+                Console.WriteLine($"Original error: {originalException.Message}");
+                Console.WriteLine($"Recovery error 1: {e2.Message}");
+                Console.WriteLine($"Recovery error 2: {e3.Message}");
+                
+                // Try one last time to clear the entity to prevent further issues
+                try
+                {
+                    _awsxRayRecorder.TraceContext.ClearEntity();
+                }
+                catch
+                {
+                    // If we can't even clear, there's nothing more we can do
+                    Console.WriteLine("Failed to clear X-Ray entity - tracing may be in an inconsistent state");
+                }
+            }
         }
     }
 
@@ -128,9 +243,19 @@ internal class XRayRecorder : IXRayRecorder
     /// <returns>Entity.</returns>
     public Entity GetEntity()
     {
-        return _isLambda
-            ? _awsxRayRecorder.TraceContext.GetEntity()
-            : new Subsegment("Root");
+        if (_isLambda)
+        {
+            try
+            {
+                return _awsxRayRecorder?.TraceContext?.GetEntity() ?? new Subsegment("Root");
+            }
+            catch
+            {
+                // If we can't get the entity from X-Ray context, fall back to a root subsegment
+                return new Subsegment("Root");
+            }
+        }
+        return new Subsegment("Root");
     }
 
     /// <summary>
@@ -150,7 +275,19 @@ internal class XRayRecorder : IXRayRecorder
     public void AddException(Exception exception)
     {
         if (_isLambda)
-            _awsxRayRecorder.AddException(exception);
+        {
+            // Sanitize exception data if it contains problematic types
+            try
+            {
+                _awsxRayRecorder.AddException(exception);
+            }
+            catch (Exception ex) when (ex.Message.Contains("LitJson") || ex.Message.Contains("JsonMapper"))
+            {
+                // If the exception itself causes serialization issues, create a sanitized version
+                var sanitizedException = new Exception($"[Sanitized Exception] {exception.GetType().Name}: {exception.Message}");
+                _awsxRayRecorder.AddException(sanitizedException);
+            }
+        }
     }
 
     /// <summary>
@@ -161,6 +298,429 @@ internal class XRayRecorder : IXRayRecorder
     public void AddHttpInformation(string key, object value)
     {
         if (_isLambda)
-            _awsxRayRecorder.AddHttpInformation(key, value);
+        {
+            var sanitizedValue = SanitizeValueForMetadata(value);
+            _awsxRayRecorder.AddHttpInformation(key, sanitizedValue);
+        }
+    }
+
+    /// <summary>
+    ///     Sanitizes annotation values to ensure they are supported by X-Ray.
+    ///     X-Ray annotations only support: string, int, long, double, float, bool
+    /// </summary>
+    /// <param name="value">The value to sanitize</param>
+    /// <returns>A sanitized value safe for X-Ray annotations</returns>
+    private static object SanitizeValueForAnnotation(object value)
+    {
+        if (value == null)
+            return null;
+
+        var type = value.GetType();
+        
+        // X-Ray supported annotation types: string, int, long, double, float, bool
+        if (type == typeof(string) || 
+            type == typeof(int) || 
+            type == typeof(long) || 
+            type == typeof(double) || 
+            type == typeof(float) || 
+            type == typeof(bool))
+        {
+            return value;
+        }
+
+        // Convert all other types to string
+        return value.ToString();
+    }
+
+    /// <summary>
+    ///     Sanitizes metadata values to ensure they can be serialized by X-Ray.
+    ///     This method recursively processes complex objects to handle problematic types.
+    /// </summary>
+    /// <param name="value">The value to sanitize</param>
+    /// <returns>A sanitized value safe for X-Ray metadata serialization</returns>
+    private static object SanitizeValueForMetadata(object value)
+    {
+        try
+        {
+            return SanitizeValueRecursive(value, 0);
+        }
+        catch (Exception ex)
+        {
+            // If sanitization fails, return a safe string representation
+            // This ensures we don't break the tracing functionality
+            return $"[Sanitization failed: {ex.Message}] {value?.ToString() ?? "null"}";
+        }
+    }
+
+    /// <summary>
+    ///     Recursively sanitizes values with depth protection to prevent infinite recursion.
+    /// </summary>
+    /// <param name="value">The value to sanitize</param>
+    /// <param name="depth">Current recursion depth</param>
+    /// <returns>A sanitized value</returns>
+    private static object SanitizeValueRecursive(object value, int depth)
+    {
+        // Prevent infinite recursion
+        if (depth > MaxSanitizationDepth)
+            return "[Max depth reached]";
+
+        if (value == null)
+            return null;
+
+        var type = value.GetType();
+
+        // Handle primitive types and strings - only convert problematic ones
+        if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal))
+        {
+            // Handle problematic numeric types that cause JSON serialization issues
+            if (type == typeof(IntPtr) || type == typeof(UIntPtr))
+                return value.ToString();
+            
+            // Handle unsigned types that might cause issues with LitJson
+            if (type == typeof(uint) || type == typeof(ulong) || type == typeof(ushort) || type == typeof(byte) || type == typeof(sbyte))
+                return value.ToString();
+
+            // Keep safe primitive types as-is
+            return value;
+        }
+
+        // Handle DateTime and TimeSpan - these can cause serialization issues
+        if (type == typeof(DateTime))
+            return ((DateTime)value).ToString("O"); // ISO 8601 format
+        
+        if (type == typeof(TimeSpan))
+            return ((TimeSpan)value).ToString();
+
+        // Handle Guid - convert to string for safety
+        if (type == typeof(Guid))
+            return value.ToString();
+
+        // Handle enums - convert to string for safety
+        if (type.IsEnum)
+            return value.ToString();
+
+        // Handle arrays - only sanitize if elements need sanitization
+        if (type.IsArray)
+        {
+            var array = (Array)value;
+            var elementType = type.GetElementType();
+            
+            // If it's an array of safe types, return as-is
+            if (elementType != null && IsSafeType(elementType))
+            {
+                // Check if all elements are actually safe
+                bool allElementsSafe = true;
+                for (int i = 0; i < array.Length; i++)
+                {
+                    var element = array.GetValue(i);
+                    if (element != null && NeedsTypeSanitization(element.GetType()))
+                    {
+                        allElementsSafe = false;
+                        break;
+                    }
+                }
+                
+                if (allElementsSafe)
+                    return value; // Return original array
+            }
+            
+            // Otherwise, sanitize to object array
+            var sanitizedArray = new object[array.Length];
+            for (int i = 0; i < array.Length; i++)
+            {
+                sanitizedArray[i] = SanitizeValueRecursive(array.GetValue(i), depth + 1);
+            }
+            return sanitizedArray;
+        }
+
+        // Handle dictionaries - always sanitize for maximum safety
+        if (value is System.Collections.IDictionary dict)
+        {
+            var sanitizedDict = new System.Collections.Generic.Dictionary<string, object>();
+            foreach (System.Collections.DictionaryEntry entry in dict)
+            {
+                var key = entry.Key?.ToString() ?? "null";
+                sanitizedDict[key] = SanitizeValueRecursive(entry.Value, depth + 1);
+            }
+            return sanitizedDict;
+        }
+
+        // Handle other collections (List, etc.) - always sanitize for maximum safety
+        if (value is System.Collections.IEnumerable enumerable && !(value is string))
+        {
+            var sanitizedList = new System.Collections.Generic.List<object>();
+            foreach (var item in enumerable)
+            {
+                sanitizedList.Add(SanitizeValueRecursive(item, depth + 1));
+            }
+            return sanitizedList;
+        }
+
+        // Handle complex objects - always convert to dictionary for maximum safety
+        // This ensures we have complete control over serialization
+        try
+        {
+            var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var sanitizedObject = new System.Collections.Generic.Dictionary<string, object>();
+
+            foreach (var prop in properties)
+            {
+                try
+                {
+                    if (prop.CanRead && prop.GetIndexParameters().Length == 0) // Skip indexers
+                    {
+                        var propValue = prop.GetValue(value);
+                        sanitizedObject[prop.Name] = SanitizeValueRecursive(propValue, depth + 1);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // If we can't read a property, record the error
+                    sanitizedObject[prop.Name] = $"[Error reading property: {ex.Message}]";
+                }
+            }
+
+            return sanitizedObject;
+        }
+        catch (Exception ex)
+        {
+            // If all else fails, convert to string
+            return $"[Object conversion failed: {ex.Message}] {value?.ToString() ?? "null"}";
+        }
+    }
+
+    /// <summary>
+    ///     Determines if a type is safe for X-Ray without sanitization
+    /// </summary>
+    /// <param name="type">The type to check</param>
+    /// <returns>True if the type is safe</returns>
+    private static bool IsSafeType(Type type)
+    {
+        return type == typeof(string) ||
+               type == typeof(int) ||
+               type == typeof(long) ||
+               type == typeof(double) ||
+               type == typeof(float) ||
+               type == typeof(bool) ||
+               type == typeof(decimal);
+    }
+
+    /// <summary>
+    ///     Checks if a type needs sanitization due to potential JSON serialization issues.
+    /// </summary>
+    /// <param name="type">The type to check</param>
+    /// <returns>True if the type needs sanitization</returns>
+    private static bool NeedsTypeSanitization(Type type)
+    {
+        // Problematic primitive types that cause LitJson issues
+        if (type == typeof(IntPtr) || type == typeof(UIntPtr) ||
+            type == typeof(uint) || type == typeof(ulong) || 
+            type == typeof(ushort) || type == typeof(byte) || type == typeof(sbyte))
+            return true;
+
+        // Other problematic types
+        if (type == typeof(DateTime) || type == typeof(TimeSpan) || 
+            type == typeof(Guid) || type.IsEnum)
+            return true;
+
+        // Check for nullable versions of problematic types
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            var underlyingType = Nullable.GetUnderlyingType(type);
+            return underlyingType != null && NeedsTypeSanitization(underlyingType);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Safely sanitizes the current entity to prevent JSON serialization errors.
+    ///     This method uses reflection to access and sanitize all data in the entity.
+    /// </summary>
+    private void SanitizeCurrentEntitySafely()
+    {
+        try
+        {
+            var entity = _awsxRayRecorder?.TraceContext?.GetEntity();
+            if (entity == null) return;
+
+            // Sanitize Metadata
+            SanitizeEntityMetadata(entity);
+            
+            // Sanitize Annotations
+            SanitizeEntityAnnotations(entity);
+            
+            // Sanitize HTTP information
+            SanitizeEntityHttpInformation(entity);
+            
+            // Sanitize any other properties that might contain problematic data
+            SanitizeEntityOtherProperties(entity);
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't break tracing
+            Console.WriteLine($"Warning: Entity sanitization failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Sanitizes the metadata in an entity
+    /// </summary>
+    private void SanitizeEntityMetadata(Entity entity)
+    {
+        try
+        {
+            var metadataProperty = entity.GetType().GetProperty("Metadata");
+            if (metadataProperty?.GetValue(entity) is not System.Collections.IDictionary metadata) return;
+
+            // Create a list of keys to avoid modifying collection while iterating
+            var namespaceKeys = new System.Collections.Generic.List<object>();
+            foreach (var key in metadata.Keys)
+            {
+                namespaceKeys.Add(key);
+            }
+
+            // Process each namespace
+            foreach (var namespaceKey in namespaceKeys)
+            {
+                if (metadata[namespaceKey] is System.Collections.IDictionary namespaceData)
+                {
+                    var dataKeys = new System.Collections.Generic.List<object>();
+                    foreach (var key in namespaceData.Keys)
+                    {
+                        dataKeys.Add(key);
+                    }
+
+                    // Sanitize each value in the namespace
+                    foreach (var dataKey in dataKeys)
+                    {
+                        var originalValue = namespaceData[dataKey];
+                        var sanitizedValue = SanitizeValueForMetadata(originalValue);
+                        namespaceData[dataKey] = sanitizedValue;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Metadata sanitization failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Sanitizes the annotations in an entity
+    /// </summary>
+    private void SanitizeEntityAnnotations(Entity entity)
+    {
+        try
+        {
+            var annotationsProperty = entity.GetType().GetProperty("Annotations");
+            if (annotationsProperty?.GetValue(entity) is not System.Collections.IDictionary annotations) return;
+
+            var annotationKeys = new System.Collections.Generic.List<object>();
+            foreach (var key in annotations.Keys)
+            {
+                annotationKeys.Add(key);
+            }
+
+            foreach (var key in annotationKeys)
+            {
+                var originalValue = annotations[key];
+                var sanitizedValue = SanitizeValueForAnnotation(originalValue);
+                annotations[key] = sanitizedValue;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Annotations sanitization failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Sanitizes HTTP information in an entity
+    /// </summary>
+    private void SanitizeEntityHttpInformation(Entity entity)
+    {
+        try
+        {
+            var httpProperty = entity.GetType().GetProperty("Http");
+            if (httpProperty?.GetValue(entity) is not System.Collections.IDictionary http) return;
+
+            var httpKeys = new System.Collections.Generic.List<object>();
+            foreach (var key in http.Keys)
+            {
+                httpKeys.Add(key);
+            }
+
+            foreach (var key in httpKeys)
+            {
+                var originalValue = http[key];
+                var sanitizedValue = SanitizeValueForMetadata(originalValue);
+                http[key] = sanitizedValue;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: HTTP information sanitization failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Sanitizes other properties in an entity that might contain problematic data
+    /// </summary>
+    private void SanitizeEntityOtherProperties(Entity entity)
+    {
+        try
+        {
+            // Get all properties of the entity
+            var properties = entity.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            
+            foreach (var property in properties)
+            {
+                try
+                {
+                    // Skip properties we've already handled
+                    if (property.Name == "Metadata" || property.Name == "Annotations" || property.Name == "Http")
+                        continue;
+                        
+                    // Skip properties that can't be written to
+                    if (!property.CanWrite || !property.CanRead)
+                        continue;
+                        
+                    // Skip indexers
+                    if (property.GetIndexParameters().Length > 0)
+                        continue;
+
+                    var value = property.GetValue(entity);
+                    if (value == null)
+                        continue;
+
+                    var valueType = value.GetType();
+                    
+                    // Only sanitize properties that might contain problematic data
+                    if (NeedsTypeSanitization(valueType) || 
+                        valueType.IsClass && valueType != typeof(string) && 
+                        !valueType.IsPrimitive && !valueType.IsEnum)
+                    {
+                        var sanitizedValue = SanitizeValueForMetadata(value);
+                        
+                        // Only update if the sanitized value is different and compatible
+                        if (!ReferenceEquals(value, sanitizedValue) && 
+                            (sanitizedValue == null || property.PropertyType.IsAssignableFrom(sanitizedValue.GetType())))
+                        {
+                            property.SetValue(entity, sanitizedValue);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: Failed to sanitize property {property.Name}: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Other properties sanitization failed: {ex.Message}");
+        }
     }
 }

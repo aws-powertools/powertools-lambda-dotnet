@@ -8,9 +8,9 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
-// This has to be the last tests to run otherwise it will keep state and fail other random tests
-[Collection("Sequential")]
-public class XRayRecorderTests
+// Tests that use XRayRecorder singleton - isolated to prevent test pollution
+[Collection("XRayRecorderTests")]
+public class XRayRecorderTests : IDisposable
 {
     [Fact]
     public void Tracing_Instance()
@@ -276,5 +276,112 @@ public class XRayRecorderTests
         awsXray.DidNotReceive().AddAnnotation(Arg.Any<string>(), Arg.Any<string>());
         awsXray.DidNotReceive().SetNamespace(Arg.Any<string>());
         awsXray.DidNotReceive().BeginSubsegment(Arg.Any<string>());
+    }
+
+    [Theory]
+    [InlineData("string", "string")] // string should remain unchanged
+    [InlineData(true, true)] // bool should remain unchanged
+    [InlineData(42, 42)] // int should remain unchanged
+    [InlineData(42L, 42L)] // long should remain unchanged
+    [InlineData(3.14, 3.14)] // double should remain unchanged
+    [InlineData(3.14f, 3.14f)] // float should remain unchanged
+    [InlineData(null, null)] // null should remain unchanged
+    public void Tracing_Add_Annotation_Supported_Types_Remain_Unchanged(object input, object expected)
+    {
+        // Arrange
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        conf.IsLambdaEnvironment.Returns(true);
+
+        var awsXray = Substitute.For<IAWSXRayRecorder>();
+
+        // Act
+        var tracing = new XRayRecorder(awsXray, conf);
+        tracing.AddAnnotation("key", input);
+
+        // Assert
+        awsXray.Received(1).AddAnnotation("key", expected);
+    }
+
+    [Theory]
+    [InlineData((byte)255)] // byte
+    [InlineData((short)32767)] // short
+    [InlineData((uint)42)] // uint
+    [InlineData((ulong)42)] // ulong
+    [InlineData((ushort)42)] // ushort
+    [InlineData((sbyte)127)] // sbyte
+    public void Tracing_Add_Annotation_Unsupported_ValueTypes_Converted_To_String(object input)
+    {
+        // Arrange
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        conf.IsLambdaEnvironment.Returns(true);
+
+        var awsXray = Substitute.For<IAWSXRayRecorder>();
+
+        // Act
+        var tracing = new XRayRecorder(awsXray, conf);
+        tracing.AddAnnotation("key", input);
+
+        // Assert
+        awsXray.Received(1).AddAnnotation("key", input.ToString());
+    }
+
+    [Fact]
+    public void Tracing_Add_Annotation_Decimal_Converted_To_String()
+    {
+        // Arrange
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        conf.IsLambdaEnvironment.Returns(true);
+
+        var awsXray = Substitute.For<IAWSXRayRecorder>();
+        var decimalValue = 13.14m;
+
+        // Act
+        var tracing = new XRayRecorder(awsXray, conf);
+        tracing.AddAnnotation("key", decimalValue);
+
+        // Assert
+        awsXray.Received(1).AddAnnotation("key", "13.14");
+    }
+
+    [Fact]
+    public void Tracing_Add_Annotation_DateTime_Converted_To_String()
+    {
+        // Arrange
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        conf.IsLambdaEnvironment.Returns(true);
+
+        var awsXray = Substitute.For<IAWSXRayRecorder>();
+        var dateTime = DateTime.Now;
+
+        // Act
+        var tracing = new XRayRecorder(awsXray, conf);
+        tracing.AddAnnotation("key", dateTime);
+
+        // Assert
+        awsXray.Received(1).AddAnnotation("key", dateTime.ToString());
+    }
+
+    [Fact]
+    public void Tracing_Add_Annotation_Guid_Converted_To_String()
+    {
+        // Arrange
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        conf.IsLambdaEnvironment.Returns(true);
+
+        var awsXray = Substitute.For<IAWSXRayRecorder>();
+        var guid = Guid.NewGuid();
+
+        // Act
+        var tracing = new XRayRecorder(awsXray, conf);
+        tracing.AddAnnotation("key", guid);
+
+        // Assert
+        awsXray.Received(1).AddAnnotation("key", guid.ToString());
+    }
+
+    public void Dispose()
+    {
+        // Reset the singleton instance after each test to prevent test pollution
+        XRayRecorder.ResetInstance();
     }
 }

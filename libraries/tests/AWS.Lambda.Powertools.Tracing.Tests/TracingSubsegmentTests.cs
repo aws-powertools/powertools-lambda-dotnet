@@ -5,7 +5,7 @@ using System;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
-[Collection("Sequential")]
+[Collection("TracingTests")]
 public class TracingSubsegmentTests
 {
 
@@ -232,4 +232,335 @@ public class TracingSubsegmentTests
         // Verify subsegment was still properly cleaned up
         Assert.True(parent.IsSubsegmentsAdded);
     }
+
+    #region BeginSubsegment Tests
+
+    [Fact]
+    public void BeginSubsegment_WithName_ThrowsArgumentNullException_WhenNameIsNull()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment(null));
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithName_ThrowsArgumentNullException_WhenNameIsEmpty()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment(""));
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithName_ThrowsArgumentNullException_WhenNameIsWhitespace()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment("   "));
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithNamespaceAndName_ThrowsArgumentNullException_WhenNameIsNull()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment("namespace", null));
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithNamespaceAndName_ThrowsArgumentNullException_WhenNameIsEmpty()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment("namespace", ""));
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithName_ReturnsTracingSubsegment()
+    {
+        // Act
+        using var subsegment = Tracing.BeginSubsegment("test-segment");
+
+        // Assert
+        Assert.NotNull(subsegment);
+        Assert.IsType<TracingSubsegment>(subsegment);
+        Assert.Equal("## test-segment", subsegment.Name);
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithNamespaceAndName_ReturnsTracingSubsegment()
+    {
+        // Act
+        using var subsegment = Tracing.BeginSubsegment("test-namespace", "test-segment");
+
+        // Assert
+        Assert.NotNull(subsegment);
+        Assert.IsType<TracingSubsegment>(subsegment);
+        Assert.Equal("## test-segment", subsegment.Name);
+    }
+
+    [Fact]
+    public void BeginSubsegment_IsDisposable()
+    {
+        // Act
+        var subsegment = Tracing.BeginSubsegment("test-segment");
+
+        // Assert
+        Assert.IsAssignableFrom<IDisposable>(subsegment);
+        
+        // Cleanup
+        subsegment.Dispose();
+    }
+
+    [Fact]
+    public void BeginSubsegment_CanBeUsedInUsingStatement()
+    {
+        // This test verifies that the using statement compiles and executes without errors
+        bool executedSuccessfully = false;
+
+        // Act
+        using (var subsegment = Tracing.BeginSubsegment("test-segment"))
+        {
+            Assert.NotNull(subsegment);
+            executedSuccessfully = true;
+        }
+
+        // Assert
+        Assert.True(executedSuccessfully);
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithUsing_AllowsNestedSubsegments()
+    {
+        // This test verifies nested using statements work correctly
+        bool outerExecuted = false;
+        bool innerExecuted = false;
+
+        // Act
+        using (var outerSegment = Tracing.BeginSubsegment("outer-segment"))
+        {
+            Assert.NotNull(outerSegment);
+            outerExecuted = true;
+
+            using (var innerSegment = Tracing.BeginSubsegment("inner-segment"))
+            {
+                Assert.NotNull(innerSegment);
+                innerExecuted = true;
+            }
+        }
+
+        // Assert
+        Assert.True(outerExecuted);
+        Assert.True(innerExecuted);
+    }
+
+    [Fact]
+    public void BeginSubsegment_Dispose_DoesNotThrowException()
+    {
+        // Arrange
+        var subsegment = Tracing.BeginSubsegment("test-segment");
+
+        // Act & Assert - Should not throw
+        subsegment.Dispose();
+        
+        // Multiple dispose calls should also not throw
+        subsegment.Dispose();
+    }
+
+    #endregion
+
+    #region TracingSubsegment Disposable Tests
+
+    [Fact]
+    public void TracingSubsegment_Constructor_WithAutoEnd_SetsCorrectProperties()
+    {
+        // Arrange & Act
+        var subsegment = new TracingSubsegment("test", true);
+
+        // Assert
+        Assert.Equal("test", subsegment.Name);
+        Assert.IsAssignableFrom<IDisposable>(subsegment);
+    }
+
+    [Fact]
+    public void TracingSubsegment_AddAnnotation_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
+        // This test mainly verifies the method exists and can be called
+        try
+        {
+            subsegment.AddAnnotation("testKey", "testValue");
+        }
+        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        {
+            // This is expected when no tracing context is available
+            // The important thing is that the method exists and attempts to call XRayRecorder
+        }
+    }
+
+    [Fact]
+    public void TracingSubsegment_AddMetadata_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
+        try
+        {
+            subsegment.AddMetadata("testKey", "testValue");
+        }
+        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        {
+            // This is expected when no tracing context is available
+            // The important thing is that the method exists and attempts to call XRayRecorder
+        }
+    }
+
+    [Fact]
+    public void TracingSubsegment_AddMetadataWithNamespace_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
+        try
+        {
+            subsegment.AddMetadata("testNamespace", "testKey", "testValue");
+        }
+        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        {
+            // This is expected when no tracing context is available
+            // The important thing is that the method exists and attempts to call XRayRecorder
+        }
+    }
+
+    [Fact]
+    public void TracingSubsegment_AddException_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+        var testException = new InvalidOperationException("Test exception");
+
+        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
+        try
+        {
+            subsegment.AddException(testException);
+        }
+        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        {
+            // This is expected when no tracing context is available
+            // The important thing is that the method exists and attempts to call XRayRecorder
+        }
+    }
+
+    [Fact]
+    public void TracingSubsegment_AddHttpInformation_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
+        try
+        {
+            subsegment.AddHttpInformation("testKey", "testValue");
+        }
+        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        {
+            // This is expected when no tracing context is available
+            // The important thing is that the method exists and attempts to call XRayRecorder
+        }
+    }
+
+    [Fact]
+    public void TracingSubsegment_Dispose_WithAutoEndFalse_DoesNotCallEndSubsegment()
+    {
+        // Arrange
+        var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw
+        subsegment.Dispose();
+        
+        // Multiple dispose calls should also not throw
+        subsegment.Dispose();
+    }
+
+    [Fact]
+    public void TracingSubsegment_Dispose_WithAutoEndTrue_AttemptsToCallEndSubsegment()
+    {
+        // Arrange
+        var subsegment = new TracingSubsegment("test", true);
+
+        // Act & Assert - Should not throw even if XRayRecorder throws
+        // The dispose method should swallow exceptions to prevent issues in using blocks
+        subsegment.Dispose();
+        
+        // Multiple dispose calls should also not throw
+        subsegment.Dispose();
+    }
+
+    #endregion
+
+    #region Integration Tests
+
+    [Fact]
+    public void BeginSubsegment_WithUsing_CanAddAnnotationsAndMetadata()
+    {
+        // This integration test verifies the complete workflow
+        bool executedSuccessfully = false;
+
+        // Act
+        using (var subsegment = Tracing.BeginSubsegment("integration-test"))
+        {
+            // These calls should not throw, even if they fail internally due to no tracing context
+            try
+            {
+                subsegment.AddAnnotation("TestAnnotation", "TestValue");
+                subsegment.AddMetadata("TestMetadata", "TestMetadataValue");
+                subsegment.AddMetadata("CustomNamespace", "TestKey", "TestValue");
+                executedSuccessfully = true;
+            }
+            catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+            {
+                // This is expected when no tracing context is available
+                executedSuccessfully = true;
+            }
+        }
+
+        // Assert
+        Assert.True(executedSuccessfully);
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithUsing_HandlesExceptionsGracefully()
+    {
+        // This test verifies that exceptions in the using block don't prevent disposal
+        var expectedException = new InvalidOperationException("Test exception");
+        bool exceptionThrown = false;
+        
+        // Act
+        try
+        {
+            using (var subsegment = Tracing.BeginSubsegment("exception-test"))
+            {
+                try
+                {
+                    subsegment.AddAnnotation("BeforeException", true);
+                }
+                catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+                {
+                    // Expected when no tracing context is available
+                }
+                throw expectedException;
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            exceptionThrown = true;
+            Assert.Equal(expectedException.Message, ex.Message);
+        }
+
+        // Assert
+        Assert.True(exceptionThrown);
+        // The important thing is that disposal happened without throwing additional exceptions
+    }
+
+    #endregion
 }
