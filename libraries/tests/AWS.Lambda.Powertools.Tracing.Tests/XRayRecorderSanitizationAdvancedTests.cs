@@ -377,6 +377,49 @@ public class XRayRecorderSanitizationAdvancedTests
     }
 
     [Fact]
+    public void AddMetadata_WithComplexObject_SerializesToDictionary()
+    {
+        // Arrange - Create a complex object that should be serialized to a dictionary
+        var complexObject = new
+        {
+            SystemInfo = new
+            {
+                DotNetVersion = "10.0.0",
+                RuntimeVersion = ".NET 10.0.0-rc.1.25451.107",
+                OSDescription = "Amazon Linux 2023.8.20250915",
+                OSArchitecture = "Arm64",
+                ProcessArchitecture = "Arm64",
+                RuntimeIdentifier = "linux-arm64",
+                MachineName = "169",
+                ProcessorCount = 2,
+                WorkingSet = 74358784L,
+                Is64BitOperatingSystem = true,
+                Is64BitProcess = true,
+                CLRVersion = "10.0.0",
+                CurrentDirectory = "/var/task"
+            },
+            LambdaInfo = new
+            {
+                FunctionName = "dotnet10-container",
+                FunctionVersion = "$LATEST",
+                InvokedFunctionArn = "arn:aws:lambda:eu-west-1:746792595426:function:dotnet10-container",
+                MemoryLimitInMB = 512,
+                RemainingTime = TimeSpan.FromSeconds(28.3635803),
+                RequestId = "fa48e22e-6312-47b7-8744-e0ae3f0b78bd",
+                LogGroupName = "/aws/lambda/dotnet10-container",
+                LogStreamName = "2025/10/01/[$LATEST]03cfeb57967e457db33a7011743f0217"
+            }
+        };
+
+        // Act
+        _xrayRecorder.AddMetadata("dotnet10-ns", "FunctionHandler response", complexObject);
+
+        // Assert - Verify the call was made and the object should be serialized as a dictionary structure
+        _mockAwsXRayRecorder.Received(1).AddMetadata("dotnet10-ns", "FunctionHandler response", 
+            Arg.Is<object>(obj => obj is System.Collections.Generic.Dictionary<string, object>));
+    }
+
+    [Fact]
     public void SanitizeValueForMetadata_WithObjectThatThrowsInToString_ReturnsSanitizationFailedMessage()
     {
         // Arrange - Create an object that throws during ToString and during sanitization

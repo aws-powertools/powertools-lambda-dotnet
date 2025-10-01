@@ -381,7 +381,7 @@ internal class XRayRecorder : IXRayRecorder
             return collectionResult;
 
         // Handle complex objects
-        return SanitizeComplexObject(value, type);
+        return SanitizeComplexObject(value, type, depth);
     }
 
     /// <summary>
@@ -529,22 +529,52 @@ internal class XRayRecorder : IXRayRecorder
     }
 
     /// <summary>
-    ///     Sanitizes complex objects by converting them to safe string representation.
+    ///     Sanitizes complex objects by converting them to dictionaries.
+    ///     Uses reflection with proper AOT attributes for compatibility.
     /// </summary>
     /// <param name="value">The object to sanitize</param>
     /// <param name="type">The object type</param>
-    /// <returns>Sanitized string representation</returns>
-    private static object SanitizeComplexObject(object value, Type type)
+    /// <param name="depth">Current recursion depth</param>
+    /// <returns>Sanitized dictionary representation or string fallback</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Complex object properties are preserved for tracing scenarios")]
+    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling", Justification = "Complex object properties are preserved for tracing scenarios")]
+    private static object SanitizeComplexObject(object value, Type type, int depth)
     {
         try
         {
-            // This ensures the object can be serialized without issues
-            return $"[{type.Name}] {value}";
+            var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var sanitizedObject = new System.Collections.Generic.Dictionary<string, object>();
+
+            foreach (var prop in properties)
+            {
+                try
+                {
+                    if (prop.CanRead && prop.GetIndexParameters().Length == 0) // Skip indexers
+                    {
+                        var propValue = prop.GetValue(value);
+                        sanitizedObject[prop.Name] = SanitizeValueRecursive(propValue, depth + 1);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // If we can't read a property, record the error
+                    sanitizedObject[prop.Name] = $"[Error reading property: {ex.Message}]";
+                }
+            }
+
+            return sanitizedObject;
         }
         catch (Exception ex)
         {
-            // If all else fails, return a safe fallback
-            return $"[Object conversion failed: {ex.Message}]";
+            // If reflection fails, fall back to string representation
+            try
+            {
+                return $"[{type.Name}] {value}";
+            }
+            catch (Exception toStringEx)
+            {
+                return $"[Object conversion failed: {ex.Message}, ToString failed: {toStringEx.Message}]";
+            }
         }
     }
 
