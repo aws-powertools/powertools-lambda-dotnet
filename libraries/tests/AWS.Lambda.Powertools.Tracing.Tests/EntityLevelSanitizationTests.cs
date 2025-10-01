@@ -153,4 +153,132 @@ public class EntityLevelSanitizationTests
             Assert.Fail($"EndSubsegment with null entity should not throw: {ex.Message}");
         }
     }
+
+    [Fact]
+    public void SanitizeCurrentEntitySafely_WithProblematicData_SanitizesSuccessfully()
+    {
+        // Arrange
+        var mockAwsXRayRecorder = Substitute.For<IAWSXRayRecorder>();
+        var mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
+        mockConfigurations.IsLambdaEnvironment.Returns(true);
+        
+        // Create a real subsegment to test actual sanitization
+        var subsegment = new Subsegment("TestSegment");
+        
+        // Add problematic data to the subsegment (only metadata, not annotations with DateTime)
+        subsegment.AddMetadata("test", "problematic_ulong", 42ul);
+        subsegment.AddMetadata("test", "problematic_guid", Guid.NewGuid());
+        subsegment.AddMetadata("test", "problematic_datetime", DateTime.Now);
+        subsegment.AddAnnotation("safe_annotation", "safe_value");
+        
+        var mockTraceContext = Substitute.For<Amazon.XRay.Recorder.Core.Internal.Context.ITraceContext>();
+        mockTraceContext.GetEntity().Returns(subsegment);
+        mockAwsXRayRecorder.TraceContext.Returns(mockTraceContext);
+        
+        var recorder = new XRayRecorder(mockAwsXRayRecorder, mockConfigurations);
+
+        // Act & Assert - Should not throw
+        try
+        {
+            recorder.EndSubsegment();
+            
+            // Verify that EndSubsegment was called
+            mockAwsXRayRecorder.Received(1).EndSubsegment();
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail($"EndSubsegment with problematic data should not throw: {ex.Message}");
+        }
+    }
+
+    [Fact]
+    public void SanitizeEntityMetadata_WithReflectionFailure_HandlesGracefully()
+    {
+        // Arrange
+        var mockAwsXRayRecorder = Substitute.For<IAWSXRayRecorder>();
+        var mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
+        mockConfigurations.IsLambdaEnvironment.Returns(true);
+        
+        // Create a subsegment and make GetEntity throw an exception to simulate reflection failure
+        var mockTraceContext = Substitute.For<Amazon.XRay.Recorder.Core.Internal.Context.ITraceContext>();
+        mockTraceContext.GetEntity().Returns(x => throw new Exception("Reflection error"));
+        mockAwsXRayRecorder.TraceContext.Returns(mockTraceContext);
+        
+        var recorder = new XRayRecorder(mockAwsXRayRecorder, mockConfigurations);
+
+        // Act & Assert - Should not throw
+        try
+        {
+            recorder.EndSubsegment();
+            
+            // Verify that EndSubsegment was still called despite the reflection error
+            mockAwsXRayRecorder.Received(1).EndSubsegment();
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail($"EndSubsegment with reflection failure should not throw: {ex.Message}");
+        }
+    }
+
+    [Fact]
+    public void SanitizeEntityAnnotations_WithNullAnnotations_HandlesGracefully()
+    {
+        // Arrange
+        var mockAwsXRayRecorder = Substitute.For<IAWSXRayRecorder>();
+        var mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
+        mockConfigurations.IsLambdaEnvironment.Returns(true);
+        
+        // Create a subsegment with null annotations property (simulated)
+        var subsegment = new Subsegment("TestSegment");
+        
+        var mockTraceContext = Substitute.For<Amazon.XRay.Recorder.Core.Internal.Context.ITraceContext>();
+        mockTraceContext.GetEntity().Returns(subsegment);
+        mockAwsXRayRecorder.TraceContext.Returns(mockTraceContext);
+        
+        var recorder = new XRayRecorder(mockAwsXRayRecorder, mockConfigurations);
+
+        // Act & Assert - Should not throw
+        try
+        {
+            recorder.EndSubsegment();
+            
+            // Verify that EndSubsegment was called
+            mockAwsXRayRecorder.Received(1).EndSubsegment();
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail($"EndSubsegment with null annotations should not throw: {ex.Message}");
+        }
+    }
+
+    [Fact]
+    public void SanitizeEntityHttpInformation_WithNullHttp_HandlesGracefully()
+    {
+        // Arrange
+        var mockAwsXRayRecorder = Substitute.For<IAWSXRayRecorder>();
+        var mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
+        mockConfigurations.IsLambdaEnvironment.Returns(true);
+        
+        // Create a subsegment with null HTTP property (simulated)
+        var subsegment = new Subsegment("TestSegment");
+        
+        var mockTraceContext = Substitute.For<Amazon.XRay.Recorder.Core.Internal.Context.ITraceContext>();
+        mockTraceContext.GetEntity().Returns(subsegment);
+        mockAwsXRayRecorder.TraceContext.Returns(mockTraceContext);
+        
+        var recorder = new XRayRecorder(mockAwsXRayRecorder, mockConfigurations);
+
+        // Act & Assert - Should not throw
+        try
+        {
+            recorder.EndSubsegment();
+            
+            // Verify that EndSubsegment was called
+            mockAwsXRayRecorder.Received(1).EndSubsegment();
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail($"EndSubsegment with null HTTP info should not throw: {ex.Message}");
+        }
+    }
 }

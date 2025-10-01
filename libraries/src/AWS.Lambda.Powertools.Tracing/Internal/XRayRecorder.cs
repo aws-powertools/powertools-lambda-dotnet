@@ -137,7 +137,6 @@ internal class XRayRecorder : IXRayRecorder
         catch (Exception e) when (IsSerializationError(e))
         {
             // This is a JSON serialization error - handle it aggressively
-            Console.WriteLine("JSON serialization error detected in Tracing utility - attempting recovery");
             Console.WriteLine($"Error: {e.Message}");
 
             HandleSerializationError(e);
@@ -191,16 +190,12 @@ internal class XRayRecorder : IXRayRecorder
         try
         {
             // Strategy 1: Try to clear and recreate with minimal data
-            Console.WriteLine("Attempting serialization error recovery - Strategy 1: Clear and recreate");
-
             _awsxRayRecorder.TraceContext.ClearEntity();
             _awsxRayRecorder.BeginSubsegment("Tracing_Sanitized");
             _awsxRayRecorder.AddAnnotation("SerializationError", true);
             _awsxRayRecorder.AddMetadata("Error", "Type", "JSON Serialization Error");
             _awsxRayRecorder.AddMetadata("Error", "Message", SanitizeValueForMetadata(originalException.Message));
             _awsxRayRecorder.EndSubsegment();
-
-            Console.WriteLine("Serialization error recovery successful");
         }
         catch (Exception e2)
         {
@@ -213,8 +208,6 @@ internal class XRayRecorder : IXRayRecorder
                 _awsxRayRecorder.BeginSubsegment("Tracing_Error");
                 _awsxRayRecorder.AddAnnotation("Error", "SerializationFailed");
                 _awsxRayRecorder.EndSubsegment();
-
-                Console.WriteLine("Minimal serialization error recovery successful");
             }
             catch (Exception e3)
             {
@@ -388,7 +381,7 @@ internal class XRayRecorder : IXRayRecorder
             return collectionResult;
 
         // Handle complex objects
-        return SanitizeComplexObject(value, type, depth);
+        return SanitizeComplexObject(value, type);
     }
 
     /// <summary>
@@ -557,13 +550,11 @@ internal class XRayRecorder : IXRayRecorder
     /// </summary>
     /// <param name="value">The object to sanitize</param>
     /// <param name="type">The object type</param>
-    /// <param name="depth">Current recursion depth</param>
     /// <returns>Sanitized string representation</returns>
-    private static object SanitizeComplexObject(object value, Type type, int depth)
+    private static object SanitizeComplexObject(object value, Type type)
     {
         try
         {
-            // For Native AOT compatibility, we avoid reflection and convert to string
             // This ensures the object can be serialized without issues
             return $"[{type.Name}] {value.ToString()}";
         }
