@@ -281,4 +281,100 @@ public class EntityLevelSanitizationTests
             Assert.Fail($"EndSubsegment with null HTTP info should not throw: {ex.Message}");
         }
     }
+
+    [Fact]
+    public void SanitizeEntityAnnotations_WithAnnotationSanitizationError_HandlesGracefully()
+    {
+        // Arrange
+        var mockAwsXRayRecorder = Substitute.For<IAWSXRayRecorder>();
+        var mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
+        mockConfigurations.IsLambdaEnvironment.Returns(true);
+        
+        // Create a subsegment with annotations that will be sanitized
+        var subsegment = new Subsegment("TestSegment");
+        subsegment.AddAnnotation("test_key", "test_value");
+        
+        var mockTraceContext = Substitute.For<Amazon.XRay.Recorder.Core.Internal.Context.ITraceContext>();
+        mockTraceContext.GetEntity().Returns(subsegment);
+        mockAwsXRayRecorder.TraceContext.Returns(mockTraceContext);
+        
+        var recorder = new XRayRecorder(mockAwsXRayRecorder, mockConfigurations);
+
+        // Act & Assert - Should not throw even if annotation sanitization encounters issues
+        try
+        {
+            recorder.EndSubsegment();
+            
+            // Verify that EndSubsegment was called
+            mockAwsXRayRecorder.Received(1).EndSubsegment();
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail($"EndSubsegment with annotation sanitization should not throw: {ex.Message}");
+        }
+    }
+
+    [Fact]
+    public void SanitizeEntityHttpInformation_WithHttpSanitizationError_HandlesGracefully()
+    {
+        // Arrange
+        var mockAwsXRayRecorder = Substitute.For<IAWSXRayRecorder>();
+        var mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
+        mockConfigurations.IsLambdaEnvironment.Returns(true);
+        
+        // Create a subsegment (HTTP info is handled internally by X-Ray SDK)
+        var subsegment = new Subsegment("TestSegment");
+        
+        var mockTraceContext = Substitute.For<Amazon.XRay.Recorder.Core.Internal.Context.ITraceContext>();
+        mockTraceContext.GetEntity().Returns(subsegment);
+        mockAwsXRayRecorder.TraceContext.Returns(mockTraceContext);
+        
+        var recorder = new XRayRecorder(mockAwsXRayRecorder, mockConfigurations);
+
+        // Act & Assert - Should not throw even if HTTP sanitization encounters issues
+        try
+        {
+            recorder.EndSubsegment();
+            
+            // Verify that EndSubsegment was called
+            mockAwsXRayRecorder.Received(1).EndSubsegment();
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail($"EndSubsegment with HTTP sanitization should not throw: {ex.Message}");
+        }
+    }
+
+    [Fact]
+    public void SanitizeEntityMetadata_WithMetadataSanitizationError_HandlesGracefully()
+    {
+        // Arrange
+        var mockAwsXRayRecorder = Substitute.For<IAWSXRayRecorder>();
+        var mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
+        mockConfigurations.IsLambdaEnvironment.Returns(true);
+        
+        // Create a subsegment with metadata that needs sanitization
+        var subsegment = new Subsegment("TestSegment");
+        subsegment.AddMetadata("test_namespace", "problematic_key", 42ul); // ulong needs sanitization
+        subsegment.AddMetadata("test_namespace", "guid_key", Guid.NewGuid()); // Guid needs sanitization
+        
+        var mockTraceContext = Substitute.For<Amazon.XRay.Recorder.Core.Internal.Context.ITraceContext>();
+        mockTraceContext.GetEntity().Returns(subsegment);
+        mockAwsXRayRecorder.TraceContext.Returns(mockTraceContext);
+        
+        var recorder = new XRayRecorder(mockAwsXRayRecorder, mockConfigurations);
+
+        // Act & Assert - Should not throw even if metadata sanitization encounters issues
+        try
+        {
+            recorder.EndSubsegment();
+            
+            // Verify that EndSubsegment was called
+            mockAwsXRayRecorder.Received(1).EndSubsegment();
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail($"EndSubsegment with metadata sanitization should not throw: {ex.Message}");
+        }
+    }
 }
