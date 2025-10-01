@@ -18,12 +18,12 @@ internal class XRayRecorder : IXRayRecorder
     ///     Maximum recursion depth for sanitization to prevent infinite loops
     /// </summary>
     private const int MaxSanitizationDepth = 10;
-    
+
     /// <summary>
     ///     The instance
     /// </summary>
     private static IXRayRecorder _instance;
-    
+
     /// <summary>
     ///     The AWS X-Ray recorder instance
     /// </summary>
@@ -119,14 +119,14 @@ internal class XRayRecorder : IXRayRecorder
             _awsxRayRecorder.AddMetadata(nameSpace, key, sanitizedValue);
         }
     }
-    
+
     /// <summary>
     ///     Ends the subsegment.
     /// </summary>
     public void EndSubsegment()
     {
         if (!_isLambda) return;
-        
+
         try
         {
             // First attempt: Sanitize the entire entity before ending the subsegment
@@ -138,7 +138,7 @@ internal class XRayRecorder : IXRayRecorder
             // This is a JSON serialization error - handle it aggressively
             Console.WriteLine("JSON serialization error detected in Tracing utility - attempting recovery");
             Console.WriteLine($"Error: {e.Message}");
-            
+
             HandleSerializationError(e);
         }
         catch (Exception e)
@@ -169,13 +169,13 @@ internal class XRayRecorder : IXRayRecorder
     private static bool IsSerializationError(Exception e)
     {
         if (e == null) return false;
-        
+
         var message = e.Message ?? string.Empty;
         var stackTrace = e.StackTrace ?? string.Empty;
         var typeName = e.GetType().Name ?? string.Empty;
-        
-        return message.Contains("LitJson") || 
-               message.Contains("JsonMapper") || 
+
+        return message.Contains("LitJson") ||
+               message.Contains("JsonMapper") ||
                stackTrace.Contains("JsonMapper") ||
                stackTrace.Contains("LitJson") ||
                stackTrace.Contains("JsonSegmentMarshaller") ||
@@ -191,14 +191,14 @@ internal class XRayRecorder : IXRayRecorder
         {
             // Strategy 1: Try to clear and recreate with minimal data
             Console.WriteLine("Attempting serialization error recovery - Strategy 1: Clear and recreate");
-            
+
             _awsxRayRecorder.TraceContext.ClearEntity();
             _awsxRayRecorder.BeginSubsegment("Tracing_Sanitized");
             _awsxRayRecorder.AddAnnotation("SerializationError", true);
             _awsxRayRecorder.AddMetadata("Error", "Type", "JSON Serialization Error");
             _awsxRayRecorder.AddMetadata("Error", "Message", SanitizeValueForMetadata(originalException.Message));
             _awsxRayRecorder.EndSubsegment();
-            
+
             Console.WriteLine("Serialization error recovery successful");
         }
         catch (Exception e2)
@@ -207,12 +207,12 @@ internal class XRayRecorder : IXRayRecorder
             {
                 // Strategy 2: Even more minimal approach
                 Console.WriteLine("Strategy 1 failed, attempting Strategy 2: Minimal segment");
-                
+
                 _awsxRayRecorder.TraceContext.ClearEntity();
                 _awsxRayRecorder.BeginSubsegment("Tracing_Error");
                 _awsxRayRecorder.AddAnnotation("Error", "SerializationFailed");
                 _awsxRayRecorder.EndSubsegment();
-                
+
                 Console.WriteLine("Minimal serialization error recovery successful");
             }
             catch (Exception e3)
@@ -222,7 +222,7 @@ internal class XRayRecorder : IXRayRecorder
                 Console.WriteLine($"Original error: {originalException.Message}");
                 Console.WriteLine($"Recovery error 1: {e2.Message}");
                 Console.WriteLine($"Recovery error 2: {e3.Message}");
-                
+
                 // Try one last time to clear the entity to prevent further issues
                 try
                 {
@@ -255,6 +255,7 @@ internal class XRayRecorder : IXRayRecorder
                 return new Subsegment("Root");
             }
         }
+
         return new Subsegment("Root");
     }
 
@@ -284,7 +285,8 @@ internal class XRayRecorder : IXRayRecorder
             catch (Exception ex) when (ex.Message.Contains("LitJson") || ex.Message.Contains("JsonMapper"))
             {
                 // If the exception itself causes serialization issues, create a sanitized version
-                var sanitizedException = new Exception($"[Sanitized Exception] {exception.GetType().Name}: {exception.Message}");
+                var sanitizedException =
+                    new Exception($"[Sanitized Exception] {exception.GetType().Name}: {exception.Message}");
                 _awsxRayRecorder.AddException(sanitizedException);
             }
         }
@@ -316,13 +318,13 @@ internal class XRayRecorder : IXRayRecorder
             return null;
 
         var type = value.GetType();
-        
+
         // X-Ray supported annotation types: string, int, long, double, float, bool
-        if (type == typeof(string) || 
-            type == typeof(int) || 
-            type == typeof(long) || 
-            type == typeof(double) || 
-            type == typeof(float) || 
+        if (type == typeof(string) ||
+            type == typeof(int) ||
+            type == typeof(long) ||
+            type == typeof(double) ||
+            type == typeof(float) ||
             type == typeof(bool))
         {
             return value;
@@ -401,7 +403,7 @@ internal class XRayRecorder : IXRayRecorder
 
         // Handle problematic numeric types that cause JSON serialization issues
         if (type == typeof(IntPtr) || type == typeof(UIntPtr) ||
-            type == typeof(uint) || type == typeof(ulong) || 
+            type == typeof(uint) || type == typeof(ulong) ||
             type == typeof(ushort) || type == typeof(byte) || type == typeof(sbyte))
         {
             return value.ToString();
@@ -421,7 +423,7 @@ internal class XRayRecorder : IXRayRecorder
     {
         if (type == typeof(DateTime))
             return ((DateTime)value).ToString("O"); // ISO 8601 format
-        
+
         if (type == typeof(TimeSpan))
             return ((TimeSpan)value).ToString();
 
@@ -468,20 +470,20 @@ internal class XRayRecorder : IXRayRecorder
     private static object SanitizeArray(Array array, Type type, int depth)
     {
         var elementType = type.GetElementType();
-        
-        // If it's an array of safe types, check if all elements are actually safe
-        if (elementType != null && IsSafeType(elementType))
+
+        // If it's an array of safe types and all elements are actually safe, return original array
+        if (elementType != null && IsSafeType(elementType) && IsArrayElementsSafe(array))
         {
-            if (IsArrayElementsSafe(array))
-                return array; // Return original array
+            return array; // Return original array
         }
-        
+
         // Otherwise, sanitize to object array
         var sanitizedArray = new object[array.Length];
         for (int i = 0; i < array.Length; i++)
         {
             sanitizedArray[i] = SanitizeValueRecursive(array.GetValue(i), depth + 1);
         }
+
         return sanitizedArray;
     }
 
@@ -498,6 +500,7 @@ internal class XRayRecorder : IXRayRecorder
             if (element != null && NeedsTypeSanitization(element.GetType()))
                 return false;
         }
+
         return true;
     }
 
@@ -515,6 +518,7 @@ internal class XRayRecorder : IXRayRecorder
             var key = entry.Key?.ToString() ?? "null";
             sanitizedDict[key] = SanitizeValueRecursive(entry.Value, depth + 1);
         }
+
         return sanitizedDict;
     }
 
@@ -531,6 +535,7 @@ internal class XRayRecorder : IXRayRecorder
         {
             sanitizedList.Add(SanitizeValueRecursive(item, depth + 1));
         }
+
         return sanitizedList;
     }
 
@@ -545,7 +550,8 @@ internal class XRayRecorder : IXRayRecorder
     {
         try
         {
-            var properties = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var properties =
+                type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
             var sanitizedObject = new System.Collections.Generic.Dictionary<string, object>();
 
             foreach (var prop in properties)
@@ -588,7 +594,7 @@ internal class XRayRecorder : IXRayRecorder
             // If we can't read a property, record the error
             return $"[Error reading property: {ex.Message}]";
         }
-        
+
         return null;
     }
 
@@ -617,12 +623,12 @@ internal class XRayRecorder : IXRayRecorder
     {
         // Problematic primitive types that cause LitJson issues
         if (type == typeof(IntPtr) || type == typeof(UIntPtr) ||
-            type == typeof(uint) || type == typeof(ulong) || 
+            type == typeof(uint) || type == typeof(ulong) ||
             type == typeof(ushort) || type == typeof(byte) || type == typeof(sbyte))
             return true;
 
         // Other problematic types
-        if (type == typeof(DateTime) || type == typeof(TimeSpan) || 
+        if (type == typeof(DateTime) || type == typeof(TimeSpan) ||
             type == typeof(Guid) || type.IsEnum)
             return true;
 
@@ -649,13 +655,13 @@ internal class XRayRecorder : IXRayRecorder
 
             // Sanitize Metadata
             SanitizeEntityMetadata(entity);
-            
+
             // Sanitize Annotations
             SanitizeEntityAnnotations(entity);
-            
+
             // Sanitize HTTP information
             SanitizeEntityHttpInformation(entity);
-            
+
             // Sanitize any other properties that might contain problematic data
             SanitizeEntityOtherProperties(entity);
         }
@@ -776,8 +782,9 @@ internal class XRayRecorder : IXRayRecorder
         try
         {
             // Get all properties of the entity
-            var properties = entity.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            
+            var properties = entity.GetType()
+                .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
             foreach (var property in properties)
             {
                 try
@@ -785,11 +792,11 @@ internal class XRayRecorder : IXRayRecorder
                     // Skip properties we've already handled
                     if (property.Name == "Metadata" || property.Name == "Annotations" || property.Name == "Http")
                         continue;
-                        
+
                     // Skip properties that can't be written to
                     if (!property.CanWrite || !property.CanRead)
                         continue;
-                        
+
                     // Skip indexers
                     if (property.GetIndexParameters().Length > 0)
                         continue;
@@ -799,17 +806,17 @@ internal class XRayRecorder : IXRayRecorder
                         continue;
 
                     var valueType = value.GetType();
-                    
+
                     // Only sanitize properties that might contain problematic data
-                    if (NeedsTypeSanitization(valueType) || 
-                        valueType.IsClass && valueType != typeof(string) && 
+                    if (NeedsTypeSanitization(valueType) ||
+                        valueType.IsClass && valueType != typeof(string) &&
                         !valueType.IsPrimitive && !valueType.IsEnum)
                     {
                         var sanitizedValue = SanitizeValueForMetadata(value);
-                        
+
                         // Only update if the sanitized value is different and compatible
-                        if (!ReferenceEquals(value, sanitizedValue) && 
-                            (sanitizedValue == null || property.PropertyType.IsAssignableFrom(sanitizedValue.GetType())))
+                        if (!ReferenceEquals(value, sanitizedValue) &&
+                            (sanitizedValue == null || property.PropertyType.IsInstanceOfType(sanitizedValue)))
                         {
                             property.SetValue(entity, sanitizedValue);
                         }

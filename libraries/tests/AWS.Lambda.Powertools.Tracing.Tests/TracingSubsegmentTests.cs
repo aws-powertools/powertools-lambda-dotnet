@@ -8,7 +8,6 @@ namespace AWS.Lambda.Powertools.Tracing.Tests;
 [Collection("TracingTests")]
 public class TracingSubsegmentTests
 {
-
     [Fact]
     public void TracingSubsegment_Constructor_Should_Set_Name()
     {
@@ -96,7 +95,7 @@ public class TracingSubsegmentTests
         var parent = new Segment("parent", TraceId.NewId());
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
+        Assert.Throws<ArgumentNullException>(() =>
             Tracing.WithSubsegment(null, invalidName, parent, _ => { }));
     }
 
@@ -104,7 +103,7 @@ public class TracingSubsegmentTests
     public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenEntityIsNull()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
+        Assert.Throws<ArgumentNullException>(() =>
             Tracing.WithSubsegment(null, "test", null, _ => { }));
     }
 
@@ -116,10 +115,8 @@ public class TracingSubsegmentTests
         TracingSubsegment capturedSubsegment = null;
 
         // Act
-        Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
-        {
-            capturedSubsegment = subsegment;
-        });
+        Tracing.WithSubsegment("test-namespace", "test-name", parent,
+            subsegment => { capturedSubsegment = subsegment; });
 
         // Assert
         Assert.NotNull(capturedSubsegment);
@@ -135,10 +132,8 @@ public class TracingSubsegmentTests
         TracingSubsegment capturedSubsegment = null;
 
         // Act
-        Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
-        {
-            capturedSubsegment = subsegment;
-        });
+        Tracing.WithSubsegment("test-namespace", "test-name", parent,
+            subsegment => { capturedSubsegment = subsegment; });
 
         // Assert
         Assert.NotNull(capturedSubsegment);
@@ -193,10 +188,7 @@ public class TracingSubsegmentTests
         TracingSubsegment capturedSubsegment = null;
 
         // Act
-        Tracing.WithSubsegment(null, "test-name", parent, subsegment =>
-        {
-            capturedSubsegment = subsegment;
-        });
+        Tracing.WithSubsegment(null, "test-name", parent, subsegment => { capturedSubsegment = subsegment; });
 
         // Assert
         Assert.NotNull(capturedSubsegment);
@@ -213,10 +205,8 @@ public class TracingSubsegmentTests
         // Act & Assert
         var actualException = Assert.Throws<InvalidOperationException>(() =>
         {
-            Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
-            {
-                throw expectedException;
-            });
+            Tracing.WithSubsegment("test-namespace", "test-name", parent,
+                subsegment => { throw expectedException; });
         });
 
         Assert.Equal(expectedException, actualException);
@@ -269,7 +259,7 @@ public class TracingSubsegmentTests
 
         // Assert
         Assert.IsAssignableFrom<IDisposable>(subsegment);
-        
+
         // Cleanup
         subsegment.Dispose();
     }
@@ -321,12 +311,28 @@ public class TracingSubsegmentTests
     {
         // Arrange
         var subsegment = Tracing.BeginSubsegment("test-segment");
+        bool firstDisposeSucceeded = false;
+        bool secondDisposeSucceeded = false;
 
         // Act & Assert - Should not throw
-        subsegment.Dispose();
-        
+        var exception1 = Record.Exception(() =>
+        {
+            subsegment.Dispose();
+            firstDisposeSucceeded = true;
+        });
+
         // Multiple dispose calls should also not throw
-        subsegment.Dispose();
+        var exception2 = Record.Exception(() =>
+        {
+            subsegment.Dispose();
+            secondDisposeSucceeded = true;
+        });
+
+        // Assert
+        Assert.Null(exception1);
+        Assert.Null(exception2);
+        Assert.True(firstDisposeSucceeded);
+        Assert.True(secondDisposeSucceeded);
     }
 
     #endregion
@@ -350,18 +356,21 @@ public class TracingSubsegmentTests
         // Arrange
         using var subsegment = new TracingSubsegment("test", false);
 
-        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
-        // This test mainly verifies the method exists and can be called
-        try
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddAnnotation("testKey", "testValue"); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
         {
-            subsegment.AddAnnotation("testKey", "testValue");
+            Assert.Contains("Entity is not available", exception.Message);
         }
-        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        else
         {
-            // This is expected when no tracing context is available
-            // The important thing is that the method exists and attempts to call XRayRecorder
+            Assert.Null(exception);
         }
     }
+
 
     [Fact]
     public void TracingSubsegment_AddMetadata_CallsXRayRecorder()
@@ -369,17 +378,21 @@ public class TracingSubsegmentTests
         // Arrange
         using var subsegment = new TracingSubsegment("test", false);
 
-        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
-        try
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddMetadata("testKey", "testValue"); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
         {
-            subsegment.AddMetadata("testKey", "testValue");
+            Assert.Contains("Entity is not available", exception.Message);
         }
-        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        else
         {
-            // This is expected when no tracing context is available
-            // The important thing is that the method exists and attempts to call XRayRecorder
+            Assert.Null(exception);
         }
     }
+
 
     [Fact]
     public void TracingSubsegment_AddMetadataWithNamespace_CallsXRayRecorder()
@@ -387,17 +400,21 @@ public class TracingSubsegmentTests
         // Arrange
         using var subsegment = new TracingSubsegment("test", false);
 
-        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
-        try
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddMetadata("testNamespace", "testKey", "testValue"); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
         {
-            subsegment.AddMetadata("testNamespace", "testKey", "testValue");
+            Assert.Contains("Entity is not available", exception.Message);
         }
-        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        else
         {
-            // This is expected when no tracing context is available
-            // The important thing is that the method exists and attempts to call XRayRecorder
+            Assert.Null(exception);
         }
     }
+
 
     [Fact]
     public void TracingSubsegment_AddException_CallsXRayRecorder()
@@ -406,17 +423,21 @@ public class TracingSubsegmentTests
         using var subsegment = new TracingSubsegment("test", false);
         var testException = new InvalidOperationException("Test exception");
 
-        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
-        try
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddException(testException); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
         {
-            subsegment.AddException(testException);
+            Assert.Contains("Entity is not available", exception.Message);
         }
-        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        else
         {
-            // This is expected when no tracing context is available
-            // The important thing is that the method exists and attempts to call XRayRecorder
+            Assert.Null(exception);
         }
     }
+
 
     [Fact]
     public void TracingSubsegment_AddHttpInformation_CallsXRayRecorder()
@@ -424,17 +445,21 @@ public class TracingSubsegmentTests
         // Arrange
         using var subsegment = new TracingSubsegment("test", false);
 
-        // Act & Assert - Should not throw (we can't easily mock XRayRecorder in this context)
-        try
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddHttpInformation("testKey", "testValue"); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
         {
-            subsegment.AddHttpInformation("testKey", "testValue");
+            Assert.Contains("Entity is not available", exception.Message);
         }
-        catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+        else
         {
-            // This is expected when no tracing context is available
-            // The important thing is that the method exists and attempts to call XRayRecorder
+            Assert.Null(exception);
         }
     }
+
 
     [Fact]
     public void TracingSubsegment_Dispose_WithAutoEndFalse_DoesNotCallEndSubsegment()
@@ -443,11 +468,16 @@ public class TracingSubsegmentTests
         var subsegment = new TracingSubsegment("test", false);
 
         // Act & Assert - Should not throw
-        subsegment.Dispose();
-        
+        var exception1 = Record.Exception(() => { subsegment.Dispose(); });
+
         // Multiple dispose calls should also not throw
-        subsegment.Dispose();
+        var exception2 = Record.Exception(() => { subsegment.Dispose(); });
+
+        // Assert
+        Assert.Null(exception1);
+        Assert.Null(exception2);
     }
+
 
     [Fact]
     public void TracingSubsegment_Dispose_WithAutoEndTrue_AttemptsToCallEndSubsegment()
@@ -456,11 +486,14 @@ public class TracingSubsegmentTests
         var subsegment = new TracingSubsegment("test", true);
 
         // Act & Assert - Should not throw even if XRayRecorder throws
-        // The dispose method should swallow exceptions to prevent issues in using blocks
-        subsegment.Dispose();
-        
+        var exception1 = Record.Exception(() => { subsegment.Dispose(); });
+
         // Multiple dispose calls should also not throw
-        subsegment.Dispose();
+        var exception2 = Record.Exception(() => { subsegment.Dispose(); });
+
+        // Assert
+        Assert.Null(exception1);
+        Assert.Null(exception2);
     }
 
     #endregion
@@ -501,7 +534,7 @@ public class TracingSubsegmentTests
         // This test verifies that exceptions in the using block don't prevent disposal
         var expectedException = new InvalidOperationException("Test exception");
         bool exceptionThrown = false;
-        
+
         // Act
         try
         {
@@ -515,6 +548,7 @@ public class TracingSubsegmentTests
                 {
                     // Expected when no tracing context is available
                 }
+
                 throw expectedException;
             }
         }
