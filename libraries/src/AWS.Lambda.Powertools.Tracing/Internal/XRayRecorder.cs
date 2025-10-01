@@ -170,7 +170,7 @@ internal class XRayRecorder : IXRayRecorder
     {
         if (e == null) return false;
 
-        var message = e.Message ?? string.Empty;
+        var message = e.Message;
         var stackTrace = e.StackTrace ?? string.Empty;
         var typeName = e.GetType().Name;
 
@@ -344,7 +344,7 @@ internal class XRayRecorder : IXRayRecorder
         {
             // If sanitization fails, return a safe string representation
             // This ensures we don't break the tracing functionality
-            return $"[Sanitization failed: {ex.Message}] {value.ToString()}";
+            return $"[Sanitization failed: {ex.Message}] {value}";
         }
     }
 
@@ -494,23 +494,6 @@ internal class XRayRecorder : IXRayRecorder
     }
 
     /// <summary>
-    ///     Checks if all elements in an array are safe types.
-    /// </summary>
-    /// <param name="array">The array to check</param>
-    /// <returns>True if all elements are safe</returns>
-    private static bool IsArrayElementsSafe(Array array)
-    {
-        for (int i = 0; i < array.Length; i++)
-        {
-            var element = array.GetValue(i);
-            if (element != null && NeedsTypeSanitization(element.GetType()))
-                return false;
-        }
-
-        return true;
-    }
-
-    /// <summary>
     ///     Sanitizes dictionary values.
     /// </summary>
     /// <param name="dict">The dictionary to sanitize</param>
@@ -521,7 +504,7 @@ internal class XRayRecorder : IXRayRecorder
         var sanitizedDict = new System.Collections.Generic.Dictionary<string, object>();
         foreach (System.Collections.DictionaryEntry entry in dict)
         {
-            var key = entry.Key?.ToString() ?? "null";
+            var key = entry.Key.ToString() ?? "null";
             sanitizedDict[key] = SanitizeValueRecursive(entry.Value, depth + 1);
         }
 
@@ -556,7 +539,7 @@ internal class XRayRecorder : IXRayRecorder
         try
         {
             // This ensures the object can be serialized without issues
-            return $"[{type.Name}] {value.ToString()}";
+            return $"[{type.Name}] {value}";
         }
         catch (Exception ex)
         {
@@ -566,64 +549,12 @@ internal class XRayRecorder : IXRayRecorder
     }
 
 
-
-    /// <summary>
-    ///     Determines if a type is safe for X-Ray without sanitization
-    /// </summary>
-    /// <param name="type">The type to check</param>
-    /// <returns>True if the type is safe</returns>
-    private static bool IsSafeType(Type type)
-    {
-        return type == typeof(string) ||
-               type == typeof(int) ||
-               type == typeof(long) ||
-               type == typeof(double) ||
-               type == typeof(float) ||
-               type == typeof(bool) ||
-               type == typeof(decimal);
-    }
-
-    /// <summary>
-    ///     Checks if a type needs sanitization due to potential JSON serialization issues.
-    /// </summary>
-    /// <param name="type">The type to check</param>
-    /// <returns>True if the type needs sanitization</returns>
-    private static bool NeedsTypeSanitization(Type type)
-    {
-        // Problematic primitive types that cause LitJson issues
-        if (type == typeof(IntPtr) || type == typeof(UIntPtr) ||
-            type == typeof(uint) || type == typeof(ulong) ||
-            type == typeof(ushort) || type == typeof(byte) || type == typeof(sbyte))
-            return true;
-
-        // Other problematic types
-        if (type == typeof(DateTime) || type == typeof(TimeSpan) ||
-            type == typeof(Guid) || type.IsEnum)
-            return true;
-
-        // Check for specific nullable types without reflection
-        if (IsKnownNullableProblematicType(type))
-            return true;
-
-        return false;
-    }
-
-    /// <summary>
-    /// Checks for known nullable problematic types without using reflection
-    /// </summary>
-    private static bool IsKnownNullableProblematicType(Type type)
-    {
-        return type == typeof(IntPtr?) || type == typeof(UIntPtr?) ||
-               type == typeof(uint?) || type == typeof(ulong?) ||
-               type == typeof(ushort?) || type == typeof(byte?) || type == typeof(sbyte?) ||
-               type == typeof(DateTime?) || type == typeof(TimeSpan?) ||
-               type == typeof(Guid?);
-    }
-
     /// <summary>
     ///     Safely sanitizes the current entity to prevent JSON serialization errors.
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Entity properties are preserved by X-Ray SDK")]
+    [UnconditionalSuppressMessage("Trimming",
+        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "Entity properties are preserved by X-Ray SDK")]
     private void SanitizeCurrentEntitySafely()
     {
         try
@@ -636,17 +567,18 @@ internal class XRayRecorder : IXRayRecorder
             SanitizeEntityAnnotations(entity);
             SanitizeEntityHttpInformation(entity);
         }
-        catch (Exception ex)
+        catch
         {
-            // Log the error but don't break tracing
-            Console.WriteLine($"Warning: Entity sanitization failed: {ex.Message}");
+            // ignored
         }
     }
 
     /// <summary>
     /// Sanitizes the metadata in an entity
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Entity.Metadata property is preserved by X-Ray SDK")]
+    [UnconditionalSuppressMessage("Trimming",
+        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "Entity.Metadata property is preserved by X-Ray SDK")]
     private static void SanitizeEntityMetadata(Entity entity)
     {
         try
@@ -682,16 +614,18 @@ internal class XRayRecorder : IXRayRecorder
                 }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Warning: Metadata sanitization failed: {ex.Message}");
+            // ignored
         }
     }
 
     /// <summary>
     /// Sanitizes the annotations in an entity
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Entity.Annotations property is preserved by X-Ray SDK")]
+    [UnconditionalSuppressMessage("Trimming",
+        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "Entity.Annotations property is preserved by X-Ray SDK")]
     private static void SanitizeEntityAnnotations(Entity entity)
     {
         try
@@ -712,16 +646,18 @@ internal class XRayRecorder : IXRayRecorder
                 annotations[key] = sanitizedValue;
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Warning: Annotations sanitization failed: {ex.Message}");
+            // ignored
         }
     }
 
     /// <summary>
     /// Sanitizes HTTP information in an entity
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Entity.Http property is preserved by X-Ray SDK")]
+    [UnconditionalSuppressMessage("Trimming",
+        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "Entity.Http property is preserved by X-Ray SDK")]
     private static void SanitizeEntityHttpInformation(Entity entity)
     {
         try
@@ -742,11 +678,9 @@ internal class XRayRecorder : IXRayRecorder
                 http[key] = sanitizedValue;
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Warning: HTTP information sanitization failed: {ex.Message}");
+            // ignored
         }
     }
-
-
 }
