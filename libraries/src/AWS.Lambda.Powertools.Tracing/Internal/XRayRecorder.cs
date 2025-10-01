@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Amazon.XRay.Recorder.Core;
 using Amazon.XRay.Recorder.Core.Internal.Emitters;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
@@ -172,7 +173,7 @@ internal class XRayRecorder : IXRayRecorder
 
         var message = e.Message ?? string.Empty;
         var stackTrace = e.StackTrace ?? string.Empty;
-        var typeName = e.GetType().Name ?? string.Empty;
+        var typeName = e.GetType().Name;
 
         return message.Contains("LitJson") ||
                message.Contains("JsonMapper") ||
@@ -461,7 +462,7 @@ internal class XRayRecorder : IXRayRecorder
     }
 
     /// <summary>
-    ///     Sanitizes array values.
+    ///     Sanitizes array values
     /// </summary>
     /// <param name="array">The array to sanitize</param>
     /// <param name="type">The array type</param>
@@ -469,12 +470,10 @@ internal class XRayRecorder : IXRayRecorder
     /// <returns>Sanitized array</returns>
     private static object SanitizeArray(Array array, Type type, int depth)
     {
-        var elementType = type.GetElementType();
-
-        // If it's an array of safe types and all elements are actually safe, return original array
-        if (elementType != null && IsSafeType(elementType) && IsArrayElementsSafe(array))
+        // Check if it's a known safe array type
+        if (IsKnownSafeArrayType(type))
         {
-            return array; // Return original array
+            return array; // Return original array for known safe types
         }
 
         // Otherwise, sanitize to object array
@@ -485,6 +484,20 @@ internal class XRayRecorder : IXRayRecorder
         }
 
         return sanitizedArray;
+    }
+
+    /// <summary>
+    /// Checks if an array type is known to be safe without reflection
+    /// </summary>
+    private static bool IsKnownSafeArrayType(Type type)
+    {
+        return type == typeof(string[]) ||
+               type == typeof(int[]) ||
+               type == typeof(long[]) ||
+               type == typeof(double[]) ||
+               type == typeof(float[]) ||
+               type == typeof(bool[]) ||
+               type == typeof(decimal[]);
     }
 
     /// <summary>
@@ -540,63 +553,28 @@ internal class XRayRecorder : IXRayRecorder
     }
 
     /// <summary>
-    ///     Sanitizes complex objects by converting them to dictionaries.
+    ///     Sanitizes complex objects by converting them to safe string representation.
     /// </summary>
     /// <param name="value">The object to sanitize</param>
     /// <param name="type">The object type</param>
     /// <param name="depth">Current recursion depth</param>
-    /// <returns>Sanitized dictionary representation</returns>
+    /// <returns>Sanitized string representation</returns>
     private static object SanitizeComplexObject(object value, Type type, int depth)
     {
         try
         {
-            var properties =
-                type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            var sanitizedObject = new System.Collections.Generic.Dictionary<string, object>();
-
-            foreach (var prop in properties)
-            {
-                var propertyValue = GetPropertyValueSafely(prop, value, depth);
-                if (propertyValue != null)
-                {
-                    sanitizedObject[prop.Name] = propertyValue;
-                }
-            }
-
-            return sanitizedObject;
+            // For Native AOT compatibility, we avoid reflection and convert to string
+            // This ensures the object can be serialized without issues
+            return $"[{type.Name}] {value.ToString()}";
         }
         catch (Exception ex)
         {
-            // If all else fails, convert to string
-            return $"[Object conversion failed: {ex.Message}] {value.ToString()}";
+            // If all else fails, return a safe fallback
+            return $"[Object conversion failed: {ex.Message}]";
         }
     }
 
-    /// <summary>
-    ///     Safely gets a property value from an object.
-    /// </summary>
-    /// <param name="prop">The property to read</param>
-    /// <param name="value">The object to read from</param>
-    /// <param name="depth">Current recursion depth</param>
-    /// <returns>The property value or null if it can't be read</returns>
-    private static object GetPropertyValueSafely(System.Reflection.PropertyInfo prop, object value, int depth)
-    {
-        try
-        {
-            if (prop.CanRead && prop.GetIndexParameters().Length == 0) // Skip indexers
-            {
-                var propValue = prop.GetValue(value);
-                return SanitizeValueRecursive(propValue, depth + 1);
-            }
-        }
-        catch (Exception ex)
-        {
-            // If we can't read a property, record the error
-            return $"[Error reading property: {ex.Message}]";
-        }
 
-        return null;
-    }
 
     /// <summary>
     ///     Determines if a type is safe for X-Ray without sanitization
@@ -632,20 +610,29 @@ internal class XRayRecorder : IXRayRecorder
             type == typeof(Guid) || type.IsEnum)
             return true;
 
-        // Check for nullable versions of problematic types
-        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-        {
-            var underlyingType = Nullable.GetUnderlyingType(type);
-            return underlyingType != null && NeedsTypeSanitization(underlyingType);
-        }
+        // Check for specific nullable types without reflection
+        if (IsKnownNullableProblematicType(type))
+            return true;
 
         return false;
     }
 
     /// <summary>
-    ///     Safely sanitizes the current entity to prevent JSON serialization errors.
-    ///     This method uses reflection to access and sanitize all data in the entity.
+    /// Checks for known nullable problematic types without using reflection
     /// </summary>
+    private static bool IsKnownNullableProblematicType(Type type)
+    {
+        return type == typeof(IntPtr?) || type == typeof(UIntPtr?) ||
+               type == typeof(uint?) || type == typeof(ulong?) ||
+               type == typeof(ushort?) || type == typeof(byte?) || type == typeof(sbyte?) ||
+               type == typeof(DateTime?) || type == typeof(TimeSpan?) ||
+               type == typeof(Guid?);
+    }
+
+    /// <summary>
+    ///     Safely sanitizes the current entity to prevent JSON serialization errors.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Entity properties are preserved by X-Ray SDK")]
     private void SanitizeCurrentEntitySafely()
     {
         try
@@ -653,17 +640,10 @@ internal class XRayRecorder : IXRayRecorder
             var entity = _awsxRayRecorder?.TraceContext?.GetEntity();
             if (entity == null) return;
 
-            // Sanitize Metadata
+            // Sanitize known entity properties without reflection
             SanitizeEntityMetadata(entity);
-
-            // Sanitize Annotations
             SanitizeEntityAnnotations(entity);
-
-            // Sanitize HTTP information
             SanitizeEntityHttpInformation(entity);
-
-            // Sanitize any other properties that might contain problematic data
-            SanitizeEntityOtherProperties(entity);
         }
         catch (Exception ex)
         {
@@ -675,6 +655,7 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes the metadata in an entity
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Entity.Metadata property is preserved by X-Ray SDK")]
     private static void SanitizeEntityMetadata(Entity entity)
     {
         try
@@ -719,6 +700,7 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes the annotations in an entity
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Entity.Annotations property is preserved by X-Ray SDK")]
     private static void SanitizeEntityAnnotations(Entity entity)
     {
         try
@@ -748,6 +730,7 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes HTTP information in an entity
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Entity.Http property is preserved by X-Ray SDK")]
     private static void SanitizeEntityHttpInformation(Entity entity)
     {
         try
@@ -774,63 +757,5 @@ internal class XRayRecorder : IXRayRecorder
         }
     }
 
-    /// <summary>
-    /// Sanitizes other properties in an entity that might contain problematic data
-    /// </summary>
-    private static void SanitizeEntityOtherProperties(Entity entity)
-    {
-        try
-        {
-            // Get all properties of the entity
-            var properties = entity.GetType()
-                .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 
-            foreach (var property in properties)
-            {
-                try
-                {
-                    // Skip properties we've already handled
-                    if (property.Name == "Metadata" || property.Name == "Annotations" || property.Name == "Http")
-                        continue;
-
-                    // Skip properties that can't be written to
-                    if (!property.CanWrite || !property.CanRead)
-                        continue;
-
-                    // Skip indexers
-                    if (property.GetIndexParameters().Length > 0)
-                        continue;
-
-                    var value = property.GetValue(entity);
-                    if (value == null)
-                        continue;
-
-                    var valueType = value.GetType();
-
-                    // Only sanitize properties that might contain problematic data
-                    if (NeedsTypeSanitization(valueType) ||
-                        valueType.IsClass && valueType != typeof(string) &&
-                        !valueType.IsPrimitive && !valueType.IsEnum)
-                    {
-                        var sanitizedValue = SanitizeValueForMetadata(value);
-
-                        // Only update if the sanitized value is different and compatible
-                        if (!ReferenceEquals(value, sanitizedValue) &&
-                            (sanitizedValue == null || property.PropertyType.IsInstanceOfType(sanitizedValue)))
-                        {
-                            property.SetValue(entity, sanitizedValue);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Warning: Failed to sanitize property {property.Name}: {ex.Message}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Warning: Other properties sanitization failed: {ex.Message}");
-        }
-    }
 }
