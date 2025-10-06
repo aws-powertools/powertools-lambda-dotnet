@@ -8,7 +8,7 @@ description: Core utility
     
     We recommend you upgrade to the latest version.
 
-    The latest version is available at [Logging v2](https://docs.powertools.aws.dev/lambda/dotnet/core/logging-v2/).
+    The latest version is available at [Logging v2](https://docs.aws.amazon.com/powertools/dotnet/core/logging-v2/).
     
 
 The logging utility provides a Lambda optimized logger with output structured as JSON.

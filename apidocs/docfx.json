@@ -50,7 +50,7 @@
     "cleanupCacheHistory": false,
     "disableGitFeatures": false,
     "sitemap": {
-      "baseUrl": "https://docs.powertools.aws.dev/lambda/dotnet/api/api"
+      "baseUrl": "https://docs.aws.amazon.com/powertools/dotnet/api/api"
     }
   }
 }

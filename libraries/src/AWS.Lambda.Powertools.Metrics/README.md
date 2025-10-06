@@ -13,7 +13,7 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://aws.
 
 ## Read the docs
 
-For a full list of features go to [docs.powertools.aws.dev/lambda/dotnet/core/metrics/](https://docs.powertools.aws.dev/lambda/dotnet/core/metrics/)
+For a full list of features go to [docs.aws.amazon.com/powertools/dotnet/core/metrics/](https://docs.aws.amazon.com/powertools/dotnet/core/metrics/)
 
 GitHub: https://github.com/aws-powertools/powertools-lambda-dotnet/
 

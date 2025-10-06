@@ -53,7 +53,7 @@ body:
     attributes:
       label: Acknowledgment
       options:
-        - label: This request meets [Powertools for AWS Lambda (.NET) Tenets](https://docs.powertools.aws.dev/lambda/dotnet/#tenets)
+        - label: This request meets [Powertools for AWS Lambda (.NET) Tenets](https://docs.aws.amazon.com/powertools/dotnet/#tenets)
           required: true
   - type: markdown
     attributes:

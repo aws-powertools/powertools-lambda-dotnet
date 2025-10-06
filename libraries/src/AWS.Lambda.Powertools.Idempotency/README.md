@@ -24,7 +24,7 @@ times with the same parameters**. This makes idempotent operations safe to retry
 
 ## Read the docs
 
-For a full list of features go to [docs.powertools.aws.dev/lambda/dotnet/utilities/idempotency/](https://docs.powertools.aws.dev/lambda/dotnet/utilities/idempotency/)
+For a full list of features go to [docs.aws.amazon.com/powertools/dotnet/utilities/idempotency/](https://docs.aws.amazon.com/powertools/dotnet/utilities/idempotency/)
 
 GitHub: https://github.com/aws-powertools/powertools-lambda-dotnet/
 

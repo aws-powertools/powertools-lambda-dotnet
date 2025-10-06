@@ -17,12 +17,12 @@ If your function fails to process any message from the batch, the entire batch r
 
 This behavior changes when you enable Report Batch Item Failures feature in your Lambda function event source configuration:
 
-* [SQS queues](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/#sqs-standard). Only messages reported as failure will return to the queue for a retry, while successful ones will be deleted.
-* [Kinesis data streams](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/#kinesis-and-dynamodb-streams) and [DynamoDB streams](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/#kinesis-and-dynamodb-streams). Single reported failure will use its sequence number as the stream checkpoint. Multiple reported failures will use the lowest sequence number as checkpoint.
+* [SQS queues](https://docs.aws.amazon.com/powertools/dotnet/utilities/batch-processing/#sqs-standard). Only messages reported as failure will return to the queue for a retry, while successful ones will be deleted.
+* [Kinesis data streams](https://docs.aws.amazon.com/powertools/dotnet/utilities/batch-processing/#kinesis-and-dynamodb-streams) and [DynamoDB streams](https://docs.aws.amazon.com/powertools/dotnet/utilities/batch-processing/#kinesis-and-dynamodb-streams). Single reported failure will use its sequence number as the stream checkpoint. Multiple reported failures will use the lowest sequence number as checkpoint.
 
 ## Read the docs
 
-For a full list of features go to [docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/)
+For a full list of features go to [docs.aws.amazon.com/powertools/dotnet/utilities/batch-processing/](https://docs.aws.amazon.com/powertools/dotnet/utilities/batch-processing/)
 
 GitHub: https://github.com/aws-powertools/powertools-lambda-dotnet/
 
