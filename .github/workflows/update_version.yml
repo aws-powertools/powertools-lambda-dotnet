@@ -76,7 +76,7 @@ jobs:
             This PR updates version.txt to the latest release version.
             
             **Version**: ${{ env.VERSION }}
-            **Release**: ${{ github.event_name == 'release' && github.event.release.html_url || format('https://github.com/{0}/releases/tag/{1}', github.repository, env.VERSION) }}
+            **Release**: ${{ github.event_name == 'release' && github.event.release.html_url || format('https://github.com/{0}/releases/tag/v{1}', github.repository, env.VERSION) }}
             **Triggered by**: ${{ github.event_name }}
           labels: automation,version-update
           delete-branch: true
