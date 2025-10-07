@@ -4,7 +4,6 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-  push: # to be removed - Remove this entirely when done testing
 
 permissions:
   contents: write
@@ -54,11 +53,12 @@ jobs:
         with:
           commit-message: "chore: update version.txt to ${{ env.VERSION }}"
           branch: update-version-txt-${{ github.run_id }}
-          title: "chore: update version.txt to ${{ env.VERSION }}"
+          title: "chore: update version to ${{ env.VERSION }}"
           body: |
             This PR updates version.txt to the latest release version.
             
             **Version**: ${{ env.VERSION }}
+            **Release**: ${{ github.event_name == 'release' && github.event.release.html_url || format('https://github.com/{0}/releases/tag/{1}', github.repository, env.VERSION) }}
             **Triggered by**: ${{ github.event_name }}
           labels: automation,version-update
           delete-branch: true
