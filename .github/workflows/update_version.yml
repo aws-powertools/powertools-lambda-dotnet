@@ -4,7 +4,7 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-  push: # to be removed
+  # push: # to be removed - Remove this entirely when done testing
 
 permissions:
   contents: write
@@ -16,27 +16,49 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git operations
 
       - name: Get version
         id: get_version
         run: |
           if [ "${{ github.event_name }}" = "release" ]; then
-            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+            VERSION="${{ github.event.release.tag_name }}"
           else
-            latest_tag=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
-            echo "VERSION=${latest_tag}" >> $GITHUB_ENV
+            VERSION=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
+          fi
+          
+          # Remove 'v' prefix if present
+          VERSION="${VERSION#v}"
+          
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Write version to version.txt
-        run: echo "${VERSION}" > version.txt
+        run: echo "${{ env.VERSION }}" > version.txt
+
+      - name: Check if changes exist
+        id: check_changes
+        run: |
+          if git diff --quiet version.txt; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create PR for version.txt update
-        id: cpr
+        if: steps.check_changes.outputs.has_changes == 'true'
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
-          commit-message: "Update version.txt to ${VERSION}"
+          commit-message: "chore: update version.txt to ${{ env.VERSION }}"
           branch: update-version-txt-${{ github.run_id }}
-          title: "Update version.txt to ${VERSION}"
-          body: "This PR updates version.txt to the latest release version (${VERSION})."
-          labels: "automation, version-update"
+          title: "chore: update version.txt to ${{ env.VERSION }}"
+          body: |
+            This PR updates version.txt to the latest release version.
+            
+            **Version**: ${{ env.VERSION }}
+            **Triggered by**: ${{ github.event_name }}
+          labels: automation,version-update
+          delete-branch: true
