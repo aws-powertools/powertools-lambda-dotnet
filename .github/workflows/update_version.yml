@@ -30,10 +30,10 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            VERSION="${{ inputs.version }}"
-          elif [ "${{ github.event_name }}" = "release" ]; then
-            VERSION="${{ github.event.release.tag_name }}"
+          if [ -n "${INPUT_VERSION}" ]; then
+            VERSION="${INPUT_VERSION}"
+          elif [ "${EVENT_NAME}" = "release" ]; then
+            VERSION="${RELEASE_TAG}"
           else
             VERSION=$(git describe --tags --abbrev=0)
           fi
@@ -45,6 +45,9 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
 
       - name: Write version to version.txt
         run: echo "${{ env.VERSION }}" > version.txt
