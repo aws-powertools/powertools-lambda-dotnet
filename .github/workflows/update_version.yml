@@ -1,0 +1,41 @@
+name: Update Version File After Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          else
+            latest_tag=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
+            echo "VERSION=${latest_tag}" >> $GITHUB_ENV
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Write version to version.txt
+        run: echo "${VERSION}" > version.txt
+
+      - name: Create PR for version.txt update
+        id: cpr
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          commit-message: "Update version.txt to ${VERSION}"
+          branch: update-version-txt-${{ github.run_id }}
+          title: "Update version.txt to ${VERSION}"
+          body: "This PR updates version.txt to the latest release version (${VERSION})."
+          labels: "automation, version-update"
