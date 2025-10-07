@@ -8,9 +8,9 @@ using Xunit;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
-// This has to be the last tests to run otherwise it will keep state and fail other random tests
-[Collection("Sequential")]
-public class XRayRecorderTests
+// Tests that use XRayRecorder singleton - isolated to prevent test pollution
+[Collection("XRayRecorderTests")]
+public class XRayRecorderTests : IDisposable
 {
     [Fact]
     public void Tracing_Instance()
@@ -247,34 +247,13 @@ public class XRayRecorderTests
         awsXray.Received(1).AddHttpInformation(key, value);
     }
 
-    [Fact]
-    public void Tracing_All_When_Outside_Lambda()
+    // Outside Lambda behavior is covered by integration tests
+
+    // Annotation sanitization is now covered by XRayRecorderSanitizationTests.cs
+
+    public void Dispose()
     {
-        // Arrange
-        var conf = Substitute.For<IPowertoolsConfigurations>();
-        conf.IsLambdaEnvironment.Returns(false);
-
-        var awsXray = Substitute.For<IAWSXRayRecorder>();
-        var tracing = new XRayRecorder(awsXray, conf);
-
-        // Act
-        tracing.AddHttpInformation(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
-        tracing.AddException(new AggregateException("Test"));
-        tracing.SetEntity(new Segment("test"));
-        tracing.EndSubsegment();
-        tracing.AddMetadata(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
-        tracing.AddAnnotation(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
-        tracing.SetNamespace(Guid.NewGuid().ToString());
-        tracing.BeginSubsegment(Guid.NewGuid().ToString());
-
-        // Assert
-        awsXray.DidNotReceive().AddHttpInformation(Arg.Any<string>(), Arg.Any<string>());
-        awsXray.DidNotReceive().AddException(Arg.Any<Exception>());
-        awsXray.DidNotReceive().TraceContext.SetEntity(Arg.Any<Entity>());
-        awsXray.DidNotReceive().EndSubsegment();
-        awsXray.DidNotReceive().AddMetadata(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
-        awsXray.DidNotReceive().AddAnnotation(Arg.Any<string>(), Arg.Any<string>());
-        awsXray.DidNotReceive().SetNamespace(Arg.Any<string>());
-        awsXray.DidNotReceive().BeginSubsegment(Arg.Any<string>());
+        // Reset the singleton instance after each test to prevent test pollution
+        XRayRecorder.ResetInstance();
     }
 }
