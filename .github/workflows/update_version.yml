@@ -11,6 +11,8 @@ permissions:
 jobs:
   update-version:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.process_version.outputs.version }}
     permissions:
       contents: write
       pull-requests: write
@@ -19,26 +21,38 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           ref: develop
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Get version
         id: get_version
         run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            VERSION="${{ github.event.release.tag_name }}"
+          if [ "${EVENT_NAME}" = "release" ]; then
+            echo "version=${RELEASE_TAG}" >> $GITHUB_OUTPUT
           else
-            VERSION=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
+            VERSION=$(git describe --tags --abbrev=0)
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
           fi
-          
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+
+      - name: Process version
+        id: process_version
+        run: |
+          VERSION="${RAW_VERSION}"
           # Remove 'v' prefix if present
           VERSION="${VERSION#v}"
           
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
         env:
-          GH_TOKEN: ${{ github.token }}
+          RAW_VERSION: ${{ steps.get_version.outputs.version }}
 
       - name: Write version to version.txt
-        run: echo "${{ env.VERSION }}" > version.txt
+        run: echo "${VERSION}" > version.txt
+        env:
+          VERSION: ${{ steps.process_version.outputs.version }}
 
       - name: Check if changes exist
         id: check_changes
@@ -62,7 +76,7 @@ jobs:
             This PR updates version.txt to the latest release version.
             
             **Version**: ${{ env.VERSION }}
-            **Release**: ${{ github.event_name == 'release' && github.event.release.html_url || format('https://github.com/{0}/releases/tag/{1}', github.repository, env.VERSION) }}
+            **Release**: ${{ github.event_name == 'release' && github.event.release.html_url || format('https://github.com/{0}/releases/tag/v{1}', github.repository, env.VERSION) }}
             **Triggered by**: ${{ github.event_name }}
           labels: automation,version-update
           delete-branch: true
