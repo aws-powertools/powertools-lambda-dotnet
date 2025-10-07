@@ -48,6 +48,18 @@ stateDiagram-v2
 
 **[AWS AppSync Events](https://docs.aws.amazon.com/appsync/latest/eventapi/event-api-welcome.html){target="_blank"}**. A service that enables you to quickly build secure, scalable real-time WebSocket APIs without managing infrastructure or writing API code. It handles connection management, message broadcasting, authentication, and monitoring, reducing time to market and operational costs.
 
+!!! warning "Migrating to v3"
+
+    If you're upgrading to v3, please review the [Migration Guide v3](../migration-guide-v3.md) for important breaking changes including .NET 8 requirement and AWS SDK v4 migration.
+
+## Installation
+
+Install the package via NuGet:
+
+```bash
+dotnet add package AWS.Lambda.Powertools.EventHandler
+```
+
 ## Getting started
 
 ???+ tip "Tip: New to AppSync Real-time API?"

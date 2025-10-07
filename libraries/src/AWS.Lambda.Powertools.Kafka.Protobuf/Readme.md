@@ -125,7 +125,7 @@ public class Function
 
 ## Requirements
 
-- **.NET 6.0+**: This library targets .NET 6.0 and later versions
+- **.NET 8.0+**: This library targets .NET 8.0 and later versions
 - **Google.Protobuf**: Requires the Google Protocol Buffers library for .NET
 - **Protobuf Compiler**: Use `protoc` to generate C# classes from `.proto` files
 - **IMessage Implementation**: Your data classes must implement `IMessage<T>`

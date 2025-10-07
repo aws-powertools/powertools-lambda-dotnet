@@ -46,9 +46,9 @@ Updating metrics implementation to support latest EMF specifications and improve
 Ensuring enterprise-grade security and compatibility with latest .NET developments.
 
 - [ ] .NET 10 support from day one
-- [ ] Deprecation path for .NET 6
+- [x] Deprecation path for .NET 6
 - [x] Scorecard implementation
-- [ ] Security compliance checks on our pipeline
+- [x] Security compliance checks on our pipeline
 - [ ] All utilities with end-to-end tests in our pipeline
 
 ### Feature Parity and ASP.NET Support (P2)

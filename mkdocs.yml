@@ -31,6 +31,8 @@ nav:
         - utilities/jmespath-functions.md
         - utilities/kafka.md
     - Resources:
+        - migration-guide-v2.md
+        - migration-guide-v3.md
         - "llms.txt": ./llms.txt
         - "llms.txt (full version)": ./llms-full.txt
   - API Reference: api/" target="_blank

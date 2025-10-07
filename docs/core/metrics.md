@@ -16,22 +16,11 @@ These metrics can be visualized through [Amazon CloudWatch Console](https://aws.
 * Ahead-of-Time compilation to native code support [AOT](https://docs.aws.amazon.com/lambda/latest/dg/dotnet-native-aot.html) from version 1.7.0
 * Support for AspNetCore middleware and filters to capture metrics for HTTP requests
 
-## Breaking changes from V1
+!!! warning "Migrating to v3"
 
-!!! info
+    If you're upgrading to v3, please review the [Migration Guide v3](../migration-guide-v3.md) for important breaking changes including .NET 8 requirement and AWS SDK v4 migration.
 
-    Loooking for v1 specific documentation please go to [Metrics v1](/lambda/dotnet/core/metrics-v1)    
-
-* **`Dimensions`** outputs as an array of arrays instead of an array of objects. Example: `Dimensions: [["service", "Environment"]]` instead of `Dimensions: ["service", "Environment"]`
-* **`FunctionName`** is not added as default dimension and only to cold start metric.
-* **`Default Dimensions`** can now be included in Cold Start metrics, this is a potential breaking change if you were relying on the absence of default dimensions in Cold Start metrics when searching.
-
-<br />
-
-<figure>
-  <img src="../../media/metrics_utility_showcase.png" loading="lazy" alt="Screenshot of the Amazon CloudWatch Console showing an example of business metrics in the Metrics Explorer" />
-  <figcaption>Metrics showcase - Metrics Explorer</figcaption>
-</figure>
+    If you're upgrading to v2, please review the [Migration Guide v2](../migration-guide-v2.md/#metrics).
 
 ## Installation
 
