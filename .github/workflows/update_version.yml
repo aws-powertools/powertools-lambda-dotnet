@@ -4,6 +4,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to use (leave empty to use latest release)'
+        required: false
+        type: string
 
 permissions:
   contents: read 
@@ -11,6 +16,8 @@ permissions:
 jobs:
   update-version:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
     permissions:
       contents: write
       pull-requests: write
@@ -23,10 +30,12 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
             VERSION="${{ github.event.release.tag_name }}"
           else
-            VERSION=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
+            VERSION=$(git describe --tags --abbrev=0)
           fi
           
           # Remove 'v' prefix if present
