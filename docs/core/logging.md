@@ -29,9 +29,6 @@ The logging utility provides a Lambda optimized logger with output structured as
 
     If you're upgrading to v3, please review the [Migration Guide v3](../migration-guide-v3.md) for important breaking changes including .NET 8 requirement and AWS SDK v4 migration.
 
-    If you're upgrading to v2, please review the [Migration Guide v2](../migration-guide-v2.md/#logging).
-
-
 ## Installation
 
 Powertools for AWS Lambda (.NET) are available as NuGet packages. You can install the packages
