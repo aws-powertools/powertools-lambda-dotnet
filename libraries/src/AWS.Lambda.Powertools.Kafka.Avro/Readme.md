@@ -96,7 +96,7 @@ var serializer = new PowertoolsKafkaAvroSerializer(MyJsonContext.Default);
 
 ## Requirements
 
-- **.NET 6.0+**: This library targets .NET 6.0 and later versions
+- **.NET 8.0+**: This library targets .NET 8.0 and later versions
 - **Avro.NET**: Requires the Apache Avro library for .NET
 - **Avro Schema**: Your data classes must include a public static `_SCHEMA` field
 - **AWS Lambda**: Designed specifically for AWS Lambda runtime environments

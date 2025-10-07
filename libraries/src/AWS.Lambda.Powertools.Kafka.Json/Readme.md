@@ -133,7 +133,7 @@ public class Function
 
 ## Requirements
 
-- **.NET 6.0+**: This library targets .NET 6.0 and later versions
+- **.NET 8.0+**: This library targets .NET 8.0 and later versions
 - **System.Text.Json**: Uses the high-performance JSON library from .NET
 - **JSON Serializable Types**: Your data classes should be compatible with System.Text.Json
 - **AWS Lambda**: Designed specifically for AWS Lambda runtime environments

@@ -56,6 +56,10 @@ Lambda processes Kafka messages as discrete events rather than continuous stream
 | **Schema Validation** | Client-side schema validation | Optional Schema Registry integration with Event Source Mapping |
 | **Error Handling** | Per-message retry control | Batch-level retry policies |
 
+!!! warning "Migrating to v3"
+
+    If you're upgrading to v3, please review the [Migration Guide v3](../migration-guide-v3.md) for important breaking changes including .NET 8 requirement and AWS SDK v4 migration.
+
 ## Getting started
 
 ### Installation

@@ -10,7 +10,7 @@ description: Powertools for AWS Lambda (.NET)
 Powertools for AWS Lambda (.NET) (which from here will be referred as Powertools) is a suite of utilities for [AWS Lambda](https://aws.amazon.com/lambda/) functions to ease adopting best practices such as tracing, structured logging, custom metrics, and more.
 
 !!! info
-    **Supports .NET 6 and .NET 8 runtimes**
+    **Supports .NET 8 runtime**
 
 ???+ tip
     Powertools is also available for [Python](https://docs.powertools.aws.dev/lambda/python/){target="_blank"}, [Java](https://docs.powertools.aws.dev/lambda/java/){target="_blank"}, and [TypeScript](https://docs.powertools.aws.dev/lambda/typescript/latest/){target="_blank"}.
@@ -71,14 +71,14 @@ We have provided you with a custom template for the Serverless Application Model
 To use the SAM CLI, you need the following tools.
 
 * SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-* .NET 6.0 (LTS)  - [Install .NET 6.0](https://www.microsoft.com/net/download)
+* .NET 8.0 (LTS)  - [Install .NET 8.0](https://www.microsoft.com/net/download)
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 
-Once you have SAM CLI installed, follow the these steps to initialize a .NET 6 project using Powertools for AWS (.NET)
+Once you have SAM CLI installed, follow the these steps to initialize a .NET 8 project using Powertools for AWS (.NET)
 
 1. Run the following command in your command line
     ```bash
-    sam init -r dotnet6
+    sam init -r dotnet8
     ```
 2. Select option 1 as your template source
 

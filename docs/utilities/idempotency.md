@@ -49,6 +49,9 @@ classDiagram
 <i>Idempotency record representation</i>
 </div>
 
+!!! warning "Migrating to v3"
+
+    If you're upgrading to v3, please review the [Migration Guide v3](../migration-guide-v3.md) for important breaking changes including .NET 8 requirement and AWS SDK v4 migration.
 
 ## Getting started
 

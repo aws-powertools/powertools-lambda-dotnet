@@ -25,76 +25,9 @@ The logging utility provides a Lambda optimized logger with output structured as
   interface
 * Support for message templates `{}` and `{@}` for structured logging
 
-## Breaking changes from v1 (dependency updates)
+!!! warning "Migrating to v3"
 
-!!! info
-
-    Loooking for V1 specific documentation please go to [Logging v1](/lambda/dotnet/core/logging-v1)    
-
-| Change | Before (v1.x) | After (v2.0) | Migration Action |
-|--------|---------------|--------------|-----------------|
-| Amazon.Lambda.Core | 2.2.0|2.5.0 | dotnet add package Amazon.Lambda.Core |
-| Amazon.Lambda.Serialization.SystemTextJson | 2.4.3 | 2.4.4 | dotnet add package Amazon.Lambda.Serialization.SystemTextJson |
-| Microsoft.Extensions.DependencyInjection | 8.0.0 | 8.0.1 | dotnet add package Microsoft.Extensions.DependencyInjection |
-
-#### Extra keys - Breaking change
-
-In v1.x, the extra keys were added to the log entry as a dictionary. In v2.x, the extra keys are added to the log entry as
-a JSON object.
-
-There is no longer a method that accepts extra keys as first argument.
-
-=== "Before (v1)"
-
-    ```csharp
-    public class User
-    {
-        public string Name { get; set; }
-        public int Age { get; set; }
-    }
-    
-    Logger.LogInformation<User>(user, "{Name} is {Age} years old", 
-          new object[]{user.Name, user.Age});
-    
-    var scopeKeys = new
-    {
-        PropOne = "Value 1",
-        PropTwo = "Value 2"
-    };
-    Logger.LogInformation(scopeKeys, "message");
-    
-    ```
-
-=== "After (v2)"
-
-    ```csharp
-    public class User
-    {
-        public string Name { get; set; }
-        public int Age { get; set; }
-        
-        public override string ToString()
-        {
-            return $"{Name} is {Age} years old";
-        }
-    }
-
-    // It uses the ToString() method of the object to log the message
-    // the extra keys are added because of the {@} in the message template
-    Logger.LogInformation("{@user}", user);
-    
-    var scopeKeys = new
-    {
-        PropOne = "Value 1",
-        PropTwo = "Value 2"
-    };
-
-    // there is no longer a method that accepts extra keys as first argument.
-    Logger.LogInformation("{@keys}", scopeKeys);
-    ```
-
-This change was made to improve the performance of the logger and to make it easier to work with the extra keys.
-
+    If you're upgrading to v3, please review the [Migration Guide v3](../migration-guide-v3.md) for important breaking changes including .NET 8 requirement and AWS SDK v4 migration.
 
 ## Installation
 
@@ -1078,7 +1011,7 @@ inheriting the ``ILogFormatter`` class and implementing the ``object FormatLogEn
 
 === "CustomLogFormatter.cs"
 
-    ```c#
+    ```csharp
     public class CustomLogFormatter : ILogFormatter
     {
         public object FormatLogEntry(LogEntry logEntry)

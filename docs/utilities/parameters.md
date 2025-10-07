@@ -13,6 +13,10 @@ The Parameters utility provides high-level functionality to retrieve one or mult
 * Transform parameter values from JSON or base 64 encoded strings
 * Bring your own parameter store provider
 
+!!! warning "Migrating to v3"
+
+    If you're upgrading to v3, please review the [Migration Guide v3](../migration-guide-v3.md) for important breaking changes including .NET 8 requirement and AWS SDK v4 migration.
+
 ## Installation
 
 Powertools for AWS Lambda (.NET) are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*){target="_blank"} or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
