@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        with:
+          ref: develop
 
       - name: Get version
         id: get_version
@@ -54,6 +56,7 @@ jobs:
         with:
           commit-message: "chore: update version.txt to ${{ env.VERSION }}"
           branch: update-version-txt-${{ github.run_id }}
+          base: develop
           title: "chore: update version to ${{ env.VERSION }}"
           body: |
             This PR updates version.txt to the latest release version.
