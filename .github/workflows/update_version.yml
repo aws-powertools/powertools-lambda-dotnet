@@ -4,11 +4,6 @@ on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to use (leave empty to use latest release)'
-        required: false
-        type: string
 
 permissions:
   contents: read 
@@ -17,7 +12,7 @@ jobs:
   update-version:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.get_version.outputs.version }}
+      version: ${{ steps.process_version.outputs.version }}
     permissions:
       contents: write
       pull-requests: write
@@ -30,27 +25,32 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          if [ -n "${INPUT_VERSION}" ]; then
-            VERSION="${INPUT_VERSION}"
-          elif [ "${EVENT_NAME}" = "release" ]; then
-            VERSION="${RELEASE_TAG}"
+          if [ "${EVENT_NAME}" = "release" ]; then
+            echo "version=${RELEASE_TAG}" >> $GITHUB_OUTPUT
           else
             VERSION=$(git describe --tags --abbrev=0)
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
           fi
-          
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+
+      - name: Process version
+        id: process_version
+        run: |
+          VERSION="${RAW_VERSION}"
           # Remove 'v' prefix if present
           VERSION="${VERSION#v}"
           
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
         env:
-          GH_TOKEN: ${{ github.token }}
-          INPUT_VERSION: ${{ inputs.version }}
-          EVENT_NAME: ${{ github.event_name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RAW_VERSION: ${{ steps.get_version.outputs.version }}
 
       - name: Write version to version.txt
-        run: echo "${{ env.VERSION }}" > version.txt
+        run: echo "${VERSION}" > version.txt
+        env:
+          VERSION: ${{ steps.process_version.outputs.version }}
 
       - name: Check if changes exist
         id: check_changes
