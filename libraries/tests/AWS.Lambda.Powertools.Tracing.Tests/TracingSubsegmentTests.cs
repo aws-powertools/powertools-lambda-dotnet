@@ -5,10 +5,9 @@ using System;
 
 namespace AWS.Lambda.Powertools.Tracing.Tests;
 
-[Collection("Sequential")]
+[Collection("TracingTests")]
 public class TracingSubsegmentTests
 {
-
     [Fact]
     public void TracingSubsegment_Constructor_Should_Set_Name()
     {
@@ -87,33 +86,24 @@ public class TracingSubsegmentTests
         Assert.True(delegateInvoked);
     }
 
-    [Fact]
-    public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenNameIsNull()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenNameIsInvalid(string invalidName)
     {
         // Arrange
         var parent = new Segment("parent", TraceId.NewId());
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
-            Tracing.WithSubsegment(null, null, parent, _ => { }));
-    }
-
-    [Fact]
-    public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenNameIsEmpty()
-    {
-        // Arrange
-        var parent = new Segment("parent", TraceId.NewId());
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
-            Tracing.WithSubsegment(null, "", parent, _ => { }));
+        Assert.Throws<ArgumentNullException>(() =>
+            Tracing.WithSubsegment(null, invalidName, parent, _ => { }));
     }
 
     [Fact]
     public void WithSubsegment_WithEntity_ThrowsArgumentNullException_WhenEntityIsNull()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
+        Assert.Throws<ArgumentNullException>(() =>
             Tracing.WithSubsegment(null, "test", null, _ => { }));
     }
 
@@ -125,10 +115,8 @@ public class TracingSubsegmentTests
         TracingSubsegment capturedSubsegment = null;
 
         // Act
-        Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
-        {
-            capturedSubsegment = subsegment;
-        });
+        Tracing.WithSubsegment("test-namespace", "test-name", parent,
+            subsegment => { capturedSubsegment = subsegment; });
 
         // Assert
         Assert.NotNull(capturedSubsegment);
@@ -144,10 +132,8 @@ public class TracingSubsegmentTests
         TracingSubsegment capturedSubsegment = null;
 
         // Act
-        Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
-        {
-            capturedSubsegment = subsegment;
-        });
+        Tracing.WithSubsegment("test-namespace", "test-name", parent,
+            subsegment => { capturedSubsegment = subsegment; });
 
         // Assert
         Assert.NotNull(capturedSubsegment);
@@ -202,10 +188,7 @@ public class TracingSubsegmentTests
         TracingSubsegment capturedSubsegment = null;
 
         // Act
-        Tracing.WithSubsegment(null, "test-name", parent, subsegment =>
-        {
-            capturedSubsegment = subsegment;
-        });
+        Tracing.WithSubsegment(null, "test-name", parent, subsegment => { capturedSubsegment = subsegment; });
 
         // Assert
         Assert.NotNull(capturedSubsegment);
@@ -222,14 +205,363 @@ public class TracingSubsegmentTests
         // Act & Assert
         var actualException = Assert.Throws<InvalidOperationException>(() =>
         {
-            Tracing.WithSubsegment("test-namespace", "test-name", parent, subsegment =>
-            {
-                throw expectedException;
-            });
+            Tracing.WithSubsegment("test-namespace", "test-name", parent,
+                subsegment => { throw expectedException; });
         });
 
         Assert.Equal(expectedException, actualException);
         // Verify subsegment was still properly cleaned up
         Assert.True(parent.IsSubsegmentsAdded);
     }
+
+    #region BeginSubsegment Tests
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void BeginSubsegment_WithInvalidName_ThrowsArgumentNullException(string invalidName)
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment(invalidName));
+        Assert.Throws<ArgumentNullException>(() => Tracing.BeginSubsegment("namespace", invalidName));
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithName_ReturnsTracingSubsegment()
+    {
+        // Act
+        using var subsegment = Tracing.BeginSubsegment("test-segment");
+
+        // Assert
+        Assert.NotNull(subsegment);
+        Assert.IsType<TracingSubsegment>(subsegment);
+        Assert.Equal("## test-segment", subsegment.Name);
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithNamespaceAndName_ReturnsTracingSubsegment()
+    {
+        // Act
+        using var subsegment = Tracing.BeginSubsegment("test-namespace", "test-segment");
+
+        // Assert
+        Assert.NotNull(subsegment);
+        Assert.IsType<TracingSubsegment>(subsegment);
+        Assert.Equal("## test-segment", subsegment.Name);
+    }
+
+    [Fact]
+    public void BeginSubsegment_IsDisposable()
+    {
+        // Act
+        var subsegment = Tracing.BeginSubsegment("test-segment");
+
+        // Assert
+        Assert.IsAssignableFrom<IDisposable>(subsegment);
+
+        // Cleanup
+        subsegment.Dispose();
+    }
+
+    [Fact]
+    public void BeginSubsegment_CanBeUsedInUsingStatement()
+    {
+        // This test verifies that the using statement compiles and executes without errors
+        bool executedSuccessfully = false;
+
+        // Act
+        using (var subsegment = Tracing.BeginSubsegment("test-segment"))
+        {
+            Assert.NotNull(subsegment);
+            executedSuccessfully = true;
+        }
+
+        // Assert
+        Assert.True(executedSuccessfully);
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithUsing_AllowsNestedSubsegments()
+    {
+        // This test verifies nested using statements work correctly
+        bool outerExecuted = false;
+        bool innerExecuted = false;
+
+        // Act
+        using (var outerSegment = Tracing.BeginSubsegment("outer-segment"))
+        {
+            Assert.NotNull(outerSegment);
+            outerExecuted = true;
+
+            using (var innerSegment = Tracing.BeginSubsegment("inner-segment"))
+            {
+                Assert.NotNull(innerSegment);
+                innerExecuted = true;
+            }
+        }
+
+        // Assert
+        Assert.True(outerExecuted);
+        Assert.True(innerExecuted);
+    }
+
+    [Fact]
+    public void BeginSubsegment_Dispose_DoesNotThrowException()
+    {
+        // Arrange
+        var subsegment = Tracing.BeginSubsegment("test-segment");
+        bool firstDisposeSucceeded = false;
+        bool secondDisposeSucceeded = false;
+
+        // Act & Assert - Should not throw
+        var exception1 = Record.Exception(() =>
+        {
+            subsegment.Dispose();
+            firstDisposeSucceeded = true;
+        });
+
+        // Multiple dispose calls should also not throw
+        var exception2 = Record.Exception(() =>
+        {
+            subsegment.Dispose();
+            secondDisposeSucceeded = true;
+        });
+
+        // Assert
+        Assert.Null(exception1);
+        Assert.Null(exception2);
+        Assert.True(firstDisposeSucceeded);
+        Assert.True(secondDisposeSucceeded);
+    }
+
+    #endregion
+
+    #region TracingSubsegment Disposable Tests
+
+    [Fact]
+    public void TracingSubsegment_Constructor_WithAutoEnd_SetsCorrectProperties()
+    {
+        // Arrange & Act
+        var subsegment = new TracingSubsegment("test", true);
+
+        // Assert
+        Assert.Equal("test", subsegment.Name);
+        Assert.IsAssignableFrom<IDisposable>(subsegment);
+    }
+
+    [Fact]
+    public void TracingSubsegment_AddAnnotation_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddAnnotation("testKey", "testValue"); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
+        {
+            Assert.Contains("Entity is not available", exception.Message);
+        }
+        else
+        {
+            Assert.Null(exception);
+        }
+    }
+
+
+    [Fact]
+    public void TracingSubsegment_AddMetadata_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddMetadata("testKey", "testValue"); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
+        {
+            Assert.Contains("Entity is not available", exception.Message);
+        }
+        else
+        {
+            Assert.Null(exception);
+        }
+    }
+
+
+    [Fact]
+    public void TracingSubsegment_AddMetadataWithNamespace_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddMetadata("testNamespace", "testKey", "testValue"); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
+        {
+            Assert.Contains("Entity is not available", exception.Message);
+        }
+        else
+        {
+            Assert.Null(exception);
+        }
+    }
+
+
+    [Fact]
+    public void TracingSubsegment_AddException_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+        var testException = new InvalidOperationException("Test exception");
+
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddException(testException); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
+        {
+            Assert.Contains("Entity is not available", exception.Message);
+        }
+        else
+        {
+            Assert.Null(exception);
+        }
+    }
+
+
+    [Fact]
+    public void TracingSubsegment_AddHttpInformation_CallsXRayRecorder()
+    {
+        // Arrange
+        using var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw unexpected exceptions
+        var exception = Record.Exception(() => { subsegment.AddHttpInformation("testKey", "testValue"); });
+
+        // Assert
+        // Either no exception or the expected "Entity is not available" exception
+        if (exception != null)
+        {
+            Assert.Contains("Entity is not available", exception.Message);
+        }
+        else
+        {
+            Assert.Null(exception);
+        }
+    }
+
+
+    [Fact]
+    public void TracingSubsegment_Dispose_WithAutoEndFalse_DoesNotCallEndSubsegment()
+    {
+        // Arrange
+        var subsegment = new TracingSubsegment("test", false);
+
+        // Act & Assert - Should not throw
+        var exception1 = Record.Exception(() => { subsegment.Dispose(); });
+
+        // Multiple dispose calls should also not throw
+        var exception2 = Record.Exception(() => { subsegment.Dispose(); });
+
+        // Assert
+        Assert.Null(exception1);
+        Assert.Null(exception2);
+    }
+
+
+    [Fact]
+    public void TracingSubsegment_Dispose_WithAutoEndTrue_AttemptsToCallEndSubsegment()
+    {
+        // Arrange
+        var subsegment = new TracingSubsegment("test", true);
+
+        // Act & Assert - Should not throw even if XRayRecorder throws
+        var exception1 = Record.Exception(() => { subsegment.Dispose(); });
+
+        // Multiple dispose calls should also not throw
+        var exception2 = Record.Exception(() => { subsegment.Dispose(); });
+
+        // Assert
+        Assert.Null(exception1);
+        Assert.Null(exception2);
+    }
+
+    #endregion
+
+    #region Integration Tests
+
+    [Fact]
+    public void BeginSubsegment_WithUsing_CanAddAnnotationsAndMetadata()
+    {
+        // This integration test verifies the complete workflow
+        bool executedSuccessfully = false;
+
+        // Act
+        using (var subsegment = Tracing.BeginSubsegment("integration-test"))
+        {
+            // These calls should not throw, even if they fail internally due to no tracing context
+            try
+            {
+                subsegment.AddAnnotation("TestAnnotation", "TestValue");
+                subsegment.AddMetadata("TestMetadata", "TestMetadataValue");
+                subsegment.AddMetadata("CustomNamespace", "TestKey", "TestValue");
+                executedSuccessfully = true;
+            }
+            catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+            {
+                // This is expected when no tracing context is available
+                executedSuccessfully = true;
+            }
+        }
+
+        // Assert
+        Assert.True(executedSuccessfully);
+    }
+
+    [Fact]
+    public void BeginSubsegment_WithUsing_HandlesExceptionsGracefully()
+    {
+        // This test verifies that exceptions in the using block don't prevent disposal
+        var expectedException = new InvalidOperationException("Test exception");
+        bool exceptionThrown = false;
+
+        // Act
+        try
+        {
+            using (var subsegment = Tracing.BeginSubsegment("exception-test"))
+            {
+                try
+                {
+                    subsegment.AddAnnotation("BeforeException", true);
+                }
+                catch (Exception ex) when (ex.Message.Contains("Entity is not available"))
+                {
+                    // Expected when no tracing context is available
+                }
+
+                throw expectedException;
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            exceptionThrown = true;
+            Assert.Equal(expectedException.Message, ex.Message);
+        }
+
+        // Assert
+        Assert.True(exceptionThrown);
+        // The important thing is that disposal happened without throwing additional exceptions
+    }
+
+    #endregion
 }

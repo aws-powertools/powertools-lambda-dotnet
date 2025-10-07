@@ -257,4 +257,48 @@ public static class Tracing
     {
         AWSSDKHandler.RegisterXRay<T>();
     }
+
+    /// <summary>
+    ///     Begins a new subsegment that can be used with a using statement.
+    ///     The subsegment will be automatically ended when disposed.
+    /// </summary>
+    /// <param name="name">The name of the subsegment.</param>
+    /// <returns>A disposable TracingSubsegment that will automatically end when disposed.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
+    public static TracingSubsegment BeginSubsegment(string name)
+    {
+        return BeginSubsegment(null, name);
+    }
+
+    /// <summary>
+    ///     Begins a new subsegment that can be used with a using statement.
+    ///     The subsegment will be automatically ended when disposed.
+    /// </summary>
+    /// <param name="nameSpace">The namespace for the subsegment.</param>
+    /// <param name="name">The name of the subsegment.</param>
+    /// <returns>A disposable TracingSubsegment that will automatically end when disposed.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the name is not provided.</exception>
+    public static TracingSubsegment BeginSubsegment(string nameSpace, string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentNullException(nameof(name));
+
+        XRayRecorder.Instance.BeginSubsegment("## " + name);
+        XRayRecorder.Instance.SetNamespace(GetNamespaceOrDefault(nameSpace));
+        
+        var entity = XRayRecorder.Instance.GetEntity();
+        var tracingSubsegment = new TracingSubsegment("## " + name, true);
+        
+        // Copy properties from the current entity
+        if (entity != null)
+        {
+            if (entity is Subsegment subsegment)
+            {
+                tracingSubsegment.Namespace = subsegment.Namespace;
+            }
+            tracingSubsegment.Sampled = entity.Sampled;
+        }
+        
+        return tracingSubsegment;
+    }
 }
