@@ -50,16 +50,24 @@ public class TypedKinesisEventBatchProcessor : KinesisEventBatchProcessor, IType
     {
         _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
         _recordDataExtractor = recordDataExtractor ?? KinesisRecordDataExtractor.Instance;
-        _typedInstance = this;
     }
 
     /// <summary>
-    /// Initializes a new instance of the TypedKinesisEventBatchProcessor class with default services.
+    /// Initializes a new instance of the TypedKinesisEventBatchProcessor class with custom deserialization service.
+    /// </summary>
+    /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
+    public TypedKinesisEventBatchProcessor(IDeserializationService deserializationService) 
+        : this(PowertoolsConfigurations.Instance, deserializationService, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the TypedKinesisEventBatchProcessor class with custom services.
     /// </summary>
     /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
     /// <param name="recordDataExtractor">The record data extractor. If null, uses KinesisRecordDataExtractor.Instance.</param>
-    public TypedKinesisEventBatchProcessor(IDeserializationService deserializationService = null,
-        IRecordDataExtractor<KinesisEvent.KinesisEventRecord> recordDataExtractor = null) 
+    public TypedKinesisEventBatchProcessor(IDeserializationService deserializationService,
+        IRecordDataExtractor<KinesisEvent.KinesisEventRecord> recordDataExtractor) 
         : this(PowertoolsConfigurations.Instance, deserializationService, recordDataExtractor)
     {
     }

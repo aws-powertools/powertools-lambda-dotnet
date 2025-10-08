@@ -50,16 +50,24 @@ public class TypedDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor, I
     {
         _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
         _recordDataExtractor = recordDataExtractor ?? DynamoDbRecordDataExtractor.Instance;
-        _typedInstance = this;
     }
 
     /// <summary>
-    /// Initializes a new instance of the TypedDynamoDbStreamBatchProcessor class with default services.
+    /// Initializes a new instance of the TypedDynamoDbStreamBatchProcessor class with custom deserialization service.
+    /// </summary>
+    /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
+    public TypedDynamoDbStreamBatchProcessor(IDeserializationService deserializationService) 
+        : this(PowertoolsConfigurations.Instance, deserializationService, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the TypedDynamoDbStreamBatchProcessor class with custom services.
     /// </summary>
     /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
     /// <param name="recordDataExtractor">The record data extractor. If null, uses DynamoDbRecordDataExtractor.Instance.</param>
-    public TypedDynamoDbStreamBatchProcessor(IDeserializationService deserializationService = null,
-        IRecordDataExtractor<DynamoDBEvent.DynamodbStreamRecord> recordDataExtractor = null) 
+    public TypedDynamoDbStreamBatchProcessor(IDeserializationService deserializationService,
+        IRecordDataExtractor<DynamoDBEvent.DynamodbStreamRecord> recordDataExtractor) 
         : this(PowertoolsConfigurations.Instance, deserializationService, recordDataExtractor)
     {
     }
