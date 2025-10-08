@@ -7,6 +7,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.KinesisEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
+using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 
@@ -18,17 +19,56 @@ public class TypedKinesisEventBatchProcessor : KinesisEventBatchProcessor, IType
     private readonly IDeserializationService _deserializationService;
     private readonly IRecordDataExtractor<KinesisEvent.KinesisEventRecord> _recordDataExtractor;
 
+    /// <summary>
+    /// The singleton instance of the typed Kinesis batch processor.
+    /// </summary>
+    private static ITypedBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord> _typedInstance;
+
+    /// <summary>
+    /// Gets the typed instance.
+    /// </summary>
+    /// <value>The typed instance.</value>
+    public static ITypedBatchProcessor<KinesisEvent, KinesisEvent.KinesisEventRecord> TypedInstance => 
+        _typedInstance ??= new TypedKinesisEventBatchProcessor();
+
+    /// <summary>
+    /// Return the typed instance ProcessingResult
+    /// </summary>
+    public new static ProcessingResult<KinesisEvent.KinesisEventRecord> Result => _typedInstance?.ProcessingResult;
+
 
     /// <summary>
     /// Initializes a new instance of the TypedKinesisEventBatchProcessor class.
+    /// </summary>
+    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
+    /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
+    /// <param name="recordDataExtractor">The record data extractor. If null, uses KinesisRecordDataExtractor.Instance.</param>
+    public TypedKinesisEventBatchProcessor(
+        IPowertoolsConfigurations powertoolsConfigurations,
+        IDeserializationService deserializationService = null,
+        IRecordDataExtractor<KinesisEvent.KinesisEventRecord> recordDataExtractor = null) 
+    {
+        _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
+        _recordDataExtractor = recordDataExtractor ?? KinesisRecordDataExtractor.Instance;
+        _typedInstance = this;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the TypedKinesisEventBatchProcessor class with default services.
     /// </summary>
     /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
     /// <param name="recordDataExtractor">The record data extractor. If null, uses KinesisRecordDataExtractor.Instance.</param>
     public TypedKinesisEventBatchProcessor(IDeserializationService deserializationService = null,
         IRecordDataExtractor<KinesisEvent.KinesisEventRecord> recordDataExtractor = null) 
+        : this(PowertoolsConfigurations.Instance, deserializationService, recordDataExtractor)
     {
-        _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
-        _recordDataExtractor = recordDataExtractor ?? KinesisRecordDataExtractor.Instance;
+    }
+
+    /// <summary>
+    /// Default constructor for when consumers create a custom typed batch processor.
+    /// </summary>
+    public TypedKinesisEventBatchProcessor() : this(PowertoolsConfigurations.Instance)
+    {
     }
 
     /// <inheritdoc />
