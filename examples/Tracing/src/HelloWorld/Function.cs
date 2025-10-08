@@ -91,14 +91,6 @@ public class Function
         gatewaySegment.AddAnnotation("AccountId", apigwProxyEvent.RequestContext.AccountId);
         gatewaySegment.AddMetadata("LookupRecord", lookupRecord);
         
-        Tracing.WithSubsegment("LoggingResponse",
-            subsegment =>
-            {
-                subsegment.AddAnnotation("AccountId", apigwProxyEvent.RequestContext.AccountId);
-                subsegment.AddMetadata("LookupRecord", lookupRecord);
-            });
-
-        
         try
         {
             await SaveRecordInDynamo(lookupRecord);
