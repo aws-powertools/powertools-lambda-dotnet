@@ -620,4 +620,44 @@ public partial class BatchProcessorAttributeValidationTests
         // Assert - Should not throw, policy should be applied
         Assert.NotNull(handler);
     }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithNoHandlerProvided_ThrowsInvalidOperationException()
+    {
+        // Arrange - No handlers configured at all (neither traditional nor typed)
+        var attribute = new BatchProcessorAttribute();
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("A record handler, record handler provider, typed record handler, or typed record handler provider is required", ex.Message);
+    }
+
+    // Test class that uses reflection to directly test the CreateTypedBatchProcessingAspectHandler method
+    [Fact]
+    public void BatchProcessorAttribute_CreateTypedBatchProcessingAspectHandler_WithNoTypedHandlerProvided_ThrowsInvalidOperationException()
+    {
+        // Arrange - Create an attribute and use reflection to call the private method directly
+        var attribute = new BatchProcessorAttribute();
+        var sqsEvent = new SQSEvent();
+        
+        // Use reflection to get the private method
+        var method = typeof(BatchProcessorAttribute).GetMethod("CreateTypedBatchProcessingAspectHandler", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        // Create the generic method for SQSEvent and SQSMessage
+        var genericMethod = method.MakeGenericMethod(typeof(SQSEvent), typeof(SQSEvent.SQSMessage));
+        
+        // Create a lambda that returns a mock typed batch processor
+        Func<ITypedBatchProcessor<SQSEvent, SQSEvent.SQSMessage>> mockProvider = () => 
+            Substitute.For<ITypedBatchProcessor<SQSEvent, SQSEvent.SQSMessage>>();
+
+        // Act & Assert - Call the method with no typed handlers configured
+        var ex = Assert.Throws<System.Reflection.TargetInvocationException>(() => 
+            genericMethod.Invoke(attribute, new object[] { mockProvider, new object[] { sqsEvent } }));
+        
+        // The actual exception is wrapped in TargetInvocationException
+        Assert.IsType<InvalidOperationException>(ex.InnerException);
+        Assert.Contains("A typed record handler or typed record handler provider is required", ex.InnerException.Message);
+    }
 }
