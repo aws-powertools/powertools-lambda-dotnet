@@ -134,6 +134,7 @@ Processing batches from SQS using typed Lambda handler decorator with automatic 
 3. Decorate your handler with **`BatchProcessor`** attribute using **`TypedRecordHandler`** property
 4. Return **`BatchItemFailuresResponse`** from Lambda handler using **`TypedSqsBatchProcessor.Result.BatchItemFailuresResponse`**
 
+
 === "Function.cs"
 
     ```csharp hl_lines="1 8 19 29 32"
@@ -359,6 +360,10 @@ Processing batches from SQS using Lambda handler decorator works in three stages
 
 When using [SQS FIFO queues](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html){target="_blank"}, we will stop processing messages after the first failure, and return all failed and unprocessed messages in `batchItemFailures`.
 This helps preserve the ordering of messages in your queue. Powertools automatically detects a FIFO queue.
+
+
+
+
 
 ### Processing messages from Kinesis
 
@@ -987,6 +992,8 @@ For Native AOT scenarios, you can configure JsonSerializerContext:
     }
     ```
 
+
+
 ### Lambda Context Injection
 
 For typed handlers that need access to Lambda context, use `ITypedRecordHandlerWithContext<T>`:
@@ -1015,7 +1022,7 @@ For typed handlers that need access to Lambda context, use `ITypedRecordHandlerW
 === "Function Usage"
 
     ```csharp hl_lines="1 2"
-    [BatchProcessor(TypedRecordHandler = typeof(ProductHandlerWithContext))]
+    [BatchProcessor(TypedRecordHandlerWithContext = typeof(ProductHandlerWithContext))]
     public BatchItemFailuresResponse ProcessWithContext(SQSEvent sqsEvent, ILambdaContext context)
     {
         return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse;
