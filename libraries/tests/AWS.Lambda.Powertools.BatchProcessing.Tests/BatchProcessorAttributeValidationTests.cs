@@ -80,6 +80,14 @@ public partial class BatchProcessorAttributeValidationTests
         }
     }
 
+    public class ValidSqsRecordHandler : IRecordHandler<SQSEvent.SQSMessage>
+    {
+        public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
+        {
+            return await Task.FromResult(RecordHandlerResult.None);
+        }
+    }
+
     public class InvalidHandlerWithContextProvider
     {
         // Missing Create method
@@ -360,5 +368,256 @@ public partial class BatchProcessorAttributeValidationTests
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() => attribute.CreateAspectHandler(new object[] { "invalid event" }));
+    }
+
+    // Test classes to trigger constructor exceptions
+    public class FailingBatchProcessor : IBatchProcessor<SQSEvent, SQSEvent.SQSMessage>
+    {
+        public FailingBatchProcessor()
+        {
+            throw new InvalidOperationException("Constructor failed");
+        }
+
+        public ProcessingResult<SQSEvent.SQSMessage> ProcessingResult => throw new NotImplementedException();
+        public Task<ProcessingResult<SQSEvent.SQSMessage>> ProcessAsync(SQSEvent @event, IRecordHandler<SQSEvent.SQSMessage> recordHandler, ProcessingOptions processingOptions) => throw new NotImplementedException();
+        public Task<ProcessingResult<SQSEvent.SQSMessage>> ProcessAsync(SQSEvent @event, IRecordHandler<SQSEvent.SQSMessage> recordHandler) => throw new NotImplementedException();
+        public Task<ProcessingResult<SQSEvent.SQSMessage>> ProcessAsync(SQSEvent @event, IRecordHandler<SQSEvent.SQSMessage> recordHandler, CancellationToken cancellationToken) => throw new NotImplementedException();
+    }
+
+    public class FailingBatchProcessorProvider : IBatchProcessorProvider<SQSEvent, SQSEvent.SQSMessage>
+    {
+        public FailingBatchProcessorProvider()
+        {
+            throw new InvalidOperationException("Provider constructor failed");
+        }
+
+        public IBatchProcessor<SQSEvent, SQSEvent.SQSMessage> Create() => throw new NotImplementedException();
+    }
+
+    public class FailingRecordHandler : IRecordHandler<SQSEvent.SQSMessage>
+    {
+        public FailingRecordHandler()
+        {
+            throw new InvalidOperationException("Handler constructor failed");
+        }
+
+        public Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken) => throw new NotImplementedException();
+    }
+
+    public class FailingRecordHandlerProvider : IRecordHandlerProvider<SQSEvent.SQSMessage>
+    {
+        public FailingRecordHandlerProvider()
+        {
+            throw new InvalidOperationException("Handler provider constructor failed");
+        }
+
+        public IRecordHandler<SQSEvent.SQSMessage> Create() => throw new NotImplementedException();
+    }
+
+    public class FailingTypedHandler : ITypedRecordHandler<TestData>
+    {
+        public FailingTypedHandler()
+        {
+            throw new InvalidOperationException("Typed handler constructor failed");
+        }
+
+        public Task<RecordHandlerResult> HandleAsync(TestData data, CancellationToken cancellationToken) => throw new NotImplementedException();
+    }
+
+    public class FailingTypedHandlerWithContext : ITypedRecordHandlerWithContext<TestData>
+    {
+        public FailingTypedHandlerWithContext()
+        {
+            throw new InvalidOperationException("Typed handler with context constructor failed");
+        }
+
+        public Task<RecordHandlerResult> HandleAsync(TestData data, ILambdaContext context, CancellationToken cancellationToken) => throw new NotImplementedException();
+    }
+
+    public class FailingJsonSerializerContext : JsonSerializerContext
+    {
+        public FailingJsonSerializerContext() : base(null)
+        {
+            throw new InvalidOperationException("JsonSerializerContext constructor failed");
+        }
+
+        protected override System.Text.Json.JsonSerializerOptions GeneratedSerializerOptions => throw new NotImplementedException();
+        public override System.Text.Json.Serialization.Metadata.JsonTypeInfo GetTypeInfo(Type type) => throw new NotImplementedException();
+    }
+
+    public class FailingTypedHandlerProvider
+    {
+        public FailingTypedHandlerProvider()
+        {
+            throw new InvalidOperationException("Typed handler provider constructor failed");
+        }
+
+        public ITypedRecordHandler<TestData> Create() => throw new NotImplementedException();
+    }
+
+    public class FailingTypedHandlerWithContextProvider
+    {
+        public FailingTypedHandlerWithContextProvider()
+        {
+            throw new InvalidOperationException("Typed handler with context provider constructor failed");
+        }
+
+        public ITypedRecordHandlerWithContext<TestData> Create() => throw new NotImplementedException();
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithFailingBatchProcessor_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            BatchProcessor = typeof(FailingBatchProcessor),
+            RecordHandler = typeof(ValidSqsRecordHandler)
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("Error during creation of: 'FailingBatchProcessor'", ex.Message);
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithFailingBatchProcessorProvider_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            BatchProcessorProvider = typeof(FailingBatchProcessorProvider),
+            RecordHandler = typeof(ValidSqsRecordHandler)
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("Error during creation of batch processor using provider: 'FailingBatchProcessorProvider'", ex.Message);
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithFailingRecordHandler_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            RecordHandler = typeof(FailingRecordHandler)
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("Error during creation of: 'FailingRecordHandler'", ex.Message);
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithFailingRecordHandlerProvider_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            RecordHandlerProvider = typeof(FailingRecordHandlerProvider)
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("Error during creation of record handler using provider: 'FailingRecordHandlerProvider'", ex.Message);
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithFailingTypedHandler_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            TypedRecordHandler = typeof(FailingTypedHandler)
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("Error during creation of: 'FailingTypedHandler'", ex.Message);
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithFailingTypedHandlerWithContext_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            TypedRecordHandlerWithContext = typeof(FailingTypedHandlerWithContext)
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("Error during creation of: 'FailingTypedHandlerWithContext'", ex.Message);
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithFailingJsonSerializerContext_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            TypedRecordHandler = typeof(ValidHandler),
+            JsonSerializerContext = typeof(FailingJsonSerializerContext)
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("Error during creation of JsonSerializerContext: 'FailingJsonSerializerContext'", ex.Message);
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithFailingTypedHandlerProvider_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            TypedRecordHandlerProvider = typeof(FailingTypedHandlerProvider)
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("Error during creation of typed record handler using provider: 'FailingTypedHandlerProvider'", ex.Message);
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithFailingTypedHandlerWithContextProvider_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            TypedRecordHandlerWithContextProvider = typeof(FailingTypedHandlerWithContextProvider)
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => attribute.CreateAspectHandler(new object[] { sqsEvent }));
+        Assert.Contains("Error during creation of typed record handler with context using provider: 'FailingTypedHandlerWithContextProvider'", ex.Message);
+    }
+
+    [Fact]
+    public void BatchProcessorAttribute_CreateAspectHandler_WithErrorHandlingPolicyOverride_UsesOverride()
+    {
+        // Arrange
+        var attribute = new BatchProcessorAttribute
+        {
+            RecordHandler = typeof(ValidSqsRecordHandler),
+            ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure
+        };
+        var sqsEvent = new SQSEvent();
+
+        // Act
+        var handler = attribute.CreateAspectHandler(new object[] { sqsEvent });
+
+        // Assert - Should not throw, policy should be applied
+        Assert.NotNull(handler);
     }
 }
