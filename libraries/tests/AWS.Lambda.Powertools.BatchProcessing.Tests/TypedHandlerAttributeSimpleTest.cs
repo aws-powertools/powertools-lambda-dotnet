@@ -25,6 +25,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests;
 /// <summary>
 /// Simple test to verify typed handler attribute works.
 /// </summary>
+[Collection("BatchProcessorTests")]
 public class TypedHandlerAttributeSimpleTest
 {
     public class SimpleOrder
@@ -53,6 +54,9 @@ public class TypedHandlerAttributeSimpleTest
     [Fact]
     public void TypedHandlerAttribute_BasicTest_DoesNotThrowException()
     {
+        // Clear any previous test state
+        TypedSqsBatchProcessor.Result?.Clear();
+        
         // Arrange
         var sqsEvent = new SQSEvent
         {

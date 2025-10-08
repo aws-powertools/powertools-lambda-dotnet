@@ -39,5 +39,6 @@ public class ProcessingResult<TRecord>
         BatchRecords.Clear();
         SuccessRecords.Clear();
         FailureRecords.Clear();
+        BatchItemFailuresResponse.BatchItemFailures.Clear();
     }
 }

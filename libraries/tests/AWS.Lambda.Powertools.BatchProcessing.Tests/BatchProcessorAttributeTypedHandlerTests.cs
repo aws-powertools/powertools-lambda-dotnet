@@ -28,6 +28,7 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests;
 /// <summary>
 /// Tests for BatchProcessorAttribute with typed handlers.
 /// </summary>
+[Collection("BatchProcessorTests")]
 public class BatchProcessorAttributeTypedHandlerTests
 {
     /// <summary>
@@ -96,6 +97,9 @@ public class BatchProcessorAttributeTypedHandlerTests
     [Fact]
     public void ProcessOrdersWithTypedHandler_ValidOrders_ProcessesSuccessfully()
     {
+        // Clear any previous test state
+        TypedSqsBatchProcessor.Result?.Clear();
+        
         // Arrange
         var sqsEvent = new SQSEvent
         {
@@ -129,6 +133,9 @@ public class BatchProcessorAttributeTypedHandlerTests
     [Fact]
     public void ProcessOrdersWithTypedHandler_OneFailure_ReportsPartialFailure()
     {
+        // Clear any previous test state
+        TypedSqsBatchProcessor.Result?.Clear();
+        
         // Arrange
         var sqsEvent = new SQSEvent
         {
@@ -163,6 +170,9 @@ public class BatchProcessorAttributeTypedHandlerTests
     [Fact]
     public void ProcessOrdersWithTypedHandlerAndContext_ValidOrders_ProcessesSuccessfully()
     {
+        // Clear any previous test state
+        TypedSqsBatchProcessor.Result?.Clear();
+        
         // Arrange
         var sqsEvent = new SQSEvent
         {
@@ -191,6 +201,9 @@ public class BatchProcessorAttributeTypedHandlerTests
     [Fact]
     public void ProcessOrdersWithTypedHandlerAndContext_OneFailure_ReportsPartialFailure()
     {
+        // Clear any previous test state
+        TypedSqsBatchProcessor.Result?.Clear();
+        
         // Arrange
         var sqsEvent = new SQSEvent
         {
@@ -199,6 +212,12 @@ public class BatchProcessorAttributeTypedHandlerTests
                 new SQSEvent.SQSMessage
                 {
                     MessageId = "1",
+                    Body = "{\"Id\":\"order-1\",\"Name\":\"Valid Order\",\"Amount\":99.99,\"Products\":[\"Product A\"]}",
+                    EventSourceArn = "arn:aws:sqs:us-east-1:123456789012:test-queue"
+                },
+                new SQSEvent.SQSMessage
+                {
+                    MessageId = "2",
                     Body = "{\"Id\":\"fail\",\"Name\":\"Failing Order\",\"Amount\":0,\"Products\":[]}",
                     EventSourceArn = "arn:aws:sqs:us-east-1:123456789012:test-queue"
                 }
@@ -214,12 +233,15 @@ public class BatchProcessorAttributeTypedHandlerTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result.BatchItemFailures);
-        Assert.Equal("1", result.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("2", result.BatchItemFailures[0].ItemIdentifier);
     }
 
     [Fact]
     public void ProcessOrdersWithTypedHandler_InvalidJson_HandlesDeserializationError()
     {
+        // Clear any previous test state
+        TypedSqsBatchProcessor.Result?.Clear();
+        
         // Arrange
         var sqsEvent = new SQSEvent
         {
@@ -228,6 +250,12 @@ public class BatchProcessorAttributeTypedHandlerTests
                 new SQSEvent.SQSMessage
                 {
                     MessageId = "1",
+                    Body = "{\"Id\":\"order-1\",\"Name\":\"Valid Order\",\"Amount\":99.99,\"Products\":[\"Product A\"]}",
+                    EventSourceArn = "arn:aws:sqs:us-east-1:123456789012:test-queue"
+                },
+                new SQSEvent.SQSMessage
+                {
+                    MessageId = "2",
                     Body = "invalid json",
                     EventSourceArn = "arn:aws:sqs:us-east-1:123456789012:test-queue"
                 }
@@ -242,6 +270,6 @@ public class BatchProcessorAttributeTypedHandlerTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result.BatchItemFailures);
-        Assert.Equal("1", result.BatchItemFailures[0].ItemIdentifier);
+        Assert.Equal("2", result.BatchItemFailures[0].ItemIdentifier);
     }
 }
