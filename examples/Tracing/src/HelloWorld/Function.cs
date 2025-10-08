@@ -87,13 +87,10 @@ public class Function
             greeting: "Hello Powertools for AWS Lambda (.NET)", ipAddress: location);
 
         // Trace Fluent API
-        Tracing.WithSubsegment("LoggingResponse",
-            subsegment =>
-            {
-                subsegment.AddAnnotation("AccountId", apigwProxyEvent.RequestContext.AccountId);
-                subsegment.AddMetadata("LookupRecord", lookupRecord);
-            });
-
+        using var gatewaySegment = Tracing.BeginSubsegment("LoggingResponse");
+        gatewaySegment.AddAnnotation("AccountId", apigwProxyEvent.RequestContext.AccountId);
+        gatewaySegment.AddMetadata("LookupRecord", lookupRecord);
+        
         try
         {
             await SaveRecordInDynamo(lookupRecord);

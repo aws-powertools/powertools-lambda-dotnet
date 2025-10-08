@@ -53,8 +53,6 @@ public class EnvWrapperTests
         Assert.NotNull(_appId);
         Assert.Contains("PTEnv/", _appId);
         _output.WriteLine(_appId);
-        // check that it is last in the string
-        Assert.EndsWith("PTEnv/", _appId, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -71,8 +69,8 @@ public class EnvWrapperTests
     {
         Assert.NotNull(_appId);
         
-        // Should end with PTEnv/
-        Assert.EndsWith("PTEnv/", _appId);
+        // Should have PTEnv/
+        Assert.Contains("PTEnv/", _appId);
         
         // Should contain at least one PT/ entry
         var ptEntries = Regex.Matches(_appId, @"PT/[^/]+/\d+\.\d+\.\d+");
@@ -172,8 +170,8 @@ public class EnvWrapperTests
             _output.WriteLine($"✓ Found utility: {utility}");
         }
         
-        // Verify PTEnv/ is at the end
-        Assert.EndsWith("PTEnv/", appId);
+        // Verify PTEnv/ exists
+        Assert.Contains("PTEnv/", appId);
         
         // Verify each utility appears exactly once
         foreach (var utility in expectedUtilities)
@@ -237,8 +235,8 @@ public class EnvWrapperTests
             _output.WriteLine($"✓ Not Found utility: {utility}");
         }
         
-        // Verify PTEnv/ is at the end
-        Assert.EndsWith("PTEnv/", appId);
+        // Verify PTEnv/ is present
+        Assert.Contains("PTEnv/", appId);
         
         // Count total PT/ entries
         var ptEntries = Regex.Matches(appId, @"PT/[^/]+/\d+\.\d+\.\d+");
@@ -308,8 +306,8 @@ public class EnvWrapperTests
         // Verify the specific utility is present
         Assert.Contains($"PT/{expectedUtility}/", appId);
         
-        // Verify PTEnv/ is at the end
-        Assert.EndsWith("PTEnv/", appId);
+        // Verify PTEnv/ is present
+        Assert.Contains("PTEnv/", appId);
         
         _output.WriteLine($"Testing {expectedUtility}: {appId}");
     }

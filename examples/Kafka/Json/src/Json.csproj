@@ -12,11 +12,11 @@
         <PublishReadyToRun>true</PublishReadyToRun>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.12.0"/>
-        <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0"/>
+        <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.13.4" />
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.7.1" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4"/>
-        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="2.0.0" />
-        <PackageReference Include="AWS.Lambda.Powertools.Kafka.Json" Version="1.0.2" />
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="3.0.0" />
+        <PackageReference Include="AWS.Lambda.Powertools.Kafka.Json" Version="3.0.0" />
     </ItemGroup>
     <ItemGroup>
         <None Remove="kafka-json-event.json" />
