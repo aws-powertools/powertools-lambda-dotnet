@@ -308,7 +308,7 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
                 BatchEventType.DynamoDbStream => CreateTypedBatchProcessingAspectHandler(() => TypedDynamoDbStreamBatchProcessor.TypedInstance, args),
                 BatchEventType.KinesisDataStream => CreateTypedBatchProcessingAspectHandler(() => TypedKinesisEventBatchProcessor.TypedInstance, args),
                 BatchEventType.Sqs => CreateTypedBatchProcessingAspectHandler(() => TypedSqsBatchProcessor.TypedInstance, args),
-                _ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, "Unsupported event type.")
+                _ => throw new ArgumentOutOfRangeException($"{eventType}", eventType, "Unsupported event type.")
             };
         }
 
@@ -318,7 +318,7 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
             BatchEventType.DynamoDbStream => CreateBatchProcessingAspectHandler(() => DynamoDbStreamBatchProcessor.Instance),
             BatchEventType.KinesisDataStream => CreateBatchProcessingAspectHandler(() => KinesisEventBatchProcessor.Instance),
             BatchEventType.Sqs => CreateBatchProcessingAspectHandler(() => SqsBatchProcessor.Instance),
-            _ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, "Unsupported event type.")
+            _ => throw new ArgumentOutOfRangeException($"{eventType}", eventType, "Unsupported event type.")
         };
     }
 
@@ -533,7 +533,7 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
         return new TypedBatchProcessingAspectHandler<TEvent, TRecord>(typedBatchProcessor, typedHandler, hasContext, deserializationOptions, processingOptions);
     }
 
-    private BatchEventType GetEventTypeFromArgs(IReadOnlyList<object> args)
+    private static BatchEventType GetEventTypeFromArgs(IReadOnlyList<object> args)
     {
         if (args == null || args.Count == 0 || !EventTypes.TryGetValue(args[0].GetType(), out var eventType))
         {
