@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,10 +23,11 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             };
 
             // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() => 
+            var exception = Assert.Throws<InvalidOperationException>(() =>
                 attribute.CreateAspectHandler(new object[] { new SQSEvent() }));
-            
-            Assert.Contains("Only one type of handler (traditional or typed) can be configured at a time", exception.Message);
+
+            Assert.Contains("Only one type of handler (traditional or typed) can be configured at a time",
+                exception.Message);
         }
 
         [Fact]
@@ -38,10 +37,12 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             var attribute = new BatchProcessorAttribute();
 
             // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() => 
+            var exception = Assert.Throws<InvalidOperationException>(() =>
                 attribute.CreateAspectHandler(new object[] { new SQSEvent() }));
-            
-            Assert.Contains("A record handler, record handler provider, typed record handler, or typed record handler provider is required", exception.Message);
+
+            Assert.Contains(
+                "A record handler, record handler provider, typed record handler, or typed record handler provider is required",
+                exception.Message);
         }
 
         [Fact]
@@ -55,9 +56,9 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             };
 
             // Act & Assert
-            var exception = Assert.Throws<InvalidOperationException>(() => 
+            var exception = Assert.Throws<InvalidOperationException>(() =>
                 attribute.CreateAspectHandler(new object[] { new SQSEvent() }));
-            
+
             Assert.Contains("The provided JsonSerializerContext must inherit from", exception.Message);
         }
 
@@ -116,6 +117,61 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             Assert.NotNull(handler);
         }
 
+        [Fact]
+        public void GetEventTypeFromArgs_WithNullArgs_ThrowsArgumentException()
+        {
+            // Arrange & Act
+            var exception = Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+                typeof(BatchProcessorAttribute)
+                    .GetMethod("GetEventTypeFromArgs",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    .Invoke(null, new object[] { null }));
+
+            // AssertÏ
+            Assert.IsType<ArgumentException>(exception.InnerException);
+            Assert.Contains("The first function handler parameter must be of one of the following types",
+                exception.InnerException.Message);
+        }
+
+        [Fact]
+        public void GetEventTypeFromArgs_WithEmptyArgs_ThrowsArgumentException()
+        {
+            // Arrange
+            var args = Array.Empty<object>();
+
+            // Act
+            var exception = Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+                typeof(BatchProcessorAttribute)
+                    .GetMethod("GetEventTypeFromArgs",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    .Invoke(null, new object[] { args }));
+
+            // Assert
+            Assert.IsType<ArgumentException>(exception.InnerException);
+            Assert.Contains("The first function handler parameter must be of one of the following types",
+                exception.InnerException.Message);
+        }
+
+        [Fact]
+        public void GetEventTypeFromArgs_WithInvalidEventType_ThrowsArgumentException()
+        {
+            // Arrange
+            var args = new object[] { "invalid event type" };
+
+            // Act
+            var exception = Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+                typeof(BatchProcessorAttribute)
+                    .GetMethod("GetEventTypeFromArgs",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    .Invoke(null, new object[] { args }));
+
+            // Assert
+            Assert.IsType<ArgumentException>(exception.InnerException);
+            Assert.Contains("The first function handler parameter must be of one of the following types",
+                exception.InnerException.Message);
+        }
+
+
         // Test helper classes
         private class TestTypedRecordHandler : ITypedRecordHandler<TestData>
         {
@@ -135,7 +191,8 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
 
         private class TestTypedRecordHandlerWithContext : ITypedRecordHandlerWithContext<TestData>
         {
-            public Task<RecordHandlerResult> HandleAsync(TestData data, ILambdaContext context, CancellationToken cancellationToken)
+            public Task<RecordHandlerResult> HandleAsync(TestData data, ILambdaContext context,
+                CancellationToken cancellationToken)
             {
                 return Task.FromResult(RecordHandlerResult.None);
             }
