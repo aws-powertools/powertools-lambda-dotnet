@@ -13,7 +13,7 @@ Powertools for AWS Lambda (.NET) (which from here will be referred as Powertools
     **Supports .NET 8 runtime**
 
 ???+ tip
-    Powertools is also available for [Python](https://docs.powertools.aws.dev/lambda/python/){target="_blank"}, [Java](https://docs.powertools.aws.dev/lambda/java/){target="_blank"}, and [TypeScript](https://docs.powertools.aws.dev/lambda/typescript/latest/){target="_blank"}.
+    Powertools is also available for [Python](https://docs.aws.amazon.com/powertools/python/){target="_blank"}, [Java](https://docs.aws.amazon.com/powertools/java/){target="_blank"}, and [TypeScript](https://docs.aws.amazon.com/powertools/typescript/latest/){target="_blank"}.
 
 ??? hint "Support this project by becoming a reference customer or sharing your work :heart:"
 

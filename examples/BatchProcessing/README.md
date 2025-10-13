@@ -1,7 +1,7 @@
 # Powertools for AWS Lambda (.NET) - Batch Processing Example
 
 This project contains examples of a Lambda function using the batch processing module of Powertools for AWS Lambda (.NET). For more information on this module, please refer to the documentation.
-[documentation](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch/).
+[documentation](https://docs.aws.amazon.com/powertools/dotnet/utilities/batch/).
 
 * src - Code for the application's Lambda function.
 * events - Invocation events that you can use to invoke the function.
