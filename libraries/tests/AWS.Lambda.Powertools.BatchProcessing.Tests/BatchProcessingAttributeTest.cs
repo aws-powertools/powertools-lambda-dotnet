@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
 using Xunit;
@@ -10,7 +8,7 @@ using Xunit;
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests
 {
     [Collection("Sequential")]
-    public partial class BatchProcessingAttributeTest
+    public class BatchProcessingAttributeTest
     {
         [Fact]
         public void BatchProcessorAttribute_WithMultipleHandlerTypes_ThrowsInvalidOperationException()
@@ -181,37 +179,10 @@ namespace AWS.Lambda.Powertools.BatchProcessing.Tests
             }
         }
 
-        private class TestTypedRecordHandlerProvider : ITypedRecordHandlerProvider<TestData>
-        {
-            public ITypedRecordHandler<TestData> Create()
-            {
-                return new TestTypedRecordHandler();
-            }
-        }
-
-        private class TestTypedRecordHandlerWithContext : ITypedRecordHandlerWithContext<TestData>
-        {
-            public Task<RecordHandlerResult> HandleAsync(TestData data, ILambdaContext context,
-                CancellationToken cancellationToken)
-            {
-                return Task.FromResult(RecordHandlerResult.None);
-            }
-        }
-
-        private class TestTypedRecordHandlerWithContextProvider : ITypedRecordHandlerWithContextProvider<TestData>
-        {
-            public ITypedRecordHandlerWithContext<TestData> Create()
-            {
-                return new TestTypedRecordHandlerWithContext();
-            }
-        }
-
         private class TestData
         {
             public string Message { get; set; }
             public int Id { get; set; }
         }
-
-        // Removed TestJsonSerializerContext to avoid source generation conflicts
     }
 }

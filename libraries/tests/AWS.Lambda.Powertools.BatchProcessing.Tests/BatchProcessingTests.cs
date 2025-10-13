@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
-using AWS.Lambda.Powertools.Common;
 using NSubstitute;
 using Xunit;
 
