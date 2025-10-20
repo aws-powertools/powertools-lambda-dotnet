@@ -19,21 +19,21 @@ Powertools for AWS Lambda (.NET) is a developer toolkit to implement Serverless 
 
 Powertools for AWS Lambda (.NET) provides three core utilities:
 
-* **[Logging](https://docs.powertools.aws.dev/lambda/dotnet/core/logging/)** - provides a custom logger class that outputs structured JSON. It allows you to pass in strings or more complex objects, and will take care of serializing the log output. Common use cases—such as logging the Lambda event payload and capturing cold start information—are handled for you, including appending custom keys to the logger at anytime.
+* **[Logging](https://docs.aws.amazon.com/powertools/dotnet/core/logging/)** - provides a custom logger class that outputs structured JSON. It allows you to pass in strings or more complex objects, and will take care of serializing the log output. Common use cases—such as logging the Lambda event payload and capturing cold start information—are handled for you, including appending custom keys to the logger at anytime.
 
-* **[Metrics](https://docs.powertools.aws.dev/lambda/dotnet/core/metrics/)** - makes collecting custom metrics from your application simple, without the need to make synchronous requests to external systems. This functionality is powered by [Amazon CloudWatch Embedded Metric Format (EMF)](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format.html), which allows for capturing metrics asynchronously.
+* **[Metrics](https://docs.aws.amazon.com/powertools/dotnet/core/metrics/)** - makes collecting custom metrics from your application simple, without the need to make synchronous requests to external systems. This functionality is powered by [Amazon CloudWatch Embedded Metric Format (EMF)](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format.html), which allows for capturing metrics asynchronously.
 
-* **[Tracing](https://docs.powertools.aws.dev/lambda/dotnet/core/tracing/)** - provides a simple way to send traces from functions to AWS X-Ray to provide visibility into function calls, interactions with other AWS services, or external HTTP requests. Annotations can easily be added to traces to allow filtering traces based on key information. For example, when using Tracer, a ColdStart annotation is created for you so you can easily group and analyze traces where there was an initialization overhead.
+* **[Tracing](https://docs.aws.amazon.com/powertools/dotnet/core/tracing/)** - provides a simple way to send traces from functions to AWS X-Ray to provide visibility into function calls, interactions with other AWS services, or external HTTP requests. Annotations can easily be added to traces to allow filtering traces based on key information. For example, when using Tracer, a ColdStart annotation is created for you so you can easily group and analyze traces where there was an initialization overhead.
 
-* **[Parameters](https://docs.powertools.aws.dev/lambda/dotnet/utilities/parameters/)** - provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/). We also provide extensibility to bring your own providers.
+* **[Parameters](https://docs.aws.amazon.com/powertools/dotnet/utilities/parameters/)** - provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/). We also provide extensibility to bring your own providers.
 
-* **[Idempotency](https://docs.powertools.aws.dev/lambda/dotnet/utilities/idempotency/)** - The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
+* **[Idempotency](https://docs.aws.amazon.com/powertools/dotnet/utilities/idempotency/)** - The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
 
-* **[Batch Processing](https://docs.powertools.aws.dev/lambda/dotnet/utilities/batch-processing/)** - The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
+* **[Batch Processing](https://docs.aws.amazon.com/powertools/dotnet/utilities/batch-processing/)** - The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
 
-* **[Event Handler AppSync Events](https://docs.powertools.aws.dev/lambda/dotnet/core/event_handler/appsync_events/)** - The event handler AppSync Events utility provides a simple way to handle AppSync events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
+* **[Event Handler AppSync Events](https://docs.aws.amazon.com/powertools/dotnet/core/event_handler/appsync_events/)** - The event handler AppSync Events utility provides a simple way to handle AppSync events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
 
-* **[Event Handler Bedrock Agent Functions](https://docs.powertools.aws.dev/lambda/dotnet/core/event_handler/bedrock_agent_function/)** - The event handler Bedrock Agent Functions utility provides a simple way to handle Amazon Bedrock agent function events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
+* **[Event Handler Bedrock Agent Functions](https://docs.aws.amazon.com/powertools/dotnet/core/event_handler/bedrock_agent_function/)** - The event handler Bedrock Agent Functions utility provides a simple way to handle Amazon Bedrock agent function events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
 
 ### Installation
 
@@ -122,7 +122,7 @@ The following companies, among others, use Powertools:
 
 ### Sharing your work
 
-Share what you did with Powertools for AWS Lambda (.NET) 💞💞. Blog post, workshops, presentation, sample apps and others. Check out what the community has already shared about Powertools for AWS Lambda (.NET) [here](https://docs.powertools.aws.dev/lambda/dotnet/we_made_this/).
+Share what you did with Powertools for AWS Lambda (.NET) 💞💞. Blog post, workshops, presentation, sample apps and others. Check out what the community has already shared about Powertools for AWS Lambda (.NET) [here](https://docs.aws.amazon.com/powertools/dotnet/we_made_this/).
 
 ### 👋 Contributing
 

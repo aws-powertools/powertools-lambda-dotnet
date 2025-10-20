@@ -206,7 +206,7 @@ message Customer {
 
 ## Documentation
 
-For more detailed documentation and examples, visit the [official documentation](https://docs.powertools.aws.dev/lambda/dotnet/).
+For more detailed documentation and examples, visit the [official documentation](https://docs.aws.amazon.com/powertools/dotnet/).
 
 ## License
 

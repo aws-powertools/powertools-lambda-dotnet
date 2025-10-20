@@ -6,7 +6,7 @@ description: Core utility
 !!! warning
     Version 1.x.x will continue to be supported **until end of October 2025** for bug fixes and security updates, but no new features will be added to this version. We recommend you upgrade to the latest version.
 
-    The latest version is available at [Metrics v2](https://docs.powertools.aws.dev/lambda/dotnet/core/metrics-v2/).
+    The latest version is available at [Metrics v2](https://docs.aws.amazon.com/powertools/dotnet/core/metrics-v2/).
 
 
 Metrics creates custom metrics asynchronously by logging metrics to standard output following [Amazon CloudWatch Embedded Metric Format (EMF)](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format.html).

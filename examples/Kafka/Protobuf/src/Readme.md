@@ -127,7 +127,7 @@ To customize the examples:
 
 ## Resources
 
-- [AWS Lambda Powertools for .NET Documentation](https://docs.powertools.aws.dev/lambda/dotnet/)
+- [AWS Lambda Powertools for .NET Documentation](https://docs.aws.amazon.com/powertools/dotnet/)
 - [Amazon MSK Documentation](https://docs.aws.amazon.com/msk/)
 - [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/)
 - [Protocol Buffers Documentation](https://developers.google.com/protocol-buffers)
