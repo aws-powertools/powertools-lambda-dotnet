@@ -3,6 +3,9 @@
 Thank you for your interest in contributing to our project. Whether it's a bug report, new feature, correction, or additional
 documentation, we greatly value feedback and contributions from our community.
 
+We encourage contributions from the community and we will work with contributors to merge their pull requests.
+Rarely, we may close pull requests that do not meet our guidelines specified in CONTRIBUTING.md, or will require unreasonable effort to meet our quality bar.
+
 Please read through this document before submitting any issues or pull requests to ensure we have all the necessary
 information to effectively respond to your bug report or contribution.
 

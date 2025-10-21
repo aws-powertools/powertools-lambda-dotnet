@@ -154,8 +154,20 @@ public static class Tracing
         XRayRecorder.Instance.SetNamespace(GetNamespaceOrDefault(nameSpace));
         try
         {
-            var entity = XRayRecorder.Instance.GetEntity() as TracingSubsegment;
-            subsegment?.Invoke(entity);
+            var entity = XRayRecorder.Instance.GetEntity();
+            var tracingSubsegment = new TracingSubsegment("## " + name);
+            
+            // Copy properties from the current entity
+            if (entity != null)
+            {
+                if (entity is Subsegment subsegmentEntity)
+                {
+                    tracingSubsegment.Namespace = subsegmentEntity.Namespace;
+                }
+                tracingSubsegment.Sampled = entity.Sampled;
+            }
+            
+            subsegment?.Invoke(tracingSubsegment);
         }
         finally
         {
