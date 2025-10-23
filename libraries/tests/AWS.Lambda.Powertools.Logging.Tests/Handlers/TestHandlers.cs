@@ -66,6 +66,11 @@ class TestHandlers
     {
     }
 
+    [Logging(CorrelationIdPath = "/detail/correlationId")]
+    public void CorrelationCloudWatchEventCustomPath(CloudWatchEvent<CwEvent> cwEvent)
+    {
+    }
+
     [Logging(CorrelationIdPath = "/headers/my_request_id_header")]
     public void CorrelationIdFromString(TestObject testObject)
     {
@@ -170,6 +175,21 @@ class TestHandlers
         Dog = 3,
         Lizard = 5
     }
+}
+
+public class CwEvent
+{
+    [JsonPropertyName("rideId")]
+    public string RideId { get; set; } = string.Empty;
+
+    [JsonPropertyName("riderId")]
+    public string RiderId { get; set; } = string.Empty;
+
+    [JsonPropertyName("riderName")]
+    public string RiderName { get; set; } = string.Empty;
+
+    [JsonPropertyName("correlationId")]
+    public string? CorrelationId { get; set; }
 }
 
 public class TestServiceHandler

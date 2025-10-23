@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
+using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.CloudWatchEvents.S3Events;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
@@ -172,6 +173,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         [InlineData(CorrelationIdPaths.ApplicationLoadBalancer)]
         [InlineData(CorrelationIdPaths.EventBridge)]
         [InlineData("/headers/my_request_id_header")]
+        [InlineData("/detail/correlationId")]
         public void OnEntry_WhenEventArgExists_CapturesCorrelationId(string correlationIdPath)
         {
             // Arrange
@@ -210,6 +212,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                         Headers = new Header
                         {
                             MyRequestIdHeader = correlationId
+                        }
+                    });
+                    break;
+                case "/detail/correlationId":
+                    _testHandlers.CorrelationCloudWatchEventCustomPath(new CloudWatchEvent<CwEvent>
+                    {
+                        Detail = new CwEvent
+                        {
+                            CorrelationId = correlationId
                         }
                     });
                     break;
