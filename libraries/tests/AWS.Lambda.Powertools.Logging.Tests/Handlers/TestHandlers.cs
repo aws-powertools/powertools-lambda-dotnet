@@ -85,6 +85,22 @@ class TestHandlers
         }
     }
 
+    [Logging(CorrelationIdPath = "/detail/CORRELATIONID")]
+    public void CorrelationIdCaseInsensitiveFallback(CloudWatchEvent<CwEvent> cwEvent)
+    {
+        // This handler uses all caps "CORRELATIONID" in the path
+        // but the actual JSON property is "correlationId" (camelCase)
+        // This tests the case-insensitive fallback logic
+    }
+
+    [Logging(CorrelationIdPath = "/DETAIL/CORRELATIONID")]
+    public void CorrelationIdNestedCaseInsensitive(CloudWatchEvent<CwEvent> cwEvent)
+    {
+        // This handler uses all caps for both path segments
+        // but the actual JSON properties are "detail" and "correlationId"
+        // This tests the case-insensitive fallback at multiple levels
+    }
+
     [Logging(CorrelationIdPath = "/headers/my_request_id_header")]
     public void CorrelationIdFromString(TestObject testObject)
     {

@@ -405,6 +405,59 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         }
         
         [Fact]
+        public void OnEntry_WhenPropertyCasingDoesNotMatch_UsesCaseInsensitiveFallback()
+        {
+            // Arrange
+            var correlationId = Guid.NewGuid().ToString();
+            
+            // This test uses a path "/detail/CORRELATIONID" (all caps) 
+            // but the actual property is "correlationId" (camelCase)
+            // This should trigger the case-insensitive fallback
+            
+            // Act
+            _testHandlers.CorrelationIdCaseInsensitiveFallback(new CloudWatchEvent<CwEvent>
+            {
+                Detail = new CwEvent
+                {
+                    CorrelationId = correlationId
+                }
+            });
+            
+            // Assert
+            var allKeys = Logger.GetAllKeys()
+                .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
+    
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyCorrelationId));
+            Assert.Equal((string)allKeys[LoggingConstants.KeyCorrelationId], correlationId);
+        }
+        
+        [Fact]
+        public void OnEntry_WhenNestedPropertyCasingDoesNotMatch_UsesCaseInsensitiveFallback()
+        {
+            // Arrange
+            var correlationId = Guid.NewGuid().ToString();
+            
+            // This test uses a path with mismatched casing at multiple levels
+            // Path: "/DETAIL/CORRELATIONID" but actual properties are "detail" and "correlationId"
+            
+            // Act
+            _testHandlers.CorrelationIdNestedCaseInsensitive(new CloudWatchEvent<CwEvent>
+            {
+                Detail = new CwEvent
+                {
+                    CorrelationId = correlationId
+                }
+            });
+            
+            // Assert
+            var allKeys = Logger.GetAllKeys()
+                .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
+    
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyCorrelationId));
+            Assert.Equal((string)allKeys[LoggingConstants.KeyCorrelationId], correlationId);
+        }
+        
+        [Fact]
         public void When_Setting_Service_Should_Update_Key()
         {
             // Arrange
