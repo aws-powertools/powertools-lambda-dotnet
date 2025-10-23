@@ -358,6 +358,53 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         }
         
         [Fact]
+        public void CorrelationId_Property_Should_Return_CorrelationId()
+        {
+            // Arrange
+            var correlationId = Guid.NewGuid().ToString();
+            
+            // Act
+            _testHandlers.CorrelationCloudWatchEventCustomPath(new CloudWatchEvent<CwEvent>
+            {
+                Detail = new CwEvent
+                {
+                    CorrelationId = correlationId
+                }
+            });
+            
+            // Assert - Static Logger property
+            Assert.Equal(correlationId, Logger.CorrelationId);
+        }
+        
+        [Fact]
+        public void CorrelationId_Extension_Should_Return_CorrelationId_Via_ILogger()
+        {
+            // Arrange
+            var correlationId = Guid.NewGuid().ToString();
+            
+            // Act
+            _testHandlers.CorrelationIdExtensionTest(new CloudWatchEvent<CwEvent>
+            {
+                Detail = new CwEvent
+                {
+                    CorrelationId = correlationId
+                }
+            });
+            
+            // Assert - The test handler will verify the extension method works
+            Assert.Equal(correlationId, Logger.CorrelationId);
+        }
+        
+        [Fact]
+        public void CorrelationId_Should_Return_Null_When_Not_Set()
+        {
+            // Arrange - no correlation ID set
+            
+            // Act & Assert
+            Assert.Null(Logger.CorrelationId);
+        }
+        
+        [Fact]
         public void When_Setting_Service_Should_Update_Key()
         {
             // Arrange

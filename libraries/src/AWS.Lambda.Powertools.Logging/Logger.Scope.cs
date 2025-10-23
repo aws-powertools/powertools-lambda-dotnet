@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -12,6 +13,22 @@ public static partial class Logger
     /// </summary>
     /// <value>The scope.</value>
     private static IDictionary<string, object> Scope { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
+
+    /// <summary>
+    ///     Gets the correlation identifier from the log context.
+    /// </summary>
+    /// <value>The correlation identifier, or null if not set.</value>
+    public static string CorrelationId
+    {
+        get
+        {
+            if (Scope.TryGetValue(LoggingConstants.KeyCorrelationId, out var value))
+            {
+                return value?.ToString();
+            }
+            return null;
+        }
+    }
 
     /// <summary>
     ///     Appending additional key to the log context.

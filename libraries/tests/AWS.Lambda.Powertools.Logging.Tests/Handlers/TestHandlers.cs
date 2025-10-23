@@ -71,6 +71,20 @@ class TestHandlers
     {
     }
 
+    [Logging(CorrelationIdPath = "/detail/correlationId")]
+    public void CorrelationIdExtensionTest(CloudWatchEvent<CwEvent> cwEvent)
+    {
+        // Test that the ILogger extension method works
+        var logger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger(nameof(TestHandlers));
+        var correlationIdFromExtension = logger.GetCorrelationId();
+        
+        // Verify it matches the static property
+        if (correlationIdFromExtension != Logger.CorrelationId)
+        {
+            throw new Exception("Extension method returned different value than static property");
+        }
+    }
+
     [Logging(CorrelationIdPath = "/headers/my_request_id_header")]
     public void CorrelationIdFromString(TestObject testObject)
     {
