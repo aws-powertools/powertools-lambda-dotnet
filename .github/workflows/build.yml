@@ -39,7 +39,7 @@ jobs:
         run: dotnet test --no-restore --filter "Category!=E2E" --collect:"XPlat Code Coverage" --results-directory ./codecov --verbosity normal
 
       - name: Codecov
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # 5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # 5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
