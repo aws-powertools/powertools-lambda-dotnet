@@ -1,4 +1,5 @@
 using System.Globalization;
+using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common.Core;
 
 namespace AWS.Lambda.Powertools.Common;
@@ -167,7 +168,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// </summary>
     /// <value>The X-Ray trace identifier.</value>
     public string XRayTraceId =>
-        GetEnvironmentVariable(Constants.XrayTraceIdEnv);
+        LambdaTraceProvider.CurrentTraceId;
 
     /// <summary>
     ///     Gets a value indicating whether this instance is Lambda.
