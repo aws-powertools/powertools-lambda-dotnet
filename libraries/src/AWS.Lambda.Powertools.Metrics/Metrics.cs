@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Amazon.Lambda.Core;
@@ -14,11 +15,26 @@ namespace AWS.Lambda.Powertools.Metrics;
 public class Metrics : IMetrics, IDisposable
 {
     /// <summary>
+    /// Static lock object for thread-safe instance creation
+    /// </summary>
+    private static readonly object _instanceLock = new();
+    
+    /// <summary>
     ///    Gets or sets the instance.
     /// </summary>
     public static IMetrics Instance
     {
-        get => _instance ?? new Metrics(PowertoolsConfigurations.Instance, consoleWrapper: new ConsoleWrapper());
+        get
+        {
+            if (_instance != null)
+                return _instance;
+                
+            lock (_instanceLock)
+            {
+                // Double-check after acquiring lock
+                return _instance ??= new Metrics(PowertoolsConfigurations.Instance, consoleWrapper: new ConsoleWrapper());
+            }
+        }
         private set => _instance = value;
     }
     
@@ -52,12 +68,75 @@ public class Metrics : IMetrics, IDisposable
     /// <summary>
     ///     The instance
     /// </summary>
-    private static IMetrics _instance;
+    private static volatile IMetrics _instance;
 
     /// <summary>
-    ///     The context
+    ///     Thread-safe dictionary for per-thread context storage.
+    ///     Uses ManagedThreadId as key to ensure isolation when Lambda processes
+    ///     multiple concurrent requests (AWS_LAMBDA_MAX_CONCURRENCY > 1).
     /// </summary>
-    private readonly MetricsContext _context;
+    private static readonly ConcurrentDictionary<int, MetricsContext> _threadContexts = new();
+
+    /// <summary>
+    ///     Gets the MetricsContext for the current thread.
+    ///     Creates a new context if one doesn't exist for this thread.
+    /// </summary>
+    private MetricsContext CurrentContext
+    {
+        get
+        {
+            var threadId = Environment.CurrentManagedThreadId;
+            return _threadContexts.GetOrAdd(threadId, _ =>
+            {
+                var ctx = new MetricsContext();
+                // Copy shared configuration to new context
+                var ns = _sharedNamespace;
+                if (!string.IsNullOrWhiteSpace(ns))
+                    ctx.SetNamespace(ns);
+                
+                var svc = _sharedService;
+                if (!string.IsNullOrWhiteSpace(svc))
+                {
+                    ctx.SetService(svc);
+                }
+                
+                // Copy default dimensions (including Service dimension if set)
+                lock (_defaultDimensionsLock)
+                {
+                    if (_sharedDefaultDimensions.Count > 0)
+                    {
+                        ctx.SetDefaultDimensions(new List<DimensionSet>(_sharedDefaultDimensions));
+                    }
+                    else if (!string.IsNullOrWhiteSpace(svc))
+                    {
+                        // If no shared default dimensions but service is set, add Service dimension
+                        ctx.SetDefaultDimensions(new List<DimensionSet>(new[] { new DimensionSet("Service", svc) }));
+                    }
+                }
+                return ctx;
+            });
+        }
+    }
+
+    /// <summary>
+    ///     Shared namespace across all threads (configuration-level)
+    /// </summary>
+    private static string _sharedNamespace;
+
+    /// <summary>
+    ///     Shared service name across all threads (configuration-level)
+    /// </summary>
+    private static string _sharedService;
+
+    /// <summary>
+    ///     Shared default dimensions across all threads (by design per requirements)
+    /// </summary>
+    private static readonly List<DimensionSet> _sharedDefaultDimensions = new();
+
+    /// <summary>
+    ///     Lock for shared default dimensions
+    /// </summary>
+    private static readonly object _defaultDimensionsLock = new();
 
     /// <summary>
     ///     The Powertools for AWS Lambda (.NET) configurations
@@ -112,16 +191,18 @@ public class Metrics : IMetrics, IDisposable
         if (!string.IsNullOrEmpty(options.Namespace))
             SetNamespace(options.Namespace);
 
-        if (!string.IsNullOrEmpty(options.Service))
-            Instance.SetService(options.Service);
-
         if (options.RaiseOnEmptyMetrics.HasValue)
             Instance.SetRaiseOnEmptyMetrics(options.RaiseOnEmptyMetrics.Value);
         if (options.CaptureColdStart.HasValue)
             Instance.SetCaptureColdStart(options.CaptureColdStart.Value);
 
+        // Set default dimensions before service so that SetService can add Service to the dimensions
         if (options.DefaultDimensions != null)
             SetDefaultDimensions(options.DefaultDimensions);
+
+        // Set service after default dimensions so Service dimension is preserved
+        if (!string.IsNullOrEmpty(options.Service))
+            Instance.SetService(options.Service);
 
         if (!string.IsNullOrEmpty(options.FunctionName))
             Instance.SetFunctionName(options.FunctionName);
@@ -155,7 +236,6 @@ public class Metrics : IMetrics, IDisposable
     {
         _powertoolsConfigurations = powertoolsConfigurations;
         _consoleWrapper = consoleWrapper;
-        _context = new MetricsContext();
         _raiseOnEmptyMetrics = raiseOnEmptyMetrics;
         _captureColdStartEnabled = captureColdStartEnabled;
         _options = options;
@@ -192,19 +272,17 @@ public class Metrics : IMetrics, IDisposable
                     "'AddMetric' method requires a valid metrics value. Value must be >= 0.", nameof(value));
             }
 
-            lock (_lockObj)
+            var context = CurrentContext;
+            var metrics = context.GetMetrics();
+
+            if (metrics.Count > 0 &&
+                (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
+                 GetExistingMetric(metrics, key)?.Values.Count == PowertoolsConfigurations.MaxMetrics))
             {
-                var metrics = _context.GetMetrics();
-
-                if (metrics.Count > 0 &&
-                    (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
-                     GetExistingMetric(metrics, key)?.Values.Count == PowertoolsConfigurations.MaxMetrics))
-                {
-                    Instance.Flush(true);
-                }
-
-                _context.AddMetric(key, value, unit, resolution);
+                FlushContext(context, true);
             }
+
+            context.AddMetric(key, value, unit, resolution);
         }
         else
         {
@@ -216,9 +294,15 @@ public class Metrics : IMetrics, IDisposable
     /// <inheritdoc />
     void IMetrics.SetNamespace(string nameSpace)
     {
-        _context.SetNamespace(!string.IsNullOrWhiteSpace(nameSpace)
+        var ns = !string.IsNullOrWhiteSpace(nameSpace)
             ? nameSpace
-            : GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace);
+            : GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace;
+        
+        // Store in shared state for new thread contexts
+        _sharedNamespace = ns;
+        
+        // Update current thread's context
+        CurrentContext.SetNamespace(ns);
     }
 
 
@@ -230,7 +314,7 @@ public class Metrics : IMetrics, IDisposable
     {
         try
         {
-            return _context.GetService();
+            return CurrentContext.GetService();
         }
         catch
         {
@@ -245,7 +329,7 @@ public class Metrics : IMetrics, IDisposable
             throw new ArgumentNullException(nameof(key),
                 "'AddDimension' method requires a valid dimension key. 'Null' or empty values are not allowed.");
 
-        _context.AddDimension(key, value);
+        CurrentContext.AddDimension(key, value);
     }
 
     /// <inheritdoc />
@@ -255,7 +339,7 @@ public class Metrics : IMetrics, IDisposable
             throw new ArgumentNullException(nameof(key),
                 "'AddMetadata' method requires a valid metadata key. 'Null' or empty values are not allowed.");
 
-        _context.AddMetadata(key, value);
+        CurrentContext.AddMetadata(key, value);
     }
 
     /// <inheritdoc />
@@ -266,7 +350,23 @@ public class Metrics : IMetrics, IDisposable
                 throw new ArgumentNullException(nameof(item.Key),
                     "'SetDefaultDimensions' method requires a valid key pair. 'Null' or empty values are not allowed.");
 
-        _context.SetDefaultDimensions(DictionaryToList(defaultDimensions));
+        var dimensionsList = DictionaryToList(defaultDimensions);
+        
+        // Update shared default dimensions (shared across all threads by design)
+        lock (_defaultDimensionsLock)
+        {
+            _sharedDefaultDimensions.Clear();
+            _sharedDefaultDimensions.AddRange(dimensionsList);
+        }
+        
+        // Update all existing thread contexts
+        foreach (var kvp in _threadContexts)
+        {
+            kvp.Value.SetDefaultDimensions(new List<DimensionSet>(dimensionsList));
+        }
+        
+        // Also update current context (in case it was just created)
+        CurrentContext.SetDefaultDimensions(new List<DimensionSet>(dimensionsList));
     }
 
     /// <inheritdoc />
@@ -274,20 +374,30 @@ public class Metrics : IMetrics, IDisposable
     {
         if(_disabled)
             return;
-        
-        if (_context.GetMetrics().Count == 0
+
+        FlushContext(CurrentContext, metricsOverflow);
+    }
+
+    /// <summary>
+    ///     Flushes a specific context's metrics.
+    /// </summary>
+    /// <param name="context">The context to flush</param>
+    /// <param name="metricsOverflow">If true, indicates overflow flush (don't clear dimensions)</param>
+    private void FlushContext(MetricsContext context, bool metricsOverflow)
+    {
+        if (context.GetMetrics().Count == 0
             && _raiseOnEmptyMetrics)
             throw new SchemaValidationException(true);
 
-        if (_context.IsSerializable)
+        if (context.IsSerializable)
         {
-            var emfPayload = _context.Serialize();
+            var emfPayload = context.Serialize();
 
             _consoleWrapper.WriteLine(emfPayload);
 
-            _context.ClearMetrics();
+            context.ClearMetrics();
 
-            if (!metricsOverflow) _context.ClearNonDefaultDimensions();
+            if (!metricsOverflow) context.ClearNonDefaultDimensions();
         }
         else
         {
@@ -300,7 +410,17 @@ public class Metrics : IMetrics, IDisposable
     /// <inheritdoc />
     void IMetrics.ClearDefaultDimensions()
     {
-        _context.ClearDefaultDimensions();
+        // Clear shared default dimensions
+        lock (_defaultDimensionsLock)
+        {
+            _sharedDefaultDimensions.Clear();
+        }
+        
+        // Clear in all existing thread contexts
+        foreach (var kvp in _threadContexts)
+        {
+            kvp.Value.ClearDefaultDimensions();
+        }
     }
 
     /// <inheritdoc />
@@ -316,9 +436,27 @@ public class Metrics : IMetrics, IDisposable
 
         if (parsedService != null)
         {
-            _context.SetService(parsedService);
-            _context.SetDefaultDimensions(new List<DimensionSet>(new[]
-                { new DimensionSet("Service", GetService()) }));
+            // Store in shared state for new thread contexts
+            _sharedService = parsedService;
+            
+            // Add Service to shared default dimensions
+            lock (_defaultDimensionsLock)
+            {
+                // Remove existing Service dimension if present
+                _sharedDefaultDimensions.RemoveAll(d => d.Dimensions.ContainsKey("Service"));
+                // Add new Service dimension
+                _sharedDefaultDimensions.Add(new DimensionSet("Service", parsedService));
+            }
+            
+            // Update current thread's context
+            var context = CurrentContext;
+            context.SetService(parsedService);
+            
+            // Update default dimensions in current context with the shared list
+            lock (_defaultDimensionsLock)
+            {
+                context.SetDefaultDimensions(new List<DimensionSet>(_sharedDefaultDimensions));
+            }
         }
     }
 
@@ -336,7 +474,11 @@ public class Metrics : IMetrics, IDisposable
 
     private Dictionary<string, string> GetDefaultDimensions()
     {
-        return ListToDictionary(_context.GetDefaultDimensions());
+        // Read from shared state to ensure consistency across threads
+        lock (_defaultDimensionsLock)
+        {
+            return ListToDictionary(new List<DimensionSet>(_sharedDefaultDimensions));
+        }
     }
 
     /// <inheritdoc />
@@ -438,7 +580,7 @@ public class Metrics : IMetrics, IDisposable
     {
         try
         {
-            return _context.GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace;
+            return CurrentContext.GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace;
         }
         catch
         {
@@ -532,25 +674,21 @@ public class Metrics : IMetrics, IDisposable
     private Dictionary<string, string> ListToDictionary(List<DimensionSet> dimensions)
     {
         var dictionary = new Dictionary<string, string>();
-        try
+        if (dimensions == null)
+            return dictionary;
+
+        foreach (var dimensionSet in dimensions)
         {
-            if (dimensions != null)
+            if (dimensionSet?.Dimensions == null)
+                continue;
+                
+            foreach (var kvp in dimensionSet.Dimensions)
             {
-                foreach (var dimensionSet in dimensions)
-                {
-                    foreach (var kvp in dimensionSet.Dimensions)
-                    {
-                        dictionary[kvp.Key] = kvp.Value;
-                    }
-                }
+                dictionary[kvp.Key] = kvp.Value;
             }
-            return dictionary;
         }
-        catch (Exception e)
-        {
-            _consoleWrapper.Debug("Error converting list to dictionary: " + e.Message);
-            return dictionary;
-        }
+        
+        return dictionary;
     }
     
     /// <summary>
@@ -605,11 +743,11 @@ public class Metrics : IMetrics, IDisposable
         // Add remaining dimensions to the same set
         for (var i = 1; i < dimensions.Length; i++)
         {
-            dimensionSet.Dimensions.Add(dimensions[i].key, dimensions[i].value);
+            dimensionSet.Dimensions.TryAdd(dimensions[i].key, dimensions[i].value);
         }
 
-        // Add the dimensionSet to a list and pass it to AddDimensions
-        _context.AddDimensions([dimensionSet]);
+        // Add the dimensionSet to current thread's context
+        CurrentContext.AddDimensions([dimensionSet]);
     }
     
     /// <summary>
@@ -631,43 +769,21 @@ public class Metrics : IMetrics, IDisposable
     }
 
     /// <summary>
-    ///     Safely searches for an existing metric by name without using LINQ enumeration
+    ///     Searches for an existing metric by name
     /// </summary>
     /// <param name="metrics">The metrics collection to search</param>
     /// <param name="key">The metric name to search for</param>
     /// <returns>The found metric or null if not found</returns>
     private static MetricDefinition GetExistingMetric(List<MetricDefinition> metrics, string key)
     {
-        // Use a traditional for loop instead of LINQ to avoid enumeration issues
-        // when the collection is modified concurrently
         if (metrics == null || string.IsNullOrEmpty(key))
             return null;
             
-        // Create a snapshot of the count to avoid issues with concurrent modifications
-        var count = metrics.Count;
-        for (int i = 0; i < count; i++)
+        foreach (var metric in metrics)
         {
-            try
+            if (metric != null && string.Equals(metric.Name, key, StringComparison.Ordinal))
             {
-                // Check bounds again in case collection was modified
-                if (i >= metrics.Count)
-                    break;
-                    
-                var metric = metrics[i];
-                if (metric != null && string.Equals(metric.Name, key, StringComparison.Ordinal))
-                {
-                    return metric;
-                }
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                // Collection was modified during iteration, return null to be safe
-                break;
-            }
-            catch (IndexOutOfRangeException)
-            {
-                // Collection was modified during iteration, return null to be safe
-                break;
+                return metric;
             }
         }
         return null;
@@ -679,6 +795,22 @@ public class Metrics : IMetrics, IDisposable
     internal static void ResetForTest()
     {
         Instance = null;
+        _threadContexts.Clear();
+        _sharedNamespace = null;
+        _sharedService = null;
+        lock (_defaultDimensionsLock)
+        {
+            _sharedDefaultDimensions.Clear();
+        }
+    }
+
+    /// <summary>
+    ///     Clears the current thread's context. Useful for cleanup after each Lambda invocation.
+    /// </summary>
+    internal static void ClearCurrentThreadContext()
+    {
+        var threadId = Environment.CurrentManagedThreadId;
+        _threadContexts.TryRemove(threadId, out _);
     }
 
     /// <summary>
