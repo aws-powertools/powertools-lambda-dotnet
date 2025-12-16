@@ -195,6 +195,10 @@ public class Metadata
     /// </summary>
     internal List<DimensionSet> GetDefaultDimensions()
     {
-        return _metricDirective.DefaultDimensions;
+        // Return a snapshot to avoid concurrent modification issues
+        lock (_metricDirective._lockObj)
+        {
+            return new List<DimensionSet>(_metricDirective.DefaultDimensions);
+        }
     }
 }
