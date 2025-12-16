@@ -281,15 +281,21 @@ public class DynamoDbPersistenceStoreTests : IClassFixture<DynamoDbFixture>
             TableName = _tableName,
             Item = item
         });
-        // enable payload validation
-        _dynamoDbPersistenceStore.Configure(
+        
+        // Create a new store instance with payload validation enabled
+        // (Configure is idempotent and thread-safe, so we need a fresh instance to change configuration)
+        var storeWithValidation = new DynamoDBPersistenceStoreBuilder()
+            .WithTableName(_tableName)
+            .WithDynamoDBClient(_client)
+            .Build();
+        storeWithValidation.Configure(
             new IdempotencyOptionsBuilder().WithPayloadValidationJmesPath("path").Build(),
             null, null);
 
         // Act
         expiry = now.AddSeconds(3600).ToUnixTimeSeconds();
         var record = new DataRecord("key", DataRecord.DataRecordStatus.COMPLETED, expiry, "Fake result", "hash");
-        await _dynamoDbPersistenceStore.UpdateRecord(record);
+        await storeWithValidation.UpdateRecord(record);
 
         // Assert
         var itemInDb = (await _client.GetItemAsync(new GetItemRequest

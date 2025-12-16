@@ -592,4 +592,261 @@ public class BasePersistenceStoreTests
         cache.TryGet("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6", out var cachedRecord).Should().BeTrue();
         cachedRecord.Should().Be(existingRecord);
     }
+
+    #region Configure Code Coverage Tests
+
+    [Fact]
+    public async Task Configure_WhenUseLocalCacheIsFalse_ShouldNotCreateCache()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with UseLocalCache = false (default)
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithUseLocalCache(false)
+            .Build(), null, null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act - SaveSuccess should work without cache
+        var product = new Product(34543, "product", 42);
+        await persistenceStore.SaveSuccess(JsonSerializer.SerializeToDocument(request)!, product, now);
+
+        // Assert - Record should be saved to persistence store
+        var dr = persistenceStore.DataRecord;
+        dr.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
+        dr.IdempotencyKey.Should().Be("testFunction#5eff007a9ed2789a9f9f6bc182fc6ae6");
+        persistenceStore.Status.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Configure_WhenUseLocalCacheIsTrue_ShouldCreateCacheWithPublicMethod()
+    {
+        // Arrange - This test covers the positive path: if (useLocalCache) { _cache = new LRUCache... }
+        // Using the PUBLIC Configure method (not the internal one with cache parameter)
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with UseLocalCache = true using the PUBLIC method
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithUseLocalCache(true)
+            .Build(), null, null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act - SaveSuccess should save to the internally created cache
+        var product = new Product(34543, "product", 42);
+        await persistenceStore.SaveSuccess(JsonSerializer.SerializeToDocument(request)!, product, now);
+
+        // Assert - Record should be saved to persistence store
+        var dr = persistenceStore.DataRecord;
+        dr.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
+        persistenceStore.Status.Should().Be(2);
+
+        // Verify cache is working by getting the record (should come from cache, not persistence)
+        var record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
+        record.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
+        // Status should still be 2 (not 0) because record came from cache, not from GetRecord override
+        persistenceStore.Status.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Configure_WhenKeyPrefixIsSet_ShouldUsePrefixAsFunctionName()
+    {
+        // Arrange - This test covers the positive path: if (!string.IsNullOrEmpty(keyPrefix)) { _functionName = keyPrefix; }
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with a non-empty keyPrefix
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "ignoredFunctionName", "MyKeyPrefix");
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - IdempotencyKey should use the keyPrefix, not the functionName
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().StartWith("MyKeyPrefix#");
+        dr.IdempotencyKey.Should().NotContain("ignoredFunctionName");
+    }
+
+    [Fact]
+    public async Task Configure_WhenPayloadValidationJmesPathIsSet_ShouldEnablePayloadValidation()
+    {
+        // Arrange - This test covers the positive path: if (!string.IsNullOrWhiteSpace(...PayloadValidationJmesPath)) { PayloadValidationEnabled = true; }
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with a valid PayloadValidationJmesPath
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithEventKeyJmesPath("powertools_json(Body).id")
+            .WithPayloadValidationJmesPath("powertools_json(Body).message")
+            .Build(), "myfunc", null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - PayloadHash should NOT be empty when validation IS enabled
+        var dr = persistenceStore.DataRecord;
+        dr.PayloadHash.Should().NotBeEmpty();
+        // The hash should be the MD5 of "Lambda rocks" (the message in the test payload)
+        dr.PayloadHash.Should().Be("70c24d88041893f7fbab4105b76fd9e1");
+    }
+
+    [Fact]
+    public async Task Configure_WhenKeyPrefixIsNull_ShouldUseFunctionNameFromEnvironment()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with null keyPrefix - should use default function name
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "myFunction", null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - IdempotencyKey should include the function name
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().Contain("myFunction");
+        dr.IdempotencyKey.Should().Be("testFunction.myFunction#5eff007a9ed2789a9f9f6bc182fc6ae6");
+    }
+
+    [Fact]
+    public async Task Configure_WhenKeyPrefixIsEmpty_ShouldUseFunctionNameFromEnvironment()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with empty keyPrefix - should use default function name
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "anotherFunction", "");
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - IdempotencyKey should include the function name
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().Contain("anotherFunction");
+        dr.IdempotencyKey.Should().Be("testFunction.anotherFunction#5eff007a9ed2789a9f9f6bc182fc6ae6");
+    }
+
+    [Fact]
+    public async Task Configure_WhenPayloadValidationJmesPathIsNull_ShouldNotEnablePayloadValidation()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure without PayloadValidationJmesPath
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithEventKeyJmesPath("powertools_json(Body).id")
+            .Build(), "myfunc", null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - PayloadHash should be empty when validation is not enabled
+        var dr = persistenceStore.DataRecord;
+        dr.PayloadHash.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Configure_WhenPayloadValidationJmesPathIsEmpty_ShouldNotEnablePayloadValidation()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with empty PayloadValidationJmesPath
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithEventKeyJmesPath("powertools_json(Body).id")
+            .WithPayloadValidationJmesPath("")
+            .Build(), "myfunc", null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - PayloadHash should be empty when validation is not enabled
+        var dr = persistenceStore.DataRecord;
+        dr.PayloadHash.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Configure_WhenPayloadValidationJmesPathIsWhitespace_ShouldNotEnablePayloadValidation()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with whitespace PayloadValidationJmesPath
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithEventKeyJmesPath("powertools_json(Body).id")
+            .WithPayloadValidationJmesPath("   ")
+            .Build(), "myfunc", null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - PayloadHash should be empty when validation is not enabled
+        var dr = persistenceStore.DataRecord;
+        dr.PayloadHash.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Configure_WhenFunctionNameIsNullAndKeyPrefixIsNull_ShouldUseDefaultFunctionName()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with both functionName and keyPrefix as null
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), null, null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - IdempotencyKey should use default "testFunction"
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().StartWith("testFunction#");
+    }
+
+    [Fact]
+    public async Task Configure_WhenFunctionNameIsWhitespace_ShouldUseDefaultFunctionNameOnly()
+    {
+        // Arrange
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with whitespace functionName
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "   ", null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - IdempotencyKey should use default "testFunction" without appending whitespace
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().StartWith("testFunction#");
+        dr.IdempotencyKey.Should().NotContain("testFunction.   ");
+    }
+
+    #endregion
 }
