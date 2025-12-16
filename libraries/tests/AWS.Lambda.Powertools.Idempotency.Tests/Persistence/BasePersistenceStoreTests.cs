@@ -621,6 +621,83 @@ public class BasePersistenceStoreTests
     }
 
     [Fact]
+    public async Task Configure_WhenUseLocalCacheIsTrue_ShouldCreateCacheWithPublicMethod()
+    {
+        // Arrange - This test covers the positive path: if (useLocalCache) { _cache = new LRUCache... }
+        // Using the PUBLIC Configure method (not the internal one with cache parameter)
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with UseLocalCache = true using the PUBLIC method
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithUseLocalCache(true)
+            .Build(), null, null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act - SaveSuccess should save to the internally created cache
+        var product = new Product(34543, "product", 42);
+        await persistenceStore.SaveSuccess(JsonSerializer.SerializeToDocument(request)!, product, now);
+
+        // Assert - Record should be saved to persistence store
+        var dr = persistenceStore.DataRecord;
+        dr.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
+        persistenceStore.Status.Should().Be(2);
+
+        // Verify cache is working by getting the record (should come from cache, not persistence)
+        var record = await persistenceStore.GetRecord(JsonSerializer.SerializeToDocument(request)!, now);
+        record.Status.Should().Be(DataRecord.DataRecordStatus.COMPLETED);
+        // Status should still be 2 (not 0) because record came from cache, not from GetRecord override
+        persistenceStore.Status.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Configure_WhenKeyPrefixIsSet_ShouldUsePrefixAsFunctionName()
+    {
+        // Arrange - This test covers the positive path: if (!string.IsNullOrEmpty(keyPrefix)) { _functionName = keyPrefix; }
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with a non-empty keyPrefix
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "ignoredFunctionName", "MyKeyPrefix");
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - IdempotencyKey should use the keyPrefix, not the functionName
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().StartWith("MyKeyPrefix#");
+        dr.IdempotencyKey.Should().NotContain("ignoredFunctionName");
+    }
+
+    [Fact]
+    public async Task Configure_WhenPayloadValidationJmesPathIsSet_ShouldEnablePayloadValidation()
+    {
+        // Arrange - This test covers the positive path: if (!string.IsNullOrWhiteSpace(...PayloadValidationJmesPath)) { PayloadValidationEnabled = true; }
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // Configure with a valid PayloadValidationJmesPath
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithEventKeyJmesPath("powertools_json(Body).id")
+            .WithPayloadValidationJmesPath("powertools_json(Body).message")
+            .Build(), "myfunc", null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - PayloadHash should NOT be empty when validation IS enabled
+        var dr = persistenceStore.DataRecord;
+        dr.PayloadHash.Should().NotBeEmpty();
+        // The hash should be the MD5 of "Lambda rocks" (the message in the test payload)
+        dr.PayloadHash.Should().Be("70c24d88041893f7fbab4105b76fd9e1");
+    }
+
+    [Fact]
     public async Task Configure_WhenKeyPrefixIsNull_ShouldUseFunctionNameFromEnvironment()
     {
         // Arrange
