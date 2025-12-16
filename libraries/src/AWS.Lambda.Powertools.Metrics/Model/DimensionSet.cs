@@ -13,8 +13,8 @@
  * permissions and limitations under the License.
  */
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace AWS.Lambda.Powertools.Metrics;
 
@@ -37,22 +37,13 @@ public class DimensionSet
     ///     Gets the dimensions.
     /// </summary>
     /// <value>The dimensions.</value>
-    internal Dictionary<string, string> Dimensions { get; } = new();
+    internal ConcurrentDictionary<string, string> Dimensions { get; } = new();
 
     /// <summary>
     ///     Gets the dimension keys.
     /// </summary>
     /// <value>The dimension keys.</value>
-    public List<string> DimensionKeys 
-    { 
-        get 
-        {
-            var keys = new List<string>();
-            foreach (var key in Dimensions.Keys)
-            {
-                keys.Add(key);
-            }
-            return keys;
-        }
-    }
+    public List<string> DimensionKeys =>
+        // Create a snapshot of keys to avoid concurrent modification issues
+        new(Dimensions.Keys);
 }
