@@ -21,9 +21,11 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Amazon.Lambda.TestUtilities" />
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
         <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" />
         <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" />
         <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Tracing\AWS.Lambda.Powertools.Tracing.csproj" />
