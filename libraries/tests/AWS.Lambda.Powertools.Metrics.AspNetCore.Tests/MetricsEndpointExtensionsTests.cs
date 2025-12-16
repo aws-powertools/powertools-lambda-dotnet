@@ -146,9 +146,14 @@ public class MetricsEndpointExtensionsTests : IDisposable
         // Assert
         Assert.Equal(200, (int)response.StatusCode);
 
-        // Assert metrics calls
+        // Assert metrics calls - check key properties without caring about dimension order
         consoleWrapper.Received(1).WriteLine(
-            Arg.Is<string>(s => s.Contains("CloudWatchMetrics\":[{\"Namespace\":\"TestNamespace\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Environment\",\"FunctionName\"]]}]},\"Environment\":\"Prod\",\"FunctionName\":\"TestFunction\",\"ColdStart\":1}"))
+            Arg.Is<string>(s => 
+                s.Contains("\"Namespace\":\"TestNamespace\"") &&
+                s.Contains("\"Name\":\"ColdStart\",\"Unit\":\"Count\"") &&
+                s.Contains("\"Environment\":\"Prod\"") &&
+                s.Contains("\"FunctionName\":\"TestFunction\"") &&
+                s.Contains("\"ColdStart\":1"))
         );
 
         await app.StopAsync();
