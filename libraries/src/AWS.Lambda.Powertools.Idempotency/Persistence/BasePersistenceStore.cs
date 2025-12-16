@@ -19,6 +19,16 @@ namespace AWS.Lambda.Powertools.Idempotency.Persistence;
 public abstract class BasePersistenceStore : IPersistenceStore
 {
     /// <summary>
+    /// Lock object for thread-safe configuration
+    /// </summary>
+    private readonly object _configureLock = new object();
+    
+    /// <summary>
+    /// Flag indicating whether the store has been configured
+    /// </summary>
+    private volatile bool _isConfigured;
+    
+    /// <summary>
     /// Idempotency Options
     /// </summary>
     private IdempotencyOptions _idempotencyOptions = null!;
@@ -39,50 +49,95 @@ public abstract class BasePersistenceStore : IPersistenceStore
     private LRUCache<string, DataRecord> _cache = null!;
 
     /// <summary>
-    /// Initialize the base persistence layer from the configuration settings
+    /// Initialize the base persistence layer from the configuration settings.
+    /// This method is thread-safe and idempotent - multiple calls with the same parameters are safe.
     /// </summary>
     /// <param name="idempotencyOptions">Idempotency configuration settings</param>
     /// <param name="functionName">The name of the function being decorated</param>
     /// <param name="keyPrefix"></param>
     public void Configure(IdempotencyOptions idempotencyOptions, string functionName, string keyPrefix)
     {
-        if (!string.IsNullOrEmpty(keyPrefix))
+        // Fast path - already configured
+        if (_isConfigured) return;
+        
+        lock (_configureLock)
         {
-            _functionName = keyPrefix;
-        }
-        else
-        {
-            var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
-
-            _functionName = funcEnv ?? "testFunction";
-            if (!string.IsNullOrWhiteSpace(functionName))
+            // Double-check pattern
+            if (_isConfigured) return;
+            
+            if (!string.IsNullOrEmpty(keyPrefix))
             {
-                _functionName += "." + functionName;
+                _functionName = keyPrefix;
             }
-        }
+            else
+            {
+                var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
 
-        _idempotencyOptions = idempotencyOptions;
+                _functionName = funcEnv ?? "testFunction";
+                if (!string.IsNullOrWhiteSpace(functionName))
+                {
+                    _functionName += "." + functionName;
+                }
+            }
 
-        if (!string.IsNullOrWhiteSpace(_idempotencyOptions.PayloadValidationJmesPath))
-        {
-            PayloadValidationEnabled = true;
-        }
+            _idempotencyOptions = idempotencyOptions;
 
-        var useLocalCache = _idempotencyOptions.UseLocalCache;
-        if (useLocalCache)
-        {
-            _cache = new LRUCache<string, DataRecord>(_idempotencyOptions.LocalCacheMaxItems);
+            if (!string.IsNullOrWhiteSpace(_idempotencyOptions.PayloadValidationJmesPath))
+            {
+                PayloadValidationEnabled = true;
+            }
+
+            var useLocalCache = _idempotencyOptions.UseLocalCache;
+            if (useLocalCache)
+            {
+                _cache = new LRUCache<string, DataRecord>(_idempotencyOptions.LocalCacheMaxItems);
+            }
+            
+            _isConfigured = true;
         }
     }
 
     /// <summary>
-    /// For test purpose only (adding a cache to mock)
+    /// For test purpose only (adding a cache to mock).
+    /// This method is thread-safe and idempotent.
     /// </summary>
     internal void Configure(IdempotencyOptions options, string functionName, string keyPrefix,
         LRUCache<string, DataRecord> cache)
     {
-        Configure(options, functionName, keyPrefix);
-        _cache = cache;
+        // Fast path - already configured
+        if (_isConfigured) return;
+        
+        lock (_configureLock)
+        {
+            // Double-check pattern
+            if (_isConfigured) return;
+            
+            if (!string.IsNullOrEmpty(keyPrefix))
+            {
+                _functionName = keyPrefix;
+            }
+            else
+            {
+                var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
+
+                _functionName = funcEnv ?? "testFunction";
+                if (!string.IsNullOrWhiteSpace(functionName))
+                {
+                    _functionName += "." + functionName;
+                }
+            }
+
+            _idempotencyOptions = options;
+
+            if (!string.IsNullOrWhiteSpace(_idempotencyOptions.PayloadValidationJmesPath))
+            {
+                PayloadValidationEnabled = true;
+            }
+
+            _cache = cache;
+            
+            _isConfigured = true;
+        }
     }
 
     /// <summary>

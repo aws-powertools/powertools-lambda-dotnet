@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json.Serialization;
+using System.Threading;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
@@ -16,6 +17,12 @@ namespace AWS.Lambda.Powertools.Idempotency;
 /// </summary>
 public sealed class Idempotency
 {
+    /// <summary>
+    /// AsyncLocal storage for per-invocation LambdaContext.
+    /// This ensures each concurrent Lambda invocation has its own isolated context.
+    /// </summary>
+    private static readonly AsyncLocal<ILambdaContext> _lambdaContext = new();
+
     /// <summary>
     /// The general configurations for the idempotency
     /// </summary>
@@ -66,18 +73,25 @@ public sealed class Idempotency
     }
 
     /// <summary>
-    /// Holds ILambdaContext
+    /// Holds ILambdaContext using AsyncLocal for per-invocation isolation.
+    /// Each concurrent Lambda invocation will have its own isolated context.
     /// </summary>
-    public ILambdaContext LambdaContext { get; private set; }
+    public ILambdaContext LambdaContext
+    {
+        get => _lambdaContext.Value;
+        private set => _lambdaContext.Value = value;
+    }
 
     /// <summary>
     /// Can be used in a method which is not the handler to capture the Lambda context,
     /// to calculate the remaining time before the invocation times out.
+    /// This method is thread-safe and stores the context in AsyncLocal storage,
+    /// ensuring isolation between concurrent Lambda invocations.
     /// </summary>
-    /// <param name="context"></param>
+    /// <param name="context">The Lambda context for the current invocation</param>
     public static void RegisterLambdaContext(ILambdaContext context)
     {
-        Instance.LambdaContext = context;
+        _lambdaContext.Value = context;
     }
 
     /// <summary>
