@@ -18,3 +18,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Metrics.Tests")]
 [assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Metrics.AspNetCore")]
 [assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Metrics.AspNetCore.Tests")]
+[assembly: InternalsVisibleTo("AWS.Lambda.Powertools.ConcurrencyTests")]

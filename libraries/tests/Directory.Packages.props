@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Amazon.Lambda.CloudWatchEvents" Version="4.4.0" />
-    <PackageVersion Include="Amazon.Lambda.RuntimeSupport" Version="1.13.4" />
+    <PackageVersion Include="Amazon.Lambda.RuntimeSupport" Version="1.14.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Grpc.Tools" Version="2.72.0" />
     <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="8.0.13" />
@@ -14,8 +14,8 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" />
     <PackageVersion Include="Testcontainers" Version="4.7.0" />
     <PackageVersion Include="Amazon.Lambda.TestUtilities" Version="3.0.1" />
-    <PackageVersion Include="Amazon.Lambda.Core" Version="2.7.1" />
-    <PackageVersion Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.0" />
+    <PackageVersion Include="Amazon.Lambda.Core" Version="2.8.0" />
+    <PackageVersion Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.2" />
     <PackageVersion Include="FluentAssertions" Version="[6.12.0]" />
     <PackageVersion Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="2.2.0" />
     <PackageVersion Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.1" />

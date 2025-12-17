@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 
 namespace AWS.Lambda.Powertools.Logging;
@@ -8,10 +11,41 @@ namespace AWS.Lambda.Powertools.Logging;
 public static partial class Logger
 {
     /// <summary>
-    ///     Gets the scope.
+    ///     Thread-safe dictionary for per-thread scope storage.
+    ///     Uses ManagedThreadId as key to ensure isolation when Lambda processes
+    ///     multiple concurrent requests (AWS_LAMBDA_MAX_CONCURRENCY > 1).
+    /// </summary>
+    private static readonly ConcurrentDictionary<int, Dictionary<string, object>> _threadScopes = new();
+
+    /// <summary>
+    ///     Gets the scope for the current thread.
+    ///     Creates a new dictionary if one doesn't exist for this thread.
     /// </summary>
     /// <value>The scope.</value>
-    private static IDictionary<string, object> Scope { get; } = new Dictionary<string, object>(StringComparer.Ordinal);
+    private static IDictionary<string, object> Scope
+    {
+        get
+        {
+            var threadId = Environment.CurrentManagedThreadId;
+            return _threadScopes.GetOrAdd(threadId, _ => new Dictionary<string, object>(StringComparer.Ordinal));
+        }
+    }
+
+    /// <summary>
+    ///     Gets the correlation identifier from the log context.
+    /// </summary>
+    /// <value>The correlation identifier, or null if not set.</value>
+    public static string CorrelationId
+    {
+        get
+        {
+            if (Scope.TryGetValue(LoggingConstants.KeyCorrelationId, out var value))
+            {
+                return value?.ToString();
+            }
+            return null;
+        }
+    }
 
     /// <summary>
     ///     Appending additional key to the log context.
@@ -53,7 +87,7 @@ public static partial class Logger
     ///     Remove additional keys from the log context.
     /// </summary>
     /// <param name="keys">The list of keys.</param>
-        public static void RemoveKeys(params string[] keys)
+    public static void RemoveKeys(params string[] keys)
     {
         if (keys == null) return;
         foreach (var key in keys)
@@ -71,11 +105,15 @@ public static partial class Logger
     }
 
     /// <summary>
-    ///     Removes all additional keys from the log context.
+    ///     Removes all additional keys from the log context for the current thread.
     /// </summary>
     internal static void RemoveAllKeys()
     {
-        Scope.Clear();
+        var threadId = Environment.CurrentManagedThreadId;
+        if (_threadScopes.TryGetValue(threadId, out var scope))
+        {
+            scope.Clear();
+        }
     }
     
     /// <summary>

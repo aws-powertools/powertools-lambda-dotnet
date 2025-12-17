@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
+using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.CloudWatchEvents.S3Events;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
@@ -172,6 +173,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         [InlineData(CorrelationIdPaths.ApplicationLoadBalancer)]
         [InlineData(CorrelationIdPaths.EventBridge)]
         [InlineData("/headers/my_request_id_header")]
+        [InlineData("/detail/correlationId")]
         public void OnEntry_WhenEventArgExists_CapturesCorrelationId(string correlationIdPath)
         {
             // Arrange
@@ -210,6 +212,15 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                         Headers = new Header
                         {
                             MyRequestIdHeader = correlationId
+                        }
+                    });
+                    break;
+                case "/detail/correlationId":
+                    _testHandlers.CorrelationCloudWatchEventCustomPath(new CloudWatchEvent<CwEvent>
+                    {
+                        Detail = new CwEvent
+                        {
+                            CorrelationId = correlationId
                         }
                     });
                     break;
@@ -344,6 +355,106 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                 s.Contains("\"message\":\"test\"") &&
                 s.Contains("\"samplingRate\":0.5")
             ));
+        }
+        
+        [Fact]
+        public void CorrelationId_Property_Should_Return_CorrelationId()
+        {
+            // Arrange
+            var correlationId = Guid.NewGuid().ToString();
+            
+            // Act
+            _testHandlers.CorrelationCloudWatchEventCustomPath(new CloudWatchEvent<CwEvent>
+            {
+                Detail = new CwEvent
+                {
+                    CorrelationId = correlationId
+                }
+            });
+            
+            // Assert - Static Logger property
+            Assert.Equal(correlationId, Logger.CorrelationId);
+        }
+        
+        [Fact]
+        public void CorrelationId_Extension_Should_Return_CorrelationId_Via_ILogger()
+        {
+            // Arrange
+            var correlationId = Guid.NewGuid().ToString();
+            
+            // Act
+            _testHandlers.CorrelationIdExtensionTest(new CloudWatchEvent<CwEvent>
+            {
+                Detail = new CwEvent
+                {
+                    CorrelationId = correlationId
+                }
+            });
+            
+            // Assert - The test handler will verify the extension method works
+            Assert.Equal(correlationId, Logger.CorrelationId);
+        }
+        
+        [Fact]
+        public void CorrelationId_Should_Return_Null_When_Not_Set()
+        {
+            // Arrange - no correlation ID set
+            
+            // Act & Assert
+            Assert.Null(Logger.CorrelationId);
+        }
+        
+        [Fact]
+        public void OnEntry_WhenPropertyCasingDoesNotMatch_UsesCaseInsensitiveFallback()
+        {
+            // Arrange
+            var correlationId = Guid.NewGuid().ToString();
+            
+            // This test uses a path "/detail/CORRELATIONID" (all caps) 
+            // but the actual property is "correlationId" (camelCase)
+            // This should trigger the case-insensitive fallback
+            
+            // Act
+            _testHandlers.CorrelationIdCaseInsensitiveFallback(new CloudWatchEvent<CwEvent>
+            {
+                Detail = new CwEvent
+                {
+                    CorrelationId = correlationId
+                }
+            });
+            
+            // Assert
+            var allKeys = Logger.GetAllKeys()
+                .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
+    
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyCorrelationId));
+            Assert.Equal((string)allKeys[LoggingConstants.KeyCorrelationId], correlationId);
+        }
+        
+        [Fact]
+        public void OnEntry_WhenNestedPropertyCasingDoesNotMatch_UsesCaseInsensitiveFallback()
+        {
+            // Arrange
+            var correlationId = Guid.NewGuid().ToString();
+            
+            // This test uses a path with mismatched casing at multiple levels
+            // Path: "/DETAIL/CORRELATIONID" but actual properties are "detail" and "correlationId"
+            
+            // Act
+            _testHandlers.CorrelationIdNestedCaseInsensitive(new CloudWatchEvent<CwEvent>
+            {
+                Detail = new CwEvent
+                {
+                    CorrelationId = correlationId
+                }
+            });
+            
+            // Assert
+            var allKeys = Logger.GetAllKeys()
+                .ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value);
+    
+            Assert.True(allKeys.ContainsKey(LoggingConstants.KeyCorrelationId));
+            Assert.Equal((string)allKeys[LoggingConstants.KeyCorrelationId], correlationId);
         }
         
         [Fact]

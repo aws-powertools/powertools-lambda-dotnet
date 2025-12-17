@@ -133,9 +133,32 @@ public class LoggingAspect : IMethodAspectHandler
                 // TODO: For casing parsing to be removed from Logging v2 when we get rid of outputcase without this CorrelationIdPaths.ApiGatewayRest would not work
                 // TODO: This will be removed and replaced by JMesPath
 
-                var pathWithOutputCase = correlationIdPaths[i].ToCase(_currentConfig.LoggerOutputCase);
-                if (!element.TryGetProperty(pathWithOutputCase, out var childElement))
-                    break;
+                var pathSegment = correlationIdPaths[i];
+                JsonElement childElement;
+                
+                // Try original path first (case-sensitive)
+                if (!element.TryGetProperty(pathSegment, out childElement))
+                {
+                    // Try with output case transformation
+                    var pathWithOutputCase = pathSegment.ToCase(_currentConfig.LoggerOutputCase);
+                    if (!element.TryGetProperty(pathWithOutputCase, out childElement))
+                    {
+                        // Try case-insensitive match as last resort
+                        var found = false;
+                        foreach (var property in element.EnumerateObject())
+                        {
+                            if (string.Equals(property.Name, pathSegment, StringComparison.OrdinalIgnoreCase))
+                            {
+                                childElement = property.Value;
+                                found = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!found)
+                            break;
+                    }
+                }
 
                 element = childElement;
                 if (i == correlationIdPaths.Length - 1)

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
 using AWS.Lambda.Powertools.Common;
@@ -28,14 +29,15 @@ public class TracingAspect
     private readonly IXRayRecorder _xRayRecorder;
 
     /// <summary>
-    ///     If true, capture annotations
+    ///     Thread-safe flag for capturing annotations. Uses int for Interlocked operations.
+    ///     1 = should capture, 0 = already captured
     /// </summary>
-    private static bool _captureAnnotations = true;
+    private static int _captureAnnotations = 1;
 
     /// <summary>
-    ///     If true, annotations have been captured
+    ///     If true, annotations have been captured by this invocation's execution context
     /// </summary>
-    private bool _isAnnotationsCaptured;
+    private static readonly AsyncLocal<bool> _isAnnotationsCaptured = new();
 
     /// <summary>
     /// Aspect constructor
@@ -117,8 +119,12 @@ public class TracingAspect
         }
         finally
         {
-            if (_isAnnotationsCaptured)
-                _captureAnnotations = true;
+            // Reset the capture flag if this execution context captured annotations
+            if (_isAnnotationsCaptured.Value)
+            {
+                Interlocked.Exchange(ref _captureAnnotations, 1);
+                _isAnnotationsCaptured.Value = false;
+            }
         }
     }
 
@@ -127,12 +133,12 @@ public class TracingAspect
         _xRayRecorder.BeginSubsegment(segmentName);
         _xRayRecorder.SetNamespace(@namespace);
 
-        if (_captureAnnotations)
+        // Use Interlocked.CompareExchange for thread-safe check-and-set
+        // Only one thread will successfully change from 1 to 0
+        if (Interlocked.CompareExchange(ref _captureAnnotations, 0, 1) == 1)
         {
             _xRayRecorder.AddAnnotation("ColdStart", LambdaLifecycleTracker.IsColdStart);
-
-            _captureAnnotations = false;
-            _isAnnotationsCaptured = true;
+            _isAnnotationsCaptured.Value = true;
 
             if (_powertoolsConfigurations.IsServiceDefined)
                 _xRayRecorder.AddAnnotation("Service", _powertoolsConfigurations.Service);
@@ -231,6 +237,7 @@ public class TracingAspect
     internal static void ResetForTest()
     {
         LambdaLifecycleTracker.Reset();
-        _captureAnnotations = true;
+        Interlocked.Exchange(ref _captureAnnotations, 1);
+        _isAnnotationsCaptured.Value = false;
     }
 }

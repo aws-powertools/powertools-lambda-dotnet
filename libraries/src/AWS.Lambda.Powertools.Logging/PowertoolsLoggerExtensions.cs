@@ -171,6 +171,16 @@ public static class PowertoolsLoggerExtensions
     #endregion
     
     /// <summary>
+    ///     Gets the correlation identifier from the log context.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <returns>The correlation identifier, or null if not set.</returns>
+    public static string GetCorrelationId(this ILogger logger)
+    {
+        return Logger.CorrelationId;
+    }
+
+    /// <summary>
     ///     Appending additional key to the log context.
     /// </summary>
     /// <param name="logger"></param>
