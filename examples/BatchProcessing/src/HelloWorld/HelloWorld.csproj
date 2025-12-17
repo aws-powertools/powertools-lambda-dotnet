@@ -5,10 +5,13 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.Core" Version="2.7.1" />
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.8.0" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
-        <PackageReference Include="AWS.Lambda.Powertools.BatchProcessing" Version="3.0.0" />
+<!--        <PackageReference Include="AWS.Lambda.Powertools.BatchProcessing" Version="3.0.0" />-->
         <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="3.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.Powertools.BatchProcessing\AWS.Lambda.Powertools.BatchProcessing.csproj" />
     </ItemGroup>
 </Project>

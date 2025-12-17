@@ -24,6 +24,7 @@ using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.Logging;
+using HelloWorld.Data;
 using HelloWorld.DynamoDb;
 using HelloWorld.Kinesis;
 using HelloWorld.Sqs;
@@ -114,4 +115,75 @@ public class Function
     }
 
     #endregion
+
+    #region Typed Batch Processing Handlers
+
+    /// <summary>
+    /// Example handler using typed batch processing for SQS.
+    /// The TypedSqsBatchProcessor automatically deserializes the message body to the specified type.
+    /// </summary>
+    [Logging(LogEvent = true)]
+    public async Task<BatchItemFailuresResponse> TypedSqsHandler(SQSEvent sqsEvent)
+    {
+        var handler = new TypedSqsProductHandler();
+        var result = await TypedSqsBatchProcessor.TypedInstance.ProcessAsync<Product>(sqsEvent, handler);
+        return result.BatchItemFailuresResponse;
+    }
+
+    /// <summary>
+    /// Example handler using typed batch processing for Kinesis.
+    /// The TypedKinesisEventBatchProcessor automatically deserializes the record data to the specified type.
+    /// </summary>
+    [Logging(LogEvent = true)]
+    public async Task<BatchItemFailuresResponse> TypedKinesisHandler(KinesisEvent kinesisEvent)
+    {
+        var handler = new TypedKinesisProductHandler();
+        var result = await TypedKinesisEventBatchProcessor.TypedInstance.ProcessAsync<Product>(kinesisEvent, handler);
+        return result.BatchItemFailuresResponse;
+    }
+
+    /// <summary>
+    /// Example handler using typed batch processing for DynamoDB Streams.
+    /// The TypedDynamoDbStreamBatchProcessor automatically deserializes the stream record to the specified type.
+    /// </summary>
+    [Logging(LogEvent = true)]
+    public async Task<BatchItemFailuresResponse> TypedDynamoDbHandler(DynamoDBEvent dynamoDbEvent)
+    {
+        var handler = new TypedDynamoDbProductHandler();
+        var result = await TypedDynamoDbStreamBatchProcessor.TypedInstance.ProcessAsync<DynamoDbProductStreamRecord>(dynamoDbEvent, handler);
+        return result.BatchItemFailuresResponse;
+    }
+
+    /// <summary>
+    /// Example handler using typed batch processing with inline handler.
+    /// Demonstrates using a lambda expression for simple processing logic.
+    /// </summary>
+    [Logging(LogEvent = true)]
+    public async Task<BatchItemFailuresResponse> TypedSqsHandlerInline(SQSEvent sqsEvent)
+    {
+        var result = await TypedSqsBatchProcessor.TypedInstance.ProcessAsync<Product>(
+            sqsEvent, 
+            new InlineTypedProductHandler());
+        return result.BatchItemFailuresResponse;
+    }
+
+    #endregion
+}
+
+/// <summary>
+/// Simple inline typed handler for demonstration purposes.
+/// </summary>
+public class InlineTypedProductHandler : ITypedRecordHandler<Product>
+{
+    public Task<RecordHandlerResult> HandleAsync(Product product, System.Threading.CancellationToken cancellationToken)
+    {
+        Logger.LogInformation($"[Inline Typed] Processing product: {product.Id} - {product.Name}");
+        
+        if (product.Id == 4)
+        {
+            throw new System.ArgumentException("Error on id 4");
+        }
+        
+        return Task.FromResult(RecordHandlerResult.None);
+    }
 }
