@@ -3,15 +3,35 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
-    commit-message:
-      prefix: chore
-      include: scope
+      interval: weekly
 
   - package-ecosystem: docker
     directory: /docs
-    commit-message:
-      prefix: chore
-      include: scope
     schedule:
-      interval: daily
+      interval: monthly
+  
+  - package-ecosystem: npm
+    directories:
+      - "/"
+    labels: [ ]
+    schedule:
+      interval: monthly
+    versioning-strategy: increase
+    allow:
+      - dependency-name: "@aws-cdk/toolkit-lib"
+      - dependency-name: "aws-cdk-lib"
+      - dependency-name: "aws-cdk"
+    groups:
+      aws-cdk:
+        patterns:
+        - "@aws-cdk/toolkit-lib"
+        - "aws-cdk-lib"
+        - "aws-cdk"
+
+  - package-ecosystem: nuget
+    directories:
+      - "/"
+    labels: [ ]
+    schedule:
+      interval: monthly
+    versioning-strategy: increase
