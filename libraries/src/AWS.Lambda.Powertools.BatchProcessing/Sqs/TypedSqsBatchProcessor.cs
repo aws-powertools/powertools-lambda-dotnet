@@ -7,6 +7,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
+using AWS.Lambda.Powertools.Common;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Sqs;
 
@@ -18,17 +19,64 @@ public class TypedSqsBatchProcessor : SqsBatchProcessor, ITypedBatchProcessor<SQ
     private readonly IDeserializationService _deserializationService;
     private readonly IRecordDataExtractor<SQSEvent.SQSMessage> _recordDataExtractor;
 
+    /// <summary>
+    /// The singleton instance of the typed SQS batch processor.
+    /// </summary>
+    private static ITypedBatchProcessor<SQSEvent, SQSEvent.SQSMessage> _typedInstance;
+
+    /// <summary>
+    /// Gets the typed instance.
+    /// </summary>
+    /// <value>The typed instance.</value>
+    public static ITypedBatchProcessor<SQSEvent, SQSEvent.SQSMessage> TypedInstance => 
+        _typedInstance ??= new TypedSqsBatchProcessor();
+
+    /// <summary>
+    /// Return the typed instance ProcessingResult
+    /// </summary>
+    public new static ProcessingResult<SQSEvent.SQSMessage> Result => _typedInstance?.ProcessingResult;
+
 
     /// <summary>
     /// Initializes a new instance of the TypedSqsBatchProcessor class.
     /// </summary>
+    /// <param name="powertoolsConfigurations">The Powertools configurations.</param>
     /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
     /// <param name="recordDataExtractor">The record data extractor. If null, uses SqsRecordDataExtractor.Instance.</param>
-    public TypedSqsBatchProcessor(IDeserializationService deserializationService = null,
+    public TypedSqsBatchProcessor(
+        IPowertoolsConfigurations powertoolsConfigurations,
+        IDeserializationService deserializationService = null,
         IRecordDataExtractor<SQSEvent.SQSMessage> recordDataExtractor = null) 
     {
         _deserializationService = deserializationService ?? JsonDeserializationService.Instance;
         _recordDataExtractor = recordDataExtractor ?? SqsRecordDataExtractor.Instance;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the TypedSqsBatchProcessor class with custom deserialization service.
+    /// </summary>
+    /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
+    public TypedSqsBatchProcessor(IDeserializationService deserializationService) 
+        : this(PowertoolsConfigurations.Instance, deserializationService, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the TypedSqsBatchProcessor class with custom services.
+    /// </summary>
+    /// <param name="deserializationService">The deserialization service. If null, uses JsonDeserializationService.Instance.</param>
+    /// <param name="recordDataExtractor">The record data extractor. If null, uses SqsRecordDataExtractor.Instance.</param>
+    public TypedSqsBatchProcessor(IDeserializationService deserializationService,
+        IRecordDataExtractor<SQSEvent.SQSMessage> recordDataExtractor) 
+        : this(PowertoolsConfigurations.Instance, deserializationService, recordDataExtractor)
+    {
+    }
+
+    /// <summary>
+    /// Default constructor for when consumers create a custom typed batch processor.
+    /// </summary>
+    public TypedSqsBatchProcessor() : this(PowertoolsConfigurations.Instance)
+    {
     }
 
     /// <inheritdoc />

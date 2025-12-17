@@ -1022,7 +1022,7 @@ For typed handlers that need access to Lambda context, use `ITypedRecordHandlerW
 === "Function Usage"
 
     ```csharp hl_lines="1 2"
-    [BatchProcessor(TypedRecordHandler = typeof(ProductHandlerWithContext))]
+    [BatchProcessor(TypedRecordHandlerWithContext = typeof(ProductHandlerWithContext))]
     public BatchItemFailuresResponse ProcessWithContext(SQSEvent sqsEvent, ILambdaContext context)
     {
         return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse;

@@ -299,19 +299,26 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
         // Validate typed handler configurations
         ValidateTypedHandlerConfiguration();
 
-        // Check if typed handlers are configured (not yet fully supported in attributes)
+        // Check if typed handlers are configured
         if (IsTypedHandlerConfigured())
         {
-            throw new NotSupportedException("Typed record handlers are not yet fully supported with BatchProcessorAttribute. Please use direct typed batch processor calls for typed processing.");
+            // Create typed aspect handler
+            return eventType switch
+            {
+                BatchEventType.DynamoDbStream => CreateTypedBatchProcessingAspectHandler(() => TypedDynamoDbStreamBatchProcessor.TypedInstance, args),
+                BatchEventType.KinesisDataStream => CreateTypedBatchProcessingAspectHandler(() => TypedKinesisEventBatchProcessor.TypedInstance, args),
+                BatchEventType.Sqs => CreateTypedBatchProcessingAspectHandler(() => TypedSqsBatchProcessor.TypedInstance, args),
+                _ => throw new ArgumentOutOfRangeException($"{eventType}", eventType, "Unsupported event type.")
+            };
         }
 
-        // Create aspect handler
+        // Create traditional aspect handler
         return eventType switch
         {
             BatchEventType.DynamoDbStream => CreateBatchProcessingAspectHandler(() => DynamoDbStreamBatchProcessor.Instance),
             BatchEventType.KinesisDataStream => CreateBatchProcessingAspectHandler(() => KinesisEventBatchProcessor.Instance),
             BatchEventType.Sqs => CreateBatchProcessingAspectHandler(() => SqsBatchProcessor.Instance),
-            _ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, "Unsupported event type.")
+            _ => throw new ArgumentOutOfRangeException($"{eventType}", eventType, "Unsupported event type.")
         };
     }
 
@@ -393,6 +400,146 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
             BatchParallelProcessingEnabled = BatchParallelProcessingEnabled,
             ThrowOnFullBatchFailure = ThrowOnFullBatchFailure
         });
+    }
+
+    private TypedBatchProcessingAspectHandler<TEvent, TRecord> CreateTypedBatchProcessingAspectHandler<TEvent, TRecord>(Func<ITypedBatchProcessor<TEvent, TRecord>> defaultTypedBatchProcessorProvider, IReadOnlyList<object> args)
+    {
+        // Create typed batch processor
+        ITypedBatchProcessor<TEvent, TRecord> typedBatchProcessor;
+        if (BatchProcessor != null && BatchProcessor.IsAssignableTo(TypedBatchProcessorTypes[GetEventTypeFromArgs(args)]))
+        {
+            try
+            {
+                typedBatchProcessor = (ITypedBatchProcessor<TEvent, TRecord>)Activator.CreateInstance(BatchProcessor)!;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error during creation of: '{BatchProcessor.Name}'.", ex);
+            }
+        }
+        else
+        {
+            typedBatchProcessor = defaultTypedBatchProcessorProvider.Invoke();
+        }
+
+        // Create deserialization options
+        var deserializationOptions = new DeserializationOptions
+        {
+            ErrorPolicy = DeserializationErrorPolicy
+        };
+
+        if (JsonSerializerContext != null)
+        {
+            try
+            {
+                var jsonSerializerContext = (JsonSerializerContext)Activator.CreateInstance(JsonSerializerContext)!;
+                deserializationOptions.JsonSerializerContext = jsonSerializerContext;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error during creation of JsonSerializerContext: '{JsonSerializerContext.Name}'.", ex);
+            }
+        }
+
+        // Create processing options
+        var errorHandlingPolicy = Enum.TryParse(PowertoolsConfigurations.Instance.BatchProcessingErrorHandlingPolicy, true, out BatchProcessorErrorHandlingPolicy errHandlingPolicy)
+            ? errHandlingPolicy
+            : ErrorHandlingPolicy;
+        if (ErrorHandlingPolicy != BatchProcessorErrorHandlingPolicy.DeriveFromEvent)
+        {
+            errorHandlingPolicy = ErrorHandlingPolicy;
+        }
+
+        var processingOptions = new ProcessingOptions
+        {
+            CancellationToken = CancellationToken.None,
+            ErrorHandlingPolicy = errorHandlingPolicy,
+            MaxDegreeOfParallelism = MaxDegreeOfParallelism,
+            BatchParallelProcessingEnabled = BatchParallelProcessingEnabled,
+            ThrowOnFullBatchFailure = ThrowOnFullBatchFailure
+        };
+
+        // Create typed handler wrapper
+        object typedHandler = null;
+        bool hasContext = false;
+
+        if (TypedRecordHandler != null)
+        {
+            try
+            {
+                typedHandler = Activator.CreateInstance(TypedRecordHandler)!;
+                hasContext = false;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error during creation of: '{TypedRecordHandler.Name}'.", ex);
+            }
+        }
+        else if (TypedRecordHandlerProvider != null)
+        {
+            try
+            {
+                var provider = Activator.CreateInstance(TypedRecordHandlerProvider)!;
+                // Assume the provider has a Create() method that returns the handler
+                var createMethod = TypedRecordHandlerProvider.GetMethod("Create");
+                if (createMethod == null)
+                {
+                    throw new InvalidOperationException($"TypedRecordHandlerProvider '{TypedRecordHandlerProvider.Name}' must have a 'Create()' method.");
+                }
+                typedHandler = createMethod.Invoke(provider, null)!;
+                hasContext = false;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error during creation of typed record handler using provider: '{TypedRecordHandlerProvider.Name}'.", ex);
+            }
+        }
+        else if (TypedRecordHandlerWithContext != null)
+        {
+            try
+            {
+                typedHandler = Activator.CreateInstance(TypedRecordHandlerWithContext)!;
+                hasContext = true;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error during creation of: '{TypedRecordHandlerWithContext.Name}'.", ex);
+            }
+        }
+        else if (TypedRecordHandlerWithContextProvider != null)
+        {
+            try
+            {
+                var provider = Activator.CreateInstance(TypedRecordHandlerWithContextProvider)!;
+                // Assume the provider has a Create() method that returns the handler
+                var createMethod = TypedRecordHandlerWithContextProvider.GetMethod("Create");
+                if (createMethod == null)
+                {
+                    throw new InvalidOperationException($"TypedRecordHandlerWithContextProvider '{TypedRecordHandlerWithContextProvider.Name}' must have a 'Create()' method.");
+                }
+                typedHandler = createMethod.Invoke(provider, null)!;
+                hasContext = true;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error during creation of typed record handler with context using provider: '{TypedRecordHandlerWithContextProvider.Name}'.", ex);
+            }
+        }
+        else
+        {
+            throw new InvalidOperationException("A typed record handler or typed record handler provider is required.");
+        }
+
+        return new TypedBatchProcessingAspectHandler<TEvent, TRecord>(typedBatchProcessor, typedHandler, hasContext, deserializationOptions, processingOptions);
+    }
+
+    private static BatchEventType GetEventTypeFromArgs(IReadOnlyList<object> args)
+    {
+        if (args == null || args.Count == 0 || !EventTypes.TryGetValue(args[0].GetType(), out var eventType))
+        {
+            throw new ArgumentException($"The first function handler parameter must be of one of the following types: {string.Join(',', EventTypes.Keys.Select(x => $"'{x.Namespace}'"))}.");
+        }
+        return eventType;
     }
 
     private void ValidateTypedHandlerConfiguration()

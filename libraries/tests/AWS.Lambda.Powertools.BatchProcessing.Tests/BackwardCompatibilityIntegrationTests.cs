@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.KinesisEvents;
 using Amazon.Lambda.SQSEvents;
@@ -16,7 +15,6 @@ using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
-using AWS.Lambda.Powertools.BatchProcessing.Tests.Handlers.SQS.Custom;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Tests;
