@@ -14,20 +14,21 @@ public static partial class Logger
     ///     Thread-safe dictionary for per-thread scope storage.
     ///     Uses ManagedThreadId as key to ensure isolation when Lambda processes
     ///     multiple concurrent requests (AWS_LAMBDA_MAX_CONCURRENCY > 1).
+    ///     Inner dictionary is ConcurrentDictionary for thread-safe operations.
     /// </summary>
-    private static readonly ConcurrentDictionary<int, Dictionary<string, object>> _threadScopes = new();
+    private static readonly ConcurrentDictionary<int, ConcurrentDictionary<string, object>> _threadScopes = new();
 
     /// <summary>
     ///     Gets the scope for the current thread.
     ///     Creates a new dictionary if one doesn't exist for this thread.
     /// </summary>
     /// <value>The scope.</value>
-    private static IDictionary<string, object> Scope
+    private static ConcurrentDictionary<string, object> Scope
     {
         get
         {
             var threadId = Environment.CurrentManagedThreadId;
-            return _threadScopes.GetOrAdd(threadId, _ => new Dictionary<string, object>(StringComparer.Ordinal));
+            return _threadScopes.GetOrAdd(threadId, _ => new ConcurrentDictionary<string, object>(StringComparer.Ordinal));
         }
     }
 
@@ -58,9 +59,10 @@ public static partial class Logger
     {
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(nameof(key));
-            
-        Scope[key] = PowertoolsLoggerHelpers.ObjectToDictionary(value) ??
+        
+        var convertedValue = PowertoolsLoggerHelpers.ObjectToDictionary(value) ??
                      throw new ArgumentNullException(nameof(value));
+        Scope[key] = convertedValue;
     }
 
     /// <summary>
@@ -91,17 +93,18 @@ public static partial class Logger
     {
         if (keys == null) return;
         foreach (var key in keys)
-            if (Scope.ContainsKey(key))
-                Scope.Remove(key);
+            Scope.TryRemove(key, out _);
     }
 
     /// <summary>
     ///     Returns all additional keys added to the log context.
+    ///     Returns a snapshot to ensure thread-safety during enumeration.
     /// </summary>
     /// <returns>IEnumerable&lt;KeyValuePair&lt;System.String, System.Object&gt;&gt;.</returns>
     public static IEnumerable<KeyValuePair<string, object>> GetAllKeys()
     {
-        return Scope.AsEnumerable();
+        // Return a snapshot to avoid concurrent modification issues
+        return Scope.ToArray();
     }
 
     /// <summary>
@@ -121,7 +124,6 @@ public static partial class Logger
     /// </summary>
     public static void RemoveKey(string key)
     {
-        if (Scope.ContainsKey(key))
-            Scope.Remove(key);
+        Scope.TryRemove(key, out _);
     }
 }
