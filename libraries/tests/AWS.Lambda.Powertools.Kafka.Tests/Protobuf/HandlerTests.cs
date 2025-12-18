@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
@@ -313,7 +314,7 @@ public class ProtobufHandlerTests
             foreach (var record in records)
             {
                 var product = record.Value;
-                context.Logger.LogInformation($"Processing {product.Name} at ${product.Price}");
+                context.Logger.LogInformation(string.Format(CultureInfo.InvariantCulture, "Processing {0} at ${1}", product.Name, product.Price));
             }
 
             return "Successfully processed Protobuf Kafka events";

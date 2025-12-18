@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.Serialization;
 using System.Text;
 using Amazon.Lambda.Core;
@@ -29,7 +30,7 @@ public class KafkaHandlerFunctionalTests
         {
             foreach (var record in records)
             {
-                context.Logger.LogInformation($"Processing {record.Value.Name} at ${record.Value.Price}");
+                context.Logger.LogInformation(string.Format(CultureInfo.InvariantCulture, "Processing {0} at ${1}", record.Value.Name, record.Value.Price));
             }
             return "Successfully processed JSON Kafka events";
         }
@@ -212,7 +213,7 @@ public class KafkaHandlerFunctionalTests
         {
             foreach (var record in records)
             {
-                context.Logger.LogInformation($"Processing {record.Value.name} at ${record.Value.price}");
+                context.Logger.LogInformation(string.Format(CultureInfo.InvariantCulture, "Processing {0} at ${1}", record.Value.name, record.Value.price));
             }
             return "Successfully processed Avro Kafka events";
         }
@@ -328,7 +329,7 @@ public class KafkaHandlerFunctionalTests
         {
             foreach (var record in records)
             {
-                context.Logger.LogInformation($"Processing {record.Value.Name} at ${record.Value.Price}");
+                context.Logger.LogInformation(string.Format(CultureInfo.InvariantCulture, "Processing {0} at ${1}", record.Value.Name, record.Value.Price));
             }
             return "Successfully processed Protobuf Kafka events";
         }
