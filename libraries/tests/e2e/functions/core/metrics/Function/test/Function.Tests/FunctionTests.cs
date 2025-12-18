@@ -142,7 +142,7 @@ public class FunctionTests
             try
             {
                 response = await cloudWatchClient.ListMetricsAsync(request);
-                if (response.Metrics.Count > 6)
+                if (response.Metrics != null && response.Metrics.Count > 6)
                 {
                     break;
                 }
@@ -155,6 +155,7 @@ public class FunctionTests
             await Task.Delay(5000); // wait for 5 seconds before retrying
         }
 
+        Assert.NotNull(response.Metrics);
         Assert.Equal(7, response.Metrics.Count);
 
         foreach (var metric in response.Metrics)
