@@ -16,3 +16,4 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("AWS.Lambda.Powertools.Parameters.Tests")]
+[assembly: InternalsVisibleTo("AWS.Lambda.Powertools.ConcurrencyTests")]

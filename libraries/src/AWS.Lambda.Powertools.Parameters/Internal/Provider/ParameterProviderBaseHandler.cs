@@ -40,23 +40,29 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 
     /// <summary>
     /// The CacheManager instance.
+    /// Thread-safe: volatile ensures visibility across threads.
     /// </summary>
-    private ICacheManager? _cache;
+    private volatile ICacheManager? _cache;
     
     /// <summary>
     /// The TransformerManager instance.
+    /// Thread-safe: volatile ensures visibility across threads.
     /// </summary>
-    private ITransformerManager? _transformManager;
+    private volatile ITransformerManager? _transformManager;
     
     /// <summary>
-    /// The DefaultMaxAge.
+    /// The DefaultMaxAge stored as ticks for thread-safe access.
+    /// Thread-safe: accessed via Interlocked operations.
+    /// A value of 0 indicates null/not set.
     /// </summary>
-    private TimeSpan? _defaultMaxAge;
+    private long _defaultMaxAgeTicks;
     
     /// <summary>
     /// The flag to raise exception on transformation error.
+    /// Thread-safe: volatile ensures visibility across threads.
+    /// Using int (0/1) instead of bool for Interlocked compatibility.
     /// </summary>
-    private bool _raiseTransformationError;
+    private volatile int _raiseTransformationError;
     
     /// <summary>
     /// The CacheMode.
@@ -100,6 +106,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 
     /// <summary>
     /// Try transform a value using a transformer.
+    /// Thread-safe: reads volatile field for raise error flag.
     /// </summary>
     /// <param name="transformer">The transformer instance to use.</param>
     /// <param name="value">The value to transform.</param>
@@ -121,7 +128,7 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
             catch (Exception e)
             {
                 transformedValue = default;
-                if (_raiseTransformationError)
+                if (_raiseTransformationError != 0)
                 {
                     if (e is not TransformationException error)
                         error = new TransformationException(e.Message, e);
@@ -140,24 +147,28 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 
     /// <summary>
     /// Sets the cache maximum age.
+    /// Thread-safe: uses Interlocked for atomic write.
     /// </summary>
     /// <param name="maxAge">The cache maximum age </param>
     public void SetDefaultMaxAge(TimeSpan maxAge)
     {
-        _defaultMaxAge = maxAge;
+        Interlocked.Exchange(ref _defaultMaxAgeTicks, maxAge.Ticks);
     }
 
     /// <summary>
     /// Gets the maximum age or default value.
+    /// Thread-safe: uses Interlocked for atomic read.
     /// </summary>
     /// <returns>the maxAge</returns>
     public TimeSpan? GetDefaultMaxAge()
     {
-        return _defaultMaxAge;
+        var ticks = Interlocked.Read(ref _defaultMaxAgeTicks);
+        return ticks > 0 ? TimeSpan.FromTicks(ticks) : null;
     }
     
     /// <summary>
     /// Gets the maximum age or default value.
+    /// Thread-safe: uses Interlocked for atomic read.
     /// </summary>
     /// <param name="config"></param>
     /// <returns>the maxAge</returns>
@@ -165,7 +176,8 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
     {
         var maxAge = config?.MaxAge;
         if (maxAge.HasValue && maxAge.Value > TimeSpan.Zero) return maxAge.Value;
-        if (_defaultMaxAge.HasValue && _defaultMaxAge.Value > TimeSpan.Zero) return _defaultMaxAge.Value;
+        var defaultMaxAgeTicks = Interlocked.Read(ref _defaultMaxAgeTicks);
+        if (defaultMaxAgeTicks > 0) return TimeSpan.FromTicks(defaultMaxAgeTicks);
         return CacheManager.DefaultMaxAge;
     }
 
@@ -208,11 +220,12 @@ internal class ParameterProviderBaseHandler : IParameterProviderBaseHandler
 
     /// <summary>
     /// Configure the transformer to raise exception or return Null on transformation error
+    /// Thread-safe: uses volatile field for visibility.
     /// </summary>
     /// <param name="raiseError">true for raise error, false for return Null.</param>
     public void SetRaiseTransformationError(bool raiseError)
     {
-        _raiseTransformationError = raiseError;
+        _raiseTransformationError = raiseError ? 1 : 0;
     }
 
     /// <summary>

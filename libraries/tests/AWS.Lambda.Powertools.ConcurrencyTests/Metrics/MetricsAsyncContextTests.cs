@@ -42,13 +42,13 @@ public class MetricsAsyncContextTests : IDisposable
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(5)]
-    public void BackgroundTaskMetrics_ShouldNotThrowException(int backgroundTaskCount)
+    public async Task BackgroundTaskMetrics_ShouldNotThrowException(int backgroundTaskCount)
     {
         Powertools.Metrics.Metrics.ResetForTest();
         Powertools.Metrics.Metrics.SetNamespace("TestNamespace");
 
         var results = new AsyncContextResult[backgroundTaskCount];
-        var allTasksCompleted = new CountdownEvent(backgroundTaskCount);
+        var tasks = new Task[backgroundTaskCount];
 
         for (int i = 0; i < backgroundTaskCount; i++)
         {
@@ -68,11 +68,11 @@ public class MetricsAsyncContextTests : IDisposable
                 result.ExceptionSource = "MainThread";
             }
 
-            Task.Run(() =>
+            tasks[taskIndex] = Task.Run(async () =>
             {
                 try
                 {
-                    Thread.Sleep(Random.Shared.Next(10, 50));
+                    await Task.Delay(Random.Shared.Next(10, 50));
                     Powertools.Metrics.Metrics.AddMetric($"background_metric_{taskIndex}", 1, MetricUnit.Count);
                     Powertools.Metrics.Metrics.AddDimension($"background_dim_{taskIndex}", "value");
                     result.BackgroundTaskMetricAdded = true;
@@ -83,14 +83,10 @@ public class MetricsAsyncContextTests : IDisposable
                     result.ExceptionMessage = ex.Message;
                     result.ExceptionSource = "BackgroundTask";
                 }
-                finally
-                {
-                    allTasksCompleted.Signal();
-                }
             });
         }
 
-        allTasksCompleted.Wait(TimeSpan.FromSeconds(10));
+        await Task.WhenAll(tasks);
 
         Assert.All(results, r => Assert.False(r.ExceptionThrown, $"{r.ExceptionSource}: {r.ExceptionMessage}"));
         Assert.All(results, r => Assert.True(r.MainThreadMetricAdded));
@@ -148,13 +144,14 @@ public class MetricsAsyncContextTests : IDisposable
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(5)]
-    public void FlushDuringBackgroundWork_ShouldNotThrowException(int backgroundTaskCount)
+    public async Task FlushDuringBackgroundWork_ShouldNotThrowException(int backgroundTaskCount)
     {
         Powertools.Metrics.Metrics.ResetForTest();
         Powertools.Metrics.Metrics.SetNamespace("TestNamespace");
 
-        var backgroundTasksStarted = new CountdownEvent(backgroundTaskCount);
-        var flushCompleted = new ManualResetEventSlim(false);
+        var backgroundTasksStarted = new TaskCompletionSource<bool>();
+        var startedCount = 0;
+        var flushCompleted = new TaskCompletionSource<bool>();
         var backgroundExceptions = new List<Exception>();
         Exception? flushException = null;
 
@@ -162,17 +159,21 @@ public class MetricsAsyncContextTests : IDisposable
         for (int i = 0; i < backgroundTaskCount; i++)
         {
             int taskIndex = i;
-            backgroundTasks[i] = Task.Run(() =>
+            backgroundTasks[i] = Task.Run(async () =>
             {
                 try
                 {
-                    backgroundTasksStarted.Signal();
+                    if (Interlocked.Increment(ref startedCount) == backgroundTaskCount)
+                    {
+                        backgroundTasksStarted.TrySetResult(true);
+                    }
+                    
                     int metricCount = 0;
-                    while (!flushCompleted.IsSet && metricCount < 100)
+                    while (!flushCompleted.Task.IsCompleted && metricCount < 100)
                     {
                         Powertools.Metrics.Metrics.AddMetric($"bg_metric_{taskIndex}_{metricCount}", metricCount, MetricUnit.Count);
                         metricCount++;
-                        Thread.Sleep(1);
+                        await Task.Delay(1);
                     }
                 }
                 catch (Exception ex)
@@ -182,21 +183,20 @@ public class MetricsAsyncContextTests : IDisposable
             });
         }
 
-        var tasksStartedOk = backgroundTasksStarted.Wait(TimeSpan.FromSeconds(10));
+        var tasksStartedOk = await Task.WhenAny(backgroundTasksStarted.Task, Task.Delay(TimeSpan.FromSeconds(10))) == backgroundTasksStarted.Task;
 
         try
         {
             Powertools.Metrics.Metrics.AddMetric("main_metric", 1, MetricUnit.Count);
-            Thread.Sleep(10);
+            await Task.Delay(10);
             Powertools.Metrics.Metrics.Flush();
         }
         catch (Exception ex) { flushException = ex; }
-        finally { flushCompleted.Set(); }
+        finally { flushCompleted.TrySetResult(true); }
 
-        var tasksCompletedOk = Task.WaitAll(backgroundTasks, TimeSpan.FromSeconds(10));
+        await Task.WhenAll(backgroundTasks).WaitAsync(TimeSpan.FromSeconds(10));
 
-        Assert.True(tasksStartedOk);
-        Assert.True(tasksCompletedOk);
+        Assert.True(tasksStartedOk, "Background tasks did not start in time");
         Assert.Null(flushException);
         Assert.Empty(backgroundExceptions);
     }

@@ -17,18 +17,19 @@ namespace AWS.Lambda.Powertools.Parameters.Internal.Cache;
 
 /// <summary>
 /// Class CacheObject.
+/// Immutable class to ensure thread-safety when cached values are accessed concurrently.
 /// </summary>
-internal class CacheObject
+internal sealed class CacheObject
 {
     /// <summary>
     /// The value to cache.
     /// </summary>
-    internal object Value { get; set; }
+    internal object Value { get; }
 
     /// <summary>
     /// The expiry time.
     /// </summary>
-    internal DateTime ExpiryTime { get; set; }
+    internal DateTime ExpiryTime { get; }
 
     /// <summary>
     /// CacheObject constructor.
