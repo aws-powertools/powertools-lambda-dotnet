@@ -34,6 +34,7 @@ jobs:
         with:
           dotnet-version: |
             8.0.x
+            10.0.x
 
       - name: Build libraries
         run: dotnet build ./libraries/ --configuration Release
@@ -64,6 +65,7 @@ jobs:
         with:
           dotnet-version: |
             8.0.x
+            10.0.x
 
       - name: Download packages
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # 6.0.0
@@ -123,6 +125,7 @@ jobs:
         with:
           dotnet-version: |
             8.0.x
+            10.0.x
 
       - name: Setup GitHub Packages source
         run: |
