@@ -13,8 +13,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.AspNetCoreServer" Version="9.2.0" />
-    <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="3.0.0" />
-    <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="3.0.0" />
-    <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="3.0.0" />
+    <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="3.0.2" />
+    <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="3.0.2" />
+    <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="3.0.2" />
   </ItemGroup>
 </Project>
