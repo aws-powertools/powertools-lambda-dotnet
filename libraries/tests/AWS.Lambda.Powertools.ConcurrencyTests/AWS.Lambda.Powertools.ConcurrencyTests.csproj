@@ -25,6 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.BatchProcessing\AWS.Lambda.Powertools.BatchProcessing.csproj" />
         <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
         <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" />
         <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" />
