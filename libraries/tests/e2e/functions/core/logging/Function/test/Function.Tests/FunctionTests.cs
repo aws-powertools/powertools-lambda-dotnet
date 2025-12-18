@@ -266,7 +266,14 @@ public class FunctionTests
         var updateRequest = new UpdateFunctionConfigurationRequest
         {
             FunctionName = functionName,
-            Handler = handler
+            Handler = handler,
+            Environment = new Environment
+            {
+                Variables = new Dictionary<string, string>
+                {
+                    { "ForceColdStart", Guid.NewGuid().ToString() }
+                }
+            }
         };
 
         var updateResponse = await _lambdaClient.UpdateFunctionConfigurationAsync(updateRequest);
@@ -281,8 +288,8 @@ public class FunctionTests
                 $"Failed to update the handler for function {functionName}. Status code: {updateResponse.HttpStatusCode}");
         }
         
-        //wait a few seconds for the changes to take effect
-        await Task.Delay(1000);
+        //wait for the changes to take effect and force cold start
+        await Task.Delay(15000);
     }
     
     private async Task ResetFunction(string functionName)

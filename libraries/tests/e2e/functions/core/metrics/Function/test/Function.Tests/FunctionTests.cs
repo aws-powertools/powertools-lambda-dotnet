@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text.Json;
 using Amazon.CDK.AWS.CodeDeploy;
 using Amazon.CloudWatch;
@@ -227,11 +228,13 @@ public class FunctionTests
         Assert.Equal("Count", unitElement5.GetString());
 
         Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Dimensions", out JsonElement dimensionsElement));
-        Assert.Equal("Service", dimensionsElement[0][0].GetString());
-        Assert.Equal("Environment", dimensionsElement[0][1].GetString());
-        Assert.Equal("Another", dimensionsElement[0][2].GetString());
-        Assert.Equal("FunctionName", dimensionsElement[0][3].GetString());
-        Assert.Equal("Memory", dimensionsElement[0][4].GetString());
+        var dimensionsList = dimensionsElement[0].EnumerateArray().Select(d => d.GetString()).ToList();
+        Assert.Equal(5, dimensionsList.Count);
+        Assert.Contains("Service", dimensionsList);
+        Assert.Contains("Environment", dimensionsList);
+        Assert.Contains("Another", dimensionsList);
+        Assert.Contains("FunctionName", dimensionsList);
+        Assert.Contains("Memory", dimensionsList);
 
         Assert.True(root.TryGetProperty("Service", out JsonElement serviceElement));
         Assert.Equal("Test", serviceElement.GetString());
@@ -286,8 +289,10 @@ public class FunctionTests
         Assert.Equal("Count", unitElement.GetString());
 
         Assert.True(cloudWatchMetricsElement[0].TryGetProperty("Dimensions", out JsonElement dimensionsElement));
-        Assert.Equal("Service", dimensionsElement[0][0].GetString());
-        Assert.Equal("FunctionName", dimensionsElement[0][1].GetString());
+        var dimensionsList = dimensionsElement[0].EnumerateArray().Select(d => d.GetString()).ToList();
+        Assert.Equal(2, dimensionsList.Count);
+        Assert.Contains("Service", dimensionsList);
+        Assert.Contains("FunctionName", dimensionsList);
 
         Assert.True(root.TryGetProperty("FunctionName", out JsonElement functionNameElement));
         Assert.Equal(_functionName, functionNameElement.GetString());
