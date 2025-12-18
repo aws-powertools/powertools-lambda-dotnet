@@ -357,16 +357,30 @@ public class Metrics : IMetrics, IDisposable
         {
             _sharedDefaultDimensions.Clear();
             _sharedDefaultDimensions.AddRange(dimensionsList);
+            
+            // Preserve Service dimension if it was set
+            if (!string.IsNullOrWhiteSpace(_sharedService) && 
+                !_sharedDefaultDimensions.Any(d => d.Dimensions.ContainsKey("Service")))
+            {
+                _sharedDefaultDimensions.Add(new DimensionSet("Service", _sharedService));
+            }
+        }
+        
+        // Get the updated list with Service dimension
+        List<DimensionSet> updatedDimensionsList;
+        lock (_defaultDimensionsLock)
+        {
+            updatedDimensionsList = new List<DimensionSet>(_sharedDefaultDimensions);
         }
         
         // Update all existing thread contexts
         foreach (var kvp in _threadContexts)
         {
-            kvp.Value.SetDefaultDimensions(new List<DimensionSet>(dimensionsList));
+            kvp.Value.SetDefaultDimensions(new List<DimensionSet>(updatedDimensionsList));
         }
         
         // Also update current context (in case it was just created)
-        CurrentContext.SetDefaultDimensions(new List<DimensionSet>(dimensionsList));
+        CurrentContext.SetDefaultDimensions(new List<DimensionSet>(updatedDimensionsList));
     }
 
     /// <inheritdoc />
