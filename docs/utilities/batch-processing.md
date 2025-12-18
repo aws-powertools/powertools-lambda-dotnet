@@ -138,40 +138,7 @@ Processing batches from SQS using typed Lambda handler decorator with automatic 
 === "Function.cs"
 
     ```csharp hl_lines="1 8 19 29 32"
-    public class Product
-    {
-        public int Id { get; set; }
-        public string? Name { get; set; }
-        public decimal Price { get; set; }
-    }
-
-    public class TypedSqsRecordHandler : ITypedRecordHandler<Product> // (1)!
-    {
-    	public async Task<RecordHandlerResult> HandleAsync(Product product, CancellationToken cancellationToken)
-    	{
-    		 /*
-    		 * Your business logic with automatic deserialization.
-    		 * If an exception is thrown, the item will be marked as a partial batch item failure.
-             */
-
-             Logger.LogInformation($"Processing product {product.Id} - {product.Name} (${product.Price})");
-
-             if (product.Id == 4) // (2)!
-             {
-                 throw new ArgumentException("Error on id 4");
-             }
-
-             return await Task.FromResult(RecordHandlerResult.None); // (3)!
-         }
-
-	}
-
-    [BatchProcessor(TypedRecordHandler = typeof(TypedSqsRecordHandler))]
-    public BatchItemFailuresResponse HandlerUsingTypedAttribute(SQSEvent _)
-    {
-    	return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedWithSqs.cs:sqs_typed_handler_decorator"
     ```
 
     1.  **Step 1**. Creates a class that implements ITypedRecordHandler<Product> interface - Product is automatically deserialized from SQS message body.
@@ -247,33 +214,7 @@ Processing batches from SQS using Lambda handler decorator works in three stages
 === "Function.cs"
 
     ```csharp hl_lines="1 12 22 17 25"
-    public class CustomSqsRecordHandler : ISqsRecordHandler // (1)!
-    {
-    	public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
-    	{
-    		 /*
-    		 * Your business logic.
-    		 * If an exception is thrown, the item will be marked as a partial batch item failure.
-             */
-
-             var product = JsonSerializer.Deserialize<Product>(record.Body);
-
-             if (product.Id == 4) // (2)!
-             {
-                 throw new ArgumentException("Error on id 4");
-             }
-
-             return await Task.FromResult(RecordHandlerResult.None); // (3)!
-         }
-
-	}
-
-    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
-    public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
-    {
-    	return SqsBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedWithSqs.cs:sqs_handler_decorator_traditional"
     ```
 
     1.  **Step 1**. Creates a class that implements ISqsRecordHandler interface and the HandleAsync method.
@@ -379,35 +320,7 @@ Processing batches from Kinesis using typed Lambda handler decorator with automa
 === "Function.cs"
 
     ```csharp hl_lines="1 9 15 20 24 27"
-    public class Order
-    {
-        public string? OrderId { get; set; }
-        public DateTime OrderDate { get; set; }
-        public List<Product> Items { get; set; } = new();
-        public decimal TotalAmount { get; set; }
-    }
-
-    internal class TypedKinesisRecordHandler : ITypedRecordHandler<Order> // (1)!
-    {
-    	public async Task<RecordHandlerResult> HandleAsync(Order order, CancellationToken cancellationToken)
-    	{
-    		Logger.LogInformation($"Processing order {order.OrderId} with {order.Items.Count} items");
-
-    		if (order.TotalAmount <= 0) // (2)!
-    		{
-    			throw new ArgumentException("Invalid order total");
-    		}
-
-    		return await Task.FromResult(RecordHandlerResult.None); // (3)!
-    	}
-    }
-
-    [BatchProcessor(TypedRecordHandler = typeof(TypedKinesisRecordHandler))]
-    public BatchItemFailuresResponse HandlerUsingTypedAttribute(KinesisEvent _)
-    {
-    	return TypedKinesisEventBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedBasic.cs:kinesis_typed_handler_decorator"
     ```
 
     1.  **Step 1**. Creates a class that implements ITypedRecordHandler<Order> interface - Order is automatically deserialized from Kinesis record data.
@@ -427,28 +340,7 @@ Processing batches from Kinesis using Lambda handler decorator works in three st
 === "Function.cs"
 
     ```csharp hl_lines="1 7 12 17 20"
-    internal class CustomKinesisEventRecordHandler : IKinesisEventRecordHandler // (1)!
-    {
-    	public async Task<RecordHandlerResult> HandleAsync(KinesisEvent.KinesisEventRecord record, CancellationToken cancellationToken)
-    	{
-    		var product = JsonSerializer.Deserialize<Product>(record.Kinesis.Data);
-
-    		if (product.Id == 4) // (2)!
-    		{
-    			throw new ArgumentException("Error on id 4");
-    		}
-
-    		return await Task.FromResult(RecordHandlerResult.None); // (3)!
-    	}
-    }
-
-
-    [BatchProcessor(RecordHandler = typeof(CustomKinesisEventRecordHandler))]
-    public BatchItemFailuresResponse HandlerUsingAttribute(KinesisEvent _)
-    {
-    	return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedBasic.cs:kinesis_handler_decorator_traditional"
     ```
 
     1.  **Step 1**. Creates a class that implements the IKinesisEventRecordHandler interface and the HandleAsync method.
@@ -545,35 +437,7 @@ Processing batches from DynamoDB Streams using typed Lambda handler decorator wi
 === "Function.cs"
 
     ```csharp hl_lines="1 9 15 20 24 27"
-    public class Customer
-    {
-        public string? CustomerId { get; set; }
-        public string? Name { get; set; }
-        public string? Email { get; set; }
-        public DateTime CreatedAt { get; set; }
-    }
-
-    internal class TypedDynamoDbRecordHandler : ITypedRecordHandler<Customer> // (1)!
-    {
-    	public async Task<RecordHandlerResult> HandleAsync(Customer customer, CancellationToken cancellationToken)
-    	{
-    		Logger.LogInformation($"Processing customer {customer.CustomerId} - {customer.Name}");
-
-    		if (string.IsNullOrEmpty(customer.Email)) // (2)!
-    		{
-    			throw new ArgumentException("Customer email is required");
-    		}
-
-    		return await Task.FromResult(RecordHandlerResult.None); // (3)!
-    	}
-    }
-
-    [BatchProcessor(TypedRecordHandler = typeof(TypedDynamoDbRecordHandler))]
-    public BatchItemFailuresResponse HandlerUsingTypedAttribute(DynamoDBEvent _)
-    {
-    	return TypedDynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedBasic.cs:dynamodb_typed_handler_decorator"
     ```
 
     1.  **Step 1**. Creates a class that implements ITypedRecordHandler<Customer> interface - Customer is automatically deserialized from DynamoDB stream record.
@@ -593,28 +457,7 @@ Processing batches from DynamoDB Streams using Lambda handler decorator works in
 === "Function.cs"
 
     ```csharp hl_lines="1 7 12 17 20"
-    internal class CustomDynamoDbStreamRecordHandler : IDynamoDbStreamRecordHandler // (1)!
-    {
-    	public async Task<RecordHandlerResult> HandleAsync(DynamoDBEvent.DynamodbStreamRecord record, CancellationToken cancellationToken)
-    	{
-    		var product = JsonSerializer.Deserialize<Product>(record.Dynamodb.NewImage["Product"].S);
-
-    		if (product.Id == 4) // (2)!
-    		{
-    			throw new ArgumentException("Error on id 4");
-    		}
-
-    		return await Task.FromResult(RecordHandlerResult.None); // (3)!
-    	}
-    }
-
-
-    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler))]
-    public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
-    {
-    	return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedBasic.cs:dynamodb_handler_decorator_traditional"
     ```
 
     1.  **Step 1**. Creates a class that implements the IDynamoDbStreamRecordHandler and the HandleAsync method.
@@ -700,27 +543,7 @@ This allows us to **(1)** continue processing the batch, **(2)** collect each ba
 === "Function.cs"
 
     ```csharp hl_lines="14"
-    public class CustomSqsRecordHandler : ISqsRecordHandler // (1)!
-    {
-    	public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
-    	{
-    		 /*
-    		 * Your business logic.
-    		 * If an exception is thrown, the item will be marked as a partial batch item failure.
-             */
-
-             var product = JsonSerializer.Deserialize<Product>(record.Body);
-
-             if (product.Id == 4) // (2)!
-             {
-                 throw new ArgumentException("Error on id 4");
-             }
-
-             return await Task.FromResult(RecordHandlerResult.None); // (3)!
-         }
-
-	}
-
+    --8<-- "docs/snippets/batch/csharp/AdvancedErrorHandling.cs:sqs_record_handler_error_handling"
     ```
 
 === "Sample event"
@@ -828,13 +651,7 @@ Another approach is to decorate the handler and use one of the policies in the *
 === "Function.cs"
 
     ```csharp hl_lines="2"
-    [BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler),
-    	ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
-    public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
-    {
-    	return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
-    }
-
+    --8<-- "docs/snippets/batch/csharp/AdvancedErrorHandling.cs:error_handling_policy_attribute"
     ```
 
 ### Partial failure mechanics
@@ -967,29 +784,13 @@ For Native AOT scenarios, you can configure JsonSerializerContext:
 === "JsonSerializerContext Configuration"
 
     ```csharp
-    [JsonSerializable(typeof(Product))]
-    [JsonSerializable(typeof(Order))]
-    [JsonSerializable(typeof(Customer))]
-    [JsonSerializable(typeof(List<Product>))]
-    [JsonSourceGenerationOptions(
-        PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-    public partial class MyJsonSerializerContext : JsonSerializerContext
-    {
-    }
+    --8<-- "docs/snippets/batch/csharp/CustomSerialization.cs:json_serializer_context_configuration"
     ```
 
 === "Using with Attribute"
 
     ```csharp hl_lines="2 3"
-    [BatchProcessor(
-        TypedRecordHandler = typeof(TypedSqsRecordHandler),
-        JsonSerializerContext = typeof(MyJsonSerializerContext))]
-    public BatchItemFailuresResponse ProcessWithAot(SQSEvent sqsEvent)
-    {
-        return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse;
-    }
+    --8<-- "docs/snippets/batch/csharp/CustomSerialization.cs:json_serializer_context_using_with_attribute"
     ```
 
 
@@ -1001,32 +802,13 @@ For typed handlers that need access to Lambda context, use `ITypedRecordHandlerW
 === "Handler with Context"
 
     ```csharp hl_lines="1 3"
-    public class ProductHandlerWithContext : ITypedRecordHandlerWithContext<Product>
-    {
-        public async Task<RecordHandlerResult> HandleAsync(Product product, ILambdaContext context, CancellationToken cancellationToken)
-        {
-            Logger.LogInformation($"Processing product {product.Id} in request {context.AwsRequestId}");
-            Logger.LogInformation($"Remaining time: {context.RemainingTime.TotalSeconds}s");
-
-            // Use context for timeout handling
-            if (context.RemainingTime.TotalSeconds < 5)
-            {
-                Logger.LogWarning("Low remaining time, processing quickly");
-            }
-
-            return RecordHandlerResult.None;
-        }
-    }
+    --8<-- "docs/snippets/batch/csharp/GettingStartedWithSqs.cs:typed_handler_with_context"
     ```
 
 === "Function Usage"
 
     ```csharp hl_lines="1 2"
-    [BatchProcessor(TypedRecordHandlerWithContext = typeof(ProductHandlerWithContext))]
-    public BatchItemFailuresResponse ProcessWithContext(SQSEvent sqsEvent, ILambdaContext context)
-    {
-        return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse;
-    }
+    --8<-- "docs/snippets/batch/csharp/GettingStartedWithSqs.cs:function_usage_with_context"
     ```
 
 ### Migration from Traditional to Typed Handlers
@@ -1036,52 +818,13 @@ You can gradually migrate from traditional to typed handlers:
 === "Before (Traditional)"
 
     ```csharp hl_lines="1 6"
-    public class TraditionalSqsHandler : ISqsRecordHandler
-    {
-        public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
-        {
-            // Manual deserialization
-            var product = JsonSerializer.Deserialize<Product>(record.Body);
-
-            Logger.LogInformation($"Processing product {product.Id}");
-
-            if (product.Price < 0)
-                throw new ArgumentException("Invalid price");
-
-            return RecordHandlerResult.None;
-        }
-    }
-
-    [BatchProcessor(RecordHandler = typeof(TraditionalSqsHandler))]
-    public BatchItemFailuresResponse ProcessSqs(SQSEvent sqsEvent)
-    {
-        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
-    }
+    --8<-- "docs/snippets/batch/csharp/GettingStartedWithSqs.cs:migration_before_traditional"
     ```
 
 === "After (Typed)"
 
     ```csharp hl_lines="1 5"
-    public class TypedSqsHandler : ITypedRecordHandler<Product>
-    {
-        public async Task<RecordHandlerResult> HandleAsync(Product product, CancellationToken cancellationToken)
-        {
-            // Automatic deserialization - product is already deserialized!
-            Logger.LogInformation($"Processing product {product.Id}");
-
-            // Same business logic
-            if (product.Price < 0)
-                throw new ArgumentException("Invalid price");
-
-            return RecordHandlerResult.None;
-        }
-    }
-
-    [BatchProcessor(TypedRecordHandler = typeof(TypedSqsHandler))]
-    public BatchItemFailuresResponse ProcessSqs(SQSEvent sqsEvent)
-    {
-        return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse;
-    }
+    --8<-- "docs/snippets/batch/csharp/GettingStartedWithSqs.cs:migration_after_typed"
     ```
 
 ### Error Handling with Typed Processors
@@ -1091,13 +834,7 @@ Typed processors support the same error handling policies as traditional process
 === "Custom Error Handling"
 
     ```csharp hl_lines="2"
-    [BatchProcessor(
-        TypedRecordHandler = typeof(TypedSqsHandler),
-        ErrorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)]
-    public BatchItemFailuresResponse ProcessWithErrorPolicy(SQSEvent sqsEvent)
-    {
-        return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse;
-    }
+    --8<-- "docs/snippets/batch/csharp/AdvancedErrorHandling.cs:typed_custom_error_handling"
     ```
 
 ### Advanced
@@ -1111,20 +848,7 @@ Calling the **`ProcessAsync`** method on the Instance of the static BatchProcess
 === "Function.cs"
 
     ```csharp hl_lines="3"
-    public async Task<BatchItemFailuresResponse> HandlerUsingUtility(DynamoDBEvent dynamoDbEvent)
-    {
-    	var result = await DynamoDbStreamBatchProcessor.Instance.ProcessAsync(dynamoDbEvent, RecordHandler<DynamoDBEvent.DynamodbStreamRecord>.From(record =>
-        {
-            var product = JsonSerializer.Deserialize<JsonElement>(record.Dynamodb.NewImage["Product"].S);
-
-            if (product.GetProperty("Id").GetInt16() == 4)
-            {
-                throw new ArgumentException("Error on 4");
-            }
-        }));
-        return result.BatchItemFailuresResponse;
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedBasic.cs:using_utility_outside_decorator"
     ```
 
 To make the handler testable you can use Dependency Injection to resolve the BatchProcessor (`SqsBatchProcessor`, `DynamoDbStreamBatchProcessor`, `KinesisEventBatchProcessor`) instance and then call the **`ProcessAsync`** method.
@@ -1132,52 +856,19 @@ To make the handler testable you can use Dependency Injection to resolve the Bat
 === "GetRequiredService inside the method"
 
     ```csharp hl_lines="3 4 5"
-    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDBEvent dynamoDbEvent)
-    {
-        var batchProcessor = Services.Provider.GetRequiredService<IDynamoDbStreamBatchProcessor>();
-        var recordHandler = Services.Provider.GetRequiredService<IDynamoDbStreamRecordHandler>();
-        var result = await batchProcessor.ProcessAsync(dynamoDbEvent, recordHandler);
-        return result.BatchItemFailuresResponse;
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedBasic.cs:using_utility_from_ioc_getrequiredservice"
     ```
 
 === "Injecting method parameters"
 
     ```csharp hl_lines="2 4"
-    public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDBEvent dynamoDbEvent,
-    	IDynamoDbStreamBatchProcessor batchProcessor, IDynamoDbStreamRecordHandler recordHandler)
-    {
-        var result = await batchProcessor.ProcessAsync(dynamoDbEvent, recordHandler);
-        return result.BatchItemFailuresResponse;
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedBasic.cs:using_utility_from_ioc_injected_parameters"
     ```
 
 === "Example implementation of IServiceProvider"
 
     ```csharp hl_lines="16 17"
-    internal class Services
-    {
-    	private static readonly Lazy<IServiceProvider> LazyInstance = new(Build);
-
-    	private static ServiceCollection _services;
-    	public static IServiceProvider Provider => LazyInstance.Value;
-
-    	public static IServiceProvider Init()
-    	{
-    		return LazyInstance.Value;
-    	}
-
-    	private static IServiceProvider Build()
-    	{
-    		_services = new ServiceCollection();
-    		_services.AddScoped<IDynamoDbStreamBatchProcessor, CustomDynamoDbStreamBatchProcessor>();
-    		_services.AddScoped<IDynamoDbStreamRecordHandler, CustomDynamoDbStreamRecordHandler>();
-    		return _services.BuildServiceProvider();
-    	}
-    }
-
+    --8<-- "docs/snippets/batch/csharp/GettingStartedBasic.cs:example_implementation_of_iserviceprovider"
     ```
 
 #### Processing messages in parallel
@@ -1206,11 +897,7 @@ You can also set `POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM` Environment Variab
 === "Function.cs"
 	
 	```csharp hl_lines="1"
-	[BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler), BatchParallelProcessingEnabled = true )]
-	public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
-	{
-		return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
-	}
+	--8<-- "docs/snippets/batch/csharp/GettingStartedBasic.cs:processing_messages_in_parallel"
 	```
 
 #### Working with full batch failures
@@ -1224,31 +911,13 @@ For these scenarios, you can set `POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE =
 === "Setting ThrowOnFullBatchFailure on Decorator"
 
     ```csharp hl_lines="3"
-	[BatchProcessor(
-        RecordHandler = typeof(CustomSqsRecordHandler),
-        ThrowOnFullBatchFailure = false)]
-	public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
-	{
-		return SqsBatchProcessor.Result.BatchItemFailuresResponse;
-	}
-
+    --8<-- "docs/snippets/batch/csharp/PartialFailureHandling.cs:throw_on_full_batch_failure_decorator"
     ```
 
 === "Setting ThrowOnFullBatchFailure outside Decorator"
 
     ```csharp hl_lines="8"
-    public async Task<BatchItemFailuresResponse> HandlerUsingUtility(SQSEvent sqsEvent)
-    {
-        var result = await SqsBatchProcessor.Instance.ProcessAsync(sqsEvent, RecordHandler<SQSEvent.SQSMessage>.From(x =>
-        {
-            // Inline handling of SQS message...
-        }), new ProcessingOptions
-        {
-            ThrowOnFullBatchFailure = false
-        });
-        return result.BatchItemFailuresResponse;
-    }
-
+    --8<-- "docs/snippets/batch/csharp/PartialFailureHandling.cs:throw_on_full_batch_failure_outside_decorator"
     ```
 
 #### Extending BatchProcessor
@@ -1266,108 +935,7 @@ For these scenarios, you can create a class that inherits from `BatchProcessor` 
 === "Function.cs"
 
     ```csharp hl_lines="1 21 54 97"
-
-    public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
-    {
-    	public override async Task<ProcessingResult<DynamoDBEvent.DynamodbStreamRecord>> ProcessAsync(DynamoDBEvent @event,
-    	IRecordHandler<DynamoDBEvent.DynamodbStreamRecord> recordHandler, ProcessingOptions processingOptions)
-    	{
-    		ProcessingResult = new ProcessingResult<DynamoDBEvent.DynamodbStreamRecord>();
-
-    		// Prepare batch records (order is preserved)
-    		var batchRecords = GetRecordsFromEvent(@event).Select(x => new KeyValuePair<string, DynamoDBEvent.DynamodbStreamRecord>(GetRecordId(x), x))
-    			.ToArray();
-
-    		// We assume all records fail by default to avoid loss of data
-    		var failureBatchRecords = batchRecords.Select(x => new KeyValuePair<string, RecordFailure<DynamoDBEvent.DynamodbStreamRecord>>(x.Key,
-    			new RecordFailure<DynamoDBEvent.DynamodbStreamRecord>
-    			{
-    				Exception = new UnprocessedRecordException($"Record: '{x.Key}' has not been processed."),
-    				Record = x.Value
-    			}));
-
-    		// Override to fail on first failure
-    		var errorHandlingPolicy = BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure;
-
-    		var successRecords = new Dictionary<string, RecordSuccess<DynamoDBEvent.DynamodbStreamRecord>>();
-    		var failureRecords = new Dictionary<string, RecordFailure<DynamoDBEvent.DynamodbStreamRecord>>(failureBatchRecords);
-
-    		try
-    		{
-    			foreach (var pair in batchRecords)
-    			{
-    				var (recordId, record) = pair;
-
-    				try
-    				{
-    					var result = await HandleRecordAsync(record, recordHandler, CancellationToken.None);
-    					failureRecords.Remove(recordId, out _);
-    					successRecords.TryAdd(recordId, new RecordSuccess<DynamoDBEvent.DynamodbStreamRecord>
-    					{
-    						Record = record,
-    						RecordId = recordId,
-    						HandlerResult = result
-    					});
-    				}
-    				catch (Exception ex)
-    				{
-    					// Capture exception
-    					failureRecords[recordId] = new RecordFailure<DynamoDBEvent.DynamodbStreamRecord>
-    					{
-    						Exception = new RecordProcessingException(
-    							$"Failed processing record: '{recordId}'. See inner exception for details.", ex),
-    						Record = record,
-    						RecordId = recordId
-    					};
-
-    					Metrics.AddMetric("BatchRecordFailures", 1, MetricUnit.Count);
-
-    					try
-    					{
-    						// Invoke hook
-    						await HandleRecordFailureAsync(record, ex);
-    					}
-    					catch
-    					{
-    						// NOOP
-    					}
-
-    					// Check if we should stop record processing on first error
-    					// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-    					if (errorHandlingPolicy == BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)
-    					{
-    						// This causes the loop's (inner) cancellation token to be cancelled for all operations already scheduled internally
-    						throw new CircuitBreakerException(
-    							"Error handling policy is configured to stop processing on first batch item failure. See inner exception for details.",
-    							ex);
-    					}
-    				}
-    			}
-    		}
-    		catch (Exception ex) when (ex is CircuitBreakerException or OperationCanceledException)
-    		{
-    			// NOOP
-    		}
-
-    		ProcessingResult.BatchRecords.AddRange(batchRecords.Select(x => x.Value));
-    		ProcessingResult.BatchItemFailuresResponse.BatchItemFailures.AddRange(failureRecords.Select(x =>
-    			new BatchItemFailuresResponse.BatchItemFailure
-    			{
-    				ItemIdentifier = x.Key
-    			}));
-    		ProcessingResult.FailureRecords.AddRange(failureRecords.Values);
-
-    		ProcessingResult.SuccessRecords.AddRange(successRecords.Values);
-
-    		return ProcessingResult;
-    	}
-
-    	// ReSharper disable once RedundantOverriddenMember
-    	protected override async Task HandleRecordFailureAsync(DynamoDBEvent.DynamodbStreamRecord record, Exception exception)
-    	{
-    		await base.HandleRecordFailureAsync(record, exception);
-    	}
-    }
+    --8<-- "docs/snippets/batch/csharp/PartialFailureHandling.cs:extending_batch_processor"
     ```
 
 ## Testing your code
@@ -1379,66 +947,13 @@ Testing typed batch processors is straightforward since you work directly with y
 === "Typed Handler Test"
 
     ```csharp
-    [Fact]
-    public async Task TypedHandler_ValidProduct_ProcessesSuccessfully()
-    {
-    	// Arrange
-    	var product = new Product { Id = 1, Name = "Test Product", Price = 10.99m };
-    	var handler = new TypedSqsRecordHandler();
-    	var cancellationToken = CancellationToken.None;
-
-    	// Act
-    	var result = await handler.HandleAsync(product, cancellationToken);
-
-    	// Assert
-    	Assert.Equal(RecordHandlerResult.None, result);
-    }
-
-    [Fact]
-    public async Task TypedHandler_InvalidProduct_ThrowsException()
-    {
-    	// Arrange
-    	var product = new Product { Id = 4, Name = "Invalid", Price = -10 };
-    	var handler = new TypedSqsRecordHandler();
-
-    	// Act & Assert
-    	await Assert.ThrowsAsync<ArgumentException>(() =>
-    		handler.HandleAsync(product, CancellationToken.None));
-    }
+    --8<-- "docs/snippets/batch/csharp/PartialFailureHandling.cs:typed_handler_test"
     ```
 
 === "Integration Test"
 
     ```csharp
-    [Fact]
-    public async Task ProcessSqsEvent_WithTypedHandler_ProcessesAllRecords()
-    {
-    	// Arrange
-    	var sqsEvent = new SQSEvent
-    	{
-    		Records = new List<SQSEvent.SQSMessage>
-    		{
-    			new() {
-    				MessageId = "1",
-    				Body = JsonSerializer.Serialize(new Product { Id = 1, Name = "Product 1", Price = 10 }),
-    				EventSourceArn = "arn:aws:sqs:us-east-1:123456789012:my-queue"
-    			},
-    			new() {
-    				MessageId = "2",
-    				Body = JsonSerializer.Serialize(new Product { Id = 2, Name = "Product 2", Price = 20 }),
-    				EventSourceArn = "arn:aws:sqs:us-east-1:123456789012:my-queue"
-    			}
-    		}
-    	};
-
-    	var function = new TypedFunction();
-
-    	// Act
-    	var result = function.HandlerUsingTypedAttribute(sqsEvent);
-
-    	// Assert
-    	Assert.Empty(result.BatchItemFailures);
-    }
+    --8<-- "docs/snippets/batch/csharp/PartialFailureHandling.cs:integration_test"
     ```
 
 ### Testing Traditional Handlers
@@ -1448,91 +963,25 @@ As there is no external calls, you can unit test your code with `BatchProcessor`
 === "Test.cs"
 
     ```csharp
-    [Fact]
-    public Task Sqs_Handler_Using_Attribute()
-    {
-    	var request = new SQSEvent
-    	{
-    		Records = TestHelper.SqsMessages
-    	};
-
-    	var function = new HandlerFunction();
-
-    	var response = function.HandlerUsingAttribute(request);
-
-    	Assert.Equal(2, response.BatchItemFailures.Count);
-    	Assert.Equal("2", response.BatchItemFailures[0].ItemIdentifier);
-    	Assert.Equal("4", response.BatchItemFailures[1].ItemIdentifier);
-
-    	return Task.CompletedTask;
-    }
+    --8<-- "docs/snippets/batch/csharp/PartialFailureHandling.cs:traditional_handler_test"
     ```
 
 === "Function.cs"
 
     ```csharp
-    [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
-    public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
-    {
-        return SqsBatchProcessor.Result.BatchItemFailuresResponse;
-    }
+    --8<-- "docs/snippets/batch/csharp/PartialFailureHandling.cs:function_handler_using_attribute"
     ```
 
 === "CustomSqsRecordHandler.cs"
 
     ```csharp
-    public class CustomSqsRecordHandler : ISqsRecordHandler
-    {
-    	public async Task<RecordHandlerResult> HandleAsync(SQSEvent.SQSMessage record, CancellationToken cancellationToken)
-    	{
-    		var product = JsonSerializer.Deserialize<JsonElement>(record.Body);
-
-    		if (product.GetProperty("Id").GetInt16() == 4)
-    		{
-    			throw new ArgumentException("Error on 4");
-    		}
-
-        	return await Task.FromResult(RecordHandlerResult.None);
-    	}
-    }
+    --8<-- "docs/snippets/batch/csharp/PartialFailureHandling.cs:custom_sqs_record_handler"
     ```
 
 === "SQS Event.cs"
 
     ```csharp
-    internal static List<SQSEvent.SQSMessage> SqsMessages => new()
-    {
-    	new SQSEvent.SQSMessage
-    	{
-    		MessageId = "1",
-    		Body = "{\"Id\":1,\"Name\":\"product-4\",\"Price\":14}",
-    		EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
-    	},
-    	new SQSEvent.SQSMessage
-    	{
-    		MessageId = "2",
-    		Body = "fail",
-    		EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
-    	},
-    	new SQSEvent.SQSMessage
-    	{
-    		MessageId = "3",
-    		Body = "{\"Id\":3,\"Name\":\"product-4\",\"Price\":14}",
-    		EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
-    	},
-    	new SQSEvent.SQSMessage
-    	{
-    		MessageId = "4",
-    		Body = "{\"Id\":4,\"Name\":\"product-4\",\"Price\":14}",
-    		EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
-    	},
-    	new SQSEvent.SQSMessage
-    	{
-    		MessageId = "5",
-    		Body = "{\"Id\":5,\"Name\":\"product-4\",\"Price\":14}",
-    		EventSourceArn = "arn:aws:sqs:us-east-2:123456789012:my-queue"
-    	},
-    };
+    --8<-- "docs/snippets/batch/csharp/PartialFailureHandling.cs:sqs_event_test_helper"
     ```
 
 ## Complete Examples and Documentation
