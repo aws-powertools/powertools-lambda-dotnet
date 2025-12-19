@@ -1,10 +1,12 @@
 // This file is referenced by docs/utilities/batch-processing.md
 // via pymdownx.snippets (mkdocs).
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+
 // --8<-- [start:throw_on_full_batch_failure_decorator]
-	[BatchProcessor(
-        RecordHandler = typeof(CustomSqsRecordHandler),
-        ThrowOnFullBatchFailure = false)]
+		[BatchProcessor(
+	        RecordHandler = typeof(CustomSqsRecordHandler),
+	        ThrowOnFullBatchFailure = false)]
 	public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
 	{
 		return SqsBatchProcessor.Result.BatchItemFailuresResponse;

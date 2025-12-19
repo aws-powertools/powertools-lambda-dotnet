@@ -1,6 +1,8 @@
 // This file is referenced by docs/utilities/batch-processing.md
 // via pymdownx.snippets (mkdocs).
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+
 // --8<-- [start:sqs_typed_handler_decorator]
     public class Product
     {

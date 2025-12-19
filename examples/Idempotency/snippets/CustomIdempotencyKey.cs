@@ -9,6 +9,8 @@
                 .UseDynamoDb("idempotency_table"));
 // --8<-- [end:event_key_jmespath_payment]
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency
+{
 // --8<-- [start:custom_key_prefix]
 public class Function
 {
@@ -45,3 +47,4 @@ public class Function
       // ...
     }
 // --8<-- [end:throw_on_no_idempotency_key]
+}

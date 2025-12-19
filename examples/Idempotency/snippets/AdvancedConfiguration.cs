@@ -1,6 +1,8 @@
 // This file is referenced by docs/utilities/idempotency.md
 // via pymdownx.snippets (mkdocs).
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
+
 // --8<-- [start:register_lambda_context]
     public class Function
     {
