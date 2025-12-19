@@ -6,7 +6,6 @@
         <Description>Powertools for AWS Lambda (.NET) - Metrics AspNetCore package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Metrics.AspNetCore</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Metrics.AspNetCore</RootNamespace>
-        <TargetFrameworks>net8.0</TargetFrameworks>
         <TargetMultiFramework>false</TargetMultiFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>

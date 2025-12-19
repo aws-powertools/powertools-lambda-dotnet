@@ -32,7 +32,7 @@ public class MetricsEndpointExtensionsTests : IDisposable
 
         var app = builder.Build();
 
-        app.MapGet("/test", () => Results.Ok(new { success = true })).WithMetrics();
+        app.MapGet("/test", () => Results.Text("ok")).WithMetrics();
 
         await app.StartAsync();
         var client = app.GetTestClient();
@@ -82,7 +82,7 @@ public class MetricsEndpointExtensionsTests : IDisposable
             await next();
         });
 
-        app.MapGet("/test", () => Results.Ok(new { success = true })).WithMetrics();
+        app.MapGet("/test", () => Results.Text("ok")).WithMetrics();
 
         await app.StartAsync();
         var client = app.GetTestClient();
@@ -135,7 +135,7 @@ public class MetricsEndpointExtensionsTests : IDisposable
             await next();
         });
 
-        app.MapGet("/test", () => Results.Ok(new { success = true })).WithMetrics();
+        app.MapGet("/test", () => Results.Text("ok")).WithMetrics();
 
         await app.StartAsync();
         var client = app.GetTestClient();

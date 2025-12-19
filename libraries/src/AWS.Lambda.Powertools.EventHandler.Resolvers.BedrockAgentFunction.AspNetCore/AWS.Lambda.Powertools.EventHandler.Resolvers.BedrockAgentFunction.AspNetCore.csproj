@@ -6,7 +6,6 @@
         <Description>Powertools for AWS Lambda (.NET) - Event Handler Bedrock Agent Function Resolver AspNetCore package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore</RootNamespace>
-        <TargetFrameworks>net8.0</TargetFrameworks>
         <TargetMultiFramework>false</TargetMultiFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>

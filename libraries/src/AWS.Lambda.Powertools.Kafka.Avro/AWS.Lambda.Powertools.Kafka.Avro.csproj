@@ -7,7 +7,6 @@
         <Description>Powertools for AWS Lambda (.NET) - Kafka Avro consumer package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Kafka.Avro</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Kafka.Avro</RootNamespace>
-        <TargetFrameworks>net8.0</TargetFrameworks>
         <TargetMultiFramework>false</TargetMultiFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
