@@ -143,7 +143,7 @@ You can quickly start by configuring `Idempotency` and using it with the `Idempo
     Initialization and configuration of the `Idempotency` must be performed outside the handler, preferably in the constructor.
 
     ```csharp hl_lines="5 8"
-    --8<-- "docs/snippets/idempotency/GettingStartedBasic.cs:idempotent_attribute"
+    --8<-- "examples/Idempotency/snippets/GettingStartedBasic.cs:idempotent_attribute"
     ```
 
 #### Idempotent attribute on another method
@@ -158,7 +158,7 @@ When using `Idempotent` attribute on another method, you must tell which paramet
 !!! info "The parameter must be serializable in JSON. We use `System.Text.Json` internally to (de)serialize objects"
 
     ```csharp hl_lines="5 14-15"
-    --8<-- "docs/snippets/idempotency/GettingStartedBasic.cs:idempotent_attribute_on_another_method"
+    --8<-- "examples/Idempotency/snippets/GettingStartedBasic.cs:idempotent_attribute_on_another_method"
     ```
 
 ### Choosing a payload subset for idempotency
@@ -185,7 +185,7 @@ If we were to treat the entire request as our idempotency key, a simple HTTP hea
 === "Payment function"
 
     ```csharp hl_lines="4"
-    --8<-- "docs/snippets/idempotency/CustomIdempotencyKey.cs:event_key_jmespath_payment"
+    --8<-- "examples/Idempotency/snippets/CustomIdempotencyKey.cs:event_key_jmespath_payment"
     ```
 
 === "Sample event"
@@ -230,7 +230,7 @@ By default, the idempotency key is prefixed with `[ClassName].[DecoratedMethodNa
 You can customize this prefix by setting the `KeyPrefix` property in the Idempotency decorator:
 
 ```csharp hl_lines="9"
---8<-- "docs/snippets/idempotency/CustomIdempotencyKey.cs:custom_key_prefix"
+--8<-- "examples/Idempotency/snippets/CustomIdempotencyKey.cs:custom_key_prefix"
 ```
 
 ### Lambda timeouts
@@ -255,7 +255,7 @@ Here is an example on how you register the Lambda context in your handler:
 === "Registering the Lambda context"
 
     ```csharp hl_lines="10" title="Registering the Lambda context"
-    --8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:register_lambda_context"
+    --8<-- "examples/Idempotency/snippets/AdvancedConfiguration.cs:register_lambda_context"
     ```
 
 ### Handling exceptions
@@ -293,7 +293,7 @@ If an Exception is raised _outside_ the scope of the decorated method and after 
 === "Handling exceptions"
 
     ```csharp hl_lines="10-12 16-18 21" title="Exception not affecting idempotency record sample"
-    --8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:exception_not_affecting_record"
+    --8<-- "examples/Idempotency/snippets/AdvancedConfiguration.cs:exception_not_affecting_record"
     ```
 
 ### Idempotency request flow
@@ -500,7 +500,7 @@ This persistence store is built-in, and you can either use an existing DynamoDB 
 
 Use the builder to customize the table structure:
 ```csharp title="Customizing DynamoDBPersistenceStore to suit your table structure"
---8<-- "docs/snippets/idempotency/DynamoDbConfiguration.cs:dynamodb_persistence_store_builder"
+--8<-- "examples/Idempotency/snippets/DynamoDbConfiguration.cs:dynamodb_persistence_store_builder"
 ```
 
 When using DynamoDB as a persistence layer, you can alter the attribute names by passing these parameters when initializing the persistence layer:
@@ -523,7 +523,7 @@ When using DynamoDB as a persistence layer, you can alter the attribute names by
 Idempotency behavior can be further configured with **`IdempotencyOptions`** using a builder:
 
 ```csharp
---8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:idempotency_options_builder"
+--8<-- "examples/Idempotency/snippets/AdvancedConfiguration.cs:idempotency_options_builder"
 ```
 
 These are the available options for further configuration:
@@ -557,7 +557,7 @@ This is a locking mechanism for correctness. Since we don't know the result from
 
 You can enable it as seen before with:
 ```csharp title="Enable local cache"
---8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:enable_local_cache"
+--8<-- "examples/Idempotency/snippets/AdvancedConfiguration.cs:enable_local_cache"
 ```
 When enabled, we cache a maximum of 255 records in each Lambda execution environment
 
@@ -574,7 +574,7 @@ In most cases, it is not desirable to store the idempotency records forever. Rat
 
 You can change this window with the **`ExpirationInSeconds`** parameter:
 ```csharp title="Customizing expiration time"
---8<-- "docs/snippets/idempotency/ExpirationSettings.cs:customizing_expiration_time"
+--8<-- "examples/Idempotency/snippets/ExpirationSettings.cs:customizing_expiration_time"
 ```
 
 Records older than 5 minutes will be marked as expired, and the Lambda handler will be executed normally even if it is invoked with a matching payload.
@@ -594,7 +594,7 @@ With **`PayloadValidationJMESPath`**, you can provide an additional JMESPath exp
 === "Function.cs"
 
     ```csharp hl_lines="6"
-    --8<-- "docs/snippets/idempotency/PayloadValidation.cs:payload_validation_jmespath"
+    --8<-- "examples/Idempotency/snippets/PayloadValidation.cs:payload_validation_jmespath"
     ```
 
 === "Example Event 1"
@@ -643,7 +643,7 @@ This means that we will throw **`IdempotencyKeyException`** if the evaluation of
 === "Function.cs"
 
     ```csharp hl_lines="9"
-    --8<-- "docs/snippets/idempotency/CustomIdempotencyKey.cs:throw_on_no_idempotency_key"
+    --8<-- "examples/Idempotency/snippets/CustomIdempotencyKey.cs:throw_on_no_idempotency_key"
     ```
 
 === "Success Event"
@@ -679,7 +679,7 @@ When creating the `DynamoDBPersistenceStore`, you can set a custom [`AmazonDynam
 === "Custom AmazonDynamoDBClient"
 
     ```csharp hl_lines="3 9"
-    --8<-- "docs/snippets/idempotency/DynamoDbConfiguration.cs:custom_amazon_dynamodb_client"
+    --8<-- "examples/Idempotency/snippets/DynamoDbConfiguration.cs:custom_amazon_dynamodb_client"
     ```
 
 ### Using a DynamoDB table with a composite primary key
@@ -693,7 +693,7 @@ You can optionally set a static value for the partition key using the `StaticPkV
 === "Reusing a DynamoDB table that uses a composite primary key"
 
     ```csharp hl_lines="5"
-    --8<-- "docs/snippets/idempotency/DynamoDbConfiguration.cs:dynamodb_composite_primary_key"
+    --8<-- "examples/Idempotency/snippets/DynamoDbConfiguration.cs:dynamodb_composite_primary_key"
     ```
 
 Data would then be stored in DynamoDB like this:
@@ -714,7 +714,7 @@ You can set up a response hook in the Idempotency configuration to manipulate th
 The example below shows how to append HTTP headers to an `APIGatewayProxyResponse`:
 
 ```csharp
---8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:response_hook"
+--8<-- "examples/Idempotency/snippets/AdvancedConfiguration.cs:response_hook"
 ```
 
 ???+ info "Info: Using custom de-serialization?"
@@ -745,13 +745,13 @@ This ensures that when serializing your payload, the utility uses the correct se
 In the example below, we use the default `LambdaFunctionJsonSerializerContext`:
 
 ```csharp
---8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:with_json_serialization_context"
+--8<-- "examples/Idempotency/snippets/AdvancedConfiguration.cs:with_json_serialization_context"
 ```
 
 Full example:
 
 ```csharp hl_lines="8"
---8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:with_json_serialization_context_full_example"
+--8<-- "examples/Idempotency/snippets/AdvancedConfiguration.cs:with_json_serialization_context_full_example"
 ```
 
 ## Testing your code
