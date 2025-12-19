@@ -1,6 +1,8 @@
 // This file is referenced by docs/utilities/batch-processing.md
 // via pymdownx.snippets (mkdocs).
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+
 // --8<-- [start:sqs_record_handler_error_handling]
     public class CustomSqsRecordHandler : ISqsRecordHandler // (1)!
     {
