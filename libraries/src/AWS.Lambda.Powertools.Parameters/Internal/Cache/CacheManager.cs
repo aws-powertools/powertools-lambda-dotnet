@@ -66,6 +66,7 @@ internal class CacheManager : ICacheManager
 
     /// <summary>
     /// Adds a value to the cache by key for a specific duration. 
+    /// Uses atomic AddOrUpdate to ensure thread-safety during concurrent access.
     /// </summary>
     /// <param name="key">The key to store the value.</param>
     /// <param name="value">The value to store.</param>
@@ -75,14 +76,11 @@ internal class CacheManager : ICacheManager
         if (string.IsNullOrWhiteSpace(key) || value is null)
             return;
 
-        if (_cache.TryGetValue(key, out var cacheObject))
-        {
-            cacheObject.Value = value;
-            cacheObject.ExpiryTime = _dateTimeWrapper.UtcNow.Add(duration);
-        }
-        else
-        {
-            _cache.TryAdd(key, new CacheObject(value, _dateTimeWrapper.UtcNow.Add(duration)));
-        }
+        // Use AddOrUpdate for atomic operation - creates new immutable CacheObject instances
+        // instead of mutating existing ones to ensure thread-safety
+        _cache.AddOrUpdate(
+            key,
+            _ => new CacheObject(value, _dateTimeWrapper.UtcNow.Add(duration)),
+            (_, _) => new CacheObject(value, _dateTimeWrapper.UtcNow.Add(duration)));
     }
 }

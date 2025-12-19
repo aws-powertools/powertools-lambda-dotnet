@@ -24,9 +24,12 @@ namespace AWS.Lambda.Powertools.Parameters.Internal.Transform;
 internal class TransformerManager : ITransformerManager
 {
     /// <summary>
-    /// The TransformerManager instance.
+    /// Thread-safe lazy initialization of the TransformerManager singleton instance.
+    /// Uses LazyThreadSafetyMode.ExecutionAndPublication to ensure only one instance
+    /// is created even under concurrent access from multiple threads.
     /// </summary>
-    private static ITransformerManager? _instance;
+    private static readonly Lazy<ITransformerManager> _lazyInstance = 
+        new Lazy<ITransformerManager>(() => new TransformerManager(), LazyThreadSafetyMode.ExecutionAndPublication);
     
     /// <summary>
     /// The JsonTransformer instance.
@@ -39,9 +42,9 @@ internal class TransformerManager : ITransformerManager
     private readonly ITransformer _base64Transformer;
     
     /// <summary>
-    /// Gets the TransformerManager instance.
+    /// Gets the TransformerManager instance in a thread-safe manner.
     /// </summary>
-    internal static ITransformerManager Instance => _instance ??= new TransformerManager();
+    internal static ITransformerManager Instance => _lazyInstance.Value;
 
     /// <summary>
     /// Gets the list of transformer instances.

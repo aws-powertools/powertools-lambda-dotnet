@@ -32,78 +32,96 @@ namespace AWS.Lambda.Powertools.Parameters;
 public static class ParametersManager
 {
     /// <summary>
-    /// The SsmProvider instance
+    /// Thread-safe lazy initialization of the SsmProvider singleton instance.
+    /// Uses LazyThreadSafetyMode.ExecutionAndPublication to ensure only one instance
+    /// is created even under concurrent access from multiple threads.
     /// </summary>
-    private static ISsmProvider? _ssmProvider;
+    private static readonly Lazy<ISsmProvider> _lazySsmProvider = 
+        new Lazy<ISsmProvider>(CreateSsmProvider, LazyThreadSafetyMode.ExecutionAndPublication);
     
     /// <summary>
-    /// The SecretsProvider instance
+    /// Thread-safe lazy initialization of the SecretsProvider singleton instance.
+    /// Uses LazyThreadSafetyMode.ExecutionAndPublication to ensure only one instance
+    /// is created even under concurrent access from multiple threads.
     /// </summary>
-    private static ISecretsProvider? _secretsProvider;
+    private static readonly Lazy<ISecretsProvider> _lazySecretsProvider = 
+        new Lazy<ISecretsProvider>(CreateSecretsProvider, LazyThreadSafetyMode.ExecutionAndPublication);
 
     /// <summary>
-    /// The DynamoDBProvider instance
+    /// Thread-safe lazy initialization of the DynamoDBProvider singleton instance.
+    /// Uses LazyThreadSafetyMode.ExecutionAndPublication to ensure only one instance
+    /// is created even under concurrent access from multiple threads.
     /// </summary>
-    private static IDynamoDBProvider? _dynamoDBProvider;
+    private static readonly Lazy<IDynamoDBProvider> _lazyDynamoDBProvider = 
+        new Lazy<IDynamoDBProvider>(CreateDynamoDBProvider, LazyThreadSafetyMode.ExecutionAndPublication);
     
     /// <summary>
-    /// The AppConfigProvider instance
+    /// Thread-safe lazy initialization of the AppConfigProvider singleton instance.
+    /// Uses LazyThreadSafetyMode.ExecutionAndPublication to ensure only one instance
+    /// is created even under concurrent access from multiple threads.
     /// </summary>
-    private static IAppConfigProvider? _appConfigProvider;
+    private static readonly Lazy<IAppConfigProvider> _lazyAppConfigProvider = 
+        new Lazy<IAppConfigProvider>(CreateAppConfigProvider, LazyThreadSafetyMode.ExecutionAndPublication);
 
     /// <summary>
-    /// The CacheManager instance
+    /// The CacheManager instance. Access is protected by _configLock.
     /// </summary>
     private static ICacheManager? _cache;
     
     /// <summary>
-    /// The TransformerManager instance
+    /// The TransformerManager instance. Access is protected by _configLock.
     /// </summary>
     private static ITransformerManager? _transformManager;
     
     /// <summary>
-    /// The DefaultMaxAge across all providers
+    /// The DefaultMaxAge across all providers. Access is protected by _configLock.
     /// </summary>
     private static TimeSpan? _defaultMaxAge;
+    
+    /// <summary>
+    /// Lock object for thread-safe configuration operations.
+    /// </summary>
+    private static readonly object _configLock = new object();
     
     /// <summary>
     /// Gets the CacheManager instance.
     /// </summary>
     /// <value>The CacheManager instance.</value>
-    private static ICacheManager Cache => _cache ??= new CacheManager(DateTimeWrapper.Instance);
+    private static ICacheManager Cache => _cache ?? (_cache = new CacheManager(DateTimeWrapper.Instance));
     
     /// <summary>
     /// Gets the TransformerManager instance.
     /// </summary>
     /// <value>The TransformerManager instance.</value>
-    private static ITransformerManager TransformManager => _transformManager ??= TransformerManager.Instance;
+    private static ITransformerManager TransformManager => _transformManager ?? (_transformManager = TransformerManager.Instance);
 
     /// <summary>
-    /// Gets the SsmProvider instance.
+    /// Gets the SsmProvider instance in a thread-safe manner.
     /// </summary>
     /// <value>The SsmProvider instance.</value>
-    public static ISsmProvider SsmProvider => _ssmProvider ??= CreateSsmProvider();
+    public static ISsmProvider SsmProvider => _lazySsmProvider.Value;
     
     /// <summary>
-    /// Gets the SecretsProvider instance.
+    /// Gets the SecretsProvider instance in a thread-safe manner.
     /// </summary>
     /// <value>The SecretsProvider instance.</value>
-    public static ISecretsProvider SecretsProvider => _secretsProvider ??= CreateSecretsProvider();
+    public static ISecretsProvider SecretsProvider => _lazySecretsProvider.Value;
 
     /// <summary>
-    /// Gets the DynamoDBProvider instance.
+    /// Gets the DynamoDBProvider instance in a thread-safe manner.
     /// </summary>
     /// <value>The DynamoDBProvider instance.</value>
-    public static IDynamoDBProvider DynamoDBProvider => _dynamoDBProvider ??= CreateDynamoDBProvider();
+    public static IDynamoDBProvider DynamoDBProvider => _lazyDynamoDBProvider.Value;
 
     /// <summary>
-    /// Gets the AppConfigProvider instance.
+    /// Gets the AppConfigProvider instance in a thread-safe manner.
     /// </summary>
     /// <value>The AppConfigProvider instance.</value>
-    public static IAppConfigProvider AppConfigProvider => _appConfigProvider ??= CreateAppConfigProvider();
+    public static IAppConfigProvider AppConfigProvider => _lazyAppConfigProvider.Value;
 
     /// <summary>
     /// Set the caching default maximum age for all providers.
+    /// Thread-safe: uses lock to ensure consistent configuration across concurrent calls.
     /// </summary>
     /// <param name="maxAge">The maximum age.</param>
     /// <exception cref="System.ArgumentOutOfRangeException">maxAge</exception>
@@ -112,75 +130,132 @@ public static class ParametersManager
         if (maxAge <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(maxAge),
                 "The value for maximum age must be greater than zero.");
+        
+        lock (_configLock)
+        {
+            _defaultMaxAge = maxAge;
             
-        _defaultMaxAge = maxAge;
-        _ssmProvider?.DefaultMaxAge(maxAge);
-        _secretsProvider?.DefaultMaxAge(maxAge);
-        _dynamoDBProvider?.DefaultMaxAge(maxAge);
-        _appConfigProvider?.DefaultMaxAge(maxAge);
+            // Apply to existing providers if they have been initialized
+            if (_lazySsmProvider.IsValueCreated)
+                _lazySsmProvider.Value.DefaultMaxAge(maxAge);
+            if (_lazySecretsProvider.IsValueCreated)
+                _lazySecretsProvider.Value.DefaultMaxAge(maxAge);
+            if (_lazyDynamoDBProvider.IsValueCreated)
+                _lazyDynamoDBProvider.Value.DefaultMaxAge(maxAge);
+            if (_lazyAppConfigProvider.IsValueCreated)
+                _lazyAppConfigProvider.Value.DefaultMaxAge(maxAge);
+        }
     }
 
     /// <summary>
     /// Set the CacheManager instance for all providers.
+    /// Thread-safe: uses lock to ensure consistent configuration across concurrent calls.
     /// </summary>
     /// <param name="cacheManager">The CacheManager instance.</param>
     public static void UseCacheManager(ICacheManager cacheManager)
     {
-        _cache = cacheManager;
-        _ssmProvider?.UseCacheManager(cacheManager);
-        _secretsProvider?.UseCacheManager(cacheManager);
-        _dynamoDBProvider?.UseCacheManager(cacheManager);
-        _appConfigProvider?.UseCacheManager(cacheManager);
+        lock (_configLock)
+        {
+            _cache = cacheManager;
+            
+            // Apply to existing providers if they have been initialized
+            if (_lazySsmProvider.IsValueCreated)
+                _lazySsmProvider.Value.UseCacheManager(cacheManager);
+            if (_lazySecretsProvider.IsValueCreated)
+                _lazySecretsProvider.Value.UseCacheManager(cacheManager);
+            if (_lazyDynamoDBProvider.IsValueCreated)
+                _lazyDynamoDBProvider.Value.UseCacheManager(cacheManager);
+            if (_lazyAppConfigProvider.IsValueCreated)
+                _lazyAppConfigProvider.Value.UseCacheManager(cacheManager);
+        }
     }
 
     /// <summary>
     /// Set the TransformerManager instance for all providers.
+    /// Thread-safe: uses lock to ensure consistent configuration across concurrent calls.
     /// </summary>
     /// <param name="transformerManager">The TransformerManager instance.</param>
     public static void UseTransformerManager(ITransformerManager transformerManager)
     {
-        _transformManager = transformerManager;
-        _ssmProvider?.UseTransformerManager(transformerManager);
-        _secretsProvider?.UseTransformerManager(transformerManager);
-        _dynamoDBProvider?.UseTransformerManager(transformerManager);
-        _appConfigProvider?.UseTransformerManager(transformerManager);
+        lock (_configLock)
+        {
+            _transformManager = transformerManager;
+            
+            // Apply to existing providers if they have been initialized
+            if (_lazySsmProvider.IsValueCreated)
+                _lazySsmProvider.Value.UseTransformerManager(transformerManager);
+            if (_lazySecretsProvider.IsValueCreated)
+                _lazySecretsProvider.Value.UseTransformerManager(transformerManager);
+            if (_lazyDynamoDBProvider.IsValueCreated)
+                _lazyDynamoDBProvider.Value.UseTransformerManager(transformerManager);
+            if (_lazyAppConfigProvider.IsValueCreated)
+                _lazyAppConfigProvider.Value.UseTransformerManager(transformerManager);
+        }
     }
 
     /// <summary>
     /// Registers a new transformer instance by name for all providers.
+    /// Thread-safe: uses lock to ensure consistent configuration across concurrent calls.
     /// </summary>
     /// <param name="name">The transformer unique name.</param>
     /// <param name="transformer">The transformer instance.</param>
     public static void AddTransformer(string name, ITransformer transformer)
     {
-        TransformManager.AddTransformer(name, transformer);
-        _ssmProvider?.AddTransformer(name, transformer);
-        _secretsProvider?.AddTransformer(name, transformer);
-        _dynamoDBProvider?.AddTransformer(name, transformer);
-        _appConfigProvider?.AddTransformer(name, transformer);
+        lock (_configLock)
+        {
+            TransformManager.AddTransformer(name, transformer);
+            
+            // Apply to existing providers if they have been initialized
+            if (_lazySsmProvider.IsValueCreated)
+                _lazySsmProvider.Value.AddTransformer(name, transformer);
+            if (_lazySecretsProvider.IsValueCreated)
+                _lazySecretsProvider.Value.AddTransformer(name, transformer);
+            if (_lazyDynamoDBProvider.IsValueCreated)
+                _lazyDynamoDBProvider.Value.AddTransformer(name, transformer);
+            if (_lazyAppConfigProvider.IsValueCreated)
+                _lazyAppConfigProvider.Value.AddTransformer(name, transformer);
+        }
     }
     
     /// <summary>
-    /// Configure the transformer to raise exception on transformation error
+    /// Configure the transformer to raise exception on transformation error.
+    /// Thread-safe: uses lock to ensure consistent configuration across concurrent calls.
     /// </summary>
     public static void RaiseTransformationError()
     {
-        _ssmProvider?.RaiseTransformationError();
-        _secretsProvider?.RaiseTransformationError();
-        _dynamoDBProvider?.RaiseTransformationError();
-        _appConfigProvider?.RaiseTransformationError();
+        lock (_configLock)
+        {
+            // Apply to existing providers if they have been initialized
+            if (_lazySsmProvider.IsValueCreated)
+                _lazySsmProvider.Value.RaiseTransformationError();
+            if (_lazySecretsProvider.IsValueCreated)
+                _lazySecretsProvider.Value.RaiseTransformationError();
+            if (_lazyDynamoDBProvider.IsValueCreated)
+                _lazyDynamoDBProvider.Value.RaiseTransformationError();
+            if (_lazyAppConfigProvider.IsValueCreated)
+                _lazyAppConfigProvider.Value.RaiseTransformationError();
+        }
     }
     
     /// <summary>
-    /// Configure the transformer to raise exception or return Null on transformation error
+    /// Configure the transformer to raise exception or return Null on transformation error.
+    /// Thread-safe: uses lock to ensure consistent configuration across concurrent calls.
     /// </summary>
     /// <param name="raiseError">true for raise error, false for return Null.</param>
     public static void RaiseTransformationError(bool raiseError)
     {
-        _ssmProvider?.RaiseTransformationError(raiseError);
-        _secretsProvider?.RaiseTransformationError(raiseError);
-        _dynamoDBProvider?.RaiseTransformationError(raiseError);
-        _appConfigProvider?.RaiseTransformationError(raiseError);
+        lock (_configLock)
+        {
+            // Apply to existing providers if they have been initialized
+            if (_lazySsmProvider.IsValueCreated)
+                _lazySsmProvider.Value.RaiseTransformationError(raiseError);
+            if (_lazySecretsProvider.IsValueCreated)
+                _lazySecretsProvider.Value.RaiseTransformationError(raiseError);
+            if (_lazyDynamoDBProvider.IsValueCreated)
+                _lazyDynamoDBProvider.Value.RaiseTransformationError(raiseError);
+            if (_lazyAppConfigProvider.IsValueCreated)
+                _lazyAppConfigProvider.Value.RaiseTransformationError(raiseError);
+        }
     }
 
     /// <summary>
