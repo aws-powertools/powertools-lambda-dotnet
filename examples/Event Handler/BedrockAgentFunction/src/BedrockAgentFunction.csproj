@@ -13,10 +13,12 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.12.0" />
-    <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="2.8.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
-    <PackageReference Include="AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction" Version="1.0.0-alpha.3" />
     <PackageReference Include="AWSSDK.GeoPlaces" Version="4.0.0.4" />
-    <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="2.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\libraries\src\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj" />
+    <ProjectReference Include="..\..\..\..\..\libraries\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" />
   </ItemGroup>
 </Project>

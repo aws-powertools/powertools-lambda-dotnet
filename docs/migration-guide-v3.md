@@ -56,7 +56,7 @@ Migrate from AWS SDK v3 to v4. Update package references in your `.csproj`:
 **After (v3):**
 ```xml
 <ItemGroup>
-  <PackageReference Include="Amazon.Lambda.Core" Version="2.7.0" />
+  <PackageReference Include="Amazon.Lambda.Core" Version="2.8.0" />
   <PackageReference Include="AWSSDK.Core" Version="4.0.*" />
   <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.*" />
   <PackageReference Include="AWSSDK.S3" Version="4.0.*" />

@@ -20,6 +20,8 @@
         <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.1" />
         <PackageReference Include="Amazon.Lambda.Core" Version="2.8.0" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4"/>
-        <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="3.0.2" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\..\libraries\src\AWS.Lambda.Powertools.Metrics\AWS.Lambda.Powertools.Metrics.csproj" />
     </ItemGroup>
 </Project>
