@@ -74,7 +74,7 @@ dotnet add package AWS.Lambda.Powertools.Idempotency
 Your Lambda function IAM Role must have `dynamodb:GetItem`, `dynamodb:PutItem`, `dynamodb:UpdateItem` and `dynamodb:DeleteItem` IAM permissions before using this feature.
 
 ???+ note
-If you're using our example [AWS Serverless Application Model (SAM)](#required-resources), [AWS Cloud Development Kit (CDK)](#required-resources), or [Terraform](#required-resources) it already adds the required permissions.
+    If you're using our example [AWS Serverless Application Model (SAM)](#required-resources), [AWS Cloud Development Kit (CDK)](#required-resources), or [Terraform](#required-resources) it already adds the required permissions.
 
 ### Required resources
 
@@ -143,19 +143,7 @@ You can quickly start by configuring `Idempotency` and using it with the `Idempo
     Initialization and configuration of the `Idempotency` must be performed outside the handler, preferably in the constructor.
 
     ```csharp hl_lines="5 8"
-    public class Function
-    {
-        public Function()
-        {
-            Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
-        }
-        
-        [Idempotent]
-        public Task<string> FunctionHandler(string input, ILambdaContext context)
-        {
-            return Task.FromResult(input.ToUpper());
-        }
-    }
+    --8<-- "docs/snippets/idempotency/GettingStartedBasic.cs:idempotent_attribute"
     ```
 
 #### Idempotent attribute on another method
@@ -170,24 +158,7 @@ When using `Idempotent` attribute on another method, you must tell which paramet
 !!! info "The parameter must be serializable in JSON. We use `System.Text.Json` internally to (de)serialize objects"
 
     ```csharp hl_lines="5 14-15"
-    public class Function
-    {
-        public Function()
-        {
-            Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
-        }
-        
-        public Task<string> FunctionHandler(string input, ILambdaContext context)
-        {
-            MyInternalMethod("hello", "world")
-            return Task.FromResult(input.ToUpper());
-        }
-
-        [Idempotent]
-        private string MyInternalMethod(string argOne, [IdempotencyKey] string argTwo) {
-            return "something";
-        }
-    }
+    --8<-- "docs/snippets/idempotency/GettingStartedBasic.cs:idempotent_attribute_on_another_method"
     ```
 
 ### Choosing a payload subset for idempotency
@@ -214,11 +185,7 @@ If we were to treat the entire request as our idempotency key, a simple HTTP hea
 === "Payment function"
 
     ```csharp hl_lines="4"
-    Idempotency.Configure(builder =>
-            builder
-                .WithOptions(optionsBuilder =>
-                    optionsBuilder.WithEventKeyJmesPath("powertools_json(Body).[\"user_id\", \"product_id\"]"))
-                .UseDynamoDb("idempotency_table"));
+    --8<-- "docs/snippets/idempotency/CustomIdempotencyKey.cs:event_key_jmespath_payment"
     ```
 
 === "Sample event"
@@ -263,20 +230,7 @@ By default, the idempotency key is prefixed with `[ClassName].[DecoratedMethodNa
 You can customize this prefix by setting the `KeyPrefix` property in the Idempotency decorator:
 
 ```csharp hl_lines="9"
-public class Function
-{
-    public Function()
-    {
-        var tableName = Environment.GetEnvironmentVariable("IDEMPOTENCY_TABLE_NAME");
-        Idempotency.Configure(builder => builder.UseDynamoDb(tableName));
-    }
-
-    [Idempotent(KeyPrefix = "MyCustomKeyPrefix")]
-    public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigwProxyEvent, ILambdaContext context)
-    {
-        return TestHelper.TestMethod(apigwProxyEvent);
-    }
-}
+--8<-- "docs/snippets/idempotency/CustomIdempotencyKey.cs:custom_key_prefix"
 ```
 
 ### Lambda timeouts
@@ -301,25 +255,7 @@ Here is an example on how you register the Lambda context in your handler:
 === "Registering the Lambda context"
 
     ```csharp hl_lines="10" title="Registering the Lambda context"
-    public class Function
-    {
-        public Function()
-        {
-            Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
-        }
-        
-        public Task<string> FunctionHandler(string input, ILambdaContext context)
-        {
-            Idempotency.RegisterLambdaContext(context);
-            MyInternalMethod("hello", "world")
-            return Task.FromResult(input.ToUpper());
-        }
-
-        [Idempotent]
-        private string MyInternalMethod(string argOne, [IdempotencyKey] string argTwo) {
-            return "something";
-        }
-    }
+    --8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:register_lambda_context"
     ```
 
 ### Handling exceptions
@@ -357,31 +293,7 @@ If an Exception is raised _outside_ the scope of the decorated method and after 
 === "Handling exceptions"
 
     ```csharp hl_lines="10-12 16-18 21" title="Exception not affecting idempotency record sample"
-    public class Function
-    {
-        public Function()
-        {
-            Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
-        }
-        
-        public Task<string> FunctionHandler(string input, ILambdaContext context)
-        {
-            Idempotency.RegisterLambdaContext(context);
-            // If an exception is thrown here, no idempotent record will ever get created as the
-            // idempotent method does not get called
-
-            MyInternalMethod("hello", "world")
-
-            // This exception will not cause the idempotent record to be deleted, since it
-            // happens after the decorated method has been successfully called    
-            throw new Exception();
-        }
-
-        [Idempotent]
-        private string MyInternalMethod(string argOne, [IdempotencyKey] string argTwo) {
-            return "something";
-        }
-    }
+    --8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:exception_not_affecting_record"
     ```
 
 ### Idempotency request flow
@@ -588,15 +500,7 @@ This persistence store is built-in, and you can either use an existing DynamoDB 
 
 Use the builder to customize the table structure:
 ```csharp title="Customizing DynamoDBPersistenceStore to suit your table structure"
-new DynamoDBPersistenceStoreBuilder()
-    .WithTableName("TABLE_NAME")
-    .WithKeyAttr("idempotency_key")
-    .WithExpiryAttr("expires_at")
-    .WithStatusAttr("current_status")
-    .WithDataAttr("result_data")
-    .WithValidationAttr("validation_key")
-    .WithInProgressExpiryAttr("in_progress_expires_at")
-    .Build()
+--8<-- "docs/snippets/idempotency/DynamoDbConfiguration.cs:dynamodb_persistence_store_builder"
 ```
 
 When using DynamoDB as a persistence layer, you can alter the attribute names by passing these parameters when initializing the persistence layer:
@@ -619,14 +523,7 @@ When using DynamoDB as a persistence layer, you can alter the attribute names by
 Idempotency behavior can be further configured with **`IdempotencyOptions`** using a builder:
 
 ```csharp
-new IdempotencyOptionsBuilder()
-    .WithEventKeyJmesPath("id")
-    .WithPayloadValidationJmesPath("paymentId")
-    .WithThrowOnNoIdempotencyKey(true)
-    .WithExpiration(TimeSpan.FromMinutes(1))
-    .WithUseLocalCache(true)
-    .WithHashFunction("MD5")
-    .Build();
+--8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:idempotency_options_builder"
 ```
 
 These are the available options for further configuration:
@@ -660,9 +557,7 @@ This is a locking mechanism for correctness. Since we don't know the result from
 
 You can enable it as seen before with:
 ```csharp title="Enable local cache"
-    new IdempotencyOptionsBuilder()
-        .WithUseLocalCache(true)
-        .Build()
+--8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:enable_local_cache"
 ```
 When enabled, we cache a maximum of 255 records in each Lambda execution environment
 
@@ -679,9 +574,7 @@ In most cases, it is not desirable to store the idempotency records forever. Rat
 
 You can change this window with the **`ExpirationInSeconds`** parameter:
 ```csharp title="Customizing expiration time"
-new IdempotencyOptionsBuilder()
-    .WithExpiration(TimeSpan.FromMinutes(5))
-    .Build()
+--8<-- "docs/snippets/idempotency/ExpirationSettings.cs:customizing_expiration_time"
 ```
 
 Records older than 5 minutes will be marked as expired, and the Lambda handler will be executed normally even if it is invoked with a matching payload.
@@ -701,13 +594,7 @@ With **`PayloadValidationJMESPath`**, you can provide an additional JMESPath exp
 === "Function.cs"
 
     ```csharp hl_lines="6"
-    Idempotency.Configure(builder =>
-            builder
-                .WithOptions(optionsBuilder =>
-                    optionsBuilder
-                        .WithEventKeyJmesPath("[userDetail, productId]")
-                        .WithPayloadValidationJmesPath("amount"))
-                .UseDynamoDb("TABLE_NAME"));
+    --8<-- "docs/snippets/idempotency/PayloadValidation.cs:payload_validation_jmespath"
     ```
 
 === "Example Event 1"
@@ -756,23 +643,7 @@ This means that we will throw **`IdempotencyKeyException`** if the evaluation of
 === "Function.cs"
 
     ```csharp hl_lines="9"
-    public App() 
-    {
-      Idempotency.Configure(builder =>
-            builder
-                .WithOptions(optionsBuilder =>
-                    optionsBuilder
-                        // Requires "user"."uid" and "orderId" to be present
-                        .WithEventKeyJmesPath("[user.uid, orderId]")
-                        .WithThrowOnNoIdempotencyKey(true))
-                .UseDynamoDb("TABLE_NAME"));
-    }
-
-    [Idempotent]
-    public Task<OrderResult> FunctionHandler(Order input, ILambdaContext context)
-    {
-      // ...
-    }
+    --8<-- "docs/snippets/idempotency/CustomIdempotencyKey.cs:throw_on_no_idempotency_key"
     ```
 
 === "Success Event"
@@ -808,17 +679,7 @@ When creating the `DynamoDBPersistenceStore`, you can set a custom [`AmazonDynam
 === "Custom AmazonDynamoDBClient"
 
     ```csharp hl_lines="3 9"
-    public Function()
-    {
-        AmazonDynamoDBClient customClient = new AmazonDynamoDBClient(RegionEndpoint.APSouth1);
-      
-        Idempotency.Configure(builder => 
-            builder.UseDynamoDb(storeBuilder => 
-                storeBuilder.
-                    WithTableName("TABLE_NAME")
-                    .WithDynamoDBClient(customClient)
-            ));
-    }
+    --8<-- "docs/snippets/idempotency/DynamoDbConfiguration.cs:custom_amazon_dynamodb_client"
     ```
 
 ### Using a DynamoDB table with a composite primary key
@@ -832,12 +693,7 @@ You can optionally set a static value for the partition key using the `StaticPkV
 === "Reusing a DynamoDB table that uses a composite primary key"
 
     ```csharp hl_lines="5"
-    Idempotency.Configure(builder => 
-        builder.UseDynamoDb(storeBuilder => 
-            storeBuilder.
-                WithTableName("TABLE_NAME")
-                .WithSortKeyAttr("sort_key")
-        ));
+    --8<-- "docs/snippets/idempotency/DynamoDbConfiguration.cs:dynamodb_composite_primary_key"
     ```
 
 Data would then be stored in DynamoDB like this:
@@ -858,24 +714,7 @@ You can set up a response hook in the Idempotency configuration to manipulate th
 The example below shows how to append HTTP headers to an `APIGatewayProxyResponse`:
 
 ```csharp
-Idempotency.Config()
-    .WithConfig(IdempotencyOptions.Builder()
-        .WithEventKeyJmesPath("powertools_json(body).address")
-        .WithResponseHook((responseData, dataRecord) => {
-            if (responseData is APIGatewayProxyResponse proxyResponse)
-            {
-                proxyResponse.Headers ??= new Dictionary<string, string>();
-                proxyResponse.Headers["x-idempotency-response"] = "true";
-                proxyResponse.Headers["x-idempotency-expiration"] = dataRecord.ExpiryTimestamp.ToString();
-                return proxyResponse;
-            }
-            return responseData;
-        })
-        .Build())
-    .WithPersistenceStore(DynamoDBPersistenceStore.Builder()
-        .WithTableName(Environment.GetEnvironmentVariable("IDEMPOTENCY_TABLE"))
-        .Build())
-    .Configure();
+--8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:response_hook"
 ```
 
 ???+ info "Info: Using custom de-serialization?"
@@ -906,54 +745,13 @@ This ensures that when serializing your payload, the utility uses the correct se
 In the example below, we use the default `LambdaFunctionJsonSerializerContext`:
 
 ```csharp
-Idempotency.Configure(builder =>
-builder.WithJsonSerializationContext(LambdaFunctionJsonSerializerContext.Default)));
-
+--8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:with_json_serialization_context"
 ```
 
 Full example:
 
 ```csharp hl_lines="8"
-public static class Function
-{
-    private static async Task Main()
-    {
-        var tableName = Environment.GetEnvironmentVariable("IDEMPOTENCY_TABLE_NAME");
-        Idempotency.Configure(builder =>
-            builder
-                .WithJsonSerializationContext(LambdaFunctionJsonSerializerContext.Default)
-                .WithOptions(optionsBuilder => optionsBuilder
-                    .WithExpiration(TimeSpan.FromHours(1)))
-                .UseDynamoDb(storeBuilder => storeBuilder
-                    .WithTableName(tableName)
-                ));
-
-        Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler = FunctionHandler;
-        await LambdaBootstrapBuilder.Create(handler,
-                new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>())
-            .Build()
-            .RunAsync();
-    }
-
-    [Idempotent]
-    public static APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
-        ILambdaContext context)
-    {
-        return new APIGatewayProxyResponse
-            {
-                Body = JsonSerializer.Serialize(response, typeof(Response), LambdaFunctionJsonSerializerContext.Default),
-                StatusCode = 200,
-                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
-            };
-    }
-}
-
-[JsonSerializable(typeof(APIGatewayProxyRequest))]
-[JsonSerializable(typeof(APIGatewayProxyResponse))]
-[JsonSerializable(typeof(Response))]
-public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
-{
-}
+--8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:with_json_serialization_context_full_example"
 ```
 
 ## Testing your code

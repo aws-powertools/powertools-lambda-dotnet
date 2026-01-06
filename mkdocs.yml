@@ -83,6 +83,7 @@ markdown_extensions:
   - pymdownx.snippets:
       base_path: "."
       check_paths: True
+      dedent_subsections: true
   - meta
   - toc:
       permalink: true
