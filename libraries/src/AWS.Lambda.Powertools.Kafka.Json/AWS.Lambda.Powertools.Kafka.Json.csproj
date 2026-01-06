@@ -6,7 +6,6 @@
         <Description>Powertools for AWS Lambda (.NET) - Kafka Json consumer package.</Description>
         <AssemblyName>AWS.Lambda.Powertools.Kafka.Json</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Kafka.Json</RootNamespace>
-        <TargetFrameworks>net8.0</TargetFrameworks>
         <TargetMultiFramework>false</TargetMultiFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>

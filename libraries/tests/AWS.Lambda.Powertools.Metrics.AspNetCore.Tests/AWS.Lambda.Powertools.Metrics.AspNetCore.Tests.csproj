@@ -4,7 +4,6 @@
     <PropertyGroup>
         <AssemblyName>AWS.Lambda.Powertools.Metrics.AspNetCore.Tests</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Metrics.AspNetCore.Tests</RootNamespace>
-        <TargetFrameworks>net8.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 

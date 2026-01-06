@@ -177,22 +177,43 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
     }
 
     [Collection("TracingTests")]
-    public class TracingAttributeLambdaEnvironmentTest
+    public class TracingAttributeLambdaEnvironmentTest : IDisposable
     {
         private readonly HandlerFunctions _handler;
+        private Segment _testSegment;
     
         public TracingAttributeLambdaEnvironmentTest()
         {
             _handler = new HandlerFunctions();
+            
+            // Clean up any existing X-Ray context before test
+            CleanupXRayContext();
+        }
+        
+        private static void CleanupXRayContext()
+        {
+            // Clear environment to ensure we're not in Lambda mode
+            Environment.SetEnvironmentVariable("LAMBDA_TASK_ROOT", null);
+            
+            try
+            {
+                AWSXRayRecorder.Instance.TraceContext.ClearEntity();
+            }
+            catch
+            {
+                // Ignore if no entity exists
+            }
+            
+            XRayRecorder.ResetInstance();
         }
         
         [Fact]
         public void Tracing_WhenOutsideOfLambdaEnv_DisablesTracing()
         {
-            // Arrange
-            
-            // Need to manually create the initial segment
-            AWSXRayRecorder.Instance.BeginSegment("foo");
+            // Arrange - Create segment directly without using BeginSegment to avoid Facade Segment issues
+            _testSegment = new Segment("foo");
+            _testSegment.SetStartTimeToNow();
+            AWSXRayRecorder.Instance.TraceContext.SetEntity(_testSegment);
     
             // Act
             // Cold Start Execution
@@ -205,8 +226,23 @@ namespace AWS.Lambda.Powertools.Tracing.Tests
             Assert.Empty(segmentCold.Annotations);
             Assert.False(segmentCold.IsSubsegmentsAdded);
             Assert.False(segmentCold.IsMetadataAdded);
-
-            AWSXRayRecorder.Instance.EndSegment();
+        }
+        
+        public void Dispose()
+        {
+            try
+            {
+                if (_testSegment != null)
+                {
+                    _testSegment.SetEndTimeToNow();
+                }
+                AWSXRayRecorder.Instance.TraceContext.ClearEntity();
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
+            XRayRecorder.ResetInstance();
         }
     }
     

@@ -58,9 +58,10 @@ body:
     attributes:
       label: AWS Lambda function runtime
       options:
-        - dotnet6
         - dotnet8
         - dotnet8 (AOT)
+        - dotnet10
+        - dotnet10 (AOT)
     validations:
       required: true
   - type: textarea

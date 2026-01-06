@@ -209,7 +209,7 @@ Alternatively, you can use Docker directly for more control:
 
 ```bash
 # Create a build container using Amazon's provided image
-docker run --rm -v $(pwd):/workspace -w /workspace public.ecr.aws/sam/build-dotnet8:latest-x86_64 \
+docker run --rm -v $(pwd):/workspace -w /workspace public.ecr.aws/sam/build-dotnet10:latest-x86_64 \
     bash -c "cd src/PowertoolsAotLoggerDemo && dotnet publish -c Release -r linux-x64 -o publish"
 
 # Deploy using the AWS CLI
@@ -227,7 +227,7 @@ aws lambda create-function \
 
 ```powershell
 # Create a build container using Amazon's provided image
-docker run --rm -v ${PWD}:/workspace -w /workspace public.ecr.aws/sam/build-dotnet8:latest-x86_64 `
+docker run --rm -v ${PWD}:/workspace -w /workspace public.ecr.aws/sam/build-dotnet10:latest-x86_64 `
     bash -c "cd src/PowertoolsAotLoggerDemo && dotnet publish -c Release -r linux-x64 -o publish"
 
 # Deploy using the AWS CLI

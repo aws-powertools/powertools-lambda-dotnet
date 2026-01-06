@@ -5,7 +5,6 @@
     <PropertyGroup>
         <AssemblyName>AWS.Lambda.Powertools.EventHandler.Tests</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.EventHandler.Tests</RootNamespace>
-        <TargetFrameworks>net8.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 

@@ -5,7 +5,6 @@
     <PropertyGroup>
         <AssemblyName>AWS.Lambda.Powertools.Kafka.Tests</AssemblyName>
         <RootNamespace>AWS.Lambda.Powertools.Kafka.Tests</RootNamespace>
-        <TargetFrameworks>net8.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
