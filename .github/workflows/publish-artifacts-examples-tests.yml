@@ -99,10 +99,10 @@ jobs:
               fi
               
               # Check if project references this package via ProjectReference and convert to PackageReference
-              if grep -q "<ProjectReference.*$packageName.csproj" "$project"; then
+              if grep -q "<ProjectReference.*$packageName\.csproj" "$project"; then
                 echo "  - Converting ProjectReference $packageName to PackageReference version $packageVersion"
                 # Remove the ProjectReference line
-                sed -i "/<ProjectReference.*$packageName.csproj/d" "$project"
+                sed -i "/<ProjectReference.*$packageName\.csproj/d" "$project"
                 # Add PackageReference
                 dotnet add "$project" package "$packageName" --version "$packageVersion" --source "local" --no-restore
               fi
