@@ -138,7 +138,7 @@ Processing batches from SQS using typed Lambda handler decorator with automatic 
 === "Function.cs"
 
     ```csharp hl_lines="1 8 19 29 32"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedWithSqs.cs:sqs_typed_handler_decorator"
+    --8<-- "docs/snippets/batch/GettingStartedWithSqs.cs:sqs_typed_handler_decorator"
     ```
 
     1.  **Step 1**. Creates a class that implements ITypedRecordHandler<Product> interface - Product is automatically deserialized from SQS message body.
@@ -214,7 +214,7 @@ Processing batches from SQS using Lambda handler decorator works in three stages
 === "Function.cs"
 
     ```csharp hl_lines="1 12 22 17 25"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedWithSqs.cs:sqs_handler_decorator_traditional"
+    --8<-- "docs/snippets/batch/GettingStartedWithSqs.cs:sqs_handler_decorator_traditional"
     ```
 
     1.  **Step 1**. Creates a class that implements ISqsRecordHandler interface and the HandleAsync method.
@@ -320,7 +320,7 @@ Processing batches from Kinesis using typed Lambda handler decorator with automa
 === "Function.cs"
 
     ```csharp hl_lines="1 9 15 20 24 27"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedBasic.cs:kinesis_typed_handler_decorator"
+    --8<-- "docs/snippets/batch/GettingStartedBasic.cs:kinesis_typed_handler_decorator"
     ```
 
     1.  **Step 1**. Creates a class that implements ITypedRecordHandler<Order> interface - Order is automatically deserialized from Kinesis record data.
@@ -340,7 +340,7 @@ Processing batches from Kinesis using Lambda handler decorator works in three st
 === "Function.cs"
 
     ```csharp hl_lines="1 7 12 17 20"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedBasic.cs:kinesis_handler_decorator_traditional"
+    --8<-- "docs/snippets/batch/GettingStartedBasic.cs:kinesis_handler_decorator_traditional"
     ```
 
     1.  **Step 1**. Creates a class that implements the IKinesisEventRecordHandler interface and the HandleAsync method.
@@ -437,7 +437,7 @@ Processing batches from DynamoDB Streams using typed Lambda handler decorator wi
 === "Function.cs"
 
     ```csharp hl_lines="1 9 15 20 24 27"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedBasic.cs:dynamodb_typed_handler_decorator"
+    --8<-- "docs/snippets/batch/GettingStartedBasic.cs:dynamodb_typed_handler_decorator"
     ```
 
     1.  **Step 1**. Creates a class that implements ITypedRecordHandler<Customer> interface - Customer is automatically deserialized from DynamoDB stream record.
@@ -457,7 +457,7 @@ Processing batches from DynamoDB Streams using Lambda handler decorator works in
 === "Function.cs"
 
     ```csharp hl_lines="1 7 12 17 20"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedBasic.cs:dynamodb_handler_decorator_traditional"
+    --8<-- "docs/snippets/batch/GettingStartedBasic.cs:dynamodb_handler_decorator_traditional"
     ```
 
     1.  **Step 1**. Creates a class that implements the IDynamoDbStreamRecordHandler and the HandleAsync method.
@@ -543,7 +543,7 @@ This allows us to **(1)** continue processing the batch, **(2)** collect each ba
 === "Function.cs"
 
     ```csharp hl_lines="14"
-    --8<-- "examples/BatchProcessing/snippets/AdvancedErrorHandling.cs:sqs_record_handler_error_handling"
+    --8<-- "docs/snippets/batch/AdvancedErrorHandling.cs:sqs_record_handler_error_handling"
     ```
 
 === "Sample event"
@@ -651,7 +651,7 @@ Another approach is to decorate the handler and use one of the policies in the *
 === "Function.cs"
 
     ```csharp hl_lines="2"
-    --8<-- "examples/BatchProcessing/snippets/AdvancedErrorHandling.cs:error_handling_policy_attribute"
+    --8<-- "docs/snippets/batch/AdvancedErrorHandling.cs:error_handling_policy_attribute"
     ```
 
 ### Partial failure mechanics
@@ -784,13 +784,13 @@ For Native AOT scenarios, you can configure JsonSerializerContext:
 === "JsonSerializerContext Configuration"
 
     ```csharp
-    --8<-- "examples/BatchProcessing/snippets/CustomSerialization.cs:json_serializer_context_configuration"
+    --8<-- "docs/snippets/batch/CustomSerialization.cs:json_serializer_context_configuration"
     ```
 
 === "Using with Attribute"
 
     ```csharp hl_lines="2 3"
-    --8<-- "examples/BatchProcessing/snippets/CustomSerialization.cs:json_serializer_context_using_with_attribute"
+    --8<-- "docs/snippets/batch/CustomSerialization.cs:json_serializer_context_using_with_attribute"
     ```
 
 
@@ -802,13 +802,13 @@ For typed handlers that need access to Lambda context, use `ITypedRecordHandlerW
 === "Handler with Context"
 
     ```csharp hl_lines="1 3"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedWithSqs.cs:typed_handler_with_context"
+    --8<-- "docs/snippets/batch/GettingStartedWithSqs.cs:typed_handler_with_context"
     ```
 
 === "Function Usage"
 
     ```csharp hl_lines="1 2"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedWithSqs.cs:function_usage_with_context"
+    --8<-- "docs/snippets/batch/GettingStartedWithSqs.cs:function_usage_with_context"
     ```
 
 ### Migration from Traditional to Typed Handlers
@@ -818,13 +818,13 @@ You can gradually migrate from traditional to typed handlers:
 === "Before (Traditional)"
 
     ```csharp hl_lines="1 6"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedWithSqs.cs:migration_before_traditional"
+    --8<-- "docs/snippets/batch/GettingStartedWithSqs.cs:migration_before_traditional"
     ```
 
 === "After (Typed)"
 
     ```csharp hl_lines="1 5"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedWithSqs.cs:migration_after_typed"
+    --8<-- "docs/snippets/batch/GettingStartedWithSqs.cs:migration_after_typed"
     ```
 
 ### Error Handling with Typed Processors
@@ -834,7 +834,7 @@ Typed processors support the same error handling policies as traditional process
 === "Custom Error Handling"
 
     ```csharp hl_lines="2"
-    --8<-- "examples/BatchProcessing/snippets/AdvancedErrorHandling.cs:typed_custom_error_handling"
+    --8<-- "docs/snippets/batch/AdvancedErrorHandling.cs:typed_custom_error_handling"
     ```
 
 ### Advanced
@@ -848,7 +848,7 @@ Calling the **`ProcessAsync`** method on the Instance of the static BatchProcess
 === "Function.cs"
 
     ```csharp hl_lines="3"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedBasic.cs:using_utility_outside_decorator"
+    --8<-- "docs/snippets/batch/GettingStartedBasic.cs:using_utility_outside_decorator"
     ```
 
 To make the handler testable you can use Dependency Injection to resolve the BatchProcessor (`SqsBatchProcessor`, `DynamoDbStreamBatchProcessor`, `KinesisEventBatchProcessor`) instance and then call the **`ProcessAsync`** method.
@@ -856,19 +856,19 @@ To make the handler testable you can use Dependency Injection to resolve the Bat
 === "GetRequiredService inside the method"
 
     ```csharp hl_lines="3 4 5"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedBasic.cs:using_utility_from_ioc_getrequiredservice"
+    --8<-- "docs/snippets/batch/GettingStartedBasic.cs:using_utility_from_ioc_getrequiredservice"
     ```
 
 === "Injecting method parameters"
 
     ```csharp hl_lines="2 4"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedBasic.cs:using_utility_from_ioc_injected_parameters"
+    --8<-- "docs/snippets/batch/GettingStartedBasic.cs:using_utility_from_ioc_injected_parameters"
     ```
 
 === "Example implementation of IServiceProvider"
 
     ```csharp hl_lines="16 17"
-    --8<-- "examples/BatchProcessing/snippets/GettingStartedBasic.cs:example_implementation_of_iserviceprovider"
+    --8<-- "docs/snippets/batch/GettingStartedBasic.cs:example_implementation_of_iserviceprovider"
     ```
 
 #### Processing messages in parallel
@@ -897,7 +897,7 @@ You can also set `POWERTOOLS_BATCH_MAX_DEGREE_OF_PARALLELISM` Environment Variab
 === "Function.cs"
 	
 	```csharp hl_lines="1"
-	--8<-- "examples/BatchProcessing/snippets/GettingStartedBasic.cs:processing_messages_in_parallel"
+	--8<-- "docs/snippets/batch/GettingStartedBasic.cs:processing_messages_in_parallel"
 	```
 
 #### Working with full batch failures
@@ -911,13 +911,13 @@ For these scenarios, you can set `POWERTOOLS_BATCH_THROW_ON_FULL_BATCH_FAILURE =
 === "Setting ThrowOnFullBatchFailure on Decorator"
 
     ```csharp hl_lines="3"
-    --8<-- "examples/BatchProcessing/snippets/PartialFailureHandling.cs:throw_on_full_batch_failure_decorator"
+    --8<-- "docs/snippets/batch/PartialFailureHandling.cs:throw_on_full_batch_failure_decorator"
     ```
 
 === "Setting ThrowOnFullBatchFailure outside Decorator"
 
     ```csharp hl_lines="8"
-    --8<-- "examples/BatchProcessing/snippets/PartialFailureHandling.cs:throw_on_full_batch_failure_outside_decorator"
+    --8<-- "docs/snippets/batch/PartialFailureHandling.cs:throw_on_full_batch_failure_outside_decorator"
     ```
 
 #### Extending BatchProcessor
@@ -935,7 +935,7 @@ For these scenarios, you can create a class that inherits from `BatchProcessor` 
 === "Function.cs"
 
     ```csharp hl_lines="1 21 54 97"
-    --8<-- "examples/BatchProcessing/snippets/PartialFailureHandling.cs:extending_batch_processor"
+    --8<-- "docs/snippets/batch/PartialFailureHandling.cs:extending_batch_processor"
     ```
 
 ## Testing your code
@@ -947,13 +947,13 @@ Testing typed batch processors is straightforward since you work directly with y
 === "Typed Handler Test"
 
     ```csharp
-    --8<-- "examples/BatchProcessing/snippets/PartialFailureHandling.cs:typed_handler_test"
+    --8<-- "docs/snippets/batch/PartialFailureHandling.cs:typed_handler_test"
     ```
 
 === "Integration Test"
 
     ```csharp
-    --8<-- "examples/BatchProcessing/snippets/PartialFailureHandling.cs:integration_test"
+    --8<-- "docs/snippets/batch/PartialFailureHandling.cs:integration_test"
     ```
 
 ### Testing Traditional Handlers
@@ -963,25 +963,25 @@ As there is no external calls, you can unit test your code with `BatchProcessor`
 === "Test.cs"
 
     ```csharp
-    --8<-- "examples/BatchProcessing/snippets/PartialFailureHandling.cs:traditional_handler_test"
+    --8<-- "docs/snippets/batch/PartialFailureHandling.cs:traditional_handler_test"
     ```
 
 === "Function.cs"
 
     ```csharp
-    --8<-- "examples/BatchProcessing/snippets/PartialFailureHandling.cs:function_handler_using_attribute"
+    --8<-- "docs/snippets/batch/PartialFailureHandling.cs:function_handler_using_attribute"
     ```
 
 === "CustomSqsRecordHandler.cs"
 
     ```csharp
-    --8<-- "examples/BatchProcessing/snippets/PartialFailureHandling.cs:custom_sqs_record_handler"
+    --8<-- "docs/snippets/batch/PartialFailureHandling.cs:custom_sqs_record_handler"
     ```
 
 === "SQS Event.cs"
 
     ```csharp
-    --8<-- "examples/BatchProcessing/snippets/PartialFailureHandling.cs:sqs_event_test_helper"
+    --8<-- "docs/snippets/batch/PartialFailureHandling.cs:sqs_event_test_helper"
     ```
 
 ## Complete Examples and Documentation
