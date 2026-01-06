@@ -8,7 +8,9 @@
         <PackageReference Include="Amazon.Lambda.Core" Version="2.8.0" />
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.3" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
-        <PackageReference Include="AWS.Lambda.Powertools.Idempotency" Version="3.0.2" />
-        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="3.0.2" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.Powertools.Idempotency\AWS.Lambda.Powertools.Idempotency.csproj" />
+        <ProjectReference Include="..\..\..\..\libraries\src\AWS.Lambda.Powertools.Logging\AWS.Lambda.Powertools.Logging.csproj" />
     </ItemGroup>
 </Project>

@@ -173,7 +173,7 @@ public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
 
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.12.0"/>
-        <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0"/>
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.8.0"/>
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4"/>
         <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="2.0.0"/>
     </ItemGroup>
