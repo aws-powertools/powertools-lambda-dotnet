@@ -162,6 +162,7 @@ public void Handler_Should_ProcessBatch_When_SQSEvent() { }
 
 Additional coding standards apply based on file patterns (see `.github/instructions/`):
 - `**/*.cs` → [csharp.instructions.md](.github/instructions/csharp.instructions.md) - naming, async patterns, error handling
+- `**/*.cs` → [dotnet-architecture-good-practices.instructions.md](.github/instructions/dotnet-architecture-good-practices.instructions.md) - SOLID, clean architecture, design patterns
 - `**/*Tests.cs` → [tests.instructions.md](.github/instructions/tests.instructions.md) - test structure, mocking, fixtures
 - `examples/**/*.cs` → [examples.instructions.md](.github/instructions/examples.instructions.md) - production-ready patterns
 

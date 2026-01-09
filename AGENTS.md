@@ -224,6 +224,18 @@ public void E2ETest_Should_ProcessBatch_When_ValidSQSEvent()
 
 ## Architecture Patterns
 
+### SOLID Principles
+
+This codebase follows SOLID principles adapted for library development:
+
+- **Single Responsibility**: Split large utilities into partial classes by feature (e.g., `Logger.cs`, `Logger.Scope.cs`, `Logger.Sampling.cs`)
+- **Open/Closed**: Extend behavior through `MethodAspectAttribute` + `IMethodAspectHandler` pattern without modifying existing code
+- **Liskov Substitution**: All aspect handlers are interchangeable via `IMethodAspectHandler` interface
+- **Interface Segregation**: Small, focused interfaces (`ILogger`, `IPowertoolsConfigurations`)
+- **Dependency Inversion**: Depend on abstractions, inject dependencies via constructors
+
+For detailed architecture guidelines, see [dotnet-architecture-good-practices.instructions.md](.github/instructions/dotnet-architecture-good-practices.instructions.md).
+
 ### Aspect-Oriented Programming
 Uses AspectInjector for cross-cutting concerns like logging, metrics, and tracing:
 ```csharp
