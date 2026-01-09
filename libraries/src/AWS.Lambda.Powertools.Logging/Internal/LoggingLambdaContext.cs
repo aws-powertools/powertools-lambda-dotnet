@@ -92,8 +92,7 @@ internal class LoggingLambdaContext
             LogGroupName = x.LogGroupName,
             LogStreamName = x.LogStreamName,
             MemoryLimitInMB = x.MemoryLimitInMB,
-            TenantId =x.TenantId,
-
+            TenantId = x.TenantId,
         };
         return true;
     }

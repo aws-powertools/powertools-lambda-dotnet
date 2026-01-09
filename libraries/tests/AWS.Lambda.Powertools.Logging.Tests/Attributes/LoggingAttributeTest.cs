@@ -120,6 +120,72 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
         }
         
         [Fact]
+        public void OnEntry_When_TenantId_Exist_Log()
+        {
+            // Arrange
+            var consoleOut = GetConsoleOutput();
+            var correlationId = Guid.NewGuid().ToString();
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
+            
+            var context = new TestLambdaContext()
+            {
+                TenantId = "Tenant-12345",
+            };
+    
+            var testObj = new TestObject
+            {
+                Headers = new Header
+                {
+                    MyRequestIdHeader = correlationId
+                }
+            };
+            
+            // Act
+            _testHandlers.LogEvent(testObj, context);
+    
+            consoleOut.Received(1).WriteLine(
+                Arg.Is<string>(i => i.Contains("TenantId\":\"Tenant-12345"))
+            );
+        }
+        
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        public void OnEntry_When_TenantId_Does_Not_Exist_Dont_Log(string tenantId)
+        {
+            // Arrange
+            var consoleOut = GetConsoleOutput();
+            var correlationId = Guid.NewGuid().ToString();
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
+            
+            var context = new TestLambdaContext()
+            {
+                TenantId = tenantId,
+            };
+    
+            var testObj = new TestObject
+            {
+                Headers = new Header
+                {
+                    MyRequestIdHeader = correlationId
+                }
+            };
+            
+            // Act
+            _testHandlers.LogEvent(testObj, context);
+    
+            consoleOut.DidNotReceive().WriteLine(
+                Arg.Is<string>(i => i.Contains("\"TenantId\""))
+            );
+        }
+        
+        [Fact]
         public void OnEntry_WhenEventArgExist_LogEvent_False_Should_Not_Log()
         {
             // Arrange
