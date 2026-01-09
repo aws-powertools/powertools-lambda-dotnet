@@ -457,6 +457,9 @@ internal sealed class PowertoolsLogger : ILogger
         logEntry.TryAdd(LoggingConstants.KeyFunctionArn, context.InvokedFunctionArn);
         logEntry.TryAdd(LoggingConstants.KeyFunctionRequestId, context.AwsRequestId);
         logEntry.TryAdd(LoggingConstants.KeyFunctionVersion, context.FunctionVersion);
+        
+        if(!string.IsNullOrEmpty(context.TenantId))
+            logEntry.TryAdd(LoggingConstants.KeyFunctionTenantId, context.TenantId);
     }
 
     /// <summary>
@@ -474,6 +477,7 @@ internal sealed class PowertoolsLogger : ILogger
             MemoryLimitInMB = context.MemoryLimitInMB,
             InvokedFunctionArn = context.InvokedFunctionArn,
             AwsRequestId = context.AwsRequestId,
+            TenantId = context.TenantId
         };
     }
 

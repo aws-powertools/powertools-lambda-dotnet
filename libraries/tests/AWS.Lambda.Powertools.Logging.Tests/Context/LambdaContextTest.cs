@@ -23,7 +23,8 @@ public class LambdaContextTest
              InvokedFunctionArn = Guid.NewGuid().ToString(),
              LogGroupName = Guid.NewGuid().ToString(),
              LogStreamName = Guid.NewGuid().ToString(),
-             MemoryLimitInMB = new Random().Next()
+             MemoryLimitInMB = new Random().Next(),
+             TenantId = Guid.NewGuid().ToString()
          };
          
          var args = Substitute.For<AspectEventArgs>();
@@ -52,6 +53,7 @@ public class LambdaContextTest
          Assert.Equal(LoggingLambdaContext.Instance.LogGroupName, lambdaContext.LogGroupName);
          Assert.Equal(LoggingLambdaContext.Instance.LogStreamName, lambdaContext.LogStreamName);
          Assert.Equal(LoggingLambdaContext.Instance.MemoryLimitInMB, lambdaContext.MemoryLimitInMB);
+         Assert.Equal(LoggingLambdaContext.Instance.TenantId, lambdaContext.TenantId);
          LoggingLambdaContext.Clear();
          Assert.Null(LoggingLambdaContext.Instance);
      }
@@ -120,7 +122,8 @@ public class LambdaContextTest
              InvokedFunctionArn = Guid.NewGuid().ToString(),
              LogGroupName = Guid.NewGuid().ToString(),
              LogStreamName = Guid.NewGuid().ToString(),
-             MemoryLimitInMB = new Random().Next()
+             MemoryLimitInMB = new Random().Next(),
+             TenantId = Guid.NewGuid().ToString()
          };
          
          var args = Substitute.For<AspectEventArgs>();

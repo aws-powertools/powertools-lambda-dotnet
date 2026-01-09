@@ -107,7 +107,8 @@ public class HandlerTests
             FunctionName = "test-function",
             FunctionVersion = "1",
             AwsRequestId = "123",
-            InvokedFunctionArn = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+            InvokedFunctionArn = "arn:aws:lambda:us-east-1:123456789012:function:test-function",
+            TenantId = "tenant-123"
         });
 
         handler.TestMethodCorrelation(new ExampleClass
@@ -131,6 +132,7 @@ public class HandlerTests
         Assert.Contains("\"Custom-key\": \"custom-value\"", logOutput);
         Assert.Contains("\"FunctionName\": \"test-function\"", logOutput);
         Assert.Contains("\"SamplingRate\": 0.002", logOutput);
+        Assert.Contains("\"TenantId\": \"tenant-123\"", logOutput);
     }
 
     [Fact]
