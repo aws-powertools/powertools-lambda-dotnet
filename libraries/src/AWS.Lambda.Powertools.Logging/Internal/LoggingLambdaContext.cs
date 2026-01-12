@@ -54,6 +54,11 @@ internal class LoggingLambdaContext
     internal int MemoryLimitInMB { get; private set; }
 
     /// <summary>
+    /// The tenant ID associated with the Lambda invocation.
+    /// </summary>
+    internal string TenantId { get; private set; }
+
+    /// <summary>
     ///     The instance
     /// </summary>
     internal static LoggingLambdaContext Instance { get; private set; }
@@ -86,7 +91,8 @@ internal class LoggingLambdaContext
             InvokedFunctionArn = x.InvokedFunctionArn,
             LogGroupName = x.LogGroupName,
             LogStreamName = x.LogStreamName,
-            MemoryLimitInMB = x.MemoryLimitInMB
+            MemoryLimitInMB = x.MemoryLimitInMB,
+            TenantId = x.TenantId,
         };
         return true;
     }

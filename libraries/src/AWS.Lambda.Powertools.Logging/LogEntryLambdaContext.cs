@@ -53,4 +53,9 @@ public class LogEntryLambdaContext
     /// CloudWatch actions.
     /// </summary>
     public string InvokedFunctionArn { get; internal set; }
+
+    /// <summary>
+    /// Tenancy ID associated with the Lambda invocation.
+    /// </summary>
+    public string TenantId { get; set; }
 }

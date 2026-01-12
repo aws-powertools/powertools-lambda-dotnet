@@ -111,4 +111,9 @@ internal static class LoggingConstants
     ///     Constant for key exception
     /// </summary>
     internal const string KeyException = "Exception";
+
+    /// <summary>
+    ///   Constant for key tenant id
+    /// </summary>    
+    public const string KeyFunctionTenantId = "TenantId";
 }
