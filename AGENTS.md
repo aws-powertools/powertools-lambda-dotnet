@@ -1,10 +1,10 @@
 # AGENTS.md - Powertools for AWS Lambda (.NET)
 
-This guide provides essential information for AI coding agents working on the AWS Lambda Powertools for .NET codebase.
+This guide provides essential information for AI coding agents working on the Powertools for AWS Lambda (.NET) codebase.
 
 ## Project Overview
 
-**AWS Lambda Powertools for .NET** is a developer toolkit implementing serverless best practices for .NET Lambda functions. The solution contains 129+ projects targeting .NET 8.0 and .NET 10.0 with full Native AOT support.
+**Powertools for AWS Lambda (.NET)** is a developer toolkit implementing serverless best practices for .NET Lambda functions. The solution contains 129+ projects targeting .NET 8.0 and .NET 10.0 with full Native AOT support.
 
 ## Build Commands
 
