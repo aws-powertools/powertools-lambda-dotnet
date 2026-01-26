@@ -360,6 +360,45 @@ public class IdempotentAspectTests : IDisposable
     }
 
     [Fact]
+    public async Task Handle_WhenMultipleIdempotentMethods_WithSameKey_ShouldCreateSeparateRecords()
+    {
+        // Arrange
+        // This test validates the bug where two different methods decorated with [Idempotent]
+        // and called with the same IdempotencyKey value should create separate entries
+        // in the persistence store, but currently Method2 incorrectly uses Method1's cached result.
+        var store = new InMemoryPersistenceStore();
+        Idempotency.Configure(builder => builder.WithPersistenceStore(store));
+
+        var context = new TestLambdaContext
+        {
+            RemainingTime = TimeSpan.FromSeconds(30)
+        };
+
+        // Act
+        var function = new IdempotencyMultipleMethodsFunction();
+        var (result1, result2) = function.HandleRequest("same-key", context);
+
+        // Assert
+        // Both methods should have been called
+        function.Method1Called.Should().BeTrue("Method1 should be called on first invocation");
+        function.Method2Called.Should().BeTrue("Method2 should be called - it's a different method even with same key");
+
+        // Results should be different - each method returns its own product
+        result1.Products[0].Name.Should().Be("Product from Method1");
+        result2.Products[0].Name.Should().Be("Product from Method2");
+
+        // Debug: Show what keys were actually created
+        var allKeys = store.GetAllKeys().ToList();
+        
+        // Verify separate records exist in the store - should have 2 records with different method names
+        allKeys.Should().HaveCount(2, $"Expected 2 records but found: [{string.Join(", ", allKeys)}]");
+        
+        // Verify the keys contain the correct method names
+        allKeys.Should().Contain(k => k.StartsWith("testFunction.Method1#"), "Should have a record for Method1");
+        allKeys.Should().Contain(k => k.StartsWith("testFunction.Method2#"), "Should have a record for Method2");
+    }
+
+    [Fact]
     public void Handle_WhenIdempotencyOnSubMethodNotAnnotated_ShouldThrowException()
     {
         // Arrange

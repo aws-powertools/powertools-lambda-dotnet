@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
 
@@ -23,6 +24,12 @@ namespace AWS.Lambda.Powertools.Idempotency.Tests.Internal;
 public class InMemoryPersistenceStore: BasePersistenceStore
 {
     private readonly Dictionary<string, DataRecord> _records = new();
+    
+    /// <summary>
+    /// Gets all keys currently stored - useful for debugging tests
+    /// </summary>
+    public IEnumerable<string> GetAllKeys() => _records.Keys;
+    
     public override Task<DataRecord> GetRecord(string idempotencyKey)
     {
         return Task.FromResult(_records.ContainsKey(idempotencyKey) ? _records[idempotencyKey] : null);

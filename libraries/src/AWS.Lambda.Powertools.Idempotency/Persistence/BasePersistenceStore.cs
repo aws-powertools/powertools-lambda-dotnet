@@ -2,6 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Idempotency.Exceptions;
@@ -34,9 +35,15 @@ public abstract class BasePersistenceStore : IPersistenceStore
     private IdempotencyOptions _idempotencyOptions = null!;
 
     /// <summary>
-    /// Function name
+    /// Base function name (Lambda function name from environment or "testFunction")
     /// </summary>
-    private string _functionName;
+    private string _baseFunctionName = null!;
+    
+    /// <summary>
+    /// Full function name including method name (used for key generation)
+    /// This is stored per-call via AsyncLocal to support multiple idempotent methods
+    /// </summary>
+    private readonly AsyncLocal<string> _fullFunctionName = new();
 
     /// <summary>
     /// Boolean to indicate whether or not payload validation is enabled
@@ -58,27 +65,26 @@ public abstract class BasePersistenceStore : IPersistenceStore
     public void Configure(IdempotencyOptions idempotencyOptions, string functionName, string keyPrefix)
     {
         // Fast path - already configured
-        if (_isConfigured) return;
+        if (_isConfigured)
+        {
+            // Even if already configured, we need to set the full function name for this call
+            // This supports multiple idempotent methods in the same Lambda
+            SetFullFunctionName(functionName, keyPrefix);
+            return;
+        }
         
         lock (_configureLock)
         {
             // Double-check pattern
-            if (_isConfigured) return;
+            if (_isConfigured)
+            {
+                SetFullFunctionName(functionName, keyPrefix);
+                return;
+            }
             
-            if (!string.IsNullOrEmpty(keyPrefix))
-            {
-                _functionName = keyPrefix;
-            }
-            else
-            {
-                var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
-
-                _functionName = funcEnv ?? "testFunction";
-                if (!string.IsNullOrWhiteSpace(functionName))
-                {
-                    _functionName += "." + functionName;
-                }
-            }
+            // Set the base function name (Lambda function name from environment)
+            var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
+            _baseFunctionName = funcEnv ?? "testFunction";
 
             _idempotencyOptions = idempotencyOptions;
 
@@ -94,6 +100,33 @@ public abstract class BasePersistenceStore : IPersistenceStore
             }
             
             _isConfigured = true;
+            
+            // Set the full function name for this call
+            SetFullFunctionName(functionName, keyPrefix);
+        }
+    }
+    
+    /// <summary>
+    /// Sets the full function name for the current call context.
+    /// This method is called for each idempotent method invocation to ensure
+    /// the correct method name is used in the idempotency key.
+    /// </summary>
+    /// <param name="functionName">The name of the decorated method</param>
+    /// <param name="keyPrefix">Optional custom key prefix</param>
+    private void SetFullFunctionName(string functionName, string keyPrefix)
+    {
+        if (!string.IsNullOrEmpty(keyPrefix))
+        {
+            _fullFunctionName.Value = keyPrefix;
+        }
+        else
+        {
+            var fullName = _baseFunctionName;
+            if (!string.IsNullOrWhiteSpace(functionName))
+            {
+                fullName += "." + functionName;
+            }
+            _fullFunctionName.Value = fullName;
         }
     }
 
@@ -105,27 +138,24 @@ public abstract class BasePersistenceStore : IPersistenceStore
         LRUCache<string, DataRecord> cache)
     {
         // Fast path - already configured
-        if (_isConfigured) return;
+        if (_isConfigured)
+        {
+            SetFullFunctionName(functionName, keyPrefix);
+            return;
+        }
         
         lock (_configureLock)
         {
             // Double-check pattern
-            if (_isConfigured) return;
+            if (_isConfigured)
+            {
+                SetFullFunctionName(functionName, keyPrefix);
+                return;
+            }
             
-            if (!string.IsNullOrEmpty(keyPrefix))
-            {
-                _functionName = keyPrefix;
-            }
-            else
-            {
-                var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
-
-                _functionName = funcEnv ?? "testFunction";
-                if (!string.IsNullOrWhiteSpace(functionName))
-                {
-                    _functionName += "." + functionName;
-                }
-            }
+            // Set the base function name (Lambda function name from environment)
+            var funcEnv = Environment.GetEnvironmentVariable(Constants.LambdaFunctionNameEnv);
+            _baseFunctionName = funcEnv ?? "testFunction";
 
             _idempotencyOptions = options;
 
@@ -137,6 +167,8 @@ public abstract class BasePersistenceStore : IPersistenceStore
             _cache = cache;
             
             _isConfigured = true;
+            
+            SetFullFunctionName(functionName, keyPrefix);
         }
     }
 
@@ -356,7 +388,7 @@ public abstract class BasePersistenceStore : IPersistenceStore
         }
 
         var hash = GenerateHash(node);
-        return _functionName + "#" + hash;
+        return _fullFunctionName.Value + "#" + hash;
     }
 
     /// <summary>
