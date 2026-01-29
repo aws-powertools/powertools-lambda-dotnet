@@ -29,6 +29,7 @@ public class LogBufferCircularCacheTests : IDisposable
             MinimumLogLevel = LogLevel.Information,
             LogBuffering = new LogBufferingOptions
             {
+                Enabled = true,
                 BufferAtLogLevel = LogLevel.Debug,
                 MaxBytes = 1200 // Small buffer size to trigger overflow - Needs to be adjusted based on the log message size
             },
@@ -76,6 +77,7 @@ public class LogBufferCircularCacheTests : IDisposable
             MinimumLogLevel = LogLevel.Information,
             LogBuffering = new LogBufferingOptions
             {
+                Enabled = true,
                 BufferAtLogLevel = LogLevel.Debug,
                 MaxBytes = 1024 // Small buffer size to trigger overflow
             },
@@ -119,6 +121,7 @@ public class LogBufferCircularCacheTests : IDisposable
             MinimumLogLevel = LogLevel.Information,
             LogBuffering = new LogBufferingOptions
             {
+                Enabled = true,
                 BufferAtLogLevel = LogLevel.Warning,
                 MaxBytes = 1024 // Small buffer size to trigger overflow
             },
@@ -162,6 +165,7 @@ public class LogBufferCircularCacheTests : IDisposable
             MinimumLogLevel = LogLevel.Information,
             LogBuffering = new LogBufferingOptions
             {
+                Enabled = true,
                 BufferAtLogLevel = LogLevel.Debug,
                 MaxBytes = 2048 // Small buffer size to trigger overflow
             },
@@ -211,6 +215,7 @@ public class LogBufferCircularCacheTests : IDisposable
             MinimumLogLevel = LogLevel.Information,
             LogBuffering = new LogBufferingOptions
             {
+                Enabled = true,
                 BufferAtLogLevel = LogLevel.Debug,
                 MaxBytes = 5096 // Even with a larger buffer
             },

@@ -99,7 +99,7 @@ public class PowertoolsLoggerBuilder
     /// <returns>The builder instance for method chaining.</returns>
     public PowertoolsLoggerBuilder WithLogBuffering(Action<LogBufferingOptions> configure)
     {
-        _configuration.LogBuffering = new LogBufferingOptions();
+        _configuration.LogBuffering.Enabled = true;
         configure?.Invoke(_configuration.LogBuffering);
         return this;
     }
