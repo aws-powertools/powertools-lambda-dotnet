@@ -248,6 +248,48 @@ public static class PowertoolsLoggerExtensions
         Logger.RemoveKey(key);
     }
 
+    /// <summary>
+    ///     Adds temporary keys to the log context that are automatically removed when disposed.
+    ///     Safe to use across async/await boundaries.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="keys">The keys to add temporarily.</param>
+    /// <returns>An IDisposable that removes the keys when disposed.</returns>
+    /// <example>
+    /// <code>
+    /// using (logger.ExtraKeys(new Dictionary&lt;string, object&gt; { {"orderId", "123"} }))
+    /// {
+    ///     await ProcessOrderAsync();
+    ///     logger.LogInformation("Order processed"); // includes orderId
+    /// }
+    /// // orderId is automatically removed
+    /// </code>
+    /// </example>
+    public static IDisposable ExtraKeys(this ILogger logger, IEnumerable<KeyValuePair<string, object>> keys)
+    {
+        return Logger.ExtraKeys(keys);
+    }
+
+    /// <summary>
+    ///     Adds temporary keys to the log context that are automatically removed when disposed.
+    ///     Safe to use across async/await boundaries.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="keys">The keys to add temporarily as tuples.</param>
+    /// <returns>An IDisposable that removes the keys when disposed.</returns>
+    /// <example>
+    /// <code>
+    /// using (logger.ExtraKeys(("orderId", "123"), ("customerId", "456")))
+    /// {
+    ///     logger.LogInformation("Processing"); // includes orderId and customerId
+    /// }
+    /// </code>
+    /// </example>
+    public static IDisposable ExtraKeys(this ILogger logger, params (string Key, object Value)[] keys)
+    {
+        return Logger.ExtraKeys(keys);
+    }
+
     // Replace the buffer methods with direct calls to the manager
 
     /// <summary>
