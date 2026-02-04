@@ -248,8 +248,13 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     ///     options.LogBuffering.BufferAtLogLevel = LogLevel.Warning;
     ///     </code>
     /// </example>
-    public LogBufferingOptions LogBuffering { get; set; } = new LogBufferingOptions();
+    private LogBufferingOptions _logBuffering = new LogBufferingOptions();
 
+    public LogBufferingOptions LogBuffering
+    {
+        get => _logBuffering;
+        set => _logBuffering = value ?? new LogBufferingOptions();
+    }
     /// <summary>
     /// Serializer instance for this configuration
     /// </summary>
