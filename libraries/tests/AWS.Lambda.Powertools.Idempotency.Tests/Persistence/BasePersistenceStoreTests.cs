@@ -848,5 +848,101 @@ public class BasePersistenceStoreTests
         dr.IdempotencyKey.Should().NotContain("testFunction.   ");
     }
 
+    [Fact]
+    public async Task Configure_WhenCalledMultipleTimes_ShouldOnlyConfigureOnceButUpdateFunctionName()
+    {
+        // Arrange - This test covers the fast path: if (_isConfigured) { SetFullFunctionName(...); return; }
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // First configuration
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "firstFunction", null);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act - Call configure again with different function name (simulates multiple idempotent methods)
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "secondFunction", null);
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - Should use the second function name (SetFullFunctionName was called in fast path)
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().Contain("secondFunction");
+        dr.IdempotencyKey.Should().Be("testFunction.secondFunction#5eff007a9ed2789a9f9f6bc182fc6ae6");
+    }
+
+    [Fact]
+    public async Task Configure_WhenCalledMultipleTimesWithKeyPrefix_ShouldUpdateKeyPrefix()
+    {
+        // Arrange - This test covers the fast path with keyPrefix: if (_isConfigured) { SetFullFunctionName(...); return; }
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+
+        // First configuration with keyPrefix
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "function", "FirstPrefix");
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act - Call configure again with different keyPrefix
+        persistenceStore.Configure(new IdempotencyOptionsBuilder().Build(), "function", "SecondPrefix");
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - Should use the second keyPrefix
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().StartWith("SecondPrefix#");
+        dr.IdempotencyKey.Should().NotContain("FirstPrefix");
+    }
+
+    [Fact]
+    public async Task Configure_InternalMethod_WhenCalledMultipleTimes_ShouldOnlyConfigureOnceButUpdateFunctionName()
+    {
+        // Arrange - This test covers the internal Configure method's fast path
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+        LRUCache<string, DataRecord> cache = new(2);
+
+        // First configuration using internal method
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithUseLocalCache(true)
+            .Build(), "firstFunction", null, cache);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act - Call configure again with different function name
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithUseLocalCache(true)
+            .Build(), "secondFunction", null, cache);
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - Should use the second function name
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().Contain("secondFunction");
+    }
+
+    [Fact]
+    public async Task Configure_InternalMethod_WhenCalledMultipleTimesWithKeyPrefix_ShouldUpdateKeyPrefix()
+    {
+        // Arrange - This test covers the internal Configure method's fast path with keyPrefix
+        var persistenceStore = new InMemoryPersistenceStore();
+        var request = LoadApiGatewayProxyRequest();
+        LRUCache<string, DataRecord> cache = new(2);
+
+        // First configuration with keyPrefix using internal method
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithUseLocalCache(true)
+            .Build(), "function", "FirstPrefix", cache);
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Act - Call configure again with different keyPrefix
+        persistenceStore.Configure(new IdempotencyOptionsBuilder()
+            .WithUseLocalCache(true)
+            .Build(), "function", "SecondPrefix", cache);
+        await persistenceStore.SaveInProgress(JsonSerializer.SerializeToDocument(request)!, now, null);
+
+        // Assert - Should use the second keyPrefix
+        var dr = persistenceStore.DataRecord;
+        dr.IdempotencyKey.Should().StartWith("SecondPrefix#");
+    }
+
     #endregion
 }
