@@ -546,9 +546,9 @@ public class LoggerAspectTests : IDisposable
     }
     
     [Fact]
-    public void OnEntry_WhenLogBufferingIsNull_ShouldSetBufferingEnabledFlagToFalse()
+    public void OnEntry_WhenLogBufferingIsSetToNull_ShouldDefaultToDisabledBuffering()
     {
-        // Arrange - This test covers the null path: _bufferingEnabled = _currentConfig.LogBuffering?.Enabled == true;
+        // Arrange - This test covers the null assignment path: LogBuffering setter defaults to new LogBufferingOptions() when null
         var consoleOut = Substitute.For<IConsoleWrapper>();
         
         var config = new PowertoolsLoggerConfiguration
@@ -556,7 +556,7 @@ public class LoggerAspectTests : IDisposable
             Service = "TestService",
             MinimumLogLevel = LogLevel.Information,
             LogOutput = consoleOut,
-            LogBuffering = null
+            LogBuffering = null // This will be converted to a default LogBufferingOptions with Enabled = false
         };
         
         PowertoolsLoggingBuilderExtensions.UpdateConfiguration(config);
@@ -581,9 +581,10 @@ public class LoggerAspectTests : IDisposable
         var loggingAspect = new LoggingAspect(logger);
         loggingAspect.OnEntry(aspectArgs);
         
-        // Assert
+        // Assert - LogBuffering should never be null, but Enabled should be false by default
         var updatedConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
-        Assert.Null(updatedConfig.LogBuffering);
+        Assert.NotNull(updatedConfig.LogBuffering);
+        Assert.False(updatedConfig.LogBuffering.Enabled);
     }
 
     public void Dispose()

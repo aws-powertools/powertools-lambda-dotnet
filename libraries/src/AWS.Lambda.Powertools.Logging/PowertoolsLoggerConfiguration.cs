@@ -226,12 +226,14 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
         }
     }
 
+    private LogBufferingOptions _logBuffering = new LogBufferingOptions();
+
     /// <summary>
-    /// Configuration options for log buffering. Logs below the specified level will be buffered
-    /// until the buffer is flushed or an error occurs.
-    /// Buffer logs at the WARNING, INFO, and DEBUG levels and reduce CloudWatch costs by decreasing the number of emitted log messages.
-    /// <para></para>
-    /// Log buffering is disabled by default. Set <see cref="LogBufferingOptions.Enabled"/> to true to enable it.
+    ///     Gets or sets the configuration options for log buffering.
+    ///     When enabled, logs below the specified level are buffered until explicitly flushed or an error occurs.
+    ///     This can reduce CloudWatch costs by decreasing the number of emitted log messages.
+    ///     <para>Log buffering is disabled by default. Set <see cref="LogBufferingOptions.Enabled"/> to true to enable it.</para>
+    ///     <para>Setting this property to null will reset it to a default <see cref="LogBufferingOptions"/> instance with buffering disabled.</para>
     /// </summary>
     /// <example>
     ///     <code>
@@ -248,8 +250,6 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     ///     options.LogBuffering.BufferAtLogLevel = LogLevel.Warning;
     ///     </code>
     /// </example>
-    private LogBufferingOptions _logBuffering = new LogBufferingOptions();
-
     public LogBufferingOptions LogBuffering
     {
         get => _logBuffering;
