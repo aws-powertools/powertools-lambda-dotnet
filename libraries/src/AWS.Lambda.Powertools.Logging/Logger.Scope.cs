@@ -169,6 +169,16 @@ public static partial class Logger
     /// </summary>
     /// <param name="keys">The keys to add temporarily.</param>
     /// <returns>An IDisposable that removes the keys when disposed.</returns>
+    /// <remarks>
+    ///     <para>
+    ///         <b>Important:</b> If a key already exists in the context, it will be overwritten
+    ///         and then removed when the scope is disposed. The original value is NOT restored.
+    ///     </para>
+    ///     <para>
+    ///         For example, if "orderId" = "A" exists and you create a scope with "orderId" = "B",
+    ///         disposing the scope will remove "orderId" entirely, not restore it to "A".
+    ///     </para>
+    /// </remarks>
     /// <example>
     /// <code>
     /// using (Logger.ExtraKeys(new Dictionary&lt;string, object&gt; { {"orderId", "123"} }))
@@ -191,6 +201,12 @@ public static partial class Logger
     /// </summary>
     /// <param name="keys">The keys to add temporarily as tuples.</param>
     /// <returns>An IDisposable that removes the keys when disposed.</returns>
+    /// <remarks>
+    ///     <para>
+    ///         <b>Important:</b> If a key already exists in the context, it will be overwritten
+    ///         and then removed when the scope is disposed. The original value is NOT restored.
+    ///     </para>
+    /// </remarks>
     /// <example>
     /// <code>
     /// using (Logger.ExtraKeys(("orderId", "123"), ("customerId", "456")))

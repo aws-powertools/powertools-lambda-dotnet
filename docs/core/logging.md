@@ -714,6 +714,9 @@ Keys are automatically removed when the scope ends, eliminating the need to manu
 !!! tip "When to use ExtraKeys vs AppendKey"
     Use `ExtraKeys` when you need keys for a specific operation or code block. Use `AppendKey` when keys should persist for the entire Lambda invocation.
 
+!!! warning "Key overwrite behavior"
+    If a key already exists when entering an `ExtraKeys` scope, it will be overwritten and then **removed** when the scope ends. The original value is not restored. Use unique key names within `ExtraKeys` scopes to avoid unexpected behavior.
+
 !!! info "Async safe"
     `ExtraKeys` is safe to use across `async/await` boundaries. Keys will correctly flow through asynchronous operations within the same execution context.
 

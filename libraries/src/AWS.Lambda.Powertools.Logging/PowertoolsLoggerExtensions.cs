@@ -255,6 +255,12 @@ public static class PowertoolsLoggerExtensions
     /// <param name="logger">The logger instance.</param>
     /// <param name="keys">The keys to add temporarily.</param>
     /// <returns>An IDisposable that removes the keys when disposed.</returns>
+    /// <remarks>
+    ///     <para>
+    ///         <b>Important:</b> If a key already exists in the context, it will be overwritten
+    ///         and then removed when the scope is disposed. The original value is NOT restored.
+    ///     </para>
+    /// </remarks>
     /// <example>
     /// <code>
     /// using (logger.ExtraKeys(new Dictionary&lt;string, object&gt; { {"orderId", "123"} }))
@@ -277,6 +283,12 @@ public static class PowertoolsLoggerExtensions
     /// <param name="logger">The logger instance.</param>
     /// <param name="keys">The keys to add temporarily as tuples.</param>
     /// <returns>An IDisposable that removes the keys when disposed.</returns>
+    /// <remarks>
+    ///     <para>
+    ///         <b>Important:</b> If a key already exists in the context, it will be overwritten
+    ///         and then removed when the scope is disposed. The original value is NOT restored.
+    ///     </para>
+    /// </remarks>
     /// <example>
     /// <code>
     /// using (logger.ExtraKeys(("orderId", "123"), ("customerId", "456")))
