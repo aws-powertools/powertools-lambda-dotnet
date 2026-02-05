@@ -24,7 +24,7 @@ namespace AWS.Lambda.Powertools.Metadata.Internal;
     PropertyNamingPolicy = JsonKnownNamingPolicy.Unspecified,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     WriteIndented = false)]
-[JsonSerializable(typeof(LambdaMetadata))]
+[JsonSerializable(typeof(MetadataValues))]
 internal partial class LambdaMetadataSerializerContext : JsonSerializerContext
 {
 }

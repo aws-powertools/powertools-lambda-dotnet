@@ -16,20 +16,12 @@
 namespace AWS.Lambda.Powertools.Metadata.Internal;
 
 /// <summary>
-/// Interface for the Lambda Metadata HTTP client.
+/// Internal interface for fetching Lambda metadata.
 /// </summary>
-internal interface ILambdaMetadataHttpClient
+internal interface IMetadataFetcher
 {
     /// <summary>
-    /// Fetches metadata from the Lambda Metadata Endpoint synchronously.
+    /// Fetches metadata from the Lambda Metadata Endpoint.
     /// </summary>
-    /// <returns>The Lambda metadata.</returns>
-    LambdaMetadata FetchMetadata();
-
-    /// <summary>
-    /// Fetches metadata from the Lambda Metadata Endpoint asynchronously.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The Lambda metadata.</returns>
-    Task<LambdaMetadata> FetchMetadataAsync(CancellationToken cancellationToken = default);
+    MetadataValues Fetch();
 }

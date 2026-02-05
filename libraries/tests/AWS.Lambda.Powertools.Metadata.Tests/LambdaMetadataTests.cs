@@ -13,60 +13,109 @@
  * permissions and limitations under the License.
  */
 
-using System.Text.Json;
+using AWS.Lambda.Powertools.Metadata.Exceptions;
 using AWS.Lambda.Powertools.Metadata.Internal;
 using FluentAssertions;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Metadata.Tests;
 
-public class LambdaMetadataTests
+[Collection("LambdaMetadata")]
+public class LambdaMetadataTests : IDisposable
 {
-    [Fact]
-    public void DefaultConstructor_Should_CreateInstanceWithNullValues()
-    {
-        // When
-        var metadata = new LambdaMetadata();
+    private readonly IMetadataFetcher _mockFetcher;
 
-        // Then
-        metadata.AvailabilityZoneId.Should().BeNull();
+    public LambdaMetadataTests()
+    {
+        _mockFetcher = Substitute.For<IMetadataFetcher>();
+        LambdaMetadata.SetFetcher(_mockFetcher);
+    }
+
+    public void Dispose()
+    {
+        LambdaMetadata.Reset();
     }
 
     [Fact]
-    public void Constructor_WithAvailabilityZoneId_Should_SetValue()
+    public void AvailabilityZoneId_ReturnsValue()
     {
-        // When
-        var metadata = new LambdaMetadata("use1-az1");
+        // Arrange
+        _mockFetcher.Fetch().Returns(new MetadataValues("use1-az1"));
 
-        // Then
-        metadata.AvailabilityZoneId.Should().Be("use1-az1");
+        // Act
+        var result = LambdaMetadata.AvailabilityZoneId;
+
+        // Assert
+        result.Should().Be("use1-az1");
     }
 
     [Fact]
-    public void Deserialize_Should_MapJsonProperty()
+    public void AvailabilityZoneId_CachesValue()
     {
-        // Given
-        var json = """{"AvailabilityZoneID": "euw1-az3"}""";
+        // Arrange
+        _mockFetcher.Fetch().Returns(new MetadataValues("use1-az1"));
 
-        // When
-        var metadata = JsonSerializer.Deserialize(json, LambdaMetadataSerializerContext.Default.LambdaMetadata);
+        // Act
+        var first = LambdaMetadata.AvailabilityZoneId;
+        var second = LambdaMetadata.AvailabilityZoneId;
 
-        // Then
-        metadata.Should().NotBeNull();
-        metadata!.AvailabilityZoneId.Should().Be("euw1-az3");
+        // Assert
+        first.Should().Be(second);
+        _mockFetcher.Received(1).Fetch();
     }
 
     [Fact]
-    public void Deserialize_Should_IgnoreUnknownFields()
+    public void AvailabilityZoneId_ThrowsOnError()
     {
-        // Given
-        var json = """{"AvailabilityZoneID": "apne1-az1", "UnknownField": "value", "AnotherField": 123}""";
+        // Arrange
+        _mockFetcher.Fetch().Returns(_ => throw new LambdaMetadataException("Test error"));
 
-        // When
-        var metadata = JsonSerializer.Deserialize(json, LambdaMetadataSerializerContext.Default.LambdaMetadata);
+        // Act & Assert
+        var act = () => LambdaMetadata.AvailabilityZoneId;
+        act.Should().Throw<LambdaMetadataException>().WithMessage("Test error");
+    }
 
-        // Then
-        metadata.Should().NotBeNull();
-        metadata!.AvailabilityZoneId.Should().Be("apne1-az1");
+    [Fact]
+    public void AvailabilityZoneId_ThrowsWithStatusCode()
+    {
+        // Arrange
+        _mockFetcher.Fetch().Returns(_ => throw new LambdaMetadataException("Server error", 500));
+
+        // Act & Assert
+        var act = () => LambdaMetadata.AvailabilityZoneId;
+        act.Should().Throw<LambdaMetadataException>().Where(e => e.StatusCode == 500);
+    }
+
+    [Fact]
+    public void Refresh_FetchesNewValue()
+    {
+        // Arrange
+        _mockFetcher.Fetch().Returns(
+            new MetadataValues("use1-az1"),
+            new MetadataValues("use1-az2"));
+
+        // Act
+        var first = LambdaMetadata.AvailabilityZoneId;
+        LambdaMetadata.Refresh();
+        var second = LambdaMetadata.AvailabilityZoneId;
+
+        // Assert
+        first.Should().Be("use1-az1");
+        second.Should().Be("use1-az2");
+        _mockFetcher.Received(2).Fetch();
+    }
+
+    [Fact]
+    public void AvailabilityZoneId_ReturnsNullWhenNotSet()
+    {
+        // Arrange
+        _mockFetcher.Fetch().Returns(new MetadataValues(null));
+
+        // Act
+        var result = LambdaMetadata.AvailabilityZoneId;
+
+        // Assert
+        result.Should().BeNull();
     }
 }

@@ -18,10 +18,10 @@ using Xunit;
 namespace AWS.Lambda.Powertools.Metadata.Tests;
 
 /// <summary>
-/// Collection definition to ensure tests that use the static LambdaMetadataClient
+/// Collection definition to ensure tests that use the static LambdaMetadata
 /// run sequentially and don't interfere with each other.
 /// </summary>
-[CollectionDefinition("LambdaMetadataClient", DisableParallelization = true)]
-public class LambdaMetadataClientCollection
+[CollectionDefinition("LambdaMetadata", DisableParallelization = true)]
+public class LambdaMetadataCollection
 {
 }

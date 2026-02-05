@@ -14,50 +14,108 @@
  */
 
 using System.Text.Json.Serialization;
+using AWS.Lambda.Powertools.Metadata.Exceptions;
+using AWS.Lambda.Powertools.Metadata.Internal;
 
 namespace AWS.Lambda.Powertools.Metadata;
 
 /// <summary>
-/// Data class representing Lambda execution environment metadata.
+/// Provides access to Lambda execution environment metadata from the Lambda Metadata Endpoint (LMDS).
 /// <para>
-/// This class is immutable and contains metadata retrieved from the Lambda Metadata Endpoint (LMDS).
-/// Use <see cref="LambdaMetadataClient.Get"/> to obtain an instance.
-/// </para>
-/// <para>
-/// Unknown properties in the JSON response are ignored to ensure forward compatibility.
+/// Metadata is automatically fetched on first access and cached for the Lambda sandbox lifetime.
 /// </para>
 /// </summary>
 /// <example>
 /// <code>
-/// var metadata = LambdaMetadataClient.Get();
-/// var azId = metadata.AvailabilityZoneId;
+/// var azId = LambdaMetadata.AvailabilityZoneId;
 /// </code>
 /// </example>
-/// <seealso cref="LambdaMetadataClient"/>
-public sealed class LambdaMetadata
+public static class LambdaMetadata
 {
-    /// <summary>
-    /// Gets the Availability Zone ID.
-    /// <para>
-    /// The Availability Zone ID is a unique identifier for the availability zone
-    /// where the Lambda function is executing (e.g., "use1-az1").
-    /// </para>
-    /// </summary>
-    [JsonPropertyName("AvailabilityZoneID")]
-    public string? AvailabilityZoneId { get; init; }
+    private static readonly object Lock = new();
+    private static volatile MetadataValues? _cached;
+    private static IMetadataFetcher _fetcher = new MetadataFetcher();
 
     /// <summary>
-    /// Default constructor for JSON deserialization.
+    /// Gets the Availability Zone ID where the Lambda function is executing.
     /// </summary>
-    public LambdaMetadata()
+    /// <example>Example value: "use1-az1"</example>
+    /// <exception cref="LambdaMetadataException">
+    /// Thrown if the metadata endpoint is unavailable or returns an error.
+    /// </exception>
+    public static string? AvailabilityZoneId => GetCached().AvailabilityZoneId;
+
+    /// <summary>
+    /// Forces a refresh of the cached metadata.
+    /// <para>
+    /// In most cases, you don't need this since metadata remains constant for the
+    /// Lambda sandbox lifetime.
+    /// </para>
+    /// </summary>
+    /// <exception cref="LambdaMetadataException">
+    /// Thrown if the metadata endpoint is unavailable or returns an error.
+    /// </exception>
+    public static void Refresh()
     {
+        lock (Lock)
+        {
+            _cached = _fetcher.Fetch();
+        }
+    }
+
+    private static MetadataValues GetCached()
+    {
+        var instance = _cached;
+        if (instance is not null)
+            return instance;
+
+        lock (Lock)
+        {
+            instance = _cached;
+            if (instance is not null)
+                return instance;
+
+            var newInstance = _fetcher.Fetch();
+            _cached = newInstance;
+            return newInstance;
+        }
     }
 
     /// <summary>
-    /// Constructor with availability zone ID.
+    /// Sets the metadata fetcher (for testing only).
     /// </summary>
-    /// <param name="availabilityZoneId">The availability zone ID.</param>
-    public LambdaMetadata(string? availabilityZoneId)
+    internal static void SetFetcher(IMetadataFetcher fetcher)
+    {
+        lock (Lock)
+        {
+            _fetcher = fetcher;
+            _cached = null;
+        }
+    }
+
+    /// <summary>
+    /// Resets the cached instance (for testing only).
+    /// </summary>
+    internal static void Reset()
+    {
+        lock (Lock)
+        {
+            _cached = null;
+        }
+    }
+}
+
+/// <summary>
+/// Internal class for JSON deserialization of metadata values.
+/// </summary>
+internal sealed class MetadataValues
+{
+    [JsonPropertyName("AvailabilityZoneID")]
+    public string? AvailabilityZoneId { get; init; }
+
+    public MetadataValues() { }
+
+    public MetadataValues(string? availabilityZoneId)
     {
         AvailabilityZoneId = availabilityZoneId;
     }
