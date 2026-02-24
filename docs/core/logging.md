@@ -1075,13 +1075,13 @@ inheriting the ``ILogFormatter`` class and implementing the ``object FormatLogEn
 
 ### Buffering logs
 
-Log buffering enables you to buffer logs for a specific request or invocation. Enable log buffering by passing `LogBufferingOptions` when configuring a Logger instance. You can buffer logs at the `Warning`, `Information`, `Debug` or `Trace` level, and flush them automatically on error or manually as needed.
+Log buffering enables you to buffer logs for a specific request or invocation. Enable log buffering by setting `LogBuffering.Enabled = true` when configuring a Logger instance. You can buffer logs at the `Warning`, `Information`, `Debug` or `Trace` level, and flush them automatically on error or manually as needed.
 
 !!! tip "This is useful when you want to reduce the number of log messages emitted while still having detailed logs when needed, such as when troubleshooting issues."
 
 === "LogBufferingOptions"
 
-    ```csharp hl_lines="5-14"
+    ```csharp hl_lines="5-12"
     public class Function 
     {
         public Function()
@@ -1089,12 +1089,10 @@ Log buffering enables you to buffer logs for a specific request or invocation. E
           Logger.Configure(logger =>
           {
               logger.Service = "MyServiceName";
-              logger.LogBuffering = new LogBufferingOptions
-              {
-                  BufferAtLogLevel = LogLevel.Debug,
-                  MaxBytes = 20480, // Default is 20KB (20480 bytes) 
-                  FlushOnErrorLog = true // default true
-              };
+              logger.LogBuffering.Enabled = true;
+              logger.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+              logger.LogBuffering.MaxBytes = 20480; // Default is 20KB (20480 bytes) 
+              logger.LogBuffering.FlushOnErrorLog = true; // default true
           });
 
           Logger.LogDebug('This is a debug message'); // This is NOT buffered
@@ -1117,17 +1115,18 @@ Log buffering enables you to buffer logs for a specific request or invocation. E
 
 #### Configuring the buffer
 
-When configuring the buffer, you can set the following options to fine-tune how logs are captured, stored, and emitted. You can configure the following options in the `logBufferOptions` constructor parameter:
+When configuring the buffer, you can set the following options to fine-tune how logs are captured, stored, and emitted. You can configure the following options in the `LogBuffering` property:
 
 | Parameter           | Description                                      | Configuration                              | Default |
 |---------------------|------------------------------------------------- |--------------------------------------------|---------|
+| `Enabled`           | Enable or disable log buffering                  | `True`, `False`                            | `False` |
 | `MaxBytes`          | Maximum size of the log buffer in bytes          | `number`                                   | `20480` |
 | `BufferAtLogLevel` | Minimum log level to buffer                      | `Trace`, `Debug`, `Information`, `Warning` | `Debug` |
 | `FlushOnErrorLog`   | Automatically flush buffer when logging an error | `True`, `False`                            | `True`  |
 
 === "BufferAtLogLevel"
 
-    ```csharp hl_lines="10"
+    ```csharp hl_lines="10 11"
     public class Function 
     {
         public Function()
@@ -1135,10 +1134,8 @@ When configuring the buffer, you can set the following options to fine-tune how 
           Logger.Configure(logger =>
           {
               logger.Service = "MyServiceName";
-              logger.LogBuffering = new LogBufferingOptions
-              {
-                  BufferAtLogLevel = LogLevel.Warning
-              };
+              logger.LogBuffering.Enabled = true;
+              logger.LogBuffering.BufferAtLogLevel = LogLevel.Warning;
           });
         }
 
@@ -1161,7 +1158,7 @@ When configuring the buffer, you can set the following options to fine-tune how 
 
 === "FlushOnErrorLog"
 
-    ```csharp hl_lines="10"
+    ```csharp hl_lines="10 11"
     public class Function 
     {
         public Function()
@@ -1169,10 +1166,8 @@ When configuring the buffer, you can set the following options to fine-tune how 
           Logger.Configure(logger =>
           {
               logger.Service = "MyServiceName";
-              logger.LogBuffering = new LogBufferingOptions
-              {
-                  FlushOnErrorLog = false
-              };
+              logger.LogBuffering.Enabled = true;
+              logger.LogBuffering.FlushOnErrorLog = false;
           });
         }
 
@@ -1214,7 +1209,7 @@ When using the `Logger` decorator, you can configure the logger to automatically
 
 === "FlushBufferOnUncaughtError"
 
-    ```csharp hl_lines="15"
+    ```csharp hl_lines="14"
     public class Function 
     {
         public Function()
@@ -1222,10 +1217,8 @@ When using the `Logger` decorator, you can configure the logger to automatically
           Logger.Configure(logger =>
           {
               logger.Service = "MyServiceName";
-              logger.LogBuffering = new LogBufferingOptions
-              {
-                  BufferAtLogLevel = LogLevel.Debug
-              };
+              logger.LogBuffering.Enabled = true;
+              logger.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
           });
         }
 
@@ -1328,7 +1321,7 @@ sequenceDiagram
    No, we never buffer logs during cold starts. This is because we want to ensure that logs emitted during this phase are always available for debugging and monitoring purposes. The buffer is only used during the execution of the Lambda function.
 
 3. **How can I prevent log buffering from consuming excessive memory?**
-   You can limit the size of the buffer by setting the `MaxBytes` option in the `LogBufferingOptions` constructor parameter. This will ensure that the buffer does not grow indefinitely and consume excessive memory.
+   You can limit the size of the buffer by setting the `MaxBytes` option in the `LogBuffering` property. This will ensure that the buffer does not grow indefinitely and consume excessive memory.
 
 4. **What happens if the log buffer reaches its maximum size?**
    Older logs are removed from the buffer to make room for new logs. This means that if the buffer is full, you may lose some logs if they are not flushed before the buffer reaches its maximum size. When this happens, we emit a warning when flushing the buffer to indicate that some logs have been dropped.
