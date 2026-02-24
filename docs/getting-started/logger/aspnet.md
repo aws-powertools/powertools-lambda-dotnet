@@ -392,11 +392,9 @@ var logger = LoggerFactory.Create(builder =>
     builder.AddPowertoolsLogger(config =>
     {
         config.Service = "powertools-aspnet-demo";
-        config.LogBuffering = new LogBufferingOptions
-        {
-            BufferAtLogLevel = LogLevel.Debug,
-            FlushOnErrorLog = true
-        };
+        config.LogBuffering.Enabled = true;
+        config.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+        config.LogBuffering.FlushOnErrorLog = true;
     });
 }).CreatePowertoolsLogger();
 
