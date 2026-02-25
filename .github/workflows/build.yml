@@ -10,12 +10,11 @@ on:
       - "libraries/**"
     branches: [develop]
 
+permissions: {}
+
 defaults:
   run:
     working-directory: ./libraries
-
-permissions:
-  contents: read
 
 jobs:
   build:
