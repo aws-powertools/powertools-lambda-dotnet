@@ -197,10 +197,8 @@ public class HandlerTests
                     DictionaryKeyPolicy = JsonNamingPolicy.KebabCaseUpper
                 };
                 config.LogOutput = output;
-                config.LogBuffering = new LogBufferingOptions
-                {
-                    BufferAtLogLevel = LogLevel.Debug
-                };
+                config.LogBuffering.Enabled = true;
+                config.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
             });
         }).CreatePowertoolsLogger();
 

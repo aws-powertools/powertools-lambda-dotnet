@@ -139,10 +139,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                     config.Service = "test-service";
                     config.MinimumLogLevel = minimumLevel;
                     config.LogOutput = _consoleOut;
-                    config.LogBuffering = new LogBufferingOptions
-                    {
-                        BufferAtLogLevel = bufferAtLevel
-                    };
+                    config.LogBuffering.Enabled = true;
+                    config.LogBuffering.BufferAtLogLevel = bufferAtLevel;
                 });
             }).CreatePowertoolsLogger();
         }
@@ -156,11 +154,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                     config.Service = "test-service";
                     config.MinimumLogLevel = LogLevel.Information;
                     config.LogOutput = _consoleOut;
-                    config.LogBuffering = new LogBufferingOptions
-                    {
-                        BufferAtLogLevel = LogLevel.Debug,
-                        FlushOnErrorLog = flushOnError
-                    };
+                    config.LogBuffering.Enabled = true;
+                    config.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                    config.LogBuffering.FlushOnErrorLog = flushOnError;
                 });
             }).CreatePowertoolsLogger();
         }
@@ -204,12 +200,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             {
                 options.LogOutput = _consoleOut;
                 options.MinimumLogLevel = LogLevel.Information;
-                options.LogBuffering = new LogBufferingOptions
-                {
-
-                    BufferAtLogLevel = LogLevel.Debug,
-                    FlushOnErrorLog = false // Disable auto-flush to test manual flush
-                };
+                options.LogBuffering.Enabled = true;
+                options.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                options.LogBuffering.FlushOnErrorLog = false; // Disable auto-flush to test manual flush
             });
 
             // Set invocation ID manually
@@ -242,12 +235,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Logger.Configure(options =>
             {
                 options.LogOutput = _consoleOut;
-                options.LogBuffering = new LogBufferingOptions
-                {
-
-                    BufferAtLogLevel = LogLevel.Debug,
-                    FlushOnErrorLog = true
-                };
+                options.LogBuffering.Enabled = true;
+                options.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                options.LogBuffering.FlushOnErrorLog = true;
             });
             
             var handler = new StaticLambdaHandler();
@@ -277,11 +267,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             {
                 options.LogOutput = _consoleOut;
                 options.MinimumLogLevel = LogLevel.Information;
-                options.LogBuffering = new LogBufferingOptions
-                {
-
-                    BufferAtLogLevel = LogLevel.Debug
-                };
+                options.LogBuffering.Enabled = true;
+                options.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
             });
 
             // Set invocation ID
@@ -307,12 +294,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             {
                 options.LogOutput = _consoleOut;
                 options.MinimumLogLevel = LogLevel.Information;
-                options.LogBuffering = new LogBufferingOptions
-                {
-
-                    BufferAtLogLevel = LogLevel.Debug,
-                    FlushOnErrorLog = true
-                };
+                options.LogBuffering.Enabled = true;
+                options.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                options.LogBuffering.FlushOnErrorLog = true;
             });
 
             // Set invocation ID
@@ -336,11 +320,8 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             {
                 options.LogOutput = _consoleOut;
                 options.MinimumLogLevel = LogLevel.Information;
-                options.LogBuffering = new LogBufferingOptions
-                {
-
-                    BufferAtLogLevel = LogLevel.Debug
-                };
+                options.LogBuffering.Enabled = true;
+                options.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
             });
 
             // Act - first invocation
@@ -373,11 +354,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             {
                 options.LogOutput = _consoleOut;
                 options.MinimumLogLevel = LogLevel.Information;
-                options.LogBuffering = new LogBufferingOptions
-                {
-                    BufferAtLogLevel = LogLevel.Debug,
-                    FlushOnErrorLog = false
-                };
+                options.LogBuffering.Enabled = true;
+                options.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                options.LogBuffering.FlushOnErrorLog = false;
             });
 
             Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-6");
@@ -406,11 +385,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             {
                 options.LogOutput = _consoleOut;
                 options.MinimumLogLevel = LogLevel.Information;
-                options.LogBuffering = new LogBufferingOptions
-                {
-                    BufferAtLogLevel = LogLevel.Debug,
-                    FlushOnErrorLog = false
-                };
+                options.LogBuffering.Enabled = true;
+                options.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                options.LogBuffering.FlushOnErrorLog = false;
             });
 
             Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-static-request-8");

@@ -55,11 +55,9 @@ public class BufferIsolationTests : IDisposable
                 Logger.Configure(config =>
                 {
                     config.MinimumLogLevel = LogLevel.Debug;
-                    config.LogBuffering = new LogBufferingOptions
-                    {
-                        BufferAtLogLevel = LogLevel.Debug,
-                        FlushOnErrorLog = false
-                    };
+                    config.LogBuffering.Enabled = true;
+                    config.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                    config.LogBuffering.FlushOnErrorLog = false;
                 });
 
                 for (int e = 0; e < entriesPerInvocation; e++)
@@ -128,11 +126,9 @@ public class BufferIsolationTests : IDisposable
             Logger.Configure(config =>
             {
                 config.MinimumLogLevel = LogLevel.Debug;
-                config.LogBuffering = new LogBufferingOptions
-                {
-                    BufferAtLogLevel = LogLevel.Debug,
-                    FlushOnErrorLog = false
-                };
+                config.LogBuffering.Enabled = true;
+                config.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                config.LogBuffering.FlushOnErrorLog = false;
             });
 
             for (int e = 0; e < entriesPerInvocation; e++)
@@ -161,11 +157,9 @@ public class BufferIsolationTests : IDisposable
             Logger.Configure(config =>
             {
                 config.MinimumLogLevel = LogLevel.Debug;
-                config.LogBuffering = new LogBufferingOptions
-                {
-                    BufferAtLogLevel = LogLevel.Debug,
-                    FlushOnErrorLog = false
-                };
+                config.LogBuffering.Enabled = true;
+                config.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                config.LogBuffering.FlushOnErrorLog = false;
             });
 
             for (int e = 0; e < entriesPerInvocation; e++)
@@ -224,12 +218,10 @@ public class BufferIsolationTests : IDisposable
             Logger.Configure(config =>
             {
                 config.MinimumLogLevel = LogLevel.Debug;
-                config.LogBuffering = new LogBufferingOptions
-                {
-                    BufferAtLogLevel = LogLevel.Debug,
-                    FlushOnErrorLog = false,
-                    MaxBytes = smallBufferSize
-                };
+                config.LogBuffering.Enabled = true;
+                config.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                config.LogBuffering.FlushOnErrorLog = false;
+                config.LogBuffering.MaxBytes = smallBufferSize;
             });
 
             for (int e = 0; e < entriesPerInvocation * 3; e++)
@@ -256,12 +248,10 @@ public class BufferIsolationTests : IDisposable
             Logger.Configure(config =>
             {
                 config.MinimumLogLevel = LogLevel.Debug;
-                config.LogBuffering = new LogBufferingOptions
-                {
-                    BufferAtLogLevel = LogLevel.Debug,
-                    FlushOnErrorLog = false,
-                    MaxBytes = largeBufferSize
-                };
+                config.LogBuffering.Enabled = true;
+                config.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                config.LogBuffering.FlushOnErrorLog = false;
+                config.LogBuffering.MaxBytes = largeBufferSize;
             });
 
             for (int e = 0; e < entriesPerInvocation; e++)

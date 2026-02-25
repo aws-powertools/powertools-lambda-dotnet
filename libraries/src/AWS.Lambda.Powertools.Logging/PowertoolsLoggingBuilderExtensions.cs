@@ -157,11 +157,8 @@ public static class PowertoolsLoggingBuilderExtensions
     ///     <code>
     ///     builder.Logging.AddPowertoolsLogger(options => 
     ///     {
-    ///         options.LogBuffering = new LogBufferingOptions
-    ///         {
-    ///             Enabled = true,
-    ///             BufferAtLogLevel = LogLevel.Debug    
-    ///         };
+    ///         options.LogBuffering.Enabled = true;
+    ///         options.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
     ///     });
     ///     </code>
     /// </example>
@@ -188,7 +185,7 @@ public static class PowertoolsLoggingBuilderExtensions
         UpdateConfiguration(options);
 
         // If buffering is enabled, register buffer providers
-        if (options.LogBuffering != null)
+        if (options.LogBuffering?.Enabled == true)
         {
             // Add a filter for the buffer provider
             builder.AddFilter<BufferingLoggerProvider>(

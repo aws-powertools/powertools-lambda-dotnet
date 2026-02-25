@@ -23,6 +23,23 @@ namespace AWS.Lambda.Powertools.Logging;
 public class LogBufferingOptions
 {
     /// <summary>
+    /// Gets or sets whether log buffering is enabled.
+    /// <para></para>
+    /// Default is false. Set to true to enable log buffering.
+    /// </summary>
+    /// <example>
+    ///     <code>
+    ///     // Enable buffering with default options
+    ///     options.LogBuffering.Enabled = true;
+    ///     
+    ///     // Enable buffering with custom options
+    ///     options.LogBuffering.Enabled = true;
+    ///     options.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+    ///     </code>
+    /// </example>
+    public bool Enabled { get; set; }
+    
+    /// <summary>
     /// Gets or sets the maximum size of the buffer in bytes
     /// <para></para>
     /// Default is 20KB (20480 bytes)

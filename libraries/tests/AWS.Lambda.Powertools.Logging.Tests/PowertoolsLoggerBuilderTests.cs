@@ -4,6 +4,7 @@ using AWS.Lambda.Powertools.Common.Tests;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Tests.Formatter;
 using AWS.Lambda.Powertools.Logging.Tests.Handlers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
@@ -202,5 +203,136 @@ public class PowertoolsLoggerBuilderTests
         Assert.Contains("\"service\":\"chained-config-service\"", logOutput);
         Assert.Contains("\"message\":\"Testing fully configured logger\"", logOutput);
         Assert.Contains("\"sample_rate\":0.1", logOutput);
+    }
+}
+
+[Collection("Sequential")]
+public class PowertoolsLoggingBuilderExtensionsTests : IDisposable
+{
+    private readonly ITestOutputHelper _output;
+    private readonly TestLoggerOutput _consoleOut;
+
+    public PowertoolsLoggingBuilderExtensionsTests(ITestOutputHelper output)
+    {
+        _output = output;
+        _consoleOut = new TestLoggerOutput();
+        ResetState();
+    }
+
+    [Fact]
+    public void AddPowertoolsLogger_WithBufferingEnabled_RegistersBufferingProvider()
+    {
+        // Arrange & Act - This test covers: if (options.LogBuffering?.Enabled == true)
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddLogging(builder =>
+        {
+            builder.AddPowertoolsLogger(config =>
+            {
+                config.Service = "test-service";
+                config.LogOutput = _consoleOut;
+                config.LogBuffering = new LogBufferingOptions
+                {
+                    Enabled = true,
+                    BufferAtLogLevel = LogLevel.Debug
+                };
+            });
+        });
+
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreatePowertoolsLogger();
+
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-invocation");
+        
+        // Act - Log a debug message (should be buffered)
+        logger.LogDebug("Debug message that should be buffered");
+        logger.LogInformation("Info message that should be logged directly");
+
+        // Assert - Debug should be buffered, Info should be logged
+        var outputBeforeFlush = _consoleOut.ToString();
+        _output.WriteLine("Before flush: " + outputBeforeFlush);
+        Assert.DoesNotContain("Debug message that should be buffered", outputBeforeFlush);
+        Assert.Contains("Info message that should be logged directly", outputBeforeFlush);
+
+        // Flush and verify debug message appears
+        logger.FlushBuffer();
+        var outputAfterFlush = _consoleOut.ToString();
+        _output.WriteLine("After flush: " + outputAfterFlush);
+        Assert.Contains("Debug message that should be buffered", outputAfterFlush);
+    }
+
+    [Fact]
+    public void AddPowertoolsLogger_WithBufferingDisabled_DoesNotRegisterBufferingProvider()
+    {
+        // Arrange & Act - This test covers the false path: if (options.LogBuffering?.Enabled == true)
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddLogging(builder =>
+        {
+            builder.AddPowertoolsLogger(config =>
+            {
+                config.Service = "test-service";
+                config.MinimumLogLevel = LogLevel.Debug;
+                config.LogOutput = _consoleOut;
+                config.LogBuffering = new LogBufferingOptions
+                {
+                    Enabled = false
+                };
+            });
+        });
+
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreatePowertoolsLogger();
+
+        // Act - Log a debug message (should be logged directly since buffering is disabled)
+        logger.LogDebug("Debug message that should be logged directly");
+
+        // Assert - Debug should be logged directly (no buffering)
+        var output = _consoleOut.ToString();
+        _output.WriteLine("Output: " + output);
+        Assert.Contains("Debug message that should be logged directly", output);
+    }
+
+    [Fact]
+    public void AddPowertoolsLogger_WithNullLogBuffering_DoesNotRegisterBufferingProvider()
+    {
+        // Arrange & Act - This test covers the null path: if (options.LogBuffering?.Enabled == true)
+        var serviceCollection = new ServiceCollection();
+        serviceCollection.AddLogging(builder =>
+        {
+            builder.AddPowertoolsLogger(config =>
+            {
+                config.Service = "test-service";
+                config.MinimumLogLevel = LogLevel.Debug;
+                config.LogOutput = _consoleOut;
+                config.LogBuffering = null;
+            });
+        });
+
+        var serviceProvider = serviceCollection.BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreatePowertoolsLogger();
+
+        // Act - Log a debug message (should be logged directly since buffering is null)
+        logger.LogDebug("Debug message with null buffering config");
+
+        // Assert - Debug should be logged directly (no buffering)
+        var output = _consoleOut.ToString();
+        _output.WriteLine("Output: " + output);
+        Assert.Contains("Debug message with null buffering config", output);
+    }
+
+    private void ResetState()
+    {
+        Logger.Reset();
+        PowertoolsLoggingBuilderExtensions.ResetAllProviders();
+        LoggerFactoryHolder.Reset();
+        LogBufferManager.ResetForTesting();
+        Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", null);
+    }
+
+    public void Dispose()
+    {
+        ResetState();
     }
 }

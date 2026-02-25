@@ -77,7 +77,7 @@ public class LoggingAspect : IMethodAspectHandler
 
         // Set operational flags based on current configuration
         _isDebug = _currentConfig.MinimumLogLevel <= LogLevel.Debug;
-        _bufferingEnabled = _currentConfig.LogBuffering != null;
+        _bufferingEnabled = _currentConfig.LogBuffering?.Enabled == true;
     }
 
     /// <summary>

@@ -245,10 +245,8 @@ public class SimpleFunctionWithStaticConfigure
         {
             logger.LogOutput = output;
             logger.Service = "MyServiceName";
-            logger.LogBuffering = new LogBufferingOptions
-            {
-                BufferAtLogLevel = LogLevel.Debug,
-            };
+            logger.LogBuffering.Enabled = true;
+            logger.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
         });
     }
 
