@@ -5,8 +5,7 @@ on:
     types: [opened, edited, closed]
 
 
-permissions: 
-  contents: read
+permissions: {}
   
 jobs:
   record_pr:
