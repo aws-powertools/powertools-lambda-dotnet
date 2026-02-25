@@ -6,8 +6,7 @@ on:
       - develop
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   update_release_draft:
