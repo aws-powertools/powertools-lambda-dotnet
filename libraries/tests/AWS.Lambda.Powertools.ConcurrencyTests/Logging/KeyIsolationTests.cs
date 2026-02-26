@@ -63,6 +63,7 @@ public class KeyIsolationTests
 
     /// <summary>
     /// Verifies that concurrent invocations don't leak keys to each other.
+    /// Uses Logger.UseScope() to simulate Lambda multi-threaded mode where each invocation starts fresh.
     /// </summary>
     [Theory]
     [InlineData(2)]
@@ -81,25 +82,29 @@ public class KeyIsolationTests
             int invocationIndex = i;
             tasks[i] = Task.Run(() =>
             {
-                var invocationId = Guid.NewGuid().ToString();
-                var uniqueKey = $"invocation_{invocationId}";
-
-                barrier.SignalAndWait();
-
-                Logger.AppendKey(uniqueKey, invocationId);
-
-                Thread.Sleep(Random.Shared.Next(1, 10));
-
-                var allKeys = Logger.GetAllKeys().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
-                results[invocationIndex] = new ConcurrentInvocationResult
+                // Simulate Lambda invocation starting fresh with isolated scope
+                using (Logger.UseScope())
                 {
-                    InvocationId = invocationId,
-                    UniqueKey = uniqueKey,
-                    AllKeysAtEnd = allKeys
-                };
+                    var invocationId = Guid.NewGuid().ToString();
+                    var uniqueKey = $"invocation_{invocationId}";
 
-                Logger.RemoveKeys(uniqueKey);
+                    barrier.SignalAndWait();
+
+                    Logger.AppendKey(uniqueKey, invocationId);
+
+                    Thread.Sleep(Random.Shared.Next(1, 10));
+
+                    var allKeys = Logger.GetAllKeys().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                    results[invocationIndex] = new ConcurrentInvocationResult
+                    {
+                        InvocationId = invocationId,
+                        UniqueKey = uniqueKey,
+                        AllKeysAtEnd = allKeys
+                    };
+
+                    Logger.RemoveKeys(uniqueKey);
+                }
             });
         }
 
@@ -119,6 +124,7 @@ public class KeyIsolationTests
 
     /// <summary>
     /// Verifies that GetAllKeys returns only the calling invocation's keys.
+    /// Uses Logger.UseScope() to simulate Lambda multi-threaded mode.
     /// </summary>
     [Theory]
     [InlineData(2, 3)]
@@ -137,31 +143,35 @@ public class KeyIsolationTests
             int invocationIndex = i;
             tasks[i] = Task.Run(() =>
             {
-                var invocationId = Guid.NewGuid().ToString();
-                var appendedKeys = new Dictionary<string, object>();
-
-                barrier.SignalAndWait();
-
-                for (int k = 0; k < keysPerInvocation; k++)
+                // Simulate Lambda invocation starting fresh with isolated scope
+                using (Logger.UseScope())
                 {
-                    var key = $"inv_{invocationId}_key_{k}";
-                    var value = $"value_{k}_{invocationId}";
-                    Logger.AppendKey(key, value);
-                    appendedKeys[key] = value;
+                    var invocationId = Guid.NewGuid().ToString();
+                    var appendedKeys = new Dictionary<string, object>();
+
+                    barrier.SignalAndWait();
+
+                    for (int k = 0; k < keysPerInvocation; k++)
+                    {
+                        var key = $"inv_{invocationId}_key_{k}";
+                        var value = $"value_{k}_{invocationId}";
+                        Logger.AppendKey(key, value);
+                        appendedKeys[key] = value;
+                    }
+
+                    Thread.Sleep(Random.Shared.Next(1, 10));
+
+                    var allKeysResult = Logger.GetAllKeys().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                    results[invocationIndex] = new GetAllKeysResult
+                    {
+                        InvocationId = invocationId,
+                        AppendedKeys = appendedKeys,
+                        GetAllKeysResult_Keys = allKeysResult
+                    };
+
+                    Logger.RemoveKeys(appendedKeys.Keys.ToArray());
                 }
-
-                Thread.Sleep(Random.Shared.Next(1, 10));
-
-                var allKeysResult = Logger.GetAllKeys().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
-                results[invocationIndex] = new GetAllKeysResult
-                {
-                    InvocationId = invocationId,
-                    AppendedKeys = appendedKeys,
-                    GetAllKeysResult_Keys = allKeysResult
-                };
-
-                Logger.RemoveKeys(appendedKeys.Keys.ToArray());
             });
         }
 
@@ -192,6 +202,7 @@ public class KeyIsolationTests
 
     /// <summary>
     /// Verifies that concurrent invocations using the same key name maintain separate values.
+    /// Uses Logger.UseScope() to simulate Lambda multi-threaded mode.
     /// </summary>
     [Theory]
     [InlineData(2)]
@@ -211,26 +222,30 @@ public class KeyIsolationTests
             int invocationIndex = i;
             tasks[i] = Task.Run(() =>
             {
-                var invocationId = Guid.NewGuid().ToString();
-                var uniqueValue = $"unique_value_{invocationId}";
-
-                barrier.SignalAndWait();
-
-                Logger.AppendKey(sharedKeyName, uniqueValue);
-
-                Thread.Sleep(Random.Shared.Next(1, 15));
-
-                var allKeys = Logger.GetAllKeys().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                var retrievedValue = allKeys.TryGetValue(sharedKeyName, out var val) ? val?.ToString() : null;
-
-                results[invocationIndex] = new SameNameKeyResult
+                // Simulate Lambda invocation starting fresh with isolated scope
+                using (Logger.UseScope())
                 {
-                    InvocationId = invocationId,
-                    ExpectedValue = uniqueValue,
-                    RetrievedValue = retrievedValue
-                };
+                    var invocationId = Guid.NewGuid().ToString();
+                    var uniqueValue = $"unique_value_{invocationId}";
 
-                Logger.RemoveKeys(sharedKeyName);
+                    barrier.SignalAndWait();
+
+                    Logger.AppendKey(sharedKeyName, uniqueValue);
+
+                    Thread.Sleep(Random.Shared.Next(1, 15));
+
+                    var allKeys = Logger.GetAllKeys().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                    var retrievedValue = allKeys.TryGetValue(sharedKeyName, out var val) ? val?.ToString() : null;
+
+                    results[invocationIndex] = new SameNameKeyResult
+                    {
+                        InvocationId = invocationId,
+                        ExpectedValue = uniqueValue,
+                        RetrievedValue = retrievedValue
+                    };
+
+                    Logger.RemoveKeys(sharedKeyName);
+                }
             });
         }
 
@@ -244,6 +259,7 @@ public class KeyIsolationTests
 
     /// <summary>
     /// Verifies that ClearState on one invocation doesn't affect another active invocation.
+    /// Uses Logger.UseScope() to simulate Lambda multi-threaded mode.
     /// </summary>
     [Theory]
     [InlineData(10)]
@@ -260,44 +276,52 @@ public class KeyIsolationTests
 
         var shortTask = Task.Run(() =>
         {
-            var invocationId = Guid.NewGuid().ToString();
-            var uniqueKey = $"short_inv_{invocationId}";
+            // Simulate Lambda invocation starting fresh with isolated scope
+            using (Logger.UseScope())
+            {
+                var invocationId = Guid.NewGuid().ToString();
+                var uniqueKey = $"short_inv_{invocationId}";
 
-            shortInvocationResult.InvocationId = invocationId;
-            shortInvocationResult.UniqueKey = uniqueKey;
+                shortInvocationResult.InvocationId = invocationId;
+                shortInvocationResult.UniqueKey = uniqueKey;
 
-            barrier.SignalAndWait();
+                barrier.SignalAndWait();
 
-            Logger.AppendKey(uniqueKey, invocationId);
-            shortInvocationResult.KeyAppended = true;
+                Logger.AppendKey(uniqueKey, invocationId);
+                shortInvocationResult.KeyAppended = true;
 
-            Thread.Sleep(shortDuration);
+                Thread.Sleep(shortDuration);
 
-            var keysToRemove = Logger.GetAllKeys().Select(k => k.Key).ToArray();
-            Logger.RemoveKeys(keysToRemove);
-            shortInvocationResult.ClearStateCalled = true;
+                var keysToRemove = Logger.GetAllKeys().Select(k => k.Key).ToArray();
+                Logger.RemoveKeys(keysToRemove);
+                shortInvocationResult.ClearStateCalled = true;
+            }
         });
 
         var longTask = Task.Run(() =>
         {
-            var invocationId = Guid.NewGuid().ToString();
-            var uniqueKey = $"long_inv_{invocationId}";
+            // Simulate Lambda invocation starting fresh with isolated scope
+            using (Logger.UseScope())
+            {
+                var invocationId = Guid.NewGuid().ToString();
+                var uniqueKey = $"long_inv_{invocationId}";
 
-            longInvocationResult.InvocationId = invocationId;
-            longInvocationResult.UniqueKey = uniqueKey;
+                longInvocationResult.InvocationId = invocationId;
+                longInvocationResult.UniqueKey = uniqueKey;
 
-            barrier.SignalAndWait();
+                barrier.SignalAndWait();
 
-            Logger.AppendKey(uniqueKey, invocationId);
-            longInvocationResult.KeyAppended = true;
+                Logger.AppendKey(uniqueKey, invocationId);
+                longInvocationResult.KeyAppended = true;
 
-            Thread.Sleep(longDuration);
+                Thread.Sleep(longDuration);
 
-            var allKeys = Logger.GetAllKeys().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            longInvocationResult.KeysAfterOtherClear = allKeys;
-            longInvocationResult.OwnKeyStillPresent = allKeys.ContainsKey(uniqueKey);
+                var allKeys = Logger.GetAllKeys().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                longInvocationResult.KeysAfterOtherClear = allKeys;
+                longInvocationResult.OwnKeyStillPresent = allKeys.ContainsKey(uniqueKey);
 
-            Logger.RemoveKeys(uniqueKey);
+                Logger.RemoveKeys(uniqueKey);
+            }
         });
 
         Task.WaitAll(shortTask, longTask);
@@ -363,8 +387,8 @@ public class KeyIsolationTests
     /// Root cause was Logger.Scope being a static Dictionary&lt;string, object&gt;
     /// which is not thread-safe for concurrent read/write operations.
     /// 
-    /// The fix uses per-thread scope storage via ConcurrentDictionary&lt;int, Dictionary&gt;
-    /// keyed by ManagedThreadId.
+    /// The fix uses AsyncLocal&lt;ConcurrentDictionary&gt; for per-execution-context
+    /// scope storage, ensuring isolation and async/await safety.
     /// </summary>
     [Fact]
     public async Task ConcurrentAccess_ForeachOnGetAllKeys_ShouldNotThrowException()
@@ -415,8 +439,8 @@ public class KeyIsolationTests
     /// When Thread A enumerated via GetAllKeys() while Thread B modified via AppendKey()/RemoveKey(),
     /// it would throw "Collection was modified; enumeration operation may not execute."
     /// 
-    /// The fix uses per-thread scope storage via ConcurrentDictionary&lt;int, Dictionary&gt;
-    /// keyed by ManagedThreadId, ensuring each thread has its own isolated dictionary.
+    /// The fix uses AsyncLocal&lt;ConcurrentDictionary&gt; for per-execution-context
+    /// scope storage, ensuring isolation and async/await safety.
     /// </summary>
     [Theory]
     [InlineData(100)]
@@ -505,7 +529,8 @@ public class KeyIsolationTests
 
     /// <summary>
     /// Stress test: Multiple threads simultaneously performing all Logger operations.
-    /// This validates that the thread-per-scope implementation handles high concurrency.
+    /// This validates that the AsyncLocal implementation handles high concurrency.
+    /// Uses Logger.UseScope() to simulate Lambda multi-threaded mode.
     /// </summary>
     [Theory]
     [InlineData(3, 100)]
@@ -523,36 +548,40 @@ public class KeyIsolationTests
         {
             try
             {
-                barrier.SignalAndWait();
-                
-                for (int i = 0; i < operationsPerThread; i++)
+                // Simulate Lambda invocation starting fresh with isolated scope
+                using (Logger.UseScope())
                 {
-                    // Mix of all operations
-                    var keyName = $"thread_{threadIndex}_key_{i % 5}";
+                    barrier.SignalAndWait();
                     
-                    // AppendKey
-                    Logger.AppendKey(keyName, $"value_{i}");
-                    
-                    // GetAllKeys with enumeration
-                    var keys = Logger.GetAllKeys().ToList();
-                    
-                    // Log (internally calls GetAllKeys)
-                    Logger.LogDebug($"Thread {threadIndex} iteration {i}, keys: {keys.Count}");
-                    
-                    // RemoveKey
-                    if (i % 2 == 0)
+                    for (int i = 0; i < operationsPerThread; i++)
                     {
-                        Logger.RemoveKey(keyName);
-                    }
-                    
-                    // RemoveKeys (batch)
-                    if (i % 10 == 0)
-                    {
-                        var keysToRemove = Logger.GetAllKeys()
-                            .Select(k => k.Key)
-                            .Where(k => k.StartsWith($"thread_{threadIndex}_"))
-                            .ToArray();
-                        Logger.RemoveKeys(keysToRemove);
+                        // Mix of all operations
+                        var keyName = $"thread_{threadIndex}_key_{i % 5}";
+                        
+                        // AppendKey
+                        Logger.AppendKey(keyName, $"value_{i}");
+                        
+                        // GetAllKeys with enumeration
+                        var keys = Logger.GetAllKeys().ToList();
+                        
+                        // Log (internally calls GetAllKeys)
+                        Logger.LogDebug($"Thread {threadIndex} iteration {i}, keys: {keys.Count}");
+                        
+                        // RemoveKey
+                        if (i % 2 == 0)
+                        {
+                            Logger.RemoveKey(keyName);
+                        }
+                        
+                        // RemoveKeys (batch)
+                        if (i % 10 == 0)
+                        {
+                            var keysToRemove = Logger.GetAllKeys()
+                                .Select(k => k.Key)
+                                .Where(k => k.StartsWith($"thread_{threadIndex}_"))
+                                .ToArray();
+                            Logger.RemoveKeys(keysToRemove);
+                        }
                     }
                 }
             }
