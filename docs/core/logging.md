@@ -604,10 +604,125 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
     }
     ```
 
-## Extra Keys
+### Temporary keys with ExtraKeys
 
-Extra keys allow you to append additional keys to a log entry. Unlike `AppendKey`, extra keys will only apply to the
-current log entry.
+The `ExtraKeys` method allows temporary modification of the Logger's context without manual cleanup. It's useful for adding context keys to specific workflows while maintaining the logger's overall state.
+
+Keys are automatically removed when the scope ends, eliminating the need to manually call `AppendKey` and `RemoveKeys`.
+
+=== "Using Dictionary"
+
+    ```c# hl_lines="12-16"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            var orderId = apigProxyEvent.PathParameters["orderId"];
+            
+            using (Logger.ExtraKeys(new Dictionary<string, object> { { "orderId", orderId } }))
+            {
+                Logger.LogInformation("Processing order");
+                await ProcessOrderAsync(orderId);
+                Logger.LogInformation("Order processed"); // orderId included
+            }
+            // orderId is automatically removed
+            
+            Logger.LogInformation("Continuing without orderId");
+        }
+    }
+    ```
+
+=== "Using Tuples"
+
+    ```c# hl_lines="12-16"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            var orderId = apigProxyEvent.PathParameters["orderId"];
+            
+            using (Logger.ExtraKeys(("orderId", orderId), ("customerId", "customer-123")))
+            {
+                Logger.LogInformation("Processing order");
+                await ProcessOrderAsync(orderId);
+                Logger.LogInformation("Order processed"); // orderId and customerId included
+            }
+            // Both keys are automatically removed
+        }
+    }
+    ```
+
+=== "Nested Scopes"
+
+    ```c# hl_lines="10-19"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            using (Logger.ExtraKeys(("requestId", context.AwsRequestId)))
+            {
+                Logger.LogInformation("Starting request"); // requestId included
+                
+                using (Logger.ExtraKeys(("step", "validation")))
+                {
+                    Logger.LogInformation("Validating"); // requestId AND step included
+                }
+                // step removed, requestId still present
+                
+                Logger.LogInformation("Request complete"); // only requestId
+            }
+        }
+    }
+    ```
+
+=== "Example CloudWatch Logs excerpt"
+
+    ```json hl_lines="14 15"
+    {
+        "level": "Information",
+        "message": "Processing order",
+        "timestamp": "2024-01-15T10:30:00.0000000Z",
+        "service": "order-service",
+        "cold_start": true,
+        "function_name": "OrderProcessor",
+        "function_memory_size": 256,
+        "function_arn": "arn:aws:lambda:eu-west-1:123456789:function:OrderProcessor",
+        "function_request_id": "abc-123-def",
+        "function_version": "$LATEST",
+        "xray_trace_id": "1-abc-123",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "order_id": "order-456",
+        "customer_id": "customer-123"
+    }
+    ```
+
+!!! tip "When to use ExtraKeys vs AppendKey"
+    Use `ExtraKeys` when you need keys for a specific operation or code block. Use `AppendKey` when keys should persist for the entire Lambda invocation.
+
+!!! warning "Key overwrite behavior"
+    If a key already exists when entering an `ExtraKeys` scope, it will be overwritten and then **removed** when the scope ends. The original value is not restored. Use unique key names within `ExtraKeys` scopes to avoid unexpected behavior.
+
+!!! info "Async safe"
+    `ExtraKeys` is safe to use across `async/await` boundaries. Keys will correctly flow through asynchronous operations within the same execution context.
+
+## Extra Keys (Single Log Entry)
+
+Extra keys can also be added to a single log entry using message templates. Unlike `AppendKey` or `ExtraKeys()`, these keys will only apply to the current log entry.
 
 Extra keys argument is available for all log levels' methods, as implemented in the standard logging library - e.g.
 Logger.Information, Logger.Warning.
