@@ -21,8 +21,7 @@ on:
 concurrency:
   group: e2e
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   deploy-stack:
