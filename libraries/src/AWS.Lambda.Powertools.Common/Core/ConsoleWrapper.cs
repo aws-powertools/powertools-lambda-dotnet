@@ -9,6 +9,9 @@ public class ConsoleWrapper : IConsoleWrapper
     private static bool _override;
     private static TextWriter _testOutputStream;
     private static bool _inTestMode = false;
+    private static StreamWriter _stdoutWriter;
+    private static StreamWriter _stderrWriter;
+    private static readonly object _lock = new object();
 
     /// <inheritdoc />
     public void WriteLine(string message)
@@ -47,12 +50,7 @@ public class ConsoleWrapper : IConsoleWrapper
         }
         else
         {
-            if (!_override)
-            {
-                var errorOutput = new StreamWriter(Console.OpenStandardError());
-                errorOutput.AutoFlush = true;
-                Console.SetError(errorOutput);
-            }
+            EnsureStderrOutput();
             Console.Error.WriteLine(message);
         }
     }
@@ -78,6 +76,32 @@ public class ConsoleWrapper : IConsoleWrapper
         }
     }
 
+    private static void EnsureStderrOutput()
+    {
+        if (_inTestMode) return;
+        
+        var isLambda = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME"));
+        if (!isLambda) return;
+        
+        lock (_lock)
+        {
+            if (_stderrWriter != null) return;
+            
+            try
+            {
+                _stderrWriter = new StreamWriter(Console.OpenStandardError())
+                {
+                    AutoFlush = true
+                };
+                Console.SetError(_stderrWriter);
+            }
+            catch (Exception)
+            {
+                // Degraded functionality is better than crash
+            }
+        }
+    }
+
     private static bool ShouldOverrideConsole()
     {
         // Don't override if we're in test mode
@@ -96,13 +120,27 @@ public class ConsoleWrapper : IConsoleWrapper
     
     internal static bool HasLambdaReInterceptedConsole(Func<TextWriter> consoleOutAccessor)
     {
-        // Lambda might re-intercept console between init and handler execution
+        // Lambda might re-intercept console between init and handler execution.
+        // We need to detect when Lambda replaces our writer with its own,
+        // but NOT trigger on the SyncTextWriter wrapper that Console.SetOut
+        // always applies around our StreamWriter — that's still ours.
         try
         {
             var currentOut = consoleOutAccessor();
-            // Check if current output stream looks like it might be Lambda's wrapper
             var typeName = currentOut.GetType().FullName ?? "";
-            return typeName.Contains("Lambda") || typeName == "System.IO.TextWriter+SyncTextWriter";
+            
+            // If it explicitly contains "Lambda", Lambda has re-intercepted
+            if (typeName.Contains("Lambda"))
+                return true;
+            
+            // If we have a cached writer, check if Console.Out still wraps it.
+            // Console.SetOut wraps in SyncTextWriter, so seeing SyncTextWriter
+            // does NOT mean Lambda re-intercepted — it's our own writer wrapped.
+            // Only if _stdoutWriter is null (never set) do we need to override.
+            lock (_lock)
+            {
+                return _stdoutWriter == null;
+            }
         }
         catch
         {
@@ -117,20 +155,32 @@ public class ConsoleWrapper : IConsoleWrapper
     
     internal static void OverrideLambdaLogger(Func<Stream> standardOutputOpener)
     {
-        try
+        lock (_lock)
         {
-            // Force override of LambdaLogger
-            var standardOutput = new StreamWriter(standardOutputOpener())
+            try
             {
-                AutoFlush = true
-            };
-            Console.SetOut(standardOutput);
-            _override = true;
-        }
-        catch (Exception)
-        {
-            // Log the failure but don't throw - degraded functionality is better than crash
-            _override = false;
+                // Reuse existing writer if we already have one — avoids FD leak
+                if (_stdoutWriter != null)
+                {
+                    // Re-set Console.Out in case Lambda replaced it
+                    Console.SetOut(_stdoutWriter);
+                    _override = true;
+                    return;
+                }
+                
+                // First time: create a single long-lived writer for stdout
+                _stdoutWriter = new StreamWriter(standardOutputOpener())
+                {
+                    AutoFlush = true
+                };
+                Console.SetOut(_stdoutWriter);
+                _override = true;
+            }
+            catch (Exception)
+            {
+                // Log the failure but don't throw - degraded functionality is better than crash
+                _override = false;
+            }
         }
     }
     
@@ -147,6 +197,8 @@ public class ConsoleWrapper : IConsoleWrapper
         _override = false;
         _inTestMode = false;
         _testOutputStream = null;
+        _stdoutWriter = null;
+        _stderrWriter = null;
     }
     
     /// <summary>
