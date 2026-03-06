@@ -78,18 +78,23 @@ public class ConsoleWrapper : IConsoleWrapper
 
     private static void EnsureStderrOutput()
     {
+        EnsureStderrOutput(() => Console.OpenStandardError());
+    }
+
+    internal static void EnsureStderrOutput(Func<Stream> standardErrorOpener)
+    {
         if (_inTestMode) return;
-        
+
         var isLambda = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME"));
         if (!isLambda) return;
-        
+
         lock (_lock)
         {
             if (_stderrWriter != null) return;
-            
+
             try
             {
-                _stderrWriter = new StreamWriter(Console.OpenStandardError())
+                _stderrWriter = new StreamWriter(standardErrorOpener())
                 {
                     AutoFlush = true
                 };

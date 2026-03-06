@@ -361,37 +361,63 @@ public class ConsoleWrapperTests : IDisposable
     }
 
     [Fact]
-    public void WriteLine_GivenLambdaEnvironment_MultipleWrites_ShouldNotLeakFileDescriptors()
+    public void EnsureStderrOutput_GivenMultipleErrorCalls_ShouldOpenStderrOnlyOnce_NoFdLeak()
     {
-        // Regression test for https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1143
-        // End-to-end: simulates the actual leak scenario from the issue where
-        // pipe FDs grew linearly with each ILogger log call in warm Lambda containers.
+        // Regression test: same FD leak pattern as stdout but for stderr path.
+        // EnsureStderrOutput should only call Console.OpenStandardError() once.
 
         // Given
         ConsoleWrapper.ResetForTest();
         Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
-        var wrapper = new ConsoleWrapper();
-
         int openCount = 0;
-        // We can't hook into the real EnsureConsoleOutput path easily,
-        // but we can call OverrideLambdaLogger directly to prove the pattern.
+        Func<Stream> countingOpener = () =>
+        {
+            openCount++;
+            return new MemoryStream(); // stand-in for stderr
+        };
+
+        // When — simulate 500 error writes triggering EnsureStderrOutput
+        for (int i = 0; i < 500; i++)
+        {
+            ConsoleWrapper.EnsureStderrOutput(countingOpener);
+        }
+
+        // Then — stream should have been opened exactly once, not 500 times
+        Assert.Equal(1, openCount);
+    }
+
+    [Fact]
+    public void WriteLine_GivenLambdaEnvironment_MultipleWrites_ShouldNotLeakFileDescriptors()
+    {
+        // Regression test for https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1143
+        // End-to-end: exercises the full WriteLine → EnsureConsoleOutput →
+        // ShouldOverrideConsole → OverrideLambdaLogger path in Lambda environment.
+        // Verifies that repeated calls through the public API only open stdout once.
+
+        // Given
+        ConsoleWrapper.ResetForTest();
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
+        int openCount = 0;
         Func<Stream> countingOpener = () =>
         {
             openCount++;
             return new MemoryStream();
         };
 
-        // When — first call opens the stream
+        // Seed the stdout writer via the internal API with our counting opener
+        // so subsequent public WriteLine calls reuse it instead of opening real stdout
         ConsoleWrapper.OverrideLambdaLogger(countingOpener);
         Assert.Equal(1, openCount);
 
-        // Subsequent calls should reuse the cached writer
+        // When — multiple writes through the public API
+        var wrapper = new ConsoleWrapper();
         for (int i = 0; i < 100; i++)
         {
-            ConsoleWrapper.OverrideLambdaLogger(countingOpener);
+            wrapper.WriteLine($"message {i}");
         }
 
-        // Then — still only 1 open, not 101
+        // Then — the counting opener should still have been called only once;
+        // all 100 public writes reused the cached writer
         Assert.Equal(1, openCount);
     }
 
