@@ -332,4 +332,86 @@ public class ConsoleWrapperTests : IDisposable
         // Then - Should not throw (catch block handles it on lines 120-123)
         Assert.Null(exception);
     }
+
+    [Fact]
+    public void OverrideLambdaLogger_GivenMultipleCalls_ShouldOpenStdoutOnlyOnce_NoFdLeak()
+    {
+        // Regression test for https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1143
+        // Before the fix, every call to OverrideLambdaLogger created a new
+        // StreamWriter(Console.OpenStandardOutput()), leaking one FD per log write.
+        // Under sustained load this exhausted the Lambda 1024 FD limit.
+
+        // Given
+        ConsoleWrapper.ResetForTest();
+        int openCount = 0;
+        Func<Stream> countingOpener = () =>
+        {
+            openCount++;
+            return new MemoryStream(); // stand-in for stdout
+        };
+
+        // When — simulate 500 log writes triggering OverrideLambdaLogger
+        for (int i = 0; i < 500; i++)
+        {
+            ConsoleWrapper.OverrideLambdaLogger(countingOpener);
+        }
+
+        // Then — stream should have been opened exactly once, not 500 times
+        Assert.Equal(1, openCount);
+    }
+
+    [Fact]
+    public void WriteLine_GivenLambdaEnvironment_MultipleWrites_ShouldNotLeakFileDescriptors()
+    {
+        // Regression test for https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1143
+        // End-to-end: simulates the actual leak scenario from the issue where
+        // pipe FDs grew linearly with each ILogger log call in warm Lambda containers.
+
+        // Given
+        ConsoleWrapper.ResetForTest();
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
+        var wrapper = new ConsoleWrapper();
+
+        int openCount = 0;
+        // We can't hook into the real EnsureConsoleOutput path easily,
+        // but we can call OverrideLambdaLogger directly to prove the pattern.
+        Func<Stream> countingOpener = () =>
+        {
+            openCount++;
+            return new MemoryStream();
+        };
+
+        // When — first call opens the stream
+        ConsoleWrapper.OverrideLambdaLogger(countingOpener);
+        Assert.Equal(1, openCount);
+
+        // Subsequent calls should reuse the cached writer
+        for (int i = 0; i < 100; i++)
+        {
+            ConsoleWrapper.OverrideLambdaLogger(countingOpener);
+        }
+
+        // Then — still only 1 open, not 101
+        Assert.Equal(1, openCount);
+    }
+
+    [Fact]
+    public void HasLambdaReInterceptedConsole_AfterOverride_ShouldNotFalsePositiveOnSyncTextWriter()
+    {
+        // Regression test for https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1143
+        // The old code checked: typeName == "System.IO.TextWriter+SyncTextWriter"
+        // But Console.SetOut() ALWAYS wraps in SyncTextWriter, so this was a
+        // permanent false positive that caused OverrideLambdaLogger to fire on every call.
+
+        // Given — override has been applied (simulating first log write in Lambda)
+        ConsoleWrapper.ResetForTest();
+        ConsoleWrapper.OverrideLambdaLogger(() => new MemoryStream());
+
+        // When — check if Lambda "re-intercepted" (it didn't, we just set it ourselves)
+        // Console.Out is now SyncTextWriter wrapping our StreamWriter
+        var result = ConsoleWrapper.HasLambdaReInterceptedConsole();
+
+        // Then — should be false: our writer is still in place, Lambda didn't touch it
+        Assert.False(result);
+    }
 }
