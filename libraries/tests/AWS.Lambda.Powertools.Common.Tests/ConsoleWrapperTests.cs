@@ -332,4 +332,112 @@ public class ConsoleWrapperTests : IDisposable
         // Then - Should not throw (catch block handles it on lines 120-123)
         Assert.Null(exception);
     }
+
+    [Fact]
+    public void OverrideLambdaLogger_GivenMultipleCalls_ShouldOpenStdoutOnlyOnce_NoFdLeak()
+    {
+        // Regression test for https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1143
+        // Before the fix, every call to OverrideLambdaLogger created a new
+        // StreamWriter(Console.OpenStandardOutput()), leaking one FD per log write.
+        // Under sustained load this exhausted the Lambda 1024 FD limit.
+
+        // Given
+        ConsoleWrapper.ResetForTest();
+        int openCount = 0;
+        Func<Stream> countingOpener = () =>
+        {
+            openCount++;
+            return new MemoryStream(); // stand-in for stdout
+        };
+
+        // When — simulate 500 log writes triggering OverrideLambdaLogger
+        for (int i = 0; i < 500; i++)
+        {
+            ConsoleWrapper.OverrideLambdaLogger(countingOpener);
+        }
+
+        // Then — stream should have been opened exactly once, not 500 times
+        Assert.Equal(1, openCount);
+    }
+
+    [Fact]
+    public void EnsureStderrOutput_GivenMultipleErrorCalls_ShouldOpenStderrOnlyOnce_NoFdLeak()
+    {
+        // Regression test: same FD leak pattern as stdout but for stderr path.
+        // EnsureStderrOutput should only call Console.OpenStandardError() once.
+
+        // Given
+        ConsoleWrapper.ResetForTest();
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
+        int openCount = 0;
+        Func<Stream> countingOpener = () =>
+        {
+            openCount++;
+            return new MemoryStream(); // stand-in for stderr
+        };
+
+        // When — simulate 500 error writes triggering EnsureStderrOutput
+        for (int i = 0; i < 500; i++)
+        {
+            ConsoleWrapper.EnsureStderrOutput(countingOpener);
+        }
+
+        // Then — stream should have been opened exactly once, not 500 times
+        Assert.Equal(1, openCount);
+    }
+
+    [Fact]
+    public void WriteLine_GivenLambdaEnvironment_MultipleWrites_ShouldNotLeakFileDescriptors()
+    {
+        // Regression test for https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1143
+        // End-to-end: exercises the full WriteLine → EnsureConsoleOutput →
+        // ShouldOverrideConsole → OverrideLambdaLogger path in Lambda environment.
+        // Verifies that repeated calls through the public API only open stdout once.
+
+        // Given
+        ConsoleWrapper.ResetForTest();
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME", "test-function");
+        int openCount = 0;
+        Func<Stream> countingOpener = () =>
+        {
+            openCount++;
+            return new MemoryStream();
+        };
+
+        // Seed the stdout writer via the internal API with our counting opener
+        // so subsequent public WriteLine calls reuse it instead of opening real stdout
+        ConsoleWrapper.OverrideLambdaLogger(countingOpener);
+        Assert.Equal(1, openCount);
+
+        // When — multiple writes through the public API
+        var wrapper = new ConsoleWrapper();
+        for (int i = 0; i < 100; i++)
+        {
+            wrapper.WriteLine($"message {i}");
+        }
+
+        // Then — the counting opener should still have been called only once;
+        // all 100 public writes reused the cached writer
+        Assert.Equal(1, openCount);
+    }
+
+    [Fact]
+    public void HasLambdaReInterceptedConsole_AfterOverride_ShouldNotFalsePositiveOnSyncTextWriter()
+    {
+        // Regression test for https://github.com/aws-powertools/powertools-lambda-dotnet/issues/1143
+        // The old code checked: typeName == "System.IO.TextWriter+SyncTextWriter"
+        // But Console.SetOut() ALWAYS wraps in SyncTextWriter, so this was a
+        // permanent false positive that caused OverrideLambdaLogger to fire on every call.
+
+        // Given — override has been applied (simulating first log write in Lambda)
+        ConsoleWrapper.ResetForTest();
+        ConsoleWrapper.OverrideLambdaLogger(() => new MemoryStream());
+
+        // When — check if Lambda "re-intercepted" (it didn't, we just set it ourselves)
+        // Console.Out is now SyncTextWriter wrapping our StreamWriter
+        var result = ConsoleWrapper.HasLambdaReInterceptedConsole();
+
+        // Then — should be false: our writer is still in place, Lambda didn't touch it
+        Assert.False(result);
+    }
 }
