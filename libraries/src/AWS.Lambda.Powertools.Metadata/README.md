@@ -38,7 +38,7 @@ try
 {
     var azId = LambdaMetadata.AvailabilityZoneId;
 }
-catch (LambdaMetadataException ex)
+catch (AWS.Lambda.Powertools.Metadata.Exceptions.LambdaMetadataException ex)
 {
     Console.WriteLine($"Failed: {ex.Message}");
 }
