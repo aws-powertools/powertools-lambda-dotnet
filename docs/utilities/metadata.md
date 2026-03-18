@@ -54,7 +54,7 @@ catch (LambdaMetadataException ex)
 {
     Console.WriteLine($"Failed to get metadata: {ex.Message}");
     
-    if (ex.StatusCode.HasValue)
+    if (ex.StatusCode != -1)
         Console.WriteLine($"HTTP Status: {ex.StatusCode}");
 }
 ```
