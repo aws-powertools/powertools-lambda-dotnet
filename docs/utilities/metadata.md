@@ -36,9 +36,9 @@ public class Function
 
 ## Available metadata
 
-| Property              | Type     | Description                                              |
-|-----------------------|----------|----------------------------------------------------------|
-| `AvailabilityZoneId`  | `string` | The AZ where the function is running (e.g., `use1-az1`) |
+| Property              | Type      | Description                                                              |
+|-----------------------|-----------|--------------------------------------------------------------------------|
+| `AvailabilityZoneId`  | `string?` | The AZ where the function is running (e.g., `use1-az1`), or `null` when unavailable |
 
 ## Error handling
 
