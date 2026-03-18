@@ -6,6 +6,8 @@ on:
     types:
       - completed
 
+permissions: {}
+
 jobs:
   get_pr_details:
     permissions:

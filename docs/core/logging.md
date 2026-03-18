@@ -604,10 +604,125 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
     }
     ```
 
-## Extra Keys
+### Temporary keys with ExtraKeys
 
-Extra keys allow you to append additional keys to a log entry. Unlike `AppendKey`, extra keys will only apply to the
-current log entry.
+The `ExtraKeys` method allows temporary modification of the Logger's context without manual cleanup. It's useful for adding context keys to specific workflows while maintaining the logger's overall state.
+
+Keys are automatically removed when the scope ends, eliminating the need to manually call `AppendKey` and `RemoveKeys`.
+
+=== "Using Dictionary"
+
+    ```c# hl_lines="12-16"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            var orderId = apigProxyEvent.PathParameters["orderId"];
+            
+            using (Logger.ExtraKeys(new Dictionary<string, object> { { "orderId", orderId } }))
+            {
+                Logger.LogInformation("Processing order");
+                await ProcessOrderAsync(orderId);
+                Logger.LogInformation("Order processed"); // orderId included
+            }
+            // orderId is automatically removed
+            
+            Logger.LogInformation("Continuing without orderId");
+        }
+    }
+    ```
+
+=== "Using Tuples"
+
+    ```c# hl_lines="12-16"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            var orderId = apigProxyEvent.PathParameters["orderId"];
+            
+            using (Logger.ExtraKeys(("orderId", orderId), ("customerId", "customer-123")))
+            {
+                Logger.LogInformation("Processing order");
+                await ProcessOrderAsync(orderId);
+                Logger.LogInformation("Order processed"); // orderId and customerId included
+            }
+            // Both keys are automatically removed
+        }
+    }
+    ```
+
+=== "Nested Scopes"
+
+    ```c# hl_lines="10-19"
+    /**
+     * Handler for requests to Lambda function.
+     */
+    public class Function
+    {
+        [Logging]
+        public async Task<APIGatewayProxyResponse> FunctionHandler
+            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        {
+            using (Logger.ExtraKeys(("requestId", context.AwsRequestId)))
+            {
+                Logger.LogInformation("Starting request"); // requestId included
+                
+                using (Logger.ExtraKeys(("step", "validation")))
+                {
+                    Logger.LogInformation("Validating"); // requestId AND step included
+                }
+                // step removed, requestId still present
+                
+                Logger.LogInformation("Request complete"); // only requestId
+            }
+        }
+    }
+    ```
+
+=== "Example CloudWatch Logs excerpt"
+
+    ```json hl_lines="14 15"
+    {
+        "level": "Information",
+        "message": "Processing order",
+        "timestamp": "2024-01-15T10:30:00.0000000Z",
+        "service": "order-service",
+        "cold_start": true,
+        "function_name": "OrderProcessor",
+        "function_memory_size": 256,
+        "function_arn": "arn:aws:lambda:eu-west-1:123456789:function:OrderProcessor",
+        "function_request_id": "abc-123-def",
+        "function_version": "$LATEST",
+        "xray_trace_id": "1-abc-123",
+        "name": "AWS.Lambda.Powertools.Logging.Logger",
+        "order_id": "order-456",
+        "customer_id": "customer-123"
+    }
+    ```
+
+!!! tip "When to use ExtraKeys vs AppendKey"
+    Use `ExtraKeys` when you need keys for a specific operation or code block. Use `AppendKey` when keys should persist for the entire Lambda invocation.
+
+!!! warning "Key overwrite behavior"
+    If a key already exists when entering an `ExtraKeys` scope, it will be overwritten and then **removed** when the scope ends. The original value is not restored. Use unique key names within `ExtraKeys` scopes to avoid unexpected behavior.
+
+!!! info "Async safe"
+    `ExtraKeys` is safe to use across `async/await` boundaries. Keys will correctly flow through asynchronous operations within the same execution context.
+
+## Extra Keys (Single Log Entry)
+
+Extra keys can also be added to a single log entry using message templates. Unlike `AppendKey` or `ExtraKeys()`, these keys will only apply to the current log entry.
 
 Extra keys argument is available for all log levels' methods, as implemented in the standard logging library - e.g.
 Logger.Information, Logger.Warning.
@@ -1075,13 +1190,13 @@ inheriting the ``ILogFormatter`` class and implementing the ``object FormatLogEn
 
 ### Buffering logs
 
-Log buffering enables you to buffer logs for a specific request or invocation. Enable log buffering by passing `LogBufferingOptions` when configuring a Logger instance. You can buffer logs at the `Warning`, `Information`, `Debug` or `Trace` level, and flush them automatically on error or manually as needed.
+Log buffering enables you to buffer logs for a specific request or invocation. Enable log buffering by setting `LogBuffering.Enabled = true` when configuring a Logger instance. You can buffer logs at the `Warning`, `Information`, `Debug` or `Trace` level, and flush them automatically on error or manually as needed.
 
 !!! tip "This is useful when you want to reduce the number of log messages emitted while still having detailed logs when needed, such as when troubleshooting issues."
 
 === "LogBufferingOptions"
 
-    ```csharp hl_lines="5-14"
+    ```csharp hl_lines="5-12"
     public class Function 
     {
         public Function()
@@ -1089,12 +1204,10 @@ Log buffering enables you to buffer logs for a specific request or invocation. E
           Logger.Configure(logger =>
           {
               logger.Service = "MyServiceName";
-              logger.LogBuffering = new LogBufferingOptions
-              {
-                  BufferAtLogLevel = LogLevel.Debug,
-                  MaxBytes = 20480, // Default is 20KB (20480 bytes) 
-                  FlushOnErrorLog = true // default true
-              };
+              logger.LogBuffering.Enabled = true;
+              logger.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+              logger.LogBuffering.MaxBytes = 20480; // Default is 20KB (20480 bytes) 
+              logger.LogBuffering.FlushOnErrorLog = true; // default true
           });
 
           Logger.LogDebug('This is a debug message'); // This is NOT buffered
@@ -1117,17 +1230,18 @@ Log buffering enables you to buffer logs for a specific request or invocation. E
 
 #### Configuring the buffer
 
-When configuring the buffer, you can set the following options to fine-tune how logs are captured, stored, and emitted. You can configure the following options in the `logBufferOptions` constructor parameter:
+When configuring the buffer, you can set the following options to fine-tune how logs are captured, stored, and emitted. You can configure the following options in the `LogBuffering` property:
 
 | Parameter           | Description                                      | Configuration                              | Default |
 |---------------------|------------------------------------------------- |--------------------------------------------|---------|
+| `Enabled`           | Enable or disable log buffering                  | `True`, `False`                            | `False` |
 | `MaxBytes`          | Maximum size of the log buffer in bytes          | `number`                                   | `20480` |
 | `BufferAtLogLevel` | Minimum log level to buffer                      | `Trace`, `Debug`, `Information`, `Warning` | `Debug` |
 | `FlushOnErrorLog`   | Automatically flush buffer when logging an error | `True`, `False`                            | `True`  |
 
 === "BufferAtLogLevel"
 
-    ```csharp hl_lines="10"
+    ```csharp hl_lines="10 11"
     public class Function 
     {
         public Function()
@@ -1135,10 +1249,8 @@ When configuring the buffer, you can set the following options to fine-tune how 
           Logger.Configure(logger =>
           {
               logger.Service = "MyServiceName";
-              logger.LogBuffering = new LogBufferingOptions
-              {
-                  BufferAtLogLevel = LogLevel.Warning
-              };
+              logger.LogBuffering.Enabled = true;
+              logger.LogBuffering.BufferAtLogLevel = LogLevel.Warning;
           });
         }
 
@@ -1161,7 +1273,7 @@ When configuring the buffer, you can set the following options to fine-tune how 
 
 === "FlushOnErrorLog"
 
-    ```csharp hl_lines="10"
+    ```csharp hl_lines="10 11"
     public class Function 
     {
         public Function()
@@ -1169,10 +1281,8 @@ When configuring the buffer, you can set the following options to fine-tune how 
           Logger.Configure(logger =>
           {
               logger.Service = "MyServiceName";
-              logger.LogBuffering = new LogBufferingOptions
-              {
-                  FlushOnErrorLog = false
-              };
+              logger.LogBuffering.Enabled = true;
+              logger.LogBuffering.FlushOnErrorLog = false;
           });
         }
 
@@ -1214,7 +1324,7 @@ When using the `Logger` decorator, you can configure the logger to automatically
 
 === "FlushBufferOnUncaughtError"
 
-    ```csharp hl_lines="15"
+    ```csharp hl_lines="14"
     public class Function 
     {
         public Function()
@@ -1222,10 +1332,8 @@ When using the `Logger` decorator, you can configure the logger to automatically
           Logger.Configure(logger =>
           {
               logger.Service = "MyServiceName";
-              logger.LogBuffering = new LogBufferingOptions
-              {
-                  BufferAtLogLevel = LogLevel.Debug
-              };
+              logger.LogBuffering.Enabled = true;
+              logger.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
           });
         }
 
@@ -1328,7 +1436,7 @@ sequenceDiagram
    No, we never buffer logs during cold starts. This is because we want to ensure that logs emitted during this phase are always available for debugging and monitoring purposes. The buffer is only used during the execution of the Lambda function.
 
 3. **How can I prevent log buffering from consuming excessive memory?**
-   You can limit the size of the buffer by setting the `MaxBytes` option in the `LogBufferingOptions` constructor parameter. This will ensure that the buffer does not grow indefinitely and consume excessive memory.
+   You can limit the size of the buffer by setting the `MaxBytes` option in the `LogBuffering` property. This will ensure that the buffer does not grow indefinitely and consume excessive memory.
 
 4. **What happens if the log buffer reaches its maximum size?**
    Older logs are removed from the buffer to make room for new logs. This means that if the buffer is full, you may lose some logs if they are not flushed before the buffer reaches its maximum size. When this happens, we emit a warning when flushing the buffer to indicate that some logs have been dropped.

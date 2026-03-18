@@ -20,7 +20,7 @@ internal class PowertoolsLoggingSerializer
 {
     private JsonSerializerOptions _currentOptions;
     private LoggerOutputCase _currentOutputCase;
-    private JsonSerializerOptions _jsonOptions;
+    private volatile JsonSerializerOptions _jsonOptions;
     private readonly object _lock = new();
 
     private readonly ConcurrentBag<JsonSerializerContext> _additionalContexts = new();
@@ -59,11 +59,9 @@ internal class PowertoolsLoggingSerializer
             {
                 _currentOutputCase = loggerOutputCase;
 
-                // Only rebuild options if they already exist
-                if (_jsonOptions != null)
-                {
-                    SetOutputCase();
-                }
+                // Force a full rebuild on next access instead of mutating existing options,
+                // because JsonSerializerOptions becomes read-only after first serialization.
+                _jsonOptions = null;
             }
         }
     }
@@ -175,27 +173,29 @@ internal class PowertoolsLoggingSerializer
     {
         lock (_lock)
         {
-            // Create a completely new options instance regardless
-            _jsonOptions = new JsonSerializerOptions();
+            // Build into a local variable so _jsonOptions is never visible in a partially-configured state.
+            // Another thread doing a lock-free read in GetSerializerOptions() could see a non-null _jsonOptions,
+            // use it for serialization (making it read-only), and then subsequent mutations here would throw.
+            var newOptions = new JsonSerializerOptions();
 
             // Copy any properties from the original options if provided
             if (options != null)
             {
                 // Copy standard properties
-                _jsonOptions.DefaultIgnoreCondition = options.DefaultIgnoreCondition;
-                _jsonOptions.PropertyNameCaseInsensitive = options.PropertyNameCaseInsensitive;
-                _jsonOptions.PropertyNamingPolicy = options.PropertyNamingPolicy;
-                _jsonOptions.DictionaryKeyPolicy = options.DictionaryKeyPolicy;
-                _jsonOptions.WriteIndented = options.WriteIndented;
-                _jsonOptions.ReferenceHandler = options.ReferenceHandler;
-                _jsonOptions.MaxDepth = options.MaxDepth;
-                _jsonOptions.IgnoreReadOnlyFields = options.IgnoreReadOnlyFields;
-                _jsonOptions.IgnoreReadOnlyProperties = options.IgnoreReadOnlyProperties;
-                _jsonOptions.IncludeFields = options.IncludeFields;
-                _jsonOptions.NumberHandling = options.NumberHandling;
-                _jsonOptions.ReadCommentHandling = options.ReadCommentHandling;
-                _jsonOptions.UnknownTypeHandling = options.UnknownTypeHandling;
-                _jsonOptions.AllowTrailingCommas = options.AllowTrailingCommas;
+                newOptions.DefaultIgnoreCondition = options.DefaultIgnoreCondition;
+                newOptions.PropertyNameCaseInsensitive = options.PropertyNameCaseInsensitive;
+                newOptions.PropertyNamingPolicy = options.PropertyNamingPolicy;
+                newOptions.DictionaryKeyPolicy = options.DictionaryKeyPolicy;
+                newOptions.WriteIndented = options.WriteIndented;
+                newOptions.ReferenceHandler = options.ReferenceHandler;
+                newOptions.MaxDepth = options.MaxDepth;
+                newOptions.IgnoreReadOnlyFields = options.IgnoreReadOnlyFields;
+                newOptions.IgnoreReadOnlyProperties = options.IgnoreReadOnlyProperties;
+                newOptions.IncludeFields = options.IncludeFields;
+                newOptions.NumberHandling = options.NumberHandling;
+                newOptions.ReadCommentHandling = options.ReadCommentHandling;
+                newOptions.UnknownTypeHandling = options.UnknownTypeHandling;
+                newOptions.AllowTrailingCommas = options.AllowTrailingCommas;
 
                 // Handle type resolver extraction without setting it yet
                 if (options.TypeInfoResolver != null)
@@ -211,49 +211,52 @@ internal class PowertoolsLoggingSerializer
             }
 
             // Set output case and other properties
-            SetOutputCase();
-            AddConverters();
-            _jsonOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-            _jsonOptions.PropertyNameCaseInsensitive = true;
+            SetOutputCase(newOptions);
+            AddConverters(newOptions);
+            newOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+            newOptions.PropertyNameCaseInsensitive = true;
 
             // Set TypeInfoResolver last, as this makes options read-only
             if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
             {
-                _jsonOptions.TypeInfoResolver = GetCompositeResolver();
+                newOptions.TypeInfoResolver = GetCompositeResolver();
             }
+
+            // Publish fully-configured options in a single atomic assignment
+            _jsonOptions = newOptions;
         }
     }
 
-    internal void SetOutputCase()
+    internal void SetOutputCase(JsonSerializerOptions target)
     {
         switch (_currentOutputCase)
         {
             case LoggerOutputCase.CamelCase:
-                _jsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                _jsonOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+                target.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                target.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
                 break;
             case LoggerOutputCase.PascalCase:
-                _jsonOptions.PropertyNamingPolicy = PascalCaseNamingPolicy.Instance;
-                _jsonOptions.DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance;
+                target.PropertyNamingPolicy = PascalCaseNamingPolicy.Instance;
+                target.DictionaryKeyPolicy = PascalCaseNamingPolicy.Instance;
                 break;
             default: // Snake case
                 // If is default (Not Set) and JsonOptions provided with DictionaryKeyPolicy or PropertyNamingPolicy, use it
-                _jsonOptions.DictionaryKeyPolicy ??= JsonNamingPolicy.SnakeCaseLower;
-                _jsonOptions.PropertyNamingPolicy ??= JsonNamingPolicy.SnakeCaseLower;
+                target.DictionaryKeyPolicy ??= JsonNamingPolicy.SnakeCaseLower;
+                target.PropertyNamingPolicy ??= JsonNamingPolicy.SnakeCaseLower;
                 break;
         }
     }
 
-    private void AddConverters()
+    private static void AddConverters(JsonSerializerOptions target)
     {
-        _jsonOptions.Converters.Add(new ByteArrayConverter());
-        _jsonOptions.Converters.Add(new ExceptionConverter());
-        _jsonOptions.Converters.Add(new MemoryStreamConverter());
-        _jsonOptions.Converters.Add(new ConstantClassConverter());
-        _jsonOptions.Converters.Add(new DateOnlyConverter());
-        _jsonOptions.Converters.Add(new TimeOnlyConverter());
+        target.Converters.Add(new ByteArrayConverter());
+        target.Converters.Add(new ExceptionConverter());
+        target.Converters.Add(new MemoryStreamConverter());
+        target.Converters.Add(new ConstantClassConverter());
+        target.Converters.Add(new DateOnlyConverter());
+        target.Converters.Add(new TimeOnlyConverter());
 
-        _jsonOptions.Converters.Add(new LogLevelJsonConverter());
+        target.Converters.Add(new LogLevelJsonConverter());
     }
 
     internal void SetOptions(JsonSerializerOptions options)

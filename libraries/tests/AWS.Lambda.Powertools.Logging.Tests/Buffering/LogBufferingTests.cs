@@ -25,9 +25,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             // Arrange
             var config = new PowertoolsLoggerConfiguration
             {
-                LogBuffering = new LogBufferingOptions(),
                 LogOutput = _consoleOut
             };
+            config.LogBuffering.Enabled = true;
 
             var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
@@ -59,6 +59,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Trace
                 },
                 LogOutput = _consoleOut
@@ -95,6 +96,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Information
                 },
                 LogOutput = _consoleOut
@@ -131,6 +133,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Warning
                 },
                 LogOutput = _consoleOut
@@ -167,6 +170,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Error
                 },
                 LogOutput = _consoleOut
@@ -194,6 +198,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug,
                     FlushOnErrorLog = true
                 },
@@ -225,6 +230,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug
                 },
                 LogOutput = _consoleOut
@@ -261,6 +267,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug,
                     MaxBytes = 1000 // Small buffer size to force overflow
                 },
@@ -295,6 +302,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug
                 },
                 LogOutput = _consoleOut
@@ -320,9 +328,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "test-id");
             var config = new PowertoolsLoggerConfiguration
             {
-                LogBuffering = new LogBufferingOptions(),
                 LogOutput = _consoleOut
             };
+            config.LogBuffering.Enabled = true;
 
             var logger = LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
 
@@ -367,6 +375,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug
                 },
                 LogOutput = _consoleOut
@@ -405,9 +414,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             // Arrange
             var config = new PowertoolsLoggerConfiguration
             {
-                LogBuffering = new LogBufferingOptions(),
                 LogOutput = _consoleOut
             };
+            config.LogBuffering.Enabled = true;
 
             var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
 
@@ -444,9 +453,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", "empty-test");
             var config = new PowertoolsLoggerConfiguration
             {
-                LogBuffering = new LogBufferingOptions(),
                 LogOutput = _consoleOut
             };
+            config.LogBuffering.Enabled = true;
             var powertoolsConfig = new PowertoolsConfigurations(new PowertoolsEnvironment());
             var provider = new BufferingLoggerProvider(config, powertoolsConfig);
 
@@ -469,6 +478,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LogBuffering = new LogBufferingOptions
                 {
+                    Enabled = true,
                     BufferAtLogLevel = LogLevel.Debug
                 },
                 LogOutput = _consoleOut

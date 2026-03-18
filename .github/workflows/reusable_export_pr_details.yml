@@ -36,8 +36,7 @@ on:
         description: "Whether PR is merged"
         value: ${{ jobs.export_pr_details.outputs.prIsMerged }}
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   export_pr_details:

@@ -129,7 +129,7 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             var config = new PowertoolsLoggerConfiguration
             {
                 MinimumLogLevel = LogLevel.Information,
-                LogBuffering = new LogBufferingOptions { BufferAtLogLevel = LogLevel.Debug },
+                LogBuffering = new LogBufferingOptions { Enabled = true, BufferAtLogLevel = LogLevel.Debug },
                 LogOutput = _consoleOut
             };
 
@@ -184,11 +184,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                     config.Service = "test-service";
                     config.MinimumLogLevel = minimumLevel;
                     config.LogOutput = _consoleOut;
-                    config.LogBuffering = new LogBufferingOptions
-                    {
-                        BufferAtLogLevel = bufferAtLevel,
-                        FlushOnErrorLog = false
-                    };
+                    config.LogBuffering.Enabled = true;
+                    config.LogBuffering.BufferAtLogLevel = bufferAtLevel;
+                    config.LogBuffering.FlushOnErrorLog = false;
                 });
             }).CreatePowertoolsLogger();
         }
@@ -202,11 +200,9 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                     config.Service = "test-service";
                     config.MinimumLogLevel = LogLevel.Information;
                     config.LogOutput = _consoleOut;
-                    config.LogBuffering = new LogBufferingOptions
-                    {
-                        BufferAtLogLevel = LogLevel.Debug,
-                        FlushOnErrorLog = flushOnError
-                    };
+                    config.LogBuffering.Enabled = true;
+                    config.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
+                    config.LogBuffering.FlushOnErrorLog = flushOnError;
                 });
             }).CreatePowertoolsLogger();
         }
