@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>AWS.Lambda.Powertools.Metadata.Tests</AssemblyName>
+        <RootNamespace>AWS.Lambda.Powertools.Metadata.Tests</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!--   Package versions are Centrally managed in Directory.Packages.props file  -->
+        <!--   More info https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management   -->
+        <PackageReference Include="coverlet.collector">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="NSubstitute" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="FluentAssertions" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.Metadata\AWS.Lambda.Powertools.Metadata.csproj" />
+    </ItemGroup>
+
+</Project>
