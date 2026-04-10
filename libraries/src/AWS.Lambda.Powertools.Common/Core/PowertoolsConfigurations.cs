@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common.Core;
 
@@ -32,9 +33,10 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
 
     /// <summary>
     ///     Whether LambdaTraceProvider is available in the loaded Amazon.Lambda.Core assembly.
-    ///     Null means not yet checked, true/false is the cached result.
+    ///     0 = not yet checked, 1 = available, -1 = unavailable.
+    ///     Stored as int for atomic reads/writes via Volatile.
     /// </summary>
-    private static bool? _isTraceProviderAvailable;
+    private static int _traceProviderState; // 0 = unknown, 1 = available, -1 = unavailable
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="PowertoolsConfigurations" /> class.
@@ -225,22 +227,24 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
 
     private static string GetTraceId(Func<string> fallback)
     {
-        if (_isTraceProviderAvailable == true)
+        var state = Volatile.Read(ref _traceProviderState);
+
+        if (state == 1)
             return GetTraceIdFromProvider();
 
-        if (_isTraceProviderAvailable == false)
+        if (state == -1)
             return fallback();
 
         // First call — probe whether LambdaTraceProvider exists in the loaded runtime
         try
         {
             var traceId = GetTraceIdFromProvider();
-            _isTraceProviderAvailable = true;
+            Volatile.Write(ref _traceProviderState, 1);
             return traceId;
         }
         catch (TypeLoadException)
         {
-            _isTraceProviderAvailable = false;
+            Volatile.Write(ref _traceProviderState, -1);
             return fallback();
         }
     }
