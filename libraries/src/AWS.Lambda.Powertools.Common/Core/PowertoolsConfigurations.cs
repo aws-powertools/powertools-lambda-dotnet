@@ -178,7 +178,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     ///     Falls back to the _X_AMZN_TRACE_ID environment variable for older runtimes.
     /// </summary>
     /// <value>The X-Ray trace identifier.</value>
-    public string XRayTraceId => GetTraceId();
+    public string XRayTraceId => GetTraceId(() => GetEnvironmentVariable(Constants.XrayTraceIdEnv));
 
     /// <summary>
     ///     Gets a value indicating whether this instance is Lambda.
@@ -223,13 +223,13 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     public string AwsInitializationType =>
         GetEnvironmentVariable(Constants.AWSInitializationTypeEnv);
 
-    private string GetTraceId()
+    private static string GetTraceId(Func<string> fallback)
     {
         if (_isTraceProviderAvailable == true)
             return GetTraceIdFromProvider();
 
         if (_isTraceProviderAvailable == false)
-            return GetEnvironmentVariable(Constants.XrayTraceIdEnv);
+            return fallback();
 
         // First call — probe whether LambdaTraceProvider exists in the loaded runtime
         try
@@ -241,7 +241,7 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
         catch (TypeLoadException)
         {
             _isTraceProviderAvailable = false;
-            return GetEnvironmentVariable(Constants.XrayTraceIdEnv);
+            return fallback();
         }
     }
 
