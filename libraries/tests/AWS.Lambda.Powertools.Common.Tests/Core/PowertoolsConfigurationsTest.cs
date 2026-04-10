@@ -534,5 +534,87 @@ namespace AWS.Lambda.Powertools.Common.Tests
         }
         
         #endregion
+
+        #region XRayTraceId Tests
+
+        [Fact]
+        public void XRayTraceId_WhenLambdaTraceProviderAvailable_ReturnsTraceId()
+        {
+            // Arrange
+            var environment = Substitute.For<IPowertoolsEnvironment>();
+            var configurations = new PowertoolsConfigurations(environment);
+
+            // Reset cached state so the probe runs fresh
+            ResetTraceProviderState();
+
+            // Act - LambdaTraceProvider is available in test env (Amazon.Lambda.Core 2.8.0)
+            var result = configurations.XRayTraceId;
+
+            // Assert - should not throw and should not fall back to env var
+            environment.DidNotReceive()
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.XrayTraceIdEnv));
+        }
+
+        [Fact]
+        public void XRayTraceId_WhenLambdaTraceProviderUnavailable_FallsBackToEnvironmentVariable()
+        {
+            // Arrange
+            var traceId = "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1";
+            var environment = Substitute.For<IPowertoolsEnvironment>();
+            environment.GetEnvironmentVariable(Constants.XrayTraceIdEnv).Returns(traceId);
+            var configurations = new PowertoolsConfigurations(environment);
+
+            // Simulate LambdaTraceProvider not being available (older Amazon.Lambda.Core)
+            SetTraceProviderAvailable(false);
+
+            // Act
+            var result = configurations.XRayTraceId;
+
+            // Assert
+            environment.Received(1)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.XrayTraceIdEnv));
+            Assert.Equal(traceId, result);
+        }
+
+        [Fact]
+        public void XRayTraceId_CachesTraceProviderAvailability_OnSubsequentCalls()
+        {
+            // Arrange
+            var environment = Substitute.For<IPowertoolsEnvironment>();
+            var configurations = new PowertoolsConfigurations(environment);
+
+            // Simulate LambdaTraceProvider not being available
+            SetTraceProviderAvailable(false);
+
+            var traceId1 = "Root=1-aaa;Parent=bbb;Sampled=1";
+            var traceId2 = "Root=1-ccc;Parent=ddd;Sampled=1";
+            environment.GetEnvironmentVariable(Constants.XrayTraceIdEnv).Returns(traceId1, traceId2);
+
+            // Act
+            var result1 = configurations.XRayTraceId;
+            var result2 = configurations.XRayTraceId;
+
+            // Assert - should go straight to env var on second call (cached false)
+            environment.Received(2)
+                .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.XrayTraceIdEnv));
+            Assert.Equal(traceId1, result1);
+            Assert.Equal(traceId2, result2);
+        }
+
+        private static void ResetTraceProviderState()
+        {
+            var field = typeof(PowertoolsConfigurations).GetField("_isTraceProviderAvailable",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            field?.SetValue(null, null);
+        }
+
+        private static void SetTraceProviderAvailable(bool available)
+        {
+            var field = typeof(PowertoolsConfigurations).GetField("_isTraceProviderAvailable",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            field?.SetValue(null, (bool?)available);
+        }
+
+        #endregion
     }
 }
