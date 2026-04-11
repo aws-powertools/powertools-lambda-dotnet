@@ -534,5 +534,114 @@ namespace AWS.Lambda.Powertools.Common.Tests
         }
         
         #endregion
+
+        #region XRayTraceId Tests
+
+        [Fact]
+        public void XRayTraceId_WhenLambdaTraceProviderAvailable_ReturnsTraceId()
+        {
+            ResetTraceProviderState();
+
+            try
+            {
+                // Arrange
+                var environment = Substitute.For<IPowertoolsEnvironment>();
+                var configurations = new PowertoolsConfigurations(environment);
+
+                // Act - LambdaTraceProvider is available in test env (Amazon.Lambda.Core 2.8.0)
+                // Returns null/empty in test env (no active Lambda trace), but should not throw
+                var result = configurations.XRayTraceId;
+
+                // Assert - should not fall back to env var (provider was used instead)
+                environment.DidNotReceive()
+                    .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.XrayTraceIdEnv));
+            }
+            finally
+            {
+                ResetTraceProviderState();
+            }
+        }
+
+        [Fact]
+        public void XRayTraceId_WhenLambdaTraceProviderUnavailable_FallsBackToEnvironmentVariable()
+        {
+            ResetTraceProviderState();
+
+            try
+            {
+                // Arrange
+                var traceId = "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1";
+                var environment = Substitute.For<IPowertoolsEnvironment>();
+                environment.GetEnvironmentVariable(Constants.XrayTraceIdEnv).Returns(traceId);
+                var configurations = new PowertoolsConfigurations(environment);
+
+                // Simulate LambdaTraceProvider not being available (older Amazon.Lambda.Core)
+                SetTraceProviderState(-1);
+
+                // Act
+                var result = configurations.XRayTraceId;
+
+                // Assert
+                environment.Received(1)
+                    .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.XrayTraceIdEnv));
+                Assert.Equal(traceId, result);
+            }
+            finally
+            {
+                ResetTraceProviderState();
+            }
+        }
+
+        [Fact]
+        public void XRayTraceId_WhenProviderCachedUnavailable_UsesEnvVarOnSubsequentCalls()
+        {
+            ResetTraceProviderState();
+
+            try
+            {
+                // Arrange
+                var environment = Substitute.For<IPowertoolsEnvironment>();
+                var configurations = new PowertoolsConfigurations(environment);
+
+                // Simulate LambdaTraceProvider not being available (cached)
+                SetTraceProviderState(-1);
+
+                var traceId1 = "Root=1-aaa;Parent=bbb;Sampled=1";
+                var traceId2 = "Root=1-ccc;Parent=ddd;Sampled=1";
+                environment.GetEnvironmentVariable(Constants.XrayTraceIdEnv).Returns(traceId1, traceId2);
+
+                // Act
+                var result1 = configurations.XRayTraceId;
+                var result2 = configurations.XRayTraceId;
+
+                // Assert - should go straight to env var on both calls (cached unavailable)
+                environment.Received(2)
+                    .GetEnvironmentVariable(Arg.Is<string>(i => i == Constants.XrayTraceIdEnv));
+                Assert.Equal(traceId1, result1);
+                Assert.Equal(traceId2, result2);
+            }
+            finally
+            {
+                ResetTraceProviderState();
+            }
+        }
+
+        private static void ResetTraceProviderState()
+        {
+            var field = typeof(PowertoolsConfigurations).GetField("_traceProviderState",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            Assert.NotNull(field);
+            field.SetValue(null, 0);
+        }
+
+        private static void SetTraceProviderState(int state)
+        {
+            var field = typeof(PowertoolsConfigurations).GetField("_traceProviderState",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            Assert.NotNull(field);
+            field.SetValue(null, state);
+        }
+
+        #endregion
     }
 }
