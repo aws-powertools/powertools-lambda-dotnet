@@ -1,4 +1,7 @@
+using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common.Core;
 
@@ -27,6 +30,13 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     ///     The instance
     /// </summary>
     private static IPowertoolsConfigurations _instance;
+
+    /// <summary>
+    ///     Whether LambdaTraceProvider is available in the loaded Amazon.Lambda.Core assembly.
+    ///     0 = not yet checked, 1 = available, -1 = unavailable.
+    ///     Stored as int for atomic reads/writes via Volatile.
+    /// </summary>
+    private static int _traceProviderState; // 0 = unknown, 1 = available, -1 = unavailable
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="PowertoolsConfigurations" /> class.
@@ -165,10 +175,12 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
 
     /// <summary>
     ///     Gets the X-Ray trace identifier.
+    ///     Uses LambdaTraceProvider.CurrentTraceId when available (Amazon.Lambda.Core >= 2.8.0)
+    ///     for correct trace ID isolation in concurrent Lambda executions (LMI).
+    ///     Falls back to the _X_AMZN_TRACE_ID environment variable for older runtimes.
     /// </summary>
     /// <value>The X-Ray trace identifier.</value>
-    public string XRayTraceId =>
-        LambdaTraceProvider.CurrentTraceId;
+    public string XRayTraceId => GetTraceId(() => GetEnvironmentVariable(Constants.XrayTraceIdEnv));
 
     /// <summary>
     ///     Gets a value indicating whether this instance is Lambda.
@@ -212,4 +224,39 @@ public class PowertoolsConfigurations : IPowertoolsConfigurations
     /// <inheritdoc />
     public string AwsInitializationType =>
         GetEnvironmentVariable(Constants.AWSInitializationTypeEnv);
+
+    private static string GetTraceId(Func<string> fallback)
+    {
+        var state = Volatile.Read(ref _traceProviderState);
+
+        if (state == 1)
+            return GetTraceIdFromProvider();
+
+        if (state == -1)
+            return fallback();
+
+        // First call — probe whether LambdaTraceProvider exists in the loaded runtime
+        try
+        {
+            var traceId = GetTraceIdFromProvider();
+            Volatile.Write(ref _traceProviderState, 1);
+            return traceId;
+        }
+        catch (TypeLoadException)
+        {
+            Volatile.Write(ref _traceProviderState, -1);
+            return fallback();
+        }
+    }
+
+    /// <summary>
+    ///     Isolated call to LambdaTraceProvider.CurrentTraceId.
+    ///     Must not be inlined so that the TypeLoadException is thrown only
+    ///     when this method is invoked, not when the caller is compiled.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static string GetTraceIdFromProvider()
+    {
+        return LambdaTraceProvider.CurrentTraceId;
+    }
 }
