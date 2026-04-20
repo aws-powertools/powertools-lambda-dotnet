@@ -239,66 +239,19 @@ When processing events with Lambda, you can return errors to AppSync in three wa
 
 === "Publish events - Class library handler"
 
-    ```chsarp hl_lines="1 5 9-15 20"
-    using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
-
-    public class Function
-    {
-        AppSyncEventsResolver _app;
-
-        public Function()
-        {
-            _app = new AppSyncEventsResolver();
-            _app.OnPublishAsync("/default/channel", async (payload) =>
-            {
-                // Handle events or
-                // return unchanged payload
-                return payload;
-            });
-        }
-    
-        public async Task<AppSyncEventsResponse> FunctionHandler(AppSyncEventsRequest input, ILambdaContext context)
-        {
-            return await _app.ResolveAsync(input, context);
-        }
-    }
+    ```csharp hl_lines="1 5 9-15 20"
+    --8<-- "docs/snippets/appsync-events/GettingStarted.cs:publish_class_library"
     ```
 === "Publish events - Executable assembly handlers"
 
-    ```chsarp hl_lines="1 3 5-10 14"
-    using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
-
-    var app = new AppSyncEventsResolver();
-
-    app.OnPublishAsync("/default/channel", async (payload) =>
-    {
-        // Handle events or
-        // return unchanged payload
-        return payload;
-    }
-
-    async Task<AppSyncEventsResponse> Handler(AppSyncEventsRequest appSyncEvent, ILambdaContext context)
-    {
-        return await app.ResolveAsync(appSyncEvent, context);
-    }
-    
-    await LambdaBootstrapBuilder.Create((Func<AppSyncEventsRequest, ILambdaContext, Task<AppSyncEventsResponse>>)Handler,
-    new DefaultLambdaJsonSerializer())
-    .Build()
-    .RunAsync();
-    
+    ```csharp hl_lines="1 3 5-10 14"
+    --8<-- "docs/snippets/appsync-events/GettingStarted.cs:publish_executable_assembly"
     ```
 
 === "Subscribe to events"
 
     ```csharp
-    app.OnSubscribe("/default/*", (payload) =>
-    {
-        // Handle subscribe events
-        // return true to allow subscription
-        // return false or throw to reject subscription
-        return true;
-    });
+    --8<-- "docs/snippets/appsync-events/GettingStarted.cs:subscribe_events"
     ```
 
 ## Advanced
@@ -312,25 +265,7 @@ When an event matches with multiple handlers, the most specific pattern takes pr
 === "Wildcard patterns"
 
     ```csharp
-    app.OnPublish("/default/channel1", (payload) =>
-    {
-        // This handler will be called for events on /default/channel1
-        return payload;
-    });
-    
-    app.OnPublish("/default/*", (payload) =>
-    {
-        // This handler will be called for all channels in the default namespace
-        // EXCEPT for /default/channel1 which has a more specific handler
-        return payload;
-    });
-
-    app.OnPublish("/*", (payload) =>
-    {
-        # This handler will be called for all channels in all namespaces
-        # EXCEPT for those that have more specific handlers
-        return payload;
-    });
+    --8<-- "docs/snippets/appsync-events/WildcardPatterns.cs:wildcard_patterns"
     ```
 
 ???+ note "Supported wildcard patterns"
@@ -357,29 +292,7 @@ In some scenarios, you might want to process all events for a channel as a batch
 === "Aggregated processing"
 
     ```csharp
-    app.OnPublishAggregate("/default/channel", (payload) =>
-    {
-        var evt = new List<AppSyncEvent>();
-
-        foreach (var item in payload.Events)
-        {
-            if (item.Payload["eventType"].ToString() == "data_2")
-            {
-                pd.Payload["message"] = "Hello from /default/channel2 with data_2";
-                pd.Payload["data"] = new Dictionary<string, object>
-                {
-                    { "key", "value" }
-                };
-            }
-    
-            evt.Add(pd);
-        }
-
-        return new AppSyncEventsResponse
-        {
-            Events = evt
-        };
-    });
+    --8<-- "docs/snippets/appsync-events/AggregatedProcessing.cs:aggregated_processing"
     ```
 
 ### Handling errors
@@ -393,19 +306,13 @@ When processing items individually with `OnPublish()` and `OnPublishAsync()`, yo
 === "Error handling individual items"
 
     ```csharp
-    app.OnPublish("/default/channel", (payload) =>
-    {
-        throw new Exception("My custom exception");
-    });
+    --8<-- "docs/snippets/appsync-events/ErrorHandling.cs:error_handling_individual"
     ```
 
 === "Error handling individual items Async"
 
     ```csharp
-    app.OnPublishAsync("/default/channel", async (payload) =>
-    {
-        throw new Exception("My custom exception");
-    });
+    --8<-- "docs/snippets/appsync-events/ErrorHandling.cs:error_handling_individual_async"
     ```
 
 === "Error handling individual items response"
@@ -434,19 +341,13 @@ When processing batch of items with `OnPublishAggregate()` and `OnPublishAggrega
 === "Error handling batch items"
 
     ```csharp
-    app.OnPublishAggregate("/default/channel", (payload) =>
-    {
-        throw new Exception("My custom exception");
-    });
+    --8<-- "docs/snippets/appsync-events/ErrorHandling.cs:error_handling_batch"
     ```
 
 === "Error handling batch items Async"
 
     ```csharp
-    app.OnPublishAggregateAsync("/default/channel", async (payload) =>
-    {
-        throw new Exception("My custom exception");
-    });
+    --8<-- "docs/snippets/appsync-events/ErrorHandling.cs:error_handling_batch_async"
     ```
 
 === "Error handling batch items response"
@@ -469,10 +370,7 @@ You can also reject the entire payload by raising an `UnauthorizedException`. Th
 === "Rejecting the entire request"
 
     ```csharp
-    app.OnPublish("/default/channel", (payload) =>
-    {
-        throw new UnauthorizedException("My custom exception");
-    });
+    --8<-- "docs/snippets/appsync-events/ErrorHandling.cs:unauthorized_exception"
     ```
 
 ### Accessing Lambda context and event
@@ -482,11 +380,7 @@ You can access to the original Lambda event or context for additional informatio
 === "Accessing Lambda context"
 
     ```csharp hl_lines="1 3"
-    app.OnPublish("/default/channel", (payload, ctx) =>
-    {
-        payload["functionName"] = ctx.FunctionName;
-        return payload;
-    });
+    --8<-- "docs/snippets/appsync-events/AdvancedUsage.cs:accessing_lambda_context"
     ```
 
 ## Event Handler workflow
@@ -599,26 +493,7 @@ You can test your event handlers by passing a mocked or actual AppSync Events La
 === "Test Publish events"
 
     ```csharp
-    [Fact]
-    public void Should_Return_Unchanged_Payload()
-    {
-        // Arrange
-        var lambdaContext = new TestLambdaContext();
-        var app = new AppSyncEventsResolver();
-
-        app.OnPublish("/default/channel", payload =>
-        {
-            // Handle channel events
-            return payload;
-        });
-
-        // Act
-        var result = app.Resolve(_appSyncEvent, lambdaContext);
-
-        // Assert
-        Assert.Equal("123", result.Events[0].Id);
-        Assert.Equal("test data", result.Events[0].Payload?["data"].ToString());
-    }
+    --8<-- "docs/snippets/appsync-events/Testing.cs:test_publish_events"
     ```
 
 === "Publish event json"
@@ -695,32 +570,5 @@ You can test your event handlers by passing a mocked or actual AppSync Events La
 === "Test Subscribe with code payload mock"
 
     ```csharp
-    [Fact]
-    public async Task Should_Authorize_Subscription()
-    {
-        // Arrange
-        var lambdaContext = new TestLambdaContext();
-        var app = new AppSyncEventsResolver();
-
-        app.OnSubscribeAsync("/default/*", async (info) => true);
-
-        var subscribeEvent = new AppSyncEventsRequest
-        {
-            Info = new Information
-            {
-                Channel = new Channel
-                {
-                    Path = "/default/channel",
-                    Segments = ["default", "channel"]
-                },
-                Operation = AppSyncEventsOperation.Subscribe,
-                ChannelNamespace = new ChannelNamespace { Name = "default" }
-            }
-        };
-        // Act
-        var result = await app.ResolveAsync(subscribeEvent, lambdaContext);
-
-        // Assert
-        Assert.Null(result);
-    }
+    --8<-- "docs/snippets/appsync-events/Testing.cs:test_subscribe_events"
     ```
