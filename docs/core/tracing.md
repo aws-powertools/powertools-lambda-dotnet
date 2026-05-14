@@ -76,46 +76,14 @@ segment name that appears in traces.
 
 === "Tracing attribute"
 
-    ```c# hl_lines="3 14 20"
-    public class Function
-    {
-        [Tracing]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            await BusinessLogic1()
-                .ConfigureAwait(false);
-    
-            await BusinessLogic2()
-                .ConfigureAwait(false);
-        }
-        
-        [Tracing]
-        private async Task BusinessLogic1()
-        {
-    
-        }
-    
-        [Tracing]
-        private async Task BusinessLogic2()
-        {
-    
-        }
-    }
+    ```csharp hl_lines="3 14 20"
+    --8<-- "docs/snippets/tracing/GettingStarted.cs:tracing_attribute"
     ```
 
 === "Custom Segment names"
 
-    ```c# hl_lines="3"
-    public class Function
-    {
-        [Tracing(SegmentName = "YourCustomName")]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-        }
-    }
+    ```csharp hl_lines="3"
+    --8<-- "docs/snippets/tracing/GettingStarted.cs:custom_segment_name"
     ```
 
 By default, this attribute will automatically record method responses and exceptions. You can change the default behavior by setting
@@ -127,16 +95,8 @@ the environment variables `POWERTOOLS_TRACER_CAPTURE_RESPONSE` and `POWERTOOLS_T
 
 === "Disable on attribute"
 
-    ```c# hl_lines="3"
-    public class Function
-    {
-        [Tracing(CaptureMode = TracingCaptureMode.Disabled)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-        }
-    }
+    ```csharp hl_lines="3"
+    --8<-- "docs/snippets/tracing/GettingStarted.cs:disable_capture_mode"
     ```
 
 === "Disable Globally"
@@ -167,35 +127,15 @@ context for an operation using any native object.
 === "Annotations"
 
     You can add annotations using `AddAnnotation()` method from Tracing
-    ```c# hl_lines="9"
-    using AWS.Lambda.Powertools.Tracing;
-
-    public class Function
-    {
-        [Tracing]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            Tracing.AddAnnotation("annotation", "value");
-        }
-    }
+    ```csharp hl_lines="9"
+    --8<-- "docs/snippets/tracing/AnnotationsAndMetadata.cs:add_annotation"
     ```
 
 === "Metadata"
 
     You can add metadata using `AddMetadata()` method from Tracing
-    ```c# hl_lines="9"
-    using AWS.Lambda.Powertools.Tracing;
-
-    public class Function
-    {
-        [Tracing]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            Tracing.AddMetadata("content", "value");
-        }
-    }
+    ```csharp hl_lines="9"
+    --8<-- "docs/snippets/tracing/AnnotationsAndMetadata.cs:add_metadata"
     ```
 
 ## Utilities
@@ -209,110 +149,34 @@ You can create subsegments using the familiar `using` statement pattern for auto
 
 === "Basic Using Statement"
 
-    ```c# hl_lines="8 9 10 11 12 13"
-    using AWS.Lambda.Powertools.Tracing;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            using var gatewaySegment = Tracing.BeginSubsegment("PaymentGatewayIntegration");
-            gatewaySegment.AddAnnotation("Operation", "ProcessPayment");
-            gatewaySegment.AddAnnotation("PaymentMethod", "CreditCard");
-
-            var result = await ProcessPaymentAsync();
-            gatewaySegment.AddAnnotation("ProcessingTimeMs", result.ProcessingTimeMs);
-            // Subsegment automatically ends when disposed
-        }
-    }
+    ```csharp hl_lines="8 9 10 11 12 13"
+    --8<-- "docs/snippets/tracing/UsingStatementPattern.cs:basic_using_statement"
     ```
 
 === "With Custom Namespace"
 
-    ```c# hl_lines="8 9 10"
-    using AWS.Lambda.Powertools.Tracing;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            using var segment = Tracing.BeginSubsegment("MyCustomNamespace", "DatabaseOperation");
-            segment.AddAnnotation("TableName", "Users");
-            segment.AddMetadata("query", "SELECT * FROM Users WHERE Active = 1");
-        }
-    }
+    ```csharp hl_lines="8 9 10"
+    --8<-- "docs/snippets/tracing/UsingStatementPattern.cs:custom_namespace"
     ```
 
 === "Nested Subsegments"
 
-    ```c# hl_lines="8 9 10 11 12 13 14 15 16"
-    using AWS.Lambda.Powertools.Tracing;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            using var outerSegment = Tracing.BeginSubsegment("PaymentProcessing");
-            outerSegment.AddAnnotation("Operation", "ProcessPayment");
-
-            var result = await ProcessPaymentAsync();
-
-            using var postProcessingSegment = Tracing.BeginSubsegment("PaymentPostProcessing");
-            postProcessingSegment.AddAnnotation("PaymentId", result.PaymentId);
-
-            await PostProcessPaymentAsync(result);
-        }
-    }
+    ```csharp hl_lines="8 9 10 11 12 13 14 15 16"
+    --8<-- "docs/snippets/tracing/UsingStatementPattern.cs:nested_subsegments"
     ```
 
 ### Callback Pattern
 
 === "Functional Api"
 
-    ```c# hl_lines="8 9 10 12 13 14"
-    using AWS.Lambda.Powertools.Tracing;
-    
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            Tracing.WithSubsegment("loggingResponse", (subsegment) => {
-                // Some business logic
-            });
-    
-            Tracing.WithSubsegment("localNamespace", "loggingResponse", (subsegment) => {
-                // Some business logic
-            });
-        }
-    }
+    ```csharp hl_lines="8 9 10 12 13 14"
+    --8<-- "docs/snippets/tracing/CallbackPattern.cs:functional_api"
     ```
 
 === "Multi Threaded Programming"
 
-    ```c# hl_lines="13-16"
-    using AWS.Lambda.Powertools.Tracing;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Extract existing trace data
-            var entity = Tracing.GetEntity();
-            
-            var task = Task.Run(() =>
-            {
-                Tracing.WithSubsegment("InlineLog", entity, (subsegment) =>
-                {
-                    // Business logic in separate task
-                });
-            });
-        }
-    }
+    ```csharp hl_lines="13-16"
+    --8<-- "docs/snippets/tracing/CallbackPattern.cs:multi_threaded"
     ```
 
 ### Subsegment Methods
@@ -321,23 +185,8 @@ When using the `using` statement pattern, the returned `TracingSubsegment` objec
 
 === "Available Methods"
 
-    ```c# hl_lines="8 9 10 11 12 13 14 15 16"
-    using var segment = Tracing.BeginSubsegment("PaymentProcessing");
-
-    // Add annotations (indexed by X-Ray)
-    segment.AddAnnotation("PaymentMethod", "CreditCard");
-    segment.AddAnnotation("Amount", 99.99);
-
-    // Add metadata (not indexed, for additional context)
-    segment.AddMetadata("PaymentDetails", paymentObject);
-    segment.AddMetadata("CustomNamespace", "RequestId", requestId);
-
-    // Add exception information
-    segment.AddException(exception);
-
-    // Add HTTP information
-    segment.AddHttpInformation("response_code", 200);
-    segment.AddHttpInformation("url", "https://api.payment.com/process");
+    ```csharp hl_lines="8 9 10 11 12 13 14 15 16"
+    --8<-- "docs/snippets/tracing/SubsegmentMethods.cs:available_methods"
     ```
 
 ## Instrumenting SDK clients
@@ -346,31 +195,14 @@ You should make sure to instrument the SDK clients explicitly based on the funct
 
 === "Function.cs"
 
-    ```c# hl_lines="14"
-    using Amazon.DynamoDBv2;
-    using Amazon.DynamoDBv2.Model;
-    using AWS.Lambda.Powertools.Tracing;
-    
-    public class Function
-    {
-        private static IAmazonDynamoDB _dynamoDb;
-
-        /// <summary>
-        /// Function constructor
-        /// </summary>
-        public Function()
-        {
-            Tracing.RegisterForAllServices();
-            
-            _dynamoDb = new AmazonDynamoDBClient();
-        }
-    }
+    ```csharp hl_lines="14"
+    --8<-- "docs/snippets/tracing/SdkInstrumentation.cs:register_all_services"
     ```
 
 To instrument clients for some services and not others, call Register instead of RegisterForAllServices. Replace the highlighted text with the name of the service's client interface.
 
-```c#
-Tracing.Register<IAmazonDynamoDB>()
+```csharp
+--8<-- "docs/snippets/tracing/SdkInstrumentation.cs:register_single_service"
 ```
 
 This functionality is a thin wrapper for AWS X-Ray .NET SDK. Refer details on [how to instrument SDK client with Xray](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-sdkclients.html)
@@ -379,17 +211,8 @@ This functionality is a thin wrapper for AWS X-Ray .NET SDK. Refer details on [h
 
 === "Function.cs"
 
-    ```c# hl_lines="7"
-    using Amazon.XRay.Recorder.Handlers.System.Net;
-    
-    public class Function
-    {
-        public Function()
-        {
-            var httpClient = new HttpClient(new HttpClientXRayTracingHandler(new HttpClientHandler()));
-            var myIp = await httpClient.GetStringAsync("https://checkip.amazonaws.com/");
-        }
-    }
+    ```csharp hl_lines="7"
+    --8<-- "docs/snippets/tracing/SdkInstrumentation.cs:instrument_http_calls"
     ```
 
 More information about instrumenting [outgoing http calls](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-dotnet-httpclients.html).
@@ -408,37 +231,14 @@ Examples:
 
 === "Without Powertools Logging"
 
-    ```c# hl_lines="8"
-    using AWS.Lambda.Powertools.Tracing;
-    using AWS.Lambda.Powertools.Tracing.Serializers;
-
-    private static async Task Main()
-    {
-        Func<string, ILambdaContext, string> handler = FunctionHandler;
-        await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>()
-        .WithTracing())
-            .Build()
-            .RunAsync();
-    }
+    ```csharp hl_lines="8"
+    --8<-- "docs/snippets/tracing/AotSupport.cs:without_powertools_logging"
     ```
 
 === "With Powertools Logging"
 
-    ```c# hl_lines="10 11"
-    using AWS.Lambda.Powertools.Logging;
-    using AWS.Lambda.Powertools.Logging.Serializers;
-    using AWS.Lambda.Powertools.Tracing;
-    using AWS.Lambda.Powertools.Tracing.Serializers;
-
-    private static async Task Main()
-    {
-        Func<string, ILambdaContext, string> handler = FunctionHandler;
-        await LambdaBootstrapBuilder.Create(handler, 
-            new PowertoolsSourceGeneratorSerializer<LambdaFunctionJsonSerializerContext>()
-            .WithTracing())
-                .Build()
-                .RunAsync();
-    }
+    ```csharp hl_lines="10 11"
+    --8<-- "docs/snippets/tracing/AotSupport.cs:with_powertools_logging"
     ```
 
 ### Publishing
