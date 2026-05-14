@@ -124,47 +124,12 @@ When using the Kafka consumer utility, you must specify the serializer in your L
 === "Class Library Deployment"
 
     ```csharp hl_lines="5"
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Avro;
-    using AWS.Lambda.Powertools.Logging;
-
-    [assembly: LambdaSerializer(typeof(PowertoolsKafkaAvroSerializer))] // Use PowertoolsKafkaAvroSerializer for Avro serialization
-
-    namespace MyKafkaConsumer;
-
-    public class Function
-    {
-        public string FunctionHandler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-        {
-            foreach (var record in records)
-            {
-                Logger.LogInformation("Record Value: {@record}", record.Value);
-            }
-        
-            return "Processed " + records.Count() + " records";
-        }
-    }
+    --8<-- "docs/snippets/kafka/GettingStarted.cs:class_library_deployment"
     ```
 === "Top Level Function Deployment"
 
     ```csharp hl_lines="15"
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Avro;
-    using AWS.Lambda.Powertools.Logging;        
-
-    string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-        
-        return "Processed " + records.Count() + " records";
-    }
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaAvroSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/GettingStarted.cs:top_level_deployment"
     ```
 
 
@@ -182,70 +147,19 @@ The parameter for the handler funcion is `ConsumerRecords<TK, T>`, where `TK` is
 === "Avro Messages"
 
     ```csharp hl_lines="16"
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Avro;
-    using AWS.Lambda.Powertools.Logging;
-
-    string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-        
-        return "Processed " + records.Count() + " records";
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaAvroSerializer()) // Use PowertoolsKafkaAvroSerializer for Avro serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/ProcessingEvents.cs:avro_messages"
     ```
 
 === "Protocol Buffers"
 
     ```csharp hl_lines="16"
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using AWS.Lambda.Powertools.Logging;
-
-    string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-
-        return "Processed " + records.Count() + " records";
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/ProcessingEvents.cs:protobuf_messages"
     ```
 
 === "JSON Messages"
 
     ```csharp hl_lines="16"
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Json;
-    using AWS.Lambda.Powertools.Logging;
-
-    string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-        
-        return "Processed " + records.Count() + " records";
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaJsonSerializer()) // Use PowertoolsKafkaJsonSerializer for Json serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/ProcessingEvents.cs:json_messages"
     ```
 
 ???+ tip "Full examples on GitHub"
@@ -260,47 +174,13 @@ This flexibility allows you to work with different data formats in the same mess
 === "Key and Value Deserialization"
 
     ```csharp hl_lines="5"
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using AWS.Lambda.Powertools.Logging;
-
-    string Handler(ConsumerRecords<CustomerKey, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-
-        return "Processed " + records.Count() + " records";
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<CustomerKey, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/DeserializingKeysValues.cs:key_value_deserialization"
     ```
 
 === "Value-Only Deserialization"
 
     ```csharp hl_lines="5"
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using AWS.Lambda.Powertools.Logging;
-
-    string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-
-        return "Processed " + records.Count() + " records";
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/DeserializingKeysValues.cs:value_only_deserialization"
     ```
 
 ### Handling primitive types
@@ -315,47 +195,13 @@ Simply place the primitive type like `int` or `string` in the ` ConsumerRecords<
 === "Primitive key"
 
     ```csharp hl_lines="5"
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using AWS.Lambda.Powertools.Logging;
-
-    string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-
-        return "Processed " + records.Count() + " records";
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/PrimitiveTypes.cs:primitive_key"
     ```
 
 === "Primitive key and value"
 
     ```csharp hl_lines="5"
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using AWS.Lambda.Powertools.Logging;
-
-    string Handler(ConsumerRecords<string, string> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-
-        return "Processed " + records.Count() + " records";
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, string>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/PrimitiveTypes.cs:primitive_key_and_value"
     ```
 
 ### Message format support and comparison
@@ -400,35 +246,7 @@ Each Kafka record contains important metadata that you can access alongside the 
 === "Working with Record Metadata"
 
     ```csharp
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using AWS.Lambda.Powertools.Logging;
-
-    string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            // Log record coordinates for tracing
-            Logger.LogInformation("Processing messagem from topic: {topic}", record.Topic);
-            Logger.LogInformation("Partition: {partition}, Offset: {offset}", record.Partition, record.Offset);
-            Logger.LogInformation("Produced at: {timestamp}", record.Timestamp);
-            
-            // Process message headers
-            foreach (var header in record.Headers.DecodedValues())
-            {
-                Logger.LogInformation($"{header.Key}: {header.Value}");
-            }
-            
-            // Access the Avro deserialized message content
-            CustomerProfile customerProfile = record.Value; // CustomerProfile class is auto-generated from Protobuf schema
-            Logger.LogInformation("Processing order for: {fullName}", customerProfile.FullName);
-        }
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/AdvancedUsage.cs:record_metadata"
     ```
 
 #### Available metadata properties
@@ -451,62 +269,7 @@ Handle errors gracefully when processing Kafka messages to ensure your applicati
 === "Error Handling"
 
     ```csharp
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using AWS.Lambda.Powertools.Logging;
-
-    var successfulRecords = 0;
-    var failedRecords = 0;
-
-    string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            try 
-            {
-                // Process each record
-                Logger.LogInformation("Processing record from topic: {topic}", record.Topic);
-                Logger.LogInformation("Partition: {partition}, Offset: {offset}", record.Partition, record.Offset);
-                
-                // Access the deserialized message content
-                CustomerProfile customerProfile = record.Value; // CustomerProfile class is auto-generated from Protobuf schema
-                ProcessOrder(customerProfile);
-                successfulRecords ++; 
-            }
-            catch (Exception ex)
-            {
-                failedRecords ++;
-
-                // Log the error and continue processing other records
-                Logger.LogError(ex, "Error processing record from topic: {topic}, partition: {partition}, offset: {offset}",
-                    record.Topic, record.Partition, record.Offset);
-                
-                SendToDeadLetterQueue(record, ex); // Optional: Send to a dead-letter queue for further analysis
-            }
-
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-
-        return $"Processed {successfulRecords} records successfully, {failedRecords} records failed";
-    }
-
-    private void ProcessOrder(CustomerProfile customerProfile)
-    {
-        Logger.LogInformation("Processing order for: {fullName}", customerProfile.FullName);
-        // Your business logic to process the order
-        // This could throw exceptions for various reasons (e.g., validation errors, database issues)
-    }
-
-    private void SendToDeadLetterQueue(ConsumerRecord<string, CustomerProfile> record, Exception ex)
-    {
-        // Implement your dead-letter queue logic here
-        Logger.LogError("Sending record to dead-letter queue: {record}, error: {error}", record, ex.Message);
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/kafka/AdvancedUsage.cs:error_handling"
     ```
 
 <!-- prettier-ignore -->
@@ -522,43 +285,7 @@ The Idempotency utility automatically stores the result of each successful opera
 === "Idempotent Kafka Processing"
 
     ```csharp
-    using Amazon.Lambda.Core;
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using AWS.Lambda.Powertools.Logging;
-    using AWS.Lambda.Powertools.Idempotency;
-
-    [assembly: LambdaSerializer(typeof(PowertoolsKafkaProtobufSerializer))]
-
-    namespace ProtoBufClassLibrary;
-
-    public class Function
-    {
-        public Function()
-        {
-            Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
-        }
-
-        public string FunctionHandler(ConsumerRecords<string, Payment> records, ILambdaContext context)
-        {
-            foreach (var record in records)
-            {
-                ProcessPayment(record.Key, record.Value);
-            }
-        
-            return "Processed " + records.Count() + " records";
-        }
-
-        [Idempotent]
-        private void ProcessPayment(Payment payment)
-        {
-            Logger.LogInformation("Processing payment {paymentId} for customer {customerName}",
-                payment.Id, payment.CustomerName);
-
-            // Your payment processing logic here
-            // This could involve calling an external payment service, updating a database, etc.
-        }
-    }
+    --8<-- "docs/snippets/kafka/AdvancedUsage.cs:idempotent_processing"
     ```
 
 <!-- prettier-ignore -->
@@ -620,37 +347,8 @@ In case where you have a Python producer and a C# consumer, you may need to adju
 
 === "Using Python naming convention"
 
-    ```c#
-    using AWS.Lambda.Powertools.Kafka;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using AWS.Lambda.Powertools.Logging;
-
-    string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            Logger.LogInformation("Record Value: {@record}", record.Value);
-        }
-
-        return "Processed " + records.Count() + " records";
-    }
-
-    await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
-            new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
-        .Build()
-        .RunAsync();
-
-    // Example class that handles Python snake_case field names
-    public partial class CustomerProfile
-    {
-        [JsonPropertyName("user_id")] public string UserId { get; set; }
-
-        [JsonPropertyName("full_name")] public string FullName { get; set; }
-
-        [JsonPropertyName("age")] public long Age { get; set; }
-
-        [JsonPropertyName("account_status")] public string AccountStatus { get; set; }
-    }
+    ```csharp
+    --8<-- "docs/snippets/kafka/AdvancedUsage.cs:cross_language_compatibility"
     ```
 
 Common cross-language challenges to address:
@@ -831,77 +529,7 @@ Testing Kafka consumer functions is straightforward with Xunit. You can create s
 === "Testing your code"
 
     ```csharp
-    using System.Text;
-    using Amazon.Lambda.Core;
-    using Amazon.Lambda.TestUtilities;
-    using AWS.Lambda.Powertools.Kafka.Protobuf;
-    using Google.Protobuf;
-    using TestKafka;
-
-    public class KafkaTests
-    {
-        [Fact]
-        public void SimpleHandlerTest()
-        {
-            string Handler(ConsumerRecords<int, ProtobufProduct> records, ILambdaContext context)
-            {
-                foreach (var record in records)
-                {
-                    var product = record.Value;
-                    context.Logger.LogInformation($"Processing {product.Name} at ${product.Price}");
-                }
-
-                return "Successfully processed Protobuf Kafka events";
-            }
-            // Simulate the handler execution
-            var mockLogger = new TestLambdaLogger();
-            var mockContext = new TestLambdaContext
-            {
-                Logger = mockLogger
-            };
-
-            var records = new ConsumerRecords<int, ProtobufProduct>
-            {
-                Records = new Dictionary<string, List<ConsumerRecord<int, ProtobufProduct>>>
-                {
-                    { "mytopic-0", new List<ConsumerRecord<int, ProtobufProduct>>
-                        {
-                            new()
-                            {
-                                Topic = "mytopic",
-                                Partition = 0,
-                                Offset = 15,
-                                Key = 42,
-                                Value = new ProtobufProduct { Name = "Test Product", Id = 1, Price = 99.99 }
-                            }
-                        }
-                    }
-                }
-            };
-            
-            // Call the handler
-            var result = Handler(records, mockContext);
-            
-            // Assert the result
-            Assert.Equal("Successfully processed Protobuf Kafka events", result);
-            
-            // Verify the context logger output
-            Assert.Contains("Processing Test Product at $99.99", mockLogger.Buffer.ToString());
-            
-            // Verify the records were processed
-            Assert.Single(records.Records);
-            Assert.Contains("mytopic-0", records.Records.Keys);
-            Assert.Single(records.Records["mytopic-0"]);
-            Assert.Equal("mytopic", records.Records["mytopic-0"][0].Topic);
-            Assert.Equal(0, records.Records["mytopic-0"][0].Partition);
-            Assert.Equal(15, records.Records["mytopic-0"][0].Offset);
-            Assert.Equal(42, records.Records["mytopic-0"][0].Key);
-            Assert.Equal("Test Product", records.Records["mytopic-0"][0].Value.Name);
-            Assert.Equal(1, records.Records["mytopic-0"][0].Value.Id);
-            Assert.Equal(99.99, records.Records["mytopic-0"][0].Value.Price);
-        }
-    }
-
+    --8<-- "docs/snippets/kafka/Testing.cs:testing_your_code"
     ```
 
 ## Code Generation for Serialization
