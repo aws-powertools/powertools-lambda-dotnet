@@ -148,66 +148,13 @@ To create an agent, use the `BedrockAgentFunctionResolver` to register your tool
 === "Executable asembly"
 
     ```csharp
-    using Amazon.Lambda.Core;
-    using Amazon.Lambda.RuntimeSupport;
-    using AWS.Lambda.Powertools.EventHandler.Resolvers;
-    using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
-
-    var resolver = new BedrockAgentFunctionResolver();
-
-    resolver
-        .Tool("GetWeather", (string city) => $"The weather in {city} is sunny")
-        .Tool("CalculateSum", (int a, int b) => $"The sum of {a} and {b} is {a + b}")
-        .Tool("GetCurrentTime", () => $"The current time is {DateTime.Now}");
-
-    // The function handler that will be called for each Lambda event
-    var handler = async (BedrockFunctionRequest input, ILambdaContext context) =>
-    {
-        return await resolver.ResolveAsync(input, context);
-    };
-
-    // Build the Lambda runtime client passing in the handler to call for each
-    // event and the JSON serializer to use for translating Lambda JSON documents
-    // to .NET types.
-    await LambdaBootstrapBuilder.Create(handler, new DefaultLambdaJsonSerializer())
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:executable_assembly"
     ```
 
 === "Class Library"
 
     ```csharp
-    using AWS.Lambda.Powertools.EventHandler.Resolvers;
-    using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
-    using Amazon.Lambda.Core;
-
-    [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
-
-    namespace MyLambdaFunction
-    {
-        public class Function
-        {
-            private readonly BedrockAgentFunctionResolver _resolver;
-            
-            public Function()
-            {
-                _resolver = new BedrockAgentFunctionResolver();
-                
-                // Register simple tool functions
-                _resolver
-                    .Tool("GetWeather", (string city) => $"The weather in {city} is sunny")
-                    .Tool("CalculateSum", (int a, int b) => $"The sum of {a} and {b} is {a + b}")
-                    .Tool("GetCurrentTime", () => $"The current time is {DateTime.Now}");
-            }
-            
-            // Lambda handler function
-            public BedrockFunctionResponse FunctionHandler(
-                BedrockFunctionRequest input, ILambdaContext context)
-            {
-                return _resolver.Resolve(input, context);
-            }
-        }
-    }
+    --8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:class_library"
     ```
 When the Bedrock Agent invokes your Lambda function with a request to use the "GetWeather" tool and a parameter for "city", the resolver automatically extracts the parameter, passes it to your function, and formats the response.
 
@@ -227,30 +174,7 @@ The response body will **always be a string**.
 If you want to return an object the best practice is to override the `ToString()` method of your return type to provide a custom string representation, or if you don't override, create an anonymous object `return new {}` and pass your object, or simply return a string directly.
 
 ```csharp
-public class AirportInfo
-{
-    public string City { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-
-    public override string ToString()
-    {
-        return $"{Name} ({Code}) in {City}";
-    }
-}
-
-resolver.Tool("getAirportCodeForCity", "Get airport code and full name for a specific city", (string city, ILambdaContext context) =>
-{
-    var airportService = new AirportService();
-    var airportInfo = airportService.GetAirportInfoForCity(city);
-    // Note: Best approach is to override the ToString method in the AirportInfo class
-    return airportInfo;
-});
-    
-//Alternatively, you can return an anonymous object if you dont override ToString()
-// return new {
-//     airportInfo
-// }; 
+--8<-- "docs/snippets/bedrock-agent-function/ResponseFormat.cs:response_format_tostring"
 ```
 
 ## How It Works with Amazon Bedrock Agents
@@ -272,15 +196,7 @@ resolver.Tool("getAirportCodeForCity", "Get airport code and full name for a spe
 You can have your own custom types as arguments to the tool function. The library will automatically handle serialization and deserialization of these types. In this case, you need to ensure that your custom type is serializable to JSON, if serialization fails, the object will be null.
 
 ```csharp hl_lines="4"
-resolver.Tool(
-    name: "PriceCalculator",
-    description: "Calculate total price with tax",
-    handler: (MyCustomType myCustomType) =>
-    {
-        var withTax = myCustomType.Price * 1.2m;
-        return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
-    }
-);
+--8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:custom_type_serialization"
 ```
 
 ### Custom type serialization native AOT
@@ -288,21 +204,7 @@ resolver.Tool(
 For native AOT compilation, you can use JsonSerializerContext and pass it to `BedrockAgentFunctionResolver`. This allows the library to generate the necessary serialization code at compile time, ensuring compatibility with AOT.
 
 ```csharp hl_lines="1 5 12-15"
-var resolver = new BedrockAgentFunctionResolver(MycustomSerializationContext.Default);
-resolver.Tool(
-    name: "PriceCalculator",
-    description: "Calculate total price with tax",
-    handler: (MyCustomType myCustomType) =>
-    {
-        var withTax = myCustomType.Price * 1.2m;
-        return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
-    }
-);
-
-[JsonSerializable(typeof(MyCustomType))]
-public partial class MycustomSerializationContext : JsonSerializerContext
-{
-}
+--8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:custom_type_serialization_aot"
 ```
 
 ### Accessing Lambda Context
@@ -310,14 +212,7 @@ public partial class MycustomSerializationContext : JsonSerializerContext
 You can access to the original Lambda event or context for additional information. These are passed to the handler function as optional arguments.
 
 ```csharp
-resolver.Tool(
-    "LogRequest",
-    "Logs request information and returns confirmation",
-    (string requestId, ILambdaContext context) => 
-    {
-        context.Logger.LogLine($"Processing request {requestId}");
-        return $"Request {requestId} logged successfully";
-    });
+--8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:accessing_lambda_context"
 ```
 
 ### Handling errors
@@ -329,29 +224,7 @@ When an error occurs, we send back an error message in the response body that in
 If you want to handle errors differently, you can return a `BedrockFunctionResponse` with a custom `Body` and `ResponseState` set to `FAILURE`. This is useful when you want to abort the conversation.
 
 ```csharp
-resolver.Tool("CustomFailure", () => 
-{
-    // Return a custom FAILURE response
-    return new BedrockFunctionResponse
-    {
-        Response = new Response
-        {
-            ActionGroup = "TestGroup",
-            Function = "CustomFailure",
-            FunctionResponse = new FunctionResponse
-            {
-                ResponseBody = new ResponseBody
-                {
-                    Text = new TextBody 
-                    { 
-                        Body = "Critical error occurred: Database unavailable" 
-                    }
-                },
-                ResponseState = ResponseState.FAILURE  // Mark as FAILURE to abort the conversation
-            }
-        }
-    };
-});
+--8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:handling_errors"
 ```
 
 ### Setting session attributes
@@ -359,47 +232,7 @@ resolver.Tool("CustomFailure", () =>
 When Bedrock Agents invoke your Lambda function, it can pass session attributes that you can use to store information across multiple interactions with the user. You can access these attributes in your handler function and modify them as needed.
 
 ```csharp
-// Create a counter tool that reads and updates session attributes
-resolver.Tool("CounterTool", (BedrockFunctionRequest request) => 
-{
-    // Read the current count from session attributes
-    int currentCount = 0;
-    if (request.SessionAttributes != null && 
-        request.SessionAttributes.TryGetValue("counter", out var countStr) &&
-        int.TryParse(countStr, out var count))
-    {
-        currentCount = count;
-    }
-    
-    // Increment the counter
-    currentCount++;
-    
-    // Create a new dictionary with updated counter
-    var updatedSessionAttributes = new Dictionary<string, string>(request.SessionAttributes ?? new Dictionary<string, string>())
-    {
-        ["counter"] = currentCount.ToString(),
-        ["lastAccessed"] = DateTime.UtcNow.ToString("o")
-    };
-
-    // Return response with updated session attributes
-    return new BedrockFunctionResponse
-    {
-        Response = new Response
-        {
-            ActionGroup = request.ActionGroup,
-            Function = request.Function,
-            FunctionResponse = new FunctionResponse
-            {
-                ResponseBody = new ResponseBody
-                {
-                    Text = new TextBody { Body = $"Current count: {currentCount}" }
-                }
-            }
-        },
-        SessionAttributes = updatedSessionAttributes,
-        PromptSessionAttributes = request.PromptSessionAttributes
-    };
-});
+--8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:session_attributes"
 ```
 
 ### Asynchronous Functions
@@ -407,20 +240,7 @@ resolver.Tool("CounterTool", (BedrockFunctionRequest request) =>
 Register and use asynchronous functions:
 
 ```csharp
-_resolver.Tool(
-    "FetchUserData",
-    "Fetches user data from external API", 
-    async (string userId, ILambdaContext ctx) => 
-    {
-        // Log the request
-        ctx.Logger.LogLine($"Fetching data for user {userId}");
-        
-        // Simulate API call
-        await Task.Delay(100); 
-        
-        // Return user information
-        return new { Id = userId, Name = "John Doe", Status = "Active" }.ToString();
-    });
+--8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:async_functions"
 ```
 
 ### Direct Access to Request Payload
@@ -428,15 +248,7 @@ _resolver.Tool(
 Access the raw Bedrock Agent request:
 
 ```csharp
-_resolver.Tool(
-    "ProcessRawRequest",
-    "Processes the raw Bedrock Agent request", 
-    (BedrockFunctionRequest input) => 
-    {
-        var functionName = input.Function;
-        var parameterCount = input.Parameters.Count;
-        return $"Received request for {functionName} with {parameterCount} parameters";
-    });
+--8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:direct_access_request"
 ```
 
 ## Dependency Injection
@@ -444,25 +256,7 @@ _resolver.Tool(
 The library supports dependency injection for integrating with services:
 
 ```csharp
-using Microsoft.Extensions.DependencyInjection;
-
-// Set up dependency injection
-var services = new ServiceCollection();
-services.AddSingleton<IWeatherService, WeatherService>();
-services.AddBedrockResolver(); // Extension method to register the resolver
-
-var serviceProvider = services.BuildServiceProvider();
-var resolver = serviceProvider.GetRequiredService<BedrockAgentFunctionResolver>();
-
-// Register a tool that uses an injected service
-resolver.Tool(
-    "GetWeatherForecast",
-    "Gets the weather forecast for a location",
-    (string city, IWeatherService weatherService, ILambdaContext ctx) => 
-    {
-        ctx.Logger.LogLine($"Getting weather for {city}");
-        return weatherService.GetForecast(city);
-    });
+--8<-- "docs/snippets/bedrock-agent-function/DependencyInjection.cs:dependency_injection"
 ```
 
 ## Using Attributes to Define Tools
@@ -472,28 +266,7 @@ You can define Bedrock Agent functions using attributes instead of explicit regi
 ### Define Tool Classes with Attributes
 
 ```csharp
-// Define your tool class with BedrockFunctionType attribute
-[BedrockFunctionType]
-public class WeatherTools
-{
-    // Each method marked with BedrockFunctionTool attribute becomes a tool
-    [BedrockFunctionTool(Name = "GetWeather", Description = "Gets weather forecast for a location")]
-    public static string GetWeather(string city, int days)
-    {
-        return $"Weather forecast for {city} for the next {days} days: Sunny";
-    }
-    
-    // Supports dependency injection and Lambda context access
-    [BedrockFunctionTool(Name = "GetDetailedForecast", Description = "Gets detailed weather forecast")]
-    public static string GetDetailedForecast(
-        string location, 
-        IWeatherService weatherService, 
-        ILambdaContext context)
-    {
-        context.Logger.LogLine($"Getting forecast for {location}");
-        return weatherService.GetForecast(location);
-    }
-}
+--8<-- "docs/snippets/bedrock-agent-function/DependencyInjection.cs:attribute_tool_classes"
 ```
 
 ### Register Tool Classes in Your Application
@@ -501,15 +274,7 @@ public class WeatherTools
 Using the extension method provided in the library, you can easily register all tools from a class:
 
 ```csharp
-
-var services = new ServiceCollection();
-services.AddSingleton<IWeatherService, WeatherService>();
-services.AddBedrockResolver(); // Extension method to register the resolver
-
-var serviceProvider = services.BuildServiceProvider();
-var resolver = serviceProvider.GetRequiredService<BedrockAgentFunctionResolver>()
-    .RegisterTool<WeatherTools>(); // Register tools from the class during service registration
-
+--8<-- "docs/snippets/bedrock-agent-function/DependencyInjection.cs:register_tool_classes"
 ```
 
 ## Complete Example with Dependency Injection
@@ -518,75 +283,5 @@ You can find examples in the [Powertools for AWS Lambda (.NET) GitHub repository
 
 
 ```csharp
-using Amazon.BedrockAgentRuntime.Model;
-using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.EventHandler;
-using Microsoft.Extensions.DependencyInjection;
-
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
-
-namespace MyBedrockAgent
-{
-    // Service interfaces and implementations
-    public interface IWeatherService
-    {
-        string GetForecast(string city);
-    }
-
-    public class WeatherService : IWeatherService
-    {
-        public string GetForecast(string city) => $"Weather forecast for {city}: Sunny, 75°F";
-    }
-
-    public interface IProductService
-    {
-        string CheckInventory(string productId);
-    }
-
-    public class ProductService : IProductService
-    {
-        public string CheckInventory(string productId) => $"Product {productId} has 25 units in stock";
-    }
-    
-    // Main Lambda function
-    public class Function
-    {
-        private readonly BedrockAgentFunctionResolver _resolver;
-
-        public Function()
-        {
-            // Set up dependency injection
-            var services = new ServiceCollection();
-            services.AddSingleton<IWeatherService, WeatherService>();
-            services.AddSingleton<IProductService, ProductService>();
-            services.AddBedrockResolver(); // Extension method to register the resolver
-            
-            var serviceProvider = services.BuildServiceProvider();
-            _resolver = serviceProvider.GetRequiredService<BedrockAgentFunctionResolver>();
-
-            // Register tool functions that use injected services
-            _resolver
-                .Tool("GetWeatherForecast", 
-                    "Gets weather forecast for a city",
-                    (string city, IWeatherService weatherService, ILambdaContext ctx) => 
-                    {
-                        ctx.Logger.LogLine($"Weather request for {city}");
-                        return weatherService.GetForecast(city);
-                    })
-                .Tool("CheckInventory",
-                    "Checks inventory for a product",
-                    (string productId, IProductService productService) => 
-                        productService.CheckInventory(productId))
-                .Tool("GetServerTime",
-                    "Returns the current server time",
-                    () => DateTime.Now.ToString("F"));
-        }
-
-        public ActionGroupInvocationOutput FunctionHandler(
-            ActionGroupInvocationInput input, ILambdaContext context)
-        {
-            return _resolver.Resolve(input, context);
-        }
-    }
-}
+--8<-- "docs/snippets/bedrock-agent-function/CompleteExample.cs:complete_example_with_di"
 ```

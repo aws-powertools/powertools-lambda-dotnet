@@ -35,10 +35,7 @@ You can use the `JsonTransformer.Transform` function with any [JMESPath expressi
 
 === "Transform"
     ```csharp hl_lines="1 2"
-    var transformer = JsonTransformer.Parse("powertools_json(body).customerId");
-    using var result = transformer.Transform(doc.RootElement);
-    
-    Logger.LogInformation(result.RootElement.GetRawText()); // "dd4649e6-2484-4993-acb8-0f9123103394"
+    --8<-- "docs/snippets/jmespath/ExtractingData.cs:transform_json"
     ```
 
 === "Payload"
@@ -90,11 +87,7 @@ This sample will deserialize the JSON string within the `body` key before [Idemp
 === "Idempotency utility: WithEventKeyJmesPath"
 
     ```csharp hl_lines="4"
-    Idempotency.Configure(builder =>
-            builder
-                .WithOptions(optionsBuilder =>
-                    optionsBuilder.WithEventKeyJmesPath("powertools_json(Body).[\"user_id\", \"product_id\"]"))
-                .UseDynamoDb("idempotency_table"));
+    --8<-- "docs/snippets/jmespath/ExtractingData.cs:idempotency_event_key_jmespath"
     ```
 
 === "Payload"
@@ -141,10 +134,7 @@ This sample will decode the base64 value within the `data` key, and deserialize 
 === "Function"
 
     ```csharp
-    var transformer = JsonTransformer.Parse("powertools_base64(body).customerId");
-    using var result = transformer.Transform(doc.RootElement);
-    
-    Logger.LogInformation(result.RootElement.GetRawText()); // "dd4649e6-2484-4993-acb8-0f9123103394"
+    --8<-- "docs/snippets/jmespath/ExtractingData.cs:powertools_base64"
     ```
 
 === "Payload"
@@ -173,10 +163,7 @@ This sample will decompress and decode base64 data from Cloudwatch Logs, then us
 === "Function"
 
     ```csharp
-    var transformer = JsonTransformer.Parse("powertools_base64_gzip(body).customerId");
-    using var result = transformer.Transform(doc.RootElement);
-    
-    Logger.LogInformation(result.RootElement.GetRawText()); // "dd4649e6-2484-4993-acb8-0f9123103394"
+    --8<-- "docs/snippets/jmespath/ExtractingData.cs:powertools_base64_gzip"
     ```
 
 === "Payload"
