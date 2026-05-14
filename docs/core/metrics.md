@@ -74,14 +74,8 @@ Metrics has three global settings that will be used across all metrics emitted. 
 
 The **`MetricsAttribute`** is a class-level attribute that can be used to set the namespace and service for all metrics emitted by the lambda handler.
 
-```csharp hl_lines="3"
-using AWS.Lambda.Powertools.Metrics;
-    
-[Metrics(Namespace = "ExampleApplication", Service = "Booking")]
-public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-{
-    ...
-}
+```csharp hl_lines="1"
+--8<-- "docs/snippets/metrics/GettingStarted.cs:metrics_attribute"
 ```
 
 #### Methods
@@ -89,15 +83,7 @@ public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyReques
 The **`Metrics`** class provides methods to add metrics, dimensions, and metadata to the metrics object.
 
 ```csharp hl_lines="5-7"
-using AWS.Lambda.Powertools.Metrics;
-    
-public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-{
-    Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-    Metrics.AddDimension("Environment", "Prod");
-    Metrics.AddMetadata("BookingId", "683EEB2D-B2F3-4075-96EE-788E6E2EED45");
-    ...
-}
+--8<-- "docs/snippets/metrics/GettingStarted.cs:metrics_methods"
 ```
 
 #### Initialization
@@ -109,57 +95,13 @@ But can also be initialize with `Configure` or `Builder` patterns in your Lambda
 Configure:
 
 ```csharp
-using AWS.Lambda.Powertools.Metrics;
-    
-public Function()
-{
-    Metrics.Configure(options =>
-    {
-        options.Namespace = "dotnet-powertools-test";
-        options.Service = "testService";
-        options.CaptureColdStart = true;
-        options.DefaultDimensions = new Dictionary<string, string>
-        {
-            { "Environment", "Prod" },
-            { "Another", "One" }
-        };
-    });
-}
-
-[Metrics]
-public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-{
-    Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-    ...
-}
+--8<-- "docs/snippets/metrics/GettingStarted.cs:metrics_configure"
 ```
 
 Builder:
 
 ```csharp
-using AWS.Lambda.Powertools.Metrics;
-
-private readonly IMetrics _metrics;
-
-public Function()
-{
-    _metrics = new MetricsBuilder()
-        .WithCaptureColdStart(true)
-        .WithService("testService")
-        .WithNamespace("dotnet-powertools-test")
-        .WithDefaultDimensions(new Dictionary<string, string>
-        {
-            { "Environment", "Prod1" },
-            { "Another", "One" }
-        }).Build();
-}
-
-[Metrics]
-public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-{
-    _metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-    ...
-}
+--8<-- "docs/snippets/metrics/GettingStarted.cs:metrics_builder"
 ```
 
 
@@ -170,31 +112,12 @@ You can create metrics using **`AddMetric`**, and you can create dimensions for 
 === "Metrics"
 
     ```csharp hl_lines="5 8"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-      
-      [Metrics(Namespace = "ExampleApplication", Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-      }
-    }
+    --8<-- "docs/snippets/metrics/CreatingMetrics.cs:creating_metrics"
     ```
 === "Metrics with custom dimensions"
 
     ```csharp hl_lines="8-9"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-      
-      [Metrics(Namespace = "ExampleApplication", Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.AddDimension("Environment","Prod");
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-      }
-    }
+    --8<-- "docs/snippets/metrics/CreatingMetrics.cs:metrics_with_dimensions"
     ```
 
 !!! tip "Autocomplete Metric Units"
@@ -219,23 +142,7 @@ You can create [high-resolution metrics](https://aws.amazon.com/about-aws/whats-
 === "Metrics with high resolution"
 
     ```csharp hl_lines="9 12 15"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-           
-      [Metrics(Namespace = "ExampleApplication", Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        // Publish a metric with standard resolution i.e. StorageResolution = 60
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count, MetricResolution.Standard);
-    
-        // Publish a metric with high resolution i.e. StorageResolution = 1
-        Metrics.AddMetric("FailedBooking", 1, MetricUnit.Count, MetricResolution.High);
-    
-        // The last parameter (storage resolution) is optional
-        Metrics.AddMetric("SuccessfulUpgrade", 1, MetricUnit.Count);
-      }
-    }
+    --8<-- "docs/snippets/metrics/CreatingMetrics.cs:high_resolution_metrics"
     ```
 
 !!! tip "Autocomplete Metric Resolutions"
@@ -248,21 +155,7 @@ You can use **`SetDefaultDimensions`** method to persist dimensions across Lambd
 === "SetDefaultDimensions method"
 
     ```csharp hl_lines="4 5 6 7 12"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-      private Dictionary<string, string> _defaultDimensions = new Dictionary<string, string>{
-            {"Environment", "Prod"},
-            {"Another", "One"}
-        }; 
-      
-      [Metrics(Namespace = "ExampleApplication", Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.SetDefaultDimensions(_defaultDimensions);
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-      }
-    }
+    --8<-- "docs/snippets/metrics/DefaultDimensions.cs:set_default_dimensions"
     ```
 
 ### Adding default dimensions with cold start metric
@@ -272,59 +165,12 @@ You can use the Builder or Configure patterns in your Lambda class constructor t
 === "Builder pattern"
 
     ```csharp hl_lines="12-16"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-      private readonly IMetrics _metrics;
-
-      public Function()
-      {
-        _metrics = new MetricsBuilder()
-            .WithCaptureColdStart(true)
-            .WithService("testService")
-            .WithNamespace("dotnet-powertools-test")
-            .WithDefaultDimensions(new Dictionary<string, string>
-            {
-                { "Environment", "Prod1" },
-                { "Another", "One" }
-            }).Build();
-      }
-
-      [Metrics]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        _metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-        ...
-    }
+    --8<-- "docs/snippets/metrics/DefaultDimensions.cs:default_dims_builder_cold_start"
     ```
 === "Configure pattern"
 
     ```csharp hl_lines="12-16"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-
-      public Function()
-      {
-        Metrics.Configure(options =>
-        {
-            options.Namespace = "dotnet-powertools-test";
-            options.Service = "testService";
-            options.CaptureColdStart = true;
-            options.DefaultDimensions = new Dictionary<string, string>
-            {
-                { "Environment", "Prod" },
-                { "Another", "One" }
-            };
-        });
-      }
-
-      [Metrics]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-        ...
-    }
+    --8<-- "docs/snippets/metrics/DefaultDimensions.cs:default_dims_configure_cold_start"
     ```
 ### Adding dimensions
 
@@ -333,17 +179,7 @@ You can add dimensions to your metrics using **`AddDimension`** method.
 === "Function.cs"
 
     ```csharp hl_lines="8"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-      
-      [Metrics(Namespace = "ExampleApplication", Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.AddDimension("Environment","Prod");
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-      }
-    }
+    --8<-- "docs/snippets/metrics/AddingDimensions.cs:adding_dimensions"
     ```
 === "Example CloudWatch Logs excerpt"
 
@@ -386,17 +222,7 @@ During metrics validation, if no metrics are provided then a warning will be log
 === "Function.cs"
 
     ```csharp hl_lines="9"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-      
-      [Metrics(Namespace = "ExampleApplication", Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-        Metrics.Flush();
-      }
-    }
+    --8<-- "docs/snippets/metrics/FlushingMetrics.cs:flushing_metrics"
     ```
 === "Example CloudWatch Logs excerpt"
 
@@ -441,15 +267,8 @@ If you want to ensure that at least one metric is emitted, you can pass **`Raise
 
 === "Function.cs"
 
-    ```python hl_lines="5"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-      
-      [Metrics(RaiseOnEmptyMetrics = true)]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        ...
+    ```csharp hl_lines="5"
+    --8<-- "docs/snippets/metrics/FlushingMetrics.cs:raise_on_empty_metrics"
     ```
 
 ### Capturing cold start metric
@@ -459,61 +278,17 @@ You can optionally capture cold start metrics by setting **`CaptureColdStart`** 
 === "Function.cs"
 
     ```csharp hl_lines="5"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-      
-      [Metrics(CaptureColdStart = true)]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        ...
+    --8<-- "docs/snippets/metrics/CaptureColdStart.cs:capture_cold_start_attribute"
     ```
 === "Builder pattern"
 
     ```csharp hl_lines="9"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-      private readonly IMetrics _metrics;
-
-      public Function()
-      {
-        _metrics = new MetricsBuilder()
-            .WithCaptureColdStart(true)
-            .WithService("testService")
-            .WithNamespace("dotnet-powertools-test")
-      }
-
-      [Metrics]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        _metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-        ...
-    }
+    --8<-- "docs/snippets/metrics/CaptureColdStart.cs:capture_cold_start_builder"
     ```
 === "Configure pattern"
 
     ```csharp hl_lines="11"
-    using AWS.Lambda.Powertools.Metrics;
-
-    public class Function {
-
-      public Function()
-      {
-        Metrics.Configure(options =>
-        {
-            options.Namespace = "dotnet-powertools-test";
-            options.Service = "testService";
-            options.CaptureColdStart = true;
-        });
-      }
-
-      [Metrics]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-        ...
-    }
+    --8<-- "docs/snippets/metrics/CaptureColdStart.cs:capture_cold_start_configure"
     ```
 
 If it's a cold start invocation, this feature will:
@@ -538,16 +313,7 @@ You can add high-cardinality data as part of your Metrics log with `AddMetadata`
 === "Function.cs"
 
     ```csharp hl_lines="9"
-    using AWS.Lambda.Powertools.Metrics;
-    
-    public class Function {
-      
-      [Metrics(Namespace = ExampleApplication, Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-        Metrics.AddMetadata("BookingId", "683EEB2D-B2F3-4075-96EE-788E6E2EED45");
-        ...
+    --8<-- "docs/snippets/metrics/AdvancedConfiguration.cs:adding_metadata"
     ```
 
 === "Example CloudWatch Logs excerpt"
@@ -591,20 +357,7 @@ CloudWatch EMF uses the same dimensions across all your metrics. Use **`PushSing
 === "Function.cs"
 
     ```csharp hl_lines="8-13"
-    using AWS.Lambda.Powertools.Metrics;
-    
-    public class Function {
-      
-      [Metrics(Namespace = ExampleApplication, Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.PushSingleMetric(
-                    name: "ColdStart",
-                    value: 1,
-                    unit: MetricUnit.Count,
-                    nameSpace: "ExampleApplication",
-                    service: "Booking");
-        ...
+    --8<-- "docs/snippets/metrics/AdvancedConfiguration.cs:push_single_metric"
     ```
 
 By default it will skip all previously defined dimensions including default dimensions. Use `dimensions` argument if you want to reuse default dimensions or specify custom dimensions from a dictionary.
@@ -615,65 +368,17 @@ By default it will skip all previously defined dimensions including default dime
 === "New Default Dimensions.cs"
 
     ```csharp hl_lines="8-17"
-    using AWS.Lambda.Powertools.Metrics;
-    
-    public class Function {
-      
-      [Metrics(Namespace = ExampleApplication, Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.PushSingleMetric(
-                    name: "ColdStart",
-                    value: 1,
-                    unit: MetricUnit.Count,
-                    nameSpace: "ExampleApplication",
-                    service: "Booking",
-                    dimensions: new Dictionary<string, string>
-                    {
-                        {"FunctionContext", "$LATEST"}
-                    });
-        ...
+    --8<-- "docs/snippets/metrics/AdvancedConfiguration.cs:single_metric_new_dimensions"
     ```
 === "Default Dimensions static.cs"
 
     ```csharp hl_lines="8-12"
-    using AWS.Lambda.Powertools.Metrics;
-    
-    public class Function {
-      
-      [Metrics(Namespace = ExampleApplication, Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-         Metrics.SetDefaultDimensions(new Dictionary<string, string> 
-        {
-            { "Default", "SingleMetric" }
-        });
-        Metrics.PushSingleMetric("SingleMetric", 1, MetricUnit.Count, dimensions: Metrics.DefaultDimensions );
-        ...
+    --8<-- "docs/snippets/metrics/AdvancedConfiguration.cs:single_metric_default_dimensions_static"
     ```
 === "Default Dimensions Options / Builder patterns"
 
     ```csharp hl_lines="9-13 18"
-    using AWS.Lambda.Powertools.Metrics;
-    
-    public MetricsnBuilderHandler(IMetrics metrics = null)
-    {
-        _metrics = metrics ?? new MetricsBuilder()
-            .WithCaptureColdStart(true)
-            .WithService("testService")
-            .WithNamespace("dotnet-powertools-test")
-            .WithDefaultDimensions(new Dictionary<string, string>
-            {
-                { "Environment", "Prod1" },
-                { "Another", "One" }
-            }).Build();
-    }
-    
-    public void HandlerSingleMetricDimensions()
-    {
-        _metrics.PushSingleMetric("SuccessfulBooking", 1, MetricUnit.Count, dimensions: _metrics.Options.DefaultDimensions);
-    }
-        ...
+    --8<-- "docs/snippets/metrics/AdvancedConfiguration.cs:single_metric_default_dimensions_options"
     ```
 
 ### Cold start Function Name dimension
@@ -687,41 +392,12 @@ Example:
 === "In decorator"
     
     ```csharp hl_lines="5"
-    using AWS.Lambda.Powertools.Metrics;
-    
-    public class Function {
-      
-      [Metrics(FunctionName = "MyFunctionName", Namespace = "ExampleApplication", Service = "Booking")]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-        ...
-      }
+    --8<-- "docs/snippets/metrics/AdvancedConfiguration.cs:function_name_decorator"
     ```
 === "Configure / Builder patterns"
 
     ```csharp hl_lines="12"
-    using AWS.Lambda.Powertools.Metrics;
-    
-    public class Function {
-      
-      public Function()
-      {
-        Metrics.Configure(options =>
-        {
-            options.Namespace = "dotnet-powertools-test";
-            options.Service = "testService";
-            options.CaptureColdStart = true;
-            options.FunctionName = "MyFunctionName";
-        });
-      }
-
-      [Metrics]
-      public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-      {
-        Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-        ...
-      }
+    --8<-- "docs/snippets/metrics/AdvancedConfiguration.cs:function_name_configure"
     ```
 
 ## AspNetCore
@@ -742,56 +418,14 @@ It adds a metrics middleware to the specified application builder, which capture
 
 #### Example
 
-```csharp hl_lines="21"
-    
-using AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Configure metrics
-builder.Services.AddSingleton<IMetrics>(_ => new MetricsBuilder()
-    .WithNamespace("MyApi") // Namespace for the metrics
-    .WithService("WeatherService") // Service name for the metrics
-    .WithCaptureColdStart(true) // Capture cold start metrics
-    .WithDefaultDimensions(new Dictionary<string, string> // Default dimensions for the metrics
-    {
-        {"Environment", "Prod"},
-        {"Another", "One"}
-    })
-    .Build()); // Build the metrics
-
-builder.Services.AddAWSLambdaHosting(LambdaEventSource.RestApi);
-
-var app = builder.Build();
-
-app.UseMetrics(); // Add the metrics middleware
-
-app.MapGet("/powertools", (IMetrics metrics) => 
-    {
-        // add custom metrics
-        metrics.AddMetric("MyCustomMetric", 1, MetricUnit.Count);
-        // flush metrics - this is required to ensure metrics are sent to CloudWatch
-        metrics.Flush();
-    });
-    
-app.Run();
-
+```csharp hl_lines="22"
+--8<-- "docs/snippets/metrics/AspNetCore.cs:use_metrics_middleware"
 ```
 
 Here is the highlighted `UseMetrics` method:
 
 ```csharp
-/// <summary>
-/// Adds a metrics middleware to the specified application builder.
-/// This will capture cold start (if CaptureColdStart is enabled) metrics and flush metrics on function exit.
-/// </summary>
-/// <param name="app">The application builder to add the metrics middleware to.</param>
-/// <returns>The application builder with the metrics middleware added.</returns>
-public static IApplicationBuilder UseMetrics(this IApplicationBuilder app)
-{
-    app.UseMiddleware<MetricsMiddleware>();
-    return app;
-}
+--8<-- "docs/snippets/metrics/AspNetCore.cs:use_metrics_method"
 ```
 
 Explanation:
@@ -808,58 +442,14 @@ It adds a metrics filter to the specified route handler builder, which captures 
 
 #### Example
 
-```csharp hl_lines="31"
-
-using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// Configure metrics
-builder.Services.AddSingleton<IMetrics>(_ => new MetricsBuilder()
-    .WithNamespace("MyApi") // Namespace for the metrics
-    .WithService("WeatherService") // Service name for the metrics
-    .WithCaptureColdStart(true) // Capture cold start metrics
-    .WithDefaultDimensions(new Dictionary<string, string> // Default dimensions for the metrics
-    {
-        {"Environment", "Prod"},
-        {"Another", "One"}
-    })
-    .Build()); // Build the metrics
-
-// Add AWS Lambda support. When the application is run in Lambda, Kestrel is swapped out as the web server with Amazon.Lambda.AspNetCoreServer. This
-// package will act as the web server translating requests and responses between the Lambda event source and ASP.NET Core.
-builder.Services.AddAWSLambdaHosting(LambdaEventSource.RestApi);
-
-var app = builder.Build();
-
-app.MapGet("/powertools", (IMetrics metrics) => 
-    {
-        // add custom metrics
-        metrics.AddMetric("MyCustomMetric", 1, MetricUnit.Count);
-        // flush metrics - this is required to ensure metrics are sent to CloudWatch
-        metrics.Flush();
-    })
-    .WithMetrics();
-
-app.Run();
-
+```csharp hl_lines="32"
+--8<-- "docs/snippets/metrics/AspNetCore.cs:with_metrics_filter"
 ```
 
 Here is the highlighted `WithMetrics` method:
 
 ```csharp
-/// <summary>
-/// Adds a metrics filter to the specified route handler builder.
-/// This will capture cold start (if CaptureColdStart is enabled) metrics and flush metrics on function exit.
-/// </summary>
-/// <param name="builder">The route handler builder to add the metrics filter to.</param>
-/// <returns>The route handler builder with the metrics filter added.</returns>
-public static RouteHandlerBuilder WithMetrics(this RouteHandlerBuilder builder)
-{
-    builder.AddEndpointFilter<MetricsFilter>();
-    return builder;
-}
+--8<-- "docs/snippets/metrics/AspNetCore.cs:with_metrics_method"
 ```
 
 Explanation:
@@ -883,95 +473,13 @@ Here is an example of how you can test a Lambda function that uses the Metrics u
 #### Lambda Function
 
 ```csharp
-using System.Collections.Generic;
-using Amazon.Lambda.Core;
-
-public class MetricsnBuilderHandler
-{
-    private readonly IMetrics _metrics;
-
-    // Allow injection of IMetrics for testing
-    public MetricsnBuilderHandler(IMetrics metrics = null)
-    {
-        _metrics = metrics ?? new MetricsBuilder()
-            .WithCaptureColdStart(true)
-            .WithService("testService")
-            .WithNamespace("dotnet-powertools-test")
-            .WithDefaultDimensions(new Dictionary<string, string>
-            {
-                { "Environment", "Prod1" },
-                { "Another", "One" }
-            }).Build();
-    }
-
-    [Metrics]
-    public void Handler(ILambdaContext context)
-    {
-        _metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-    }
-}
-
+--8<-- "docs/snippets/metrics/Testing.cs:lambda_function_testing"
 ```
 #### Unit Tests
 
 
 ```csharp
-[Fact]
-    public void Handler_With_Builder_Should_Configure_In_Constructor()
-    {
-        // Arrange
-        var handler = new MetricsnBuilderHandler();
-
-        // Act
-        handler.Handler(new TestLambdaContext
-        {
-            FunctionName = "My_Function_Name"
-        });
-
-        // Get the output and parse it
-        var metricsOutput = _consoleOut.ToString();
-
-        // Assert cold start
-        Assert.Contains(
-            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"ColdStart\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\",\"FunctionName\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod1\",\"Another\":\"One\",\"FunctionName\":\"My_Function_Name\",\"ColdStart\":1}",
-            metricsOutput);
-        // Assert successful Memory metrics
-        Assert.Contains(
-            "\"CloudWatchMetrics\":[{\"Namespace\":\"dotnet-powertools-test\",\"Metrics\":[{\"Name\":\"SuccessfulBooking\",\"Unit\":\"Count\"}],\"Dimensions\":[[\"Service\",\"Environment\",\"Another\",\"FunctionName\"]]}]},\"Service\":\"testService\",\"Environment\":\"Prod1\",\"Another\":\"One\",\"FunctionName\":\"My_Function_Name\",\"SuccessfulBooking\":1}",
-            metricsOutput);
-    }
-    
-    [Fact]
-    public void Handler_With_Builder_Should_Configure_In_Constructor_Mock()
-    {
-        var metricsMock = Substitute.For<IMetrics>();
-
-        metricsMock.Options.Returns(new MetricsOptions
-        {
-            CaptureColdStart = true,
-            Namespace = "dotnet-powertools-test",
-            Service = "testService",
-            DefaultDimensions = new Dictionary<string, string>
-            {
-                { "Environment", "Prod" },
-                { "Another", "One" }
-            }
-        });
-
-        Metrics.UseMetricsForTests(metricsMock);
-        
-        var sut = new MetricsnBuilderHandler(metricsMock);
-
-        // Act
-        sut.Handler(new TestLambdaContext
-        {
-            FunctionName = "My_Function_Name"
-        });
-
-        metricsMock.Received(1).PushSingleMetric("ColdStart", 1, MetricUnit.Count, "dotnet-powertools-test",
-            service: "testService", Arg.Any<Dictionary<string, string>>());
-        metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-    }
+--8<-- "docs/snippets/metrics/Testing.cs:unit_tests"
 ```
 
 ### Environment variables
@@ -987,5 +495,5 @@ public class MetricsnBuilderHandler
 Make sure to set `POWERTOOLS_METRICS_NAMESPACE` and `POWERTOOLS_SERVICE_NAME` before running your tests to prevent failing on `SchemaValidation` exception. You can set it before you run tests by adding the environment variable.
 
 ```csharp title="Injecting Metric Namespace before running tests"
-Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE","AWSLambdaPowertools");
+--8<-- "docs/snippets/metrics/Testing.cs:inject_metric_namespace"
 ```
