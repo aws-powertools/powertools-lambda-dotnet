@@ -49,92 +49,20 @@ in order to get data from other regions or use specific credentials.
 
 === "SsmProvider"
 
-    ```c# hl_lines="10"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider;
-                
-            // Retrieve a single parameter
-            string? value = await ssmProvider
-                .GetAsync("/my/parameter")
-                .ConfigureAwait(false);
-            
-            // Retrieve multiple parameters from a path prefix
-            // This returns a Dictionary with the parameter name as key
-            IDictionary<string, string?> values = await ssmProvider
-                .GetMultipleAsync("/my/path/prefix")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="10"
+    --8<-- "docs/snippets/parameters/SsmProvider.cs:ssm_provider"
     ```
     
 === "SsmProvider with an explicit region"
 
-    ```c# hl_lines="10 11"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider
-                .ConfigureClient(RegionEndpoint.EUCentral1);
-                
-            // Retrieve a single parameter
-            string? value = await ssmProvider
-                .GetAsync("/my/parameter")
-                .ConfigureAwait(false);
-            
-            // Retrieve multiple parameters from a path prefix
-            // This returns a Dictionary with the parameter name as key
-            IDictionary<string, string?> values = await ssmProvider
-                .GetMultipleAsync("/my/path/prefix")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="10 11"
+    --8<-- "docs/snippets/parameters/SsmProvider.cs:ssm_provider_explicit_region"
     ```
 
 === "SsmProvider with a custom client"
 
-    ```c# hl_lines="11 14 15"
-    using Amazon.SimpleSystemsManagement;
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Create a new instance of client
-            IAmazonSimpleSystemsManagement client = new AmazonSimpleSystemsManagementClient();
-
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider
-                .UseClient(client);
-                
-            // Retrieve a single parameter
-            string? value = await ssmProvider
-                .GetAsync("/my/parameter")
-                .ConfigureAwait(false);
-            
-            // Retrieve multiple parameters from a path prefix
-            // This returns a Dictionary with the parameter name as key
-            IDictionary<string, string?> values = await ssmProvider
-                .GetMultipleAsync("/my/path/prefix")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="11 14 15"
+    --8<-- "docs/snippets/parameters/SsmProvider.cs:ssm_provider_custom_client"
     ```
 
 ### Additional arguments
@@ -152,32 +80,8 @@ You can create `SecureString` parameters, which are parameters that have a plain
 
 === "Function.cs"
 
-    ```c# hl_lines="13-16 20-23"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider;
-                
-            // Retrieve a single parameter
-            string? value = await ssmProvider
-                .WithDecryption()
-                .GetAsync("/my/parameter")
-                .ConfigureAwait(false);
-            
-            // Retrieve multiple parameters from a path prefix
-            // This returns a Dictionary with the parameter name as key
-            IDictionary<string, string?> values = await ssmProvider
-                .Recursive()
-                .GetMultipleAsync("/my/path/prefix")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="13-16 20-23"
+    --8<-- "docs/snippets/parameters/SsmProvider.cs:ssm_provider_additional_args"
     ```
 
 ## Secrets Manager
@@ -189,73 +93,19 @@ in order to get data from other regions or use specific credentials.
 
 === "SecretsProvider"
 
-    ```c# hl_lines="13-15"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SecretsManager;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get Secrets Provider instance
-            ISecretsProvider secretsProvider = ParametersManager.SecretsProvider;
-                
-            // Retrieve a single secret
-            string? value = await secretsProvider
-                .GetAsync("/my/secret")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="13-15"
+    --8<-- "docs/snippets/parameters/SecretsProvider.cs:secrets_provider"
     ```
 === "SecretsProvider with an explicit region"
 
-    ```c# hl_lines="10-11 14-16"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SecretsManager;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get Secrets Provider instance
-            ISecretsProvider secretsProvider = ParametersManager.SecretsProvider
-                .ConfigureClient(RegionEndpoint.EUCentral1);
-                
-            // Retrieve a single secret
-            string? value = await secretsProvider
-                .GetAsync("/my/secret")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="10-11 14-16"
+    --8<-- "docs/snippets/parameters/SecretsProvider.cs:secrets_provider_explicit_region"
     ```
 
 === "SecretsProvider with a custom client"
 
-    ```c# hl_lines="11 14 15"
-    using Amazon.SecretsManager;
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SecretsManager;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-             // Create a new instance of client
-            IAmazonSecretsManager client = new AmazonSecretsManagerClient(); 
-
-            // Get Secrets Provider instance
-            ISecretsProvider secretsProvider = ParametersManager.SecretsProvider
-                .UseClient(client);
-                
-            // Retrieve a single secret
-            string? value = await secretsProvider
-                .GetAsync("/my/secret")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="11 14 15"
+    --8<-- "docs/snippets/parameters/SecretsProvider.cs:secrets_provider_custom_client"
     ```
 
 ## DynamoDB Provider
@@ -278,25 +128,8 @@ For single parameters, you must use `id` as the [partition key](https://docs.aws
 
 === "DynamoDBProvider"
 
-    ```c# hl_lines="10 11 14-16"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.DynamoDB;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get DynamoDB Provider instance
-            IDynamoDBProvider dynamoDbProvider = ParametersManager.DynamoDBProvider
-                .UseTable("my-table");
-                
-            // Retrieve a single parameter
-            string? value = await dynamoDbProvider
-                .GetAsync("my-param")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="10 11 14-16"
+    --8<-- "docs/snippets/parameters/DynamoDbProvider.cs:dynamodb_provider_single"
     ```
 
 **DynamoDB table structure for multiple values parameters**
@@ -317,25 +150,8 @@ You can retrieve multiple parameters sharing the same `id` by having a sort key 
 
 === "DynamoDBProvider"
 
-    ```c# hl_lines="10 11 14-16"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.DynamoDB;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get DynamoDB Provider instance
-            IDynamoDBProvider dynamoDbProvider = ParametersManager.DynamoDBProvider
-                .UseTable("my-table");
-                
-            // Retrieve a single parameter
-            IDictionary<string, string?> value = await dynamoDbProvider
-                .GetMultipleAsync("my-hash-key")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="10 11 14-16"
+    --8<-- "docs/snippets/parameters/DynamoDbProvider.cs:dynamodb_provider_multiple"
     ```
 
 === "parameters dictionary response"
@@ -361,26 +177,8 @@ DynamoDB provider can be customized at initialization to match your table struct
 
 === "DynamoDBProvider"
 
-    ```c# hl_lines="10-17"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.DynamoDB;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get DynamoDB Provider instance
-            IDynamoDBProvider dynamoDbProvider = ParametersManager.DynamoDBProvider
-                .UseTable
-                (
-                    tableName: "TableName",    // DynamoDB table name, Required.
-                    primaryKeyAttribute: "id", // Partition Key attribute name, optional, default is 'id'
-                    sortKeyAttribute: "sk",    // Sort Key attribute name, optional, default is 'sk'
-                    valueAttribute: "value"    // Value attribute name, optional, default is 'value'
-                );
-        }
-    }
+    ```csharp hl_lines="10-17"
+    --8<-- "docs/snippets/parameters/DynamoDbProvider.cs:dynamodb_provider_customizing"
     ```
 
 ## App Configurations
@@ -392,53 +190,14 @@ in order to get data from other regions or use specific credentials.
 
 === "AppConfigProvider"
 
-    ```c# hl_lines="10-13 16-18"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.AppConfig;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get AppConfig Provider instance
-            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
-                .DefaultApplication("MyApplicationId")
-                .DefaultEnvironment("MyEnvironmentId")
-                .DefaultConfigProfile("MyConfigProfileId");
-                
-            // Retrieve a single configuration, latest version
-            IDictionary<string, string?> value = await appConfigProvider
-                .GetAsync()
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="10-13 16-18"
+    --8<-- "docs/snippets/parameters/AppConfigProvider.cs:app_config_provider"
     ```
 
 === "AppConfigProvider with an explicit region"
 
-    ```c# hl_lines="10-14"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.AppConfig;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get AppConfig Provider instance
-            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
-                .ConfigureClient(RegionEndpoint.EUCentral1)
-                .DefaultApplication("MyApplicationId")
-                .DefaultEnvironment("MyEnvironmentId")
-                .DefaultConfigProfile("MyConfigProfileId");
-                
-            // Retrieve a single configuration, latest version
-            IDictionary<string, string?> value = await appConfigProvider
-                .GetAsync()
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="10-14"
+    --8<-- "docs/snippets/parameters/AppConfigProvider.cs:app_config_provider_explicit_region"
     ```
 
 **Using AWS AppConfig Feature Flags**
@@ -447,40 +206,8 @@ Feature flagging is a powerful tool that allows safely pushing out new features 
 
 === "AppConfigProvider"
 
-    ```c# hl_lines="10-13 16-18 23-25"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.AppConfig;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get AppConfig Provider instance
-            IAppConfigProvider appConfigProvider = ParametersManager.AppConfigProvider
-                .DefaultApplication("MyApplicationId")
-                .DefaultEnvironment("MyEnvironmentId")
-                .DefaultConfigProfile("MyConfigProfileId");
-                
-            // Check if feature flag is enabled
-            var isFeatureFlagEnabled = await appConfigProvider
-                .IsFeatureFlagEnabledAsync("MyFeatureFlag")
-                .ConfigureAwait(false);
-            
-            if (isFeatureFlagEnabled)
-            {
-                // Retrieve an attribute value of the feature flag
-                var strAttValue = await appConfigProvider
-                    .GetFeatureFlagAttributeValueAsync<string>("MyFeatureFlag", "StringAttribute")
-                    .ConfigureAwait(false);
-                
-                // Retrieve another attribute value of the feature flag
-                var numberAttValue = await appConfigProvider
-                    .GetFeatureFlagAttributeValueAsync<int>("MyFeatureFlag", "NumberAttribute")
-                    .ConfigureAwait(false);
-            }
-        }
-    }
+    ```csharp hl_lines="10-13 16-18 23-25"
+    --8<-- "docs/snippets/parameters/AppConfigProvider.cs:app_config_feature_flags"
     ```
 
 ## Advanced configuration
@@ -496,71 +223,20 @@ If you'd like to always ensure you fetch the latest parameter from the store reg
 
 === "Provider with default Max age"
 
-    ```c# hl_lines="10 11"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider
-                .DefaultMaxAge(TimeSpan.FromSeconds(10));
-                
-            // Retrieve a single parameter
-            string? value = await ssmProvider
-                .GetAsync("/my/parameter")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="10 11"
+    --8<-- "docs/snippets/parameters/Caching.cs:default_max_age"
     ```
 
 === "Provider with age for each parameter"
 
-    ```c# hl_lines="13-16"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider;
-                
-            // Retrieve a single parameter
-            string? value = await ssmProvider
-                .WithMaxAge(TimeSpan.FromSeconds(10))
-                .GetAsync("/my/parameter")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="13-16"
+    --8<-- "docs/snippets/parameters/Caching.cs:max_age_per_parameter"
     ```
 
 === "Force to fetch the latest parameter"
 
-    ```c# hl_lines="13-16"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider;
-                
-            // Retrieve a single parameter
-            string? value = await ssmProvider
-                .ForceFetch()
-                .GetAsync("/my/parameter")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="13-16"
+    --8<-- "docs/snippets/parameters/Caching.cs:force_fetch"
     ```
 
 ### Transform values
@@ -570,48 +246,14 @@ For more complex transformation, you need to specify how to deserialize by writi
 
 === "JSON Transformation"
 
-    ```c# hl_lines="13-16"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider;
-                
-            // Retrieve a single parameter
-            var value = await ssmProvider
-                .WithTransformation(Transformation.Json)
-                .GetAsync<MyObj>("/my/parameter/json")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="13-16"
+    --8<-- "docs/snippets/parameters/TransformValues.cs:json_transformation"
     ```
 
 === "Base64 Transformation"
 
-    ```c# hl_lines="13-16"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider;
-                
-            // Retrieve a single parameter
-            var value = await ssmProvider
-                .WithTransformation(Transformation.Base64)
-                .GetAsync("/my/parameter/b64")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="13-16"
+    --8<-- "docs/snippets/parameters/TransformValues.cs:base64_transformation"
     ```
 
 #### Partial transform failures with `GetMultiple()`
@@ -622,26 +264,8 @@ You can override this by using ```RaiseTransformationError()```. If you do so, a
 
 === "Function.cs"
 
-    ```c# hl_lines="10 11"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider
-                .RaiseTransformationError();
-                
-            // Retrieve a single parameter
-            var value = await ssmProvider
-                .WithTransformation(Transformation.Json)
-                .GetAsync<MyObj>("/my/parameter/json")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="10 11"
+    --8<-- "docs/snippets/parameters/TransformValues.cs:raise_transformation_error"
     ```
 
 #### Auto-transform values on suffix
@@ -652,26 +276,8 @@ You can do this with a single request by using `Transformation.Auto`. This will 
     
 === "Function.cs"
 
-    ```c# hl_lines="14-17"
-    using AWS.Lambda.Powertools.Parameters;
-    using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
-
-    public class Function
-    {
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            // Get SSM Provider instance
-            ISsmProvider ssmProvider = ParametersManager.SsmProvider;
-                
-            // Retrieve multiple parameters from a path prefix
-            // This returns a Dictionary with the parameter name as key
-            IDictionary<string, object?> values = await ssmProvider
-                .WithTransformation(Transformation.Auto)
-                .GetMultipleAsync("/param")
-                .ConfigureAwait(false);
-        }
-    }
+    ```csharp hl_lines="14-17"
+    --8<-- "docs/snippets/parameters/TransformValues.cs:auto_transform"
     ```
 
 For example, if you have two parameters with the following suffixes `.json` and `.binary`:
@@ -697,42 +303,20 @@ For example, if you wish to deserialize XML into an object.
 
 === "XmlTransformer.cs"
 
-    ```c# hl_lines="1 3"
-    public class XmlTransformer : ITransformer
-    {
-        public T? Transform<T>(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-                return default;
-            
-            var serializer = new XmlSerializer(typeof(T));
-            using var reader = new StringReader(value);
-            return (T?)serializer.Deserialize(reader);
-        }
-    }
+    ```csharp hl_lines="1 3"
+    --8<-- "docs/snippets/parameters/CustomTransformer.cs:xml_transformer"
     ```
 
 === "Using XmlTransformer"
 
-    ```c#
-        var value = await ssmProvider
-            .WithTransformation(new XmlTransformer())
-            .GetAsync<MyObj>("/my/parameter/xml")
-            .ConfigureAwait(false);
+    ```csharp
+    --8<-- "docs/snippets/parameters/CustomTransformer.cs:using_xml_transformer"
     ```
 
 === "Adding XmlTransformer as transformer"
 
-    ```c# hl_lines="2 3 7"
-        // Get SSM Provider instance
-        ISsmProvider ssmProvider = ParametersManager.SsmProvider
-            .AddTransformer("XML", new XmlTransformer());
-
-        // Retrieve a single parameter
-        var value = await ssmProvider
-            .WithTransformation("XML")
-            .GetAsync<MyObj>("/my/parameter/xml")
-            .ConfigureAwait(false);
+    ```csharp hl_lines="2 3 7"
+    --8<-- "docs/snippets/parameters/CustomTransformer.cs:adding_xml_transformer"
     ```
 
 ### Fluent API
@@ -741,13 +325,8 @@ To simplify the use of the library, you can chain all method calls before a get.
 
 === "Fluent API call"
 
-    ```c#
-        ssmProvider
-          .DefaultMaxAge(TimeSpan.FromSeconds(10))  // will set 10 seconds as the default cache TTL
-          .WithMaxAge(TimeSpan.FromMinutes(1))      // will set the cache TTL for this value at 1 minute
-          .WithTransformation(Transformation.Json)  // Will use JSON transfomer to deserializes JSON to an object
-          .WithDecryption()                         // enable decryption of the parameter value
-          .Get<MyObj>("/my/param");                 // finally get the value
+    ```csharp
+    --8<-- "docs/snippets/parameters/CustomTransformer.cs:fluent_api"
     ```
 
 ## Create your own provider
@@ -757,84 +336,13 @@ You can create your own custom parameter provider by inheriting the ```BaseProvi
 
 === "Example implementation using S3 as a custom parameter"
 
-    ```c#
-    public class S3Provider : ParameterProvider
-    {
-    
-        private string _bucket;
-        private readonly IAmazonS3 _client;
-    
-        public S3Provider()
-        {
-            _client = new AmazonS3Client();
-        }
-
-        public S3Provider(IAmazonS3 client)
-        {
-            _client = client;
-        }
-    
-        public S3Provider WithBucket(string bucket)
-        {
-            _bucket = bucket;
-            return this;
-        }
-    
-        protected override async Task<string?> GetAsync(string key, ParameterProviderConfiguration? config)
-        {
-            if (string.IsNullOrEmpty(key))
-                throw new ArgumentNullException(nameof(key));
-
-            if (string.IsNullOrEmpty(_bucket))
-                throw new ArgumentException("A bucket must be specified, using withBucket() method");
-
-            var request = new GetObjectRequest
-            {
-                Key = key,
-                BucketName = _bucket
-            };
-
-            using var response = await _client.GetObjectAsync(request);
-            await using var responseStream = response.ResponseStream;
-            using var reader = new StreamReader(responseStream);
-            return await reader.ReadToEndAsync();
-        }
-    
-         protected override async Task<IDictionary<string, string?>> GetMultipleAsync(string path, ParameterProviderConfiguration? config)
-        {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException(nameof(path));
-
-            if (string.IsNullOrEmpty(_bucket))
-                throw new ArgumentException("A bucket must be specified, using withBucket() method");
-
-            var request = new ListObjectsV2Request
-            {
-                Prefix = path,
-                BucketName = _bucket
-            };
-            var response = await _client.ListObjectsV2Async(request);
-
-            var result = new Dictionary<string, string?>();
-            foreach (var s3Object in response.S3Objects)
-            {
-                var value = await GetAsync(s3Object.Key);
-                result.Add(s3Object.Key, value);
-            }
-
-            return result;
-        }
-    }
+    ```csharp
+    --8<-- "docs/snippets/parameters/CustomProvider.cs:s3_provider"
     ```
 
 === "Using custom parameter store"
 
-    ```c#
-        var provider = new S3Provider();
-        
-        var value = await provider
-            .WithBucket("myBucket")
-            .GetAsync("myKey")
-            .ConfigureAwait(false);
+    ```csharp
+    --8<-- "docs/snippets/parameters/CustomProvider.cs:using_custom_provider"
     ```
 
