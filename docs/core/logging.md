@@ -70,78 +70,20 @@ You can also use the `ILogger` interface to log messages. This interface is part
 
 === "Using decorator"
 
-    ```c# hl_lines="6 10"
-        /**
-         * Handler for requests to Lambda function.
-         */
-        public class Function
-        {
-            [Logging(Service = "payment", LogLevel = LogLevel.Debug)]
-            public async Task<APIGatewayProxyResponse> FunctionHandler
-                (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-            {
-                Logger.LogInformation("Collecting payment");
-                ...
-            }
-        }
+    ```csharp hl_lines="6 10"
+    --8<-- "docs/snippets/logging/GettingStarted.cs:using_decorator"
     ```
 
 === "Logger Factory"
 
-    ```c# hl_lines="6 10-17 23"
-        /**
-         * Handler for requests to Lambda function.
-         */
-        public class Function
-        {
-            private readonly ILogger _logger;
-    
-            public Function(ILoggerFactory loggerFactory)
-            {
-                _logger = loggerFactory.Create(builder =>
-                {
-                    builder.AddPowertoolsLogger(config =>
-                    {
-                        config.Service = "TestService";
-                        config.LoggerOutputCase = LoggerOutputCase.PascalCase;
-                    });
-                }).CreatePowertoolsLogger();
-            }
-    
-            public async Task<APIGatewayProxyResponse> FunctionHandler
-                (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-            {
-                _logger.LogInformation("Collecting payment");
-                ...
-            }
-        }
+    ```csharp hl_lines="6 10-17 23"
+    --8<-- "docs/snippets/logging/GettingStarted.cs:logger_factory"
     ```
 
 === "With Builder"
 
-    ```c# hl_lines="6 10-13 19"
-        /**
-         * Handler for requests to Lambda function.
-         */
-        public class Function
-        {
-            private readonly ILogger _logger;
-    
-            public Function(ILogger logger)
-            {
-                _logger = logger ?? new PowertoolsLoggerBuilder()
-                    .WithService("TestService")
-                    .WithOutputCase(LoggerOutputCase.PascalCase)
-                    .Build();
-            }
-    
-            public async Task<APIGatewayProxyResponse> FunctionHandler
-                (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-            {
-                _logger.LogInformation("Collecting payment");
-                ...
-            }
-        }
+    ```csharp hl_lines="6 10-13 19"
+    --8<-- "docs/snippets/logging/GettingStarted.cs:with_builder"
     ```
 
 ### Customizing the logger
@@ -168,26 +110,9 @@ Lambda function is initialized. You can configure the logger using the `Logger.C
 
 === "Configure static Logger"
 
-```c# hl_lines="5-9"
-    public class Function
-    {
-        public Function()
-        {
-            Logger.Configure(options =>
-            {
-                options.MinimumLogLevel = LogLevel.Information;
-                options.LoggerOutputCase = LoggerOutputCase.CamelCase;
-            });
-        }
-
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            Logger.LogInformation("Collecting payment");
-            ...
-        }
-    }
-```
+    ```csharp hl_lines="5-9"
+    --8<-- "docs/snippets/logging/Configuration.cs:configure_static_logger"
+    ```
 
 ### ILogger
 You can also use the `ILogger` interface to log messages. This interface is part of the Microsoft.Extensions.Logging.
@@ -195,28 +120,8 @@ With this approach you get more flexibility and testability using dependency inj
 
 === "Configure with LoggerFactory or Builder"
 
-    ```c# hl_lines="5-12"
-        public class Function
-        {
-            public Function(ILogger logger)
-            {
-                _logger = logger ?? LoggerFactory.Create(builder =>
-                {
-                    builder.AddPowertoolsLogger(config =>
-                    {
-                        config.Service = "TestService";
-                        config.LoggerOutputCase = LoggerOutputCase.PascalCase;
-                    });
-                }).CreatePowertoolsLogger();
-            }
-    
-            public async Task<APIGatewayProxyResponse> FunctionHandler
-                (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-            {
-                Logger.LogInformation("Collecting payment");
-                ...
-            }
-        }
+    ```csharp hl_lines="5-12"
+    --8<-- "docs/snippets/logging/Configuration.cs:configure_ilogger"
     ```
 
 ## Standard structured keys
@@ -254,41 +159,15 @@ You can use message templates to extract properties from your objects and log th
     This is especially important when using `{}` to log the object as a string.
 
     ```csharp
-        public class User
-        {
-            public string FirstName { get; set; }
-            public string LastName { get; set; }
-            public int Age { get; set; }
-
-            public override string ToString()
-            {
-                return $"{LastName}, {FirstName} ({Age})";
-            }
-        }
+    --8<-- "docs/snippets/logging/MessageTemplates.cs:tostring_override"
     ```
 
 If you want to log the object as a JSON object, use `{@}`. This will serialize the object and log it as a JSON object.
 
 === "Message template {@}"
 
-    ```c# hl_lines="7-14"
-        public class Function
-        {
-            [Logging(Service = "user-service", LogLevel = LogLevel.Information)]
-            public async Task<APIGatewayProxyResponse> FunctionHandler
-                (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-            {
-                var user = new User
-                {
-                    FirstName = "John",
-                    LastName = "Doe",
-                    Age = 42
-                };
-
-                logger.LogInformation("User object: {@user}", user);
-                ...
-            }
-        }
+    ```csharp hl_lines="7-14"
+    --8<-- "docs/snippets/logging/MessageTemplates.cs:message_template_at"
     ```
 
 === "{@} Output"
@@ -315,29 +194,8 @@ a string.
 
 === "Message template {} ToString"
 
-    ```c# hl_lines="7-12 14 18 19"
-        public class Function
-        {
-            [Logging(Service = "user", LogLevel = LogLevel.Information)]
-            public async Task<APIGatewayProxyResponse> FunctionHandler
-                (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-            {
-                var user = new User
-                {
-                    FirstName = "John",
-                    LastName = "Doe",
-                    Age = 42
-                };
-
-                logger.LogInformation("User data: {user}", user);
-                
-                // Also works with numbers, dates, etc.
-
-                logger.LogInformation("Price: {price:0.00}", 123.4567); // will respect decimal places
-                logger.LogInformation("Percentage: {percent:0.0%}", 0.1234);
-                ...
-            }
-        }
+    ```csharp hl_lines="7-12 14 18 19"
+    --8<-- "docs/snippets/logging/MessageTemplates.cs:message_template_tostring"
     ```
 
 === "Output {} ToString"
@@ -383,19 +241,8 @@ parameter or via `POWERTOOLS_LOGGER_LOG_EVENT` environment variable.
 
 === "Function.cs"
 
-    ```c# hl_lines="6"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging(LogEvent = true)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-        }
-    }
+    ```csharp hl_lines="6"
+    --8<-- "docs/snippets/logging/LoggingEvent.cs:log_event"
     ```
 
 ## Setting a Correlation ID
@@ -409,19 +256,8 @@ a [JSON Pointer expression](https://datatracker.ietf.org/doc/html/draft-ietf-app
 
 === "Function.cs"
 
-    ```c# hl_lines="6"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging(CorrelationIdPath = "/headers/my_request_id_header")]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-        }
-    }
+    ```csharp hl_lines="6"
+    --8<-- "docs/snippets/logging/CorrelationId.cs:correlation_id_custom"
     ```
 
 === "Example Event"
@@ -461,19 +297,8 @@ for known event sources, where either a request ID or X-Ray Trace ID are present
 
 === "Function.cs"
 
-    ```c# hl_lines="6"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging(CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-        }
-    }
+    ```csharp hl_lines="6"
+    --8<-- "docs/snippets/logging/CorrelationId.cs:correlation_id_builtin"
     ```
 
 === "Example Event"
@@ -520,32 +345,8 @@ Lambda handler.
 
 === "Function.cs"
 
-    ```c# hl_lines="21"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging(LogEvent = true)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
-            ILambdaContext context)
-        {
-            var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
-            
-        var lookupInfo = new Dictionary<string, object>()
-        {
-            {"LookupInfo", new Dictionary<string, object>{{ "LookupId", requestContextRequestId }}}
-        };  
-
-        // Appended keys are added to all subsequent log entries in the current execution.
-        // Call this method as early as possible in the Lambda handler.
-        // Typically this is value would be passed into the function via the event.
-        // Set the ClearState = true to force the removal of keys across invocations,
-        Logger.AppendKeys(lookupInfo);
-
-        Logger.LogInformation("Getting ip address from external service");
-
-    }
+    ```csharp hl_lines="21"
+    --8<-- "docs/snippets/logging/AppendingKeys.cs:append_keys"
     ```
 
 === "Example CloudWatch Logs excerpt"
@@ -576,32 +377,8 @@ You can remove any additional key from entry using `Logger.RemoveKeys()`.
 
 === "Function.cs"
 
-    ```c# hl_lines="21 22"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging(LogEvent = true)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-            Logger.AppendKey("test", "willBeLogged");
-            ...
-            var customKeys = new Dictionary<string, string>
-            {
-                {"test1", "value1"}, 
-                {"test2", "value2"}
-            };
-            
-            Logger.AppendKeys(customKeys);
-            ...
-            Logger.RemoveKeys("test");
-            Logger.RemoveKeys("test1", "test2");
-            ...
-        }
-    }
+    ```csharp hl_lines="21 22"
+    --8<-- "docs/snippets/logging/AppendingKeys.cs:remove_keys"
     ```
 
 ### Temporary keys with ExtraKeys
@@ -612,82 +389,20 @@ Keys are automatically removed when the scope ends, eliminating the need to manu
 
 === "Using Dictionary"
 
-    ```c# hl_lines="12-16"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            var orderId = apigProxyEvent.PathParameters["orderId"];
-            
-            using (Logger.ExtraKeys(new Dictionary<string, object> { { "orderId", orderId } }))
-            {
-                Logger.LogInformation("Processing order");
-                await ProcessOrderAsync(orderId);
-                Logger.LogInformation("Order processed"); // orderId included
-            }
-            // orderId is automatically removed
-            
-            Logger.LogInformation("Continuing without orderId");
-        }
-    }
+    ```csharp hl_lines="12-16"
+    --8<-- "docs/snippets/logging/ExtraKeys.cs:extra_keys_dictionary"
     ```
 
 === "Using Tuples"
 
-    ```c# hl_lines="12-16"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            var orderId = apigProxyEvent.PathParameters["orderId"];
-            
-            using (Logger.ExtraKeys(("orderId", orderId), ("customerId", "customer-123")))
-            {
-                Logger.LogInformation("Processing order");
-                await ProcessOrderAsync(orderId);
-                Logger.LogInformation("Order processed"); // orderId and customerId included
-            }
-            // Both keys are automatically removed
-        }
-    }
+    ```csharp hl_lines="12-16"
+    --8<-- "docs/snippets/logging/ExtraKeys.cs:extra_keys_tuples"
     ```
 
 === "Nested Scopes"
 
-    ```c# hl_lines="10-19"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            using (Logger.ExtraKeys(("requestId", context.AwsRequestId)))
-            {
-                Logger.LogInformation("Starting request"); // requestId included
-                
-                using (Logger.ExtraKeys(("step", "validation")))
-                {
-                    Logger.LogInformation("Validating"); // requestId AND step included
-                }
-                // step removed, requestId still present
-                
-                Logger.LogInformation("Request complete"); // only requestId
-            }
-        }
-    }
+    ```csharp hl_lines="10-19"
+    --8<-- "docs/snippets/logging/ExtraKeys.cs:extra_keys_nested"
     ```
 
 === "Example CloudWatch Logs excerpt"
@@ -735,29 +450,8 @@ log statement.
 
 === "Function.cs"
 
-    ```c# hl_lines="16"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging(LogEvent = true)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
-            ILambdaContext context)
-        {
-            var requestContextRequestId = apigwProxyEvent.RequestContext.RequestId;
-            
-            var lookupId = new Dictionary<string, object>()
-            {
-                { "LookupId", requestContextRequestId }
-            };
-
-            // Appended keys are added to all subsequent log entries in the current execution.
-            // Call this method as early as possible in the Lambda handler.
-            // Typically this is value would be passed into the function via the event.
-            // Set the ClearState = true to force the removal of keys across invocations,
-            Logger.AppendKeys(lookupId);
-    }
+    ```csharp hl_lines="16"
+    --8<-- "docs/snippets/logging/ExtraKeys.cs:extra_keys_single_entry"
     ```
 
 ### Clearing all state
@@ -769,26 +463,8 @@ custom keys can be persisted across invocations. If you want all custom keys to 
 
 === "Function.cs"
 
-    ```cs hl_lines="6 13"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging(ClearState = true)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-            if (apigProxyEvent.Headers.ContainsKey("SomeSpecialHeader"))
-            {
-                Logger.AppendKey("SpecialKey", "value");
-            }
-
-            Logger.LogInformation("Collecting payment");
-            ...
-        }
-    }
+    ```csharp hl_lines="6 13"
+    --8<-- "docs/snippets/logging/ClearState.cs:clear_state"
     ```
 
 === "#1 Request"
@@ -839,43 +515,14 @@ The sampling decision happens automatically with each invocation when using `Log
 
 === "Sampling via attribute parameter"
 
-    ```c# hl_lines="6"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging(SamplingRate = 0.5)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-        }
-    }
+    ```csharp hl_lines="6"
+    --8<-- "docs/snippets/logging/SamplingDebugLogs.cs:sampling_attribute"
     ```
 
 === "Sampling Logger.Configure"
 
-    ```c# hl_lines="5-10 16"
-    public class Function
-    {
-        public Function()
-        {
-            Logger.Configure(options =>
-            {
-                options.MinimumLogLevel = LogLevel.Information;
-                options.LoggerOutputCase = LoggerOutputCase.CamelCase;
-                options.SamplingRate = 0.1; // 10% sampling
-            });
-        }
-
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            Logger.RefreshSampleRateCalculation();            
-            ...
-        }
-    }
+    ```csharp hl_lines="5-10 16"
+    --8<-- "docs/snippets/logging/SamplingDebugLogs.cs:sampling_configure"
     ```
 
 === "Sampling via environment variable"
@@ -904,19 +551,8 @@ values are: `CamelCase`, `PascalCase` and `SnakeCase`.
 
 === "Output casing via attribute parameter"
 
-    ```c# hl_lines="6"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        [Logging(LoggerOutputCase = LoggerOutputCase.CamelCase)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-        }
-    }
+    ```csharp hl_lines="6"
+    --8<-- "docs/snippets/logging/OutputCasing.cs:output_casing_attribute"
     ```
 
 Below are some output examples for different casing.
@@ -1065,14 +701,7 @@ customize the serialization of Powertools Logger.
     `null`.
 
 ```csharp
-builder.Logging.AddPowertoolsLogger(options => 
-{
-    options.JsonOptions = new JsonSerializerOptions
-    {
-        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase, // Override output casing
-        TypeInfoResolver = MyCustomJsonSerializerContext.Default // Your custom JsonSerializerContext
-    };
-});
+--8<-- "docs/snippets/logging/AdvancedConfiguration.cs:json_serializer_options"
 ```
 
 !!! warning
@@ -1081,11 +710,7 @@ builder.Logging.AddPowertoolsLogger(options =>
     If you want to use Powertools Logger as the only logging provider, you should call `builder.Logging.ClearProviders()` before adding Powertools Logger or the new method override
     
     ```csharp
-    builder.Logging.AddPowertoolsLogger(config =>
-        {
-        config.Service = "TestService";
-        config.LoggerOutputCase = LoggerOutputCase.PascalCase;
-        }, clearExistingProviders: true);
+    --8<-- "docs/snippets/logging/AdvancedConfiguration.cs:clear_providers"
     ```
 
 ### Custom Log formatter (Bring Your Own Formatter)
@@ -1098,67 +723,14 @@ inheriting the ``ILogFormatter`` class and implementing the ``object FormatLogEn
 
 === "Function.cs"
 
-    ```c# hl_lines="11"
-    /**
-     * Handler for requests to Lambda function.
-     */
-    public class Function
-    {
-        /// <summary>
-        /// Function constructor
-        /// </summary>
-        public Function()
-        {
-            Logger.Configure(options =>
-            {
-                options.LogFormatter = new CustomLogFormatter();
-            });
-        }
-
-        [Logging(CorrelationIdPath = "/headers/my_request_id_header", SamplingRate = 0.7)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            ...
-        }
-    }
+    ```csharp hl_lines="11"
+    --8<-- "docs/snippets/logging/CustomLogFormatter.cs:custom_log_formatter_function"
     ```
 
 === "CustomLogFormatter.cs"
 
     ```csharp
-    public class CustomLogFormatter : ILogFormatter
-    {
-        public object FormatLogEntry(LogEntry logEntry)
-        {
-            return new
-            {
-                Message = logEntry.Message,
-                Service = logEntry.Service,
-                CorrelationIds = new 
-                {
-                    AwsRequestId = logEntry.LambdaContext?.AwsRequestId,
-                    XRayTraceId = logEntry.XRayTraceId,
-                    CorrelationId = logEntry.CorrelationId
-                },
-                LambdaFunction = new
-                {
-                    Name = logEntry.LambdaContext?.FunctionName,
-                    Arn = logEntry.LambdaContext?.InvokedFunctionArn,
-                    MemoryLimitInMB = logEntry.LambdaContext?.MemoryLimitInMB,
-                    Version = logEntry.LambdaContext?.FunctionVersion,
-                    ColdStart = logEntry.ColdStart,
-                },
-                Level = logEntry.Level.ToString(),
-                Timestamp = logEntry.Timestamp.ToString("o"),
-                Logger = new
-                {
-                    Name = logEntry.Name,
-                    SampleRate = logEntry.SamplingRate
-                },
-            };
-        }
-    }
+    --8<-- "docs/snippets/logging/CustomLogFormatter.cs:custom_log_formatter_class"
     ```
 
 === "Example CloudWatch Logs excerpt"
@@ -1197,35 +769,7 @@ Log buffering enables you to buffer logs for a specific request or invocation. E
 === "LogBufferingOptions"
 
     ```csharp hl_lines="5-12"
-    public class Function 
-    {
-        public Function()
-        {
-          Logger.Configure(logger =>
-          {
-              logger.Service = "MyServiceName";
-              logger.LogBuffering.Enabled = true;
-              logger.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
-              logger.LogBuffering.MaxBytes = 20480; // Default is 20KB (20480 bytes) 
-              logger.LogBuffering.FlushOnErrorLog = true; // default true
-          });
-
-          Logger.LogDebug('This is a debug message'); // This is NOT buffered
-        }
-
-        [Logging]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-            Logger.LogDebug('This is a debug message'); // This is buffered
-            Logger.LogInformation('This is an info message');
-            
-            // your business logic here
-            
-            Logger.LogError('This is an error message'); // This also flushes the buffer
-        }
-    }
-      
+    --8<-- "docs/snippets/logging/LogBuffering.cs:buffering_options"
     ```
 
 #### Configuring the buffer
@@ -1242,30 +786,7 @@ When configuring the buffer, you can set the following options to fine-tune how 
 === "BufferAtLogLevel"
 
     ```csharp hl_lines="10 11"
-    public class Function 
-    {
-        public Function()
-        {
-          Logger.Configure(logger =>
-          {
-              logger.Service = "MyServiceName";
-              logger.LogBuffering.Enabled = true;
-              logger.LogBuffering.BufferAtLogLevel = LogLevel.Warning;
-          });
-        }
-
-        [Logging]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-          // All logs below are buffered
-          Logger.LogDebug('This is a debug message');
-          Logger.LogInformation('This is an info message');
-          Logger.LogWarning('This is a warn message');
-          
-          Logger.ClearBuffer(); // This will clear the buffer without emitting the logs
-        }
-    }
+    --8<-- "docs/snippets/logging/LogBuffering.cs:buffer_at_log_level"
     ```
 
     1. Setting `BufferAtLogLevel: 'Warning'` configures log buffering for `Warning` and all lower severity levels like `Information`, `Debug`, and `Trace`.
@@ -1274,46 +795,7 @@ When configuring the buffer, you can set the following options to fine-tune how 
 === "FlushOnErrorLog"
 
     ```csharp hl_lines="10 11"
-    public class Function 
-    {
-        public Function()
-        {
-          Logger.Configure(logger =>
-          {
-              logger.Service = "MyServiceName";
-              logger.LogBuffering.Enabled = true;
-              logger.LogBuffering.FlushOnErrorLog = false;
-          });
-        }
-
-        [Logging]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-          Logger.LogDebug('This is a debug message'); // this is buffered
-
-          try
-          {
-              throw new Exception();
-          }
-          catch (Exception e)
-          {
-              Logger.LogError(e.Message); // this does NOT flush the buffer
-          }
-          
-          Logger.LogDebug("Debug!!"); // this is buffered
-          
-          try
-          {
-              throw new Exception();
-          }
-          catch (Exception e)
-          {
-              Logger.LogError(e.Message); // this does NOT flush the buffer
-              Logger.FlushBuffer(); // Manually flush
-          }
-        }
-    }
+    --8<-- "docs/snippets/logging/LogBuffering.cs:flush_on_error_log"
     ```
 
     1. Disabling `FlushOnErrorLog` will not flush the buffer when logging an error. This is useful when you want to control when the buffer is flushed by calling the `Logger.FlushBuffer()` method.
@@ -1325,27 +807,7 @@ When using the `Logger` decorator, you can configure the logger to automatically
 === "FlushBufferOnUncaughtError"
 
     ```csharp hl_lines="14"
-    public class Function 
-    {
-        public Function()
-        {
-          Logger.Configure(logger =>
-          {
-              logger.Service = "MyServiceName";
-              logger.LogBuffering.Enabled = true;
-              logger.LogBuffering.BufferAtLogLevel = LogLevel.Debug;
-          });
-        }
-
-        [Logging(FlushBufferOnUncaughtError = true)]
-        public async Task<APIGatewayProxyResponse> FunctionHandler
-            (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-        {
-          Logger.LogDebug('This is a debug message');
-          
-          throw new Exception(); // This causes the buffer to be flushed
-        }
-    }
+    --8<-- "docs/snippets/logging/LogBuffering.cs:flush_buffer_on_uncaught_error"
     ```
 
 #### Buffering workflows
@@ -1460,10 +922,7 @@ You can use any valid [DateTime format string](https://docs.microsoft.com/en-us/
 For example, to use the `yyyy-MM-dd HH:mm:ss` format, you can do the following:
 
 ```csharp
-Logger.Configure(logger =>
-{
-    logger.TimestampFormat = "yyyy-MM-dd HH:mm:ss";
-});
+--8<-- "docs/snippets/logging/TimestampFormatting.cs:timestamp_formatting"
 ```
 This will output the timestamp in the following format:
 
@@ -1492,13 +951,7 @@ This will output the timestamp in the following format:
 To be able to serializer your own types, you need to pass your `JsonSerializerContext` to the `TypeInfoResolver` of the `Logger.Configure` method.
 
 ```csharp
-Logger.Configure(logger => 
-{
-    logger.JsonOptions = new JsonSerializerOptions
-    {
-        TypeInfoResolver = YourJsonSerializerContext.Default
-    };
-});
+--8<-- "docs/snippets/logging/AotSupport.cs:json_serializer_options_aot"
 ```
 
 ### Using PowertoolsSourceGeneratorSerializer
@@ -1511,40 +964,25 @@ and deserialization of Lambda JSON events and your own types.
 === "Before"
 
     ```csharp
-     Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
-     await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<MyCustomJsonSerializerContext>())
-         .Build()
-         .RunAsync();
+    --8<-- "docs/snippets/logging/AotSupport.cs:before_aot"
     ```
 
 === "After"
 
     ```csharp hl_lines="2"
-    Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
-    await LambdaBootstrapBuilder.Create(handler, new PowertoolsSourceGeneratorSerializer<MyCustomJsonSerializerContext>())
-        .Build()
-        .RunAsync();
+    --8<-- "docs/snippets/logging/AotSupport.cs:after_aot"
     ```
 
 For example when you have your own Demo type
 
 ```csharp
-public class Demo
-{
-    public string Name { get; set; }
-    public Headers Headers { get; set; }
-}
+--8<-- "docs/snippets/logging/AotSupport.cs:demo_class"
 ```
 
 To be able to serialize it in AOT you have to have your own `JsonSerializerContext`
 
 ```csharp
-[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
-[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
-[JsonSerializable(typeof(Demo))]
-public partial class MyCustomJsonSerializerContext : JsonSerializerContext
-{
-}
+--8<-- "docs/snippets/logging/AotSupport.cs:json_serializer_context"
 ```
 
 When you update your code to use `PowertoolsSourceGeneratorSerializer<MyCustomJsonSerializerContext>`, we combine your
@@ -1559,54 +997,13 @@ instead of using the static `Logger.UseFormatter` in the Function constructor as
 === "Function Main method"
 
     ```csharp hl_lines="5"
-
-    Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
-    await LambdaBootstrapBuilder.Create(handler, 
-        new PowertoolsSourceGeneratorSerializer<LambdaFunctionJsonSerializerContext>
-        ( 
-            new CustomLogFormatter()
-        )
-    )
-    .Build()
-    .RunAsync();
-    
+    --8<-- "docs/snippets/logging/AotSupport.cs:custom_log_formatter_aot_function"
     ```
 
 === "CustomLogFormatter.cs"
 
     ```csharp
-    public class CustomLogFormatter : ILogFormatter
-    {
-        public object FormatLogEntry(LogEntry logEntry)
-        {
-            return new
-            {
-                Message = logEntry.Message,
-                Service = logEntry.Service,
-                CorrelationIds = new
-                {
-                    AwsRequestId = logEntry.LambdaContext?.AwsRequestId,
-                    XRayTraceId = logEntry.XRayTraceId,
-                    CorrelationId = logEntry.CorrelationId
-                },
-                LambdaFunction = new
-                {
-                    Name = logEntry.LambdaContext?.FunctionName,
-                    Arn = logEntry.LambdaContext?.InvokedFunctionArn,
-                    MemoryLimitInMB = logEntry.LambdaContext?.MemoryLimitInMB,
-                    Version = logEntry.LambdaContext?.FunctionVersion,
-                    ColdStart = logEntry.ColdStart,
-                },
-                Level = logEntry.Level.ToString(),
-                Timestamp = logEntry.Timestamp.ToString("o"),
-                Logger = new
-                {
-                Name = logEntry.Name,
-                SampleRate = logEntry.SamplingRate
-                },
-            };
-        }
-    }
+    --8<-- "docs/snippets/logging/AotSupport.cs:custom_log_formatter_aot_class"
     ```
 
 ### Anonymous types
@@ -1623,49 +1020,10 @@ You can change where the `Logger` will output its logs by setting the `LogOutput
 We also provide a helper class for tests `TestLoggerOutput` or you can provider your own implementation of `IConsoleWrapper`.
 
 ```csharp
-Logger.Configure(options =>
-{
-    // Using TestLoggerOutput
-    options.LogOutput = new TestLoggerOutput();
-    // Custom console output for testing
-    options.LogOutput = new TestConsoleWrapper();
-});
-
-// Example implementation for testing:
-public class TestConsoleWrapper : IConsoleWrapper
-{
-    public List<string> CapturedOutput { get; } = new();
-    
-    public void WriteLine(string message)
-    {
-        CapturedOutput.Add(message);
-    }
-}
+--8<-- "docs/snippets/logging/Testing.cs:testing_setup"
 ```
 ```csharp
-// Test example
-[Fact]
-public void When_Setting_Service_Should_Update_Key()
-{
-    // Arrange
-    var consoleOut = new TestLoggerOutput();
-    Logger.Configure(options =>
-    {
-        options.LogOutput = consoleOut;
-    });
-    
-    // Act
-    _testHandlers.HandlerService();
-
-    // Assert
-
-    var st = consoleOut.ToString();
-
-    Assert.Contains("\"level\":\"Information\"", st);
-    Assert.Contains("\"service\":\"test\"", st);
-    Assert.Contains("\"name\":\"AWS.Lambda.Powertools.Logging.Logger\"", st);
-    Assert.Contains("\"message\":\"test\"", st);
-}
+--8<-- "docs/snippets/logging/Testing.cs:test_example"
 ```
 
 ### ILogger
@@ -1673,42 +1031,7 @@ public void When_Setting_Service_Should_Update_Key()
 If you are using ILogger interface you can inject the logger in a dedicated constructor for your Lambda function and thus you can mock your ILogger instance.
 
 ```csharp
-public class Function
-{
-    private readonly ILogger _logger;
-
-    public Function()
-    {
-        _logger = oggerFactory.Create(builder =>
-        {
-            builder.AddPowertoolsLogger(config =>
-            {
-                config.Service = "TestService";
-                config.LoggerOutputCase = LoggerOutputCase.PascalCase;
-            });
-        }).CreatePowertoolsLogger();
-    }
-    
-    // constructor used for tests - pass the mock ILogger
-    public Function(ILogger logger)
-    {
-        _logger = logger ?? loggerFactory.Create(builder =>
-        {
-            builder.AddPowertoolsLogger(config =>
-            {
-                config.Service = "TestService";
-                config.LoggerOutputCase = LoggerOutputCase.PascalCase;
-            });
-        }).CreatePowertoolsLogger();
-    }
-
-    public async Task<APIGatewayProxyResponse> FunctionHandler
-        (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
-    {
-        _logger.LogInformation("Collecting payment");
-        ...
-    }
-}
+--8<-- "docs/snippets/logging/Testing.cs:ilogger_testing"
 ```
 
 
