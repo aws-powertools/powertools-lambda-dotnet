@@ -517,6 +517,98 @@ public class HandlerTests
         }
     }
 
+    [Theory]
+    [InlineData("Trace", "LEVELTEST trace", true)]
+    [InlineData("Trace", "LEVELTEST debug", true)]
+    [InlineData("Trace", "LEVELTEST information", true)]
+    [InlineData("Debug", "LEVELTEST debug", true)]
+    [InlineData("Debug", "LEVELTEST information", true)]
+    [InlineData("Debug", "LEVELTEST trace", false)]
+    [InlineData("Information", "LEVELTEST trace", false)]
+    [InlineData("Information", "LEVELTEST debug", false)]
+    [InlineData("Information", "LEVELTEST information", true)]
+    public void PowertoolsLogLevel_EnvVar_ShouldFilterCorrectly(string envLogLevel, string expectedMessage, bool shouldAppear)
+    {
+        var originalLogLevel = Environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", envLogLevel);
+
+            var output = new TestLoggerOutput();
+            Logger.Reset();
+            Logger.Configure(options =>
+            {
+                options.LogOutput = output;
+                options.Service = "LevelTestService";
+            });
+
+            Logger.LogTrace("LEVELTEST trace");
+            Logger.LogDebug("LEVELTEST debug");
+            Logger.LogInformation("LEVELTEST information");
+
+            var logOutput = output.ToString();
+            _output.WriteLine(logOutput);
+
+            if (shouldAppear)
+            {
+                Assert.Contains(expectedMessage, logOutput);
+            }
+            else
+            {
+                Assert.DoesNotContain(expectedMessage, logOutput);
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", originalLogLevel);
+            Logger.Reset();
+        }
+    }
+
+    [Fact]
+    public void PowertoolsLogLevel_Trace_ViaLoggerFactory_ShouldEmitAllLevels()
+    {
+        var originalLogLevel = Environment.GetEnvironmentVariable("POWERTOOLS_LOG_LEVEL");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", "Trace");
+
+            var output = new TestLoggerOutput();
+            var logger = LoggerFactory.Create(builder =>
+            {
+                builder.AddPowertoolsLogger(config =>
+                {
+                    config.Service = "LevelTestService";
+                    config.LogOutput = output;
+                });
+            }).CreatePowertoolsLogger();
+
+            logger.LogTrace("LEVELTEST trace");
+            logger.LogDebug("LEVELTEST debug");
+            logger.LogInformation("LEVELTEST information");
+            logger.LogWarning("LEVELTEST warning");
+            logger.LogError("LEVELTEST error");
+            logger.LogCritical("LEVELTEST critical");
+
+            var logOutput = output.ToString();
+            _output.WriteLine(logOutput);
+
+            Assert.Contains("LEVELTEST trace", logOutput);
+            Assert.Contains("LEVELTEST debug", logOutput);
+            Assert.Contains("LEVELTEST information", logOutput);
+            Assert.Contains("LEVELTEST warning", logOutput);
+            Assert.Contains("LEVELTEST error", logOutput);
+            Assert.Contains("LEVELTEST critical", logOutput);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", originalLogLevel);
+            Logger.Reset();
+        }
+    }
+
     /// <summary>
     /// Test with 0% sampling rate to ensure info logs are not elevated
     /// </summary>

@@ -24,6 +24,17 @@ class TestHandlers
     {
     }
 
+    [Logging(ClearState = true)]
+    public void TestMethodAllLevels()
+    {
+        Logger.LogTrace("LEVELTEST trace");
+        Logger.LogDebug("LEVELTEST debug");
+        Logger.LogInformation("LEVELTEST information");
+        Logger.LogWarning("LEVELTEST warning");
+        Logger.LogError("LEVELTEST error");
+        Logger.LogCritical("LEVELTEST critical");
+    }
+
     [Logging(LogEvent = true)]
     public void LogEventNoArgs()
     {

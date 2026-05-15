@@ -727,6 +727,44 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Attributes
                 s.Contains("\"message\":\"This should NOT be logged\"")));
         }
         
+        [Theory]
+        // Reproduces issue #1205 test matrix
+        [InlineData(null,            "information,warning,error,critical", "trace,debug")]
+        [InlineData("Trace",         "trace,debug,information,warning,error,critical", "")]
+        [InlineData("Debug",         "debug,information,warning,error,critical", "trace")]
+        [InlineData("Information",   "information,warning,error,critical", "trace,debug")]
+        [InlineData("Warning",       "warning,error,critical", "trace,debug,information")]
+        [InlineData("Error",         "error,critical", "trace,debug,information,warning")]
+        [InlineData("Critical",      "critical", "trace,debug,information,warning,error")]
+        public void LoggingAttribute_ShouldRespectEnvVarLogLevel(string envLogLevel, string expectedCsv, string missingCsv)
+        {
+            // Reproduces issue #1205: POWERTOOLS_LOG_LEVEL=Trace/Debug ignored when using [Logging] attribute
+            Environment.SetEnvironmentVariable("POWERTOOLS_LOG_LEVEL", envLogLevel);
+
+            var consoleOut = new TestLoggerOutput();
+            Logger.Configure(options =>
+            {
+                options.LogOutput = consoleOut;
+            });
+
+            _testHandlers.TestMethodAllLevels();
+
+            var logOutput = consoleOut.ToString();
+
+            foreach (var level in expectedCsv.Split(','))
+            {
+                Assert.Contains($"LEVELTEST {level}", logOutput);
+            }
+
+            if (!string.IsNullOrEmpty(missingCsv))
+            {
+                foreach (var level in missingCsv.Split(','))
+                {
+                    Assert.DoesNotContain($"LEVELTEST {level}", logOutput);
+                }
+            }
+        }
+
         public void Dispose()
         {
             ResetAllState();
