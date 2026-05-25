@@ -97,6 +97,10 @@ public static class PowertoolsLoggingBuilderExtensions
         builder.Services.TryAddSingleton<ILogger>(provider =>
             provider.GetRequiredService<ILoggerFactory>().CreatePowertoolsLogger());
 
+        // Default the factory minimum to Trace so the framework doesn't filter
+        // before our provider. The provider handles env-var-derived level filtering.
+        builder.SetMinimumLevel(LogLevel.Trace);
+
         builder.Services.TryAddEnumerable(
             ServiceDescriptor.Singleton<ILoggerProvider, PowertoolsLoggerProvider>(provider =>
             {
@@ -174,7 +178,6 @@ public static class PowertoolsLoggingBuilderExtensions
         var options = new PowertoolsLoggerConfiguration();
         configure(options);
 
-        // IMPORTANT: Set the minimum level directly on the builder
         if (options.MinimumLogLevel != LogLevel.None)
         {
             builder.SetMinimumLevel(options.MinimumLogLevel);
