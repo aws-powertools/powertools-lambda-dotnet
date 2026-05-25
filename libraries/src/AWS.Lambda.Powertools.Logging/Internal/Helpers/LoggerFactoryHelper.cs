@@ -45,6 +45,13 @@ internal static class LoggerFactoryHelper
                 builder.AddFilter(null, configuration.MinimumLogLevel);
                 builder.SetMinimumLevel(configuration.MinimumLogLevel);
             }
+            else
+            {
+                // No explicit level configured — let everything through the factory
+                // so the provider can filter based on POWERTOOLS_LOG_LEVEL env var
+                builder.AddFilter(null, LogLevel.Trace);
+                builder.SetMinimumLevel(LogLevel.Trace);
+            }
         });
         
         LoggerFactoryHolder.SetFactory(factory);
