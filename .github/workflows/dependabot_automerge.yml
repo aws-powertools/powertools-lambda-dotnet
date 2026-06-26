@@ -35,8 +35,10 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       # Agent is vendored in-tree (.github/agents/dependabot-automerge) — no
-      # external repo is fetched. npm ci installs its pinned, integrity-checked
-      # deps. Workflow context passes through env (never interpolated into the shell).
+      # external repo is fetched. `npm ci --ignore-scripts` installs its pinned,
+      # integrity-checked deps without running dependency lifecycle scripts (no
+      # arbitrary install-time code). Workflow context passes through env (never
+      # interpolated into the shell).
       - name: Run dependabot-automerge agent
         working-directory: .github/agents/dependabot-automerge
         env:
@@ -44,6 +46,6 @@ jobs:
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          npm ci
+          npm ci --ignore-scripts
           ./node_modules/.bin/flue run pr-label-actions \
             --input "$(printf '{"message":"Act on GitHub PR %s#%s (dependencies label)."}' "$REPO" "$PR_NUMBER")"
