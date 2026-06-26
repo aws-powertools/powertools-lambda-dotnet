@@ -34,16 +34,16 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      # Agent fetched at run time, not vendored into this .NET tree. Workflow
-      # context passes through env (never interpolated into the shell).
+      # Agent is vendored in-tree (.github/agents/dependabot-automerge) — no
+      # external repo is fetched. npm ci installs its pinned, integrity-checked
+      # deps. Workflow context passes through env (never interpolated into the shell).
       - name: Run dependabot-automerge agent
+        working-directory: .github/agents/dependabot-automerge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          npx --yes degit hjgraca/agentic-sdlc/examples/github-pr-label-actions ./.pr-agent
-          cd ./.pr-agent
           npm ci
           ./node_modules/.bin/flue run pr-label-actions \
             --input "$(printf '{"message":"Act on GitHub PR %s#%s (dependencies label)."}' "$REPO" "$PR_NUMBER")"
