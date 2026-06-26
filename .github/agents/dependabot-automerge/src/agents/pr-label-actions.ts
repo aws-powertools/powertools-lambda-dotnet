@@ -22,5 +22,5 @@ const cwd = process.env.SKILLS_DIR ?? process.cwd();
 export default defineAgent(() => ({
 	model: 'amazon-bedrock/us.anthropic.claude-sonnet-4-6',
 	sandbox: local({ cwd }),
-	tools: [...Object.values(githubTools)],
+	tools: Object.values(githubTools),
 }));
