@@ -359,4 +359,22 @@ public class FunctionHandler
         
         Metrics.Flush();
     }
+    
+    public void AddDimensionAndAddDimensionsTogether()
+    {
+        Metrics.SetNamespace("dotnet-powertools-test");
+        Metrics.SetService("testService");
+
+        // Use AddDimension (singular) - merges into existing dimension set
+        Metrics.AddDimension("Environment", "prod");
+
+        // Use AddDimensions (plural) - also merges into existing dimension set
+        Metrics.AddDimensions(
+            ("Region", "eu-west-1"),
+            ("AZ", "eu-west-1a")
+        );
+
+        Metrics.AddMetric("TestMetric", 1.0, MetricUnit.Count);
+        Metrics.Flush();
+    }
 }
