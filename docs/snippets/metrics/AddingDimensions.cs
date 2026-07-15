@@ -13,6 +13,7 @@ public class Function {
   {
     Metrics.AddDimension("Environment","Prod");
     Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+    ...
   }
 }
 // --8<-- [end:adding_dimensions]
