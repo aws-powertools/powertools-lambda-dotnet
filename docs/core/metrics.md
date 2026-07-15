@@ -174,7 +174,7 @@ You can use the Builder or Configure patterns in your Lambda class constructor t
     ```
 ### Adding dimensions
 
-You can add dimensions to your metrics using **`AddDimension`** method.
+You can add a dimension to your metrics using the **`AddDimension`** method.
 
 === "Function.cs"
 
@@ -185,31 +185,75 @@ You can add dimensions to your metrics using **`AddDimension`** method.
 
     ```json hl_lines="11 24"
     {
-        "SuccessfulBooking": 1.0,
+        "SuccessfulBooking": 1,
         "_aws": {
             "Timestamp": 1592234975665,
             "CloudWatchMetrics": [
                 {
-            "Namespace": "ExampleApplication",
-            "Dimensions": [
-                [
-                    "service",
-                    "Environment"
-                ]
-            ],
-            "Metrics": [
-                {
-                    "Name": "SuccessfulBooking",
-                    "Unit": "Count"
+                    "Namespace": "ExampleApplication",
+                    "Dimensions": [
+                        [
+                            "Service",
+                            "Environment"
+                        ]
+                    ],
+                    "Metrics": [
+                        {
+                            "Name": "SuccessfulBooking",
+                            "Unit": "Count"
+                        }
+                    ]
                 }
-                ]
-            }
-        ]
-    },
-    "service": "ExampleService",
-    "Environment": "Prod"
+            ]
+        },
+        "Service": "Booking",
+        "Environment": "Prod"
     }
     ```
+
+You can also add multiple dimensions at once using the **`AddDimensions`** method.
+
+=== "Function.cs"
+
+    ```csharp hl_lines="8-11"
+    --8<-- "docs/snippets/metrics/AddingMultipleDimensions.cs:adding_multiple_dimensions"
+    ```
+=== "Example CloudWatch Logs excerpt"
+
+    ```json hl_lines="11 12 25 26"
+    {
+        "SuccessfulBooking": 1,
+        "_aws": {
+            "Timestamp": 1592234975665,
+            "CloudWatchMetrics": [
+                {
+                    "Namespace": "ExampleApplication",
+                    "Dimensions": [
+                        [
+                            "Service",
+                            "Environment",
+                            "Region"
+                        ]
+                    ],
+                    "Metrics": [
+                        {
+                            "Name": "SuccessfulBooking",
+                            "Unit": "Count"
+                        }
+                    ]
+                }
+            ]
+        },
+        "Service": "Booking",
+        "Environment": "Prod",
+        "Region": "eu-west-1"
+    }
+    ```
+
+!!! info "Both methods produce the same result"
+    `AddDimension` and `AddDimensions` both merge dimensions into the same dimension set in the EMF output. The only difference is ergonomics - multiple individual `AddDimension` calls vs. a single `AddDimensions` call with tuples.
+
+    The resulting CloudWatch metric is aggregated with all dimensions combined - default dimensions plus any dimensions added via either method.
 
 ### Flushing metrics
 

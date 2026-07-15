@@ -466,6 +466,25 @@ namespace AWS.Lambda.Powertools.Metrics.Tests
 
         [Trait("Category", "MetricsImplementation")]
         [Fact]
+        public void AddDimension_And_AddDimensions_ProduceSingleDimensionSet()
+        {
+            // Act - use both AddDimension (singular) and AddDimensions (plural) together
+            _handler.AddDimensionAndAddDimensionsTogether();
+
+            var result = _consoleOut.ToString();
+
+            // Assert - single dimension set with all keys
+            Assert.Contains("\"Dimensions\":[[\"Service\",\"Region\",\"AZ\",\"Environment\"]]", result);
+
+            // Assert - check key properties without caring about dimension order
+            Assert.Contains("\"Service\":\"testService\"", result);
+            Assert.Contains("\"Environment\":\"prod\"", result);
+            Assert.Contains("\"Region\":\"eu-west-1\"", result);
+            Assert.Contains("\"AZ\":\"eu-west-1a\"", result);
+        }
+
+        [Trait("Category", "MetricsImplementation")]
+        [Fact]
         public void AddDefaultDimensionsAtRuntime_OnlyAppliedToNewDimensionSets()
         {
             // Act
