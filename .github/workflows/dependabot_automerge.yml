@@ -1,0 +1,51 @@
+# Experimental AI-assisted auto-merge for low-risk Dependabot PRs. See #1228 for
+# the policy, prerequisites (repo vars AWS_ROLE_ARN/AWS_REGION + auto-merge
+# settings), and security rationale. The agent is API-only and never runs PR code.
+name: Dependabot auto-merge (experimental)
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions: {}
+
+jobs:
+  automerge:
+    # pull_request_target gives a write token; gate it tightly to Dependabot.
+    if: >-
+      github.event.label.name == 'dependencies' &&
+      github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      id-token: write # assume the Bedrock OIDC role
+      contents: write # GitHub performs the eventual merge
+      pull-requests: write # approve, comment, label, enable auto-merge
+    steps:
+      # Checks out this base repo (the pull_request_target default), not the PR head.
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+
+      - name: Assume Bedrock role (OIDC)
+        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # Agent is vendored in-tree (.github/agents/dependabot-automerge) — no
+      # external repo is fetched. `npm ci --ignore-scripts` installs its pinned,
+      # integrity-checked deps without running dependency lifecycle scripts (no
+      # arbitrary install-time code). Workflow context passes through env (never
+      # interpolated into the shell).
+      - name: Run dependabot-automerge agent
+        working-directory: .github/agents/dependabot-automerge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          npm ci --ignore-scripts
+          ./node_modules/.bin/flue run pr-label-actions \
+            --input "$(printf '{"message":"Act on GitHub PR %s#%s (dependencies label)."}' "$REPO" "$PR_NUMBER")"
