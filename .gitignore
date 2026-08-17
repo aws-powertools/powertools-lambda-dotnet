@@ -26,8 +26,3 @@ AWS.Lambda.Powertools.sln.DotSettings.user
 dist/
 site/
 samconfig.toml
-
-.kiro
-.claude
-.amazonq
-.github/instructions
