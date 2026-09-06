@@ -21,7 +21,7 @@ examples/Kafka/Avro/src/
 
 ## Prerequisites
 
-- [Dotnet](https://dotnet.microsoft.com/en-us/download/dotnet) (dotnet8 or later)
+- [Dotnet](https://dotnet.microsoft.com/en-us/download/dotnet) (dotnet10 or later)
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 - [AWS CLI](https://aws.amazon.com/cli/)
 - An AWS account with appropriate permissions
