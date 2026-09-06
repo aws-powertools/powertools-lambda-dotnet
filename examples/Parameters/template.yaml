@@ -53,7 +53,7 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      Runtime: dotnet6
+      Runtime: dotnet10
       CodeUri: ./src/HelloWorld/
       Handler: HelloWorld::HelloWorld.Function::FunctionHandler
       MemorySize: 256
@@ -233,7 +233,7 @@ Resources:
   InitCustomResourcFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Runtime: dotnet6
+      Runtime: dotnet10
       CodeUri: ./cfn/HelloWorld.Cfn/
       Handler: HelloWorld.Cfn::HelloWorld.Cfn.Function::FunctionHandler
       MemorySize: 256
