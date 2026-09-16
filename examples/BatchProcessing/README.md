@@ -28,7 +28,7 @@ To use the AWS SAM CLI, you need the following tools.
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
 
 You will need the following for local testing.
-* .NET 8.0 - [Install .NET 8.0](https://www.microsoft.com/net/download)
+* .NET 10.0 - [Install .NET 10.0](https://www.microsoft.com/net/download)
 
 To build and deploy your application for the first time, run the following in your shell. Make sure the `template.yaml` file is in your current directory:
 

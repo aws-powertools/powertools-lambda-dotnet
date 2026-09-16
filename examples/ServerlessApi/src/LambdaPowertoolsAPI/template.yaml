@@ -12,7 +12,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: LambdaPowertoolsAPI::LambdaPowertoolsAPI.LambdaEntryPoint::FunctionHandlerAsync
-      Runtime: dotnet6
+      Runtime: dotnet10
       CodeUri: '.'
       MemorySize: 256
       Timeout: 30

@@ -21,7 +21,7 @@ examples/Kafka/Protobuf/src/
 
 ## Prerequisites
 
-- [Dotnet](https://dotnet.microsoft.com/en-us/download/dotnet) (dotnet8 or later)
+- [Dotnet](https://dotnet.microsoft.com/en-us/download/dotnet) (dotnet10 or later)
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 - [AWS CLI](https://aws.amazon.com/cli/)
 - An AWS account with appropriate permissions
@@ -73,7 +73,7 @@ And update the `.csproj` file to include the `.proto` files.
    <Access>Public</Access>
    <ProtoCompile>True</ProtoCompile>
    <CompileOutputs>True</CompileOutputs>
-   <OutputDir>obj\Debug/net8.0/</OutputDir>
+   <OutputDir>obj\Debug/net10.0/</OutputDir>
    <Generator>MSBuild:Compile</Generator>
    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 </Protobuf>
