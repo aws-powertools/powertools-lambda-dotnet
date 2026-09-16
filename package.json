@@ -13,7 +13,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "aws-cdk": "^2.1128.1",
-    "aws-cdk-lib": "^2.260.0"
+    "aws-cdk": "^2.1133.0",
+    "aws-cdk-lib": "^2.262.1"
   }
 }
