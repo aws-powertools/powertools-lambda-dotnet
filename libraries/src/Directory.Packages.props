@@ -6,6 +6,8 @@
     <!--    Do not update AspectInjector from 2.8.1 until this issue is fixed https://github.com/pamidur/aspect-injector/issues/220-->
     <PackageVersion Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
     <PackageVersion Include="Apache.Avro" Version="1.12.0" />
+    <PackageVersion Include="AWS.Cryptography.EncryptionSDK" Version="5.0.0" />
+    <PackageVersion Include="AWSSDK.KeyManagementService" Version="4.0.100.14" />
     <PackageVersion Include="AspectInjector" Version="2.8.1" />
     <PackageVersion Include="Amazon.Lambda.Core" Version="2.8.0" />
     <PackageVersion Include="AWSSDK.AppConfig" Version="4.0.2.2" />
