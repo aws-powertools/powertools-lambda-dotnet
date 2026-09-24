@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
@@ -36,7 +36,7 @@
             <ProtoCompile>True</ProtoCompile>
 
             <CompileOutputs>True</CompileOutputs>
-            <OutputDir>obj\Debug/net8.0/</OutputDir>
+            <OutputDir>obj\Debug/net10.0/</OutputDir>
             <Generator>MSBuild:Compile</Generator>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Protobuf>
