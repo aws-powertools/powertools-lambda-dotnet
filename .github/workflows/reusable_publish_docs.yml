@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: docs/requirements.txt
       - name: Build docs website
         run: |
-          pip install --require-hashes -r docs/requirements.txt
+          pip install --require-hashes --only-binary :all: -r docs/requirements.txt
           mkdocs build
           mkdir -p dist
           cp -R site/* dist/
