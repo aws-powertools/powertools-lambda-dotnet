@@ -1,71 +1,37 @@
 name: Reusable publish documentation
 
-env:
-  BRANCH: develop
-  ORIGIN: aws-powertools/powertools-lambda-dotnet
-
 on:
   workflow_call:
-    inputs:
-      version:
-        description: "Version to build and publish docs (1.28.0, develop)"
-        required: true
-        type: string
-      alias:
-        description: "Alias to associate version (latest, stage)"
-        required: true
-        type: string
-      detached_mode:
-        description: "Whether it's running in git detached mode to ensure git is sync'd"
-        required: false
-        default: false
-        type: boolean
 
 permissions: {}
 
 jobs:
-  publish_docs:
+  docs:
     permissions:
+      contents: read
       id-token: write
-      contents: write
     # Force Github action to run only a single job at a time (based on the group name)
-    # This is to prevent "race-condition" in publishing a new version of doc to `gh-pages`
+    # This is to prevent race-conditions when publishing the docs to S3
     concurrency:
-      group: on-docs-rebuild
+      group: on-docs-build
     runs-on: ubuntu-latest
     environment: Docs
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 0
-      - name: Install poetry
-        run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-          cache: "poetry"
-      - name: Install dependencies
-        run: make dev
-      - name: Git client setup
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+      - name: Build docs website
         run: |
-          git config --global user.name Docs deploy
-          git config --global user.email aws-devax-open-source@amazon.com
-      - name: Git refresh tip (detached mode)
-        # Git Detached mode (release notes) doesn't have origin
-        if: ${{ inputs.detached_mode }}
-        run: |
-          git config pull.rebase true
-          git config remote.origin.url >&- || git remote add origin https://github.com/"$ORIGIN"
-          git pull origin "$BRANCH"
-      - name: Build docs website and API reference
-        env:
-          VERSION: ${{ inputs.version }}
-          ALIAS: ${{ inputs.alias }}
-        run: |
-          make release-docs VERSION="$VERSION" ALIAS="$ALIAS"
-          poetry run mike set-default --push latest
-
+          pip install --require-hashes -r docs/requirements.txt
+          mkdocs build
+          mkdir -p dist
+          cp -R site/* dist/
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
@@ -77,27 +43,29 @@ jobs:
           aws s3 sync \
             dist \
             s3://${{ secrets.AWS_DOCS_BUCKET }}/lambda-dotnet/
-
-
   apidocs:
     permissions:
+      contents: read
       id-token: write
-      contents: write
     # Force Github action to run only a single job at a time (based on the group name)
-    # This is to prevent "race-condition" in publishing a new version of doc to `gh-pages`
+    # This is to prevent race-conditions when publishing the docs to S3
     concurrency:
       group: on-docs-build
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     environment: Docs
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # 6.0.0
         with:
-          fetch-depth: 0
-      - name: Configure and build api docs generator
+          dotnet-version: '8.x'
+
+      - name: Build Api Docs
         run: |
-          brew install -f docfx --skip-cask-deps --ignore-dependencies
+          dotnet tool install -g docfx
           docfx apidocs/docfx.json
-      - name: Configure AWS credentials 
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           aws-region: us-east-1
