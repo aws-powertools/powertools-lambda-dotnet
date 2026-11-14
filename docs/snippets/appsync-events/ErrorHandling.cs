@@ -1,7 +1,16 @@
 // This file is referenced by docs/core/event_handler/appsync_events.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents;
+using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents.ErrorHandling
+{
+internal class Example
+{
+    private readonly AppSyncEventsResolver app = new();
+
+    public void Register()
+    {
 
 // --8<-- [start:error_handling_individual]
 app.OnPublish("/default/channel", (payload) =>
@@ -37,3 +46,6 @@ app.OnPublish("/default/channel", (payload) =>
     throw new UnauthorizedException("My custom exception");
 });
 // --8<-- [end:unauthorized_exception]
+    }
+}
+}
