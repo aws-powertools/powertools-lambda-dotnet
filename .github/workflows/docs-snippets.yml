@@ -1,23 +1,27 @@
-name: Examples Tests
+name: Build docs snippets
 
 on:
   push:
     paths:
-      - "examples/**"
+      - "docs/snippets/**"
+      - "libraries/src/**"
     branches: [develop]
   pull_request:
     paths:
-      - "examples/**"
+      - "docs/snippets/**"
+      - "libraries/src/**"
     branches: [develop]
 
 permissions: {}
 
 defaults:
   run:
-    working-directory: ./examples
+    working-directory: ./docs/snippets
 
 jobs:
   build:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
@@ -29,14 +33,5 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Install dependencies
-        run: dotnet restore
-
-      - name: Install global tools
-        run: dotnet tool install --global Apache.Avro.Tools
-
       - name: Build
-        run: dotnet build --configuration Release --no-restore /tl
-
-      - name: Test Examples
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet build --configuration Release /tl

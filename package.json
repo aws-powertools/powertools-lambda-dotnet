@@ -4,8 +4,7 @@
   "description": "Powertools for AWS Lambda (.NET)",
   "main": "index.js",
   "directories": {
-    "doc": "docs",
-    "example": "examples"
+    "doc": "docs"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

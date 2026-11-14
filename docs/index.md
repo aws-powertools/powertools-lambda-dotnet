@@ -105,18 +105,6 @@ Once you have SAM CLI installed, follow the these steps to initialize a .NET 8 p
 
 Viola! You now have a SAM application pre-configured with Powertools!
 
-## Examples
-
-We have provided a few examples that should you how to use the each of the core Powertools for AWS Lambda (.NET) features.
-
-* [Tracing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Tracing){target="_blank"}
-* [Logging](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Logging/){target="_blank"}
-* [Metrics](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Metrics/){target="_blank"}
-* [Serverless API](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/ServerlessApi/){target="_blank"}
-* [Parameters](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Parameters/){target="_blank"}
-* [Idempotency](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/Idempotency/){target="_blank"}
-* [Batch Processing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/BatchProcessing/){target="_blank"}
-
 ## Connect
 
 * **Powertools for AWS Lambda (.NET) on Discord**: `#dotnet` - **[Invite link](https://discord.gg/B8zZKbbyET){target="_blank"}**

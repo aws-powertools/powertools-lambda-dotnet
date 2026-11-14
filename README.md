@@ -90,15 +90,7 @@ The Powertools for AWS Lambda (.NET) utilities are available as NuGet packages. 
 
 ## Examples
 
-We have provided examples focused specifically on each of the utilities. Each solution comes with an AWS Serverless Application Model (AWS SAM) templates to run your functions as a Zip package using the AWS Lambda .NET 8 managed runtime; or as a container package using the AWS base images for .NET.
-
-* **[Logging example](examples/Logging/)**
-* **[Metrics example](examples/Metrics/)**
-* **[Tracing example](examples/Tracing/)**
-* **[Serverless API example](examples/ServerlessApi/)**
-* **[Parameters example](examples/Parameters/)**
-* **[Idempotency example](examples/Idempotency)**
-* **[Batch Processing example](examples/BatchProcessing)**
+Each utility's [documentation](https://docs.aws.amazon.com/powertools/dotnet/) includes code examples. They're kept in [docs/snippets](docs/snippets/) and compiled against the libraries on every change.
 
 ## Other members of the Powertools for AWS Lambda family
 
