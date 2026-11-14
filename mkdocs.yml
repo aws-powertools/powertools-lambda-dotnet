@@ -4,6 +4,9 @@ site_author: Amazon Web Services
 repo_url: https://github.com/aws-powertools/powertools-lambda-dotnet
 edit_uri: edit/develop/docs
 site_url: https://docs.aws.amazon.com/powertools/dotnet/
+exclude_docs: |
+  /Dockerfile
+  /requirements.*
 
 nav:
   - Homepage: 
