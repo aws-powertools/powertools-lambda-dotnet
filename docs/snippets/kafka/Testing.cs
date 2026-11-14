@@ -1,6 +1,8 @@
 // This file is referenced by docs/utilities/kafka.md
 // via pymdownx.snippets (mkdocs).
 
+using Xunit;
+
 namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka;
 
 // --8<-- [start:testing_your_code]
@@ -33,24 +35,35 @@ public class KafkaTests
             Logger = mockLogger
         };
 
-        var records = new ConsumerRecords<int, ProtobufProduct>
-        {
-            Records = new Dictionary<string, List<ConsumerRecord<int, ProtobufProduct>>>
+        // Build a Kafka event like the one Lambda sends: keys and values are base64-encoded
+        var product = new ProtobufProduct { Name = "Test Product", Id = 1, Price = 99.99 };
+        var key = Convert.ToBase64String(Encoding.UTF8.GetBytes("42"));
+        var value = Convert.ToBase64String(product.ToByteArray());
+
+        var kafkaEvent = $$"""
             {
-                { "mytopic-0", new List<ConsumerRecord<int, ProtobufProduct>>
-                    {
-                        new()
+                "eventSource": "aws:kafka",
+                "records": {
+                    "mytopic-0": [
                         {
-                            Topic = "mytopic",
-                            Partition = 0,
-                            Offset = 15,
-                            Key = 42,
-                            Value = new ProtobufProduct { Name = "Test Product", Id = 1, Price = 99.99 }
+                            "topic": "mytopic",
+                            "partition": 0,
+                            "offset": 15,
+                            "timestamp": 1545084650987,
+                            "timestampType": "CREATE_TIME",
+                            "key": "{{key}}",
+                            "value": "{{value}}",
+                            "headers": []
                         }
-                    }
+                    ]
                 }
             }
-        };
+            """;
+
+        // Deserialize the event with the same serializer the Lambda runtime uses
+        var serializer = new PowertoolsKafkaProtobufSerializer();
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEvent));
+        var records = serializer.Deserialize<ConsumerRecords<int, ProtobufProduct>>(stream);
 
         // Call the handler
         var result = Handler(records, mockContext);
@@ -62,16 +75,14 @@ public class KafkaTests
         Assert.Contains("Processing Test Product at $99.99", mockLogger.Buffer.ToString());
 
         // Verify the records were processed
-        Assert.Single(records.Records);
-        Assert.Contains("mytopic-0", records.Records.Keys);
-        Assert.Single(records.Records["mytopic-0"]);
-        Assert.Equal("mytopic", records.Records["mytopic-0"][0].Topic);
-        Assert.Equal(0, records.Records["mytopic-0"][0].Partition);
-        Assert.Equal(15, records.Records["mytopic-0"][0].Offset);
-        Assert.Equal(42, records.Records["mytopic-0"][0].Key);
-        Assert.Equal("Test Product", records.Records["mytopic-0"][0].Value.Name);
-        Assert.Equal(1, records.Records["mytopic-0"][0].Value.Id);
-        Assert.Equal(99.99, records.Records["mytopic-0"][0].Value.Price);
+        var processed = Assert.Single(records);
+        Assert.Equal("mytopic", processed.Topic);
+        Assert.Equal(0, processed.Partition);
+        Assert.Equal(15, processed.Offset);
+        Assert.Equal(42, processed.Key);
+        Assert.Equal("Test Product", processed.Value.Name);
+        Assert.Equal(1, processed.Value.Id);
+        Assert.Equal(99.99, processed.Value.Price);
     }
 }
 // --8<-- [end:testing_your_code]
