@@ -10,7 +10,7 @@ Globals:
   Function:
     Timeout: 15
     MemorySize: 512
-    Runtime: dotnet8
+    Runtime: dotnet10
 
 Resources:
   JsonDeserializationFunction:
