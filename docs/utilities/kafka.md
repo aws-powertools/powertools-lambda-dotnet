@@ -124,7 +124,7 @@ When using the Kafka consumer utility, you must specify the serializer in your L
 === "Class Library Deployment"
 
     ```csharp hl_lines="5"
-    --8<-- "docs/snippets/kafka/GettingStarted.cs:class_library_deployment"
+    --8<-- "docs/snippets/kafka/ClassLibraryDeployment.cs:class_library_deployment"
     ```
 === "Top Level Function Deployment"
 
@@ -162,8 +162,13 @@ The parameter for the handler funcion is `ConsumerRecords<TK, T>`, where `TK` is
     --8<-- "docs/snippets/kafka/ProcessingEvents.cs:json_messages"
     ```
 
-???+ tip "Full examples on GitHub"
-    A full example including how to generate Avro and Protobuf Java classes can be found on [GitHub](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/main/examples/kafka).
+???+ tip "Generating Avro and Protobuf classes"
+    The `CustomerProfile` classes used with Avro and Protobuf are generated from your schema files.
+
+    - **Avro**: install the tool with `dotnet tool install --global Apache.Avro.Tools`, then run `avrogen -s CustomerProfile.avsc ./Generated`.
+    - **Protobuf**: add the `Grpc.Tools` package (with `PrivateAssets="all"`) and `<Protobuf Include="CustomerProfile.proto" GrpcServices="None" Access="Public" />` to your `.csproj`. The classes are generated on build.
+
+    See [Code Generation for Serialization](#code-generation-for-serialization) to run the generators as part of your build.
 
 ### Deserializing keys and values
 
@@ -285,7 +290,7 @@ The Idempotency utility automatically stores the result of each successful opera
 === "Idempotent Kafka Processing"
 
     ```csharp
-    --8<-- "docs/snippets/kafka/AdvancedUsage.cs:idempotent_processing"
+    --8<-- "docs/snippets/kafka/IdempotentProcessing.cs:idempotent_processing"
     ```
 
 <!-- prettier-ignore -->
