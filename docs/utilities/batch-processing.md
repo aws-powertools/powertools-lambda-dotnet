@@ -983,11 +983,3 @@ As there is no external calls, you can unit test your code with `BatchProcessor`
     ```csharp
     --8<-- "docs/snippets/batch/PartialFailureHandling.cs:sqs_event_test_helper"
     ```
-
-## Complete Examples and Documentation
-
-The [BatchProcessing example](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/BatchProcessing){target="\_blank"} contains complete working examples:
-
-- **TypedFunction.cs** - Complete examples using all typed batch processing patterns
-- **TypedHandlers/** - Example implementations for SQS, Kinesis, and DynamoDB
-- **Sample Events** - Test events for all event types with typed data

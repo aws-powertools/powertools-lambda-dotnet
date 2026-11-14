@@ -1,12 +1,10 @@
 // This file is referenced by docs/core/event_handler/bedrock_agent_function.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction;
-
 // --8<-- [start:complete_example_with_di]
-using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.EventHandler;
+using AWS.Lambda.Powertools.EventHandler.Resolvers;
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -68,8 +66,8 @@ namespace MyBedrockAgent
                     () => DateTime.Now.ToString("F"));
         }
 
-        public ActionGroupInvocationOutput FunctionHandler(
-            ActionGroupInvocationInput input, ILambdaContext context)
+        public BedrockFunctionResponse FunctionHandler(
+            BedrockFunctionRequest input, ILambdaContext context)
         {
             return _resolver.Resolve(input, context);
         }

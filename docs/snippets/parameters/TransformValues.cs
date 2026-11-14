@@ -1,8 +1,18 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Parameters;
+using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
+using AWS.Lambda.Powertools.Parameters.Transform;
+using AWS.Lambda.Powertools.Parameters.Provider;
+using Docs.ParametersSnippets.CustomTransformer;
+
 // This file is referenced by docs/utilities/parameters.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters;
 
+namespace Docs.ParametersSnippets.TransformValues.JsonTransformation
+{
 // --8<-- [start:json_transformation]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -20,10 +30,14 @@ public class Function
             .WithTransformation(Transformation.Json)
             .GetAsync<MyObj>("/my/parameter/json")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:json_transformation]
+}
 
+namespace Docs.ParametersSnippets.TransformValues.Base64Transformation
+{
 // --8<-- [start:base64_transformation]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -41,10 +55,14 @@ public class Function
             .WithTransformation(Transformation.Base64)
             .GetAsync("/my/parameter/b64")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:base64_transformation]
+}
 
+namespace Docs.ParametersSnippets.TransformValues.RaiseTransformationError
+{
 // --8<-- [start:raise_transformation_error]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -63,10 +81,14 @@ public class Function
             .WithTransformation(Transformation.Json)
             .GetAsync<MyObj>("/my/parameter/json")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:raise_transformation_error]
+}
 
+namespace Docs.ParametersSnippets.TransformValues.AutoTransform
+{
 // --8<-- [start:auto_transform]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -83,8 +105,10 @@ public class Function
         // This returns a Dictionary with the parameter name as key
         IDictionary<string, object?> values = await ssmProvider
             .WithTransformation(Transformation.Auto)
-            .GetMultipleAsync("/param")
+            .GetMultipleAsync<object>("/param")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:auto_transform]
+}

@@ -1,11 +1,29 @@
 // This file is referenced by docs/core/event_handler/bedrock_agent_function.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction;
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.EventHandler.Resolvers;
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction;
+using Microsoft.Extensions.DependencyInjection;
 
+namespace Docs.BedrockAgentFunctionSnippets.DependencyInjection
+{
+public interface IWeatherService
+{
+    string GetForecast(string city);
+}
+
+internal class WeatherService : IWeatherService
+{
+    public string GetForecast(string city) => $"Sunny in {city}";
+}
+
+namespace Registration
+{
 // --8<-- [start:dependency_injection]
 using Microsoft.Extensions.DependencyInjection;
 
+internal class Example { public void Register() { // --8<-- [start:hidden]
 // Set up dependency injection
 var services = new ServiceCollection();
 services.AddSingleton<IWeatherService, WeatherService>();
@@ -24,6 +42,8 @@ resolver.Tool(
         return weatherService.GetForecast(city);
     });
 // --8<-- [end:dependency_injection]
+} }
+}
 
 // --8<-- [start:attribute_tool_classes]
 // Define your tool class with BedrockFunctionType attribute
@@ -50,6 +70,11 @@ public class WeatherTools
 }
 // --8<-- [end:attribute_tool_classes]
 
+internal class RegistrationExample
+{
+    public void Register()
+    {
+
 // --8<-- [start:register_tool_classes]
 
 var services = new ServiceCollection();
@@ -61,3 +86,6 @@ var resolver = serviceProvider.GetRequiredService<BedrockAgentFunctionResolver>(
     .RegisterTool<WeatherTools>(); // Register tools from the class during service registration
 
 // --8<-- [end:register_tool_classes]
+    }
+}
+}

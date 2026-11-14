@@ -1,7 +1,23 @@
 // This file is referenced by docs/core/event_handler/appsync_events.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents;
+using Amazon.Lambda.TestUtilities;
+using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
+using Xunit;
+
+namespace Docs.AppSyncEventsSnippets.Testing
+{
+public class Tests
+{
+    private readonly AppSyncEventsRequest _appSyncEvent = new()
+    {
+        Info = new Information
+        {
+            Channel = new Channel { Path = "/default/channel" },
+            Operation = AppSyncEventsOperation.Publish
+        },
+        Events = [new AppSyncEvent { Id = "123", Payload = new Dictionary<string, object> { ["data"] = "test data" } }]
+    };
 
 // --8<-- [start:test_publish_events]
 [Fact]
@@ -56,3 +72,5 @@ public async Task Should_Authorize_Subscription()
     Assert.Null(result);
 }
 // --8<-- [end:test_subscribe_events]
+}
+}

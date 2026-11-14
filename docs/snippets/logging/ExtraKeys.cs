@@ -1,8 +1,19 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using ILambdaContext = Amazon.Lambda.Core.ILambdaContext;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using AWS.Lambda.Powertools.Logging;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using static Docs.LoggingSnippets.ExtraKeys.Helpers;
+
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging;
 
+namespace Docs.LoggingSnippets.ExtraKeys.ExtraKeysDictionary
+{
 // --8<-- [start:extra_keys_dictionary]
 /**
  * Handler for requests to Lambda function.
@@ -24,10 +35,14 @@ public class Function
         // orderId is automatically removed
 
         Logger.LogInformation("Continuing without orderId");
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:extra_keys_dictionary]
+}
 
+namespace Docs.LoggingSnippets.ExtraKeys.ExtraKeysTuples
+{
 // --8<-- [start:extra_keys_tuples]
 /**
  * Handler for requests to Lambda function.
@@ -47,10 +62,14 @@ public class Function
             Logger.LogInformation("Order processed"); // orderId and customerId included
         }
         // Both keys are automatically removed
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:extra_keys_tuples]
+}
 
+namespace Docs.LoggingSnippets.ExtraKeys.ExtraKeysNested
+{
 // --8<-- [start:extra_keys_nested]
 /**
  * Handler for requests to Lambda function.
@@ -73,10 +92,14 @@ public class Function
 
             Logger.LogInformation("Request complete"); // only requestId
         }
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:extra_keys_nested]
+}
 
+namespace Docs.LoggingSnippets.ExtraKeys.ExtraKeysSingleEntry
+{
 // --8<-- [start:extra_keys_single_entry]
 /**
  * Handler for requests to Lambda function.
@@ -99,5 +122,16 @@ public class Function
         // Typically this is value would be passed into the function via the event.
         // Set the ClearState = true to force the removal of keys across invocations,
         Logger.AppendKeys(lookupId);
+        return new APIGatewayProxyResponse();
+    }
 }
 // --8<-- [end:extra_keys_single_entry]
+}
+
+namespace Docs.LoggingSnippets.ExtraKeys
+{
+internal static class Helpers
+{
+    public static Task ProcessOrderAsync(string orderId) => Task.CompletedTask;
+}
+}

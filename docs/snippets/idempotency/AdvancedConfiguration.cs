@@ -1,8 +1,22 @@
 // This file is referenced by docs/utilities/idempotency.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Amazon;
+using Amazon.DynamoDBv2;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.RuntimeSupport;
+using Amazon.Lambda.Serialization.SystemTextJson;
+using AWS.Lambda.Powertools.Idempotency;
+using AWS.Lambda.Powertools.Idempotency.Persistence;
+using Docs.IdempotencySnippets;
+using Docs.IdempotencySnippets.AdvancedConfiguration.WithJsonSerializationContextFullExample;
+
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.RegisterLambdaContext
+{
 // --8<-- [start:register_lambda_context]
     public class Function
     {
@@ -24,7 +38,11 @@ namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
         }
     }
 // --8<-- [end:register_lambda_context]
+}
 
+
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.ExceptionNotAffectingRecord
+{
 // --8<-- [start:exception_not_affecting_record]
     public class Function
     {
@@ -52,7 +70,15 @@ namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
         }
     }
 // --8<-- [end:exception_not_affecting_record]
+}
 
+
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.IdempotencyOptionsBuilderExample
+{
+internal static class Example
+{
+    public static void Run()
+    {
 // --8<-- [start:idempotency_options_builder]
 new IdempotencyOptionsBuilder()
     .WithEventKeyJmesPath("id")
@@ -63,16 +89,36 @@ new IdempotencyOptionsBuilder()
     .WithHashFunction("MD5")
     .Build();
 // --8<-- [end:idempotency_options_builder]
+    }
+}
+}
 
+
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.EnableLocalCache
+{
+internal static class Example
+{
+    public static void Run()
+    {
 // --8<-- [start:enable_local_cache]
     new IdempotencyOptionsBuilder()
         .WithUseLocalCache(true)
         .Build();
 // --8<-- [end:enable_local_cache]
+    }
+}
+}
 
+
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.ResponseHook
+{
+internal static class Example
+{
+    public static void Run()
+    {
 // --8<-- [start:response_hook]
-Idempotency.Config()
-    .WithConfig(IdempotencyOptions.Builder()
+Idempotency.Configure(builder => builder
+    .WithOptions(optionsBuilder => optionsBuilder
         .WithEventKeyJmesPath("powertools_json(body).address")
         .WithResponseHook((responseData, dataRecord) => {
             if (responseData is APIGatewayProxyResponse proxyResponse)
@@ -83,19 +129,31 @@ Idempotency.Config()
                 return proxyResponse;
             }
             return responseData;
-        })
-        .Build())
-    .WithPersistenceStore(DynamoDBPersistenceStore.Builder()
-        .WithTableName(Environment.GetEnvironmentVariable("IDEMPOTENCY_TABLE"))
-        .Build())
-    .Configure();
+        }))
+    .UseDynamoDb(Environment.GetEnvironmentVariable("IDEMPOTENCY_TABLE")));
 // --8<-- [end:response_hook]
+    }
+}
+}
 
+
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.WithJsonSerializationContext
+{
+internal static class Example
+{
+    public static void Run()
+    {
 // --8<-- [start:with_json_serialization_context]
 Idempotency.Configure(builder =>
     builder.WithJsonSerializationContext(LambdaFunctionJsonSerializerContext.Default));
 // --8<-- [end:with_json_serialization_context]
+    }
+}
+}
 
+
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.WithJsonSerializationContextFullExample
+{
 // --8<-- [start:with_json_serialization_context_full_example]
 public static class Function
 {
@@ -122,6 +180,7 @@ public static class Function
     public static APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest apigwProxyEvent,
         ILambdaContext context)
     {
+        var response = new Response();
         return new APIGatewayProxyResponse
             {
                 Body = JsonSerializer.Serialize(response, typeof(Response), LambdaFunctionJsonSerializerContext.Default),
@@ -138,3 +197,4 @@ public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
 {
 }
 // --8<-- [end:with_json_serialization_context_full_example]
+}

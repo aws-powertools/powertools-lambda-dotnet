@@ -1,7 +1,26 @@
 // This file is referenced by docs/core/event_handler/bedrock_agent_function.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction;
+using System.Globalization;
+using System.Text.Json.Serialization;
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.EventHandler.Resolvers;
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
+
+namespace Docs.BedrockAgentFunctionSnippets.AdvancedUsage
+{
+public class MyCustomType
+{
+    public decimal Price { get; set; }
+}
+
+internal class Example
+{
+    private readonly BedrockAgentFunctionResolver resolver = new();
+    private readonly BedrockAgentFunctionResolver _resolver = new();
+
+    public void Register()
+    {
 
 // --8<-- [start:custom_type_serialization]
 resolver.Tool(
@@ -14,6 +33,10 @@ resolver.Tool(
     }
 );
 // --8<-- [end:custom_type_serialization]
+    }
+
+    public void RegisterAot()
+    {
 
 // --8<-- [start:custom_type_serialization_aot]
 var resolver = new BedrockAgentFunctionResolver(MycustomSerializationContext.Default);
@@ -27,11 +50,11 @@ resolver.Tool(
     }
 );
 
-[JsonSerializable(typeof(MyCustomType))]
-public partial class MycustomSerializationContext : JsonSerializerContext
-{
-}
 // --8<-- [end:custom_type_serialization_aot]
+    }
+
+    public void RegisterOtherTools()
+    {
 
 // --8<-- [start:accessing_lambda_context]
 resolver.Tool(
@@ -48,25 +71,10 @@ resolver.Tool(
 resolver.Tool("CustomFailure", () =>
 {
     // Return a custom FAILURE response
-    return new BedrockFunctionResponse
-    {
-        Response = new Response
-        {
-            ActionGroup = "TestGroup",
-            Function = "CustomFailure",
-            FunctionResponse = new FunctionResponse
-            {
-                ResponseBody = new ResponseBody
-                {
-                    Text = new TextBody
-                    {
-                        Body = "Critical error occurred: Database unavailable"
-                    }
-                },
-                ResponseState = ResponseState.FAILURE  // Mark as FAILURE to abort the conversation
-            }
-        }
-    };
+    var response = BedrockFunctionResponse.WithText(
+        "Critical error occurred: Database unavailable", "TestGroup", "CustomFailure");
+    response.Response.FunctionResponse.ResponseState = ResponseState.FAILURE; // Abort the conversation
+    return response;
 });
 // --8<-- [end:handling_errors]
 
@@ -94,23 +102,9 @@ resolver.Tool("CounterTool", (BedrockFunctionRequest request) =>
     };
 
     // Return response with updated session attributes
-    return new BedrockFunctionResponse
-    {
-        Response = new Response
-        {
-            ActionGroup = request.ActionGroup,
-            Function = request.Function,
-            FunctionResponse = new FunctionResponse
-            {
-                ResponseBody = new ResponseBody
-                {
-                    Text = new TextBody { Body = $"Current count: {currentCount}" }
-                }
-            }
-        },
-        SessionAttributes = updatedSessionAttributes,
-        PromptSessionAttributes = request.PromptSessionAttributes
-    };
+    return BedrockFunctionResponse.WithText(
+        $"Current count: {currentCount}", request.ActionGroup, request.Function,
+        updatedSessionAttributes, request.PromptSessionAttributes);
 });
 // --8<-- [end:session_attributes]
 
@@ -142,3 +136,13 @@ _resolver.Tool(
         return $"Received request for {functionName} with {parameterCount} parameters";
     });
 // --8<-- [end:direct_access_request]
+    }
+}
+
+// --8<-- [start:custom_type_serialization_context]
+[JsonSerializable(typeof(MyCustomType))]
+public partial class MycustomSerializationContext : JsonSerializerContext
+{
+}
+// --8<-- [end:custom_type_serialization_context]
+}

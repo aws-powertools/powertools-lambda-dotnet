@@ -1,8 +1,30 @@
 // This file is referenced by docs/utilities/batch-processing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.DynamoDBEvents;
+using Amazon.Lambda.KinesisEvents;
+using Amazon.Lambda.SQSEvents;
+using AWS.Lambda.Powertools.BatchProcessing;
+using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
+using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
+using AWS.Lambda.Powertools.BatchProcessing.Sqs;
+using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
+using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
+using Docs.BatchProcessingSnippets;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+using Docs.BatchSnippets.PartialFailureHandling.ExtendingBatchProcessor;
+using Docs.BatchSnippets.GettingStartedBasic.ExampleImplementationOfIserviceprovider;
+
+namespace Docs.BatchSnippets.GettingStartedBasic.KinesisTypedHandlerDecorator
+{
+public class Function
+{
 // --8<-- [start:kinesis_typed_handler_decorator]
 public class Order
 {
@@ -33,7 +55,14 @@ public BatchItemFailuresResponse HandlerUsingTypedAttribute(KinesisEvent _)
 	return TypedKinesisEventBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
 }
 // --8<-- [end:kinesis_typed_handler_decorator]
+}
+}
 
+
+namespace Docs.BatchSnippets.GettingStartedBasic.KinesisHandlerDecoratorTraditional
+{
+public class Function
+{
 // --8<-- [start:kinesis_handler_decorator_traditional]
 internal class CustomKinesisEventRecordHandler : IKinesisEventRecordHandler // (1)!
 {
@@ -57,7 +86,14 @@ public BatchItemFailuresResponse HandlerUsingAttribute(KinesisEvent _)
 	return KinesisEventBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
 }
 // --8<-- [end:kinesis_handler_decorator_traditional]
+}
+}
 
+
+namespace Docs.BatchSnippets.GettingStartedBasic.DynamodbTypedHandlerDecorator
+{
+public class Function
+{
 // --8<-- [start:dynamodb_typed_handler_decorator]
 public class Customer
 {
@@ -88,7 +124,14 @@ public BatchItemFailuresResponse HandlerUsingTypedAttribute(DynamoDBEvent _)
 	return TypedDynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
 }
 // --8<-- [end:dynamodb_typed_handler_decorator]
+}
+}
 
+
+namespace Docs.BatchSnippets.GettingStartedBasic.DynamodbHandlerDecoratorTraditional
+{
+public class Function
+{
 // --8<-- [start:dynamodb_handler_decorator_traditional]
 internal class CustomDynamoDbStreamRecordHandler : IDynamoDbStreamRecordHandler // (1)!
 {
@@ -112,7 +155,14 @@ public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
 	return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
 }
 // --8<-- [end:dynamodb_handler_decorator_traditional]
+}
+}
 
+
+namespace Docs.BatchSnippets.GettingStartedBasic.UsingUtilityOutsideDecorator
+{
+public class Function
+{
 // --8<-- [start:using_utility_outside_decorator]
 public async Task<BatchItemFailuresResponse> HandlerUsingUtility(DynamoDBEvent dynamoDbEvent)
 {
@@ -128,7 +178,14 @@ public async Task<BatchItemFailuresResponse> HandlerUsingUtility(DynamoDBEvent d
     return result.BatchItemFailuresResponse;
 }
 // --8<-- [end:using_utility_outside_decorator]
+}
+}
 
+
+namespace Docs.BatchSnippets.GettingStartedBasic.UsingUtilityFromIocGetrequiredservice
+{
+public class Function
+{
 // --8<-- [start:using_utility_from_ioc_getrequiredservice]
 public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDBEvent dynamoDbEvent)
 {
@@ -138,7 +195,14 @@ public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDB
     return result.BatchItemFailuresResponse;
 }
 // --8<-- [end:using_utility_from_ioc_getrequiredservice]
+}
+}
 
+
+namespace Docs.BatchSnippets.GettingStartedBasic.UsingUtilityFromIocInjectedParameters
+{
+public class Function
+{
 // --8<-- [start:using_utility_from_ioc_injected_parameters]
 public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDBEvent dynamoDbEvent,
 	IDynamoDbStreamBatchProcessor batchProcessor, IDynamoDbStreamRecordHandler recordHandler)
@@ -147,7 +211,12 @@ public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDB
     return result.BatchItemFailuresResponse;
 }
 // --8<-- [end:using_utility_from_ioc_injected_parameters]
+}
+}
 
+
+namespace Docs.BatchSnippets.GettingStartedBasic.ExampleImplementationOfIserviceprovider
+{
 // --8<-- [start:example_implementation_of_iserviceprovider]
 internal class Services
 {
@@ -170,7 +239,13 @@ internal class Services
 	}
 }
 // --8<-- [end:example_implementation_of_iserviceprovider]
+}
 
+
+namespace Docs.BatchSnippets.GettingStartedBasic.ProcessingMessagesInParallel
+{
+public class Function
+{
 // --8<-- [start:processing_messages_in_parallel]
 [BatchProcessor(RecordHandler = typeof(CustomDynamoDbStreamRecordHandler), BatchParallelProcessingEnabled = true )]
 public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
@@ -178,3 +253,5 @@ public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
 	return DynamoDbStreamBatchProcessor.Result.BatchItemFailuresResponse;
 }
 // --8<-- [end:processing_messages_in_parallel]
+}
+}
