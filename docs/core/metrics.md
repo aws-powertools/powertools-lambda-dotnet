@@ -475,8 +475,7 @@ Here is the highlighted `UseMetrics` method:
 Explanation:
 
 - The method is defined as an extension method for the `IApplicationBuilder` interface.
-- It adds a `MetricsMiddleware` to the application builder using the `UseMiddleware` method.
-- The `MetricsMiddleware` captures and records metrics for HTTP requests, including cold start metrics if the `CaptureColdStart` option is enabled.
+- The extension sets up the middleware pipeline, including cold start tracking when `CaptureColdStart` is enabled.
 
 ### WithMetrics() filter
 
