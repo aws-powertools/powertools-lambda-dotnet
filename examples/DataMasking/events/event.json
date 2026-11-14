@@ -1,0 +1,10 @@
+{
+  "resource": "/mask",
+  "path": "/mask",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"orderId\":\"ORD-1001\",\"item\":\"Powertools T-Shirt\",\"customer\":{\"name\":\"John Doe\",\"email\":\"john@example.com\",\"phone\":\"555-0134\",\"ssn\":\"123-45-6789\"},\"address\":{\"street\":\"123 Main St\",\"city\":\"Anytown\"},\"payment\":{\"creditCard\":\"4111111111111111\",\"amount\":42.5}}",
+  "isBase64Encoded": false
+}
