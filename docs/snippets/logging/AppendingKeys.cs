@@ -1,8 +1,18 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using ILambdaContext = Amazon.Lambda.Core.ILambdaContext;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using AWS.Lambda.Powertools.Logging;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging;
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AppendingKeys.AppendKeys
+{
 // --8<-- [start:append_keys]
 /**
  * Handler for requests to Lambda function.
@@ -28,9 +38,14 @@ public class Function
 
     Logger.LogInformation("Getting ip address from external service");
 
+        return new APIGatewayProxyResponse();
+    }
 }
 // --8<-- [end:append_keys]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AppendingKeys.RemoveKeys
+{
 // --8<-- [start:remove_keys]
 /**
  * Handler for requests to Lambda function.
@@ -41,9 +56,9 @@ public class Function
     public async Task<APIGatewayProxyResponse> FunctionHandler
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
-        ...
+        // ...
         Logger.AppendKey("test", "willBeLogged");
-        ...
+        // ...
         var customKeys = new Dictionary<string, string>
         {
             {"test1", "value1"},
@@ -51,10 +66,12 @@ public class Function
         };
 
         Logger.AppendKeys(customKeys);
-        ...
+        // ...
         Logger.RemoveKeys("test");
         Logger.RemoveKeys("test1", "test2");
-        ...
+        // ...
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:remove_keys]
+}

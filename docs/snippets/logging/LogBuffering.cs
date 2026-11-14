@@ -1,8 +1,18 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using ILambdaContext = Amazon.Lambda.Core.ILambdaContext;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using AWS.Lambda.Powertools.Logging;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging;
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.LogBuffering.BufferingOptions
+{
 // --8<-- [start:buffering_options]
 public class Function
 {
@@ -30,10 +40,14 @@ public class Function
         // your business logic here
 
         Logger.LogError("This is an error message"); // This also flushes the buffer
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:buffering_options]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.LogBuffering.BufferAtLogLevel
+{
 // --8<-- [start:buffer_at_log_level]
 public class Function
 {
@@ -57,10 +71,14 @@ public class Function
       Logger.LogWarning("This is a warn message");
 
       Logger.ClearBuffer(); // This will clear the buffer without emitting the logs
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:buffer_at_log_level]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.LogBuffering.FlushOnErrorLog
+{
 // --8<-- [start:flush_on_error_log]
 public class Function
 {
@@ -100,10 +118,14 @@ public class Function
           Logger.LogError(e.Message); // this does NOT flush the buffer
           Logger.FlushBuffer(); // Manually flush
       }
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:flush_on_error_log]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.LogBuffering.FlushBufferOnUncaughtError
+{
 // --8<-- [start:flush_buffer_on_uncaught_error]
 public class Function
 {
@@ -124,6 +146,8 @@ public class Function
       Logger.LogDebug("This is a debug message");
 
       throw new Exception(); // This causes the buffer to be flushed
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:flush_buffer_on_uncaught_error]
+}
