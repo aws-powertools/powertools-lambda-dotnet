@@ -33,7 +33,8 @@
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Idempotency/AWS.Lambda.Powertools.Idempotency.csproj" />
-        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.JMESPath/AWS.Lambda.Powertools.JMESPath.csproj" />
+        <!-- Idempotency embeds JMESPath sources in Release; referencing both duplicates JsonTransformer. -->
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.JMESPath/AWS.Lambda.Powertools.JMESPath.csproj" Condition="'$(Configuration)'!='Release'" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Avro/AWS.Lambda.Powertools.Kafka.Avro.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Json/AWS.Lambda.Powertools.Kafka.Json.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Protobuf/AWS.Lambda.Powertools.Kafka.Protobuf.csproj" />
