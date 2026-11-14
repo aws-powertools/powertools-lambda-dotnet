@@ -25,6 +25,7 @@ AWS.Lambda.Powertools.sln.DotSettings.user
 
 dist/
 site/
+.venv-docs/
 samconfig.toml
 
 .kiro
