@@ -1,7 +1,13 @@
+using Amazon.XRay.Recorder.Handlers.System.Net;
 // This file is referenced by docs/core/tracing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing;
+using AWS.Lambda.Powertools.Tracing;
+using Amazon.DynamoDBv2;
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.RegisterAllServices
+{
+using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 
 // --8<-- [start:register_all_services]
 using Amazon.DynamoDBv2;
@@ -23,20 +29,37 @@ public class Function
     }
 }
 // --8<-- [end:register_all_services]
+}
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.RegisterSingleService
+{
+using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
+public class Function
+{
+    public void Register()
+    {
 
 // --8<-- [start:register_single_service]
-Tracing.Register<IAmazonDynamoDB>()
+Tracing.Register<IAmazonDynamoDB>();
 // --8<-- [end:register_single_service]
+    }
+}
+}
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.InstrumentHttpCalls
+{
+using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 
 // --8<-- [start:instrument_http_calls]
 using Amazon.XRay.Recorder.Handlers.System.Net;
 
 public class Function
 {
-    public Function()
+    public async Task CheckIpAsync()
     {
         var httpClient = new HttpClient(new HttpClientXRayTracingHandler(new HttpClientHandler()));
         var myIp = await httpClient.GetStringAsync("https://checkip.amazonaws.com/");
     }
 }
 // --8<-- [end:instrument_http_calls]
+}

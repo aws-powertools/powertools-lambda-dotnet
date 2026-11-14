@@ -1,8 +1,20 @@
+using AWS.Lambda.Powertools.Tracing;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+
 // This file is referenced by docs/core/tracing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing;
-
+namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.SubsegmentMethods.available_methods
+{
+using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
+public class Function
+{
+    public void Handler()
+    {
+        object paymentObject = new();
+        string requestId = "request-id";
+        Exception exception = new();
 // --8<-- [start:available_methods]
 using var segment = Tracing.BeginSubsegment("PaymentProcessing");
 
@@ -21,3 +33,6 @@ segment.AddException(exception);
 segment.AddHttpInformation("response_code", 200);
 segment.AddHttpInformation("url", "https://api.payment.com/process");
 // --8<-- [end:available_methods]
+    }
+}
+}

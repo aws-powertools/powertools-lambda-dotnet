@@ -1,9 +1,18 @@
 // This file is referenced by docs/core/metrics.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics;
+using AWS.Lambda.Powertools.Metrics;
+using Amazon.Lambda.TestUtilities;
+using Xunit;
+using NSubstitute;
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.Testing
+{
+using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 
 // --8<-- [start:lambda_function_testing]
+using System.Collections.Generic;
+using Amazon.Lambda.Core;
 using System.Collections.Generic;
 using Amazon.Lambda.Core;
 
@@ -32,6 +41,12 @@ public class MetricsnBuilderHandler
     }
 }
 // --8<-- [end:lambda_function_testing]
+
+public class MetricsTests
+{
+    private readonly StringWriter _consoleOut = new();
+
+    public MetricsTests() => Console.SetOut(_consoleOut);
 
 // --8<-- [start:unit_tests]
 [Fact]
@@ -91,7 +106,16 @@ public class MetricsnBuilderHandler
         metricsMock.Received(1).AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
     }
 // --8<-- [end:unit_tests]
+}
+
+public class EnvironmentConfiguration
+{
+    public void SetNamespace()
+    {
 
 // --8<-- [start:inject_metric_namespace]
 Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE","AWSLambdaPowertools");
 // --8<-- [end:inject_metric_namespace]
+    }
+}
+}
