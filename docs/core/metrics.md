@@ -466,17 +466,6 @@ It adds a metrics middleware to the specified application builder, which capture
 --8<-- "docs/snippets/metrics/AspNetCore.cs:use_metrics_middleware"
 ```
 
-Here is the highlighted `UseMetrics` method:
-
-```csharp
---8<-- "docs/snippets/metrics/AspNetCore.cs:use_metrics_method"
-```
-
-Explanation:
-
-- The method is defined as an extension method for the `IApplicationBuilder` interface.
-- The extension sets up the middleware pipeline, including cold start tracking when `CaptureColdStart` is enabled.
-
 ### WithMetrics() filter
 
 The `WithMetrics` method is an extension method for the `RouteHandlerBuilder` class.

@@ -50,25 +50,6 @@ app.Run();
 } }
 }
 
-namespace Docs.MetricsSnippets.AspNetCore.use_metrics_method
-{
-public static class Example
-{
-    // --8<-- [start:use_metrics_method]
-/// <summary>
-/// Adds a metrics middleware to the specified application builder.
-/// This will capture cold start (if CaptureColdStart is enabled) metrics and flush metrics on function exit.
-/// </summary>
-/// <param name="app">The application builder to add the metrics middleware to.</param>
-/// <returns>The application builder with the metrics middleware added.</returns>
-public static IApplicationBuilder UseMetrics(this IApplicationBuilder app)
-{
-    return MetricsMiddlewareExtensions.UseMetrics(app);
-}
-// --8<-- [end:use_metrics_method]
-}
-}
-
 namespace Docs.MetricsSnippets.AspNetCore.with_metrics_filter
 {
 // --8<-- [start:with_metrics_filter]
