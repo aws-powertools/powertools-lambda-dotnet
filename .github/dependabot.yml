@@ -5,11 +5,6 @@ updates:
     schedule:
       interval: weekly
 
-  - package-ecosystem: docker
-    directory: /docs
-    schedule:
-      interval: monthly
-  
   - package-ecosystem: npm
     directories:
       - "/"

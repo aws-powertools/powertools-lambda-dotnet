@@ -1,20 +1,21 @@
-.PHONY: build-docs build-docs-website docs-local docs-local-docker
+.PHONY: build-docs build-docs-website docs-local docs-venv changelog
+
+DOCS_VENV ?= .venv-docs
+
+docs-venv:
+	python3 -m venv $(DOCS_VENV)
+	$(DOCS_VENV)/bin/pip install --require-hashes --only-binary :all: -r docs/requirements.txt
 
 build-docs:
 	@$(MAKE) build-docs-website
 
-build-docs-website:
+build-docs-website: docs-venv
 	mkdir -p dist
-	docker build -t squidfunk/mkdocs-material ./docs/
-	docker run --rm -t -v ${PWD}:/docs squidfunk/mkdocs-material build
+	$(DOCS_VENV)/bin/mkdocs build
 	cp -R site/* dist/
 
-docs-local:
-	poetry run mkdocs serve
-
-docs-local-docker:
-	docker build -t squidfunk/mkdocs-material ./docs/
-	docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
+docs-local: docs-venv
+	$(DOCS_VENV)/bin/mkdocs serve
 
 changelog:
 	git fetch --tags origin
