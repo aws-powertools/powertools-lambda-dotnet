@@ -1,8 +1,29 @@
 // This file is referenced by docs/utilities/batch-processing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.DynamoDBEvents;
+using Amazon.Lambda.KinesisEvents;
+using Amazon.Lambda.SQSEvents;
+using AWS.Lambda.Powertools.BatchProcessing;
+using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
+using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
+using AWS.Lambda.Powertools.BatchProcessing.Sqs;
+using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
+using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
+using AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+using AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.TypedHandlerWithContext;
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.SqsTypedHandlerDecorator
+{
+public class Function
+{
 // --8<-- [start:sqs_typed_handler_decorator]
     public class Product
     {
@@ -38,7 +59,14 @@ namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
     	return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
     }
 // --8<-- [end:sqs_typed_handler_decorator]
+}
+}
 
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.SqsHandlerDecoratorTraditional
+{
+public class Function
+{
 // --8<-- [start:sqs_handler_decorator_traditional]
     public class CustomSqsRecordHandler : ISqsRecordHandler // (1)!
     {
@@ -67,7 +95,12 @@ namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
     	return SqsBatchProcessor.Result.BatchItemFailuresResponse; // (4)!
     }
 // --8<-- [end:sqs_handler_decorator_traditional]
+}
+}
 
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.TypedHandlerWithContext
+{
 // --8<-- [start:typed_handler_with_context]
 public class ProductHandlerWithContext : ITypedRecordHandlerWithContext<Product>
 {
@@ -86,7 +119,13 @@ public class ProductHandlerWithContext : ITypedRecordHandlerWithContext<Product>
     }
 }
 // --8<-- [end:typed_handler_with_context]
+}
 
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.FunctionUsageWithContext
+{
+public class Function
+{
 // --8<-- [start:function_usage_with_context]
 [BatchProcessor(TypedRecordHandlerWithContext = typeof(ProductHandlerWithContext))]
 public BatchItemFailuresResponse ProcessWithContext(SQSEvent sqsEvent, ILambdaContext context)
@@ -94,7 +133,14 @@ public BatchItemFailuresResponse ProcessWithContext(SQSEvent sqsEvent, ILambdaCo
     return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse;
 }
 // --8<-- [end:function_usage_with_context]
+}
+}
 
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.MigrationBeforeTraditional
+{
+public class Function
+{
 // --8<-- [start:migration_before_traditional]
 public class TraditionalSqsHandler : ISqsRecordHandler
 {
@@ -118,7 +164,14 @@ public BatchItemFailuresResponse ProcessSqs(SQSEvent sqsEvent)
     return SqsBatchProcessor.Result.BatchItemFailuresResponse;
 }
 // --8<-- [end:migration_before_traditional]
+}
+}
 
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.MigrationAfterTyped
+{
+public class Function
+{
 // --8<-- [start:migration_after_typed]
 public class TypedSqsHandler : ITypedRecordHandler<Product>
 {
@@ -141,3 +194,5 @@ public BatchItemFailuresResponse ProcessSqs(SQSEvent sqsEvent)
     return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse;
 }
 // --8<-- [end:migration_after_typed]
+}
+}

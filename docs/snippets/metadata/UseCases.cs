@@ -1,8 +1,15 @@
 // This file is referenced by docs/utilities/metadata.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata;
 
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Metadata;
+using AWS.Lambda.Powertools.Metadata.Exceptions;
+using AWS.Lambda.Powertools.Logging;
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.UseCases.MultiAzRouting
+{
+using static AWS.Lambda.Powertools.Docs.Snippets.Metadata.UseCases.MultiAzRouting.OrderProcessor;
 // --8<-- [start:multi_az_routing]
 using AWS.Lambda.Powertools.Metadata;
 
@@ -21,7 +28,16 @@ public class Function
     }
 }
 // --8<-- [end:multi_az_routing]
+public class OrderRequest { }
+static class OrderProcessor
+{
+    public static Task<string> ProcessOrder(OrderRequest request, string endpoint) => Task.FromResult(endpoint);
+}
+}
 
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.UseCases.LoggingWithMetadata
+{
 // --8<-- [start:logging_with_metadata]
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metadata;
@@ -41,3 +57,4 @@ public class Function
     }
 }
 // --8<-- [end:logging_with_metadata]
+}

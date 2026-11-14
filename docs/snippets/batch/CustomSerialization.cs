@@ -1,8 +1,27 @@
 // This file is referenced by docs/utilities/batch-processing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.DynamoDBEvents;
+using Amazon.Lambda.KinesisEvents;
+using Amazon.Lambda.SQSEvents;
+using AWS.Lambda.Powertools.BatchProcessing;
+using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
+using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
+using AWS.Lambda.Powertools.BatchProcessing.Sqs;
+using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
+using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
+using AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+using AWS.Lambda.Powertools.Docs.Snippets.Batch.CustomSerialization.JsonSerializerContextConfiguration;
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.CustomSerialization.JsonSerializerContextConfiguration
+{
 // --8<-- [start:json_serializer_context_configuration]
 [JsonSerializable(typeof(Product))]
 [JsonSerializable(typeof(Order))]
@@ -16,7 +35,13 @@ public partial class MyJsonSerializerContext : JsonSerializerContext
 {
 }
 // --8<-- [end:json_serializer_context_configuration]
+}
 
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.CustomSerialization.JsonSerializerContextUsingWithAttribute
+{
+public class Function
+{
 // --8<-- [start:json_serializer_context_using_with_attribute]
 [BatchProcessor(
     TypedRecordHandler = typeof(TypedSqsRecordHandler),
@@ -26,3 +51,5 @@ public BatchItemFailuresResponse ProcessWithAot(SQSEvent sqsEvent)
     return TypedSqsBatchProcessor.Result.BatchItemFailuresResponse;
 }
 // --8<-- [end:json_serializer_context_using_with_attribute]
+}
+}

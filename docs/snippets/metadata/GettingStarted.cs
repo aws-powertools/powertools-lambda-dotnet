@@ -1,8 +1,14 @@
 // This file is referenced by docs/utilities/metadata.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata;
 
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Metadata;
+using AWS.Lambda.Powertools.Metadata.Exceptions;
+using AWS.Lambda.Powertools.Logging;
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.GettingStarted.GettingStarted
+{
 // --8<-- [start:getting_started]
 using AWS.Lambda.Powertools.Metadata;
 
@@ -15,10 +21,16 @@ public class Function
     }
 }
 // --8<-- [end:getting_started]
+}
 
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.GettingStarted.ErrorHandling
+{
+internal static class Example
+{
+    public static void Run()
+    {
 // --8<-- [start:error_handling]
-using AWS.Lambda.Powertools.Metadata;
-using AWS.Lambda.Powertools.Metadata.Exceptions;
 
 try
 {
@@ -32,7 +44,20 @@ catch (LambdaMetadataException ex)
         Console.WriteLine($"HTTP Status: {ex.StatusCode}");
 }
 // --8<-- [end:error_handling]
+    }
+}
+}
 
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.GettingStarted.RefreshMetadata
+{
+internal static class Example
+{
+    public static void Run()
+    {
 // --8<-- [start:refresh_metadata]
 LambdaMetadata.Refresh();
 // --8<-- [end:refresh_metadata]
+    }
+}
+}
