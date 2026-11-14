@@ -7,7 +7,7 @@ using AWS.Lambda.Powertools.Metadata;
 using AWS.Lambda.Powertools.Metadata.Exceptions;
 using AWS.Lambda.Powertools.Logging;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.GettingStarted.GettingStarted
+namespace Docs.MetadataSnippets.GettingStarted.GettingStarted
 {
 // --8<-- [start:getting_started]
 using AWS.Lambda.Powertools.Metadata;
@@ -24,7 +24,7 @@ public class Function
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.GettingStarted.ErrorHandling
+namespace Docs.MetadataSnippets.GettingStarted.ErrorHandling
 {
 internal static class Example
 {
@@ -49,7 +49,7 @@ catch (LambdaMetadataException ex)
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.GettingStarted.RefreshMetadata
+namespace Docs.MetadataSnippets.GettingStarted.RefreshMetadata
 {
 internal static class Example
 {

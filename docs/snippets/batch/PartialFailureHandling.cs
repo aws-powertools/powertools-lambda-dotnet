@@ -15,11 +15,11 @@ using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+using Docs.BatchProcessingSnippets;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.ThrowOnFullBatchFailureDecorator
+namespace Docs.BatchSnippets.PartialFailureHandling.ThrowOnFullBatchFailureDecorator
 {
 public class Function
 {
@@ -36,7 +36,7 @@ public class Function
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.ThrowOnFullBatchFailureOutsideDecorator
+namespace Docs.BatchSnippets.PartialFailureHandling.ThrowOnFullBatchFailureOutsideDecorator
 {
 public class Function
 {
@@ -57,7 +57,7 @@ public async Task<BatchItemFailuresResponse> HandlerUsingUtility(SQSEvent sqsEve
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.ExtendingBatchProcessor
+namespace Docs.BatchSnippets.PartialFailureHandling.ExtendingBatchProcessor
 {
 // --8<-- [start:extending_batch_processor]
 
@@ -114,7 +114,7 @@ public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
 						RecordId = recordId
 					};
 
-					AWS.Lambda.Powertools.Metrics.Metrics.AddMetric("BatchRecordFailures", 1, MetricUnit.Count);
+					Metrics.AddMetric("BatchRecordFailures", 1, MetricUnit.Count);
 
 					try
 					{
@@ -166,7 +166,7 @@ public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.TypedHandlerTest
+namespace Docs.BatchSnippets.PartialFailureHandling.TypedHandlerTest
 {
 public class Function
 {
@@ -202,7 +202,7 @@ public async Task TypedHandler_InvalidProduct_ThrowsException()
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.IntegrationTest
+namespace Docs.BatchSnippets.PartialFailureHandling.IntegrationTest
 {
 public class Function
 {
@@ -241,7 +241,7 @@ public async Task ProcessSqsEvent_WithTypedHandler_ProcessesAllRecords()
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.TraditionalHandlerTest
+namespace Docs.BatchSnippets.PartialFailureHandling.TraditionalHandlerTest
 {
 public class Function
 {
@@ -269,7 +269,7 @@ public Task Sqs_Handler_Using_Attribute()
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.FunctionHandlerUsingAttribute
+namespace Docs.BatchSnippets.PartialFailureHandling.FunctionHandlerUsingAttribute
 {
 public class Function
 {
@@ -284,7 +284,7 @@ public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.CustomSqsRecordHandlerExample
+namespace Docs.BatchSnippets.PartialFailureHandling.CustomSqsRecordHandlerExample
 {
 // --8<-- [start:custom_sqs_record_handler]
 public class CustomSqsRecordHandler : ISqsRecordHandler
@@ -305,7 +305,7 @@ public class CustomSqsRecordHandler : ISqsRecordHandler
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.SqsEventTestHelper
+namespace Docs.BatchSnippets.PartialFailureHandling.SqsEventTestHelper
 {
 public static class TestHelper
 {

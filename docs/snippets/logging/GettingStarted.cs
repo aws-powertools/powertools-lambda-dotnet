@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.GettingStartedExamples.UsingDecorator
+namespace Docs.LoggingSnippets.GettingStartedExamples.UsingDecorator
 {
 // --8<-- [start:using_decorator]
 /**
@@ -31,7 +31,7 @@ public class Function
 // --8<-- [end:using_decorator]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.GettingStartedExamples.LoggerFactoryExample
+namespace Docs.LoggingSnippets.GettingStartedExamples.LoggerFactoryExample
 {
 // --8<-- [start:logger_factory]
 /**
@@ -64,7 +64,7 @@ public class Function
 // --8<-- [end:logger_factory]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.GettingStartedExamples.WithBuilder
+namespace Docs.LoggingSnippets.GettingStartedExamples.WithBuilder
 {
 // --8<-- [start:with_builder]
 /**

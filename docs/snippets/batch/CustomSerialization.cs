@@ -15,12 +15,12 @@ using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+using Docs.BatchProcessingSnippets;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using AWS.Lambda.Powertools.Docs.Snippets.Batch.CustomSerialization.JsonSerializerContextConfiguration;
+using Docs.BatchSnippets.CustomSerialization.JsonSerializerContextConfiguration;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.CustomSerialization.JsonSerializerContextConfiguration
+namespace Docs.BatchSnippets.CustomSerialization.JsonSerializerContextConfiguration
 {
 // --8<-- [start:json_serializer_context_configuration]
 [JsonSerializable(typeof(Product))]
@@ -38,7 +38,7 @@ public partial class MyJsonSerializerContext : JsonSerializerContext
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.CustomSerialization.JsonSerializerContextUsingWithAttribute
+namespace Docs.BatchSnippets.CustomSerialization.JsonSerializerContextUsingWithAttribute
 {
 public class Function
 {

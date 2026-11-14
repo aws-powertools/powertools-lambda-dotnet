@@ -7,7 +7,7 @@ using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.EventHandler.Resolvers;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction.AdvancedUsage
+namespace Docs.BedrockAgentFunctionSnippets.AdvancedUsage
 {
 public class MyCustomType
 {

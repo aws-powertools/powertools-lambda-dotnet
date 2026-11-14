@@ -6,7 +6,7 @@ using AWS.Lambda.Powertools.EventHandler.Resolvers;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction.DependencyInjection
+namespace Docs.BedrockAgentFunctionSnippets.DependencyInjection
 {
 public interface IWeatherService
 {

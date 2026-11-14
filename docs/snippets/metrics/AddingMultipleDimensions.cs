@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/metrics.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AddingMultipleDimensions.adding_multiple_dimensions
+namespace Docs.MetricsSnippets.AddingMultipleDimensions.adding_multiple_dimensions
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:adding_multiple_dimensions]
 using AWS.Lambda.Powertools.Metrics;
 

@@ -10,7 +10,7 @@ using AWS.Lambda.Powertools.Parameters.Provider;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.Caching.DefaultMaxAge
+namespace Docs.ParametersSnippets.Caching.DefaultMaxAge
 {
 // --8<-- [start:default_max_age]
 using AWS.Lambda.Powertools.Parameters;
@@ -35,7 +35,7 @@ public class Function
 // --8<-- [end:default_max_age]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.Caching.MaxAgePerParameter
+namespace Docs.ParametersSnippets.Caching.MaxAgePerParameter
 {
 // --8<-- [start:max_age_per_parameter]
 using AWS.Lambda.Powertools.Parameters;
@@ -60,7 +60,7 @@ public class Function
 // --8<-- [end:max_age_per_parameter]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.Caching.ForceFetch
+namespace Docs.ParametersSnippets.Caching.ForceFetch
 {
 // --8<-- [start:force_fetch]
 using AWS.Lambda.Powertools.Parameters;

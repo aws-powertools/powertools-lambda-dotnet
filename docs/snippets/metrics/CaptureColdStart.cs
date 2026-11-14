@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/metrics.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.CaptureColdStart.capture_cold_start_attribute
+namespace Docs.MetricsSnippets.CaptureColdStart.capture_cold_start_attribute
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:capture_cold_start_attribute]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -24,9 +23,8 @@ public class Function {
 
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.CaptureColdStart.capture_cold_start_builder
+namespace Docs.MetricsSnippets.CaptureColdStart.capture_cold_start_builder
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:capture_cold_start_builder]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -54,9 +52,8 @@ public class Function {
 
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.CaptureColdStart.capture_cold_start_configure
+namespace Docs.MetricsSnippets.CaptureColdStart.capture_cold_start_configure
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:capture_cold_start_configure]
 using AWS.Lambda.Powertools.Metrics;
 

@@ -9,7 +9,7 @@ using AWS.Lambda.Powertools.EventHandler.Resolvers;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 // --8<-- [end:executable_imports]
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction.GettingStarted.ExecutableAssembly
+namespace Docs.BedrockAgentFunctionSnippets.GettingStarted.ExecutableAssembly
 {
 internal class Example
 {
@@ -41,7 +41,7 @@ await LambdaBootstrapBuilder.Create(handler, new DefaultLambdaJsonSerializer())
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction.GettingStarted.ClassLibrary
+namespace Docs.BedrockAgentFunctionSnippets.GettingStarted.ClassLibrary
 {
 
 // --8<-- [start:class_library]

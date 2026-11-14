@@ -15,11 +15,11 @@ using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+using Docs.BatchProcessingSnippets;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.AdvancedErrorHandling.SqsRecordHandlerErrorHandling
+namespace Docs.BatchSnippets.AdvancedErrorHandling.SqsRecordHandlerErrorHandling
 {
 // --8<-- [start:sqs_record_handler_error_handling]
     public class CustomSqsRecordHandler : ISqsRecordHandler // (1)!
@@ -45,7 +45,7 @@ namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.AdvancedErrorHandling.SqsRec
 // --8<-- [end:sqs_record_handler_error_handling]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.AdvancedErrorHandling.ErrorHandlingPolicyAttribute
+namespace Docs.BatchSnippets.AdvancedErrorHandling.ErrorHandlingPolicyAttribute
 {
 public class Function
 {
@@ -61,7 +61,7 @@ public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.AdvancedErrorHandling.TypedCustomErrorHandling
+namespace Docs.BatchSnippets.AdvancedErrorHandling.TypedCustomErrorHandling
 {
 public class Function
 {

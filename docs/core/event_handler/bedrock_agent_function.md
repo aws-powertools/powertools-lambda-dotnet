@@ -148,8 +148,8 @@ To create an agent, use the `BedrockAgentFunctionResolver` to register your tool
 === "Executable asembly"
 
     ```csharp
---8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:executable_imports"
---8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:executable_assembly"
+    --8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:executable_imports"
+    --8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:executable_assembly"
     ```
 
 === "Class Library"

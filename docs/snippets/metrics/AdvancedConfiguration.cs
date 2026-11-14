@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/metrics.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AdvancedConfiguration.adding_metadata
+namespace Docs.MetricsSnippets.AdvancedConfiguration.adding_metadata
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:adding_metadata]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -26,9 +25,8 @@ public class Function {
 
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AdvancedConfiguration.push_single_metric
+namespace Docs.MetricsSnippets.AdvancedConfiguration.push_single_metric
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:push_single_metric]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -51,9 +49,8 @@ public class Function {
 
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AdvancedConfiguration.single_metric_new_dimensions
+namespace Docs.MetricsSnippets.AdvancedConfiguration.single_metric_new_dimensions
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:single_metric_new_dimensions]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -80,9 +77,8 @@ public class Function {
 
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AdvancedConfiguration.single_metric_default_dimensions_static
+namespace Docs.MetricsSnippets.AdvancedConfiguration.single_metric_default_dimensions_static
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:single_metric_default_dimensions_static]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -104,9 +100,8 @@ public class Function {
 
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AdvancedConfiguration.single_metric_default_dimensions_options
+namespace Docs.MetricsSnippets.AdvancedConfiguration.single_metric_default_dimensions_options
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 public class Function
 {
     private readonly IMetrics _metrics;
@@ -134,9 +129,8 @@ public void HandlerSingleMetricDimensions()
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AdvancedConfiguration.function_name_decorator
+namespace Docs.MetricsSnippets.AdvancedConfiguration.function_name_decorator
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:function_name_decorator]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -154,9 +148,8 @@ public class Function {
 
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AdvancedConfiguration.function_name_configure
+namespace Docs.MetricsSnippets.AdvancedConfiguration.function_name_configure
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:function_name_configure]
 using AWS.Lambda.Powertools.Metrics;
 

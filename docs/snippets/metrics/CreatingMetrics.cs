@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/metrics.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.CreatingMetrics.creating_metrics
+namespace Docs.MetricsSnippets.CreatingMetrics.creating_metrics
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:creating_metrics]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -23,9 +22,8 @@ public class Function {
 // --8<-- [end:creating_metrics]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.CreatingMetrics.metrics_with_dimensions
+namespace Docs.MetricsSnippets.CreatingMetrics.metrics_with_dimensions
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:metrics_with_dimensions]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -42,9 +40,8 @@ public class Function {
 // --8<-- [end:metrics_with_dimensions]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.CreatingMetrics.high_resolution_metrics
+namespace Docs.MetricsSnippets.CreatingMetrics.high_resolution_metrics
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:high_resolution_metrics]
 using AWS.Lambda.Powertools.Metrics;
 

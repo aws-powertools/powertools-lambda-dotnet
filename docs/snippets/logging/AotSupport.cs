@@ -9,17 +9,17 @@ using System.Text.Json.Serialization;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Logging.Serializers;
-using AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.DemoClass;
-using AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.JsonSerializerContextExample;
-using AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.JsonSerializerOptionsAot;
-using static AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.HandlerSupport;
-using CustomLogFormatter = AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.CustomLogFormatterAotClass.CustomLogFormatter;
+using Docs.LoggingSnippets.AotSupportExamples.DemoClass;
+using Docs.LoggingSnippets.AotSupportExamples.JsonSerializerContextExample;
+using Docs.LoggingSnippets.AotSupportExamples.JsonSerializerOptionsAot;
+using static Docs.LoggingSnippets.AotSupportExamples.HandlerSupport;
+using CustomLogFormatter = Docs.LoggingSnippets.AotSupportExamples.CustomLogFormatterAotClass.CustomLogFormatter;
 
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.JsonSerializerOptionsAot
+namespace Docs.LoggingSnippets.AotSupportExamples.JsonSerializerOptionsAot
 {
 public class Example
 {
@@ -38,7 +38,7 @@ Logger.Configure(logger =>
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.BeforeAot
+namespace Docs.LoggingSnippets.AotSupportExamples.BeforeAot
 {
 public class Example
 {
@@ -54,7 +54,7 @@ public class Example
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.AfterAot
+namespace Docs.LoggingSnippets.AotSupportExamples.AfterAot
 {
 public class Example
 {
@@ -70,7 +70,7 @@ await LambdaBootstrapBuilder.Create(handler, new PowertoolsSourceGeneratorSerial
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.DemoClass
+namespace Docs.LoggingSnippets.AotSupportExamples.DemoClass
 {
 // --8<-- [start:demo_class]
 public class Demo
@@ -83,7 +83,7 @@ public class Demo
 public class Headers : Dictionary<string, string> { }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.JsonSerializerContextExample
+namespace Docs.LoggingSnippets.AotSupportExamples.JsonSerializerContextExample
 {
 // --8<-- [start:json_serializer_context]
 [JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
@@ -95,7 +95,7 @@ public partial class MyCustomJsonSerializerContext : JsonSerializerContext
 // --8<-- [end:json_serializer_context]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.CustomLogFormatterAotFunction
+namespace Docs.LoggingSnippets.AotSupportExamples.CustomLogFormatterAotFunction
 {
 public class Example
 {
@@ -118,7 +118,7 @@ await LambdaBootstrapBuilder.Create(handler,
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.CustomLogFormatterAotClass
+namespace Docs.LoggingSnippets.AotSupportExamples.CustomLogFormatterAotClass
 {
 // --8<-- [start:custom_log_formatter_aot_class]
 public class CustomLogFormatter : ILogFormatter
@@ -156,7 +156,7 @@ public class CustomLogFormatter : ILogFormatter
 // --8<-- [end:custom_log_formatter_aot_class]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples
+namespace Docs.LoggingSnippets.AotSupportExamples
 {
 internal static class HandlerSupport
 {

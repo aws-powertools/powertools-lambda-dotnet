@@ -9,7 +9,7 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SsmProvider.SsmProvider
+namespace Docs.ParametersSnippets.SsmProvider.SsmProvider
 {
 // --8<-- [start:ssm_provider]
 using AWS.Lambda.Powertools.Parameters;
@@ -39,7 +39,7 @@ public class Function
 // --8<-- [end:ssm_provider]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SsmProvider.SsmProviderExplicitRegion
+namespace Docs.ParametersSnippets.SsmProvider.SsmProviderExplicitRegion
 {
 // --8<-- [start:ssm_provider_explicit_region]
 using AWS.Lambda.Powertools.Parameters;
@@ -70,7 +70,7 @@ public class Function
 // --8<-- [end:ssm_provider_explicit_region]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SsmProvider.SsmProviderCustomClient
+namespace Docs.ParametersSnippets.SsmProvider.SsmProviderCustomClient
 {
 // --8<-- [start:ssm_provider_custom_client]
 using Amazon.SimpleSystemsManagement;
@@ -105,7 +105,7 @@ public class Function
 // --8<-- [end:ssm_provider_custom_client]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SsmProvider.SsmProviderAdditionalArgs
+namespace Docs.ParametersSnippets.SsmProvider.SsmProviderAdditionalArgs
 {
 // --8<-- [start:ssm_provider_additional_args]
 using AWS.Lambda.Powertools.Parameters;

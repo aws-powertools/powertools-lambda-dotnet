@@ -1,6 +1,6 @@
 using Amazon.Lambda.APIGatewayEvents;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
+namespace Docs.IdempotencySnippets;
 
 public class Order { }
 public class OrderResult { }

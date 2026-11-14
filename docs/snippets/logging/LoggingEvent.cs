@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.LoggingEvent.LogEvent
+namespace Docs.LoggingSnippets.LoggingEvent.LogEvent
 {
 // --8<-- [start:log_event]
 /**

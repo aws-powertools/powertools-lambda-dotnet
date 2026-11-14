@@ -12,11 +12,10 @@ using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Idempotency;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
-using AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
+using Docs.IdempotencySnippets;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.GettingStartedBasic.IdempotentAttributeExample
+namespace Docs.IdempotencySnippets.GettingStartedBasic.IdempotentAttributeExample
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 // --8<-- [start:idempotent_attribute]
     public class Function
     {
@@ -35,9 +34,8 @@ using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.GettingStartedBasic.IdempotentAttributeOnAnotherMethod
+namespace Docs.IdempotencySnippets.GettingStartedBasic.IdempotentAttributeOnAnotherMethod
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 // --8<-- [start:idempotent_attribute_on_another_method]
     public class Function
     {

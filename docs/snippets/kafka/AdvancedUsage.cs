@@ -9,7 +9,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using System.Text.Json.Serialization;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.RecordMetadata
+namespace Docs.KafkaSnippets.RecordMetadata
 {
 // --8<-- [start:record_metadata]
 using AWS.Lambda.Powertools.Kafka;
@@ -48,7 +48,7 @@ await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfil
 } }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.ErrorHandling
+namespace Docs.KafkaSnippets.ErrorHandling
 {
 // --8<-- [start:error_handling]
 using AWS.Lambda.Powertools.Kafka;
@@ -112,7 +112,7 @@ await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfil
 } }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.CrossLanguageCompatibility
+namespace Docs.KafkaSnippets.CrossLanguageCompatibility
 {
 // --8<-- [start:cross_language_compatibility]
 using AWS.Lambda.Powertools.Kafka;

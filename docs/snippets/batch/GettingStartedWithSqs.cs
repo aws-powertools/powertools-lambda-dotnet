@@ -15,12 +15,12 @@ using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+using Docs.BatchProcessingSnippets;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.TypedHandlerWithContext;
+using Docs.BatchSnippets.GettingStartedWithSqs.TypedHandlerWithContext;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.SqsTypedHandlerDecorator
+namespace Docs.BatchSnippets.GettingStartedWithSqs.SqsTypedHandlerDecorator
 {
 public class Function
 {
@@ -63,7 +63,7 @@ public class Function
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.SqsHandlerDecoratorTraditional
+namespace Docs.BatchSnippets.GettingStartedWithSqs.SqsHandlerDecoratorTraditional
 {
 public class Function
 {
@@ -99,7 +99,7 @@ public class Function
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.TypedHandlerWithContext
+namespace Docs.BatchSnippets.GettingStartedWithSqs.TypedHandlerWithContext
 {
 // --8<-- [start:typed_handler_with_context]
 public class ProductHandlerWithContext : ITypedRecordHandlerWithContext<Product>
@@ -122,7 +122,7 @@ public class ProductHandlerWithContext : ITypedRecordHandlerWithContext<Product>
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.FunctionUsageWithContext
+namespace Docs.BatchSnippets.GettingStartedWithSqs.FunctionUsageWithContext
 {
 public class Function
 {
@@ -137,7 +137,7 @@ public BatchItemFailuresResponse ProcessWithContext(SQSEvent sqsEvent, ILambdaCo
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.MigrationBeforeTraditional
+namespace Docs.BatchSnippets.GettingStartedWithSqs.MigrationBeforeTraditional
 {
 public class Function
 {
@@ -168,7 +168,7 @@ public BatchItemFailuresResponse ProcessSqs(SQSEvent sqsEvent)
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedWithSqs.MigrationAfterTyped
+namespace Docs.BatchSnippets.GettingStartedWithSqs.MigrationAfterTyped
 {
 public class Function
 {

@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.Configuration.ConfigureStaticLogger
+namespace Docs.LoggingSnippets.Configuration.ConfigureStaticLogger
 {
 // --8<-- [start:configure_static_logger]
 public class Function
@@ -36,7 +36,7 @@ public class Function
 // --8<-- [end:configure_static_logger]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.Configuration.ConfigureIlogger
+namespace Docs.LoggingSnippets.Configuration.ConfigureIlogger
 {
 // --8<-- [start:configure_ilogger]
 public class Function

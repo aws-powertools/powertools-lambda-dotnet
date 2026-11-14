@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.CorrelationId.CorrelationIdCustom
+namespace Docs.LoggingSnippets.CorrelationId.CorrelationIdCustom
 {
 // --8<-- [start:correlation_id_custom]
 /**
@@ -30,7 +30,7 @@ public class Function
 // --8<-- [end:correlation_id_custom]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.CorrelationId.CorrelationIdBuiltin
+namespace Docs.LoggingSnippets.CorrelationId.CorrelationIdBuiltin
 {
 // --8<-- [start:correlation_id_builtin]
 /**

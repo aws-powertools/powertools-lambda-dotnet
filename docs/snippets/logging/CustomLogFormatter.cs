@@ -6,13 +6,13 @@ using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using CustomLogFormatter = AWS.Lambda.Powertools.Docs.Snippets.Logging.CustomLogFormatterExamples.CustomLogFormatterClass.CustomLogFormatter;
+using CustomLogFormatter = Docs.LoggingSnippets.CustomLogFormatterExamples.CustomLogFormatterClass.CustomLogFormatter;
 
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.CustomLogFormatterExamples.CustomLogFormatterFunction
+namespace Docs.LoggingSnippets.CustomLogFormatterExamples.CustomLogFormatterFunction
 {
 // --8<-- [start:custom_log_formatter_function]
 /**
@@ -42,7 +42,7 @@ public class Function
 // --8<-- [end:custom_log_formatter_function]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.CustomLogFormatterExamples.CustomLogFormatterClass
+namespace Docs.LoggingSnippets.CustomLogFormatterExamples.CustomLogFormatterClass
 {
 // --8<-- [start:custom_log_formatter_class]
 public class CustomLogFormatter : ILogFormatter

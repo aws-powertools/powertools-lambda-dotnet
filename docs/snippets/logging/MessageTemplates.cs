@@ -6,13 +6,13 @@ using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using AWS.Lambda.Powertools.Docs.Snippets.Logging.MessageTemplates.TostringOverride;
+using Docs.LoggingSnippets.MessageTemplates.TostringOverride;
 
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.MessageTemplates.TostringOverride
+namespace Docs.LoggingSnippets.MessageTemplates.TostringOverride
 {
 // --8<-- [start:tostring_override]
 public class User
@@ -29,7 +29,7 @@ public class User
 // --8<-- [end:tostring_override]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.MessageTemplates.MessageTemplateAt
+namespace Docs.LoggingSnippets.MessageTemplates.MessageTemplateAt
 {
 // --8<-- [start:message_template_at]
 public class Function
@@ -53,7 +53,7 @@ public class Function
 // --8<-- [end:message_template_at]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.MessageTemplates.MessageTemplateTostring
+namespace Docs.LoggingSnippets.MessageTemplates.MessageTemplateTostring
 {
 // --8<-- [start:message_template_tostring]
 public class Function

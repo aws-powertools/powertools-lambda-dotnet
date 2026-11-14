@@ -12,12 +12,11 @@ using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Idempotency;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
-using AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
-using AWS.Lambda.Powertools.Docs.Snippets.Idempotency.AdvancedConfiguration.WithJsonSerializationContextFullExample;
+using Docs.IdempotencySnippets;
+using Docs.IdempotencySnippets.AdvancedConfiguration.WithJsonSerializationContextFullExample;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.AdvancedConfiguration.RegisterLambdaContext
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.RegisterLambdaContext
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 // --8<-- [start:register_lambda_context]
     public class Function
     {
@@ -42,9 +41,8 @@ using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.AdvancedConfiguration.ExceptionNotAffectingRecord
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.ExceptionNotAffectingRecord
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 // --8<-- [start:exception_not_affecting_record]
     public class Function
     {
@@ -75,9 +73,8 @@ using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.AdvancedConfiguration.IdempotencyOptionsBuilderExample
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.IdempotencyOptionsBuilderExample
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()
@@ -97,9 +94,8 @@ new IdempotencyOptionsBuilder()
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.AdvancedConfiguration.EnableLocalCache
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.EnableLocalCache
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()
@@ -114,9 +110,8 @@ internal static class Example
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.AdvancedConfiguration.ResponseHook
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.ResponseHook
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()
@@ -142,9 +137,8 @@ Idempotency.Configure(builder => builder
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.AdvancedConfiguration.WithJsonSerializationContext
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.WithJsonSerializationContext
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()
@@ -158,9 +152,8 @@ Idempotency.Configure(builder =>
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.AdvancedConfiguration.WithJsonSerializationContextFullExample
+namespace Docs.IdempotencySnippets.AdvancedConfiguration.WithJsonSerializationContextFullExample
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 // --8<-- [start:with_json_serialization_context_full_example]
 public static class Function
 {

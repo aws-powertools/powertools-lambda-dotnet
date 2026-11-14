@@ -3,7 +3,7 @@
 
 using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents.ErrorHandling
+namespace Docs.AppSyncEventsSnippets.ErrorHandling
 {
 internal class Example
 {

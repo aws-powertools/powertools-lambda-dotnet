@@ -8,7 +8,7 @@
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.KeyValueDeserialization
+namespace Docs.KafkaSnippets.KeyValueDeserialization
 {
 // --8<-- [start:key_value_deserialization]
 using AWS.Lambda.Powertools.Kafka;
@@ -34,7 +34,7 @@ await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<CustomerKey, CustomerP
 } }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.ValueOnlyDeserialization
+namespace Docs.KafkaSnippets.ValueOnlyDeserialization
 {
 // --8<-- [start:value_only_deserialization]
 using AWS.Lambda.Powertools.Kafka;

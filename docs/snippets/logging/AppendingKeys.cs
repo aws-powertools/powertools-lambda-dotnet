@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AppendingKeys.AppendKeys
+namespace Docs.LoggingSnippets.AppendingKeys.AppendKeys
 {
 // --8<-- [start:append_keys]
 /**
@@ -44,7 +44,7 @@ public class Function
 // --8<-- [end:append_keys]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AppendingKeys.RemoveKeys
+namespace Docs.LoggingSnippets.AppendingKeys.RemoveKeys
 {
 // --8<-- [start:remove_keys]
 /**

@@ -15,13 +15,13 @@ using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+using Docs.BatchProcessingSnippets;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using AWS.Lambda.Powertools.Docs.Snippets.Batch.PartialFailureHandling.ExtendingBatchProcessor;
-using AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.ExampleImplementationOfIserviceprovider;
+using Docs.BatchSnippets.PartialFailureHandling.ExtendingBatchProcessor;
+using Docs.BatchSnippets.GettingStartedBasic.ExampleImplementationOfIserviceprovider;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.KinesisTypedHandlerDecorator
+namespace Docs.BatchSnippets.GettingStartedBasic.KinesisTypedHandlerDecorator
 {
 public class Function
 {
@@ -59,7 +59,7 @@ public BatchItemFailuresResponse HandlerUsingTypedAttribute(KinesisEvent _)
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.KinesisHandlerDecoratorTraditional
+namespace Docs.BatchSnippets.GettingStartedBasic.KinesisHandlerDecoratorTraditional
 {
 public class Function
 {
@@ -90,7 +90,7 @@ public BatchItemFailuresResponse HandlerUsingAttribute(KinesisEvent _)
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.DynamodbTypedHandlerDecorator
+namespace Docs.BatchSnippets.GettingStartedBasic.DynamodbTypedHandlerDecorator
 {
 public class Function
 {
@@ -128,7 +128,7 @@ public BatchItemFailuresResponse HandlerUsingTypedAttribute(DynamoDBEvent _)
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.DynamodbHandlerDecoratorTraditional
+namespace Docs.BatchSnippets.GettingStartedBasic.DynamodbHandlerDecoratorTraditional
 {
 public class Function
 {
@@ -159,7 +159,7 @@ public BatchItemFailuresResponse HandlerUsingAttribute(DynamoDBEvent _)
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.UsingUtilityOutsideDecorator
+namespace Docs.BatchSnippets.GettingStartedBasic.UsingUtilityOutsideDecorator
 {
 public class Function
 {
@@ -182,7 +182,7 @@ public async Task<BatchItemFailuresResponse> HandlerUsingUtility(DynamoDBEvent d
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.UsingUtilityFromIocGetrequiredservice
+namespace Docs.BatchSnippets.GettingStartedBasic.UsingUtilityFromIocGetrequiredservice
 {
 public class Function
 {
@@ -199,7 +199,7 @@ public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDB
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.UsingUtilityFromIocInjectedParameters
+namespace Docs.BatchSnippets.GettingStartedBasic.UsingUtilityFromIocInjectedParameters
 {
 public class Function
 {
@@ -215,7 +215,7 @@ public async Task<BatchItemFailuresResponse> HandlerUsingUtilityFromIoc(DynamoDB
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.ExampleImplementationOfIserviceprovider
+namespace Docs.BatchSnippets.GettingStartedBasic.ExampleImplementationOfIserviceprovider
 {
 // --8<-- [start:example_implementation_of_iserviceprovider]
 internal class Services
@@ -242,7 +242,7 @@ internal class Services
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Batch.GettingStartedBasic.ProcessingMessagesInParallel
+namespace Docs.BatchSnippets.GettingStartedBasic.ProcessingMessagesInParallel
 {
 public class Function
 {

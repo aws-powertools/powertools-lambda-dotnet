@@ -11,11 +11,10 @@ using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Idempotency;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
-using AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
+using Docs.IdempotencySnippets;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.CustomIdempotencyKey.EventKeyJmespathPayment
+namespace Docs.IdempotencySnippets.CustomIdempotencyKey.EventKeyJmespathPayment
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()
@@ -32,9 +31,8 @@ internal static class Example
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.CustomIdempotencyKey.CustomKeyPrefix
+namespace Docs.IdempotencySnippets.CustomIdempotencyKey.CustomKeyPrefix
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 // --8<-- [start:custom_key_prefix]
 public class Function
 {
@@ -54,9 +52,8 @@ public class Function
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.CustomIdempotencyKey.ThrowOnNoIdempotencyKey
+namespace Docs.IdempotencySnippets.CustomIdempotencyKey.ThrowOnNoIdempotencyKey
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 public class App
 {
 // --8<-- [start:throw_on_no_idempotency_key]

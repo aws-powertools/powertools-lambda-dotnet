@@ -6,7 +6,7 @@
 // Lines carrying a "hidden" snippet marker are compile-only and are not rendered in the docs.
 
 using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.Docs.Snippets.Kafka;
+using Docs.KafkaSnippets;
 
 // --8<-- [start:class_library_deployment]
 using AWS.Lambda.Powertools.Kafka;

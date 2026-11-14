@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.TimestampFormatting.TimestampFormatting
+namespace Docs.LoggingSnippets.TimestampFormatting.TimestampFormatting
 {
 public class Example
 {

@@ -3,7 +3,7 @@
 
 using Xunit;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka;
+namespace Docs.KafkaSnippets;
 
 // --8<-- [start:testing_your_code]
 using System.Text;

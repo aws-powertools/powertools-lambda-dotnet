@@ -10,9 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AspNetCore.use_metrics_middleware
+namespace Docs.MetricsSnippets.AspNetCore.use_metrics_middleware
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 public static class Example
 {
     public static void Main(string[] args)
@@ -54,9 +53,8 @@ app.Run();
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AspNetCore.use_metrics_method
+namespace Docs.MetricsSnippets.AspNetCore.use_metrics_method
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 public static class Example
 {
     // --8<-- [start:use_metrics_method]
@@ -74,9 +72,8 @@ public static IApplicationBuilder UseMetrics(this IApplicationBuilder app)
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AspNetCore.with_metrics_filter
+namespace Docs.MetricsSnippets.AspNetCore.with_metrics_filter
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 public static class Example
 {
     public static void Main(string[] args)
@@ -119,9 +116,8 @@ app.Run();
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.AspNetCore.with_metrics_method
+namespace Docs.MetricsSnippets.AspNetCore.with_metrics_method
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 public static class Example
 {
     // --8<-- [start:with_metrics_method]

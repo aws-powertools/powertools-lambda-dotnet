@@ -6,9 +6,8 @@ using Amazon.Lambda.TestUtilities;
 using Xunit;
 using NSubstitute;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.Testing
+namespace Docs.MetricsSnippets.Testing
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 
 // --8<-- [start:lambda_function_testing]
 using System.Collections.Generic;

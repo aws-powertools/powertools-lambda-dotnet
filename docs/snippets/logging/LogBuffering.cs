@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.LogBuffering.BufferingOptions
+namespace Docs.LoggingSnippets.LogBuffering.BufferingOptions
 {
 // --8<-- [start:buffering_options]
 public class Function
@@ -46,7 +46,7 @@ public class Function
 // --8<-- [end:buffering_options]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.LogBuffering.BufferAtLogLevel
+namespace Docs.LoggingSnippets.LogBuffering.BufferAtLogLevel
 {
 // --8<-- [start:buffer_at_log_level]
 public class Function
@@ -77,7 +77,7 @@ public class Function
 // --8<-- [end:buffer_at_log_level]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.LogBuffering.FlushOnErrorLog
+namespace Docs.LoggingSnippets.LogBuffering.FlushOnErrorLog
 {
 // --8<-- [start:flush_on_error_log]
 public class Function
@@ -124,7 +124,7 @@ public class Function
 // --8<-- [end:flush_on_error_log]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.LogBuffering.FlushBufferOnUncaughtError
+namespace Docs.LoggingSnippets.LogBuffering.FlushBufferOnUncaughtError
 {
 // --8<-- [start:flush_buffer_on_uncaught_error]
 public class Function

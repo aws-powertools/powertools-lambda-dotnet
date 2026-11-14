@@ -7,7 +7,7 @@
         <Nullable>disable</Nullable>
         <IsPackable>false</IsPackable>
         <OutputType>Library</OutputType>
-        <RootNamespace>AWS.Lambda.Powertools.Docs.Snippets</RootNamespace>
+        <RootNamespace>Docs</RootNamespace>
         <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
     </PropertyGroup>
 

@@ -4,7 +4,7 @@ using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 using AWS.Lambda.Powertools.Parameters.Transform;
-using S3Provider = AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomProviderExamples.S3ProviderExample.S3Provider;
+using S3Provider = Docs.ParametersSnippets.CustomProviderExamples.S3ProviderExample.S3Provider;
 using Amazon.S3;
 using Amazon.S3.Model;
 using AWS.Lambda.Powertools.Parameters.Provider;
@@ -14,7 +14,7 @@ using AWS.Lambda.Powertools.Parameters.Configuration;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomProviderExamples.S3ProviderExample
+namespace Docs.ParametersSnippets.CustomProviderExamples.S3ProviderExample
 {
 // --8<-- [start:s3_provider]
 public class S3Provider : ParameterProvider
@@ -87,7 +87,7 @@ public class S3Provider : ParameterProvider
 // --8<-- [end:s3_provider]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomProviderExamples.UsingCustomProvider
+namespace Docs.ParametersSnippets.CustomProviderExamples.UsingCustomProvider
 {
 public class Example
 {

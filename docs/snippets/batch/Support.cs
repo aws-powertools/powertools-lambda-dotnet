@@ -3,7 +3,7 @@ using AWS.Lambda.Powertools.BatchProcessing;
 using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 using AWS.Lambda.Powertools.BatchProcessing.Sqs;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
+namespace Docs.BatchProcessingSnippets;
 
 public class Product
 {

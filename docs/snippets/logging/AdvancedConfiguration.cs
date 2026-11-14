@@ -7,13 +7,13 @@ using Microsoft.Extensions.Logging;
 using JsonSerializerOptions = System.Text.Json.JsonSerializerOptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using AWS.Lambda.Powertools.Docs.Snippets.Logging.AotSupportExamples.JsonSerializerContextExample;
+using Docs.LoggingSnippets.AotSupportExamples.JsonSerializerContextExample;
 
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AdvancedConfigurationExamples.JsonSerializerOptionsExample
+namespace Docs.LoggingSnippets.AdvancedConfigurationExamples.JsonSerializerOptionsExample
 {
 public class Example
 {
@@ -34,7 +34,7 @@ builder.Logging.AddPowertoolsLogger(options =>
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.AdvancedConfigurationExamples.ClearProviders
+namespace Docs.LoggingSnippets.AdvancedConfigurationExamples.ClearProviders
 {
 public class Example
 {

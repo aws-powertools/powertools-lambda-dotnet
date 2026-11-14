@@ -11,11 +11,10 @@ using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Idempotency;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
-using AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
+using Docs.IdempotencySnippets;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.PayloadValidation.PayloadValidationJmespath
+namespace Docs.IdempotencySnippets.PayloadValidation.PayloadValidationJmespath
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()

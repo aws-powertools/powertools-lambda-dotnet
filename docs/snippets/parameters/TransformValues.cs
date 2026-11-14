@@ -5,13 +5,13 @@ using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 using AWS.Lambda.Powertools.Parameters.Transform;
 using AWS.Lambda.Powertools.Parameters.Provider;
-using AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomTransformer;
+using Docs.ParametersSnippets.CustomTransformer;
 
 // This file is referenced by docs/utilities/parameters.md
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.TransformValues.JsonTransformation
+namespace Docs.ParametersSnippets.TransformValues.JsonTransformation
 {
 // --8<-- [start:json_transformation]
 using AWS.Lambda.Powertools.Parameters;
@@ -36,7 +36,7 @@ public class Function
 // --8<-- [end:json_transformation]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.TransformValues.Base64Transformation
+namespace Docs.ParametersSnippets.TransformValues.Base64Transformation
 {
 // --8<-- [start:base64_transformation]
 using AWS.Lambda.Powertools.Parameters;
@@ -61,7 +61,7 @@ public class Function
 // --8<-- [end:base64_transformation]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.TransformValues.RaiseTransformationError
+namespace Docs.ParametersSnippets.TransformValues.RaiseTransformationError
 {
 // --8<-- [start:raise_transformation_error]
 using AWS.Lambda.Powertools.Parameters;
@@ -87,7 +87,7 @@ public class Function
 // --8<-- [end:raise_transformation_error]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.TransformValues.AutoTransform
+namespace Docs.ParametersSnippets.TransformValues.AutoTransform
 {
 // --8<-- [start:auto_transform]
 using AWS.Lambda.Powertools.Parameters;

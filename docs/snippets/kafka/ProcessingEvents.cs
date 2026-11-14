@@ -8,7 +8,7 @@
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.AvroMessages
+namespace Docs.KafkaSnippets.AvroMessages
 {
 // --8<-- [start:avro_messages]
 using AWS.Lambda.Powertools.Kafka;
@@ -34,7 +34,7 @@ await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfil
 } }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.ProtobufMessages
+namespace Docs.KafkaSnippets.ProtobufMessages
 {
 // --8<-- [start:protobuf_messages]
 using AWS.Lambda.Powertools.Kafka;
@@ -60,7 +60,7 @@ await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfil
 } }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.JsonMessages
+namespace Docs.KafkaSnippets.JsonMessages
 {
 // --8<-- [start:json_messages]
 using AWS.Lambda.Powertools.Kafka;

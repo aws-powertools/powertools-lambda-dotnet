@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/tracing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.UsingStatementPattern.basic_using_statement
+namespace Docs.TracingSnippets.UsingStatementPattern.basic_using_statement
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 // --8<-- [start:basic_using_statement]
 using AWS.Lambda.Powertools.Tracing;
 
@@ -34,9 +33,8 @@ public partial class Function
 
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.UsingStatementPattern.custom_namespace
+namespace Docs.TracingSnippets.UsingStatementPattern.custom_namespace
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 // --8<-- [start:custom_namespace]
 using AWS.Lambda.Powertools.Tracing;
 
@@ -54,9 +52,8 @@ public partial class Function
 // --8<-- [end:custom_namespace]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.UsingStatementPattern.nested_subsegments
+namespace Docs.TracingSnippets.UsingStatementPattern.nested_subsegments
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 // --8<-- [start:nested_subsegments]
 using AWS.Lambda.Powertools.Tracing;
 

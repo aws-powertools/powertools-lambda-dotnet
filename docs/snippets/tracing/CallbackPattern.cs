@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/tracing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.CallbackPattern.functional_api
+namespace Docs.TracingSnippets.CallbackPattern.functional_api
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 // --8<-- [start:functional_api]
 using AWS.Lambda.Powertools.Tracing;
 
@@ -29,9 +28,8 @@ public class Function
 // --8<-- [end:functional_api]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.CallbackPattern.multi_threaded
+namespace Docs.TracingSnippets.CallbackPattern.multi_threaded
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 // --8<-- [start:multi_threaded]
 using AWS.Lambda.Powertools.Tracing;
 

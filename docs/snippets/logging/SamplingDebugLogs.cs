@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.SamplingDebugLogs.SamplingAttribute
+namespace Docs.LoggingSnippets.SamplingDebugLogs.SamplingAttribute
 {
 // --8<-- [start:sampling_attribute]
 /**
@@ -30,7 +30,7 @@ public class Function
 // --8<-- [end:sampling_attribute]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.SamplingDebugLogs.SamplingConfigure
+namespace Docs.LoggingSnippets.SamplingDebugLogs.SamplingConfigure
 {
 // --8<-- [start:sampling_configure]
 public class Function

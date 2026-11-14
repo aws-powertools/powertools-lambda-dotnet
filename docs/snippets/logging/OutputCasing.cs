@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.OutputCasing.OutputCasingAttribute
+namespace Docs.LoggingSnippets.OutputCasing.OutputCasingAttribute
 {
 // --8<-- [start:output_casing_attribute]
 /**

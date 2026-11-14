@@ -9,7 +9,7 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.DynamoDbProvider.DynamodbProviderSingle
+namespace Docs.ParametersSnippets.DynamoDbProvider.DynamodbProviderSingle
 {
 // --8<-- [start:dynamodb_provider_single]
 using AWS.Lambda.Powertools.Parameters;
@@ -34,7 +34,7 @@ public class Function
 // --8<-- [end:dynamodb_provider_single]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.DynamoDbProvider.DynamodbProviderMultiple
+namespace Docs.ParametersSnippets.DynamoDbProvider.DynamodbProviderMultiple
 {
 // --8<-- [start:dynamodb_provider_multiple]
 using AWS.Lambda.Powertools.Parameters;
@@ -59,7 +59,7 @@ public class Function
 // --8<-- [end:dynamodb_provider_multiple]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.DynamoDbProvider.DynamodbProviderCustomizing
+namespace Docs.ParametersSnippets.DynamoDbProvider.DynamodbProviderCustomizing
 {
 // --8<-- [start:dynamodb_provider_customizing]
 using AWS.Lambda.Powertools.Parameters;

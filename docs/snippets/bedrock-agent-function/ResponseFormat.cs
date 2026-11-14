@@ -4,7 +4,7 @@
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.EventHandler.Resolvers;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction.ResponseFormat
+namespace Docs.BedrockAgentFunctionSnippets.ResponseFormat
 {
 internal class AirportService
 {

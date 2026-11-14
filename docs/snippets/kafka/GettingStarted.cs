@@ -8,7 +8,7 @@
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.TopLevelDeployment
+namespace Docs.KafkaSnippets.TopLevelDeployment
 {
 // --8<-- [start:top_level_deployment]
 using AWS.Lambda.Powertools.Kafka;

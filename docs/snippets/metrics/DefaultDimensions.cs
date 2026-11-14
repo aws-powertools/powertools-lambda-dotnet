@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/metrics.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.DefaultDimensions.set_default_dimensions
+namespace Docs.MetricsSnippets.DefaultDimensions.set_default_dimensions
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:set_default_dimensions]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -28,9 +27,8 @@ public class Function {
 // --8<-- [end:set_default_dimensions]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.DefaultDimensions.default_dims_builder_cold_start
+namespace Docs.MetricsSnippets.DefaultDimensions.default_dims_builder_cold_start
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:default_dims_builder_cold_start]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -62,9 +60,8 @@ public class Function {
 
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.DefaultDimensions.default_dims_configure_cold_start
+namespace Docs.MetricsSnippets.DefaultDimensions.default_dims_configure_cold_start
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 // --8<-- [start:default_dims_configure_cold_start]
 using AWS.Lambda.Powertools.Metrics;
 

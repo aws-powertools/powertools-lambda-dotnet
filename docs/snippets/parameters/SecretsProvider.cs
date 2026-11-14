@@ -9,7 +9,7 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SecretsProvider.SecretsProvider
+namespace Docs.ParametersSnippets.SecretsProvider.SecretsProvider
 {
 // --8<-- [start:secrets_provider]
 using AWS.Lambda.Powertools.Parameters;
@@ -33,7 +33,7 @@ public class Function
 // --8<-- [end:secrets_provider]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SecretsProvider.SecretsProviderExplicitRegion
+namespace Docs.ParametersSnippets.SecretsProvider.SecretsProviderExplicitRegion
 {
 // --8<-- [start:secrets_provider_explicit_region]
 using AWS.Lambda.Powertools.Parameters;
@@ -58,7 +58,7 @@ public class Function
 // --8<-- [end:secrets_provider_explicit_region]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SecretsProvider.SecretsProviderCustomClient
+namespace Docs.ParametersSnippets.SecretsProvider.SecretsProviderCustomClient
 {
 // --8<-- [start:secrets_provider_custom_client]
 using Amazon.SecretsManager;

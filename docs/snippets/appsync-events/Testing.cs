@@ -5,7 +5,7 @@ using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 using Xunit;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents.Testing
+namespace Docs.AppSyncEventsSnippets.Testing
 {
 public class Tests
 {

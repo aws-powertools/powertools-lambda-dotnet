@@ -5,9 +5,8 @@ using Amazon.XRay.Recorder.Handlers.System.Net;
 using AWS.Lambda.Powertools.Tracing;
 using Amazon.DynamoDBv2;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.RegisterAllServices
+namespace Docs.TracingSnippets.RegisterAllServices
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 
 // --8<-- [start:register_all_services]
 using Amazon.DynamoDBv2;
@@ -31,9 +30,8 @@ public class Function
 // --8<-- [end:register_all_services]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.RegisterSingleService
+namespace Docs.TracingSnippets.RegisterSingleService
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 public class Function
 {
     public void Register()
@@ -46,9 +44,8 @@ Tracing.Register<IAmazonDynamoDB>();
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.InstrumentHttpCalls
+namespace Docs.TracingSnippets.InstrumentHttpCalls
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 
 // --8<-- [start:instrument_http_calls]
 using Amazon.XRay.Recorder.Handlers.System.Net;

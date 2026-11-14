@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/metrics.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.GettingStarted.metrics_attribute
+namespace Docs.MetricsSnippets.GettingStarted.metrics_attribute
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 public class Function
 {
 // --8<-- [start:metrics_attribute]
@@ -21,9 +20,8 @@ public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyReques
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.GettingStarted.metrics_methods
+namespace Docs.MetricsSnippets.GettingStarted.metrics_methods
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 public class Function
 {
 // --8<-- [start:metrics_methods]
@@ -40,9 +38,8 @@ public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyReques
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.GettingStarted.metrics_configure
+namespace Docs.MetricsSnippets.GettingStarted.metrics_configure
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 public class Function
 {
 // --8<-- [start:metrics_configure]
@@ -73,9 +70,8 @@ public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyReques
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics.GettingStarted.metrics_builder
+namespace Docs.MetricsSnippets.GettingStarted.metrics_builder
 {
-using Metrics = global::AWS.Lambda.Powertools.Metrics.Metrics;
 public class Function
 {
 // --8<-- [start:metrics_builder]

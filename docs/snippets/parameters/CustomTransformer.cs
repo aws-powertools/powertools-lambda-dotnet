@@ -4,17 +4,17 @@ using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
 using AWS.Lambda.Powertools.Parameters.Transform;
-using XmlTransformer = AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomTransformerExamples.XmlTransformerExample.XmlTransformer;
+using XmlTransformer = Docs.ParametersSnippets.CustomTransformerExamples.XmlTransformerExample.XmlTransformer;
 using AWS.Lambda.Powertools.Parameters.Provider;
 using AWS.Lambda.Powertools.Parameters.Configuration;
 using System.Xml.Serialization;
-using AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomTransformer;
+using Docs.ParametersSnippets.CustomTransformer;
 
 // This file is referenced by docs/utilities/parameters.md
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomTransformerExamples.XmlTransformerExample
+namespace Docs.ParametersSnippets.CustomTransformerExamples.XmlTransformerExample
 {
 // --8<-- [start:xml_transformer]
 public class XmlTransformer : ITransformer
@@ -32,7 +32,7 @@ public class XmlTransformer : ITransformer
 // --8<-- [end:xml_transformer]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomTransformerExamples.UsingXmlTransformer
+namespace Docs.ParametersSnippets.CustomTransformerExamples.UsingXmlTransformer
 {
 public class Example
 {
@@ -49,7 +49,7 @@ public class Example
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomTransformerExamples.AddingXmlTransformer
+namespace Docs.ParametersSnippets.CustomTransformerExamples.AddingXmlTransformer
 {
 public class Example
 {
@@ -71,7 +71,7 @@ public class Example
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomTransformerExamples.FluentApi
+namespace Docs.ParametersSnippets.CustomTransformerExamples.FluentApi
 {
 public class Example
 {
@@ -90,7 +90,7 @@ public class Example
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.CustomTransformer
+namespace Docs.ParametersSnippets.CustomTransformer
 {
     public class MyObj { }
 }

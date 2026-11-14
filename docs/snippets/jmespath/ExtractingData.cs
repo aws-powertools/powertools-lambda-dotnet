@@ -7,9 +7,8 @@ using AWS.Lambda.Powertools.Idempotency;
 using AWS.Lambda.Powertools.JMESPath;
 using AWS.Lambda.Powertools.Logging;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Jmespath.ExtractingData.TransformJson
+namespace Docs.JmespathSnippets.ExtractingData.TransformJson
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()
@@ -26,9 +25,8 @@ Logger.LogInformation(result.RootElement.GetRawText()); // "dd4649e6-2484-4993-a
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Jmespath.ExtractingData.IdempotencyEventKeyJmespath
+namespace Docs.JmespathSnippets.ExtractingData.IdempotencyEventKeyJmespath
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()
@@ -45,9 +43,8 @@ Idempotency.Configure(builder =>
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Jmespath.ExtractingData.PowertoolsBase64
+namespace Docs.JmespathSnippets.ExtractingData.PowertoolsBase64
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()
@@ -64,9 +61,8 @@ Logger.LogInformation(result.RootElement.GetRawText()); // "dd4649e6-2484-4993-a
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Jmespath.ExtractingData.PowertoolsBase64Gzip
+namespace Docs.JmespathSnippets.ExtractingData.PowertoolsBase64Gzip
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()

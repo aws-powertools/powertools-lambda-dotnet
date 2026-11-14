@@ -8,7 +8,7 @@
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.PrimitiveKey
+namespace Docs.KafkaSnippets.PrimitiveKey
 {
 // --8<-- [start:primitive_key]
 using AWS.Lambda.Powertools.Kafka;
@@ -34,7 +34,7 @@ await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfil
 } }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.PrimitiveKeyAndValue
+namespace Docs.KafkaSnippets.PrimitiveKeyAndValue
 {
 // --8<-- [start:primitive_key_and_value]
 using AWS.Lambda.Powertools.Kafka;

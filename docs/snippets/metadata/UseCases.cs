@@ -7,9 +7,9 @@ using AWS.Lambda.Powertools.Metadata;
 using AWS.Lambda.Powertools.Metadata.Exceptions;
 using AWS.Lambda.Powertools.Logging;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.UseCases.MultiAzRouting
+namespace Docs.MetadataSnippets.UseCases.MultiAzRouting
 {
-using static AWS.Lambda.Powertools.Docs.Snippets.Metadata.UseCases.MultiAzRouting.OrderProcessor;
+using static Docs.MetadataSnippets.UseCases.MultiAzRouting.OrderProcessor;
 // --8<-- [start:multi_az_routing]
 using AWS.Lambda.Powertools.Metadata;
 
@@ -36,7 +36,7 @@ static class OrderProcessor
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metadata.UseCases.LoggingWithMetadata
+namespace Docs.MetadataSnippets.UseCases.LoggingWithMetadata
 {
 // --8<-- [start:logging_with_metadata]
 using AWS.Lambda.Powertools.Logging;

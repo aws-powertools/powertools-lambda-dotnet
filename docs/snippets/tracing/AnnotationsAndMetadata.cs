@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/tracing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.AnnotationsAndMetadata.add_annotation
+namespace Docs.TracingSnippets.AnnotationsAndMetadata.add_annotation
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 // --8<-- [start:add_annotation]
 using AWS.Lambda.Powertools.Tracing;
 
@@ -24,9 +23,8 @@ public class Function
 // --8<-- [end:add_annotation]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.AnnotationsAndMetadata.add_metadata
+namespace Docs.TracingSnippets.AnnotationsAndMetadata.add_metadata
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 // --8<-- [start:add_metadata]
 using AWS.Lambda.Powertools.Tracing;
 

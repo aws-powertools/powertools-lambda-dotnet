@@ -11,11 +11,10 @@ using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.Idempotency;
 using AWS.Lambda.Powertools.Idempotency.Persistence;
-using AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
+using Docs.IdempotencySnippets;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.DynamoDbConfiguration.DynamodbPersistenceStoreBuilder
+namespace Docs.IdempotencySnippets.DynamoDbConfiguration.DynamodbPersistenceStoreBuilder
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()
@@ -36,9 +35,8 @@ new DynamoDBPersistenceStoreBuilder()
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.DynamoDbConfiguration.CustomAmazonDynamodbClient
+namespace Docs.IdempotencySnippets.DynamoDbConfiguration.CustomAmazonDynamodbClient
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 public class Function
 {
 // --8<-- [start:custom_amazon_dynamodb_client]
@@ -58,9 +56,8 @@ public class Function
 }
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency.DynamoDbConfiguration.DynamodbCompositePrimaryKey
+namespace Docs.IdempotencySnippets.DynamoDbConfiguration.DynamodbCompositePrimaryKey
 {
-using Idempotency = global::AWS.Lambda.Powertools.Idempotency.Idempotency;
 internal static class Example
 {
     public static void Run()

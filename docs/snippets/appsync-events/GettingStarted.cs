@@ -8,7 +8,7 @@ using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 // --8<-- [end:publish_executable_imports]
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents.GettingStarted.PublishClassLibrary
+namespace Docs.AppSyncEventsSnippets.GettingStarted.PublishClassLibrary
 {
 
 // --8<-- [start:publish_class_library]
@@ -37,7 +37,7 @@ public class Function
 // --8<-- [end:publish_class_library]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents.GettingStarted.PublishExecutableAssembly
+namespace Docs.AppSyncEventsSnippets.GettingStarted.PublishExecutableAssembly
 {
 internal class Example
 {
@@ -68,7 +68,7 @@ new DefaultLambdaJsonSerializer())
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents.GettingStarted.SubscribeEvents
+namespace Docs.AppSyncEventsSnippets.GettingStarted.SubscribeEvents
 {
 internal class Example
 {

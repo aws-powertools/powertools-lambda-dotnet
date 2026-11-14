@@ -5,7 +5,7 @@
 // [assembly: LambdaSerializer] attribute, but it is compiled out: an assembly can only declare it once.
 // Lines carrying a "hidden" snippet marker are compile-only and are not rendered in the docs.
 
-using AWS.Lambda.Powertools.Docs.Snippets.Kafka;
+using Docs.KafkaSnippets;
 
 // --8<-- [start:idempotent_processing]
 using Amazon.Lambda.Core;

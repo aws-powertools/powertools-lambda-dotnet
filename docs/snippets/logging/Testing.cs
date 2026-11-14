@@ -14,7 +14,7 @@ using IConsoleWrapper = LoggingTypes::AWS.Lambda.Powertools.Common.IConsoleWrapp
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.Testing.TestingSetup
+namespace Docs.LoggingSnippets.Testing.TestingSetup
 {
 public class Example
 {
@@ -47,7 +47,7 @@ public class TestConsoleWrapper : IConsoleWrapper
 // --8<-- [end:testing_setup]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.Testing.TestExample
+namespace Docs.LoggingSnippets.Testing.TestExample
 {
 public class Example
 {
@@ -80,7 +80,7 @@ public void When_Setting_Service_Should_Update_Key()
 }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.Testing.IloggerTesting
+namespace Docs.LoggingSnippets.Testing.IloggerTesting
 {
 // --8<-- [start:ilogger_testing]
 public class Function

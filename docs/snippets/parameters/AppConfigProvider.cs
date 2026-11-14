@@ -9,7 +9,7 @@ using AWS.Lambda.Powertools.Parameters.Transform;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.AppConfigProvider.AppConfigProvider
+namespace Docs.ParametersSnippets.AppConfigProvider.AppConfigProvider
 {
 // --8<-- [start:app_config_provider]
 using AWS.Lambda.Powertools.Parameters;
@@ -36,7 +36,7 @@ public class Function
 // --8<-- [end:app_config_provider]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.AppConfigProvider.AppConfigProviderExplicitRegion
+namespace Docs.ParametersSnippets.AppConfigProvider.AppConfigProviderExplicitRegion
 {
 // --8<-- [start:app_config_provider_explicit_region]
 using AWS.Lambda.Powertools.Parameters;
@@ -64,7 +64,7 @@ public class Function
 // --8<-- [end:app_config_provider_explicit_region]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.AppConfigProvider.AppConfigFeatureFlags
+namespace Docs.ParametersSnippets.AppConfigProvider.AppConfigFeatureFlags
 {
 // --8<-- [start:app_config_feature_flags]
 using AWS.Lambda.Powertools.Parameters;

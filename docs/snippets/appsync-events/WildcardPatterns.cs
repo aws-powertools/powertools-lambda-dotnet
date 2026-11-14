@@ -3,7 +3,7 @@
 
 using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents.WildcardPatterns
+namespace Docs.AppSyncEventsSnippets.WildcardPatterns
 {
 internal class Example
 {

@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.ClearState.ClearState
+namespace Docs.LoggingSnippets.ClearState.ClearState
 {
 // --8<-- [start:clear_state]
 /**

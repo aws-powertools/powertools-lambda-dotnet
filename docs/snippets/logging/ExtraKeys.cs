@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 // via pymdownx.snippets (mkdocs).
 
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.ExtraKeys.ExtraKeysDictionary
+namespace Docs.LoggingSnippets.ExtraKeys.ExtraKeysDictionary
 {
 // --8<-- [start:extra_keys_dictionary]
 /**
@@ -42,7 +42,7 @@ public class Function
 // --8<-- [end:extra_keys_dictionary]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.ExtraKeys.ExtraKeysTuples
+namespace Docs.LoggingSnippets.ExtraKeys.ExtraKeysTuples
 {
 // --8<-- [start:extra_keys_tuples]
 /**
@@ -71,7 +71,7 @@ public class Function
 // --8<-- [end:extra_keys_tuples]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.ExtraKeys.ExtraKeysNested
+namespace Docs.LoggingSnippets.ExtraKeys.ExtraKeysNested
 {
 // --8<-- [start:extra_keys_nested]
 /**
@@ -101,7 +101,7 @@ public class Function
 // --8<-- [end:extra_keys_nested]
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.ExtraKeys.ExtraKeysSingleEntry
+namespace Docs.LoggingSnippets.ExtraKeys.ExtraKeysSingleEntry
 {
 // --8<-- [start:extra_keys_single_entry]
 /**

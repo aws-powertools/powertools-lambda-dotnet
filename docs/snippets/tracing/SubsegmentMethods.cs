@@ -5,9 +5,8 @@ using Amazon.Lambda.Core;
 // This file is referenced by docs/core/tracing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.SubsegmentMethods.available_methods
+namespace Docs.TracingSnippets.SubsegmentMethods.available_methods
 {
-using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
 public class Function
 {
     public void Handler()

@@ -5,7 +5,7 @@
 using Google.Protobuf;
 using Google.Protobuf.Reflection;
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka
+namespace Docs.KafkaSnippets
 {
     public class CustomerProfile
     {
@@ -28,7 +28,7 @@ namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka
     }
 }
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka.TestKafka
+namespace Docs.KafkaSnippets.TestKafka
 {
     // Stand-in for the class protoc generates from:
     // message ProtobufProduct { int32 id = 1; string name = 2; double price = 3; }
