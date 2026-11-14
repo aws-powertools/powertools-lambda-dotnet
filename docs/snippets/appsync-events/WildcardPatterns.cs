@@ -1,7 +1,16 @@
 // This file is referenced by docs/core/event_handler/appsync_events.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents;
+using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents.WildcardPatterns
+{
+internal class Example
+{
+    private readonly AppSyncEventsResolver app = new();
+
+    public void Register()
+    {
 
 // --8<-- [start:wildcard_patterns]
 app.OnPublish("/default/channel1", (payload) =>
@@ -24,3 +33,6 @@ app.OnPublish("/*", (payload) =>
     return payload;
 });
 // --8<-- [end:wildcard_patterns]
+    }
+}
+}

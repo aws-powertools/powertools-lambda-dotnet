@@ -1,14 +1,22 @@
 // This file is referenced by docs/core/event_handler/bedrock_agent_function.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction;
-
-// --8<-- [start:executable_assembly]
+// --8<-- [start:executable_imports]
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
+using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.EventHandler.Resolvers;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
+// --8<-- [end:executable_imports]
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction.GettingStarted.ExecutableAssembly
+{
+internal class Example
+{
+    public static async Task Run()
+    {
+
+// --8<-- [start:executable_assembly]
 var resolver = new BedrockAgentFunctionResolver();
 
 resolver
@@ -29,14 +37,14 @@ await LambdaBootstrapBuilder.Create(handler, new DefaultLambdaJsonSerializer())
     .Build()
     .RunAsync();
 // --8<-- [end:executable_assembly]
+    }
+}
+}
+
+namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction.GettingStarted.ClassLibrary
+{
 
 // --8<-- [start:class_library]
-using AWS.Lambda.Powertools.EventHandler.Resolvers;
-using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
-using Amazon.Lambda.Core;
-
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
-
 namespace MyLambdaFunction
 {
     public class Function
@@ -63,3 +71,4 @@ namespace MyLambdaFunction
     }
 }
 // --8<-- [end:class_library]
+}

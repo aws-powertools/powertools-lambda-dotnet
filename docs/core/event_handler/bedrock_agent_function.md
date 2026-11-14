@@ -148,12 +148,14 @@ To create an agent, use the `BedrockAgentFunctionResolver` to register your tool
 === "Executable asembly"
 
     ```csharp
-    --8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:executable_assembly"
+--8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:executable_imports"
+--8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:executable_assembly"
     ```
 
 === "Class Library"
 
     ```csharp
+    --8<-- "docs/snippets/bedrock-agent-function/CompleteExample.cs:serializer_attribute"
     --8<-- "docs/snippets/bedrock-agent-function/GettingStarted.cs:class_library"
     ```
 When the Bedrock Agent invokes your Lambda function with a request to use the "GetWeather" tool and a parameter for "city", the resolver automatically extracts the parameter, passes it to your function, and formats the response.
@@ -175,6 +177,7 @@ If you want to return an object the best practice is to override the `ToString()
 
 ```csharp
 --8<-- "docs/snippets/bedrock-agent-function/ResponseFormat.cs:response_format_tostring"
+--8<-- "docs/snippets/bedrock-agent-function/ResponseFormat.cs:response_format_register"
 ```
 
 ## How It Works with Amazon Bedrock Agents
@@ -205,6 +208,7 @@ For native AOT compilation, you can use JsonSerializerContext and pass it to `Be
 
 ```csharp hl_lines="1 5 12-15"
 --8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:custom_type_serialization_aot"
+--8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:custom_type_serialization_context"
 ```
 
 ### Accessing Lambda Context
