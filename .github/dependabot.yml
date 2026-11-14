@@ -18,15 +18,7 @@ updates:
       interval: monthly
     versioning-strategy: increase
     allow:
-      - dependency-name: "@aws-cdk/toolkit-lib"
-      - dependency-name: "aws-cdk-lib"
       - dependency-name: "aws-cdk"
-    groups:
-      aws-cdk:
-        patterns:
-        - "@aws-cdk/toolkit-lib"
-        - "aws-cdk-lib"
-        - "aws-cdk"
 
   - package-ecosystem: nuget
     directories:
