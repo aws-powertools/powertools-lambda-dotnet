@@ -10,12 +10,17 @@ using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using System.Text.Json.Serialization;
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing
+{
+// The JSON source generator needs context type names to be unique per assembly.
 [JsonSerializable(typeof(string))]
-internal partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext;
+internal partial class TracingLambdaFunctionJsonSerializerContext : JsonSerializerContext;
+}
 
 namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.AotWithoutLogging
 {
 using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
+using LambdaFunctionJsonSerializerContext = AWS.Lambda.Powertools.Docs.Snippets.Tracing.TracingLambdaFunctionJsonSerializerContext;
 public class Function
 {
     private static string FunctionHandler(string input, ILambdaContext context) => input;
@@ -37,6 +42,7 @@ private static async Task Main()
 namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing.AotWithLogging
 {
 using Tracing = global::AWS.Lambda.Powertools.Tracing.Tracing;
+using LambdaFunctionJsonSerializerContext = AWS.Lambda.Powertools.Docs.Snippets.Tracing.TracingLambdaFunctionJsonSerializerContext;
 public class Function
 {
     private static string FunctionHandler(string input, ILambdaContext context) => input;

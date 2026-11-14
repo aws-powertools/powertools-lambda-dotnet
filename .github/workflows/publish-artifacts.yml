@@ -92,13 +92,18 @@ jobs:
             packageName=$(basename $package .nupkg | sed -E 's/(.*)\.([0-9]+\.[0-9]+\.[0-9]+.*)$/\1/')
             packageVersion=$(basename $package .nupkg | sed -E 's/(.*)\.([0-9]+\.[0-9]+\.[0-9]+.*)$/\2/')
 
-            # Convert ProjectReference to PackageReference
-            if grep -q "<ProjectReference.*$packageName\.csproj" "$project"; then
+            # Swap the ProjectReference for a PackageReference in place, keeping other attributes (e.g. Aliases)
+            if grep -q "<ProjectReference Include=\"[^\"]*/$packageName\.csproj\"" "$project"; then
               echo "  - Converting ProjectReference $packageName to PackageReference version $packageVersion"
-              sed -i "/<ProjectReference.*$packageName\.csproj/d" "$project"
-              dotnet add "$project" package "$packageName" --version "$packageVersion" --source "local" --no-restore
+              sed -i -E "s#<ProjectReference Include=\"[^\"]*/$packageName\.csproj\"#<PackageReference Include=\"$packageName\" Version=\"$packageVersion\"#" "$project"
             fi
           done
+
+          if grep -q "<ProjectReference Include=" "$project"; then
+            echo "::error::Some ProjectReferences in $project have no matching package"
+            grep "<ProjectReference Include=" "$project"
+            exit 1
+          fi
 
       - name: Build docs snippets
         run: dotnet build ./docs/snippets/ --configuration Release

@@ -8,6 +8,7 @@
         <IsPackable>false</IsPackable>
         <OutputType>Library</OutputType>
         <RootNamespace>AWS.Lambda.Powertools.Docs.Snippets</RootNamespace>
+        <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,9 +16,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.9.1" />
-        <PackageReference Include="AWSXRayRecorder.Handlers.System.Net" Version="2.13.0" />
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.3" />
+        <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.9.1" />
         <PackageReference Include="Amazon.Lambda.Core" Version="2.8.0" />
         <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.1" />
         <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="3.0.0" />
@@ -25,10 +25,22 @@
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
         <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.0" />
         <PackageReference Include="Amazon.Lambda.TestUtilities" Version="3.0.1" />
+        <PackageReference Include="AWSSDK.S3" Version="4.0.4" />
+        <PackageReference Include="AWSXRayRecorder.Handlers.System.Net" Version="2.13.0" />
         <PackageReference Include="NSubstitute" Version="5.3.0" />
         <PackageReference Include="xunit" Version="2.7.0" />
-        <PackageReference Include="AWSSDK.S3" Version="4.0.3.5" />
     </ItemGroup>
+
+    <!--
+        Compile against the same shape as the published packages: libraries are always built in
+        Release (which embeds Common, Kafka and JMESPath sources into the packages that use them) and
+        only direct references are visible. JMESPath isn't referenced because Idempotency embeds it.
+    -->
+    <ItemDefinitionGroup>
+        <ProjectReference>
+            <SetConfiguration>Configuration=Release</SetConfiguration>
+        </ProjectReference>
+    </ItemDefinitionGroup>
 
     <ItemGroup>
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.BatchProcessing/AWS.Lambda.Powertools.BatchProcessing.csproj" />
@@ -36,8 +48,6 @@
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Idempotency/AWS.Lambda.Powertools.Idempotency.csproj" />
-        <!-- Idempotency embeds JMESPath sources in Release; referencing both duplicates JsonTransformer. -->
-        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.JMESPath/AWS.Lambda.Powertools.JMESPath.csproj" Condition="'$(Configuration)'!='Release'" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Avro/AWS.Lambda.Powertools.Kafka.Avro.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Json/AWS.Lambda.Powertools.Kafka.Json.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Protobuf/AWS.Lambda.Powertools.Kafka.Protobuf.csproj" />

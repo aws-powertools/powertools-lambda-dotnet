@@ -283,9 +283,6 @@ Using the extension method provided in the library, you can easily register all 
 
 ## Complete Example with Dependency Injection
 
-You can find examples in the [Powertools for AWS Lambda (.NET) GitHub repository](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/Event%20Handler/BedrockAgentFunction).
-
-
 ```csharp
 --8<-- "docs/snippets/bedrock-agent-function/CompleteExample.cs:complete_example_with_di"
 ```
