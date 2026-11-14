@@ -19,7 +19,7 @@ public class Function
 
         await BusinessLogic2()
             .ConfigureAwait(false);
-    return null;
+        return null;
     }
 
     [Tracing]
@@ -47,7 +47,7 @@ public class Function
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
         // ...
-    return null;
+        return null;
     }
 }
 // --8<-- [end:custom_segment_name]
@@ -63,7 +63,7 @@ public class Function
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
         // ...
-    return null;
+        return null;
     }
 }
 // --8<-- [end:disable_capture_mode]

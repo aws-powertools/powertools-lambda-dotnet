@@ -71,7 +71,7 @@ public class Function
       Logger.LogWarning("This is a warn message");
 
       Logger.ClearBuffer(); // This will clear the buffer without emitting the logs
-        return new APIGatewayProxyResponse();
+      return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:buffer_at_log_level]
@@ -118,7 +118,7 @@ public class Function
           Logger.LogError(e.Message); // this does NOT flush the buffer
           Logger.FlushBuffer(); // Manually flush
       }
-        return new APIGatewayProxyResponse();
+      return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:flush_on_error_log]
@@ -146,7 +146,6 @@ public class Function
       Logger.LogDebug("This is a debug message");
 
       throw new Exception(); // This causes the buffer to be flushed
-        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:flush_buffer_on_uncaught_error]

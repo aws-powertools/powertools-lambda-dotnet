@@ -28,8 +28,7 @@ Logger.Configure(options =>
     // Custom console output for testing
     options.LogOutput = new TestConsoleWrapper();
 });
-    }
-}
+} } // --8<-- [start:hidden]
 
 // Example implementation for testing:
 public class TestConsoleWrapper : IConsoleWrapper

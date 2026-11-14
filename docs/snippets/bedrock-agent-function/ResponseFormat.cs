@@ -23,15 +23,8 @@ public class AirportInfo
         return $"{Name} ({Code}) in {City}";
     }
 }
-// --8<-- [end:response_format_tostring]
 
-internal class Example
-{
-    private readonly BedrockAgentFunctionResolver resolver = new();
-
-    public void Register()
-    {
-// --8<-- [start:response_format_register]
+internal class Example { private readonly BedrockAgentFunctionResolver resolver = new(); public void Register() { // --8<-- [start:hidden]
 resolver.Tool("getAirportCodeForCity", "Get airport code and full name for a specific city", (string city, ILambdaContext context) =>
 {
     var airportService = new AirportService();
@@ -44,7 +37,6 @@ resolver.Tool("getAirportCodeForCity", "Get airport code and full name for a spe
 // return new {
 //     airportInfo
 // };
-// --8<-- [end:response_format_register]
-    }
-}
+// --8<-- [end:response_format_tostring]
+} }
 }

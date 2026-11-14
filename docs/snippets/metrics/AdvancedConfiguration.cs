@@ -102,11 +102,10 @@ public class Function {
 
 namespace Docs.MetricsSnippets.AdvancedConfiguration.single_metric_default_dimensions_options
 {
-public class Function
-{
-    private readonly IMetrics _metrics;
 // --8<-- [start:single_metric_default_dimensions_options]
+using AWS.Lambda.Powertools.Metrics;
 
+public class Function { private readonly IMetrics _metrics; // --8<-- [start:hidden]
 public Function(IMetrics metrics = null)
 {
     _metrics = metrics ?? new MetricsBuilder()

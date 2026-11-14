@@ -6,6 +6,7 @@ using AWS.Lambda.Powertools.Logging;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using static Docs.LoggingSnippets.ExtraKeys.Helpers;
 
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
@@ -36,8 +37,6 @@ public class Function
         Logger.LogInformation("Continuing without orderId");
         return new APIGatewayProxyResponse();
     }
-
-    private Task ProcessOrderAsync(string orderId) => Task.CompletedTask;
 }
 // --8<-- [end:extra_keys_dictionary]
 }
@@ -65,8 +64,6 @@ public class Function
         // Both keys are automatically removed
         return new APIGatewayProxyResponse();
     }
-
-    private Task ProcessOrderAsync(string orderId) => Task.CompletedTask;
 }
 // --8<-- [end:extra_keys_tuples]
 }
@@ -129,4 +126,12 @@ public class Function
     }
 }
 // --8<-- [end:extra_keys_single_entry]
+}
+
+namespace Docs.LoggingSnippets.ExtraKeys
+{
+internal static class Helpers
+{
+    public static Task ProcessOrderAsync(string orderId) => Task.CompletedTask;
+}
 }

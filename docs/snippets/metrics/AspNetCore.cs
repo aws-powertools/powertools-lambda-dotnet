@@ -12,13 +12,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Docs.MetricsSnippets.AspNetCore.use_metrics_middleware
 {
-public static class Example
-{
-    public static void Main(string[] args)
-    {
 // --8<-- [start:use_metrics_middleware]
 
+using AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
 
+public static class Example { public static void Main(string[] args) { // --8<-- [start:hidden]
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure metrics
@@ -49,8 +47,7 @@ app.MapGet("/powertools", (IMetrics metrics) =>
 
 app.Run();
 // --8<-- [end:use_metrics_middleware]
-    }
-}
+} }
 }
 
 namespace Docs.MetricsSnippets.AspNetCore.use_metrics_method
@@ -74,13 +71,12 @@ public static IApplicationBuilder UseMetrics(this IApplicationBuilder app)
 
 namespace Docs.MetricsSnippets.AspNetCore.with_metrics_filter
 {
-public static class Example
-{
-    public static void Main(string[] args)
-    {
 // --8<-- [start:with_metrics_filter]
 
+using AWS.Lambda.Powertools.Metrics;
+using AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
 
+public static class Example { public static void Main(string[] args) { // --8<-- [start:hidden]
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure metrics
@@ -112,8 +108,7 @@ app.MapGet("/powertools", (IMetrics metrics) =>
 
 app.Run();
 // --8<-- [end:with_metrics_filter]
-    }
-}
+} }
 }
 
 namespace Docs.MetricsSnippets.AspNetCore.with_metrics_method

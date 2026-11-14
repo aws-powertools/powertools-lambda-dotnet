@@ -120,7 +120,7 @@ With this approach you get more flexibility and testability using dependency inj
 
 === "Configure with LoggerFactory or Builder"
 
-    ```csharp hl_lines="5-12"
+    ```csharp hl_lines="7-14"
     --8<-- "docs/snippets/logging/Configuration.cs:configure_ilogger"
     ```
 

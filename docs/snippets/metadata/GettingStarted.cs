@@ -26,12 +26,11 @@ public class Function
 
 namespace Docs.MetadataSnippets.GettingStarted.ErrorHandling
 {
-internal static class Example
-{
-    public static void Run()
-    {
 // --8<-- [start:error_handling]
+using AWS.Lambda.Powertools.Metadata;
+using AWS.Lambda.Powertools.Metadata.Exceptions;
 
+internal static class Example { public static void Run() { // --8<-- [start:hidden]
 try
 {
     var azId = LambdaMetadata.AvailabilityZoneId;
@@ -44,8 +43,7 @@ catch (LambdaMetadataException ex)
         Console.WriteLine($"HTTP Status: {ex.StatusCode}");
 }
 // --8<-- [end:error_handling]
-    }
-}
+} }
 }
 
 

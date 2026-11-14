@@ -245,7 +245,6 @@ When processing events with Lambda, you can return errors to AppSync in three wa
 === "Publish events - Executable assembly handlers"
 
     ```csharp hl_lines="1 3 5-10 14"
-    --8<-- "docs/snippets/appsync-events/GettingStarted.cs:publish_executable_imports"
     --8<-- "docs/snippets/appsync-events/GettingStarted.cs:publish_executable_assembly"
     ```
 

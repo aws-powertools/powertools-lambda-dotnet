@@ -22,10 +22,10 @@ public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyReques
 
 namespace Docs.MetricsSnippets.GettingStarted.metrics_methods
 {
-public class Function
-{
 // --8<-- [start:metrics_methods]
+using AWS.Lambda.Powertools.Metrics;
 
+public class Function { // --8<-- [start:hidden]
 public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
 {
     Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
@@ -40,10 +40,10 @@ public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyReques
 
 namespace Docs.MetricsSnippets.GettingStarted.metrics_configure
 {
-public class Function
-{
 // --8<-- [start:metrics_configure]
+using AWS.Lambda.Powertools.Metrics;
 
+public class Function { // --8<-- [start:hidden]
 public Function()
 {
     Metrics.Configure(options =>
@@ -72,10 +72,10 @@ public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyReques
 
 namespace Docs.MetricsSnippets.GettingStarted.metrics_builder
 {
-public class Function
-{
 // --8<-- [start:metrics_builder]
+using AWS.Lambda.Powertools.Metrics;
 
+public class Function { // --8<-- [start:hidden]
 private readonly IMetrics _metrics;
 
 public Function()

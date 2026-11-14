@@ -22,7 +22,7 @@ public class Function
         Tracing.WithSubsegment("localNamespace", "loggingResponse", (subsegment) => {
             // Some business logic
         });
-    return null;
+        return null;
     }
 }
 // --8<-- [end:functional_api]
@@ -48,7 +48,7 @@ public class Function
                 // Business logic in separate task
             });
         });
-    return null;
+        return null;
     }
 }
 // --8<-- [end:multi_threaded]

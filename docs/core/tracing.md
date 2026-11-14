@@ -76,7 +76,7 @@ segment name that appears in traces.
 
 === "Tracing attribute"
 
-    ```csharp hl_lines="3 14 20"
+    ```csharp hl_lines="3 15 21"
     --8<-- "docs/snippets/tracing/GettingStarted.cs:tracing_attribute"
     ```
 

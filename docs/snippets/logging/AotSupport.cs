@@ -21,6 +21,8 @@ using CustomLogFormatter = Docs.LoggingSnippets.AotSupportExamples.CustomLogForm
 
 namespace Docs.LoggingSnippets.AotSupportExamples.JsonSerializerOptionsAot
 {
+using YourJsonSerializerContext = Docs.LoggingSnippets.AotSupportExamples.JsonSerializerContextExample.MyCustomJsonSerializerContext;
+
 public class Example
 {
     public void Run()
@@ -30,7 +32,7 @@ Logger.Configure(logger =>
 {
     logger.JsonOptions = new JsonSerializerOptions
     {
-        TypeInfoResolver = MyCustomJsonSerializerContext.Default
+        TypeInfoResolver = YourJsonSerializerContext.Default
     };
 });
 // --8<-- [end:json_serializer_options_aot]
@@ -97,6 +99,8 @@ public partial class MyCustomJsonSerializerContext : JsonSerializerContext
 
 namespace Docs.LoggingSnippets.AotSupportExamples.CustomLogFormatterAotFunction
 {
+using LambdaFunctionJsonSerializerContext = Docs.LoggingSnippets.AotSupportExamples.JsonSerializerContextExample.MyCustomJsonSerializerContext;
+
 public class Example
 {
     public async Task RunAsync()
@@ -105,7 +109,7 @@ public class Example
 
 Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
 await LambdaBootstrapBuilder.Create(handler,
-    new PowertoolsSourceGeneratorSerializer<MyCustomJsonSerializerContext>
+    new PowertoolsSourceGeneratorSerializer<LambdaFunctionJsonSerializerContext>
     (
         new CustomLogFormatter()
     )

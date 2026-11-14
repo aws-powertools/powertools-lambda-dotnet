@@ -1,6 +1,7 @@
 using AWS.Lambda.Powertools.Tracing;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
+using static Docs.TracingSnippets.UsingStatementPattern.Helpers;
 
 // This file is referenced by docs/core/tracing.md
 // via pymdownx.snippets (mkdocs).
@@ -10,7 +11,7 @@ namespace Docs.TracingSnippets.UsingStatementPattern.basic_using_statement
 // --8<-- [start:basic_using_statement]
 using AWS.Lambda.Powertools.Tracing;
 
-public partial class Function
+public class Function
 {
     public async Task<APIGatewayProxyResponse> FunctionHandler
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
@@ -22,15 +23,10 @@ public partial class Function
         var result = await ProcessPaymentAsync();
         gatewaySegment.AddAnnotation("ProcessingTimeMs", result.ProcessingTimeMs);
         // Subsegment automatically ends when disposed
-    return null;
+        return null;
     }
 }
 // --8<-- [end:basic_using_statement]
-public partial class Function
-{
-    private Task<PaymentResult> ProcessPaymentAsync() => Task.FromResult(new PaymentResult());
-}
-
 }
 
 namespace Docs.TracingSnippets.UsingStatementPattern.custom_namespace
@@ -38,7 +34,7 @@ namespace Docs.TracingSnippets.UsingStatementPattern.custom_namespace
 // --8<-- [start:custom_namespace]
 using AWS.Lambda.Powertools.Tracing;
 
-public partial class Function
+public class Function
 {
     public async Task<APIGatewayProxyResponse> FunctionHandler
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
@@ -46,7 +42,7 @@ public partial class Function
         using var segment = Tracing.BeginSubsegment("MyCustomNamespace", "DatabaseOperation");
         segment.AddAnnotation("TableName", "Users");
         segment.AddMetadata("query", "SELECT * FROM Users WHERE Active = 1");
-    return null;
+        return null;
     }
 }
 // --8<-- [end:custom_namespace]
@@ -57,7 +53,7 @@ namespace Docs.TracingSnippets.UsingStatementPattern.nested_subsegments
 // --8<-- [start:nested_subsegments]
 using AWS.Lambda.Powertools.Tracing;
 
-public partial class Function
+public class Function
 {
     public async Task<APIGatewayProxyResponse> FunctionHandler
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
@@ -71,20 +67,23 @@ public partial class Function
         postProcessingSegment.AddAnnotation("PaymentId", result.PaymentId);
 
         await PostProcessPaymentAsync(result);
-    return null;
+        return null;
     }
 }
 // --8<-- [end:nested_subsegments]
-public partial class Function
+}
+
+namespace Docs.TracingSnippets.UsingStatementPattern
 {
-    private Task<PaymentResult> ProcessPaymentAsync() => Task.FromResult(new PaymentResult());
-    private Task PostProcessPaymentAsync(PaymentResult result) => Task.CompletedTask;
-}
-
-}
-
 internal class PaymentResult
 {
     public int ProcessingTimeMs { get; set; }
     public string PaymentId { get; set; }
+}
+
+internal static class Helpers
+{
+    public static Task<PaymentResult> ProcessPaymentAsync() => Task.FromResult(new PaymentResult());
+    public static Task PostProcessPaymentAsync(PaymentResult result) => Task.CompletedTask;
+}
 }

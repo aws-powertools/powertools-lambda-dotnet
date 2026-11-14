@@ -1,12 +1,10 @@
 // This file is referenced by docs/core/event_handler/appsync_events.md
 // via pymdownx.snippets (mkdocs).
 
-// --8<-- [start:publish_executable_imports]
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
-// --8<-- [end:publish_executable_imports]
 
 namespace Docs.AppSyncEventsSnippets.GettingStarted.PublishClassLibrary
 {
@@ -39,12 +37,10 @@ public class Function
 
 namespace Docs.AppSyncEventsSnippets.GettingStarted.PublishExecutableAssembly
 {
-internal class Example
-{
-    public static async Task Run()
-    {
-
 // --8<-- [start:publish_executable_assembly]
+using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
+
+internal static class Example { public static async Task Run() { // --8<-- [start:hidden]
 var app = new AppSyncEventsResolver();
 
 app.OnPublishAsync("/default/channel", async (payload) =>
@@ -64,8 +60,7 @@ new DefaultLambdaJsonSerializer())
 .Build()
 .RunAsync();
 // --8<-- [end:publish_executable_assembly]
-    }
-}
+} }
 }
 
 namespace Docs.AppSyncEventsSnippets.GettingStarted.SubscribeEvents

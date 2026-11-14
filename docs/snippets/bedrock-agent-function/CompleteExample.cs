@@ -7,9 +7,7 @@ using AWS.Lambda.Powertools.EventHandler.Resolvers;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
 using Microsoft.Extensions.DependencyInjection;
 
-// --8<-- [start:serializer_attribute]
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
-// --8<-- [end:serializer_attribute]
 
 namespace MyBedrockAgent
 {

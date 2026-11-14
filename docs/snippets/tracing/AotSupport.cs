@@ -20,12 +20,11 @@ internal partial class TracingLambdaFunctionJsonSerializerContext : JsonSerializ
 namespace Docs.TracingSnippets.AotWithoutLogging
 {
 using LambdaFunctionJsonSerializerContext = Docs.TracingSnippets.TracingLambdaFunctionJsonSerializerContext;
-public class Function
-{
-    private static string FunctionHandler(string input, ILambdaContext context) => input;
-
 // --8<-- [start:without_powertools_logging]
+using AWS.Lambda.Powertools.Tracing;
+using AWS.Lambda.Powertools.Tracing.Serializers;
 
+public class Function { private static string FunctionHandler(string input, ILambdaContext context) => input; // --8<-- [start:hidden]
 private static async Task Main()
 {
     Func<string, ILambdaContext, string> handler = FunctionHandler;
@@ -41,12 +40,13 @@ private static async Task Main()
 namespace Docs.TracingSnippets.AotWithLogging
 {
 using LambdaFunctionJsonSerializerContext = Docs.TracingSnippets.TracingLambdaFunctionJsonSerializerContext;
-public class Function
-{
-    private static string FunctionHandler(string input, ILambdaContext context) => input;
-
 // --8<-- [start:with_powertools_logging]
+using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Logging.Serializers;
+using AWS.Lambda.Powertools.Tracing;
+using AWS.Lambda.Powertools.Tracing.Serializers;
 
+public class Function { private static string FunctionHandler(string input, ILambdaContext context) => input; // --8<-- [start:hidden]
 private static async Task Main()
 {
     Func<string, ILambdaContext, string> handler = FunctionHandler;

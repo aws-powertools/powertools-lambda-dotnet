@@ -72,6 +72,7 @@ public class App
     [Idempotent]
     public Task<OrderResult> FunctionHandler(Order input, ILambdaContext context)
     {
+      // ...
       return Task.FromResult(new OrderResult());
     }
 // --8<-- [end:throw_on_no_idempotency_key]

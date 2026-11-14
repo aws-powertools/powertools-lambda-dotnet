@@ -17,7 +17,7 @@ public class Function
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
         Tracing.AddAnnotation("annotation", "value");
-    return null;
+        return null;
     }
 }
 // --8<-- [end:add_annotation]
@@ -35,7 +35,7 @@ public class Function
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
         Tracing.AddMetadata("content", "value");
-    return null;
+        return null;
     }
 }
 // --8<-- [end:add_metadata]

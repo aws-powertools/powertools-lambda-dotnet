@@ -18,12 +18,12 @@ internal class WeatherService : IWeatherService
     public string GetForecast(string city) => $"Sunny in {city}";
 }
 
-internal class Example
+namespace Registration
 {
-    public void Register()
-    {
-
 // --8<-- [start:dependency_injection]
+using Microsoft.Extensions.DependencyInjection;
+
+internal class Example { public void Register() { // --8<-- [start:hidden]
 // Set up dependency injection
 var services = new ServiceCollection();
 services.AddSingleton<IWeatherService, WeatherService>();
@@ -42,7 +42,7 @@ resolver.Tool(
         return weatherService.GetForecast(city);
     });
 // --8<-- [end:dependency_injection]
-    }
+} }
 }
 
 // --8<-- [start:attribute_tool_classes]

@@ -12,8 +12,6 @@ namespace Docs.MetricsSnippets.Testing
 // --8<-- [start:lambda_function_testing]
 using System.Collections.Generic;
 using Amazon.Lambda.Core;
-using System.Collections.Generic;
-using Amazon.Lambda.Core;
 
 public class MetricsnBuilderHandler
 {
