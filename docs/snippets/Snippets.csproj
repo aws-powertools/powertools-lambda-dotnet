@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Compiles the code snippets included in the docs so they stay in sync with the libraries. -->
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <IsPackable>false</IsPackable>
+        <OutputType>Library</OutputType>
+        <RootNamespace>AWS.Lambda.Powertools.Docs.Snippets</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.3" />
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.8.0" />
+        <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.1" />
+        <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="3.0.0" />
+        <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.1" />
+        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
+        <PackageReference Include="Amazon.Lambda.SQSEvents" Version="2.2.0" />
+        <PackageReference Include="Amazon.Lambda.TestUtilities" Version="3.0.1" />
+        <PackageReference Include="NSubstitute" Version="5.3.0" />
+        <PackageReference Include="xunit" Version="2.7.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.BatchProcessing/AWS.Lambda.Powertools.BatchProcessing.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.EventHandler/AWS.Lambda.Powertools.EventHandler.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Idempotency/AWS.Lambda.Powertools.Idempotency.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.JMESPath/AWS.Lambda.Powertools.JMESPath.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Avro/AWS.Lambda.Powertools.Kafka.Avro.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Json/AWS.Lambda.Powertools.Kafka.Json.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Protobuf/AWS.Lambda.Powertools.Kafka.Protobuf.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Logging/AWS.Lambda.Powertools.Logging.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Metadata/AWS.Lambda.Powertools.Metadata.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Metrics/AWS.Lambda.Powertools.Metrics.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Metrics.AspNetCore/AWS.Lambda.Powertools.Metrics.AspNetCore.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Parameters/AWS.Lambda.Powertools.Parameters.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Tracing/AWS.Lambda.Powertools.Tracing.csproj" />
+    </ItemGroup>
+
+</Project>
