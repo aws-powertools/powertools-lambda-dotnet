@@ -1,8 +1,16 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Parameters;
+using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
+using AWS.Lambda.Powertools.Parameters.Transform;
+
 // This file is referenced by docs/utilities/parameters.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters;
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.DynamoDbProvider.DynamodbProviderSingle
+{
 // --8<-- [start:dynamodb_provider_single]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.DynamoDB;
@@ -20,10 +28,14 @@ public class Function
         string? value = await dynamoDbProvider
             .GetAsync("my-param")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:dynamodb_provider_single]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.DynamoDbProvider.DynamodbProviderMultiple
+{
 // --8<-- [start:dynamodb_provider_multiple]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.DynamoDB;
@@ -41,10 +53,14 @@ public class Function
         IDictionary<string, string?> value = await dynamoDbProvider
             .GetMultipleAsync("my-hash-key")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:dynamodb_provider_multiple]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.DynamoDbProvider.DynamodbProviderCustomizing
+{
 // --8<-- [start:dynamodb_provider_customizing]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.DynamoDB;
@@ -63,6 +79,8 @@ public class Function
                 sortKeyAttribute: "sk",    // Sort Key attribute name, optional, default is 'sk'
                 valueAttribute: "value"    // Value attribute name, optional, default is 'value'
             );
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:dynamodb_provider_customizing]
+}

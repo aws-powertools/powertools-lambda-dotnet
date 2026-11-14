@@ -1,8 +1,16 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Parameters;
+using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
+using AWS.Lambda.Powertools.Parameters.Transform;
+
 // This file is referenced by docs/utilities/parameters.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters;
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SsmProvider.SsmProvider
+{
 // --8<-- [start:ssm_provider]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -25,10 +33,14 @@ public class Function
         IDictionary<string, string?> values = await ssmProvider
             .GetMultipleAsync("/my/path/prefix")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:ssm_provider]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SsmProvider.SsmProviderExplicitRegion
+{
 // --8<-- [start:ssm_provider_explicit_region]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -52,10 +64,14 @@ public class Function
         IDictionary<string, string?> values = await ssmProvider
             .GetMultipleAsync("/my/path/prefix")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:ssm_provider_explicit_region]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SsmProvider.SsmProviderCustomClient
+{
 // --8<-- [start:ssm_provider_custom_client]
 using Amazon.SimpleSystemsManagement;
 using AWS.Lambda.Powertools.Parameters;
@@ -83,10 +99,14 @@ public class Function
         IDictionary<string, string?> values = await ssmProvider
             .GetMultipleAsync("/my/path/prefix")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:ssm_provider_custom_client]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.SsmProvider.SsmProviderAdditionalArgs
+{
 // --8<-- [start:ssm_provider_additional_args]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -111,6 +131,8 @@ public class Function
             .Recursive()
             .GetMultipleAsync("/my/path/prefix")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:ssm_provider_additional_args]
+}

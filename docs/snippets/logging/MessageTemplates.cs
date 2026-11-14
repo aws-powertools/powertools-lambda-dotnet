@@ -1,8 +1,19 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using ILambdaContext = Amazon.Lambda.Core.ILambdaContext;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using AWS.Lambda.Powertools.Logging;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using AWS.Lambda.Powertools.Docs.Snippets.Logging.MessageTemplates.TostringOverride;
+
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging;
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.MessageTemplates.TostringOverride
+{
 // --8<-- [start:tostring_override]
 public class User
 {
@@ -16,7 +27,10 @@ public class User
     }
 }
 // --8<-- [end:tostring_override]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.MessageTemplates.MessageTemplateAt
+{
 // --8<-- [start:message_template_at]
 public class Function
 {
@@ -31,12 +45,16 @@ public class Function
             Age = 42
         };
 
-        logger.LogInformation("User object: {@user}", user);
-        ...
+        Logger.LogInformation("User object: {@user}", user);
+        // ...
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:message_template_at]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Logging.MessageTemplates.MessageTemplateTostring
+{
 // --8<-- [start:message_template_tostring]
 public class Function
 {
@@ -51,13 +69,15 @@ public class Function
             Age = 42
         };
 
-        logger.LogInformation("User data: {user}", user);
+        Logger.LogInformation("User data: {user}", user);
 
         // Also works with numbers, dates, etc.
 
-        logger.LogInformation("Price: {price:0.00}", 123.4567); // will respect decimal places
-        logger.LogInformation("Percentage: {percent:0.0%}", 0.1234);
-        ...
+        Logger.LogInformation("Price: {price:0.00}", 123.4567); // will respect decimal places
+        Logger.LogInformation("Percentage: {percent:0.0%}", 0.1234);
+        // ...
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:message_template_tostring]
+}

@@ -25,6 +25,7 @@
         <PackageReference Include="Amazon.Lambda.TestUtilities" Version="3.0.1" />
         <PackageReference Include="NSubstitute" Version="5.3.0" />
         <PackageReference Include="xunit" Version="2.7.0" />
+        <PackageReference Include="AWSSDK.S3" Version="4.0.3.5" />
     </ItemGroup>
 
     <ItemGroup>
@@ -37,7 +38,7 @@
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Avro/AWS.Lambda.Powertools.Kafka.Avro.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Json/AWS.Lambda.Powertools.Kafka.Json.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Kafka.Protobuf/AWS.Lambda.Powertools.Kafka.Protobuf.csproj" />
-        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Logging/AWS.Lambda.Powertools.Logging.csproj" />
+        <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Logging/AWS.Lambda.Powertools.Logging.csproj" Aliases="global,LoggingTypes" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Metadata/AWS.Lambda.Powertools.Metadata.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Metrics/AWS.Lambda.Powertools.Metrics.csproj" />
         <ProjectReference Include="../../libraries/src/AWS.Lambda.Powertools.Metrics.AspNetCore/AWS.Lambda.Powertools.Metrics.AspNetCore.csproj" />

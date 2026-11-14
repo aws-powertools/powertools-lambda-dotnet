@@ -1,8 +1,16 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Parameters;
+using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
+using AWS.Lambda.Powertools.Parameters.Transform;
+
 // This file is referenced by docs/utilities/parameters.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters;
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.AppConfigProvider.AppConfigProvider
+{
 // --8<-- [start:app_config_provider]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.AppConfig;
@@ -22,10 +30,14 @@ public class Function
         IDictionary<string, string?> value = await appConfigProvider
             .GetAsync()
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:app_config_provider]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.AppConfigProvider.AppConfigProviderExplicitRegion
+{
 // --8<-- [start:app_config_provider_explicit_region]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.AppConfig;
@@ -46,10 +58,14 @@ public class Function
         IDictionary<string, string?> value = await appConfigProvider
             .GetAsync()
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:app_config_provider_explicit_region]
+}
 
+namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters.AppConfigProvider.AppConfigFeatureFlags
+{
 // --8<-- [start:app_config_feature_flags]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.AppConfig;
@@ -82,6 +98,8 @@ public class Function
                 .GetFeatureFlagAttributeValueAsync<int>("MyFeatureFlag", "NumberAttribute")
                 .ConfigureAwait(false);
         }
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:app_config_feature_flags]
+}
