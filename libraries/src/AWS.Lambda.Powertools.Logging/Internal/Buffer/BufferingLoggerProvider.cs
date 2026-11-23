@@ -58,7 +58,12 @@ internal class BufferingLoggerProvider : PowertoolsLoggerProvider
     private void WarnIfAlcFiltersBufferedLogs()
     {
         var config = GetCurrentConfig();
-        if (AlcFiltersBufferedLogs(_powertoolsConfigurations, config?.LogBuffering) &&
+        if (config?.LogOutput == null)
+        {
+            return;
+        }
+
+        if (AlcFiltersBufferedLogs(_powertoolsConfigurations, config.LogBuffering) &&
             OneTimeWarnings.ShouldWrite(AlcFiltersBufferWarning))
         {
             config.LogOutput.WriteLine(AlcFiltersBufferWarning);
