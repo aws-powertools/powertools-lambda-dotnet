@@ -170,7 +170,7 @@ internal sealed class PowertoolsLogger : ILogger
     internal object LogEntry<TState>(LogLevel logLevel, TState state, Exception exception,
         Func<TState, Exception, string> formatter)
     {
-        var timestamp = DateTime.UtcNow;
+        var timestamp = GetTimestamp(_currentConfig().UseLocalTimeZone);
 
         if (formatter is null)
             throw new ArgumentNullException(nameof(formatter));
@@ -189,6 +189,20 @@ internal sealed class PowertoolsLogger : ILogger
             ? GetLogEntry(logLevel, timestamp, message, exception, structuredParameters)
             : GetFormattedLogEntry(logLevel, timestamp, message, exception, logFormatter, structuredParameters);
         return logEntry;
+    }
+
+    /// <summary>
+    ///     Gets the entry timestamp. Local time (written with its offset) only when enabled and the local time zone
+    ///     is not UTC, so that UTC functions keep the "Z" suffix.
+    /// </summary>
+    /// <param name="useLocalTimeZone">Whether local time zone timestamps are enabled.</param>
+    internal static DateTime GetTimestamp(bool useLocalTimeZone)
+    {
+        if (!useLocalTimeZone)
+            return DateTime.UtcNow;
+
+        // TimeZoneInfo.Local is resolved from TZ on Linux and falls back to UTC if the zone can't be found
+        return TimeZoneInfo.Local.HasSameRules(TimeZoneInfo.Utc) ? DateTime.UtcNow : DateTime.Now;
     }
 
     /// <summary>

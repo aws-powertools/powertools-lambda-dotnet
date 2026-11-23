@@ -43,7 +43,8 @@ public class LogEntry
     public string CorrelationId { get; internal set; }
     
     /// <summary>
-    /// Log entry timestamp in UTC.
+    /// Log entry timestamp. In UTC, unless <see cref="PowertoolsLoggerConfiguration.UseLocalTimeZone"/> is enabled
+    /// and the local time zone is not UTC, in which case it is local time (<see cref="DateTimeKind.Local"/>).
     /// </summary>
     public DateTime Timestamp { get; internal set; }
  

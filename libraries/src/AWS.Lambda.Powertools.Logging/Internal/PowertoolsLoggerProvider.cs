@@ -69,6 +69,13 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
         _currentConfig.XRayTraceId = _powertoolsConfigurations.XRayTraceId;
         _currentConfig.LogEvent = _powertoolsConfigurations.LoggerLogEvent;
 
+        // Opt-in only: the environment variable can enable local time zone timestamps, but not disable them
+        if (!_currentConfig.UseLocalTimeZone)
+        {
+            _currentConfig.UseLocalTimeZone =
+                _powertoolsConfigurations.GetEnvironmentVariableOrDefault(LoggingConstants.UseLocalTimeZoneEnv, false);
+        }
+
         // Configure the log level key based on output case
         _currentConfig.LogLevelKey = _powertoolsConfigurations.LambdaLogLevelEnabled() &&
                                      _currentConfig.LoggerOutputCase == LoggerOutputCase.PascalCase
