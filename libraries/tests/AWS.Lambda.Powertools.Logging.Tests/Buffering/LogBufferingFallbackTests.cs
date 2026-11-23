@@ -1,10 +1,13 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
+using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Common.Tests;
 using AWS.Lambda.Powertools.Logging.Internal;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
 using Xunit;
 
 namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
@@ -31,37 +34,87 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Assert.Contains("\"message\":\"Debug message\"", output);
         }
 
-        [Fact]
-        public void Log_WhenFormatterAlwaysFails_WritesEntryWithoutMessage()
+        [Theory]
+        [InlineData(LoggerOutputCase.SnakeCase, "level", "message", "timestamp", "service")]
+        [InlineData(LoggerOutputCase.CamelCase, "level", "message", "timestamp", "service")]
+        [InlineData(LoggerOutputCase.PascalCase, "Level", "Message", "Timestamp", "Service")]
+        public void Log_WhenFormatterAlwaysFails_WritesEntryWithoutMessage(
+            LoggerOutputCase outputCase, string levelKey, string messageKey, string timestampKey, string serviceKey)
         {
-            var logger = CreateLogger(new ThrowingDebugFormatter(failures: int.MaxValue));
+            var logger = CreateLogger(new ThrowingDebugFormatter(failures: int.MaxValue), outputCase);
 
             logger.LogDebug("secret value");
 
             var output = _consoleOut.ToString();
             Assert.DoesNotContain("secret value", output);
 
-            var entry = ParseLines(output).Single(e =>
-                e.TryGetProperty("message", out var message) &&
-                message.GetString() == PowertoolsBufferingLogger.UnformattedEntryMessage);
-            Assert.Equal("Debug", entry.GetProperty("level").GetString());
-            Assert.Equal("test-service", entry.GetProperty("service").GetString());
-            Assert.True(entry.TryGetProperty("timestamp", out _));
+            var entry = FindUnformattedEntry(output, messageKey);
+            Assert.Equal("Debug", entry.GetProperty(levelKey).GetString());
+            Assert.Equal("test-service", entry.GetProperty(serviceKey).GetString());
+            Assert.True(entry.TryGetProperty(timestampKey, out _));
         }
 
         [Fact]
-        public void Log_WhenFormatterAlwaysFails_UsesConfiguredOutputCase()
+        public void Log_WhenTimestampFormatIsInvalid_WritesEntryWithIsoTimestamp()
         {
-            var logger = CreateLogger(new ThrowingDebugFormatter(failures: int.MaxValue), LoggerOutputCase.PascalCase);
+            // An unterminated quote makes DateTime.ToString throw, so the regular entry can't be built
+            var logger = CreateLogger(formatter: null, timestampFormat: "'");
 
             logger.LogDebug("secret value");
 
-            var entry = ParseLines(_consoleOut.ToString()).Single(e =>
-                e.TryGetProperty("Message", out var message) &&
-                message.GetString() == PowertoolsBufferingLogger.UnformattedEntryMessage);
-            Assert.Equal("Debug", entry.GetProperty("Level").GetString());
-            Assert.Equal("test-service", entry.GetProperty("Service").GetString());
-            Assert.True(entry.TryGetProperty("Timestamp", out _));
+            var output = _consoleOut.ToString();
+            Assert.DoesNotContain("secret value", output);
+
+            var entry = FindUnformattedEntry(output, "message");
+            var timestamp = entry.GetProperty("timestamp").GetString();
+            Assert.True(DateTime.TryParse(timestamp, out _), $"Not an ISO timestamp: {timestamp}");
+        }
+
+        [Fact]
+        public void Log_WhenOutputThrows_DoesNotThrow()
+        {
+            var logger = CreateLogger(new ThrowingDebugFormatter(failures: int.MaxValue), output: new ThrowingOutput());
+
+            var exception = Record.Exception(() => logger.LogDebug("Debug message"));
+
+            Assert.Null(exception);
+        }
+
+        [Fact]
+        public void Log_WhenEntryIsWrittenBeforeFailure_DoesNotWriteItAgain()
+        {
+            // Entries larger than MaxBytes are written directly; make the warning that follows throw
+            var logger = CreateLogger(new ThrowingDebugFormatter(failures: 0), maxBytes: 10);
+            var originalOut = Console.Out;
+            Console.SetOut(new ThrowingTextWriter());
+            try
+            {
+                logger.LogDebug("Debug message");
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+
+            var output = _consoleOut.ToString();
+            Assert.Contains("Failed to buffer log entry", output);
+            Assert.Single(ParseLines(output), e =>
+                e.TryGetProperty("message", out var message) && message.GetString() == "Debug message");
+        }
+
+        [Fact]
+        public void Log_WhenInnerLoggerIsNotPowertoolsLogger_DoesNothing()
+        {
+            var inner = Substitute.For<ILogger>();
+            var config = new PowertoolsLoggerConfiguration
+            {
+                LogBuffering = new LogBufferingOptions { Enabled = true, BufferAtLogLevel = LogLevel.Debug }
+            };
+            var logger = new PowertoolsBufferingLogger(inner, () => config, Substitute.For<IPowertoolsConfigurations>());
+
+            logger.LogDebug("Debug message");
+
+            Assert.Empty(inner.ReceivedCalls());
         }
 
         [Fact]
@@ -78,7 +131,12 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
             Assert.DoesNotContain("Failed to buffer log entry", output);
         }
 
-        private ILogger CreateLogger(ILogFormatter formatter, LoggerOutputCase outputCase = LoggerOutputCase.SnakeCase)
+        private ILogger CreateLogger(
+            ILogFormatter formatter,
+            LoggerOutputCase outputCase = LoggerOutputCase.SnakeCase,
+            string timestampFormat = null,
+            int maxBytes = 20480,
+            IConsoleWrapper output = null)
         {
             var config = new PowertoolsLoggerConfiguration
             {
@@ -86,15 +144,22 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                 MinimumLogLevel = LogLevel.Information,
                 LoggerOutputCase = outputCase,
                 LogFormatter = formatter,
+                TimestampFormat = timestampFormat,
                 LogBuffering = new LogBufferingOptions
                 {
                     Enabled = true,
-                    BufferAtLogLevel = LogLevel.Debug
+                    BufferAtLogLevel = LogLevel.Debug,
+                    MaxBytes = maxBytes
                 },
-                LogOutput = _consoleOut
+                LogOutput = output ?? _consoleOut
             };
             return LoggerFactoryHelper.CreateAndConfigureFactory(config).CreatePowertoolsLogger();
         }
+
+        private static JsonElement FindUnformattedEntry(string output, string messageKey) =>
+            ParseLines(output).Single(e =>
+                e.TryGetProperty(messageKey, out var message) &&
+                message.GetString() == PowertoolsBufferingLogger.UnformattedEntryMessage);
 
         private static JsonElement[] ParseLines(string output) =>
             output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -133,6 +198,18 @@ namespace AWS.Lambda.Powertools.Logging.Tests.Buffering
                     service = logEntry.Service
                 };
             }
+        }
+
+        private sealed class ThrowingOutput : IConsoleWrapper
+        {
+            public void WriteLine(string message) => throw new IOException("Simulated output failure");
+            public void Debug(string message) => throw new IOException("Simulated output failure");
+            public void Error(string message) => throw new IOException("Simulated output failure");
+        }
+
+        private sealed class ThrowingTextWriter : StringWriter
+        {
+            public override void WriteLine(string value) => throw new IOException("Simulated console failure");
         }
     }
 }
