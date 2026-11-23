@@ -50,6 +50,16 @@ public class LoggingAspect : IMethodAspectHandler
         _logger = logger ?? LoggerFactoryHolder.GetOrCreateFactory().CreatePowertoolsLogger();
     }
 
+    /// <summary>
+    ///     The attribute settings applied last, and the configuration and factory they produced.
+    ///     Static because the attribute creates a new aspect instance for every invocation.
+    /// </summary>
+    private static readonly object AppliedLock = new();
+    private static AttributeSettings? _appliedSettings;
+    private static PowertoolsLoggerConfiguration _appliedConfig;
+    private static ILoggerFactory _appliedFactory;
+    private static ILogger _appliedLogger;
+
     private void InitializeLogger(LoggingAttribute trigger)
     {
         // Check which settings are explicitly provided in the attribute
@@ -64,21 +74,55 @@ public class LoggingAspect : IMethodAspectHandler
 
         if (needsReconfiguration)
         {
-            // Apply each setting directly using the existing Logger static methods
-            if (hasLogLevel) _currentConfig.MinimumLogLevel = trigger.LogLevel;
-            if (hasService) _currentConfig.Service = trigger.Service;
-            if (hasOutputCase) _currentConfig.LoggerOutputCase = trigger.LoggerOutputCase;
-            if (hasSamplingRate) _currentConfig.SamplingRate = trigger.SamplingRate;
+            var settings = new AttributeSettings(trigger.LogLevel, trigger.Service, trigger.LoggerOutputCase,
+                trigger.SamplingRate);
 
-            // Need to refresh the logger after configuration changes
-            _logger = LoggerFactoryHelper.CreateAndConfigureFactory(_currentConfig).CreatePowertoolsLogger();
-            Logger.ClearInstance();
+            lock (AppliedLock)
+            {
+                // Rebuild only when these settings have not been applied yet, or when the configuration or
+                // factory changed since (for example Logger.Configure, another handler or a test reset).
+                if (_appliedSettings == settings &&
+                    ReferenceEquals(_appliedConfig, _currentConfig) &&
+                    ReferenceEquals(_appliedFactory, LoggerFactoryHolder.Current))
+                {
+                    _logger = _appliedLogger;
+                }
+                else
+                {
+                    // Apply each setting directly using the existing Logger static methods
+                    if (hasLogLevel) _currentConfig.MinimumLogLevel = trigger.LogLevel;
+                    if (hasService) _currentConfig.Service = trigger.Service;
+                    if (hasOutputCase) _currentConfig.LoggerOutputCase = trigger.LoggerOutputCase;
+                    if (hasSamplingRate) _currentConfig.SamplingRate = trigger.SamplingRate;
+
+                    // Need to refresh the logger after configuration changes.
+                    // The previous factory is not disposed: loggers created from it may still be in use,
+                    // and disposing a buffering provider flushes its buffer.
+                    var factory = LoggerFactoryHelper.CreateAndConfigureFactory(_currentConfig);
+                    _logger = factory.CreatePowertoolsLogger();
+                    Logger.ClearInstance();
+
+                    _appliedSettings = settings;
+                    _appliedConfig = PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration();
+                    _appliedFactory = factory;
+                    _appliedLogger = _logger;
+                }
+            }
         }
 
         // Set operational flags based on current configuration
-        _isDebug = _currentConfig.MinimumLogLevel <= LogLevel.Debug;
+        _isDebug = (hasLogLevel ? trigger.LogLevel : _currentConfig.MinimumLogLevel) <= LogLevel.Debug;
         _bufferingEnabled = _currentConfig.LogBuffering?.Enabled == true;
     }
+
+    /// <summary>
+    ///     The settings of a Logging attribute that require the logger to be reconfigured.
+    /// </summary>
+    private readonly record struct AttributeSettings(
+        LogLevel LogLevel,
+        string Service,
+        LoggerOutputCase LoggerOutputCase,
+        double SamplingRate);
 
     /// <summary>
     ///     Captures the lambda context.
@@ -222,6 +266,21 @@ public class LoggingAspect : IMethodAspectHandler
     internal static void ResetForTest()
     {
         LoggingLambdaContext.Clear();
+        ResetAppliedSettings();
+    }
+
+    /// <summary>
+    ///     Forgets the attribute settings applied so far, so the next invocation reconfigures the logger.
+    /// </summary>
+    internal static void ResetAppliedSettings()
+    {
+        lock (AppliedLock)
+        {
+            _appliedSettings = null;
+            _appliedConfig = null;
+            _appliedFactory = null;
+            _appliedLogger = null;
+        }
     }
 
     /// <summary>

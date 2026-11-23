@@ -72,6 +72,7 @@ public static partial class Logger
     internal static void Reset()
     {
         LoggerFactoryHolder.Reset();
+        OneTimeWarnings.Reset();
         _loggerInstance = null;
         RemoveAllKeys();
     }
