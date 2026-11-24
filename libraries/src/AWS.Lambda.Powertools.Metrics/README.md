@@ -19,8 +19,6 @@ GitHub: https://github.com/aws-powertools/powertools-lambda-dotnet/
 
 ## Sample Function
 
-View the full example here: [https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/Metrics](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/Metrics)
-
 ```csharp
 public class Function
 {

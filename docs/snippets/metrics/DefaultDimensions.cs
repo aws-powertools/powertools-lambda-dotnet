@@ -1,8 +1,12 @@
+using AWS.Lambda.Powertools.Metrics;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+
 // This file is referenced by docs/core/metrics.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics;
-
+namespace Docs.MetricsSnippets.DefaultDimensions.set_default_dimensions
+{
 // --8<-- [start:set_default_dimensions]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -17,10 +21,14 @@ public class Function {
   {
     Metrics.SetDefaultDimensions(_defaultDimensions);
     Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
+    return null;
   }
 }
 // --8<-- [end:set_default_dimensions]
+}
 
+namespace Docs.MetricsSnippets.DefaultDimensions.default_dims_builder_cold_start
+{
 // --8<-- [start:default_dims_builder_cold_start]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -44,10 +52,16 @@ public class Function {
   public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
   {
     _metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-    ...
+    // ...
+    return null;
 }
 // --8<-- [end:default_dims_builder_cold_start]
+}
 
+}
+
+namespace Docs.MetricsSnippets.DefaultDimensions.default_dims_configure_cold_start
+{
 // --8<-- [start:default_dims_configure_cold_start]
 using AWS.Lambda.Powertools.Metrics;
 
@@ -72,6 +86,10 @@ public class Function {
   public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
   {
     Metrics.AddMetric("SuccessfulBooking", 1, MetricUnit.Count);
-    ...
+    // ...
+    return null;
 }
 // --8<-- [end:default_dims_configure_cold_start]
+}
+
+}

@@ -1,12 +1,22 @@
+using AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
+using AWS.Lambda.Powertools.Metrics;
+using Amazon.Lambda.AspNetCoreServer.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+
 // This file is referenced by docs/core/metrics.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Metrics;
 
+
+namespace Docs.MetricsSnippets.AspNetCore.use_metrics_middleware
+{
 // --8<-- [start:use_metrics_middleware]
 
 using AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
 
+public static class Example { public static void Main(string[] args) { // --8<-- [start:hidden]
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure metrics
@@ -37,26 +47,17 @@ app.MapGet("/powertools", (IMetrics metrics) =>
 
 app.Run();
 // --8<-- [end:use_metrics_middleware]
-
-// --8<-- [start:use_metrics_method]
-/// <summary>
-/// Adds a metrics middleware to the specified application builder.
-/// This will capture cold start (if CaptureColdStart is enabled) metrics and flush metrics on function exit.
-/// </summary>
-/// <param name="app">The application builder to add the metrics middleware to.</param>
-/// <returns>The application builder with the metrics middleware added.</returns>
-public static IApplicationBuilder UseMetrics(this IApplicationBuilder app)
-{
-    app.UseMiddleware<MetricsMiddleware>();
-    return app;
+} }
 }
-// --8<-- [end:use_metrics_method]
 
+namespace Docs.MetricsSnippets.AspNetCore.with_metrics_filter
+{
 // --8<-- [start:with_metrics_filter]
 
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
 
+public static class Example { public static void Main(string[] args) { // --8<-- [start:hidden]
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure metrics
@@ -88,8 +89,14 @@ app.MapGet("/powertools", (IMetrics metrics) =>
 
 app.Run();
 // --8<-- [end:with_metrics_filter]
+} }
+}
 
-// --8<-- [start:with_metrics_method]
+namespace Docs.MetricsSnippets.AspNetCore.with_metrics_method
+{
+public static class Example
+{
+    // --8<-- [start:with_metrics_method]
 /// <summary>
 /// Adds a metrics filter to the specified route handler builder.
 /// This will capture cold start (if CaptureColdStart is enabled) metrics and flush metrics on function exit.
@@ -102,3 +109,5 @@ public static RouteHandlerBuilder WithMetrics(this RouteHandlerBuilder builder)
     return builder;
 }
 // --8<-- [end:with_metrics_method]
+}
+}

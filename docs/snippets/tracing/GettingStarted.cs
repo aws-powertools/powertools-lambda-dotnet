@@ -1,8 +1,12 @@
+using AWS.Lambda.Powertools.Tracing;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+
 // This file is referenced by docs/core/tracing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Tracing;
-
+namespace Docs.TracingSnippets.GettingStarted.tracing_attribute
+{
 // --8<-- [start:tracing_attribute]
 public class Function
 {
@@ -15,6 +19,7 @@ public class Function
 
         await BusinessLogic2()
             .ConfigureAwait(false);
+        return null;
     }
 
     [Tracing]
@@ -30,7 +35,10 @@ public class Function
     }
 }
 // --8<-- [end:tracing_attribute]
+}
 
+namespace Docs.TracingSnippets.GettingStarted.custom_segment_name
+{
 // --8<-- [start:custom_segment_name]
 public class Function
 {
@@ -38,11 +46,15 @@ public class Function
     public async Task<APIGatewayProxyResponse> FunctionHandler
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
-        ...
+        // ...
+        return null;
     }
 }
 // --8<-- [end:custom_segment_name]
+}
 
+namespace Docs.TracingSnippets.GettingStarted.disable_capture_mode
+{
 // --8<-- [start:disable_capture_mode]
 public class Function
 {
@@ -50,7 +62,9 @@ public class Function
     public async Task<APIGatewayProxyResponse> FunctionHandler
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
-        ...
+        // ...
+        return null;
     }
 }
 // --8<-- [end:disable_capture_mode]
+}

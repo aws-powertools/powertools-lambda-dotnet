@@ -19,8 +19,6 @@ For a full list of features go to [docs.aws.amazon.com/powertools/dotnet/core/tr
 
 ## Sample Function
 
-View the full example here: [https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/Tracing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/Tracing)
-
 ```csharp
 public class Function
 {

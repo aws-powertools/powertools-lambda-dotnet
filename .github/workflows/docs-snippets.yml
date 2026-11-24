@@ -1,0 +1,39 @@
+name: Build docs snippets
+
+on:
+  push:
+    paths:
+      - "docs/snippets/**"
+      - "libraries/src/**"
+      - ".github/workflows/docs-snippets.yml"
+    branches: [develop]
+  pull_request:
+    paths:
+      - "docs/snippets/**"
+      - "libraries/src/**"
+      - ".github/workflows/docs-snippets.yml"
+    branches: [develop]
+
+permissions: {}
+
+defaults:
+  run:
+    working-directory: ./docs/snippets
+
+jobs:
+  build:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # 6.1.0
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Build
+        run: dotnet build --configuration Release /tl
