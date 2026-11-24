@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -15,6 +14,14 @@ internal static class IdempotencySerializer
 {
     private static JsonSerializerOptions _jsonOptions;
 
+    /// <summary>
+    ///     Whether to use reflection-based serialization. <see cref="JsonSerializer.IsReflectionEnabledByDefault" /> is
+    ///     a feature switch that is false in trimmed and Native AOT apps, where the source-generated contexts are used.
+    ///     <see cref="RuntimeFeatureWrapper" /> lets tests force the source-generated path.
+    /// </summary>
+    private static bool UseReflectionSerialization =>
+        JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported;
+
     static IdempotencySerializer()
     {
         BuildDefaultOptions();
@@ -29,7 +36,7 @@ internal static class IdempotencySerializer
         {
             PropertyNameCaseInsensitive = true
         };
-        if (!RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        if (!UseReflectionSerialization)
         {
             _jsonOptions.TypeInfoResolverChain.Add(IdempotencySerializationContext.Default);
         }
@@ -78,12 +85,16 @@ internal static class IdempotencySerializer
     /// <returns>A JSON string representation of the object.</returns>
     internal static string Serialize(object value, Type inputType)
     {
-        if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        // Inline rather than UseReflectionSerialization: the trimmer and ILC only recognize the feature switch
+        // as a guard when it is checked at the call site.
+        if (JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
-#pragma warning disable
+#pragma warning disable IL2026, IL3050 // Guarded by JsonSerializer.IsReflectionEnabledByDefault.
             return JsonSerializer.Serialize(value, _jsonOptions);
+#pragma warning restore IL2026, IL3050
         }
-        
+
+
         var typeInfo = GetTypeInfo(inputType);
         if (typeInfo == null)
         {
@@ -100,13 +111,13 @@ internal static class IdempotencySerializer
     /// <typeparam name="T">The type of the object to deserialize to.</typeparam>
     /// <param name="value">The JSON string to deserialize.</param>
     /// <returns>An object of type T represented by the JSON string.</returns>
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "False positive")]
-    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "False positive")]
     internal static T Deserialize<T>(string value)
     {
-        if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        if (JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
+#pragma warning disable IL2026, IL3050 // Guarded by JsonSerializer.IsReflectionEnabledByDefault.
             return JsonSerializer.Deserialize<T>(value, _jsonOptions);
+#pragma warning restore IL2026, IL3050
         }
 
         return (T)JsonSerializer.Deserialize(value, GetTypeInfo(typeof(T)));
