@@ -674,7 +674,7 @@ We prioritise log level settings in this order:
 3. POWERTOOLS_LOG_LEVEL environment variable
 
 If you set `Logger` level lower than ALC, we will emit a warning informing you that your messages will be discarded by
-Lambda.
+Lambda. The warning is written once per execution environment, not on every invocation.
 
 > **NOTE**
 > With ALC enabled, we are unable to increase the minimum log level below the `AWS_LAMBDA_LOG_LEVEL` environment
@@ -916,6 +916,9 @@ sequenceDiagram
 
 8. **What happens if Lambda times out without flushing the buffer?**
    Logs that are still in the buffer will be lost. If you are using the log buffer to log asynchronously, you should ensure that the buffer is flushed before the Lambda function times out. You can do this by calling the `Logger.FlushBuffer()` method at the end of your Lambda function.
+
+9. **Why are my flushed logs missing when I use Advanced Logging Controls (ALC)?**
+   Lambda filters log lines below the ALC log level, including lines written when the buffer is flushed. If you buffer at `Debug` and the ALC log level is `INFO`, the flushed `Debug` lines are dropped. We emit a warning when the buffer is set up and when it is flushed in this situation, once per execution environment. Keep `BufferAtLogLevel` at or above the ALC log level, or lower the ALC log level.
 
 ### Timestamp formatting
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -38,8 +39,14 @@ internal class PowertoolsLoggerProvider : ILoggerProvider
         // Warn if Lambda log level doesn't match
         if (lambdaLogLevelEnabled && logLevel < lambdaLogLevel)
         {
-            _currentConfig.LogOutput.WriteLine(
-                $"Current log level ({logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.");
+            var message =
+                $"Current log level ({logLevel}) does not match AWS Lambda Advanced Logging Controls minimum log level ({lambdaLogLevel}). This can lead to data loss, consider adjusting them.";
+
+            // Providers can be recreated when settings change, so only warn once per execution environment
+            if (OneTimeWarnings.ShouldWrite(message))
+            {
+                _currentConfig.LogOutput.WriteLine(message);
+            }
         }
 
         // Set service from environment if not explicitly set
