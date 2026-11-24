@@ -536,8 +536,11 @@ internal class XRayRecorder : IXRayRecorder
     /// <param name="type">The object type</param>
     /// <param name="depth">Current recursion depth</param>
     /// <returns>Sanitized dictionary representation or string fallback</returns>
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Complex object properties are preserved for tracing scenarios")]
-    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling", Justification = "Complex object properties are preserved for tracing scenarios")]
+    [UnconditionalSuppressMessage("Trimming", "IL2070:UnrecognizedReflectionPattern",
+        Justification = "Reads the properties of metadata values passed by the application. Under Native AOT, Tracing " +
+                        "requires TrimMode partial (see the Tracing AOT docs), which keeps the metadata of application " +
+                        "types; the X-Ray SDK, which serializes the same values, needs it too. If a property can't be " +
+                        "read, the value is recorded as an error string instead of failing.")]
     private static object SanitizeComplexObject(object value, Type type, int depth)
     {
         try
@@ -582,9 +585,6 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     ///     Safely sanitizes the current entity to prevent JSON serialization errors.
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming",
-        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
-        Justification = "Entity properties are preserved by X-Ray SDK")]
     private void SanitizeCurrentEntitySafely()
     {
         try
@@ -606,15 +606,11 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes the metadata in an entity
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming",
-        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
-        Justification = "Entity.Metadata property is preserved by X-Ray SDK")]
     private static void SanitizeEntityMetadata(Entity entity)
     {
         try
         {
-            var metadataProperty = entity.GetType().GetProperty("Metadata");
-            if (metadataProperty?.GetValue(entity) is not System.Collections.IDictionary metadata) return;
+            if (entity.Metadata is not System.Collections.IDictionary metadata) return;
 
             // Create a list of keys to avoid modifying collection while iterating
             var namespaceKeys = new System.Collections.Generic.List<object>();
@@ -653,15 +649,12 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes the annotations in an entity
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming",
-        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
-        Justification = "Entity.Annotations property is preserved by X-Ray SDK")]
     private static void SanitizeEntityAnnotations(Entity entity)
     {
         try
         {
-            var annotationsProperty = entity.GetType().GetProperty("Annotations");
-            if (annotationsProperty?.GetValue(entity) is not System.Collections.IDictionary annotations) return;
+            // Annotations doesn't implement IDictionary in the X-Ray SDK, so this returns here (unchanged behavior).
+            if ((object)entity.Annotations is not System.Collections.IDictionary annotations) return;
 
             var annotationKeys = new System.Collections.Generic.List<object>();
             foreach (var key in annotations.Keys)
@@ -685,15 +678,11 @@ internal class XRayRecorder : IXRayRecorder
     /// <summary>
     /// Sanitizes HTTP information in an entity
     /// </summary>
-    [UnconditionalSuppressMessage("Trimming",
-        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
-        Justification = "Entity.Http property is preserved by X-Ray SDK")]
     private static void SanitizeEntityHttpInformation(Entity entity)
     {
         try
         {
-            var httpProperty = entity.GetType().GetProperty("Http");
-            if (httpProperty?.GetValue(entity) is not System.Collections.IDictionary http) return;
+            if (entity.Http is not System.Collections.IDictionary http) return;
 
             var httpKeys = new System.Collections.Generic.List<object>();
             foreach (var key in http.Keys)

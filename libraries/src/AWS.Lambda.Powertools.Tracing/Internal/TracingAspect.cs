@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
@@ -51,6 +54,62 @@ public class TracingAspect
     }
 
     /// <summary>
+    ///     Cached readers of <see cref="Task{TResult}.Result" />, one per result type.
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, Func<Task, object>> TaskResultReaders = new();
+
+    /// <summary>
+    ///     Reads the result of a <see cref="Task{TResult}" /> without reflecting over its <c>Result</c> property,
+    ///     whose metadata Native AOT removes.
+    /// </summary>
+    /// <returns>
+    ///     False when the task isn't a <see cref="Task{TResult}" />, or when <c>TResult</c> is a value type and dynamic
+    ///     code isn't supported (Native AOT): the generic reader has no native code for value types there.
+    /// </returns>
+    private static bool TryGetTaskResult(Task task, out object result)
+    {
+        result = null;
+
+        var resultType = GetTaskResultType(task.GetType());
+        if (resultType is null)
+            return false;
+
+        if (resultType.IsValueType && !RuntimeFeatureWrapper.IsDynamicCodeSupported)
+            return false;
+
+        result = TaskResultReaders.GetOrAdd(resultType, CreateTaskResultReader)(task);
+        return true;
+    }
+
+    private static Type GetTaskResultType(Type taskType)
+    {
+        // Async methods return a subclass of Task<TResult> (the async state machine box), so walk the base types
+        for (var type = taskType; type is not null && type != typeof(Task); type = type.BaseType)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>))
+                return type.GetGenericArguments()[0];
+        }
+
+        return null;
+    }
+
+    [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
+        Justification = "ReadTaskResult is only instantiated over reference types when dynamic code is not supported " +
+                        "(see TryGetTaskResult), which use shared canonical code.")]
+    private static Func<Task, object> CreateTaskResultReader(Type resultType)
+    {
+        // Resolved here, not in a static field, so the trimmer can see which method MakeGenericMethod is called on
+        var method = typeof(TracingAspect).GetMethod(nameof(ReadTaskResult), BindingFlags.NonPublic | BindingFlags.Static)
+                     ?? throw new InvalidOperationException($"Could not resolve {nameof(ReadTaskResult)}.");
+        return method.MakeGenericMethod(resultType).CreateDelegate<Func<Task, object>>();
+    }
+
+    private static object ReadTaskResult<TResult>(Task task)
+    {
+        return ((Task<TResult>)task).Result;
+    }
+
+    /// <summary>
     /// Surrounds the specific method with Tracing aspect
     /// </summary>
     /// <param name="name"></param>
@@ -93,9 +152,8 @@ public class TracingAspect
                 } 
                 
                 // Only handle response if it's not a void Task
-                if (task.GetType().IsGenericType)
+                if (task.GetType().IsGenericType && TryGetTaskResult(task, out var taskResult))
                 {
-                    var taskResult = task.GetType().GetProperty("Result")?.GetValue(task);
                     HandleResponse(metadataName, taskResult, trigger.CaptureMode, @namespace);
                 }
                 _xRayRecorder.EndSubsegment();
