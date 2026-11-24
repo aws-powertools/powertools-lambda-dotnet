@@ -74,6 +74,8 @@ public class UniversalWrapperAspect
     /// </exception>
     [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
         Justification = "WrapSync/WrapAsync are only instantiated over reference types when dynamic code is not supported, which use shared canonical code. Value-type instantiations are rejected before MakeGenericMethod is called.")]
+    [SuppressMessage("Major Code Smell", "S3011:Reflection should not be used to increase accessibility of classes, methods, or fields",
+        Justification = "WrapSync/WrapAsync are protected internal members of UniversalWrapperAttribute in this assembly. They are resolved here, not in static fields, so the trimmer can see which method MakeGenericMethod is called on.")]
     private static Handler CreateMethodHandler(Type returnType, IEnumerable<UniversalWrapperAttribute> wrappers,
         MethodBase wrappedMethod)
     {
@@ -88,7 +90,8 @@ public class UniversalWrapperAspect
         {
             wrapperTypeArgument = returnType.IsConstructedGenericType
                 ? returnType.GenericTypeArguments[0]
-                : Type.GetType("System.Threading.Tasks.VoidTaskResult")!;
+                : Type.GetType("System.Threading.Tasks.VoidTaskResult")
+                  ?? throw new InvalidOperationException("Could not resolve System.Threading.Tasks.VoidTaskResult.");
             returnType = typeof(Task<>).MakeGenericType(wrapperTypeArgument);
         }
         else
@@ -109,13 +112,15 @@ public class UniversalWrapperAspect
 
         // Resolve the generic method definitions here, rather than caching them in static fields,
         // so the trimmer can see which methods MakeGenericMethod is called on (avoids IL2060).
-        var wrapperMethod = isAsync
-            ? typeof(UniversalWrapperAttribute)
-                .GetMethod(nameof(UniversalWrapperAttribute.WrapAsync), BindingFlags.NonPublic | BindingFlags.Instance)!
-                .MakeGenericMethod(wrapperTypeArgument)
-            : typeof(UniversalWrapperAttribute)
-                .GetMethod(nameof(UniversalWrapperAttribute.WrapSync), BindingFlags.NonPublic | BindingFlags.Instance)!
-                .MakeGenericMethod(wrapperTypeArgument);
+        var wrapperMethodDefinition = isAsync
+            ? typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapAsync),
+                BindingFlags.NonPublic | BindingFlags.Instance)
+            : typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapSync),
+                BindingFlags.NonPublic | BindingFlags.Instance);
+        var wrapperMethod = (wrapperMethodDefinition
+                             ?? throw new InvalidOperationException(
+                                 $"Could not resolve {nameof(UniversalWrapperAttribute)} wrap method."))
+            .MakeGenericMethod(wrapperTypeArgument);
 
         var converArgs = Expression.Parameter(typeof(object[]), "args");
         var next = Expression.Lambda(Expression.Convert(Expression.Invoke(targetParam, converArgs), returnType),
