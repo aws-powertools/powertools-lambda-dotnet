@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace AWS.Lambda.Powertools.Logging.Internal;
@@ -13,6 +14,7 @@ internal class PowertoolsBufferingLogger : ILogger
     private readonly ILogger _logger;
     private readonly Func<PowertoolsLoggerConfiguration> _getCurrentConfig;
     private readonly LogBuffer _buffer;
+    private readonly IPowertoolsConfigurations _powertoolsConfigurations;
 
     public PowertoolsBufferingLogger(
         ILogger logger,
@@ -21,6 +23,7 @@ internal class PowertoolsBufferingLogger : ILogger
     {
         _logger = logger;
         _getCurrentConfig = getCurrentConfig;
+        _powertoolsConfigurations = powertoolsConfigurations;
         _buffer = new LogBuffer(powertoolsConfigurations);
     }
 
@@ -81,6 +84,14 @@ internal class PowertoolsBufferingLogger : ILogger
          
                 // Get all buffered entries
                 var entries = _buffer.GetAndClear();
+
+                // Written as a Warning entry so that ALC does not filter the warning itself
+                if (entries.Count > 0 &&
+                    BufferingLoggerProvider.AlcFiltersBufferedLogs(_powertoolsConfigurations, _getCurrentConfig()?.LogBuffering) &&
+                    OneTimeWarnings.ShouldWrite(BufferingLoggerProvider.AlcFiltersFlushWarning))
+                {
+                    powertoolsLogger.LogWarning(BufferingLoggerProvider.AlcFiltersFlushWarning);
+                }
                 
                 // Log each entry directly
                 foreach (var entry in entries)

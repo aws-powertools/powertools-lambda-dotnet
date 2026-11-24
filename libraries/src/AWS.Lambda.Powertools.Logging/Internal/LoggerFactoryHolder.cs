@@ -44,6 +44,20 @@ internal static class LoggerFactoryHolder
         }
     }
 
+    /// <summary>
+    /// Gets the shared logger factory without creating one
+    /// </summary>
+    internal static ILoggerFactory Current
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _factory;
+            }
+        }
+    }
+
     public static void SetFactory(ILoggerFactory factory)
     {
         if (factory == null) throw new ArgumentNullException(nameof(factory));
