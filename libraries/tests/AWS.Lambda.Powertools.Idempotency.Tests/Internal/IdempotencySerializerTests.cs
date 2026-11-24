@@ -115,6 +115,57 @@ public class IdempotencySerializerTests
     }
 
     [Fact]
+    public void Deserialize_WhenDynamicCodeNotSupported_UsesTypeInfo()
+    {
+        try
+        {
+            // Arrange
+            RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+            IdempotencySerializer.AddTypeInfoResolver(TestJsonSerializerContext.Default);
+
+            // Act
+            var result = IdempotencySerializer.Deserialize<TestClass>("{\"Id\":1,\"Name\":\"Test\"}");
+
+            // Assert
+            Assert.Equal(1, result.Id);
+            Assert.Equal("Test", result.Name);
+        }
+        finally
+        {
+            RuntimeFeatureWrapper.Reset();
+            IdempotencySerializer.AddTypeInfoResolver(TestJsonSerializerContext.Default);
+        }
+    }
+
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public void AddTypeInfoResolver_AddsBuiltInContext_OnlyWhenReflectionIsNotUsed(bool dynamicCodeSupported,
+        bool expectBuiltInContext)
+    {
+        try
+        {
+            // Arrange
+            RuntimeFeatureWrapper.SetIsDynamicCodeSupported(dynamicCodeSupported);
+
+            // Act
+            IdempotencySerializer.AddTypeInfoResolver(TestJsonSerializerContext.Default);
+
+            // Assert
+            var field = typeof(IdempotencySerializer).GetField("_jsonOptions",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var options = (JsonSerializerOptions)field!.GetValue(null)!;
+            Assert.Equal(expectBuiltInContext,
+                options.TypeInfoResolverChain.Contains(IdempotencySerializationContext.Default));
+        }
+        finally
+        {
+            RuntimeFeatureWrapper.Reset();
+            IdempotencySerializer.AddTypeInfoResolver(TestJsonSerializerContext.Default);
+        }
+    }
+
+    [Fact]
     public void Serialize_WhenDynamicCodeSupported_UsesTypeInfo()
     {
         // Arrange
