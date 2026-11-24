@@ -80,6 +80,20 @@ public class PowertoolsLoggerConfiguration : IOptions<PowertoolsLoggerConfigurat
     public string TimestampFormat { get; set; }
 
     /// <summary>
+    ///     Writes timestamps in the function's local time zone, with its UTC offset, instead of UTC.
+    ///     The local time zone comes from the <c>TZ</c> environment variable, which Lambda sets to <c>:UTC</c> by default.
+    ///     When the local time zone is UTC, timestamps are written in UTC as usual.
+    ///     Defaults to false. This can also be set using the environment variable <c>POWERTOOLS_LOGGER_USE_LOCAL_TIMEZONE</c>.
+    /// </summary>
+    /// <example>
+    ///     <code>
+    ///     // With TZ=America/New_York: "2026-10-31T03:41:56.6142006-04:00" instead of "2026-10-31T07:41:56.6142006Z"
+    ///     options.UseLocalTimeZone = true;
+    ///     </code>
+    /// </example>
+    public bool UseLocalTimeZone { get; set; }
+
+    /// <summary>
     ///     Defines the minimum log level that will be processed by the logger.
     ///     Messages below this level will be ignored. Defaults to LogLevel.None, which means
     ///     the minimum level is determined by other configuration mechanisms.

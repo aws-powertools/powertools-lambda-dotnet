@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal;
+using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -233,5 +234,9 @@ public static class PowertoolsLoggingBuilderExtensions
             // Reset the current configuration to default
             _currentConfig = new PowertoolsLoggerConfiguration();
         }
+
+        // Forget one-time warnings and the settings applied by the Logging attribute
+        OneTimeWarnings.Reset();
+        LoggingAspect.ResetAppliedSettings();
     }
 }
