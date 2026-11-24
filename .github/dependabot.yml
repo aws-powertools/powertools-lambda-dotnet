@@ -9,6 +9,10 @@ updates:
       codeql-action:
         patterns:
           - "github/codeql-action*"
+    ignore:
+      # The v2.6.0 image can't be pulled (ossf/scorecard-action#1752). Remove once a fixed release is out.
+      - dependency-name: "ossf/scorecard-action"
+        versions: ["2.6.0"]
 
   - package-ecosystem: npm
     directories:
