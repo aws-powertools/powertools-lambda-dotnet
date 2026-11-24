@@ -172,6 +172,29 @@ public class PowertoolsLoggingSerializerTests : IDisposable
     }
 
     [Fact]
+    public void Serialize_LogEntryWithException_WhenDynamicCodeIsNotSupported_UsesExceptionConverterFormat()
+    {
+        // Arrange
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+        var logEntry = new LogEntry
+        {
+            Message = "failed",
+            Exception = new InvalidOperationException("Test error message", new Exception("Inner exception"))
+        };
+
+        // Act
+        var json = _serializer.Serialize(logEntry, typeof(LogEntry));
+
+        // Assert
+        using var document = JsonDocument.Parse(json);
+        var exception = document.RootElement.GetProperty("exception");
+        Assert.Equal("System.InvalidOperationException", exception.GetProperty("type").GetString());
+        Assert.Equal("Test error message", exception.GetProperty("message").GetString());
+        Assert.Equal("System.Exception", exception.GetProperty("inner_exception").GetProperty("type").GetString());
+        Assert.False(exception.TryGetProperty("target_site", out _));
+    }
+
+    [Fact]
     public void AddSerializerContext_ShouldUpdateTypeInfoResolver()
     {
         // Arrange
