@@ -5,7 +5,7 @@ namespace AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 /// <summary>
 /// Represents the operation type for AppSync events.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<AppSyncEventsOperation>))]
 public enum AppSyncEventsOperation
 {
     /// <summary>
