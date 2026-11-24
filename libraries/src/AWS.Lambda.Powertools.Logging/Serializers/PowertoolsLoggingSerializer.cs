@@ -213,6 +213,16 @@ internal class PowertoolsLoggingSerializer
             // Set output case and other properties
             SetOutputCase(newOptions);
             AddConverters(newOptions);
+
+            // User converters go after the built-in ones, so the fields Powertools writes keep their format
+            if (options != null)
+            {
+                foreach (var converter in options.Converters)
+                {
+                    newOptions.Converters.Add(converter);
+                }
+            }
+
             newOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             newOptions.PropertyNameCaseInsensitive = true;
 
