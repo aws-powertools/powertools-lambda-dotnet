@@ -99,7 +99,7 @@ public partial class MyCustomJsonSerializerContext : JsonSerializerContext
 
 namespace Docs.LoggingSnippets.AotSupportExamples.CustomLogFormatterAotFunction
 {
-using LambdaFunctionJsonSerializerContext = Docs.LoggingSnippets.AotSupportExamples.JsonSerializerContextExample.MyCustomJsonSerializerContext;
+using CustomLogFormatterJsonSerializerContext = Docs.LoggingSnippets.AotSupportExamples.CustomLogFormatterAotClass.CustomLogFormatterJsonSerializerContext;
 
 public class Example
 {
@@ -109,7 +109,7 @@ public class Example
 
 Func<APIGatewayHttpApiV2ProxyRequest, ILambdaContext, Task<APIGatewayHttpApiV2ProxyResponse>> handler = FunctionHandler;
 await LambdaBootstrapBuilder.Create(handler,
-    new PowertoolsSourceGeneratorSerializer<LambdaFunctionJsonSerializerContext>
+    new PowertoolsSourceGeneratorSerializer<CustomLogFormatterJsonSerializerContext>
     (
         new CustomLogFormatter()
     )
@@ -125,37 +125,54 @@ await LambdaBootstrapBuilder.Create(handler,
 namespace Docs.LoggingSnippets.AotSupportExamples.CustomLogFormatterAotClass
 {
 // --8<-- [start:custom_log_formatter_aot_class]
+// Under Native AOT, return a type declared in a namespace and registered in your
+// JsonSerializerContext. Anonymous types can't be read under Native AOT.
 public class CustomLogFormatter : ILogFormatter
 {
     public object FormatLogEntry(LogEntry logEntry)
     {
-        return new
-        {
-            Message = logEntry.Message,
-            Service = logEntry.Service,
-            CorrelationIds = new
-            {
-                AwsRequestId = logEntry.LambdaContext?.AwsRequestId,
-                XRayTraceId = logEntry.XRayTraceId,
-                CorrelationId = logEntry.CorrelationId
-            },
-            LambdaFunction = new
-            {
-                Name = logEntry.LambdaContext?.FunctionName,
-                Arn = logEntry.LambdaContext?.InvokedFunctionArn,
-                MemoryLimitInMB = logEntry.LambdaContext?.MemoryLimitInMB,
-                Version = logEntry.LambdaContext?.FunctionVersion,
-                ColdStart = logEntry.ColdStart,
-            },
-            Level = logEntry.Level.ToString(),
-            Timestamp = logEntry.Timestamp.ToString("o"),
-            Logger = new
-            {
-            Name = logEntry.Name,
-            SampleRate = logEntry.SamplingRate
-            },
-        };
+        return new CustomLogEntry(
+            Message: logEntry.Message,
+            Service: logEntry.Service,
+            CorrelationIds: new CorrelationIds(
+                AwsRequestId: logEntry.LambdaContext?.AwsRequestId,
+                XRayTraceId: logEntry.XRayTraceId,
+                CorrelationId: logEntry.CorrelationId),
+            LambdaFunction: new LambdaFunctionInfo(
+                Name: logEntry.LambdaContext?.FunctionName,
+                Arn: logEntry.LambdaContext?.InvokedFunctionArn,
+                MemoryLimitInMB: logEntry.LambdaContext?.MemoryLimitInMB,
+                Version: logEntry.LambdaContext?.FunctionVersion,
+                ColdStart: logEntry.ColdStart),
+            Level: logEntry.Level.ToString(),
+            Timestamp: logEntry.Timestamp.ToString("o"),
+            Logger: new LoggerInfo(
+                Name: logEntry.Name,
+                SampleRate: logEntry.SamplingRate));
     }
+}
+
+public record CustomLogEntry(
+    object Message,
+    string Service,
+    CorrelationIds CorrelationIds,
+    LambdaFunctionInfo LambdaFunction,
+    string Level,
+    string Timestamp,
+    LoggerInfo Logger);
+
+public record CorrelationIds(string AwsRequestId, string XRayTraceId, string CorrelationId);
+
+public record LambdaFunctionInfo(string Name, string Arn, int? MemoryLimitInMB, string Version, bool ColdStart);
+
+public record LoggerInfo(string Name, double? SampleRate);
+
+// Register the formatter's output type next to your function's request and response types
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyRequest))]
+[JsonSerializable(typeof(APIGatewayHttpApiV2ProxyResponse))]
+[JsonSerializable(typeof(CustomLogEntry))]
+public partial class CustomLogFormatterJsonSerializerContext : JsonSerializerContext
+{
 }
 // --8<-- [end:custom_log_formatter_aot_class]
 }
