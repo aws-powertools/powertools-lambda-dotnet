@@ -70,6 +70,17 @@ public class PowertoolsLoggerBuilder
     }
 
     /// <summary>
+    /// Writes timestamps in the function's local time zone (from the TZ environment variable) instead of UTC.
+    /// </summary>
+    /// <param name="useLocalTimeZone">Whether to use the local time zone. Defaults to true.</param>
+    /// <returns>The builder instance for method chaining.</returns>
+    public PowertoolsLoggerBuilder WithLocalTimeZone(bool useLocalTimeZone = true)
+    {
+        _configuration.UseLocalTimeZone = useLocalTimeZone;
+        return this;
+    }
+
+    /// <summary>
     /// Sets the output casing style for log properties.
     /// </summary>
     /// <param name="outputCase">The casing style to use for log output.</param>

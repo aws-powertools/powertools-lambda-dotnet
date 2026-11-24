@@ -20,6 +20,7 @@ internal static class LoggerFactoryHelper
             {
                 config.Service = configuration.Service;
                 config.TimestampFormat = configuration.TimestampFormat;
+                config.UseLocalTimeZone = configuration.UseLocalTimeZone;
                 config.MinimumLogLevel = configuration.MinimumLogLevel;
                 config.InitialLogLevel = configuration.InitialLogLevel;
                 config.SamplingRate = configuration.SamplingRate;

@@ -62,6 +62,7 @@ Logging requires two settings:
 | **POWERTOOLS_LOGGER_CASE**        | Override the default casing for log keys                                               | `SnakeCase`           |
 | **POWERTOOLS_LOGGER_LOG_EVENT**   | Logs incoming event                                                                    | `false`               |
 | **POWERTOOLS_LOGGER_SAMPLE_RATE** | Debug log sampling                                                                     | `0`                   |
+| **POWERTOOLS_LOGGER_USE_LOCAL_TIMEZONE** | Writes timestamps in the time zone set by `TZ` instead of UTC                   | `false`               |
 
 ### Setting up the logger
 
@@ -98,6 +99,7 @@ You can customize the logger by setting the following properties in the `Logger.
 | `JsonOptions`         | The JSON options to use. This is used to customize the serialization of logs.|
 | `LogBuffering`        | The log buffering options. This is used to configure log buffering.                             |
 | `TimestampFormat`     | The format of the timestamp. This is used to customize the format of the timestamp in the logs.|
+| `UseLocalTimeZone`    | Writes timestamps in the function's local time zone (from `TZ`) instead of UTC. Defaults to `false`.|
 | `SamplingRate`       | Sets a percentage (0.0 to 1.0) of logs that will be dynamically elevated to DEBUG level   |
 | `LoggerOutputCase`   | The output casing of the logger. This is used to customize the casing of the log entries.       |
 | `LogOutput`        | Specifies the console output wrapper used for writing logs. This property allows redirecting log output for testing or specialized handling scenarios.           |
@@ -941,6 +943,36 @@ This will output the timestamp in the following format:
     ...
 }
 ```
+
+### Time zone
+
+Timestamps are written in UTC by default, even if you set the `TZ` environment variable on your function. To write them in the time zone from `TZ`, set `UseLocalTimeZone` to `true` or set the `POWERTOOLS_LOGGER_USE_LOCAL_TIMEZONE` environment variable to `true`.
+
+```csharp
+Logger.Configure(logger =>
+{
+    logger.UseLocalTimeZone = true;
+});
+```
+
+With `TZ` set to `America/New_York`, the default format writes the time with its UTC offset instead of `Z`:
+
+```json
+{
+    "level": "Information",
+    "message": "Test Message",
+    "timestamp": "2026-10-31T03:41:56.6142006-04:00",
+    "service": "lambda-example",
+    ...
+}
+```
+
+If the local time zone is UTC, for example when `TZ` is `:UTC` (the Lambda default), timestamps keep the `Z` suffix. If the time zone in `TZ` can't be found, .NET falls back to UTC.
+
+Custom log formatters receive the local time in `LogEntry.Timestamp` when this setting is on.
+
+???+ warning
+    If you set a custom `TimestampFormat`, include the offset (`zzz`) rather than a literal `Z`. A format such as `yyyy-MM-ddTHH:mm:ssZ` would label local time as UTC.
 
 ## AOT Support
 
