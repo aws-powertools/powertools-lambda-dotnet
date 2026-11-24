@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "examples/**"
+      - ".github/workflows/examples-tests.yml"
     branches: [develop]
   pull_request:
     paths:
       - "examples/**"
+      - ".github/workflows/examples-tests.yml"
     branches: [develop]
 
 permissions: {}
@@ -39,4 +41,4 @@ jobs:
         run: dotnet build --configuration Release --no-restore /tl
 
       - name: Test Examples
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --configuration Release --no-build --verbosity normal
