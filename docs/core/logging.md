@@ -697,6 +697,9 @@ customize the serialization of Powertools Logger.
   the types that should be included in the generated assembly.
 - `DictionaryKeyPolicy`: This option allows you to specify a custom naming policy for the properties in the JSON output.
   This is useful when you want to change the casing of the property names or use a different naming convention.
+- `Converters`: Custom `JsonConverter`s are used for your own values, such as appended keys and structured message
+  parameters. Powertools' built-in converters run first, so they keep control of the types they handle, like
+  exceptions and `LogLevel`.
 
 !!! info
     If you want to preserve the original casing of the property names (keys), you can set the `DictionaryKeyPolicy` to
