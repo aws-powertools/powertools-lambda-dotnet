@@ -1,7 +1,13 @@
 // This file is referenced by docs/core/event_handler/appsync_events.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.AppSyncEvents;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.RuntimeSupport;
+using Amazon.Lambda.Serialization.SystemTextJson;
+using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
+
+namespace Docs.AppSyncEventsSnippets.GettingStarted.PublishClassLibrary
+{
 
 // --8<-- [start:publish_class_library]
 using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
@@ -27,10 +33,14 @@ public class Function
     }
 }
 // --8<-- [end:publish_class_library]
+}
 
+namespace Docs.AppSyncEventsSnippets.GettingStarted.PublishExecutableAssembly
+{
 // --8<-- [start:publish_executable_assembly]
 using AWS.Lambda.Powertools.EventHandler.AppSyncEvents;
 
+internal static class Example { public static async Task Run() { // --8<-- [start:hidden]
 var app = new AppSyncEventsResolver();
 
 app.OnPublishAsync("/default/channel", async (payload) =>
@@ -38,7 +48,7 @@ app.OnPublishAsync("/default/channel", async (payload) =>
     // Handle events or
     // return unchanged payload
     return payload;
-}
+});
 
 async Task<AppSyncEventsResponse> Handler(AppSyncEventsRequest appSyncEvent, ILambdaContext context)
 {
@@ -50,6 +60,17 @@ new DefaultLambdaJsonSerializer())
 .Build()
 .RunAsync();
 // --8<-- [end:publish_executable_assembly]
+} }
+}
+
+namespace Docs.AppSyncEventsSnippets.GettingStarted.SubscribeEvents
+{
+internal class Example
+{
+    private readonly AppSyncEventsResolver app = new();
+
+    public void Register()
+    {
 
 // --8<-- [start:subscribe_events]
 app.OnSubscribe("/default/*", (payload) =>
@@ -60,3 +81,6 @@ app.OnSubscribe("/default/*", (payload) =>
     return true;
 });
 // --8<-- [end:subscribe_events]
+    }
+}
+}

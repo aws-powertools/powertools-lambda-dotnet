@@ -1,8 +1,17 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Parameters;
+using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
+using AWS.Lambda.Powertools.Parameters.Transform;
+using AWS.Lambda.Powertools.Parameters.Provider;
+
 // This file is referenced by docs/utilities/parameters.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters;
 
+namespace Docs.ParametersSnippets.Caching.DefaultMaxAge
+{
 // --8<-- [start:default_max_age]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -20,10 +29,14 @@ public class Function
         string? value = await ssmProvider
             .GetAsync("/my/parameter")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:default_max_age]
+}
 
+namespace Docs.ParametersSnippets.Caching.MaxAgePerParameter
+{
 // --8<-- [start:max_age_per_parameter]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -41,10 +54,14 @@ public class Function
             .WithMaxAge(TimeSpan.FromSeconds(10))
             .GetAsync("/my/parameter")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:max_age_per_parameter]
+}
 
+namespace Docs.ParametersSnippets.Caching.ForceFetch
+{
 // --8<-- [start:force_fetch]
 using AWS.Lambda.Powertools.Parameters;
 using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
@@ -62,6 +79,8 @@ public class Function
             .ForceFetch()
             .GetAsync("/my/parameter")
             .ConfigureAwait(false);
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:force_fetch]
+}

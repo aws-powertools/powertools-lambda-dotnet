@@ -28,8 +28,6 @@ GitHub: https://github.com/aws-powertools/powertools-lambda-dotnet/
 
 ## Sample Function
 
-View the full example here: [github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/BatchProcessing](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/BatchProcessing)
-
 ```csharp
 [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
 public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)

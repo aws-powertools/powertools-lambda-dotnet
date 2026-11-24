@@ -1,8 +1,21 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Parameters;
+using AWS.Lambda.Powertools.Parameters.SimpleSystemsManagement;
+using AWS.Lambda.Powertools.Parameters.Transform;
+using S3Provider = Docs.ParametersSnippets.CustomProviderExamples.S3ProviderExample.S3Provider;
+using Amazon.S3;
+using Amazon.S3.Model;
+using AWS.Lambda.Powertools.Parameters.Provider;
+using AWS.Lambda.Powertools.Parameters.Configuration;
+
 // This file is referenced by docs/utilities/parameters.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Parameters;
 
+namespace Docs.ParametersSnippets.CustomProviderExamples.S3ProviderExample
+{
 // --8<-- [start:s3_provider]
 public class S3Provider : ParameterProvider
 {
@@ -72,7 +85,14 @@ public class S3Provider : ParameterProvider
     }
 }
 // --8<-- [end:s3_provider]
+}
 
+namespace Docs.ParametersSnippets.CustomProviderExamples.UsingCustomProvider
+{
+public class Example
+{
+    public async Task RunAsync()
+    {
 // --8<-- [start:using_custom_provider]
     var provider = new S3Provider();
 
@@ -81,3 +101,6 @@ public class S3Provider : ParameterProvider
         .GetAsync("myKey")
         .ConfigureAwait(false);
 // --8<-- [end:using_custom_provider]
+    }
+}
+}

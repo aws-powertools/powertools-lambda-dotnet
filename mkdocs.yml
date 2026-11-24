@@ -6,6 +6,7 @@ edit_uri: edit/develop/docs
 site_url: https://docs.aws.amazon.com/powertools/dotnet/
 exclude_docs: |
   /requirements.*
+  /snippets/
 
 nav:
   - Homepage: 

@@ -1,8 +1,21 @@
 // This file is referenced by docs/utilities/idempotency.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Amazon;
+using Amazon.DynamoDBv2;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.RuntimeSupport;
+using Amazon.Lambda.Serialization.SystemTextJson;
+using AWS.Lambda.Powertools.Idempotency;
+using AWS.Lambda.Powertools.Idempotency.Persistence;
+using Docs.IdempotencySnippets;
+
+namespace Docs.IdempotencySnippets.GettingStartedBasic.IdempotentAttributeExample
+{
 // --8<-- [start:idempotent_attribute]
     public class Function
     {
@@ -18,7 +31,11 @@ namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
         }
     }
 // --8<-- [end:idempotent_attribute]
+}
 
+
+namespace Docs.IdempotencySnippets.GettingStartedBasic.IdempotentAttributeOnAnotherMethod
+{
 // --8<-- [start:idempotent_attribute_on_another_method]
     public class Function
     {
@@ -39,3 +56,4 @@ namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency;
         }
     }
 // --8<-- [end:idempotent_attribute_on_another_method]
+}
