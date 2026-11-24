@@ -33,6 +33,11 @@ internal static class LoggingConstants
     internal const LoggerOutputCase DefaultLoggerOutputCase = LoggerOutputCase.SnakeCase;
 
     /// <summary>
+    ///     Constant for POWERTOOLS_LOGGER_USE_LOCAL_TIMEZONE environment variable
+    /// </summary>
+    internal const string UseLocalTimeZoneEnv = "POWERTOOLS_LOGGER_USE_LOCAL_TIMEZONE";
+
+    /// <summary>
     ///     Constant for key json formatter
     /// </summary>
     internal const string KeyJsonFormatter = "{@json}";

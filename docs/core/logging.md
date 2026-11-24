@@ -62,6 +62,7 @@ Logging requires two settings:
 | **POWERTOOLS_LOGGER_CASE**        | Override the default casing for log keys                                               | `SnakeCase`           |
 | **POWERTOOLS_LOGGER_LOG_EVENT**   | Logs incoming event                                                                    | `false`               |
 | **POWERTOOLS_LOGGER_SAMPLE_RATE** | Debug log sampling                                                                     | `0`                   |
+| **POWERTOOLS_LOGGER_USE_LOCAL_TIMEZONE** | Writes timestamps in the time zone set by `TZ` instead of UTC                   | `false`               |
 
 ### Setting up the logger
 
@@ -98,6 +99,7 @@ You can customize the logger by setting the following properties in the `Logger.
 | `JsonOptions`         | The JSON options to use. This is used to customize the serialization of logs.|
 | `LogBuffering`        | The log buffering options. This is used to configure log buffering.                             |
 | `TimestampFormat`     | The format of the timestamp. This is used to customize the format of the timestamp in the logs.|
+| `UseLocalTimeZone`    | Writes timestamps in the function's local time zone (from `TZ`) instead of UTC. Defaults to `false`.|
 | `SamplingRate`       | Sets a percentage (0.0 to 1.0) of logs that will be dynamically elevated to DEBUG level   |
 | `LoggerOutputCase`   | The output casing of the logger. This is used to customize the casing of the log entries.       |
 | `LogOutput`        | Specifies the console output wrapper used for writing logs. This property allows redirecting log output for testing or specialized handling scenarios.           |
@@ -672,7 +674,7 @@ We prioritise log level settings in this order:
 3. POWERTOOLS_LOG_LEVEL environment variable
 
 If you set `Logger` level lower than ALC, we will emit a warning informing you that your messages will be discarded by
-Lambda.
+Lambda. The warning is written once per execution environment, not on every invocation.
 
 > **NOTE**
 > With ALC enabled, we are unable to increase the minimum log level below the `AWS_LAMBDA_LOG_LEVEL` environment
@@ -695,6 +697,9 @@ customize the serialization of Powertools Logger.
   the types that should be included in the generated assembly.
 - `DictionaryKeyPolicy`: This option allows you to specify a custom naming policy for the properties in the JSON output.
   This is useful when you want to change the casing of the property names or use a different naming convention.
+- `Converters`: Custom `JsonConverter`s are used for your own values, such as appended keys and structured message
+  parameters. Powertools' built-in converters run first, so they keep control of the types they handle, like
+  exceptions and `LogLevel`.
 
 !!! info
     If you want to preserve the original casing of the property names (keys), you can set the `DictionaryKeyPolicy` to
@@ -915,6 +920,9 @@ sequenceDiagram
 8. **What happens if Lambda times out without flushing the buffer?**
    Logs that are still in the buffer will be lost. If you are using the log buffer to log asynchronously, you should ensure that the buffer is flushed before the Lambda function times out. You can do this by calling the `Logger.FlushBuffer()` method at the end of your Lambda function.
 
+9. **Why are my flushed logs missing when I use Advanced Logging Controls (ALC)?**
+   Lambda filters log lines below the ALC log level, including lines written when the buffer is flushed. If you buffer at `Debug` and the ALC log level is `INFO`, the flushed `Debug` lines are dropped. We emit a warning when the buffer is set up and when it is flushed in this situation, once per execution environment. Keep `BufferAtLogLevel` at or above the ALC log level, or lower the ALC log level.
+
 ### Timestamp formatting
 
 You can customize the timestamp format by setting the `TimestampFormat` property in the `Logger.Configure` method. The default format is `o`, which is the ISO 8601 format.
@@ -935,6 +943,36 @@ This will output the timestamp in the following format:
     ...
 }
 ```
+
+### Time zone
+
+Timestamps are written in UTC by default, even if you set the `TZ` environment variable on your function. To write them in the time zone from `TZ`, set `UseLocalTimeZone` to `true` or set the `POWERTOOLS_LOGGER_USE_LOCAL_TIMEZONE` environment variable to `true`.
+
+```csharp
+Logger.Configure(logger =>
+{
+    logger.UseLocalTimeZone = true;
+});
+```
+
+With `TZ` set to `America/New_York`, the default format writes the time with its UTC offset instead of `Z`:
+
+```json
+{
+    "level": "Information",
+    "message": "Test Message",
+    "timestamp": "2026-10-31T03:41:56.6142006-04:00",
+    "service": "lambda-example",
+    ...
+}
+```
+
+If the local time zone is UTC, for example when `TZ` is `:UTC` (the Lambda default), timestamps keep the `Z` suffix. If the time zone in `TZ` can't be found, .NET falls back to UTC.
+
+Custom log formatters receive the local time in `LogEntry.Timestamp` when this setting is on.
+
+???+ warning
+    If you set a custom `TimestampFormat`, include the offset (`zzz`) rather than a literal `Z`. A format such as `yyyy-MM-ddTHH:mm:ssZ` would label local time as UTC.
 
 ## AOT Support
 

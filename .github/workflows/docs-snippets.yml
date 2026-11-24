@@ -5,11 +5,13 @@ on:
     paths:
       - "docs/snippets/**"
       - "libraries/src/**"
+      - ".github/workflows/docs-snippets.yml"
     branches: [develop]
   pull_request:
     paths:
       - "docs/snippets/**"
       - "libraries/src/**"
+      - ".github/workflows/docs-snippets.yml"
     branches: [develop]
 
 permissions: {}
@@ -24,10 +26,10 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # 6.0.0
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # 6.1.0
         with:
           dotnet-version: |
             8.0.x
