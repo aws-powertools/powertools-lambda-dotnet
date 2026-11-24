@@ -75,10 +75,9 @@ internal class PowertoolsLoggingSerializer
     /// <exception cref="InvalidOperationException">Thrown when the input type is not known to the serializer.</exception>
     internal string Serialize(object value, Type inputType)
     {
-        // JsonSerializer.IsReflectionEnabledByDefault is a feature switch that is false for trimmed and
-        // Native AOT apps. The trimmer and ILC evaluate it at publish time and remove this branch,
-        // so the reflection-based overload below is never compiled into those apps.
-        // RuntimeFeatureWrapper lets tests force the source-generated path.
+        // JsonSerializer.IsReflectionEnabledByDefault is a feature switch that is false in trimmed and
+        // Native AOT apps. The trimmer and ILC know it's false there, so they don't report the guarded
+        // reflection-based call. RuntimeFeatureWrapper lets tests force the source-generated path.
         if (JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
             var jsonSerializerOptions = GetSerializerOptions();
