@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
@@ -51,38 +52,9 @@ internal class PowertoolsBufferingLogger : ILogger
 
         if (shouldBuffer)
         {
-            // Add to buffer instead of logging
-            try
+            if (_logger is PowertoolsLogger powertoolsLogger)
             {
-                if (_logger is PowertoolsLogger powertoolsLogger)
-                {
-                    var logEntry = powertoolsLogger.LogEntryString(logLevel, state, exception, formatter);
-                    
-                    // Check the size of the log entry, log it if too large
-                    var size = 100 + (logEntry?.Length ?? 0) * 2;
-                    if (size > bufferOptions.MaxBytes)
-                    {
-                        // log the entry directly if it exceeds the buffer size
-                        powertoolsLogger.LogLine(logEntry);
-                        ConsoleWrapper.WriteLine(LogLevel.Warning.ToLambdaLogLevel(), "Cannot add item to the buffer");
-                    }
-                    else
-                    {
-                        _buffer.Add(logEntry, bufferOptions.MaxBytes, size);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // If buffering fails, try to log an error about it
-                try
-                {
-                    _logger.LogError(ex, "Failed to buffer log entry");
-                }
-                catch
-                {
-                    // Last resort: if even that fails, just suppress the error
-                }
+                Buffer(powertoolsLogger, options, logLevel, state, exception, formatter);
             }
         }
         else
@@ -148,6 +120,125 @@ internal class PowertoolsBufferingLogger : ILogger
     public void ClearBuffer()
     {
         _buffer.Clear();
+    }
+
+    /// <summary>
+    /// Add an entry to the buffer. If that fails, write it now instead of losing it.
+    /// </summary>
+    private void Buffer<TState>(
+        PowertoolsLogger logger,
+        PowertoolsLoggerConfiguration config,
+        LogLevel logLevel,
+        TState state,
+        Exception exception,
+        Func<TState, Exception, string> formatter)
+    {
+        var bufferOptions = config.LogBuffering;
+        string logEntry = null;
+        var written = false;
+
+        try
+        {
+            logEntry = logger.LogEntryString(logLevel, state, exception, formatter);
+
+            // Check the size of the log entry, log it if too large
+            var size = 100 + logEntry.Length * 2;
+            if (size > bufferOptions.MaxBytes)
+            {
+                // log the entry directly if it exceeds the buffer size
+                logger.LogLine(logEntry);
+                written = true;
+                ConsoleWrapper.WriteLine(LogLevel.Warning.ToLambdaLogLevel(), "Cannot add item to the buffer");
+            }
+            else
+            {
+                _buffer.Add(logEntry, bufferOptions.MaxBytes, size);
+            }
+        }
+        catch (Exception ex)
+        {
+            // If buffering fails, try to log an error about it
+            try
+            {
+                _logger.LogError(ex, "Failed to buffer log entry");
+            }
+            catch
+            {
+                // Last resort: if even that fails, just suppress the error
+            }
+
+            if (!written)
+            {
+                WriteUnbuffered(logger, config, logEntry, logLevel, state, exception, formatter);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Write an entry that could not be buffered straight to the output.
+    /// If the entry can't be formatted, a minimal entry without the message is written instead,
+    /// so a custom formatter that masks data is never bypassed.
+    /// </summary>
+    private static void WriteUnbuffered<TState>(
+        PowertoolsLogger logger,
+        PowertoolsLoggerConfiguration config,
+        string logEntry,
+        LogLevel logLevel,
+        TState state,
+        Exception exception,
+        Func<TState, Exception, string> formatter)
+    {
+        try
+        {
+            if (logEntry is null)
+            {
+                try
+                {
+                    logEntry = logger.LogEntryString(logLevel, state, exception, formatter);
+                }
+                catch
+                {
+                    logEntry = UnformattedEntry(config, logLevel);
+                }
+            }
+
+            logger.LogLine(logEntry);
+        }
+        catch
+        {
+            // Nothing else we can do
+        }
+    }
+
+    internal const string UnformattedEntryMessage = "Log entry could not be formatted";
+
+    /// <summary>
+    /// Build a minimal entry with the same keys as a regular entry, but without the original message.
+    /// It only holds strings, so it serializes with the same key casing as regular entries, AOT included.
+    /// </summary>
+    private static string UnformattedEntry(PowertoolsLoggerConfiguration config, LogLevel logLevel)
+    {
+        var now = DateTime.UtcNow;
+        string timestamp;
+        try
+        {
+            timestamp = now.ToString(config.TimestampFormat ?? "o");
+        }
+        catch (FormatException)
+        {
+            // An invalid TimestampFormat may be why the entry failed in the first place
+            timestamp = now.ToString("o");
+        }
+
+        var entry = new Dictionary<string, object>
+        {
+            { config.LogLevelKey, logLevel.ToString() },
+            { LoggingConstants.KeyMessage, UnformattedEntryMessage },
+            { LoggingConstants.KeyTimestamp, timestamp },
+            { LoggingConstants.KeyService, config.Service }
+        };
+
+        return config.Serializer.Serialize(entry, typeof(object));
     }
 
     /// <summary>
