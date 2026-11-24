@@ -346,6 +346,32 @@ public class EntityLevelSanitizationTests
     }
 
     [Fact]
+    public void EndSubsegment_SanitizesEntityMetadataAndHttpValues()
+    {
+        // Arrange
+        var mockAwsXRayRecorder = Substitute.For<IAWSXRayRecorder>();
+        var mockConfigurations = Substitute.For<IPowertoolsConfigurations>();
+        mockConfigurations.IsLambdaEnvironment.Returns(true);
+
+        var subsegment = new Subsegment("TestSegment");
+        subsegment.AddMetadata("test_namespace", "ulong_value", 42ul);
+        subsegment.Http["status"] = 200ul;
+
+        var mockTraceContext = Substitute.For<Amazon.XRay.Recorder.Core.Internal.Context.ITraceContext>();
+        mockTraceContext.GetEntity().Returns(subsegment);
+        mockAwsXRayRecorder.TraceContext.Returns(mockTraceContext);
+
+        var recorder = new XRayRecorder(mockAwsXRayRecorder, mockConfigurations);
+
+        // Act
+        recorder.EndSubsegment();
+
+        // Assert: ulong isn't safe for X-Ray JSON, so it's written as a string
+        Assert.Equal("42", subsegment.Metadata["test_namespace"]["ulong_value"]);
+        Assert.Equal("200", subsegment.Http["status"]);
+    }
+
+    [Fact]
     public void SanitizeEntityMetadata_WithMetadataSanitizationError_HandlesGracefully()
     {
         // Arrange

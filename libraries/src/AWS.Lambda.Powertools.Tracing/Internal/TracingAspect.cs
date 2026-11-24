@@ -83,8 +83,9 @@ public class TracingAspect
 
     private static Type GetTaskResultType(Type taskType)
     {
-        // Async methods return a subclass of Task<TResult> (the async state machine box), so walk the base types
-        for (var type = taskType; type is not null && type != typeof(Task); type = type.BaseType)
+        // Async methods return a subclass of Task<TResult> (the async state machine box), so walk the base types.
+        // taskType derives from Task, so the loop always ends there.
+        for (var type = taskType; type != typeof(Task); type = type.BaseType)
         {
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>))
                 return type.GetGenericArguments()[0];
@@ -99,9 +100,9 @@ public class TracingAspect
     private static Func<Task, object> CreateTaskResultReader(Type resultType)
     {
         // Resolved here, not in a static field, so the trimmer can see which method MakeGenericMethod is called on
-        var method = typeof(TracingAspect).GetMethod(nameof(ReadTaskResult), BindingFlags.NonPublic | BindingFlags.Static)
-                     ?? throw new InvalidOperationException($"Could not resolve {nameof(ReadTaskResult)}.");
-        return method.MakeGenericMethod(resultType).CreateDelegate<Func<Task, object>>();
+        return typeof(TracingAspect).GetMethod(nameof(ReadTaskResult), BindingFlags.NonPublic | BindingFlags.Static)
+            .MakeGenericMethod(resultType)
+            .CreateDelegate<Func<Task, object>>();
     }
 
     private static object ReadTaskResult<TResult>(Task task)
@@ -151,8 +152,8 @@ public class TracingAspect
                     task.Exception?.Handle(ex => false);    
                 } 
                 
-                // Only handle response if it's not a void Task
-                if (task.GetType().IsGenericType && TryGetTaskResult(task, out var taskResult))
+                // Only handle response if the task has a result (Task<TResult>)
+                if (TryGetTaskResult(task, out var taskResult))
                 {
                     HandleResponse(metadataName, taskResult, trigger.CaptureMode, @namespace);
                 }

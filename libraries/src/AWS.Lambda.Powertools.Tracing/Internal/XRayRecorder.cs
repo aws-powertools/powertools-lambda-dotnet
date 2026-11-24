@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Amazon.XRay.Recorder.Core;
 using Amazon.XRay.Recorder.Core.Internal.Emitters;
 using Amazon.XRay.Recorder.Core.Internal.Entities;
@@ -592,9 +593,9 @@ internal class XRayRecorder : IXRayRecorder
             var entity = _awsxRayRecorder?.TraceContext?.GetEntity();
             if (entity == null) return;
 
-            // Sanitize known entity properties without reflection
+            // Sanitize known entity properties without reflection. Annotations aren't sanitized here: the X-Ray
+            // SDK's Annotations type isn't a dictionary, and AddAnnotation already sanitizes each value.
             SanitizeEntityMetadata(entity);
-            SanitizeEntityAnnotations(entity);
             SanitizeEntityHttpInformation(entity);
         }
         catch
@@ -610,63 +611,13 @@ internal class XRayRecorder : IXRayRecorder
     {
         try
         {
-            if (entity.Metadata is not System.Collections.IDictionary metadata) return;
-
-            // Create a list of keys to avoid modifying collection while iterating
-            var namespaceKeys = new System.Collections.Generic.List<object>();
-            foreach (var key in metadata.Keys)
+            // Snapshot the namespaces and keys to avoid modifying collections while iterating
+            foreach (var namespaceData in entity.Metadata.Values.ToList())
             {
-                namespaceKeys.Add(key);
-            }
-
-            // Process each namespace
-            foreach (var namespaceKey in namespaceKeys)
-            {
-                if (metadata[namespaceKey] is System.Collections.IDictionary namespaceData)
+                foreach (var dataKey in namespaceData.Keys.Cast<object>().ToList())
                 {
-                    var dataKeys = new System.Collections.Generic.List<object>();
-                    foreach (var key in namespaceData.Keys)
-                    {
-                        dataKeys.Add(key);
-                    }
-
-                    // Sanitize each value in the namespace
-                    foreach (var dataKey in dataKeys)
-                    {
-                        var originalValue = namespaceData[dataKey];
-                        var sanitizedValue = SanitizeValueForMetadata(originalValue);
-                        namespaceData[dataKey] = sanitizedValue;
-                    }
+                    namespaceData[dataKey] = SanitizeValueForMetadata(namespaceData[dataKey]);
                 }
-            }
-        }
-        catch
-        {
-            // ignored
-        }
-    }
-
-    /// <summary>
-    /// Sanitizes the annotations in an entity
-    /// </summary>
-    private static void SanitizeEntityAnnotations(Entity entity)
-    {
-        try
-        {
-            // Annotations doesn't implement IDictionary in the X-Ray SDK, so this returns here (unchanged behavior).
-            if ((object)entity.Annotations is not System.Collections.IDictionary annotations) return;
-
-            var annotationKeys = new System.Collections.Generic.List<object>();
-            foreach (var key in annotations.Keys)
-            {
-                annotationKeys.Add(key);
-            }
-
-            foreach (var key in annotationKeys)
-            {
-                var originalValue = annotations[key];
-                var sanitizedValue = SanitizeValueForAnnotation(originalValue);
-                annotations[key] = sanitizedValue;
             }
         }
         catch
@@ -682,19 +633,10 @@ internal class XRayRecorder : IXRayRecorder
     {
         try
         {
-            if (entity.Http is not System.Collections.IDictionary http) return;
-
-            var httpKeys = new System.Collections.Generic.List<object>();
-            foreach (var key in http.Keys)
+            var http = entity.Http;
+            foreach (var key in http.Keys.ToList())
             {
-                httpKeys.Add(key);
-            }
-
-            foreach (var key in httpKeys)
-            {
-                var originalValue = http[key];
-                var sanitizedValue = SanitizeValueForMetadata(originalValue);
-                http[key] = sanitizedValue;
+                http[key] = SanitizeValueForMetadata(http[key]);
             }
         }
         catch
