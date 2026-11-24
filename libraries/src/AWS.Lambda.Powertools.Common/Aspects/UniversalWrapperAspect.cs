@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using AspectInjector.Broker;
+using AWS.Lambda.Powertools.Common.Utils;
 
 namespace AWS.Lambda.Powertools.Common;
 
@@ -19,20 +20,6 @@ public class UniversalWrapperAspect
     ///     The delegate cache
     /// </summary>
     private static readonly Dictionary<MethodBase, Handler> DelegateCache = new();
-
-    /// <summary>
-    ///     The asynchronous generic handler
-    /// </summary>
-    private static readonly MethodInfo AsyncGenericHandler =
-        typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapAsync),
-            BindingFlags.NonPublic | BindingFlags.Instance);
-
-    /// <summary>
-    ///     The synchronize generic handler
-    /// </summary>
-    private static readonly MethodInfo SyncGenericHandler =
-        typeof(UniversalWrapperAttribute).GetMethod(nameof(UniversalWrapperAttribute.WrapSync),
-            BindingFlags.NonPublic | BindingFlags.Instance);
 
     /// <summary>
     ///     Handles the specified instance.
@@ -70,7 +57,7 @@ public class UniversalWrapperAspect
 
         var wrappers = triggers.OfType<UniversalWrapperAttribute>().ToArray();
         // Target.Method is more precise for cases when decorating generic methods
-        var handler = GetMethodHandler(target.Method, returnType, wrappers);
+        var handler = GetMethodHandler(target.Method, returnType, wrappers, method);
         return handler(target, args, eventArgs);
     }
 
@@ -79,29 +66,56 @@ public class UniversalWrapperAspect
     /// </summary>
     /// <param name="returnType">Type of the return.</param>
     /// <param name="wrappers">The wrappers.</param>
+    /// <param name="wrappedMethod">The user method being wrapped, used in error messages.</param>
     /// <returns>Handler.</returns>
-    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "<Pending>")]
-    private static Handler CreateMethodHandler(Type returnType, IEnumerable<UniversalWrapperAttribute> wrappers)
+    /// <exception cref="NotSupportedException">
+    ///     Dynamic code is not supported (Native AOT) and the method returns a value type, <see cref="Task" />,
+    ///     or <see cref="Task{TResult}" /> of a value type.
+    /// </exception>
+    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+        Justification = "WrapSync/WrapAsync are only instantiated over reference types when dynamic code is not supported, which use shared canonical code. Value-type instantiations are rejected before MakeGenericMethod is called.")]
+    private static Handler CreateMethodHandler(Type returnType, IEnumerable<UniversalWrapperAttribute> wrappers,
+        MethodBase wrappedMethod)
     {
         var targetParam = Expression.Parameter(typeof(Func<object[], object>), "orig");
         var eventArgsParam = Expression.Parameter(typeof(AspectEventArgs), "event");
 
-        MethodInfo wrapperMethod;
+        var isAsync = typeof(Task).IsAssignableFrom(returnType);
+        var originalReturnType = returnType;
+        Type wrapperTypeArgument;
 
-        if (typeof(Task).IsAssignableFrom(returnType))
+        if (isAsync)
         {
-            var taskType = returnType.IsConstructedGenericType
+            wrapperTypeArgument = returnType.IsConstructedGenericType
                 ? returnType.GenericTypeArguments[0]
-                : Type.GetType("System.Threading.Tasks.VoidTaskResult");
-            returnType = typeof(Task<>).MakeGenericType(taskType);
-            wrapperMethod = AsyncGenericHandler.MakeGenericMethod(taskType);
+                : Type.GetType("System.Threading.Tasks.VoidTaskResult")!;
+            returnType = typeof(Task<>).MakeGenericType(wrapperTypeArgument);
         }
         else
         {
             if (returnType == typeof(void))
                 returnType = typeof(object);
-            wrapperMethod = SyncGenericHandler.MakeGenericMethod(returnType);
+            wrapperTypeArgument = returnType;
         }
+
+        if (!RuntimeFeatureWrapper.IsDynamicCodeSupported && wrapperTypeArgument.IsValueType)
+        {
+            throw new NotSupportedException(
+                $"'{wrappedMethod.DeclaringType?.Name}.{wrappedMethod.Name}' returns '{GetDisplayName(originalReturnType)}', " +
+                $"which {string.Join(", ", wrappers.Select(w => w.GetType().Name).Distinct())} can't wrap when running as Native AOT. " +
+                "Methods that return a value type, Task, or Task<T> of a value type are not supported under Native AOT. " +
+                "Return a reference type (for example a class, record or string) or Task<T> of a reference type instead.");
+        }
+
+        // Resolve the generic method definitions here, rather than caching them in static fields,
+        // so the trimmer can see which methods MakeGenericMethod is called on (avoids IL2060).
+        var wrapperMethod = isAsync
+            ? typeof(UniversalWrapperAttribute)
+                .GetMethod(nameof(UniversalWrapperAttribute.WrapAsync), BindingFlags.NonPublic | BindingFlags.Instance)!
+                .MakeGenericMethod(wrapperTypeArgument)
+            : typeof(UniversalWrapperAttribute)
+                .GetMethod(nameof(UniversalWrapperAttribute.WrapSync), BindingFlags.NonPublic | BindingFlags.Instance)!
+                .MakeGenericMethod(wrapperTypeArgument);
 
         var converArgs = Expression.Parameter(typeof(object[]), "args");
         var next = Expression.Lambda(Expression.Convert(Expression.Invoke(targetParam, converArgs), returnType),
@@ -130,18 +144,28 @@ public class UniversalWrapperAspect
     /// <param name="method">The method.</param>
     /// <param name="returnType">Type of the return.</param>
     /// <param name="wrappers">The wrappers.</param>
+    /// <param name="wrappedMethod">The user method being wrapped, used in error messages.</param>
     /// <returns>Handler.</returns>
     private static Handler GetMethodHandler(MethodBase method, Type returnType,
-        IEnumerable<UniversalWrapperAttribute> wrappers)
+        IEnumerable<UniversalWrapperAttribute> wrappers, MethodBase wrappedMethod)
     {
         lock (method)
         {
             if (!DelegateCache.TryGetValue(method, out var handler))
                 if (!DelegateCache.TryGetValue(method, out handler))
-                    DelegateCache[method] = handler = CreateMethodHandler(returnType, wrappers);
+                    DelegateCache[method] = handler = CreateMethodHandler(returnType, wrappers, wrappedMethod);
 
             return handler;
         }
+    }
+
+    private static string GetDisplayName(Type type)
+    {
+        if (!type.IsConstructedGenericType)
+            return type.Name;
+
+        var name = type.Name.Substring(0, type.Name.IndexOf('`'));
+        return $"{name}<{string.Join(", ", type.GenericTypeArguments.Select(GetDisplayName))}>";
     }
 
     /// <summary>

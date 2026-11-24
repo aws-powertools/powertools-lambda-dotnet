@@ -736,6 +736,9 @@ When using response hooks to manipulate returned data from idempotent operations
 
 Native AOT trims your application code as part of the compilation to ensure that the binary is as small as possible. .NET 8 for Lambda provides improved trimming support compared to previous versions of .NET.
 
+!!! warning "Return types under Native AOT"
+    Under Native AOT, the `[Idempotent]` attribute can only wrap methods that return a reference type (for example a class, record or `string`) or `Task<T>` of a reference type. Methods that return a value type (such as `int` or `bool`), a plain `Task`, or `Task<T>` of a value type throw a `NotSupportedException` when first called. Return a class or record instead.
+
 ### WithJsonSerializationContext()
 
 To use Idempotency utility with AOT support you first need to add `WithJsonSerializationContext()` to your `Idempotency` configuration.
