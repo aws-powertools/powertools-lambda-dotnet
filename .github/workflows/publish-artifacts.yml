@@ -47,7 +47,7 @@ jobs:
           dotnet pack ./libraries/ --configuration Release --no-build --output ./packages --version-suffix $VERSION_SUFFIX
 
       - name: Upload packages
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 #7.0.2
         with:
           name: nuget-packages
           path: ./packages/
