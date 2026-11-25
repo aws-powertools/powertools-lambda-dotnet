@@ -3,7 +3,7 @@
 ![aws provider](https://img.shields.io/badge/provider-AWS-orange?logo=amazon-aws&color=ff9900)
 [![Build](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml)
 [![codecov.io](https://codecov.io/github/aws-powertools/powertools-lambda-dotnet/branch/develop/graphs/badge.svg)](https://app.codecov.io/gh/aws-powertools/powertools-lambda-dotnet)
-[![dotnet support](https://img.shields.io/static/v1?label=dotnet&message=%20NET8.0&color=blue?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+[![dotnet support](https://img.shields.io/badge/dotnet-.NET_8.0_%7C_10.0-blue?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/en-us/download/dotnet)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/AWS.Lambda.Powertools.Logging.svg)](https://www.nuget.org/packages?q=AWS.Lambda.Powertools) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/aws-powertools/powertools-lambda-dotnet/badge)](https://scorecard.dev/viewer/?uri=github.com/aws-powertools/powertools-lambda-dotnet)
 [![Discord](https://img.shields.io/badge/Discord-Join_Community-7289da.svg)](https://discord.gg/B8zZKbbyET)
 
