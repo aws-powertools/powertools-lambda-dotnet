@@ -46,8 +46,13 @@ public class MetricsFilter : IEndpointFilter, IDisposable
     /// <summary>
     /// Disposes of the resources used by the filter.
     /// </summary>
+    /// <remarks>
+    /// The filter holds no disposable resources. Disposing it does not reset cold start tracking,
+    /// which is recorded once per execution environment.
+    /// </remarks>
     public void Dispose()
     {
-        _coldStartTracker.Dispose();
+        // Nothing to dispose. Kept for backwards compatibility.
+        GC.SuppressFinalize(this);
     }
 }

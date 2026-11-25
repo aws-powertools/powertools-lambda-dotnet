@@ -27,7 +27,7 @@ public static class MetricsMiddlewareExtensions
         return app.Use(async (context, next) =>
         {
             var metrics = context.RequestServices.GetRequiredService<IMetrics>();
-            using var metricsHelper = new ColdStartTracker(metrics);
+            var metricsHelper = new ColdStartTracker(metrics);
             metricsHelper.TrackColdStart(context);
             await next();
         });

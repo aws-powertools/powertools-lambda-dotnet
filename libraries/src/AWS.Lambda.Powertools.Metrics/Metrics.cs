@@ -713,14 +713,15 @@ public class Metrics : IMetrics, IDisposable
     {
         if (Options.CaptureColdStart == null || !Options.CaptureColdStart.Value) return;
         
-        // bring default dimensions if exist
-        var dimensions = Options?.DefaultDimensions;
-        
+        // bring default dimensions if exist; copy so the configured options are never mutated
+        var defaultDimensions = Options?.DefaultDimensions;
+        var dimensions = defaultDimensions != null ? new Dictionary<string, string>(defaultDimensions) : null;
+
         var functionName = Options?.FunctionName ?? context?.FunctionName ?? "";
         if (!string.IsNullOrWhiteSpace(functionName))
         {
             dimensions ??= new Dictionary<string, string>();
-            dimensions.Add("FunctionName", functionName);
+            dimensions["FunctionName"] = functionName;
         }
 
         PushSingleMetric(

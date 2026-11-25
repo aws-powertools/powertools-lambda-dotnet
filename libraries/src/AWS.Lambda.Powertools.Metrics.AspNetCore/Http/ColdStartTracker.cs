@@ -10,8 +10,9 @@ namespace AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
 /// <remarks>
 /// This class is responsible for detecting and recording the first invocation (cold start) of a Lambda function.
 /// It ensures thread-safe tracking of cold starts and proper metric capture using the provided IMetrics implementation.
+/// The cold start state is shared by all instances and is recorded once per execution environment.
 /// </remarks>
-internal class ColdStartTracker : IDisposable
+internal class ColdStartTracker
 {
     private readonly IMetrics _metrics;
     private static bool _coldStart = true;
@@ -37,13 +38,14 @@ internal class ColdStartTracker : IDisposable
         lock (_lock)
         {
             if (!_coldStart) return;
-            _metrics.CaptureColdStartMetric(context.Items["LambdaContext"] as ILambdaContext);
+            // Mark as consumed first so a failing capture is not retried on every request
             _coldStart = false;
+            _metrics.CaptureColdStartMetric(context.Items["LambdaContext"] as ILambdaContext);
         }
     }
 
     /// <summary>
-    /// Resets the cold start tracking state.
+    /// Resets the cold start tracking state. Intended for tests only.
     /// </summary>
     internal static void ResetColdStart()
     {
@@ -51,11 +53,5 @@ internal class ColdStartTracker : IDisposable
         {
             _coldStart = true;
         }
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        ResetColdStart();
     }
 }
