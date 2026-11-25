@@ -737,7 +737,15 @@ When using response hooks to manipulate returned data from idempotent operations
 Native AOT trims your application code as part of the compilation to ensure that the binary is as small as possible. .NET 8 for Lambda provides improved trimming support compared to previous versions of .NET.
 
 !!! warning "Return types under Native AOT"
-    Under Native AOT, the `[Idempotent]` attribute can only wrap methods that return a reference type (for example a class, record or `string`) or `Task<T>` of a reference type. Methods that return a value type (such as `int` or `bool`), a plain `Task`, or `Task<T>` of a value type throw a `NotSupportedException` when first called. Return a class or record instead.
+    Under Native AOT, the `[Idempotent]` attribute can wrap methods that return:
+
+    * `Task`
+    * a reference type, for example a class, record or `string`, or `Task<T>` of one
+    * `int`, `long`, `bool`, `double`, `decimal`, `Guid` or `DateTime`, or `Task<T>` of one of these
+
+    You don't need to add `string` or these value types to your `JsonSerializerContext`; Powertools includes them. Add your own response types, as shown below.
+
+    Methods that return any other value type, for example your own struct, an enum, a nullable value type such as `int?`, or `ValueTask<T>`, throw a `NotSupportedException` that names the method and the return type when first called. Return a class or record instead.
 
 ### WithJsonSerializationContext()
 
