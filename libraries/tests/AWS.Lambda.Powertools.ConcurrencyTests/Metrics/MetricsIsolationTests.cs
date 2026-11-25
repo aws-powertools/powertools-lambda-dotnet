@@ -11,17 +11,22 @@ namespace AWS.Lambda.Powertools.ConcurrencyTests.Metrics;
 /// These tests verify that when multiple Lambda invocations run concurrently,
 /// each invocation's metrics remain isolated from other invocations.
 /// 
-/// The Metrics implementation uses per-thread context storage to ensure
+/// The Metrics implementation keeps one context per invocation (async flow) to ensure
 /// isolation between concurrent Lambda invocations.
 /// </summary>
 [Collection("Metrics Tests")]
 public class MetricsIsolationTests : IDisposable
 {
+    // These tests simulate concurrent invocations in one execution environment, which Lambda only
+    // does with AWS_LAMBDA_MAX_CONCURRENCY > 1
+    private readonly string? _previousMaxConcurrency = Environment.GetEnvironmentVariable("AWS_LAMBDA_MAX_CONCURRENCY");
+
     public MetricsIsolationTests()
     {
         Powertools.Metrics.Metrics.ResetForTest();
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "TestNamespace");
         Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "TestService");
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_MAX_CONCURRENCY", "4");
     }
 
     public void Dispose()
@@ -29,6 +34,7 @@ public class MetricsIsolationTests : IDisposable
         Powertools.Metrics.Metrics.ResetForTest();
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", null);
         Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_MAX_CONCURRENCY", _previousMaxConcurrency);
     }
 
     #region Helper Result Classes

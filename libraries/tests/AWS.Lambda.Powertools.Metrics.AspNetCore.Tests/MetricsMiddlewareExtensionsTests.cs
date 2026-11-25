@@ -238,6 +238,45 @@ public class MetricsMiddlewareExtensionsTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task When_UseMetrics_And_Endpoint_Resumes_On_Another_Thread_Should_Flush_Metrics_Added_Before_The_Await()
+    {
+        // Arrange
+        Metrics.ResetForTest();
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        var consoleWrapper = Substitute.For<IConsoleWrapper>();
+        var metrics = new Metrics(conf, nameSpace: "TestNamespace", consoleWrapper: consoleWrapper);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.Services.AddSingleton<IMetrics>(metrics);
+        builder.WebHost.UseTestServer();
+
+        var app = builder.Build();
+        app.UseMetrics();
+        app.MapGet("/test", async (IMetrics m) =>
+        {
+            m.AddMetric("BeforeAwait", 1, MetricUnit.Count);
+            await new ResumeOnNewThread();
+            m.AddMetric("AfterAwait", 1, MetricUnit.Count);
+            m.Flush();
+            return Results.Ok();
+        });
+
+        await app.StartAsync();
+        var client = app.GetTestClient();
+
+        // Act
+        var response = await client.GetAsync("/test");
+
+        // Assert
+        Assert.Equal(200, (int)response.StatusCode);
+        consoleWrapper.Received(1).WriteLine(
+            Arg.Is<string>(s => s.Contains("\"BeforeAwait\":1") && s.Contains("\"AfterAwait\":1")));
+
+        await app.StopAsync();
+        Metrics.ResetForTest();
+    }
+
     public void Dispose()
     {
         ColdStartTracker.ResetColdStart();

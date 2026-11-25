@@ -54,6 +54,10 @@ public class MetricsAspect
             options.FunctionName = trigger.FunctionName;
         });
 
+        // Give the invocation its own context. Everything it runs, including code after an await
+        // and child tasks, inherits it through the async flow.
+        Metrics.BeginInvocationContext();
+
         var eventArgs = new AspectEventArgs
         {
             Instance = instance,
@@ -77,7 +81,14 @@ public class MetricsAspect
     [Advice(Kind.After)]
     public void Exit()
     {
-        _metricsInstance.Flush();
+        try
+        {
+            _metricsInstance.Flush();
+        }
+        finally
+        {
+            Metrics.EndInvocationContext();
+        }
     }
 
 

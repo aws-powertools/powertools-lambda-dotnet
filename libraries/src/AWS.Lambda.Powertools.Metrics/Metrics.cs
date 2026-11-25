@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
 
@@ -71,51 +72,240 @@ public class Metrics : IMetrics, IDisposable
     private static volatile IMetrics _instance;
 
     /// <summary>
-    ///     Thread-safe dictionary for per-thread context storage.
-    ///     Uses ManagedThreadId as key to ensure isolation when Lambda processes
-    ///     multiple concurrent requests (AWS_LAMBDA_MAX_CONCURRENCY > 1).
+    ///     A MetricsContext bound to an async flow. Scopes form a chain so that a nested
+    ///     <c>[Metrics]</c> method gets its own context and its caller's context is used again once
+    ///     the nested one has ended.
     /// </summary>
-    private static readonly ConcurrentDictionary<int, MetricsContext> _threadContexts = new();
+    private sealed class ContextScope
+    {
+        internal ContextScope(MetricsContext context, ContextScope parent, bool isInvocation)
+        {
+            Context = context;
+            Parent = parent;
+            IsInvocation = isInvocation;
+            Depth = parent == null ? 0 : parent.Depth + 1;
+        }
+
+        internal MetricsContext Context { get; }
+        internal ContextScope Parent { get; }
+        internal bool IsInvocation { get; }
+        internal int Depth { get; }
+    }
 
     /// <summary>
-    ///     Gets the MetricsContext for the current thread.
-    ///     Creates a new context if one doesn't exist for this thread.
+    ///     The context of the current invocation. AsyncLocal flows with the ExecutionContext, so the
+    ///     same context is used before and after an <c>await</c> (whatever thread the continuation
+    ///     runs on) and by child tasks started from the invocation (<c>Task.Run</c>,
+    ///     <c>Task.WhenAll</c>, <c>Parallel.ForEachAsync</c>).
+    ///     Concurrent invocations (AWS_LAMBDA_MAX_CONCURRENCY &gt; 1) run in separate flows and
+    ///     therefore never share a context.
     /// </summary>
-    private MetricsContext CurrentContext
+    private static readonly AsyncLocal<ContextScope> _currentScope = new();
+
+    /// <summary>
+    ///     Registry of live contexts. A context is live while it is registered here; once removed
+    ///     (when its invocation ends, or on reset) every flow that still references it ignores it.
+    ///     Keys are held weakly, so contexts created lazily by code that never ends them (manual
+    ///     usage without the <c>[Metrics]</c> attribute) are dropped once their flow is gone.
+    ///     Used to apply default dimension changes to all live contexts.
+    /// </summary>
+    private static readonly ConditionalWeakTable<MetricsContext, object> _liveContexts = new();
+
+    /// <summary>
+    ///     Value stored for every registered context.
+    /// </summary>
+    private static readonly object _liveMarker = new();
+
+    /// <summary>
+    ///     Upper bound for the scope chain. Only reached if invocations keep failing (so they never
+    ///     end their scope) while their caller's flow keeps a reference; the chain is cut there so
+    ///     it can't grow without bound.
+    /// </summary>
+    private const int MaxScopeDepth = 16;
+
+    /// <summary>
+    ///     Process-wide context for code outside any invocation context (manual usage without the
+    ///     <c>[Metrics]</c> attribute) when the execution environment runs one invocation at a time.
+    ///     It is registered like any other context and cleared by every flush.
+    /// </summary>
+    private static MetricsContext _fallbackContext;
+
+    /// <summary>
+    ///     Lock for creating the fallback context.
+    /// </summary>
+    private static readonly object _fallbackLock = new();
+
+    /// <summary>
+    ///     Environment variable set by Lambda when an execution environment can run several
+    ///     invocations at once.
+    /// </summary>
+    private const string MaxConcurrencyEnv = "AWS_LAMBDA_MAX_CONCURRENCY";
+
+    /// <summary>
+    ///     Whether the execution environment can run several invocations at once
+    ///     (AWS_LAMBDA_MAX_CONCURRENCY &gt; 1). Read on every call, so tests can change it.
+    /// </summary>
+    private static bool IsMultiConcurrency =>
+        int.TryParse(Environment.GetEnvironmentVariable(MaxConcurrencyEnv), out var maxConcurrency) &&
+        maxConcurrency > 1;
+
+    /// <summary>
+    ///     Gets the MetricsContext for the current invocation. Outside any invocation context (code
+    ///     without the <c>[Metrics]</c> attribute or the ASP.NET Core middleware/filter):
+    ///     <list type="bullet">
+    ///         <item>with one invocation at a time, uses the process-wide fallback context, so it
+    ///         doesn't matter which method makes the first metrics call;</item>
+    ///         <item>with AWS_LAMBDA_MAX_CONCURRENCY &gt; 1, creates a context in the current async
+    ///         flow, so concurrent invocations stay isolated.</item>
+    ///     </list>
+    /// </summary>
+    private static MetricsContext CurrentContext
     {
         get
         {
-            var threadId = Environment.CurrentManagedThreadId;
-            return _threadContexts.GetOrAdd(threadId, _ =>
-            {
-                var ctx = new MetricsContext();
-                // Copy shared configuration to new context
-                var ns = _sharedNamespace;
-                if (!string.IsNullOrWhiteSpace(ns))
-                    ctx.SetNamespace(ns);
-                
-                var svc = _sharedService;
-                if (!string.IsNullOrWhiteSpace(svc))
-                {
-                    ctx.SetService(svc);
-                }
-                
-                // Copy default dimensions (including Service dimension if set)
-                lock (_defaultDimensionsLock)
-                {
-                    if (_sharedDefaultDimensions.Count > 0)
-                    {
-                        ctx.SetDefaultDimensions(new List<DimensionSet>(_sharedDefaultDimensions));
-                    }
-                    else if (!string.IsNullOrWhiteSpace(svc))
-                    {
-                        // If no shared default dimensions but service is set, add Service dimension
-                        ctx.SetDefaultDimensions(new List<DimensionSet>(new[] { new DimensionSet("Service", svc) }));
-                    }
-                }
-                return ctx;
-            });
+            var scoped = FindLiveScope(_currentScope.Value, false)?.Context;
+            if (scoped != null)
+                return scoped;
+
+            if (!IsMultiConcurrency)
+                return FallbackContext;
+
+            var ctx = CreateContext();
+            _currentScope.Value = new ContextScope(ctx, null, false);
+            return ctx;
         }
+    }
+
+    /// <summary>
+    ///     Gets the live MetricsContext for the current invocation without creating one.
+    /// </summary>
+    private static MetricsContext ExistingContext
+    {
+        get
+        {
+            var scoped = FindLiveScope(_currentScope.Value, false)?.Context;
+            if (scoped != null)
+                return scoped;
+
+            if (IsMultiConcurrency)
+                return null;
+
+            var fallback = Volatile.Read(ref _fallbackContext);
+            return fallback != null && IsLive(fallback) ? fallback : null;
+        }
+    }
+
+    /// <summary>
+    ///     Gets the fallback context, creating it if there is none (or it was reset).
+    /// </summary>
+    private static MetricsContext FallbackContext
+    {
+        get
+        {
+            var ctx = Volatile.Read(ref _fallbackContext);
+            if (ctx != null && IsLive(ctx))
+                return ctx;
+
+            lock (_fallbackLock)
+            {
+                ctx = _fallbackContext;
+                if (ctx == null || !IsLive(ctx))
+                {
+                    ctx = CreateContext();
+                    Volatile.Write(ref _fallbackContext, ctx);
+                }
+
+                return ctx;
+            }
+        }
+    }
+
+    private static bool IsLive(MetricsContext context) => _liveContexts.TryGetValue(context, out _);
+
+    private static ContextScope FindLiveScope(ContextScope scope, bool invocationOnly)
+    {
+        while (scope != null && (!IsLive(scope.Context) || (invocationOnly && !scope.IsInvocation)))
+            scope = scope.Parent;
+        return scope;
+    }
+
+    /// <summary>
+    ///     Creates and registers a context initialized from the shared configuration.
+    /// </summary>
+    private static MetricsContext CreateContext()
+    {
+        var ctx = new MetricsContext();
+        // Copy shared configuration to new context
+        var ns = _sharedNamespace;
+        if (!string.IsNullOrWhiteSpace(ns))
+            ctx.SetNamespace(ns);
+
+        var svc = _sharedService;
+        if (!string.IsNullOrWhiteSpace(svc))
+        {
+            ctx.SetService(svc);
+        }
+
+        // Copy default dimensions (including Service dimension if set)
+        lock (_defaultDimensionsLock)
+        {
+            if (_sharedDefaultDimensions.Count > 0)
+            {
+                ctx.SetDefaultDimensions(new List<DimensionSet>(_sharedDefaultDimensions));
+            }
+            else if (!string.IsNullOrWhiteSpace(svc))
+            {
+                // If no shared default dimensions but service is set, add Service dimension
+                ctx.SetDefaultDimensions(new List<DimensionSet>(new[] { new DimensionSet("Service", svc) }));
+            }
+
+            // Register under the same lock that default dimension updates hold, so an update
+            // either sees this context or happened before it copied the shared dimensions
+            _liveContexts.AddOrUpdate(ctx, _liveMarker);
+        }
+
+        return ctx;
+    }
+
+    /// <summary>
+    ///     Snapshot of all live contexts.
+    /// </summary>
+    private static List<MetricsContext> LiveContexts()
+    {
+        var contexts = new List<MetricsContext>();
+        foreach (var kvp in (IEnumerable<KeyValuePair<MetricsContext, object>>)_liveContexts)
+            contexts.Add(kvp.Key);
+        return contexts;
+    }
+
+    /// <summary>
+    ///     Starts a new context for an invocation in the current async flow. Called when a
+    ///     <c>[Metrics]</c> method starts; everything the invocation runs, including child tasks,
+    ///     inherits it.
+    /// </summary>
+    internal static void BeginInvocationContext()
+    {
+        var parent = FindLiveScope(_currentScope.Value, false);
+        if (parent != null && parent.Depth >= MaxScopeDepth)
+            parent = null;
+
+        _currentScope.Value = new ContextScope(CreateContext(), parent, true);
+    }
+
+    /// <summary>
+    ///     Ends the current invocation's context. Called when a <c>[Metrics]</c> method ends, after
+    ///     its metrics are flushed. The context is unregistered, so nothing (another invocation that
+    ///     runs on the same thread, or a task that outlives the invocation) can write to it or
+    ///     flush it again.
+    /// </summary>
+    internal static void EndInvocationContext()
+    {
+        var scope = FindLiveScope(_currentScope.Value, true);
+        if (scope == null)
+            return;
+
+        _liveContexts.Remove(scope.Context);
+        _currentScope.Value = scope.Parent;
     }
 
     /// <summary>
@@ -273,16 +463,22 @@ public class Metrics : IMetrics, IDisposable
             }
 
             var context = CurrentContext;
-            var metrics = context.GetMetrics();
 
-            if (metrics.Count > 0 &&
-                (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
-                 GetExistingMetric(metrics, key)?.Values.Count == PowertoolsConfigurations.MaxMetrics))
+            // Child tasks of an invocation share its context: the overflow check, the overflow
+            // flush and the add must not interleave with another task's add or flush
+            lock (context.SyncRoot)
             {
-                FlushContext(context, true);
-            }
+                var metrics = context.GetMetrics();
 
-            context.AddMetric(key, value, unit, resolution);
+                if (metrics.Count > 0 &&
+                    (metrics.Count == PowertoolsConfigurations.MaxMetrics ||
+                     GetExistingMetric(metrics, key)?.Values.Count == PowertoolsConfigurations.MaxMetrics))
+                {
+                    FlushContext(context, true);
+                }
+
+                context.AddMetric(key, value, unit, resolution);
+            }
         }
         else
         {
@@ -298,11 +494,12 @@ public class Metrics : IMetrics, IDisposable
             ? nameSpace
             : GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace;
         
-        // Store in shared state for new thread contexts
+        // Store in shared state for new contexts
         _sharedNamespace = ns;
-        
-        // Update current thread's context
-        CurrentContext.SetNamespace(ns);
+
+        // Update the current invocation's context, if there is one. Configuration doesn't create a
+        // context: one created at startup would be inherited by every invocation.
+        ExistingContext?.SetNamespace(ns);
     }
 
 
@@ -314,7 +511,8 @@ public class Metrics : IMetrics, IDisposable
     {
         try
         {
-            return CurrentContext.GetService();
+            var context = ExistingContext;
+            return context != null ? context.GetService() : _sharedService;
         }
         catch
         {
@@ -329,7 +527,11 @@ public class Metrics : IMetrics, IDisposable
             throw new ArgumentNullException(nameof(key),
                 "'AddDimension' method requires a valid dimension key. 'Null' or empty values are not allowed.");
 
-        CurrentContext.AddDimension(key, value);
+        var context = CurrentContext;
+        lock (context.SyncRoot)
+        {
+            context.AddDimension(key, value);
+        }
     }
 
     /// <inheritdoc />
@@ -339,7 +541,11 @@ public class Metrics : IMetrics, IDisposable
             throw new ArgumentNullException(nameof(key),
                 "'AddMetadata' method requires a valid metadata key. 'Null' or empty values are not allowed.");
 
-        CurrentContext.AddMetadata(key, value);
+        var context = CurrentContext;
+        lock (context.SyncRoot)
+        {
+            context.AddMetadata(key, value);
+        }
     }
 
     /// <inheritdoc />
@@ -352,35 +558,25 @@ public class Metrics : IMetrics, IDisposable
 
         var dimensionsList = DictionaryToList(defaultDimensions);
         
-        // Update shared default dimensions (shared across all threads by design)
+        // Update shared default dimensions (shared across all invocations by design)
         lock (_defaultDimensionsLock)
         {
             _sharedDefaultDimensions.Clear();
             _sharedDefaultDimensions.AddRange(dimensionsList);
-            
+
             // Preserve Service dimension if it was set
-            if (!string.IsNullOrWhiteSpace(_sharedService) && 
+            if (!string.IsNullOrWhiteSpace(_sharedService) &&
                 !_sharedDefaultDimensions.Any(d => d.Dimensions.ContainsKey("Service")))
             {
                 _sharedDefaultDimensions.Add(new DimensionSet("Service", _sharedService));
             }
+
+            // Update all live contexts, including the current invocation's
+            foreach (var context in LiveContexts())
+            {
+                context.SetDefaultDimensions(new List<DimensionSet>(_sharedDefaultDimensions));
+            }
         }
-        
-        // Get the updated list with Service dimension
-        List<DimensionSet> updatedDimensionsList;
-        lock (_defaultDimensionsLock)
-        {
-            updatedDimensionsList = new List<DimensionSet>(_sharedDefaultDimensions);
-        }
-        
-        // Update all existing thread contexts
-        foreach (var kvp in _threadContexts)
-        {
-            kvp.Value.SetDefaultDimensions(new List<DimensionSet>(updatedDimensionsList));
-        }
-        
-        // Also update current context (in case it was just created)
-        CurrentContext.SetDefaultDimensions(new List<DimensionSet>(updatedDimensionsList));
     }
 
     /// <inheritdoc />
@@ -389,7 +585,8 @@ public class Metrics : IMetrics, IDisposable
         if(_disabled)
             return;
 
-        FlushContext(CurrentContext, metricsOverflow);
+        // Flushing doesn't create a context: with none there is nothing to publish
+        FlushContext(ExistingContext ?? new MetricsContext(), metricsOverflow);
     }
 
     /// <summary>
@@ -399,41 +596,46 @@ public class Metrics : IMetrics, IDisposable
     /// <param name="metricsOverflow">If true, indicates overflow flush (don't clear dimensions)</param>
     private void FlushContext(MetricsContext context, bool metricsOverflow)
     {
-        if (context.GetMetrics().Count == 0
-            && _raiseOnEmptyMetrics)
-            throw new SchemaValidationException(true);
-
-        if (context.IsSerializable)
+        // Serialize and clear as one step, so a metric added concurrently by a child task is
+        // either in this payload or kept for the next one, never dropped
+        lock (context.SyncRoot)
         {
-            var emfPayload = context.Serialize();
+            if (context.GetMetrics().Count == 0
+                && _raiseOnEmptyMetrics)
+                throw new SchemaValidationException(true);
 
-            _consoleWrapper.WriteLine(emfPayload);
+            if (context.IsSerializable)
+            {
+                var emfPayload = context.Serialize();
 
-            context.ClearMetrics();
+                _consoleWrapper.WriteLine(emfPayload);
 
-            if (!metricsOverflow) context.ClearNonDefaultDimensions();
-        }
-        else
-        {
-            if (!_captureColdStartEnabled)
-                _consoleWrapper.WriteLine(
-                    "##User-WARNING## No application metrics to publish. The cold-start metric may be published if enabled. If application metrics should never be empty, consider using 'RaiseOnEmptyMetrics = true'");
+                context.ClearMetrics();
+
+                if (!metricsOverflow) context.ClearNonDefaultDimensions();
+            }
+            else
+            {
+                if (!_captureColdStartEnabled)
+                    _consoleWrapper.WriteLine(
+                        "##User-WARNING## No application metrics to publish. The cold-start metric may be published if enabled. If application metrics should never be empty, consider using 'RaiseOnEmptyMetrics = true'");
+            }
         }
     }
 
     /// <inheritdoc />
     void IMetrics.ClearDefaultDimensions()
     {
-        // Clear shared default dimensions
         lock (_defaultDimensionsLock)
         {
+            // Clear shared default dimensions
             _sharedDefaultDimensions.Clear();
-        }
-        
-        // Clear in all existing thread contexts
-        foreach (var kvp in _threadContexts)
-        {
-            kvp.Value.ClearDefaultDimensions();
+
+            // Clear in all live contexts
+            foreach (var context in LiveContexts())
+            {
+                context.ClearDefaultDimensions();
+            }
         }
     }
 
@@ -450,9 +652,9 @@ public class Metrics : IMetrics, IDisposable
 
         if (parsedService != null)
         {
-            // Store in shared state for new thread contexts
+            // Store in shared state for new contexts
             _sharedService = parsedService;
-            
+
             // Add Service to shared default dimensions
             lock (_defaultDimensionsLock)
             {
@@ -461,15 +663,19 @@ public class Metrics : IMetrics, IDisposable
                 // Add new Service dimension
                 _sharedDefaultDimensions.Add(new DimensionSet("Service", parsedService));
             }
-            
-            // Update current thread's context
-            var context = CurrentContext;
-            context.SetService(parsedService);
-            
-            // Update default dimensions in current context with the shared list
-            lock (_defaultDimensionsLock)
+
+            // Update the current invocation's context, if there is one (configuration doesn't
+            // create a context)
+            var context = ExistingContext;
+            if (context != null)
             {
-                context.SetDefaultDimensions(new List<DimensionSet>(_sharedDefaultDimensions));
+                context.SetService(parsedService);
+
+                // Update default dimensions in current context with the shared list
+                lock (_defaultDimensionsLock)
+                {
+                    context.SetDefaultDimensions(new List<DimensionSet>(_sharedDefaultDimensions));
+                }
             }
         }
     }
@@ -594,7 +800,9 @@ public class Metrics : IMetrics, IDisposable
     {
         try
         {
-            return CurrentContext.GetNamespace() ?? _powertoolsConfigurations.MetricsNamespace;
+            var context = ExistingContext;
+            var ns = context != null ? context.GetNamespace() : _sharedNamespace;
+            return ns ?? _powertoolsConfigurations.MetricsNamespace;
         }
         catch
         {
@@ -761,8 +969,12 @@ public class Metrics : IMetrics, IDisposable
             dimensionSet.Dimensions.TryAdd(dimensions[i].key, dimensions[i].value);
         }
 
-        // Add the dimensionSet to current thread's context
-        CurrentContext.AddDimensions([dimensionSet]);
+        // Add the dimensionSet to the current invocation's context
+        var context = CurrentContext;
+        lock (context.SyncRoot)
+        {
+            context.AddDimensions([dimensionSet]);
+        }
     }
     
     /// <summary>
@@ -810,7 +1022,10 @@ public class Metrics : IMetrics, IDisposable
     internal static void ResetForTest()
     {
         Instance = null;
-        _threadContexts.Clear();
+        // Unregistering every context also kills the ones other flows still reference
+        _liveContexts.Clear();
+        _currentScope.Value = null;
+        Volatile.Write(ref _fallbackContext, null);
         _sharedNamespace = null;
         _sharedService = null;
         lock (_defaultDimensionsLock)
@@ -820,12 +1035,15 @@ public class Metrics : IMetrics, IDisposable
     }
 
     /// <summary>
-    ///     Clears the current thread's context. Useful for cleanup after each Lambda invocation.
+    ///     Discards the current async flow's context without flushing it. The next metric added in
+    ///     this flow starts a new context.
     /// </summary>
-    internal static void ClearCurrentThreadContext()
+    internal static void ClearCurrentContext()
     {
-        var threadId = Environment.CurrentManagedThreadId;
-        _threadContexts.TryRemove(threadId, out _);
+        var context = ExistingContext;
+        if (context != null)
+            _liveContexts.Remove(context);
+        _currentScope.Value = null;
     }
 
     /// <summary>
