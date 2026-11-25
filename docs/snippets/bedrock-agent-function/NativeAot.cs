@@ -12,65 +12,60 @@ using Microsoft.AspNetCore.Builder;
 
 namespace Docs.BedrockAgentFunctionSnippets.NativeAot
 {
+// --8<-- [start:native_aot_tool_class]
 public enum TemperatureUnit
 {
     Celsius,
     Fahrenheit
 }
 
-internal static class Example { public static async Task Run() { // --8<-- [start:hidden]
-// --8<-- [start:named_parameter_tools]
-var resolver = new BedrockAgentFunctionResolver();
+[BedrockFunctionType]
+public class WeatherTools
+{
+    // Parameters are bound by name from the Bedrock request
+    [BedrockFunctionTool(Name = "GetWeather", Description = "Gets the weather forecast for a city")]
+    public static string GetWeather(string city, int days, TemperatureUnit unit) =>
+        $"{city}: sunny for {days} days, 25 degrees {unit}";
 
-resolver
-    // The names after the handler are the Bedrock parameters bound to each handler parameter, in order
-    .Tool("GetWeather", "Gets the weather forecast for a city",
-        (string city, int days, TemperatureUnit unit) => $"{city}: sunny for {days} days, 25 degrees {unit}",
-        "city", "days", "unit")
     // ILambdaContext, BedrockFunctionRequest and services from dependency injection are bound by type
-    .Tool("GetTime", "Gets the time in a city",
-        async (string city, ILambdaContext context) =>
-        {
-            context.Logger.LogInformation($"Getting the time in {city}");
-            await Task.Delay(10);
-            return $"It's {DateTime.UtcNow:t} in {city}";
-        },
-        "city", "context")
-    // Tool classes work too
-    .RegisterTool<AirportTools>();
+    [BedrockFunctionTool(Name = "GetTime", Description = "Gets the time in a city")]
+    public static async Task<string> GetTime(string city, ILambdaContext context)
+    {
+        context.Logger.LogInformation($"Getting the time in {city}");
+        await Task.Delay(10);
+        return $"It's {DateTime.UtcNow:t} in {city}";
+    }
+}
+// --8<-- [end:native_aot_tool_class]
+
+// --8<-- [start:native_aot_serialization_context]
+[JsonSerializable(typeof(BedrockFunctionRequest))]
+[JsonSerializable(typeof(BedrockFunctionResponse))]
+public partial class BedrockFunctionJsonContext : JsonSerializerContext
+{
+}
+// --8<-- [end:native_aot_serialization_context]
+
+internal static class Example { public static async Task Run() { // --8<-- [start:hidden]
+// --8<-- [start:native_aot_register]
+var resolver = new BedrockAgentFunctionResolver()
+    .RegisterTool<WeatherTools>()
+    // Typed handlers that read the request themselves work too
+    .Tool("GetParameterCount", (BedrockFunctionRequest request) =>
+        BedrockFunctionResponse.WithText($"{request.Parameters.Count} parameters"));
 
 await LambdaBootstrapBuilder.Create(
         (BedrockFunctionRequest input, ILambdaContext context) => resolver.ResolveAsync(input, context),
         new SourceGeneratorLambdaJsonSerializer<BedrockFunctionJsonContext>())
     .Build()
     .RunAsync();
-// --8<-- [end:named_parameter_tools]
+// --8<-- [end:native_aot_register]
 // --8<-- [start:hidden]
 } }
 
-// --8<-- [start:native_aot_tool_class]
-[BedrockFunctionType]
-public class AirportTools
-{
-    [BedrockFunctionTool(Name = "GetAirportCode", Description = "Gets the airport code for a city")]
-    public static string GetAirportCode(string city, bool international) =>
-        international ? $"{city.ToUpperInvariant()[..3]}-INTL" : city.ToUpperInvariant()[..3];
-}
-
-[JsonSerializable(typeof(BedrockFunctionRequest))]
-[JsonSerializable(typeof(BedrockFunctionResponse))]
-public partial class BedrockFunctionJsonContext : JsonSerializerContext
-{
-}
-// --8<-- [end:native_aot_tool_class]
-
 internal static class AspNetCoreExample { public static void Run(WebApplication app) { // --8<-- [start:hidden]
 // --8<-- [start:native_aot_aspnetcore]
-app.MapBedrockFunction("GetWeather", "Gets the weather forecast for a city",
-    (string city, int days) => $"{city}: sunny for {days} days",
-    "city", "days");
-
-app.MapBedrockToolType<AirportTools>();
+app.MapBedrockToolType<WeatherTools>();
 // --8<-- [end:native_aot_aspnetcore]
 // --8<-- [start:hidden]
 } }

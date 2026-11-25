@@ -7,7 +7,7 @@ internal static class AotMessages
 {
     internal const string DelegateTool =
         "Tools registered with a Delegate read the delegate's method and parameters with reflection, which isn't " +
-        "supported under Native AOT. Use the Tool overload that takes a typed Func and the names of its parameters " +
-        "instead, for example Tool(name, description, (string city, int days) => ..., \"city\", \"days\"), or " +
-        "register a [BedrockFunctionType] class with RegisterTool<T>().";
+        "supported under Native AOT. Define the tool as a static method of a [BedrockFunctionType] class and " +
+        "register it with RegisterTool<T>(), or use a Tool overload that takes a Func<BedrockFunctionRequest, ...> " +
+        "or a Func<string>.";
 }

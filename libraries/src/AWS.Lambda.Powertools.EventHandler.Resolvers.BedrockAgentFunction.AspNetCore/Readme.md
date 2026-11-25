@@ -8,7 +8,7 @@ This library provides ASP.NET Core integration for the AWS Lambda Powertools Bed
 ## Features
 
 - **Minimal API Integration**: Register Bedrock Agent functions using familiar ASP.NET Core Minimal API patterns
-- **Native AOT Compatibility**: The named-parameter `MapBedrockFunction` overloads and `MapBedrockToolType<T>()` work under Native AOT (see [Native AOT](#native-aot))
+- **Native AOT Compatibility**: `MapBedrockToolType<T>()` works under Native AOT (see [Native AOT](#native-aot))
 - **Simple Function Registration**: Register functions with a fluent API
 - **Automatic Request Processing**: Automatic parsing of Bedrock Agent requests and formatting of responses
 - **Error Handling**: Built-in error handling for Bedrock Agent function requests
@@ -101,15 +101,7 @@ app.MapBedrockToolType<WeatherTools>();
 
 ### Native AOT
 
-`MapBedrockFunction` with a lambda such as `(string city, int month) => ...` reads the lambda's parameters with reflection, which isn't supported under Native AOT, and AOT builds warn where you call it. Under Native AOT, pass the description first and the parameter names after the handler, or use `MapBedrockToolType<T>()`:
-
-```csharp
-app.MapBedrockFunction("GetWeather", "Gets weather forecast for a specific city and month",
-    (string city, int month) => $"Weather forecast for {city} in month {month}: Warm and sunny",
-    "city", "month");
-
-app.MapBedrockToolType<WeatherTools>();
-```
+`MapBedrockFunction` with a lambda such as `(string city, int month) => ...` reads the lambda's parameters with reflection, which isn't supported under Native AOT, and AOT builds warn where you call it. Under Native AOT, define the functions as static methods of a `[BedrockFunctionType]` class and map it with `MapBedrockToolType<T>()`, as shown in [Working with Tool Classes](#working-with-tool-classes).
 
 ## How It Works
 

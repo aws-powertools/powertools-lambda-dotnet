@@ -35,7 +35,7 @@ flowchart LR
 * Easily expose tools for your Large Language Model (LLM) agents
 * Automatic routing based on tool name and function details
 * Graceful error handling and response formatting
-* Native AOT support, with `Tool` overloads that bind parameters by name without reflection and with `RegisterTool<T>()` tool classes (see [native AOT](#native-aot))
+* Native AOT support, with `RegisterTool<T>()` tool classes and the typed `Tool` overloads (see [native AOT](#native-aot))
 
 ## Terminology
 
@@ -201,24 +201,24 @@ You can have your own custom types as arguments to the tool function. The librar
 
 ### Native AOT
 
-Native AOT doesn't keep the metadata that the `Tool(name, description, handler)` overloads read from a lambda to bind its parameters. To register tools with parameters under Native AOT, use one of these instead:
+Native AOT doesn't keep the metadata that the `Tool(name, description, handler)` overloads read from a lambda to bind its parameters. To register tools under Native AOT, use one of these instead:
 
-* The `Tool` overloads that take a typed `Func` followed by the names of its parameters, for handlers with 1 to 8 parameters. Each name is the Bedrock parameter bound to the handler parameter at the same position.
-* `RegisterTool<T>()` with a `[BedrockFunctionType]` class. The tool methods are kept by the trimmer and invoked without generating code, so their parameter names are used as they are under JIT.
+* For tools with parameters, a `[BedrockFunctionType]` class registered with `RegisterTool<T>()`. The trimmer keeps the tool methods and their parameter names, and they're invoked without generating code, so parameters are bound and converted the same way as under JIT.
 * The `Tool` overloads that take a `Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse>`, `Func<BedrockFunctionRequest, BedrockFunctionResponse>`, `Func<BedrockFunctionResponse>`, `Func<string>` or `Func<object>`, which read the parameters from the request themselves.
 
-Parameters are converted the same way for all of them. Parameters of type `ILambdaContext` and `BedrockFunctionRequest`, and services from [dependency injection](#dependency-injection), are bound by type, so their names aren't used.
+In tool classes, parameters of type `ILambdaContext` and `BedrockFunctionRequest`, and services from [dependency injection](#dependency-injection), are bound by type.
 
-=== "Named parameters"
+=== "Tool class"
 
-    ```csharp hl_lines="7 16 18"
-    --8<-- "docs/snippets/bedrock-agent-function/NativeAot.cs:named_parameter_tools"
+    ```csharp hl_lines="7 11 16"
+    --8<-- "docs/snippets/bedrock-agent-function/NativeAot.cs:native_aot_tool_class"
     ```
 
-=== "Tool class and serialization context"
+=== "Registration"
 
-    ```csharp
-    --8<-- "docs/snippets/bedrock-agent-function/NativeAot.cs:native_aot_tool_class"
+    ```csharp hl_lines="2"
+    --8<-- "docs/snippets/bedrock-agent-function/NativeAot.cs:native_aot_register"
+    --8<-- "docs/snippets/bedrock-agent-function/NativeAot.cs:native_aot_serialization_context"
     ```
 
 === "ASP.NET Core"
@@ -227,13 +227,13 @@ Parameters are converted the same way for all of them. Parameters of type `ILamb
     --8<-- "docs/snippets/bedrock-agent-function/NativeAot.cs:native_aot_aspnetcore"
     ```
 
-    `MapBedrockFunction` has the same named-parameter overloads, and `MapBedrockToolType<T>()` registers a tool class, in `AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore`.
+    `MapBedrockToolType<T>()`, in `AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore`, registers a tool class and maps the endpoint.
 
 #### Custom types under native AOT
 
 Under native AOT, custom types are only deserialized from the request's input text when you pass your `JsonSerializerContext` to the resolver. Without one, the parameter is `null`, as it is when deserialization fails.
 
-```csharp hl_lines="1 5 11 14"
+```csharp hl_lines="2 3 16"
 --8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:custom_type_serialization_aot"
 --8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:custom_type_serialization_context"
 ```
@@ -241,10 +241,10 @@ Under native AOT, custom types are only deserialized from the request's input te
 !!! warning "Not supported under native AOT"
     These APIs read your handler's method and parameters with reflection, which isn't available under native AOT. They're marked with `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`, so an AOT build warns where you call them:
 
-    * `Tool(name, handler)`, `Tool(name, description, handler)`, `Tool<TResult>(name, handler)` and `Tool<TResult>(name, description, handler)` when `handler` is a `Delegate`, for example a lambda with typed parameters such as `(string city, int days) => ...` without parameter names after it
-    * `MapBedrockFunction(functionName, handler, description)` when `handler` is a `Delegate`, in `AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore`
+    * `Tool(name, handler)`, `Tool(name, description, handler)`, `Tool<TResult>(name, handler)` and `Tool<TResult>(name, description, handler)` when `handler` is a `Delegate`, for example a lambda with typed parameters such as `(string city, int days) => ...`
+    * `MapBedrockFunction(functionName, handler, description)` in `AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore`
 
-    To move a tool to native AOT, add its parameter names after the handler and move the description before it, for example `Tool("GetWeather", "Gets the weather", (string city, int days) => ..., "city", "days")`.
+    To move such a tool to native AOT, make it a static method of a `[BedrockFunctionType]` class and register the class with `RegisterTool<T>()` or `MapBedrockToolType<T>()`.
 
 ### Accessing Lambda Context
 

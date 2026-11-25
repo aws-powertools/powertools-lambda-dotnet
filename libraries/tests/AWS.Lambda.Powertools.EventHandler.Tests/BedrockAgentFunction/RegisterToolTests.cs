@@ -32,6 +32,13 @@ public class ForecastTools
     public static string Throws(string city) =>
         throw new InvalidOperationException($"No data for {city}", new Exception("inner"));
 
+    [BedrockFunctionTool(Name = "ThrowsAsync", Description = "Throws after an await")]
+    public static async Task<string> ThrowsAsync(string city)
+    {
+        await Task.Yield();
+        throw new InvalidOperationException($"No async data for {city}");
+    }
+
     // Not a tool: no BedrockFunctionTool attribute
     public static string NotATool() => "not a tool";
 }
@@ -65,6 +72,23 @@ public class RegisterToolTests
     }
 
     [Fact]
+    public void RegisterTool_ConvertsParametersLikeDelegateTools()
+    {
+        var resolver = new BedrockAgentFunctionResolver().RegisterTool<ForecastTools>();
+        // Reference behavior: the reflection-based Delegate overload with the same method.
+        resolver.Tool("PlanDelegate", "", (string city, int days, bool metric, ForecastUnit unit, int? limit) =>
+            ForecastTools.Plan(city, days, metric, unit, limit));
+        var parameters = new[]
+        {
+            P("city", "Lisbon"), P("days", "3", "integer"), P("metric", "true", "boolean"), P("unit", "Fahrenheit"),
+            P("limit", "7", "integer")
+        };
+
+        Assert.Equal(Resolve(resolver, "PlanDelegate", parameters), Resolve(resolver, "Plan", parameters));
+        Assert.Equal(Resolve(resolver, "PlanDelegate", P("city", "Porto")), Resolve(resolver, "Plan", P("city", "Porto")));
+    }
+
+    [Fact]
     public void RegisterTool_UsesDefaultValuesForMissingParameters()
     {
         var resolver = new BedrockAgentFunctionResolver().RegisterTool<ForecastTools>();
@@ -95,6 +119,8 @@ public class RegisterToolTests
         var resolver = new BedrockAgentFunctionResolver().RegisterTool<ForecastTools>();
 
         Assert.Equal("Error when invoking tool: No data for Lisbon", Resolve(resolver, "Throws", P("city", "Lisbon")));
+        Assert.Equal("Error when invoking tool: No async data for Lisbon",
+            Resolve(resolver, "ThrowsAsync", P("city", "Lisbon")));
     }
 
     [Fact]

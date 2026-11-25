@@ -15,6 +15,9 @@ public class AspNetCoreWeatherTools
 {
     [BedrockFunctionTool(Name = "GetWeather", Description = "Gets weather")]
     public static string GetWeather(string city, int days) => $"Weather for {city} for {days} days";
+
+    [BedrockFunctionTool(Name = "GetCity", Description = "Echoes the city")]
+    public static string GetCity(string city) => $"City: {city}";
 }
 
 public class BedrockMinimalApiExtensionsTests
@@ -37,29 +40,6 @@ public class BedrockMinimalApiExtensionsTests
     }
 
     [Fact]
-    public void MapBedrockFunction_WithEachArity_RegistersANamedParameterTool()
-    {
-        var app = CreateApp();
-        app.MapBedrockFunction("T1", "", (int a) => $"{a}", "a")
-            .MapBedrockFunction("T2", "", (int a, int b) => $"{a}{b}", "a", "b")
-            .MapBedrockFunction("T3", "", (int a, int b, int c) => $"{a}{b}{c}", "a", "b", "c")
-            .MapBedrockFunction("T4", "", (int a, int b, int c, int d) => $"{a}{b}{c}{d}", "a", "b", "c", "d")
-            .MapBedrockFunction("T5", "", (int a, int b, int c, int d, int e) => $"{a}{b}{c}{d}{e}",
-                "a", "b", "c", "d", "e")
-            .MapBedrockFunction("T6", "", (int a, int b, int c, int d, int e, int f) => $"{a}{b}{c}{d}{e}{f}",
-                "a", "b", "c", "d", "e", "f")
-            .MapBedrockFunction("T7", "", (int a, int b, int c, int d, int e, int f, int g) =>
-                $"{a}{b}{c}{d}{e}{f}{g}", "a", "b", "c", "d", "e", "f", "g")
-            .MapBedrockFunction("T8", "", (int a, int b, int c, int d, int e, int f, int g, int h) =>
-                $"{a}{b}{c}{d}{e}{f}{g}{h}", "a", "b", "c", "d", "e", "f", "g", "h");
-        var parameters = "abcdefgh".Select((name, i) => P(name.ToString(), (i + 1).ToString(), "integer")).ToArray();
-
-        var bodies = Enumerable.Range(1, 8).Select(n => Resolve(app, $"T{n}", parameters));
-
-        Assert.Equal(new[] { "1", "12", "123", "1234", "12345", "123456", "1234567", "12345678" }, bodies);
-    }
-
-    [Fact]
     public void MapBedrockToolType_RegistersTheToolsOfTheType()
     {
         var app = CreateApp();
@@ -79,31 +59,24 @@ public class BedrockMinimalApiExtensionsTests
     }
 
     [Fact]
-    public void MapBedrockFunction_WithoutAResolverInDependencyInjection_DoesNotThrow()
+    public void MapBedrockToolType_WithoutAResolverInDependencyInjection_DoesNotThrow()
     {
         var app = WebApplication.CreateSlimBuilder().Build();
 
-        var result = app.MapBedrockFunction("GetCity", "", (string city) => city, "city");
+        var result = app.MapBedrockToolType<AspNetCoreWeatherTools>();
 
         Assert.Same(app, result);
     }
 
     [Fact]
-    public void AotCompatibleMappings_AreNotAnnotated_AndTheDelegateMappingIs()
+    public void MapBedrockToolType_IsNotAnnotated_AndTheDelegateMappingIs()
     {
         var methods = typeof(BedrockMinimalApiExtensions).GetMethods(BindingFlags.Public | BindingFlags.Static);
-        var named = methods.Where(m => m.Name == nameof(BedrockMinimalApiExtensions.MapBedrockFunction) &&
-                                       m.IsGenericMethodDefinition).ToList();
         var toolType = methods.Single(m => m.Name == nameof(BedrockMinimalApiExtensions.MapBedrockToolType));
-        var delegateMapping = methods.Single(m => m.Name == nameof(BedrockMinimalApiExtensions.MapBedrockFunction) &&
-                                                  !m.IsGenericMethodDefinition);
+        var delegateMapping = methods.Single(m => m.Name == nameof(BedrockMinimalApiExtensions.MapBedrockFunction));
 
-        Assert.Equal(8, named.Count);
-        Assert.All(named.Append(toolType), m =>
-        {
-            Assert.Null(m.GetCustomAttribute<RequiresUnreferencedCodeAttribute>());
-            Assert.Null(m.GetCustomAttribute<RequiresDynamicCodeAttribute>());
-        });
+        Assert.Null(toolType.GetCustomAttribute<RequiresUnreferencedCodeAttribute>());
+        Assert.Null(toolType.GetCustomAttribute<RequiresDynamicCodeAttribute>());
         Assert.NotNull(delegateMapping.GetCustomAttribute<RequiresUnreferencedCodeAttribute>());
         Assert.NotNull(delegateMapping.GetCustomAttribute<RequiresDynamicCodeAttribute>());
     }
@@ -111,8 +84,7 @@ public class BedrockMinimalApiExtensionsTests
     private static async Task<(int Status, string? ContentType, string Body)> Post(string json,
         IServiceProvider? services = null)
     {
-        var resolver = new BedrockAgentFunctionResolver();
-        resolver.Tool("GetCity", "", (string city) => $"City: {city}", "city");
+        var resolver = new BedrockAgentFunctionResolver().RegisterTool<AspNetCoreWeatherTools>();
         var context = new DefaultHttpContext
         {
             RequestServices = services ?? new ServiceCollection().BuildServiceProvider(),

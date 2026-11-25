@@ -87,8 +87,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
 
                 // Invoke the method directly rather than creating a typed delegate for it: delegate types over value
                 // types, such as Func<string, int, string>, have no native code under Native AOT.
-                resolver.BoundTool(toolName, args => method.Invoke(null, args),
-                    ParameterMapper.GetToolParameters(method));
+                resolver.RegisterBoundTool(toolName, ParameterMapper.GetToolParameters(method),
+                    args => method.Invoke(null, args));
             }
 
             return resolver;

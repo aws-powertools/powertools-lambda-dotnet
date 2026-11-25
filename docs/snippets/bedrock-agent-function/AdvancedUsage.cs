@@ -39,18 +39,9 @@ resolver.Tool(
     {
 
 // --8<-- [start:custom_type_serialization_aot]
-var resolver = new BedrockAgentFunctionResolver(MycustomSerializationContext.Default);
-resolver.Tool(
-    name: "PriceCalculator",
-    description: "Calculate total price with tax",
-    handler: (MyCustomType myCustomType) =>
-    {
-        // Deserialized from the request's input text with MycustomSerializationContext
-        var withTax = myCustomType.Price * 1.2m;
-        return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
-    },
-    parameterName1: "myCustomType"
-);
+// Custom types are deserialized from the request's input text with MycustomSerializationContext
+var resolver = new BedrockAgentFunctionResolver(MycustomSerializationContext.Default)
+    .RegisterTool<PriceTools>();
 
 // --8<-- [end:custom_type_serialization_aot]
     }
@@ -142,6 +133,17 @@ _resolver.Tool(
 }
 
 // --8<-- [start:custom_type_serialization_context]
+[BedrockFunctionType]
+public class PriceTools
+{
+    [BedrockFunctionTool(Name = "PriceCalculator", Description = "Calculate total price with tax")]
+    public static string PriceCalculator(MyCustomType myCustomType)
+    {
+        var withTax = myCustomType.Price * 1.2m;
+        return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
+    }
+}
+
 [JsonSerializable(typeof(MyCustomType))]
 public partial class MycustomSerializationContext : JsonSerializerContext
 {

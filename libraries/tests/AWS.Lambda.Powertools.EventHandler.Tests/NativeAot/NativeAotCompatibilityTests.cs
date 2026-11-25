@@ -92,23 +92,6 @@ public class NativeAotCompatibilityTests
         Assert.Equal(DynamicallyAccessedMemberTypes.PublicMethods, annotation!.MemberTypes);
     }
 
-    [Fact]
-    public void NamedParameterToolRegistration_IsAotCompatible()
-    {
-        var overloads = typeof(BedrockAgentFunctionResolver).GetMethods()
-            .Where(m => m.Name == nameof(BedrockAgentFunctionResolver.Tool) && m.IsGenericMethodDefinition &&
-                        m.GetGenericArguments().Length > 1)
-            .ToList();
-
-        // One overload per handler arity, 1 to 8.
-        Assert.Equal(Enumerable.Range(1, 8), overloads.Select(m => m.GetGenericArguments().Length - 1).OrderBy(n => n));
-        Assert.All(overloads, m =>
-        {
-            Assert.Null(m.GetCustomAttribute<RequiresUnreferencedCodeAttribute>());
-            Assert.Null(m.GetCustomAttribute<RequiresDynamicCodeAttribute>());
-        });
-    }
-
     private static MethodInfo FindMethod(string signature)
     {
         var methods = typeof(BedrockAgentFunctionResolver).GetMethods()
