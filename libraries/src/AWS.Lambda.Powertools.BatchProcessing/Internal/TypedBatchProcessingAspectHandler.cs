@@ -14,10 +14,12 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.Common.Utils;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Internal;
 
@@ -58,73 +60,84 @@ internal class TypedBatchProcessingAspectHandler<TEvent, TRecord> : IBatchProces
             context = lambdaContext;
         }
 
-        // Use reflection to call the appropriate ProcessAsync method on the typed batch processor
+        // Call the typed batch processor with the data type of the typed handler
         await CallTypedProcessAsync(@event, context);
     }
 
-    private async Task CallTypedProcessAsync(TEvent @event, ILambdaContext context)
+    private Task CallTypedProcessAsync(TEvent @event, ILambdaContext context)
     {
-        // Get the generic type argument from the handler
-        var handlerType = _typedHandler.GetType();
-        var handlerInterface = handlerType.GetInterfaces()
-            .FirstOrDefault(i => i.IsGenericType && 
-                                (i.GetGenericTypeDefinition() == typeof(ITypedRecordHandler<>) ||
-                                 i.GetGenericTypeDefinition() == typeof(ITypedRecordHandlerWithContext<>)));
+        var dataType = GetHandlerDataType(_typedHandler);
+
+        // Under Native AOT, MakeGenericMethod only works for reference types, which share canonical code.
+        if (!RuntimeFeatureWrapper.IsDynamicCodeSupported && dataType.IsValueType)
+        {
+            throw new NotSupportedException(
+                $"Typed record handler '{_typedHandler.GetType().Name}' handles '{dataType.Name}', a value type, " +
+                "which isn't supported when running as Native AOT. Use a class or record for the record data instead.");
+        }
+
+        return InvokeProcessAsync(dataType, @event, context);
+    }
+
+    /// <summary>
+    /// Calls <see cref="ProcessAsync{T}"/> for the data type of the typed record handler.
+    /// </summary>
+    [UnconditionalSuppressMessage("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+        Justification = "When dynamic code isn't supported, ProcessAsync is only instantiated over reference types, which use " +
+                        "shared canonical code. Value types are rejected before this is called.")]
+    private Task InvokeProcessAsync(Type dataType, TEvent @event, ILambdaContext context)
+    {
+        // Resolved here, rather than cached in a static field, so the trimmer can see which method
+        // MakeGenericMethod is called on (avoids IL2060).
+        var processMethod = typeof(TypedBatchProcessingAspectHandler<TEvent, TRecord>)
+            .GetMethod(nameof(ProcessAsync), BindingFlags.NonPublic | BindingFlags.Instance)!
+            .MakeGenericMethod(dataType);
+
+        return (Task)processMethod.Invoke(this, new object[] { @event, context })!;
+    }
+
+    private async Task ProcessAsync<T>(TEvent @event, ILambdaContext context)
+    {
+        if (_hasContext && context != null && _typedHandler is ITypedRecordHandlerWithContext<T> handlerWithContext)
+        {
+            await _typedBatchProcessor.ProcessAsync(@event, handlerWithContext, context, _deserializationOptions,
+                _processingOptions);
+            return;
+        }
+
+        if (_typedHandler is not ITypedRecordHandler<T> handler)
+        {
+            throw new InvalidOperationException(
+                $"Typed record handler '{_typedHandler.GetType().Name}' implements ITypedRecordHandlerWithContext<T>. " +
+                "Configure it with TypedRecordHandlerWithContext or TypedRecordHandlerWithContextProvider, and add an " +
+                "ILambdaContext as the second function handler parameter.");
+        }
+
+        await _typedBatchProcessor.ProcessAsync(@event, handler, _deserializationOptions, _processingOptions);
+    }
+
+    /// <summary>
+    /// Gets T from the <see cref="ITypedRecordHandler{T}"/> or <see cref="ITypedRecordHandlerWithContext{T}"/>
+    /// the handler implements.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2075:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.",
+        Justification = "Only ITypedRecordHandler<T> and ITypedRecordHandlerWithContext<T> are looked for. ProcessAsync<T>, " +
+                        "which is always compiled because MakeGenericMethod is called on it, casts the handler to these " +
+                        "interfaces, so the trimmer and ILC keep them on the handler types the application creates.")]
+    private Type GetHandlerDataType(object typedHandler)
+    {
+        var handlerType = typedHandler.GetType();
+        var preferred = _hasContext ? typeof(ITypedRecordHandlerWithContext<>) : typeof(ITypedRecordHandler<>);
+        var other = _hasContext ? typeof(ITypedRecordHandler<>) : typeof(ITypedRecordHandlerWithContext<>);
+        var interfaces = handlerType.GetInterfaces().Where(i => i.IsGenericType).ToArray();
+        var handlerInterface = interfaces.FirstOrDefault(i => i.GetGenericTypeDefinition() == preferred)
+                               ?? interfaces.FirstOrDefault(i => i.GetGenericTypeDefinition() == other);
 
         if (handlerInterface == null)
         {
             throw new InvalidOperationException($"Handler type '{handlerType.Name}' does not implement ITypedRecordHandler<T> or ITypedRecordHandlerWithContext<T>.");
         }
 
-        var dataType = handlerInterface.GetGenericArguments()[0];
-
-        // Find the appropriate ProcessAsync method on the typed batch processor
-        MethodInfo processMethod;
-        if (_hasContext && context != null)
-        {
-            // Look for ProcessAsync<T>(TEvent, ITypedRecordHandlerWithContext<T>, ILambdaContext, DeserializationOptions, ProcessingOptions)
-            processMethod = _typedBatchProcessor.GetType().GetMethods()
-                .FirstOrDefault(m => m.Name == "ProcessAsync" &&
-                                    m.IsGenericMethodDefinition &&
-                                    m.GetParameters().Length == 5 &&
-                                    m.GetParameters()[1].ParameterType.IsGenericType &&
-                                    m.GetParameters()[1].ParameterType.GetGenericTypeDefinition() == typeof(ITypedRecordHandlerWithContext<>) &&
-                                    m.GetParameters()[2].ParameterType == typeof(ILambdaContext) &&
-                                    m.GetParameters()[3].ParameterType == typeof(DeserializationOptions) &&
-                                    m.GetParameters()[4].ParameterType == typeof(ProcessingOptions));
-        }
-        else
-        {
-            // Look for ProcessAsync<T>(TEvent, ITypedRecordHandler<T>, DeserializationOptions, ProcessingOptions)
-            processMethod = _typedBatchProcessor.GetType().GetMethods()
-                .FirstOrDefault(m => m.Name == "ProcessAsync" &&
-                                    m.IsGenericMethodDefinition &&
-                                    m.GetParameters().Length == 4 &&
-                                    m.GetParameters()[1].ParameterType.IsGenericType &&
-                                    m.GetParameters()[1].ParameterType.GetGenericTypeDefinition() == typeof(ITypedRecordHandler<>) &&
-                                    m.GetParameters()[2].ParameterType == typeof(DeserializationOptions) &&
-                                    m.GetParameters()[3].ParameterType == typeof(ProcessingOptions));
-        }
-
-        if (processMethod == null)
-        {
-            throw new InvalidOperationException($"Could not find appropriate ProcessAsync method on typed batch processor for handler type '{handlerType.Name}'.");
-        }
-
-        // Make the method generic with the data type
-        var genericProcessMethod = processMethod.MakeGenericMethod(dataType);
-
-        // Call the method
-        Task processTask;
-        if (_hasContext && context != null)
-        {
-            processTask = (Task)genericProcessMethod.Invoke(_typedBatchProcessor, new object[] { @event, _typedHandler, context, _deserializationOptions, _processingOptions });
-        }
-        else
-        {
-            processTask = (Task)genericProcessMethod.Invoke(_typedBatchProcessor, new object[] { @event, _typedHandler, _deserializationOptions, _processingOptions });
-        }
-
-        await processTask;
+        return handlerInterface.GetGenericArguments()[0];
     }
 }

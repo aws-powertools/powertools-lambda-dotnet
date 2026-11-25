@@ -781,6 +781,9 @@ sequenceDiagram
 
 For Native AOT scenarios, you can configure JsonSerializerContext:
 
+!!! note "Typed handlers under Native AOT"
+    Under Native AOT, typed record handlers need a `JsonSerializerContext` that includes the record data type; without one, processing throws an `AotCompatibilityException`. The record data type must also be a reference type (for example a class or record): if it's a value type, such as a struct, processing throws a `NotSupportedException`.
+
 !!! warning "Return types under Native AOT"
     Under Native AOT, the `[BatchProcessor]` attribute can only wrap methods that return a reference type (for example a class, record or `string`) or `Task<T>` of a reference type. Methods that return a value type (such as `int` or `bool`), a plain `Task`, or `Task<T>` of a value type throw a `NotSupportedException` when first called. Return a class or record instead.
 

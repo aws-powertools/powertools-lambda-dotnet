@@ -160,7 +160,7 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
     /// <summary>
     /// Type of typed record handler provider for strongly-typed processing.
     /// </summary>
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.PublicMethods)]
     public Type TypedRecordHandlerProvider { get; set; }
 
     /// <summary>
@@ -172,7 +172,7 @@ public class BatchProcessorAttribute : UniversalWrapperAttribute
     /// <summary>
     /// Type of typed record handler with context provider for strongly-typed processing.
     /// </summary>
-    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.PublicMethods)]
     public Type TypedRecordHandlerWithContextProvider { get; set; }
 
     /// <summary>

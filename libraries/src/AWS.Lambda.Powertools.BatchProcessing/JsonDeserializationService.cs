@@ -1,9 +1,11 @@
 
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
 using AWS.Lambda.Powertools.BatchProcessing.Internal;
+using AWS.Lambda.Powertools.Common.Utils;
 
 namespace AWS.Lambda.Powertools.BatchProcessing;
 
@@ -34,14 +36,25 @@ public class JsonDeserializationService : IDeserializationService
 
     private static T DeserializeWithFallback<T>(string data, DeserializationOptions options)
     {
-        // Check if we're in AOT mode and provide appropriate guidance
-        if (AotCompatibilityHelper.IsAotMode())
+        // JsonSerializer.IsReflectionEnabledByDefault is a feature switch that is false in trimmed and Native AOT
+        // apps. The trimmer and ILC know it's false there, so they remove the guarded reflection-based call and
+        // don't report it. RuntimeFeatureWrapper lets tests simulate Native AOT.
+        if (JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported)
         {
-            throw new AotCompatibilityException(typeof(T), 
-                AotCompatibilityHelper.GetAotCompatibilityErrorMessage(typeof(T), false));
+#pragma warning disable IL2026, IL3050 // Guarded by JsonSerializer.IsReflectionEnabledByDefault, which the Roslyn analyzer doesn't treat as a guard.
+            return DeserializeWithReflection<T>(data, options);
+#pragma warning restore IL2026, IL3050
         }
 
-        // Use reflection-based deserialization as fallback for non-AOT scenarios
+        // Reflection-based deserialization isn't available: a JsonSerializerContext is required
+        throw new AotCompatibilityException(typeof(T),
+            AotCompatibilityHelper.GetAotCompatibilityErrorMessage(typeof(T), false));
+    }
+
+    [RequiresUnreferencedCode("Uses reflection-based JSON deserialization. Provide a JsonSerializerContext instead.")]
+    [RequiresDynamicCode("Uses reflection-based JSON deserialization. Provide a JsonSerializerContext instead.")]
+    private static T DeserializeWithReflection<T>(string data, DeserializationOptions options)
+    {
         return JsonSerializer.Deserialize<T>(data, options?.JsonSerializerOptions);
     }
 
