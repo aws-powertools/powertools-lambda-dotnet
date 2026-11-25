@@ -782,7 +782,13 @@ sequenceDiagram
 For Native AOT scenarios, you can configure JsonSerializerContext:
 
 !!! warning "Return types under Native AOT"
-    Under Native AOT, the `[BatchProcessor]` attribute can only wrap methods that return a reference type (for example a class, record or `string`) or `Task<T>` of a reference type. Methods that return a value type (such as `int` or `bool`), a plain `Task`, or `Task<T>` of a value type throw a `NotSupportedException` when first called. Return a class or record instead.
+    Under Native AOT, the `[BatchProcessor]` attribute can wrap methods that return:
+
+    * `void` or `Task`
+    * a reference type, for example a class, record or `string`, or `Task<T>` of one
+    * `int`, `long`, `bool`, `double`, `decimal`, `Guid` or `DateTime`, or `Task<T>` of one of these
+
+    Methods that return any other value type, for example your own struct, an enum, a nullable value type such as `int?`, or `ValueTask<T>`, throw a `NotSupportedException` that names the method and the return type when first called. Return a class or record instead.
 
 === "JsonSerializerContext Configuration"
 
