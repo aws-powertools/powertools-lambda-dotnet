@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
@@ -276,20 +275,6 @@ public class MetricsMiddlewareExtensionsTests : IDisposable
 
         await app.StopAsync();
         Metrics.ResetForTest();
-    }
-
-    /// <summary>
-    /// Never completes synchronously and resumes on a brand-new thread, so the code after the
-    /// await always runs on a different thread than the code before it.
-    /// </summary>
-    private readonly struct ResumeOnNewThread : ICriticalNotifyCompletion
-    {
-        public ResumeOnNewThread GetAwaiter() => this;
-        public bool IsCompleted => false;
-        public void GetResult() { }
-        public void OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
-        public void UnsafeOnCompleted(Action continuation) =>
-            new Thread(() => continuation()) { IsBackground = true }.Start();
     }
 
     public void Dispose()

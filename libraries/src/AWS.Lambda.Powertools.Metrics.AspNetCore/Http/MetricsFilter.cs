@@ -40,7 +40,18 @@ public class MetricsFilter : IEndpointFilter, IDisposable
             // ignored
         }
 
-        return await next(context);
+        // The endpoint gets its own metrics context, shared by everything it awaits or starts.
+        // Inside UseMetrics() this nests in the request's context, which is used again once the
+        // endpoint is done. Metrics are not flushed here; the application calls Flush.
+        Metrics.BeginInvocationContext();
+        try
+        {
+            return await next(context);
+        }
+        finally
+        {
+            Metrics.EndInvocationContext();
+        }
     }
 
     /// <summary>
