@@ -124,17 +124,51 @@ public class Metrics : IMetrics, IDisposable
     private const int MaxScopeDepth = 16;
 
     /// <summary>
-    ///     Gets the MetricsContext for the current invocation.
-    ///     Creates one in the current async flow if there is none, for code that doesn't use the
-    ///     <c>[Metrics]</c> attribute (manual usage, ASP.NET Core).
+    ///     Process-wide context for code outside any invocation context (manual usage without the
+    ///     <c>[Metrics]</c> attribute) when the execution environment runs one invocation at a time.
+    ///     It is registered like any other context and cleared by every flush.
+    /// </summary>
+    private static MetricsContext _fallbackContext;
+
+    /// <summary>
+    ///     Lock for creating the fallback context.
+    /// </summary>
+    private static readonly object _fallbackLock = new();
+
+    /// <summary>
+    ///     Environment variable set by Lambda when an execution environment can run several
+    ///     invocations at once.
+    /// </summary>
+    private const string MaxConcurrencyEnv = "AWS_LAMBDA_MAX_CONCURRENCY";
+
+    /// <summary>
+    ///     Whether the execution environment can run several invocations at once
+    ///     (AWS_LAMBDA_MAX_CONCURRENCY &gt; 1). Read on every call, so tests can change it.
+    /// </summary>
+    private static bool IsMultiConcurrency =>
+        int.TryParse(Environment.GetEnvironmentVariable(MaxConcurrencyEnv), out var maxConcurrency) &&
+        maxConcurrency > 1;
+
+    /// <summary>
+    ///     Gets the MetricsContext for the current invocation. Outside any invocation context (code
+    ///     without the <c>[Metrics]</c> attribute or the ASP.NET Core middleware/filter):
+    ///     <list type="bullet">
+    ///         <item>with one invocation at a time, uses the process-wide fallback context, so it
+    ///         doesn't matter which method makes the first metrics call;</item>
+    ///         <item>with AWS_LAMBDA_MAX_CONCURRENCY &gt; 1, creates a context in the current async
+    ///         flow, so concurrent invocations stay isolated.</item>
+    ///     </list>
     /// </summary>
     private static MetricsContext CurrentContext
     {
         get
         {
-            var existing = ExistingContext;
-            if (existing != null)
-                return existing;
+            var scoped = FindLiveScope(_currentScope.Value, false)?.Context;
+            if (scoped != null)
+                return scoped;
+
+            if (!IsMultiConcurrency)
+                return FallbackContext;
 
             var ctx = CreateContext();
             _currentScope.Value = new ContextScope(ctx, null, false);
@@ -145,7 +179,46 @@ public class Metrics : IMetrics, IDisposable
     /// <summary>
     ///     Gets the live MetricsContext for the current invocation without creating one.
     /// </summary>
-    private static MetricsContext ExistingContext => FindLiveScope(_currentScope.Value, false)?.Context;
+    private static MetricsContext ExistingContext
+    {
+        get
+        {
+            var scoped = FindLiveScope(_currentScope.Value, false)?.Context;
+            if (scoped != null)
+                return scoped;
+
+            if (IsMultiConcurrency)
+                return null;
+
+            var fallback = Volatile.Read(ref _fallbackContext);
+            return fallback != null && IsLive(fallback) ? fallback : null;
+        }
+    }
+
+    /// <summary>
+    ///     Gets the fallback context, creating it if there is none (or it was reset).
+    /// </summary>
+    private static MetricsContext FallbackContext
+    {
+        get
+        {
+            var ctx = Volatile.Read(ref _fallbackContext);
+            if (ctx != null && IsLive(ctx))
+                return ctx;
+
+            lock (_fallbackLock)
+            {
+                ctx = _fallbackContext;
+                if (ctx == null || !IsLive(ctx))
+                {
+                    ctx = CreateContext();
+                    Volatile.Write(ref _fallbackContext, ctx);
+                }
+
+                return ctx;
+            }
+        }
+    }
 
     private static bool IsLive(MetricsContext context) => _liveContexts.TryGetValue(context, out _);
 
@@ -952,6 +1025,7 @@ public class Metrics : IMetrics, IDisposable
         // Unregistering every context also kills the ones other flows still reference
         _liveContexts.Clear();
         _currentScope.Value = null;
+        Volatile.Write(ref _fallbackContext, null);
         _sharedNamespace = null;
         _sharedService = null;
         lock (_defaultDimensionsLock)

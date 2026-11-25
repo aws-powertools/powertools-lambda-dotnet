@@ -98,6 +98,8 @@ public class AsyncContextTests : IDisposable
     [Fact]
     public async Task ConcurrentInvocations_WithoutAttribute_DoNotShareMetricsDimensionsOrMetadata()
     {
+        // Concurrent invocations in one execution environment only happen in multi-concurrency mode
+        using var _ = new MaxConcurrency("4");
         var handler = new AsyncContextFunctionHandler();
         using var worker = new DedicatedThread();
         var aAdded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -188,6 +190,124 @@ public class AsyncContextTests : IDisposable
 
         var blob = Assert.Single(EmfBlobs());
         Assert.Equal(new[] { "AfterAwait", "BeforeAwait" }, MetricNames(blob));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("1")]
+    [InlineData("not-a-number")]
+    public async Task ManualFlush_WithSingleConcurrency_SeesMetricFirstAddedInAwaitedHelperOnAnotherThread(string maxConcurrency)
+    {
+        using var _ = new MaxConcurrency(maxConcurrency);
+        Metrics.SetNamespace("ns");
+
+        await Task.Run(async () =>
+        {
+            await AddFirstMetricInHelper("FromHelper");
+            Metrics.Flush();
+        });
+
+        var blob = Assert.Single(EmfBlobs());
+        Assert.Equal(new[] { "FromHelper" }, MetricNames(blob));
+    }
+
+    [Fact]
+    public async Task ManualFlush_WithSingleConcurrency_GetsDefaultDimensionUpdates_AndFlushClearsIt()
+    {
+        using var _ = new MaxConcurrency(null);
+        Metrics.SetNamespace("ns");
+
+        await Task.Run(async () =>
+        {
+            await AddFirstMetricInHelper("FromHelper");
+            Metrics.SetDefaultDimensions(new Dictionary<string, string> { { "Environment", "prod" } });
+            Metrics.Flush();
+            // Nothing left to publish after the flush
+            Metrics.Flush();
+        });
+
+        var blob = Assert.Single(EmfBlobs());
+        Assert.Equal(new[] { "FromHelper" }, MetricNames(blob));
+        Assert.Equal("prod", blob.GetProperty("Environment").GetString());
+        Assert.Contains(_consoleOut.OutputValues, line => line.Contains("No application metrics to publish"));
+    }
+
+    [Fact]
+    public async Task ManualFlush_WithSingleConcurrency_FlushesEveryMetricFromConcurrentChildTasksExactlyOnce()
+    {
+        using var _ = new MaxConcurrency(null);
+        Metrics.SetNamespace("ns");
+
+        await Task.Run(async () =>
+        {
+            // No [Metrics] attribute: the first metrics call happens inside the child tasks
+            await Task.WhenAll(Enumerable.Range(0, 8).Select(t => Task.Run(() =>
+            {
+                for (var i = 0; i < 50; i++)
+                    Metrics.AddMetric($"T{t:D2}_M{i:D3}", 1, MetricUnit.Count);
+            })));
+            await ThreadHop.ToNewThread();
+            Metrics.Flush();
+        });
+
+        var flushed = EmfBlobs().SelectMany(MetricNames).OrderBy(n => n, StringComparer.Ordinal);
+        var expected = Enumerable.Range(0, 8)
+            .SelectMany(t => Enumerable.Range(0, 50).Select(i => $"T{t:D2}_M{i:D3}"))
+            .OrderBy(n => n, StringComparer.Ordinal);
+        Assert.Equal(expected, flushed);
+    }
+
+    [Fact]
+    public async Task ManualFlush_WithMultiConcurrency_DoesNotSeeMetricFirstAddedInAwaitedHelper()
+    {
+        // Documented caveat: with AWS_LAMBDA_MAX_CONCURRENCY > 1 each flow gets its own context,
+        // and one first created inside an awaited async method isn't visible to its caller
+        using var _ = new MaxConcurrency("4");
+        Metrics.SetNamespace("ns");
+
+        await Task.Run(async () =>
+        {
+            await AddFirstMetricInHelper("FromHelper");
+            Metrics.Flush();
+        });
+
+        Assert.Empty(EmfBlobs());
+    }
+
+    [Fact]
+    public async Task MetricsInvocation_WithSingleConcurrency_GetsItsOwnContext_NotTheSharedOne()
+    {
+        using var _ = new MaxConcurrency(null);
+        var handler = new AsyncContextFunctionHandler();
+        using var worker = new DedicatedThread();
+        Metrics.SetNamespace("ns");
+
+        // Manual code puts a metric in the shared context and leaves it there
+        await Task.Run(() => AddFirstMetricInHelper("Manual"));
+        await Task.Run(() => handler.AddOnThread("FromInvocation", worker));
+
+        var blob = Assert.Single(EmfBlobs());
+        Assert.Equal(new[] { "FromInvocation" }, MetricNames(blob));
+    }
+
+    private static async Task AddFirstMetricInHelper(string name)
+    {
+        await ThreadHop.ToNewThread();
+        Metrics.AddMetric(name, 1, MetricUnit.Count);
+    }
+
+    /// <summary>
+    /// Sets AWS_LAMBDA_MAX_CONCURRENCY for the test and restores the previous value on dispose.
+    /// </summary>
+    private sealed class MaxConcurrency : IDisposable
+    {
+        private const string Name = "AWS_LAMBDA_MAX_CONCURRENCY";
+        private readonly string _previous = Environment.GetEnvironmentVariable(Name);
+
+        public MaxConcurrency(string value) => Environment.SetEnvironmentVariable(Name, value);
+
+        public void Dispose() => Environment.SetEnvironmentVariable(Name, _previous);
     }
 
     private void AssertOnlyOwnData(string own, string other)

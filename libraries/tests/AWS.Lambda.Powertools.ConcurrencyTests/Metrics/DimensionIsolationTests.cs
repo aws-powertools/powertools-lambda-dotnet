@@ -17,11 +17,16 @@ namespace AWS.Lambda.Powertools.ConcurrencyTests.Metrics;
 [Collection("Metrics Tests")]
 public class DimensionIsolationTests : IDisposable
 {
+    // These tests simulate concurrent invocations in one execution environment, which Lambda only
+    // does with AWS_LAMBDA_MAX_CONCURRENCY > 1
+    private readonly string? _previousMaxConcurrency = Environment.GetEnvironmentVariable("AWS_LAMBDA_MAX_CONCURRENCY");
+
     public DimensionIsolationTests()
     {
         Powertools.Metrics.Metrics.ResetForTest();
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "TestNamespace");
         Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", "TestService");
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_MAX_CONCURRENCY", "4");
     }
 
     public void Dispose()
@@ -29,6 +34,7 @@ public class DimensionIsolationTests : IDisposable
         Powertools.Metrics.Metrics.ResetForTest();
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", null);
         Environment.SetEnvironmentVariable("POWERTOOLS_SERVICE_NAME", null);
+        Environment.SetEnvironmentVariable("AWS_LAMBDA_MAX_CONCURRENCY", _previousMaxConcurrency);
     }
 
     #region Helper Result Classes
