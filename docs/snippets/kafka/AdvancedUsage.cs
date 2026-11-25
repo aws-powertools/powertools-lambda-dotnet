@@ -1,19 +1,28 @@
 // This file is referenced by docs/utilities/kafka.md
 // via pymdownx.snippets (mkdocs).
+//
+// Each region is a top-level-statements Lambda function. To compile it inside the snippets library,
+// it is wrapped in a namespace and a static method. The line that opens the wrapper class/method
+// sits inside the region but carries a "hidden" snippet marker, so pymdownx.snippets drops it.
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Kafka;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.RuntimeSupport;
+using System.Text.Json.Serialization;
 
+namespace Docs.KafkaSnippets.RecordMetadata
+{
 // --8<-- [start:record_metadata]
 using AWS.Lambda.Powertools.Kafka;
 using AWS.Lambda.Powertools.Kafka.Protobuf;
 using AWS.Lambda.Powertools.Logging;
 
+public static class Function { public static async Task RunAsync() { // --8<-- [start:hidden]
 string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
 {
     foreach (var record in records)
     {
         // Log record coordinates for tracing
-        Logger.LogInformation("Processing messagem from topic: {topic}", record.Topic);
+        Logger.LogInformation("Processing message from topic: {topic}", record.Topic);
         Logger.LogInformation("Partition: {partition}, Offset: {offset}", record.Partition, record.Offset);
         Logger.LogInformation("Produced at: {timestamp}", record.Timestamp);
 
@@ -27,6 +36,8 @@ string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext 
         CustomerProfile customerProfile = record.Value; // CustomerProfile class is auto-generated from Protobuf schema
         Logger.LogInformation("Processing order for: {fullName}", customerProfile.FullName);
     }
+
+    return "Processed " + records.Count() + " records";
 }
 
 await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfile>, ILambdaContext, string>?)Handler,
@@ -34,12 +45,17 @@ await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfil
     .Build()
     .RunAsync();
 // --8<-- [end:record_metadata]
+} }
+}
 
+namespace Docs.KafkaSnippets.ErrorHandling
+{
 // --8<-- [start:error_handling]
 using AWS.Lambda.Powertools.Kafka;
 using AWS.Lambda.Powertools.Kafka.Protobuf;
 using AWS.Lambda.Powertools.Logging;
 
+public static class Function { public static async Task RunAsync() { // --8<-- [start:hidden]
 var successfulRecords = 0;
 var failedRecords = 0;
 
@@ -75,14 +91,14 @@ string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext 
     return $"Processed {successfulRecords} records successfully, {failedRecords} records failed";
 }
 
-private void ProcessOrder(CustomerProfile customerProfile)
+void ProcessOrder(CustomerProfile customerProfile)
 {
     Logger.LogInformation("Processing order for: {fullName}", customerProfile.FullName);
     // Your business logic to process the order
     // This could throw exceptions for various reasons (e.g., validation errors, database issues)
 }
 
-private void SendToDeadLetterQueue(ConsumerRecord<string, CustomerProfile> record, Exception ex)
+void SendToDeadLetterQueue(ConsumerRecord<string, CustomerProfile> record, Exception ex)
 {
     // Implement your dead-letter queue logic here
     Logger.LogError("Sending record to dead-letter queue: {record}, error: {error}", record, ex.Message);
@@ -93,52 +109,17 @@ await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfil
     .Build()
     .RunAsync();
 // --8<-- [end:error_handling]
-
-// --8<-- [start:idempotent_processing]
-using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.Kafka;
-using AWS.Lambda.Powertools.Kafka.Protobuf;
-using AWS.Lambda.Powertools.Logging;
-using AWS.Lambda.Powertools.Idempotency;
-
-[assembly: LambdaSerializer(typeof(PowertoolsKafkaProtobufSerializer))]
-
-namespace ProtoBufClassLibrary;
-
-public class Function
-{
-    public Function()
-    {
-        Idempotency.Configure(builder => builder.UseDynamoDb("idempotency_table"));
-    }
-
-    public string FunctionHandler(ConsumerRecords<string, Payment> records, ILambdaContext context)
-    {
-        foreach (var record in records)
-        {
-            ProcessPayment(record.Key, record.Value);
-        }
-
-        return "Processed " + records.Count() + " records";
-    }
-
-    [Idempotent]
-    private void ProcessPayment(Payment payment)
-    {
-        Logger.LogInformation("Processing payment {paymentId} for customer {customerName}",
-            payment.Id, payment.CustomerName);
-
-        // Your payment processing logic here
-        // This could involve calling an external payment service, updating a database, etc.
-    }
+} }
 }
-// --8<-- [end:idempotent_processing]
 
+namespace Docs.KafkaSnippets.CrossLanguageCompatibility
+{
 // --8<-- [start:cross_language_compatibility]
 using AWS.Lambda.Powertools.Kafka;
 using AWS.Lambda.Powertools.Kafka.Protobuf;
 using AWS.Lambda.Powertools.Logging;
 
+public static class Function { public static async Task RunAsync() { // --8<-- [start:hidden]
 string Handler(ConsumerRecords<string, CustomerProfile> records, ILambdaContext context)
 {
     foreach (var record in records)
@@ -153,6 +134,7 @@ await LambdaBootstrapBuilder.Create((Func<ConsumerRecords<string, CustomerProfil
         new PowertoolsKafkaProtobufSerializer()) // Use PowertoolsKafkaProtobufSerializer for Protobuf serialization
     .Build()
     .RunAsync();
+} } // --8<-- [start:hidden]
 
 // Example class that handles Python snake_case field names
 public partial class CustomerProfile
@@ -166,3 +148,4 @@ public partial class CustomerProfile
     [JsonPropertyName("account_status")] public string AccountStatus { get; set; }
 }
 // --8<-- [end:cross_language_compatibility]
+}

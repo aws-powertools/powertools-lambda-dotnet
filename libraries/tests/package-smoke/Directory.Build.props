@@ -1,0 +1,9 @@
+<Project>
+    <!--
+        Only here so that libraries/tests/Directory.Build.props is not used: it adds a ProjectReference to
+        AWS.Lambda.Powertools.Common, and the smoke tests must consume Powertools only as NuGet packages.
+    -->
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+</Project>

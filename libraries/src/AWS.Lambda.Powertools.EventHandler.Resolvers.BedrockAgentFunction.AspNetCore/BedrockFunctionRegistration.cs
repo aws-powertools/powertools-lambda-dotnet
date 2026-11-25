@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore;
 
 /// <summary>
@@ -33,6 +34,8 @@ internal class BedrockFunctionRegistration
     /// );
     /// </code>
     /// </example>
+    [RequiresUnreferencedCode(BedrockMinimalApiExtensions.DelegateToolMessage)]
+    [RequiresDynamicCode(BedrockMinimalApiExtensions.DelegateToolMessage)]
     public BedrockFunctionRegistration Add(string name, Delegate handler, string description = "")
     {
         _resolver.Tool(name, description, handler);

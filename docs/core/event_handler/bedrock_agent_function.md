@@ -35,7 +35,7 @@ flowchart LR
 * Easily expose tools for your Large Language Model (LLM) agents
 * Automatic routing based on tool name and function details
 * Graceful error handling and response formatting
-* Fully compatible with .NET 8 AOT compilation through source generation
+* Native AOT support through source generation, using the `Tool` overloads that take a `Func<BedrockFunctionRequest, ...>` (see [native AOT](#custom-type-serialization-native-aot))
 
 ## Terminology
 
@@ -201,10 +201,18 @@ You can have your own custom types as arguments to the tool function. The librar
 
 ### Custom type serialization native AOT
 
-For native AOT compilation, you can use JsonSerializerContext and pass it to `BedrockAgentFunctionResolver`. This allows the library to generate the necessary serialization code at compile time, ensuring compatibility with AOT.
+For native AOT compilation, register tools with the `Tool` overloads that take a `Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse>`, `Func<BedrockFunctionRequest, BedrockFunctionResponse>`, `Func<BedrockFunctionResponse>` or `Func<string>`, and deserialize custom types with your own `JsonSerializerContext`.
 
-```csharp hl_lines="1 5 12-15"
+!!! warning "Not supported under native AOT"
+    These APIs read your handler's method and parameters with reflection, which isn't available under native AOT. They're marked with `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`, so an AOT build warns where you call them:
+
+    * `Tool(name, handler)` and `Tool(name, description, handler)` when `handler` is a `Delegate`, for example a lambda with typed parameters such as `(string city, int days) => ...`
+    * `RegisterTool<T>()` with `[BedrockFunctionType]` classes
+    * `MapBedrockFunction` and `MapBedrockToolType<T>` in `AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore`
+
+```csharp hl_lines="4 7 8"
 --8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:custom_type_serialization_aot"
+--8<-- "docs/snippets/bedrock-agent-function/AdvancedUsage.cs:custom_type_serialization_context"
 ```
 
 ### Accessing Lambda Context
@@ -278,9 +286,6 @@ Using the extension method provided in the library, you can easily register all 
 ```
 
 ## Complete Example with Dependency Injection
-
-You can find examples in the [Powertools for AWS Lambda (.NET) GitHub repository](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/Event%20Handler/BedrockAgentFunction).
-
 
 ```csharp
 --8<-- "docs/snippets/bedrock-agent-function/CompleteExample.cs:complete_example_with_di"

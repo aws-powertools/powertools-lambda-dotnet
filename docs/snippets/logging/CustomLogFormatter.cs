@@ -1,8 +1,19 @@
+using Amazon;
+using Amazon.Lambda.APIGatewayEvents;
+using ILambdaContext = Amazon.Lambda.Core.ILambdaContext;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using AWS.Lambda.Powertools.Logging;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using CustomLogFormatter = Docs.LoggingSnippets.CustomLogFormatterExamples.CustomLogFormatterClass.CustomLogFormatter;
+
 // This file is referenced by docs/core/logging.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Logging;
 
+namespace Docs.LoggingSnippets.CustomLogFormatterExamples.CustomLogFormatterFunction
+{
 // --8<-- [start:custom_log_formatter_function]
 /**
  * Handler for requests to Lambda function.
@@ -24,11 +35,15 @@ public class Function
     public async Task<APIGatewayProxyResponse> FunctionHandler
         (APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
-        ...
+        // ...
+        return new APIGatewayProxyResponse();
     }
 }
 // --8<-- [end:custom_log_formatter_function]
+}
 
+namespace Docs.LoggingSnippets.CustomLogFormatterExamples.CustomLogFormatterClass
+{
 // --8<-- [start:custom_log_formatter_class]
 public class CustomLogFormatter : ILogFormatter
 {
@@ -63,3 +78,4 @@ public class CustomLogFormatter : ILogFormatter
     }
 }
 // --8<-- [end:custom_log_formatter_class]
+}

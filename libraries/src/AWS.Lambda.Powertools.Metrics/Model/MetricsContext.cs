@@ -45,6 +45,12 @@ public class MetricsContext : IDisposable
     internal bool IsSerializable => !(GetMetrics().Count == 0 && _rootNode.AWS.CustomMetadata.Count == 0);
 
     /// <summary>
+    ///     Synchronizes compound operations (add with overflow flush, serialize then clear) on this
+    ///     context, which is shared by every task of an invocation.
+    /// </summary>
+    internal object SyncRoot { get; } = new();
+
+    /// <summary>
     ///     Implements IDisposable interface
     /// </summary>
     public void Dispose()

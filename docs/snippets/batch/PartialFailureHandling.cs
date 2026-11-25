@@ -1,8 +1,28 @@
 // This file is referenced by docs/utilities/batch-processing.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.DynamoDBEvents;
+using Amazon.Lambda.KinesisEvents;
+using Amazon.Lambda.SQSEvents;
+using AWS.Lambda.Powertools.BatchProcessing;
+using AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
+using AWS.Lambda.Powertools.BatchProcessing.Kinesis;
+using AWS.Lambda.Powertools.BatchProcessing.Sqs;
+using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
+using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
+using Docs.BatchProcessingSnippets;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+
+namespace Docs.BatchSnippets.PartialFailureHandling.ThrowOnFullBatchFailureDecorator
+{
+public class Function
+{
 // --8<-- [start:throw_on_full_batch_failure_decorator]
 		[BatchProcessor(
 	        RecordHandler = typeof(CustomSqsRecordHandler),
@@ -12,7 +32,14 @@ namespace AWS.Lambda.Powertools.Docs.Snippets.BatchProcessing;
 		return SqsBatchProcessor.Result.BatchItemFailuresResponse;
 	}
 // --8<-- [end:throw_on_full_batch_failure_decorator]
+}
+}
 
+
+namespace Docs.BatchSnippets.PartialFailureHandling.ThrowOnFullBatchFailureOutsideDecorator
+{
+public class Function
+{
 // --8<-- [start:throw_on_full_batch_failure_outside_decorator]
 public async Task<BatchItemFailuresResponse> HandlerUsingUtility(SQSEvent sqsEvent)
 {
@@ -26,7 +53,12 @@ public async Task<BatchItemFailuresResponse> HandlerUsingUtility(SQSEvent sqsEve
     return result.BatchItemFailuresResponse;
 }
 // --8<-- [end:throw_on_full_batch_failure_outside_decorator]
+}
+}
 
+
+namespace Docs.BatchSnippets.PartialFailureHandling.ExtendingBatchProcessor
+{
 // --8<-- [start:extending_batch_processor]
 
 public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
@@ -44,7 +76,7 @@ public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
 		var failureBatchRecords = batchRecords.Select(x => new KeyValuePair<string, RecordFailure<DynamoDBEvent.DynamodbStreamRecord>>(x.Key,
 			new RecordFailure<DynamoDBEvent.DynamodbStreamRecord>
 			{
-				Exception = new UnprocessedRecordException($"Record: '{x.Key}' has not been processed."),
+				Exception = new InvalidOperationException($"Record: '{x.Key}' has not been processed."),
 				Record = x.Value
 			}));
 
@@ -76,7 +108,7 @@ public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
 					// Capture exception
 					failureRecords[recordId] = new RecordFailure<DynamoDBEvent.DynamodbStreamRecord>
 					{
-						Exception = new RecordProcessingException(
+						Exception = new InvalidOperationException(
 							$"Failed processing record: '{recordId}'. See inner exception for details.", ex),
 						Record = record,
 						RecordId = recordId
@@ -98,15 +130,15 @@ public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
 					// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 					if (errorHandlingPolicy == BatchProcessorErrorHandlingPolicy.StopOnFirstBatchItemFailure)
 					{
-						// This causes the loop's (inner) cancellation token to be cancelled for all operations already scheduled internally
-						throw new CircuitBreakerException(
+						// Stop processing remaining records after the first failure
+						throw new OperationCanceledException(
 							"Error handling policy is configured to stop processing on first batch item failure. See inner exception for details.",
 							ex);
 					}
 				}
 			}
 		}
-		catch (Exception ex) when (ex is CircuitBreakerException or OperationCanceledException)
+		catch (OperationCanceledException)
 		{
 			// NOOP
 		}
@@ -131,7 +163,13 @@ public class CustomDynamoDbStreamBatchProcessor : DynamoDbStreamBatchProcessor
 	}
 }
 // --8<-- [end:extending_batch_processor]
+}
 
+
+namespace Docs.BatchSnippets.PartialFailureHandling.TypedHandlerTest
+{
+public class Function
+{
 // --8<-- [start:typed_handler_test]
 [Fact]
 public async Task TypedHandler_ValidProduct_ProcessesSuccessfully()
@@ -160,7 +198,14 @@ public async Task TypedHandler_InvalidProduct_ThrowsException()
 		handler.HandleAsync(product, CancellationToken.None));
 }
 // --8<-- [end:typed_handler_test]
+}
+}
 
+
+namespace Docs.BatchSnippets.PartialFailureHandling.IntegrationTest
+{
+public class Function
+{
 // --8<-- [start:integration_test]
 [Fact]
 public async Task ProcessSqsEvent_WithTypedHandler_ProcessesAllRecords()
@@ -192,7 +237,14 @@ public async Task ProcessSqsEvent_WithTypedHandler_ProcessesAllRecords()
 	Assert.Empty(result.BatchItemFailures);
 }
 // --8<-- [end:integration_test]
+}
+}
 
+
+namespace Docs.BatchSnippets.PartialFailureHandling.TraditionalHandlerTest
+{
+public class Function
+{
 // --8<-- [start:traditional_handler_test]
 [Fact]
 public Task Sqs_Handler_Using_Attribute()
@@ -213,7 +265,14 @@ public Task Sqs_Handler_Using_Attribute()
 	return Task.CompletedTask;
 }
 // --8<-- [end:traditional_handler_test]
+}
+}
 
+
+namespace Docs.BatchSnippets.PartialFailureHandling.FunctionHandlerUsingAttribute
+{
+public class Function
+{
 // --8<-- [start:function_handler_using_attribute]
 [BatchProcessor(RecordHandler = typeof(CustomSqsRecordHandler))]
 public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
@@ -221,7 +280,12 @@ public BatchItemFailuresResponse HandlerUsingAttribute(SQSEvent _)
     return SqsBatchProcessor.Result.BatchItemFailuresResponse;
 }
 // --8<-- [end:function_handler_using_attribute]
+}
+}
 
+
+namespace Docs.BatchSnippets.PartialFailureHandling.CustomSqsRecordHandlerExample
+{
 // --8<-- [start:custom_sqs_record_handler]
 public class CustomSqsRecordHandler : ISqsRecordHandler
 {
@@ -238,7 +302,13 @@ public class CustomSqsRecordHandler : ISqsRecordHandler
 	}
 }
 // --8<-- [end:custom_sqs_record_handler]
+}
 
+
+namespace Docs.BatchSnippets.PartialFailureHandling.SqsEventTestHelper
+{
+public static class TestHelper
+{
 // --8<-- [start:sqs_event_test_helper]
 internal static List<SQSEvent.SQSMessage> SqsMessages => new()
 {
@@ -274,3 +344,5 @@ internal static List<SQSEvent.SQSMessage> SqsMessages => new()
 	},
 };
 // --8<-- [end:sqs_event_test_helper]
+}
+}

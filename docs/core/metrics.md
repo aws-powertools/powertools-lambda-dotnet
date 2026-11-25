@@ -303,6 +303,16 @@ During metrics validation, if no metrics are provided then a warning will be log
     * Namespace is set
     * Metric units must be [supported by CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricDatum.html)
 
+!!! note "Async handlers, child tasks and concurrent invocations"
+    Metrics belong to the invocation, not to a thread. Metrics, dimensions and metadata added after an `await`, or from tasks the handler starts (`Task.Run`, `Task.WhenAll`, `Parallel.ForEachAsync`), are flushed with that invocation. When an execution environment runs several invocations at once, each invocation only flushes its own metrics.
+
+    If you flush manually without the **`MetricsAttribute`**:
+
+    * With one invocation at a time per execution environment (the default), metrics added anywhere, including inside an `async` method you await, are flushed by the next **`Flush`**.
+    * With `AWS_LAMBDA_MAX_CONCURRENCY` greater than 1, each invocation keeps its own metrics. Make the first metrics call in the method that calls **`Flush`** (or in code it calls synchronously), not inside an `async` method it awaits: metrics first added inside an awaited `async` method aren't visible to its caller.
+
+    In ASP.NET Core, [`UseMetrics()`](#usemetrics-middleware) and [`WithMetrics()`](#withmetrics-filter) give each request its own metrics, whatever the concurrency.
+
 !!! info "We do not emit 0 as a value for ColdStart metric for cost reasons. [Let us know](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=feature-request%2Ctriage&template=feature_request.yml&title=Feature+request%3A+TITLE) if you'd prefer a flag to override it"
 
 ### Raising SchemaValidationException on empty metrics
@@ -341,6 +351,8 @@ If it's a cold start invocation, this feature will:
 * Add `FunctionName` and `Service` dimensions
 
 This has the advantage of keeping cold start metric separate from your application metrics, where you might have unrelated dimensions.
+
+Execution environments initialized for [provisioned concurrency](https://docs.aws.amazon.com/lambda/latest/dg/provisioned-concurrency.html){target="_blank"} (`AWS_LAMBDA_INITIALIZATION_TYPE` is `provisioned-concurrency`) are not counted as cold starts, so no `ColdStart` metric is emitted for them. This applies to the `[Metrics]` attribute and to the ASP.NET Core middleware and filter.
 
 ## Advanced
 
@@ -458,7 +470,7 @@ dotnet add package AWS.Lambda.Powertools.Metrics.AspNetCore
 
 The `UseMetrics` middleware is an extension method for the `IApplicationBuilder` interface.
 
-It adds a metrics middleware to the specified application builder, which captures cold start metrics (if enabled) and flushes metrics on function exit.
+It adds a metrics middleware to the specified application builder, which captures cold start metrics (if enabled) and gives each request its own metrics, including metrics added in methods the request awaits and tasks it starts. Call `Flush` to publish them.
 
 #### Example
 
@@ -466,23 +478,11 @@ It adds a metrics middleware to the specified application builder, which capture
 --8<-- "docs/snippets/metrics/AspNetCore.cs:use_metrics_middleware"
 ```
 
-Here is the highlighted `UseMetrics` method:
-
-```csharp
---8<-- "docs/snippets/metrics/AspNetCore.cs:use_metrics_method"
-```
-
-Explanation:
-
-- The method is defined as an extension method for the `IApplicationBuilder` interface.
-- It adds a `MetricsMiddleware` to the application builder using the `UseMiddleware` method.
-- The `MetricsMiddleware` captures and records metrics for HTTP requests, including cold start metrics if the `CaptureColdStart` option is enabled.
-
 ### WithMetrics() filter
 
 The `WithMetrics` method is an extension method for the `RouteHandlerBuilder` class.
 
-It adds a metrics filter to the specified route handler builder, which captures cold start metrics (if enabled) and flushes metrics on function exit.
+It adds a metrics filter to the specified route handler builder, which captures cold start metrics (if enabled) and gives each request to that endpoint its own metrics. Call `Flush` to publish them. Used together with `UseMetrics()`, the endpoint's metrics are kept apart from metrics the request adds outside the endpoint.
 
 #### Example
 

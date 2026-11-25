@@ -4,12 +4,16 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      # init, autobuild and analyze must run the same version
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
+    ignore:
+      # The v2.6.0 image can't be pulled (ossf/scorecard-action#1752). Remove once a fixed release is out.
+      - dependency-name: "ossf/scorecard-action"
+        versions: ["2.6.0"]
 
-  - package-ecosystem: docker
-    directory: /docs
-    schedule:
-      interval: monthly
-  
   - package-ecosystem: npm
     directories:
       - "/"
@@ -18,15 +22,7 @@ updates:
       interval: monthly
     versioning-strategy: increase
     allow:
-      - dependency-name: "@aws-cdk/toolkit-lib"
-      - dependency-name: "aws-cdk-lib"
       - dependency-name: "aws-cdk"
-    groups:
-      aws-cdk:
-        patterns:
-        - "@aws-cdk/toolkit-lib"
-        - "aws-cdk-lib"
-        - "aws-cdk"
 
   - package-ecosystem: nuget
     directories:

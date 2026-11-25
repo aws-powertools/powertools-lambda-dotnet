@@ -40,14 +40,30 @@ public class MetricsFilter : IEndpointFilter, IDisposable
             // ignored
         }
 
-        return await next(context);
+        // The endpoint gets its own metrics context, shared by everything it awaits or starts.
+        // Inside UseMetrics() this nests in the request's context, which is used again once the
+        // endpoint is done. Metrics are not flushed here; the application calls Flush.
+        Metrics.BeginInvocationContext();
+        try
+        {
+            return await next(context);
+        }
+        finally
+        {
+            Metrics.EndInvocationContext();
+        }
     }
 
     /// <summary>
     /// Disposes of the resources used by the filter.
     /// </summary>
+    /// <remarks>
+    /// The filter holds no disposable resources. Disposing it does not reset cold start tracking,
+    /// which is recorded once per execution environment.
+    /// </remarks>
     public void Dispose()
     {
-        _coldStartTracker.Dispose();
+        // Nothing to dispose. Kept for backwards compatibility.
+        GC.SuppressFinalize(this);
     }
 }

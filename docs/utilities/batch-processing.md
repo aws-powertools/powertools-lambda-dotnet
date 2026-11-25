@@ -781,6 +781,9 @@ sequenceDiagram
 
 For Native AOT scenarios, you can configure JsonSerializerContext:
 
+!!! warning "Return types under Native AOT"
+    Under Native AOT, the `[BatchProcessor]` attribute can only wrap methods that return a reference type (for example a class, record or `string`) or `Task<T>` of a reference type. Methods that return a value type (such as `int` or `bool`), a plain `Task`, or `Task<T>` of a value type throw a `NotSupportedException` when first called. Return a class or record instead.
+
 === "JsonSerializerContext Configuration"
 
     ```csharp
@@ -983,11 +986,3 @@ As there is no external calls, you can unit test your code with `BatchProcessor`
     ```csharp
     --8<-- "docs/snippets/batch/PartialFailureHandling.cs:sqs_event_test_helper"
     ```
-
-## Complete Examples and Documentation
-
-The [BatchProcessing example](https://github.com/aws-powertools/powertools-lambda-dotnet/tree/develop/examples/BatchProcessing){target="\_blank"} contains complete working examples:
-
-- **TypedFunction.cs** - Complete examples using all typed batch processing patterns
-- **TypedHandlers/** - Example implementations for SQS, Kinesis, and DynamoDB
-- **Sample Events** - Test events for all event types with typed data

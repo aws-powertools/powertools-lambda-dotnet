@@ -1,6 +1,24 @@
 // This file is referenced by docs/utilities/idempotency.md
 // via pymdownx.snippets (mkdocs).
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Amazon;
+using Amazon.DynamoDBv2;
+using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
+using Amazon.Lambda.RuntimeSupport;
+using Amazon.Lambda.Serialization.SystemTextJson;
+using AWS.Lambda.Powertools.Idempotency;
+using AWS.Lambda.Powertools.Idempotency.Persistence;
+using Docs.IdempotencySnippets;
+
+namespace Docs.IdempotencySnippets.CustomIdempotencyKey.EventKeyJmespathPayment
+{
+internal static class Example
+{
+    public static void Run()
+    {
 // --8<-- [start:event_key_jmespath_payment]
     Idempotency.Configure(builder =>
             builder
@@ -8,8 +26,12 @@
                     optionsBuilder.WithEventKeyJmesPath("powertools_json(Body).[\"user_id\", \"product_id\"]"))
                 .UseDynamoDb("idempotency_table"));
 // --8<-- [end:event_key_jmespath_payment]
+    }
+}
+}
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.Idempotency
+
+namespace Docs.IdempotencySnippets.CustomIdempotencyKey.CustomKeyPrefix
 {
 // --8<-- [start:custom_key_prefix]
 public class Function
@@ -27,7 +49,13 @@ public class Function
     }
 }
 // --8<-- [end:custom_key_prefix]
+}
 
+
+namespace Docs.IdempotencySnippets.CustomIdempotencyKey.ThrowOnNoIdempotencyKey
+{
+public class App
+{
 // --8<-- [start:throw_on_no_idempotency_key]
     public App() 
     {
@@ -45,6 +73,8 @@ public class Function
     public Task<OrderResult> FunctionHandler(Order input, ILambdaContext context)
     {
       // ...
+      return Task.FromResult(new OrderResult());
     }
 // --8<-- [end:throw_on_no_idempotency_key]
+}
 }

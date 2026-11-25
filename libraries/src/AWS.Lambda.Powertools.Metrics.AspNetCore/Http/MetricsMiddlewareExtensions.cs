@@ -27,9 +27,20 @@ public static class MetricsMiddlewareExtensions
         return app.Use(async (context, next) =>
         {
             var metrics = context.RequestServices.GetRequiredService<IMetrics>();
-            using var metricsHelper = new ColdStartTracker(metrics);
+            var metricsHelper = new ColdStartTracker(metrics);
             metricsHelper.TrackColdStart(context);
-            await next();
+
+            // Each request gets its own metrics context, shared by everything the request awaits
+            // or starts. Metrics are not flushed here; the application calls Flush.
+            Metrics.BeginInvocationContext();
+            try
+            {
+                await next();
+            }
+            finally
+            {
+                Metrics.EndInvocationContext();
+            }
         });
     }
 }

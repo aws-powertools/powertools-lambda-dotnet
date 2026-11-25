@@ -19,6 +19,18 @@ internal partial class BedrockJsonContext : JsonSerializerContext
 /// </summary>
 public static class BedrockMinimalApiExtensions
 {
+    internal const string DelegateToolMessage =
+        "Tools registered with a Delegate read the delegate's method and parameters with reflection, which isn't " +
+        "supported under Native AOT. For Native AOT, use BedrockAgentFunctionResolver from " +
+        "AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction directly, with a Tool overload that takes " +
+        "a Func<BedrockFunctionRequest, ...>.";
+
+    internal const string RegisterToolMessage =
+        "MapBedrockToolType<T> creates delegates for the tool methods at runtime, which isn't supported under " +
+        "Native AOT. For Native AOT, use BedrockAgentFunctionResolver from " +
+        "AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction directly, with a Tool overload that takes " +
+        "a Func<BedrockFunctionRequest, ...>.";
+
     // Static flag to track if handler is mapped (thread-safe with volatile)
     private static volatile bool _bedrockRequestHandlerMapped;
 
@@ -47,6 +59,8 @@ public static class BedrockMinimalApiExtensions
     ///     $"Result: {x + y}");
     /// </code>
     /// </example>
+    [RequiresUnreferencedCode(DelegateToolMessage)]
+    [RequiresDynamicCode(DelegateToolMessage)]
     public static WebApplication MapBedrockFunction(
         this WebApplication app,
         string functionName,
@@ -139,6 +153,8 @@ public static class BedrockMinimalApiExtensions
     /// app.MapBedrockToolClass&lt;WeatherTools&gt;();
     /// </code>
     /// </example>
+    [RequiresUnreferencedCode(RegisterToolMessage)]
+    [RequiresDynamicCode(RegisterToolMessage)]
     public static WebApplication MapBedrockToolType<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] T>(
         this WebApplication app) 
         where T : class

@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "libraries/**"
+      - ".github/workflows/codeql-analysis.yml"
     branches: [ "develop" ]
   pull_request:
     paths:
       - "libraries/**"
+      - ".github/workflows/codeql-analysis.yml"
     branches: [ "develop" ]
   schedule:
     - cron: '42 8 * * 0'
@@ -30,31 +32,27 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
+      uses: github/codeql-action/init@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea  # v4.39.4
       with:
         languages: ${{ matrix.language }}
+        build-mode: manual
         
-    - name: Install global tools
-      run: dotnet tool install --global Apache.Avro.Tools
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # 6.1.0
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
 
-    # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
-    # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
-
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-
-    #   If the Autobuild fails above, remove it and uncomment the following three lines. 
-    #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
-
-    # - run: |
-    #   echo "Run, Build Application using script"
-    #   ./location_of_script_within_repo/buildscript.sh
+    # Build the libraries solution only, same as build.yml. Autobuild picked up every project
+    # in the repo (including examples) and failed on newer SDKs preinstalled on the runner.
+    - name: Build
+      working-directory: ./libraries
+      run: dotnet build AWS.Lambda.Powertools.sln --configuration Release /tl
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
+      uses: github/codeql-action/analyze@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea  # v4.39.4

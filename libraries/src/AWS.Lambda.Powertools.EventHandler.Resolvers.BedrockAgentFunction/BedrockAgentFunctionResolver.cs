@@ -1,3 +1,5 @@
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Internal;
+using System.Diagnostics.CodeAnalysis;
 ﻿using System.Text.Json.Serialization.Metadata;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
@@ -179,6 +181,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <param name="name">The name of the tool function</param>
         /// <param name="handler">The delegate handler function</param>
         /// <returns>The resolver instance for method chaining</returns>
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public BedrockAgentFunctionResolver Tool(
             string name,
             Delegate handler)
@@ -193,6 +197,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <param name="description">Description of the tool function</param>
         /// <param name="handler">The delegate handler function</param>
         /// <returns>The resolver instance for method chaining</returns>
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public BedrockAgentFunctionResolver Tool(
             string name,
             string description,
@@ -208,6 +214,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <param name="name">The name of the tool function</param>
         /// <param name="handler">The delegate handler function</param>
         /// <returns>The resolver instance for method chaining</returns>
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public BedrockAgentFunctionResolver Tool<TResult>(
             string name,
             Delegate handler)
@@ -223,6 +231,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <param name="description">Description of the tool function</param>
         /// <param name="handler">The delegate handler function</param>
         /// <returns>The resolver instance for method chaining</returns>
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public BedrockAgentFunctionResolver Tool<TResult>(
             string name,
             string description,
@@ -237,6 +247,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             return this;
         }
 
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         private Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse> RegisterToolHandler<TResult>(
             Delegate handler, string functionName)
         {
@@ -266,6 +278,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             };
         }
 
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         private BedrockFunctionResponse ExecuteHandlerAndProcessResult<TResult>(
             Delegate handler, 
             object?[] args, 

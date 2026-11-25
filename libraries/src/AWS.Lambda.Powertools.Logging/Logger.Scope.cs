@@ -100,7 +100,8 @@ public static partial class Logger
         if (string.IsNullOrWhiteSpace(key))
             throw new ArgumentNullException(nameof(key));
         
-        var convertedValue = PowertoolsLoggerHelpers.ObjectToDictionary(value) ??
+        var convertedValue = PowertoolsLoggerHelpers.ObjectToDictionary(value,
+                                 PowertoolsLoggingBuilderExtensions.GetCurrentConfiguration()?.LogOutput) ??
                      throw new ArgumentNullException(nameof(value));
         Scope[key] = convertedValue;
     }

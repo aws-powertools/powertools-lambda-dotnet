@@ -17,7 +17,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: develop
           fetch-depth: 0
@@ -65,7 +65,7 @@ jobs:
 
       - name: Create PR for version.txt update
         if: steps.check_changes.outputs.has_changes == 'true'
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
         with:
           commit-message: "chore: update version.txt to ${{ env.VERSION }}"
           branch: update-version-txt-${{ github.run_id }}

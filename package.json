@@ -4,8 +4,7 @@
   "description": "Powertools for AWS Lambda (.NET)",
   "main": "index.js",
   "directories": {
-    "doc": "docs",
-    "example": "examples"
+    "doc": "docs"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,7 +12,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "aws-cdk": "^2.1139.0",
-    "aws-cdk-lib": "^2.267.0"
+    "aws-cdk": "^2.1149.0"
   }
 }

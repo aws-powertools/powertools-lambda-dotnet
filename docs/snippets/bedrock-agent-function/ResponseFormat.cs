@@ -1,7 +1,15 @@
 // This file is referenced by docs/core/event_handler/bedrock_agent_function.md
 // via pymdownx.snippets (mkdocs).
 
-namespace AWS.Lambda.Powertools.Docs.Snippets.BedrockAgentFunction;
+using Amazon.Lambda.Core;
+using AWS.Lambda.Powertools.EventHandler.Resolvers;
+
+namespace Docs.BedrockAgentFunctionSnippets.ResponseFormat
+{
+internal class AirportService
+{
+    public AirportInfo GetAirportInfoForCity(string city) => new() { City = city, Code = "LHR", Name = "Heathrow" };
+}
 
 // --8<-- [start:response_format_tostring]
 public class AirportInfo
@@ -16,6 +24,7 @@ public class AirportInfo
     }
 }
 
+internal class Example { private readonly BedrockAgentFunctionResolver resolver = new(); public void Register() { // --8<-- [start:hidden]
 resolver.Tool("getAirportCodeForCity", "Get airport code and full name for a specific city", (string city, ILambdaContext context) =>
 {
     var airportService = new AirportService();
@@ -29,3 +38,5 @@ resolver.Tool("getAirportCodeForCity", "Get airport code and full name for a spe
 //     airportInfo
 // };
 // --8<-- [end:response_format_tostring]
+} }
+}

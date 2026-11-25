@@ -76,7 +76,7 @@ segment name that appears in traces.
 
 === "Tracing attribute"
 
-    ```csharp hl_lines="3 14 20"
+    ```csharp hl_lines="3 15 21"
     --8<-- "docs/snippets/tracing/GettingStarted.cs:tracing_attribute"
     ```
 
@@ -264,7 +264,11 @@ Examples:
     
     To learn more about managing trim warnings, see [Introduction to trim warnings](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings) in the Microsoft .NET documentation.
 
+    Even with this setup, the AOT publish reports trim warnings from the AWS X-Ray SDK (`AWSXRayRecorder.Core`), for example from its bundled `ThirdParty.LitJson` serializer. These come from the X-Ray SDK, not from Powertools, and the assemblies above keep the code those warnings refer to.
+
 ### Not supported
 
 !!! warning "Not supported"
     Currently instrumenting SDK clients with `Tracing.RegisterForAllServices()` is not supported on AOT mode.
+
+    The response of a `[Tracing]` method that returns `Task<T>` where `T` is a value type, such as `Task<int>` or `Task<bool>`, isn't captured under AOT. Responses of other return types, including `Task<T>` of a class, are captured.

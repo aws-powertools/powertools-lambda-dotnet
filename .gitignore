@@ -14,9 +14,6 @@ deploy/**
 
 node_modules/*
 
-examples/SimpleLambda/.aws-sam
-examples/SimpleLambda/samconfig.toml
-
 AWS.Lambda.Powertools.sln.DotSettings.user
 [Oo]bj/**
 [Bb]in/**
@@ -25,6 +22,7 @@ AWS.Lambda.Powertools.sln.DotSettings.user
 
 dist/
 site/
+.venv-docs/
 samconfig.toml
 
 .kiro
