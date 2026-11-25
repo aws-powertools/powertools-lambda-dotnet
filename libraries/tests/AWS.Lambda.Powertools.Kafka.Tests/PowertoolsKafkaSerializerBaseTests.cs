@@ -505,6 +505,56 @@ namespace AWS.Lambda.Powertools.Kafka.Tests
             Assert.Equal(0.0, result);
         }
 
+        public static IEnumerable<object[]> UnparseablePrimitiveDefaults() => new[]
+        {
+            new object[] { typeof(byte), (byte)0 },
+            new object[] { typeof(sbyte), (sbyte)0 },
+            new object[] { typeof(short), (short)0 },
+            new object[] { typeof(ushort), (ushort)0 },
+            new object[] { typeof(uint), 0u },
+            new object[] { typeof(ulong), 0ul },
+            new object[] { typeof(float), 0f },
+            new object[] { typeof(decimal), 0m },
+            new object[] { typeof(DateTime), default(DateTime) },
+            new object[] { typeof(IntPtr), IntPtr.Zero },
+        };
+
+        [Theory]
+        [MemberData(nameof(UnparseablePrimitiveDefaults))]
+        public void DeserializePrimitiveValue_UnparseableValue_ReturnsDefaultOfType(Type type, object expected)
+        {
+            var serializer = new TestKafkaSerializer();
+
+            var result = serializer.TestDeserializePrimitiveValue("not a number"u8.ToArray(), type);
+
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void Deserialize_EventWithoutRecords_ReturnsEmptyConsumerRecords()
+        {
+            var serializer = new TestKafkaSerializer();
+            using var stream = new MemoryStream(
+                Encoding.UTF8.GetBytes("{\"eventSource\":\"aws:kafka\",\"bootstrapServers\":\"b-1:9092\"}"));
+
+            var result = serializer.Deserialize<ConsumerRecords<string, string>>(stream);
+
+            Assert.Equal("aws:kafka", result.EventSource);
+            Assert.Equal("b-1:9092", result.BootstrapServers);
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void Deserialize_NonConsumerRecordNullJson_ThrowsException()
+        {
+            var serializer = new TestKafkaSerializer();
+            using var stream = new MemoryStream("null"u8.ToArray());
+
+            var ex = Assert.Throws<InvalidOperationException>(() => serializer.Deserialize<TestModel>(stream));
+
+            Assert.Contains("Failed to deserialize to type TestModel", ex.Message);
+        }
+
         [Fact]
         public void Serialize_WithTypeInfoFromContext_WritesToStream()
         {

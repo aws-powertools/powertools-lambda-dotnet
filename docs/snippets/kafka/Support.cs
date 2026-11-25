@@ -26,6 +26,19 @@ namespace Docs.KafkaSnippets
         public string CustomerName { get; set; }
         public decimal Amount { get; set; }
     }
+
+    // Stand-ins for avrogen classes of a record with an array of records.
+    public class Order
+    {
+        public string orderId { get; set; }
+        public IList<OrderLine> lines { get; set; }
+    }
+
+    public class OrderLine
+    {
+        public string sku { get; set; }
+        public int qty { get; set; }
+    }
 }
 
 namespace Docs.KafkaSnippets.TestKafka

@@ -1,11 +1,11 @@
 using Amazon.Lambda.Core;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using AWS.Lambda.Powertools.Common.Utils;
 
 #if KAFKA_JSON
 namespace AWS.Lambda.Powertools.Kafka.Json;
@@ -79,21 +79,26 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     }
 
     /// <summary>
+    /// The members of Kafka key and value types that the serializers read: the parameterless constructor,
+    /// public properties (such as the Protobuf <c>Parser</c>) and public fields (such as the Avro <c>_SCHEMA</c>).
+    /// </summary>
+    internal const DynamicallyAccessedMemberTypes DeserializedMemberTypes =
+        DynamicallyAccessedMemberTypes.PublicParameterlessConstructor |
+        DynamicallyAccessedMemberTypes.PublicProperties |
+        DynamicallyAccessedMemberTypes.PublicFields;
+
+    /// <summary>
     /// Deserializes the Lambda input stream into the specified type.
     /// Handles Kafka events with various serialization formats.
     /// </summary>
+    /// <remarks>
+    /// <see cref="ConsumerRecords{TK,T}"/> is built without reflection, so it works under Native AOT.
+    /// Other types are deserialized with the <see cref="JsonSerializerContext"/> passed to the constructor,
+    /// or with the <c>TypeInfoResolver</c> of the <see cref="JsonSerializerOptions"/>. Reflection-based
+    /// deserialization is only used when it's enabled, which isn't the case under Native AOT.
+    /// </remarks>
     public T Deserialize<T>(Stream requestStream)
     {
-        if (SerializerContext != null && typeof(T) != typeof(ConsumerRecords<,>))
-        {
-            // Fast path for regular JSON types when serializer context is provided
-            var typeInfo = GetJsonTypeInfo<T>();
-            if (typeInfo != null)
-            {
-                return JsonSerializer.Deserialize(requestStream, typeInfo) ?? throw new InvalidOperationException();
-            }
-        }
-
         using var reader = new StreamReader(requestStream);
         var json = reader.ReadToEnd();
 
@@ -104,19 +109,33 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             return DeserializeConsumerRecords<T>(json);
         }
 
-        if (SerializerContext != null)
+        var contextTypeInfo = SerializerContext?.GetTypeInfo(targetType);
+        if (contextTypeInfo != null)
         {
-            var typeInfo = SerializerContext.GetTypeInfo(targetType);
-            if (typeInfo != null)
-            {
-                return (T)JsonSerializer.Deserialize(json, typeInfo)!;
-            }
+            return (T)JsonSerializer.Deserialize(json, contextTypeInfo)!;
         }
 
-#pragma warning disable IL2026, IL3050
-        var result = JsonSerializer.Deserialize<T>(json, JsonOptions);
+        // JsonSerializer.IsReflectionEnabledByDefault is a feature switch that is false in trimmed and Native AOT
+        // apps. The trimmer and ILC know it's false there, so they don't report the guarded reflection-based call.
+        // RuntimeFeatureWrapper lets tests simulate Native AOT.
+        if (JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        {
+#pragma warning disable IL2026, IL3050 // Guarded by JsonSerializer.IsReflectionEnabledByDefault; needed for the net8.0 analyzer.
+            return DeserializeWithReflection<T>(json);
 #pragma warning restore IL2026, IL3050
+        }
 
+        var typeInfo = GetTypeInfoFromOptions(targetType) ?? throw ReflectionDisabledException("deserialize", targetType);
+        return JsonSerializer.Deserialize(json, typeInfo) is T result
+            ? result
+            : throw new InvalidOperationException($"Failed to deserialize to type {targetType.Name}");
+    }
+
+    [RequiresUnreferencedCode("Reflection-based JSON deserialization of types that can't be statically analyzed.")]
+    [RequiresDynamicCode("Reflection-based JSON deserialization might require runtime code generation.")]
+    private T DeserializeWithReflection<T>(string json)
+    {
+        var result = JsonSerializer.Deserialize<T>(json, JsonOptions);
         return result ?? throw new InvalidOperationException($"Failed to deserialize to type {typeof(T).Name}");
     }
 
@@ -126,144 +145,111 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <typeparam name="T">The ConsumerRecords type with key and value generics.</typeparam>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized ConsumerRecords object.</returns>
-    [RequiresUnreferencedCode("ConsumerRecords deserialization uses reflection and may be incompatible with trimming.")]
-    [RequiresDynamicCode(
-        "ConsumerRecords deserialization dynamically creates generic types and may be incompatible with NativeAOT.")]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ConsumerRecords<,>))]
+    [UnconditionalSuppressMessage("Trimming", "IL2091",
+        Justification = "T is always a ConsumerRecords<,> instantiation (checked by the caller). Its public " +
+                        "parameterless constructor is kept by the DynamicDependency above. Native AOT compiles " +
+                        "Activator.CreateInstance<T>() to a lookup of the constructor of the instantiation that " +
+                        "Deserialize<T> is called with, so no reflection metadata is needed.")]
     private T DeserializeConsumerRecords<T>(string json)
     {
-        var targetType = typeof(T);
-        var typeArgs = targetType.GetGenericArguments();
-        var keyType = typeArgs[0];
-        var valueType = typeArgs[1];
-
         using var document = JsonDocument.Parse(json);
-        var root = document.RootElement;
 
-        // Create the typed instance and set basic properties
-        var typedEvent = CreateConsumerRecordsInstance(targetType);
-        SetBasicProperties(root, typedEvent, targetType);
-
-        // Create and populate records dictionary
-        if (root.TryGetProperty("records", out var recordsElement))
-        {
-            var records = CreateRecordsDictionary(recordsElement, keyType, valueType);
-            targetType.GetProperty("Records", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.SetValue(typedEvent, records);
-        }
-
-        return (T)typedEvent;
+        // ILambdaSerializer.Deserialize<T> doesn't give us the key and value types, so the instance fills itself
+        // in ConsumerRecords<TK, T>, where they are known statically. See PopulateConsumerRecords.
+        var consumerRecords = Activator.CreateInstance<T>();
+        ((IPopulatableConsumerRecords)consumerRecords!).Populate(document.RootElement, this);
+        return consumerRecords;
     }
 
-    private object CreateConsumerRecordsInstance(Type targetType)
-    {
-        return Activator.CreateInstance(targetType) ??
-               throw new InvalidOperationException($"Failed to create instance of {targetType.Name}");
-    }
-
-    private void SetBasicProperties(JsonElement root, object instance, Type targetType)
+    /// <summary>
+    /// Populates <paramref name="consumerRecords"/> from the Lambda Kafka event.
+    /// </summary>
+    internal void PopulateConsumerRecords<
+        [DynamicallyAccessedMembers(DeserializedMemberTypes)] TKey,
+        [DynamicallyAccessedMembers(DeserializedMemberTypes)] TValue>(
+        ConsumerRecords<TKey, TValue> consumerRecords, JsonElement root)
     {
         if (root.TryGetProperty("eventSource", out var eventSource))
-            targetType.GetProperty("EventSource", BindingFlags.Public | BindingFlags.Instance)
-                ?.SetValue(instance, eventSource.GetString());
+            consumerRecords.EventSource = eventSource.GetString()!;
 
         if (root.TryGetProperty("eventSourceArn", out var eventSourceArn))
-            targetType.GetProperty("EventSourceArn")?.SetValue(instance, eventSourceArn.GetString());
+            consumerRecords.EventSourceArn = eventSourceArn.GetString()!;
 
         if (root.TryGetProperty("bootstrapServers", out var bootstrapServers))
-            targetType.GetProperty("BootstrapServers")?.SetValue(instance, bootstrapServers.GetString());
-    }
+            consumerRecords.BootstrapServers = bootstrapServers.GetString()!;
 
-    private object CreateRecordsDictionary(JsonElement recordsElement, Type keyType, Type valueType)
-    {
-        // Create dictionary with correct generic types
-        var dictType = typeof(Dictionary<,>).MakeGenericType(
-            typeof(string),
-            typeof(List<>).MakeGenericType(typeof(ConsumerRecord<,>).MakeGenericType(keyType, valueType))
-        );
-        var records = Activator.CreateInstance(dictType) ??
-                      throw new InvalidOperationException($"Failed to create dictionary of type {dictType.Name}");
-        var dictAddMethod = dictType.GetMethod("Add") ??
-                            throw new InvalidOperationException("Add method not found on dictionary type");
+        if (!root.TryGetProperty("records", out var recordsElement))
+            return;
+
+        var records = new Dictionary<string, List<ConsumerRecord<TKey, TValue>>>();
 
         // Process each topic partition
         foreach (var topicPartition in recordsElement.EnumerateObject())
         {
-            var topicName = topicPartition.Name;
-            var recordsList = ProcessTopicPartition(topicPartition.Value, keyType, valueType);
-            dictAddMethod.Invoke(records, new[] { topicName, recordsList });
-        }
-
-        return records;
-    }
-
-    private object ProcessTopicPartition(JsonElement partitionData, Type keyType, Type valueType)
-    {
-        // Create list type with correct generics
-        var listType = typeof(List<>).MakeGenericType(
-            typeof(ConsumerRecord<,>).MakeGenericType(keyType, valueType));
-        var recordsList = Activator.CreateInstance(listType) ??
-                          throw new InvalidOperationException($"Failed to create list of type {listType.Name}");
-        var listAddMethod = listType.GetMethod("Add") ??
-                            throw new InvalidOperationException("Add method not found on list type");
-
-        // Process each record
-        foreach (var recordElement in partitionData.EnumerateArray())
-        {
-            var record = CreateAndPopulateRecord(recordElement, keyType, valueType);
-            if (record != null)
+            var recordsList = new List<ConsumerRecord<TKey, TValue>>();
+            foreach (var recordElement in topicPartition.Value.EnumerateArray())
             {
-                listAddMethod.Invoke(recordsList, new[] { record });
+                recordsList.Add(CreateAndPopulateRecord<TKey, TValue>(recordElement));
             }
+
+            records.Add(topicPartition.Name, recordsList);
         }
 
-        return recordsList;
+        consumerRecords.Records = records;
     }
 
-    private object? CreateAndPopulateRecord(JsonElement recordElement, Type keyType, Type valueType)
+    private ConsumerRecord<TKey, TValue> CreateAndPopulateRecord<
+        [DynamicallyAccessedMembers(DeserializedMemberTypes)] TKey,
+        [DynamicallyAccessedMembers(DeserializedMemberTypes)] TValue>(JsonElement recordElement)
     {
-        // Create record instance
-        var recordType = typeof(ConsumerRecord<,>).MakeGenericType(keyType, valueType);
-        var record = Activator.CreateInstance(recordType);
-        if (record == null)
-            return null;
+        var record = new ConsumerRecord<TKey, TValue>();
 
         // Set basic properties
-        SetProperty(recordType, record, "Topic", recordElement, "topic");
-        SetProperty(recordType, record, "Partition", recordElement, "partition");
-        SetProperty(recordType, record, "Offset", recordElement, "offset");
-        SetProperty(recordType, record, "Timestamp", recordElement, "timestamp");
-        SetProperty(recordType, record, "TimestampType", recordElement, "timestampType");
+        if (TryGetNonNullProperty(recordElement, "topic", out var topic))
+            record.Topic = topic.GetString()!;
+        if (TryGetNonNullProperty(recordElement, "partition", out var partition))
+            record.Partition = partition.GetInt32();
+        if (TryGetNonNullProperty(recordElement, "offset", out var offset))
+            record.Offset = offset.GetInt64();
+        if (TryGetNonNullProperty(recordElement, "timestamp", out var timestamp))
+            record.Timestamp = timestamp.GetInt64();
+        if (TryGetNonNullProperty(recordElement, "timestampType", out var timestampType))
+            record.TimestampType = timestampType.GetString()!;
 
         // Process schema metadata for both key and value FIRST
         SchemaMetadata? keySchemaMetadata = null;
         SchemaMetadata? valueSchemaMetadata = null;
-        
-        ProcessSchemaMetadata(recordElement, record, recordType, "keySchemaMetadata", "KeySchemaMetadata");
-        ProcessSchemaMetadata(recordElement, record, recordType, "valueSchemaMetadata", "ValueSchemaMetadata");
-        
-        // Get the schema metadata for use in deserialization
+
         if (recordElement.TryGetProperty("keySchemaMetadata", out var keyMetadataElement))
         {
+            record.KeySchemaMetadata = ReadSchemaMetadata(keyMetadataElement);
             keySchemaMetadata = ExtractSchemaMetadata(keyMetadataElement);
         }
-        
+
         if (recordElement.TryGetProperty("valueSchemaMetadata", out var valueMetadataElement))
         {
+            record.ValueSchemaMetadata = ReadSchemaMetadata(valueMetadataElement);
             valueSchemaMetadata = ExtractSchemaMetadata(valueMetadataElement);
         }
 
         // Process key with schema metadata context
-        ProcessKey(recordElement, record, recordType, keyType, keySchemaMetadata);
+        ProcessKey(recordElement, record, keySchemaMetadata);
 
         // Process value with schema metadata context
-        ProcessValue(recordElement, record, recordType, valueType, valueSchemaMetadata);
+        ProcessValue(recordElement, record, valueSchemaMetadata);
 
         // Process headers
-        ProcessHeaders(recordElement, record, recordType);
+        ProcessHeaders(recordElement, record);
 
         return record;
     }
-    
+
+    private static bool TryGetNonNullProperty(JsonElement element, string propertyName, out JsonElement value)
+    {
+        return element.TryGetProperty(propertyName, out value) && value.ValueKind != JsonValueKind.Null;
+    }
+
     private SchemaMetadata? ExtractSchemaMetadata(JsonElement metadataElement)
     {
         var schemaMetadata = new SchemaMetadata();
@@ -284,7 +270,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         return hasData ? schemaMetadata : null;
     }
 
-    private void ProcessKey(JsonElement recordElement, object record, Type recordType, Type keyType, SchemaMetadata? keySchemaMetadata)
+    private void ProcessKey<[DynamicallyAccessedMembers(DeserializedMemberTypes)] TKey, TValue>(
+        JsonElement recordElement, ConsumerRecord<TKey, TValue> record, SchemaMetadata? keySchemaMetadata)
     {
         if (recordElement.TryGetProperty("key", out var keyElement) && keyElement.ValueKind == JsonValueKind.String)
         {
@@ -294,8 +281,8 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 try
                 {
                     var keyBytes = Convert.FromBase64String(base64Key);
-                    var decodedKey = DeserializeKey(keyBytes, keyType, keySchemaMetadata);
-                    recordType.GetProperty("Key")?.SetValue(record, decodedKey);
+                    var decodedKey = DeserializeKey(keyBytes, typeof(TKey), keySchemaMetadata);
+                    record.Key = ConvertDeserialized<TKey>(decodedKey);
                 }
                 catch (Exception ex)
                 {
@@ -305,19 +292,19 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         }
     }
 
-    private void ProcessValue(JsonElement recordElement, object record, Type recordType, Type valueType, SchemaMetadata? valueSchemaMetadata)
+    private void ProcessValue<TKey, [DynamicallyAccessedMembers(DeserializedMemberTypes)] TValue>(
+        JsonElement recordElement, ConsumerRecord<TKey, TValue> record, SchemaMetadata? valueSchemaMetadata)
     {
         if (recordElement.TryGetProperty("value", out var valueElement) && valueElement.ValueKind == JsonValueKind.String)
         {
             var base64Value = valueElement.GetString();
-            var valueProperty = recordType.GetProperty("Value");
 
-            if (base64Value != null && valueProperty != null)
+            if (base64Value != null)
             {
                 try
                 {
-                    var deserializedValue = DeserializeValue(base64Value, valueType, valueSchemaMetadata);
-                    valueProperty.SetValue(record, deserializedValue);
+                    var deserializedValue = DeserializeValue(base64Value, typeof(TValue), valueSchemaMetadata);
+                    record.Value = ConvertDeserialized<TValue>(deserializedValue);
                 }
                 catch (Exception ex)
                 {
@@ -328,13 +315,25 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     }
 
     /// <summary>
+    /// Converts a deserialized key or value to its static type. Null becomes the default value, as it did when
+    /// the property was set with reflection.
+    /// </summary>
+    private static T ConvertDeserialized<T>(object? value)
+    {
+        return value is null ? default! : (T)value;
+    }
+
+    /// <summary>
     /// Deserializes a key from bytes based on the specified key type.
     /// </summary>
     /// <param name="keyBytes">The key bytes to deserialize.</param>
     /// <param name="keyType">The target type for the key.</param>
     /// <param name="keySchemaMetadata">Optional schema metadata for the key.</param>
     /// <returns>The deserialized key object.</returns>
-    private object? DeserializeKey(byte[] keyBytes, Type keyType, SchemaMetadata? keySchemaMetadata)
+    private object? DeserializeKey(byte[] keyBytes,
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
+        Type keyType, SchemaMetadata? keySchemaMetadata)
     {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (keyBytes == null || keyBytes.Length == 0)
@@ -350,43 +349,14 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     }
 
     /// <summary>
-    /// Sets a property value on an object instance from a JsonElement.
-    /// </summary>
-    /// <param name="type">The type of the object.</param>
-    /// <param name="instance">The object instance.</param>
-    /// <param name="propertyName">The name of the property to set.</param>
-    /// <param name="element">The JsonElement containing the source data.</param>
-    /// <param name="jsonPropertyName">The property name within the JsonElement.</param>
-    [RequiresDynamicCode("Dynamically accesses properties which might be trimmed.")]
-    [RequiresUnreferencedCode("Dynamically accesses properties which might be trimmed.")]
-    private void SetProperty(
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-        Type type, object instance, string propertyName,
-        JsonElement element, string jsonPropertyName)
-    {
-        if (!element.TryGetProperty(jsonPropertyName, out var jsonValue) ||
-            jsonValue.ValueKind == JsonValueKind.Null)
-            return;
-
-        // Add BindingFlags to find internal properties too
-        var property = type.GetProperty(propertyName,
-            BindingFlags.Public | BindingFlags.Instance);
-        if (property == null) return;
-        var propertyType = property.PropertyType;
-
-        object value;
-        if (propertyType == typeof(int)) value = jsonValue.GetInt32();
-        else if (propertyType == typeof(long)) value = jsonValue.GetInt64();
-        else if (propertyType == typeof(double)) value = jsonValue.GetDouble();
-        else if (propertyType == typeof(string)) value = jsonValue.GetString()!;
-        else return;
-
-        property.SetValue(instance, value);
-    }
-
-    /// <summary>
     /// Serializes an object to JSON and writes it to the provided stream.
     /// </summary>
+    /// <remarks>
+    /// Uses the <see cref="JsonSerializerContext"/> passed to the constructor when it includes the type.
+    /// When reflection-based serialization is disabled, as under Native AOT, it uses the <c>TypeInfoResolver</c>
+    /// of the <see cref="JsonSerializerOptions"/>, and serializes <see cref="string"/> and common primitive types
+    /// without a context.
+    /// </remarks>
     public void Serialize<T>(T response, Stream responseStream)
     {
         if (EqualityComparer<T>.Default.Equals(response, default(T)))
@@ -399,9 +369,11 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             return;
         }
 
+        var responseType = response!.GetType();
+
         if (SerializerContext != null)
         {
-            var typeInfo = SerializerContext.GetTypeInfo(response.GetType()) ?? 
+            var typeInfo = SerializerContext.GetTypeInfo(responseType) ??
                           SerializerContext.GetTypeInfo(typeof(T));
             if (typeInfo != null)
             {
@@ -410,42 +382,55 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
             }
         }
 
-        using var writer = new StreamWriter(responseStream, encoding: Encoding.UTF8, bufferSize: 1024, leaveOpen: true);
-#pragma warning disable IL2026, IL3050
-        var jsonResponse = JsonSerializer.Serialize(response, JsonOptions);
+        // See Deserialize<T> for why the feature switch is checked here.
+        if (JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        {
+#pragma warning disable IL2026, IL3050 // Guarded by JsonSerializer.IsReflectionEnabledByDefault; needed for the net8.0 analyzer.
+            SerializeWithReflection(response, responseStream);
 #pragma warning restore IL2026, IL3050
+            return;
+        }
+
+        var fallbackTypeInfo = GetTypeInfoFromOptions(responseType) ??
+                               GetTypeInfoFromOptions(typeof(T)) ??
+                               KafkaBuiltInJsonSerializerContext.Default.GetTypeInfo(responseType) ??
+                               throw ReflectionDisabledException("serialize", responseType);
+        JsonSerializer.Serialize(responseStream, response, fallbackTypeInfo);
+    }
+
+    [RequiresUnreferencedCode("Reflection-based JSON serialization of types that can't be statically analyzed.")]
+    [RequiresDynamicCode("Reflection-based JSON serialization might require runtime code generation.")]
+    private void SerializeWithReflection<T>(T response, Stream responseStream)
+    {
+        using var writer = new StreamWriter(responseStream, encoding: Encoding.UTF8, bufferSize: 1024, leaveOpen: true);
+        var jsonResponse = JsonSerializer.Serialize(response, JsonOptions);
         writer.Write(jsonResponse);
         writer.Flush();
     }
 
-    // Helper to get non-generic JsonTypeInfo from context based on a Type argument
-    private JsonTypeInfo? GetJsonTypeInfoFromContext(Type type)
+    /// <summary>
+    /// Gets the metadata for <paramref name="type"/> from the <c>TypeInfoResolver</c> of the JSON options,
+    /// without falling back to reflection.
+    /// </summary>
+    private JsonTypeInfo? GetTypeInfoFromOptions(Type type)
     {
-        if (SerializerContext == null)
+        if (JsonOptions.TypeInfoResolver == null)
             return null;
 
-        return SerializerContext.GetTypeInfo(type);
+        return JsonOptions.TryGetTypeInfo(type, out var typeInfo) ? typeInfo : null;
     }
 
-    private JsonTypeInfo<T>? GetJsonTypeInfo<T>()
+    private static InvalidOperationException ReflectionDisabledException(string operation, Type type)
     {
-        if (SerializerContext == null) return null;
-
-        foreach (var prop in SerializerContext.GetType().GetProperties())
-        {
-            if (prop.PropertyType == typeof(JsonTypeInfo<T>))
-            {
-                return prop.GetValue(SerializerContext) as JsonTypeInfo<T>;
-            }
-        }
-        return null;
+        return new InvalidOperationException(
+            $"Can't {operation} '{type.FullName}' because reflection-based JSON serialization is disabled, " +
+            "for example in Native AOT and trimmed apps. Pass a JsonSerializerContext that includes " +
+            $"[JsonSerializable(typeof({type.Name}))] to the serializer constructor.");
     }
 
     /// <summary>
     /// Deserializes a base64-encoded value into an object using the appropriate format.
     /// </summary>
-    [RequiresDynamicCode("Deserializing values might require runtime code generation.")]
-    [RequiresUnreferencedCode("Deserializing values might require types that cannot be statically analyzed.")]
     protected virtual object DeserializeValue(string base64Value,
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
                                     DynamicallyAccessedMemberTypes.PublicFields)]
@@ -464,8 +449,6 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// <summary>
     /// Deserializes binary data using format-specific implementation.
     /// </summary>
-    [RequiresDynamicCode("Format-specific deserialization might require runtime code generation.")]
-    [RequiresUnreferencedCode("Format-specific deserialization might require types that cannot be statically analyzed.")]
     protected virtual object? DeserializeFormatSpecific(byte[] data, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
                                     DynamicallyAccessedMemberTypes.PublicFields)]
@@ -483,8 +466,6 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
     /// Deserializes complex (non-primitive) types using format-specific implementation.
     /// Each derived class must implement this method to handle its specific format.
     /// </summary>
-    [RequiresDynamicCode("Format-specific deserialization might require runtime code generation.")]
-    [RequiresUnreferencedCode("Format-specific deserialization might require types that cannot be statically analyzed.")]
     protected abstract object? DeserializeComplexTypeFormat(byte[] data, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | 
                                    DynamicallyAccessedMemberTypes.PublicFields)]
@@ -594,32 +575,59 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
         }
         catch
         {
-            return valueType.IsValueType ? Activator.CreateInstance(valueType) : null;
+            return valueType.IsValueType ? GetDefaultValue(valueType) : null;
         }
     }
 
-    private void ProcessSchemaMetadata(JsonElement recordElement, object record, Type recordType, 
-        string jsonPropertyName, string recordPropertyName)
+    /// <summary>
+    /// Gets the default value of a primitive or simple value type without reflection.
+    /// </summary>
+    private static object? GetDefaultValue(Type valueType)
     {
-        if (recordElement.TryGetProperty(jsonPropertyName, out var metadataElement))
+        if (valueType == typeof(IntPtr)) return IntPtr.Zero;
+        if (valueType == typeof(UIntPtr)) return UIntPtr.Zero;
+        if (valueType == typeof(Guid)) return Guid.Empty;
+
+        return Type.GetTypeCode(valueType) switch
         {
-            var schemaMetadata = new SchemaMetadata();
-
-            if (metadataElement.TryGetProperty("dataFormat", out var dataFormatElement))
-            {
-                schemaMetadata.DataFormat = dataFormatElement.GetString() ?? string.Empty;
-            }
-
-            if (metadataElement.TryGetProperty("schemaId", out var schemaIdElement))
-            {
-                schemaMetadata.SchemaId = schemaIdElement.GetString() ?? string.Empty;
-            }
-
-            recordType.GetProperty(recordPropertyName)?.SetValue(record, schemaMetadata);
-        }
+            TypeCode.Boolean => false,
+            TypeCode.Char => '\0',
+            TypeCode.SByte => (sbyte)0,
+            TypeCode.Byte => (byte)0,
+            TypeCode.Int16 => (short)0,
+            TypeCode.UInt16 => (ushort)0,
+            TypeCode.Int32 => 0,
+            TypeCode.UInt32 => 0u,
+            TypeCode.Int64 => 0L,
+            TypeCode.UInt64 => 0ul,
+            TypeCode.Single => 0f,
+            TypeCode.Double => 0d,
+            TypeCode.Decimal => 0m,
+            TypeCode.DateTime => default(DateTime),
+            // Only primitive and simple types get here. Anything else becomes null, which a
+            // ConsumerRecord turns into the default value of its key or value type.
+            _ => null
+        };
     }
 
-    private void ProcessHeaders(JsonElement recordElement, object record, Type recordType)
+    private static SchemaMetadata ReadSchemaMetadata(JsonElement metadataElement)
+    {
+        var schemaMetadata = new SchemaMetadata();
+
+        if (metadataElement.TryGetProperty("dataFormat", out var dataFormatElement))
+        {
+            schemaMetadata.DataFormat = dataFormatElement.GetString() ?? string.Empty;
+        }
+
+        if (metadataElement.TryGetProperty("schemaId", out var schemaIdElement))
+        {
+            schemaMetadata.SchemaId = schemaIdElement.GetString() ?? string.Empty;
+        }
+
+        return schemaMetadata;
+    }
+
+    private void ProcessHeaders<TKey, TValue>(JsonElement recordElement, ConsumerRecord<TKey, TValue> record)
     {
         if (recordElement.TryGetProperty("headers", out var headersElement) &&
             headersElement.ValueKind == JsonValueKind.Array)
@@ -637,9 +645,7 @@ public abstract class PowertoolsKafkaSerializerBase : ILambdaSerializer
                 }
             }
 
-            var headersProperty = recordType.GetProperty("Headers",
-                BindingFlags.Public | BindingFlags.Instance);
-            headersProperty?.SetValue(record, headers);
+            record.Headers = headers;
         }
     }
 

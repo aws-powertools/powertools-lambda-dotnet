@@ -225,7 +225,21 @@ public class PowertoolsKafkaJsonSerializerTests
         Assert.Equal("testKey", record.Key);
         Assert.Null(record.Value); // Should be null for empty input
     }
-    
+
+    [Fact]
+    public void DeserializeComplexValue_WithEmptyDataForValueType_SetsDefault()
+    {
+        var serializer = new PowertoolsKafkaJsonSerializer();
+        string kafkaEventJson = CreateKafkaEvent(
+            keyValue: Convert.ToBase64String(Encoding.UTF8.GetBytes("testKey")),
+            valueValue: "");
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(kafkaEventJson));
+
+        var record = serializer.Deserialize<KafkaAlias.ConsumerRecords<string, ValueTypeProduct>>(stream).First();
+
+        Assert.Equal(default, record.Value);
+    }
+
     [Fact]
     public void DeserializeComplexValue_WithContextAndNullResult_ReturnsNull()
     {
