@@ -2,7 +2,6 @@
 // via pymdownx.snippets (mkdocs).
 
 using System.Globalization;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.EventHandler.Resolvers;
@@ -43,16 +42,14 @@ resolver.Tool(
 var resolver = new BedrockAgentFunctionResolver(MycustomSerializationContext.Default);
 resolver.Tool(
     name: "PriceCalculator",
-    handler: (BedrockFunctionRequest request) =>
+    description: "Calculate total price with tax",
+    handler: (MyCustomType myCustomType) =>
     {
-        // Typed handlers don't need reflection, so they work under Native AOT.
-        var myCustomType = JsonSerializer.Deserialize(request.InputText,
-            MycustomSerializationContext.Default.MyCustomType)!;
+        // Deserialized from the request's input text with MycustomSerializationContext
         var withTax = myCustomType.Price * 1.2m;
-        return BedrockFunctionResponse.WithText(
-            $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}");
+        return $"Total price with tax: {withTax.ToString("F2", CultureInfo.InvariantCulture)}";
     },
-    description: "Calculate total price with tax"
+    parameterName1: "myCustomType"
 );
 
 // --8<-- [end:custom_type_serialization_aot]
