@@ -1,4 +1,4 @@
-using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Internal;
+using AWS.Lambda.Powertools.Common.Utils;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json;
@@ -29,22 +29,53 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
         /// <param name="context">The Lambda context</param>
         /// <param name="serviceProvider">Optional service provider for dependency injection</param>
         /// <returns>Array of arguments to pass to the handler</returns>
-        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
-        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public object?[] MapParameters(
             MethodInfo methodInfo,
             BedrockFunctionRequest input,
             ILambdaContext? context,
             IServiceProvider? serviceProvider)
         {
+            return MapParameters(GetToolParameters(methodInfo), input, context, serviceProvider);
+        }
+
+        /// <summary>
+        /// Describes the parameters of a handler method, using the parameter names declared on the method.
+        /// </summary>
+        internal static ToolParameter[] GetToolParameters(MethodInfo methodInfo)
+        {
             var parameters = methodInfo.GetParameters();
+            var result = new ToolParameter[parameters.Length];
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                result[i] = new ToolParameter(parameters[i].ParameterType, parameters[i].Name ?? $"arg{i}");
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Maps the arguments for a tool handler from a Bedrock function request.
+        /// Parameters of type <see cref="ILambdaContext"/> and <see cref="BedrockFunctionRequest"/> are bound by
+        /// type, Bedrock parameter types are bound by name from the request, and other types are deserialized from
+        /// the request's input text or resolved from dependency injection.
+        /// </summary>
+        /// <param name="parameters">The handler parameters, in order</param>
+        /// <param name="input">The Bedrock function request</param>
+        /// <param name="context">The Lambda context</param>
+        /// <param name="serviceProvider">Optional service provider for dependency injection</param>
+        /// <returns>Array of arguments to pass to the handler</returns>
+        internal object?[] MapParameters(
+            ToolParameter[] parameters,
+            BedrockFunctionRequest input,
+            ILambdaContext? context,
+            IServiceProvider? serviceProvider)
+        {
             var args = new object?[parameters.Length];
             var accessor = new ParameterAccessor(input.Parameters);
 
             for (var i = 0; i < parameters.Length; i++)
             {
-                var parameter = parameters[i];
-                var paramType = parameter.ParameterType;
+                var paramType = parameters[i].Type;
 
                 if (paramType == typeof(ILambdaContext))
                 {
@@ -65,37 +96,10 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
                 {
                     try
                     {
-                        var options = new JsonSerializerOptions
+                        args[i] = DeserializeInputText(input.InputText, paramType);
+                        if (args[i] != null)
                         {
-                            PropertyNameCaseInsensitive = true
-                        };
-
-                        if (_typeResolver != null)
-                        {
-                            options.TypeInfoResolver = _typeResolver;
-
-                            // Get the JsonTypeInfo for the parameter type
-                            var jsonTypeInfo = _typeResolver.GetTypeInfo(paramType, options);
-                            if (jsonTypeInfo != null)
-                            {
-                                // Use the AOT-friendly overload with JsonTypeInfo
-                                args[i] = JsonSerializer.Deserialize(input.InputText, jsonTypeInfo);
-
-                                if (args[i] != null)
-                                {
-                                    continue;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // Reflection-based fallback; this method is [RequiresUnreferencedCode]/[RequiresDynamicCode]
-                            args[i] = JsonSerializer.Deserialize(input.InputText, paramType, options);
-
-                            if (args[i] != null)
-                            {
-                                continue;
-                            }
+                            continue;
                         }
                     }
                     catch
@@ -106,7 +110,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
 
                 if (_validator.IsBedrockParameter(paramType))
                 {
-                    args[i] = MapBedrockParameter(paramType, parameter.Name ?? $"arg{i}", accessor);
+                    args[i] = MapBedrockParameter(paramType, parameters[i].Name, accessor);
                 }
                 else if (serviceProvider != null)
                 {
@@ -116,6 +120,58 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
             }
 
             return args;
+        }
+
+        private object? DeserializeInputText(string inputText, Type paramType)
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            if (_typeResolver != null)
+            {
+                options.TypeInfoResolver = _typeResolver;
+
+                // Get the JsonTypeInfo for the parameter type and use the AOT-friendly overload
+                var jsonTypeInfo = _typeResolver.GetTypeInfo(paramType, options);
+                return jsonTypeInfo != null ? JsonSerializer.Deserialize(inputText, jsonTypeInfo) : null;
+            }
+
+            return DeserializeWithReflectionIfAvailable(inputText, paramType, options);
+        }
+
+        /// <summary>
+        /// Deserializes with reflection-based System.Text.Json when it's available. In trimmed and Native AOT apps
+        /// it isn't, so the parameter falls through to the regular mapping, as it did when deserialization failed.
+        /// </summary>
+        [ExcludeFromCodeCoverage]
+        [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
+            Justification = "Only called when reflection-based serialization is enabled, which it isn't in trimmed " +
+                            "and Native AOT apps (JsonSerializer.IsReflectionEnabledByDefault feature switch).")]
+        [UnconditionalSuppressMessage("AOT", "IL3050:RequiresDynamicCode",
+            Justification = "Only called when dynamic code is supported and reflection-based serialization is " +
+                            "enabled, which they aren't in Native AOT apps.")]
+        private static object? DeserializeWithReflectionIfAvailable(string inputText, Type paramType,
+            JsonSerializerOptions options)
+        {
+            // JsonSerializer.IsReflectionEnabledByDefault is a feature switch that is false in trimmed and Native
+            // AOT apps, so the trimmer and ILC remove the guarded call. The analyzer doesn't treat it as a guard,
+            // hence the suppressions above. RuntimeFeatureWrapper lets tests simulate Native AOT.
+            if (JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported)
+            {
+                return DeserializeWithReflection(inputText, paramType, options);
+            }
+
+            return null;
+        }
+
+        [RequiresUnreferencedCode("Deserializes a parameter type that isn't known at compile time.")]
+        [RequiresDynamicCode("Deserializes a parameter type that isn't known at compile time.")]
+        private static object? DeserializeWithReflection(string inputText, Type paramType,
+            JsonSerializerOptions options)
+        {
+            return JsonSerializer.Deserialize(inputText, paramType, options);
         }
 
         private object? MapBedrockParameter(Type paramType, string paramName, ParameterAccessor accessor)
@@ -193,4 +249,9 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
             return null;
         }
     }
+
+    /// <summary>
+    /// A tool handler parameter: its type, and the name of the Bedrock request parameter it binds to.
+    /// </summary>
+    internal readonly record struct ToolParameter(Type Type, string Name);
 }
