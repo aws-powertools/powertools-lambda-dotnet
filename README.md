@@ -3,90 +3,75 @@
 ![aws provider](https://img.shields.io/badge/provider-AWS-orange?logo=amazon-aws&color=ff9900)
 [![Build](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/aws-powertools/powertools-lambda-dotnet/actions/workflows/build.yml)
 [![codecov.io](https://codecov.io/github/aws-powertools/powertools-lambda-dotnet/branch/develop/graphs/badge.svg)](https://app.codecov.io/gh/aws-powertools/powertools-lambda-dotnet)
-[![dotnet support](https://img.shields.io/static/v1?label=dotnet&message=%20NET8.0&color=blue?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+[![dotnet support](https://img.shields.io/badge/dotnet-.NET_8.0_%7C_10.0-blue?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/en-us/download/dotnet)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/AWS.Lambda.Powertools.Logging.svg)](https://www.nuget.org/packages?q=AWS.Lambda.Powertools) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/aws-powertools/powertools-lambda-dotnet/badge)](https://scorecard.dev/viewer/?uri=github.com/aws-powertools/powertools-lambda-dotnet)
 [![Discord](https://img.shields.io/badge/Discord-Join_Community-7289da.svg)](https://discord.gg/B8zZKbbyET)
 
-Powertools for AWS Lambda (.NET) is a developer toolkit to implement Serverless [best practices and increase developer velocity](https://docs.powertools.aws.dev/lambda-dotnet/#features).
+Powertools for AWS Lambda (.NET) is a developer toolkit to implement Serverless [best practices and increase developer velocity](https://docs.aws.amazon.com/powertools/dotnet/#features).
 
-> Also available in [Java](https://github.com/aws-powertools/powertools-lambda-java), [Typescript](https://github.com/aws-powertools/powertools-lambda-typescript), and [Python](https://github.com/aws-powertools/powertools-lambda-python).
+> Also available in [Python](https://github.com/aws-powertools/powertools-lambda-python), [TypeScript](https://github.com/aws-powertools/powertools-lambda-typescript), and [Java](https://github.com/aws-powertools/powertools-lambda-java).
 
-**[📜 Documentation](https://docs.powertools.aws.dev/lambda-dotnet/)** | **[NuGet](https://www.nuget.org/packages?q=AWS.Lambda.Powertools)** | **[Roadmap](https://github.com/orgs/aws-powertools/projects/6)** | **[Examples](#examples)**
-
-> **Join us on the AWS Developers Slack at `#lambda-powertools`** - **[Invite, if you don't have an account](https://join.slack.com/t/awsdevelopers/shared_invite/zt-gu30gquv-EhwIYq3kHhhysaZ2aIX7ew)**
+**[📜 Documentation](https://docs.aws.amazon.com/powertools/dotnet/)** | **[NuGet](https://www.nuget.org/packages?q=AWS.Lambda.Powertools)** | **[Roadmap](https://github.com/orgs/aws-powertools/projects/6)** | **[Examples](#examples)**
 
 ## Features
 
-Powertools for AWS Lambda (.NET) provides three core utilities:
+Core utilities:
 
-* **[Logging](https://docs.aws.amazon.com/powertools/dotnet/core/logging/)** - provides a custom logger class that outputs structured JSON. It allows you to pass in strings or more complex objects, and will take care of serializing the log output. Common use cases—such as logging the Lambda event payload and capturing cold start information—are handled for you, including appending custom keys to the logger at anytime.
+* **[Logging](https://docs.aws.amazon.com/powertools/dotnet/core/logging/)** - structured JSON logging with Lambda context, cold start, correlation IDs, custom keys and optional event logging. Works with `ILogger`, ASP.NET Core and Native AOT.
 
-* **[Metrics](https://docs.aws.amazon.com/powertools/dotnet/core/metrics/)** - makes collecting custom metrics from your application simple, without the need to make synchronous requests to external systems. This functionality is powered by [Amazon CloudWatch Embedded Metric Format (EMF)](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format.html), which allows for capturing metrics asynchronously.
+* **[Metrics](https://docs.aws.amazon.com/powertools/dotnet/core/metrics/)** - custom metrics written asynchronously with [CloudWatch Embedded Metric Format (EMF)](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format.html),
+  with no synchronous calls to CloudWatch. `AWS.Lambda.Powertools.Metrics.AspNetCore` adds middleware and endpoint filters for ASP.NET Core.
 
-* **[Tracing](https://docs.aws.amazon.com/powertools/dotnet/core/tracing/)** - provides a simple way to send traces from functions to AWS X-Ray to provide visibility into function calls, interactions with other AWS services, or external HTTP requests. Annotations can easily be added to traces to allow filtering traces based on key information. For example, when using Tracer, a ColdStart annotation is created for you so you can easily group and analyze traces where there was an initialization overhead.
+* **[Tracing](https://docs.aws.amazon.com/powertools/dotnet/core/tracing/)** - AWS X-Ray tracing for your handler, AWS SDK calls and outbound HTTP requests, with a `ColdStart` annotation added for you and support for custom annotations and metadata.
 
-* **[Parameters](https://docs.aws.amazon.com/powertools/dotnet/utilities/parameters/)** - provides high-level functionality to retrieve one or multiple parameter values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/). We also provide extensibility to bring your own providers.
+Event handlers:
 
-* **[Idempotency](https://docs.aws.amazon.com/powertools/dotnet/utilities/idempotency/)** - The idempotency utility provides a simple solution to convert your Lambda functions into idempotent operations which are safe to retry.
+* **[AppSync Events](https://docs.aws.amazon.com/powertools/dotnet/core/event_handler/appsync_events/)** - route AWS AppSync Events publish and subscribe operations to handlers by channel path, with support for wildcards and aggregated processing.
 
-* **[Batch Processing](https://docs.aws.amazon.com/powertools/dotnet/utilities/batch-processing/)** - The batch processing utility handles partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams, and Amazon DynamoDB Streams.
+* **[Bedrock Agent Functions](https://docs.aws.amazon.com/powertools/dotnet/core/event_handler/bedrock_agent_function/)** - register tools for Amazon Bedrock Agents and let the resolver handle parameter binding and response formatting. Also available for ASP.NET Core.
 
-* **[Event Handler AppSync Events](https://docs.aws.amazon.com/powertools/dotnet/core/event_handler/appsync_events/)** - The event handler AppSync Events utility provides a simple way to handle AppSync events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
+Utilities:
 
-* **[Event Handler Bedrock Agent Functions](https://docs.aws.amazon.com/powertools/dotnet/core/event_handler/bedrock_agent_function/)** - The event handler Bedrock Agent Functions utility provides a simple way to handle Amazon Bedrock agent function events in your Lambda functions. It allows you to easily parse the event and access the data you need, without having to write complex code.
+* **[Parameters](https://docs.aws.amazon.com/powertools/dotnet/utilities/parameters/)** - retrieve and cache values from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html), [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/), [AWS AppConfig](https://docs.aws.amazon.com/appconfig/latest/userguide/what-is-appconfig.html)
+  or [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), or bring your own provider.
+
+* **[Idempotency](https://docs.aws.amazon.com/powertools/dotnet/utilities/idempotency/)** - make Lambda functions safe to retry by storing results in Amazon DynamoDB and returning them for repeated events.
+
+* **[Batch Processing](https://docs.aws.amazon.com/powertools/dotnet/utilities/batch-processing/)** - handle partial failures when processing batches from Amazon SQS, Amazon Kinesis Data Streams and Amazon DynamoDB Streams.
+
+* **[Kafka Consumer](https://docs.aws.amazon.com/powertools/dotnet/utilities/kafka/)** - deserialize Avro, Protobuf and JSON keys and values from Amazon MSK and self-managed Apache Kafka events, with Schema Registry support.
+
+* **[JMESPath Functions](https://docs.aws.amazon.com/powertools/dotnet/utilities/jmespath-functions/)** - extract data from event payloads with JMESPath, including built-in functions to decode JSON strings, base64 and compressed data.
+
+* **[Lambda Metadata](https://docs.aws.amazon.com/powertools/dotnet/utilities/metadata/)** - read execution environment metadata, such as the Availability Zone ID, from the Lambda Metadata Endpoint, cached for the lifetime of the execution environment.
 
 ### Installation
 
-The Powertools for AWS Lambda (.NET) utilities are available as NuGet packages. You can install the packages from [NuGet Gallery](https://www.nuget.org/packages?q=AWS+Lambda+Powertools*) or from Visual Studio editor by searching `AWS.Lambda.Powertools*` to see various utilities available.
+The utilities are published as separate NuGet packages, so you only install what you use. Browse them on the [NuGet Gallery](https://www.nuget.org/packages?q=AWS.Lambda.Powertools) or install with `dotnet add package`:
 
-* [AWS.Lambda.Powertools.Logging](https://www.nuget.org/packages/AWS.Lambda.Powertools.Logging):
+| Utility | Package |
+| --- | --- |
+| Logging | [`AWS.Lambda.Powertools.Logging`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Logging) |
+| Metrics | [`AWS.Lambda.Powertools.Metrics`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics) |
+| Metrics for ASP.NET Core | [`AWS.Lambda.Powertools.Metrics.AspNetCore`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics.AspNetCore) |
+| Tracing | [`AWS.Lambda.Powertools.Tracing`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Tracing) |
+| AppSync Events | [`AWS.Lambda.Powertools.EventHandler`](https://www.nuget.org/packages/AWS.Lambda.Powertools.EventHandler) |
+| Bedrock Agent Functions | [`AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction`](https://www.nuget.org/packages/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction) |
+| Bedrock Agent Functions for ASP.NET Core | [`AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore`](https://www.nuget.org/packages/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore) |
+| Parameters | [`AWS.Lambda.Powertools.Parameters`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Parameters) |
+| Idempotency | [`AWS.Lambda.Powertools.Idempotency`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Idempotency) |
+| Batch Processing | [`AWS.Lambda.Powertools.BatchProcessing`](https://www.nuget.org/packages/AWS.Lambda.Powertools.BatchProcessing) |
+| Kafka Consumer (Avro) | [`AWS.Lambda.Powertools.Kafka.Avro`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Kafka.Avro) |
+| Kafka Consumer (Protobuf) | [`AWS.Lambda.Powertools.Kafka.Protobuf`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Kafka.Protobuf) |
+| Kafka Consumer (JSON) | [`AWS.Lambda.Powertools.Kafka.Json`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Kafka.Json) |
+| JMESPath Functions | [`AWS.Lambda.Powertools.JMESPath`](https://www.nuget.org/packages/AWS.Lambda.Powertools.JMESPath) |
+| Lambda Metadata | [`AWS.Lambda.Powertools.Metadata`](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metadata) |
 
-    `dotnet add package AWS.Lambda.Powertools.Logging`
+For example:
 
-* [AWS.Lambda.Powertools.Metrics](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics):
-
-    `dotnet add package AWS.Lambda.Powertools.Metrics`
-
-* [AWS.Lambda.Powertools.Metrics.AspNetCore](https://www.nuget.org/packages/AWS.Lambda.Powertools.Metrics.AspNetCore):
-
-    `dotnet add package AWS.Lambda.Powertools.Metrics.AspNetCore`
-
-* [AWS.Lambda.Powertools.Tracing](https://www.nuget.org/packages/AWS.Lambda.Powertools.Tracing):
-
-    `dotnet add package AWS.Lambda.Powertools.Tracing`
-
-* [AWS.Lambda.Powertools.Parameters](https://www.nuget.org/packages/AWS.Lambda.Powertools.Parameters):
-
-    `dotnet add package AWS.Lambda.Powertools.Parameters`
-
-* [AWS.Lambda.Powertools.Idempotency](https://www.nuget.org/packages/AWS.Lambda.Powertools.Idempotency):
-
-    `dotnet add package AWS.Lambda.Powertools.Idempotency`
-
-* [AWS.Lambda.Powertools.BatchProcessing](https://www.nuget.org/packages/AWS.Lambda.Powertools.BatchProcessing):
-
-    `dotnet add package AWS.Lambda.Powertools.BatchProcessing`
-
-* [AWS.Lambda.Powertools.EventHandler.AppSyncEvents](https://www.nuget.org/packages/AWS.Lambda.Powertools.EventHandler):
-
-    `dotnet add package AWS.Lambda.Powertools.EventHandler`
-
-* [AWS.Lambda.Powertools.EventHandler.BedrockAgentFunction](https://www.nuget.org/packages/AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction):
-
-    `dotnet add package AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction`
-
-* [AWS.Lambda.Powertools.Kafka.Avro](https://www.nuget.org/packages/AWS.Lambda.Powertools.Kafka.Avro):
-
-    `dotnet add package AWS.Lambda.Powertools.Kafka.Avro`
-
-* [AWS.Lambda.Powertools.Kafka.Json](https://www.nuget.org/packages/AWS.Lambda.Powertools.Kafka.Json):
-
-    `dotnet add package AWS.Lambda.Powertools.Kafka.Json`
-
-* [AWS.Lambda.Powertools.Kafka.Protobuf](https://www.nuget.org/packages/AWS.Lambda.Powertools.Kafka.Protobuf):
-
-    `dotnet add package AWS.Lambda.Powertools.Kafka.Protobuf`
-
+```bash
+dotnet add package AWS.Lambda.Powertools.Logging
+```
 
 ## Examples
 
@@ -114,11 +99,11 @@ The following companies, among others, use Powertools:
 
 ### Sharing your work
 
-Share what you did with Powertools for AWS Lambda (.NET) 💞💞. Blog post, workshops, presentation, sample apps and others. Check out what the community has already shared about Powertools for AWS Lambda (.NET) [here](https://docs.aws.amazon.com/powertools/dotnet/we_made_this/).
+Share what you built with Powertools for AWS Lambda (.NET): blog posts, workshops, talks, sample apps and more. See what the community has already shared on the [We Made This](https://docs.aws.amazon.com/powertools/dotnet/we_made_this/) page.
 
 ### 👋 Contributing
 
-We welcome contributions from developers of all levels to our open-source project on GitHub. If you'd like to contribute, please check our contributing guidelines and help make this project more accessible.
+We welcome contributions from developers of all levels. Read the [contributing guidelines](CONTRIBUTING.md) to get started, and look for issues labelled [`good first issue`](https://github.com/aws-powertools/powertools-lambda-dotnet/labels/good%20first%20issue) or [`help wanted`](https://github.com/aws-powertools/powertools-lambda-dotnet/labels/help%20wanted).
 
 [![Star History Chart](https://api.star-history.com/svg?repos=aws-powertools/powertools-lambda-dotnet&type=Date)](https://star-history.com/#aws-powertools/powertools-lambda-dotnet&Date)
 
@@ -134,8 +119,8 @@ We welcome contributions from developers of all levels to our open-source projec
 
 ## Security disclosures
 
-If you think you’ve found a potential security issue, please do not post it in the Issues.  Instead, please follow the instructions [here](https://aws.amazon.com/security/vulnerability-reporting/) or [email AWS security directly](mailto:aws-security@amazon.com).
+If you think you've found a potential security issue, please do not post it in the Issues. Instead, please follow the [AWS vulnerability reporting instructions](https://aws.amazon.com/security/vulnerability-reporting/) or [email AWS security directly](mailto:aws-security@amazon.com).
 
 ## License
 
-This project is licensed under the Apache-2.0 License.
+This project is licensed under the [Apache-2.0 License](LICENSE).
