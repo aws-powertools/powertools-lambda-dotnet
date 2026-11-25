@@ -11,7 +11,7 @@ Amazon Bedrock Agents can invoke functions to perform tasks based on user input.
 - **Automatic Parameter Handling**: Parameters are automatically extracted from Bedrock Agent requests and converted to the appropriate types
 - **Lambda Context Access**: Easy access to Lambda context for logging and AWS Lambda features
 - **Dependency Injection Support**: Seamless integration with .NET's dependency injection system
-- **AOT Compatibility**: Fully compatible with .NET 8 AOT compilation through source generation
+- **Native AOT Compatibility**: `RegisterTool<T>()` tool classes and the `Func<BedrockFunctionRequest, ...>` overloads work under Native AOT
 
 ## Terminology
 

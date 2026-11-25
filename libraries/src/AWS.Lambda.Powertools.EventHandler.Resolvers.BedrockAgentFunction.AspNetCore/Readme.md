@@ -8,7 +8,7 @@ This library provides ASP.NET Core integration for the AWS Lambda Powertools Bed
 ## Features
 
 - **Minimal API Integration**: Register Bedrock Agent functions using familiar ASP.NET Core Minimal API patterns
-- **AOT Compatibility**: Full support for .NET 8 AOT compilation through source generation
+- **Native AOT Compatibility**: `MapBedrockToolType<T>()` works under Native AOT (see [Native AOT](#native-aot))
 - **Simple Function Registration**: Register functions with a fluent API
 - **Automatic Request Processing**: Automatic parsing of Bedrock Agent requests and formatting of responses
 - **Error Handling**: Built-in error handling for Bedrock Agent function requests
@@ -82,7 +82,7 @@ app.MapBedrockFunction("GetWeather",
 
 ### Working with Tool Classes
 
-Use the `MapBedrockToolClass<T>()` method to register all functions from a class directly:
+Use the `MapBedrockToolType<T>()` method to register all functions from a class directly:
 
 ```csharp
 [BedrockFunctionType]
@@ -96,8 +96,12 @@ public class WeatherTools
 }
 
 // In Program.cs - directly register the tool class
-app.MapBedrockToolClass<WeatherTools>();
+app.MapBedrockToolType<WeatherTools>();
 ```
+
+### Native AOT
+
+`MapBedrockFunction` with a lambda such as `(string city, int month) => ...` reads the lambda's parameters with reflection, which isn't supported under Native AOT, and AOT builds warn where you call it. Under Native AOT, define the functions as static methods of a `[BedrockFunctionType]` class and map it with `MapBedrockToolType<T>()`, as shown in [Working with Tool Classes](#working-with-tool-classes).
 
 ## How It Works
 

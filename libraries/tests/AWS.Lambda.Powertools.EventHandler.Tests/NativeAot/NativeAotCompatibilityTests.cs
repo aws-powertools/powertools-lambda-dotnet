@@ -51,8 +51,7 @@ public class NativeAotCompatibilityTests
         nameof(BedrockAgentFunctionResolver.Tool) + "(String, Delegate)",
         nameof(BedrockAgentFunctionResolver.Tool) + "(String, String, Delegate)",
         nameof(BedrockAgentFunctionResolver.Tool) + "`1(String, Delegate)",
-        nameof(BedrockAgentFunctionResolver.Tool) + "`1(String, String, Delegate)",
-        nameof(BedrockResolverExtensions.RegisterTool) + "`1(BedrockAgentFunctionResolver)"
+        nameof(BedrockAgentFunctionResolver.Tool) + "`1(String, String, Delegate)"
     };
 
     [Theory]
@@ -79,6 +78,18 @@ public class NativeAotCompatibilityTests
         Assert.NotNull(method);
         Assert.Null(method!.GetCustomAttribute<RequiresUnreferencedCodeAttribute>());
         Assert.Null(method.GetCustomAttribute<RequiresDynamicCodeAttribute>());
+    }
+
+    [Fact]
+    public void RegisterTool_IsAotCompatible()
+    {
+        var method = FindMethod(nameof(BedrockResolverExtensions.RegisterTool) + "`1(BedrockAgentFunctionResolver)");
+
+        Assert.Null(method.GetCustomAttribute<RequiresUnreferencedCodeAttribute>());
+        Assert.Null(method.GetCustomAttribute<RequiresDynamicCodeAttribute>());
+        // Keeps the tool methods and their metadata in trimmed and Native AOT apps.
+        var annotation = method.GetGenericArguments()[0].GetCustomAttribute<DynamicallyAccessedMembersAttribute>();
+        Assert.Equal(DynamicallyAccessedMemberTypes.PublicMethods, annotation!.MemberTypes);
     }
 
     private static MethodInfo FindMethod(string signature)
