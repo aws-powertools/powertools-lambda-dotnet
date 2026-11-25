@@ -1,3 +1,5 @@
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Internal;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -27,6 +29,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
         /// <param name="context">The Lambda context</param>
         /// <param name="serviceProvider">Optional service provider for dependency injection</param>
         /// <returns>Array of arguments to pass to the handler</returns>
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public object?[] MapParameters(
             MethodInfo methodInfo,
             BedrockFunctionRequest input,
@@ -85,10 +89,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Help
                         }
                         else
                         {
-                            // Fallback to non-AOT deserialization with warning
-#pragma warning disable IL2026, IL3050
+                            // Reflection-based fallback; this method is [RequiresUnreferencedCode]/[RequiresDynamicCode]
                             args[i] = JsonSerializer.Deserialize(input.InputText, paramType, options);
-#pragma warning restore IL2026, IL3050
 
                             if (args[i] != null)
                             {

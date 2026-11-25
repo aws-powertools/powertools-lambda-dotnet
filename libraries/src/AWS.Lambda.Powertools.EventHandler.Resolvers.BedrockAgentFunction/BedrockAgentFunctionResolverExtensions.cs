@@ -1,3 +1,4 @@
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Internal;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -61,6 +62,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// resolver.RegisterTool&lt;WeatherTools&gt;();
         /// </code>
         /// </example>
+        [RequiresUnreferencedCode(AotMessages.RegisterTool)]
+        [RequiresDynamicCode(AotMessages.RegisterTool)]
         public static BedrockAgentFunctionResolver RegisterTool<
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] T>(
             this BedrockAgentFunctionResolver resolver)
@@ -94,6 +97,7 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             return resolver;
         }
 
+        [RequiresDynamicCode(AotMessages.RegisterTool)]
         private static Type GetDelegateType(MethodInfo method)
         {
             var parameters = method.GetParameters();
