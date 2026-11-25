@@ -78,12 +78,6 @@ jobs:
         run: |
           dotnet nuget add source ${{ github.workspace }}/packages --name local
 
-      # Ensure we preserve access to NuGet.org
-      - name: Configure NuGet.org source
-        continue-on-error: true
-        run: |
-          dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget.org
-
       - name: Update docs snippets to use local packages
         run: |
           project=./docs/snippets/Snippets.csproj
