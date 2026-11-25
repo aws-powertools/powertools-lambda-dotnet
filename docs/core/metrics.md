@@ -342,6 +342,8 @@ If it's a cold start invocation, this feature will:
 
 This has the advantage of keeping cold start metric separate from your application metrics, where you might have unrelated dimensions.
 
+Execution environments initialized for [provisioned concurrency](https://docs.aws.amazon.com/lambda/latest/dg/provisioned-concurrency.html){target="_blank"} (`AWS_LAMBDA_INITIALIZATION_TYPE` is `provisioned-concurrency`) are not counted as cold starts, so no `ColdStart` metric is emitted for them. This applies to the `[Metrics]` attribute and to the ASP.NET Core middleware and filter.
+
 ## Advanced
 
 ### Adding metadata
