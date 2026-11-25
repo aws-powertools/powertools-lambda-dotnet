@@ -161,6 +161,120 @@ public class TracingAspectTests
     }
 
     [Fact]
+    public async Task Around_AsyncMethodReturningTypedReferenceType_UnderAot_CapturesResponse()
+    {
+        // Arrange
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+        PowertoolsTracingSerializer.AddSerializerContext(new TestJsonContext(new JsonSerializerOptions()));
+
+        var methodName = "TestTypedAsyncMethod";
+        var result = new TestResponse { Message = "typed async result" };
+        Func<object[], object> target = _ => Task.FromResult(result);
+
+        // Act
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target,
+            new Attribute[] { new TracingAttribute() });
+
+        // Assert
+        Assert.Same(result, await Assert.IsType<Task<TestResponse>>(taskResult));
+        _mockXRayRecorder.Received(1).AddMetadata(
+            Arg.Any<string>(),
+            $"{methodName} response",
+            PowertoolsTracingSerializer.Serialize(result));
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+
+    [Fact]
+    public async Task Around_AsyncMethodReturningValueType_UnderAot_SkipsResponseCapture()
+    {
+        // Arrange: under Native AOT, Task<T>.Result can't be read for value-type T
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+
+        var methodName = "TestValueTypeAsyncMethod";
+        Func<object[], object> target = _ => Task.FromResult(42);
+
+        // Act
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target,
+            new Attribute[] { new TracingAttribute() });
+
+        // Assert
+        Assert.Equal(42, await Assert.IsType<Task<int>>(taskResult));
+        _mockXRayRecorder.DidNotReceive().AddMetadata(Arg.Any<string>(), $"{methodName} response", Arg.Any<object>());
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+
+    [Fact]
+    public async Task Around_AsyncMethodReturningValueType_WithDynamicCode_CapturesResponse()
+    {
+        // Arrange
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(true);
+
+        var methodName = "TestValueTypeAsyncMethodJit";
+        Func<object[], object> target = _ => Task.FromResult(42);
+
+        // Act
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target,
+            new Attribute[] { new TracingAttribute() });
+
+        // Assert
+        Assert.Equal(42, await Assert.IsType<Task<int>>(taskResult));
+        _mockXRayRecorder.Received(1).AddMetadata(Arg.Any<string>(), $"{methodName} response", 42);
+    }
+
+    [Fact]
+    public async Task Around_TaskSubclassOfTaskOfT_CapturesResponse()
+    {
+        // Arrange: a non-generic class deriving from Task<string>
+        RuntimeFeatureWrapper.SetIsDynamicCodeSupported(false);
+        var methodName = "TestTaskSubclass";
+        Func<object[], object> target = _ => new StringTask("from subclass");
+
+        // Act
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target,
+            new Attribute[] { new TracingAttribute() });
+
+        // Assert
+        Assert.Equal("from subclass", await Assert.IsType<StringTask>(taskResult));
+        _mockXRayRecorder.Received(1).AddMetadata(
+            Arg.Any<string>(),
+            $"{methodName} response",
+            PowertoolsTracingSerializer.Serialize("from subclass"));
+    }
+
+    [Fact]
+    public async Task Around_GenericTaskSubclassWithoutResult_DoesNotCaptureResponse()
+    {
+        // Arrange: a generic class deriving from Task (not Task<T>), so there is no result to capture
+        var methodName = "TestGenericTaskWithoutResult";
+        Func<object[], object> target = _ => new GenericTaskWithoutResult<string>();
+
+        // Act
+        var taskResult = _handler.Around(methodName, Array.Empty<object>(), target,
+            new Attribute[] { new TracingAttribute() });
+
+        // Assert
+        await Assert.IsType<GenericTaskWithoutResult<string>>(taskResult);
+        _mockXRayRecorder.DidNotReceive().AddMetadata(Arg.Any<string>(), $"{methodName} response", Arg.Any<object>());
+        _mockXRayRecorder.Received(1).EndSubsegment();
+    }
+
+    private sealed class StringTask : Task<string>
+    {
+        public StringTask(string value) : base(() => value)
+        {
+            RunSynchronously();
+        }
+    }
+
+    private sealed class GenericTaskWithoutResult<T> : Task
+    {
+        public GenericTaskWithoutResult() : base(() => { })
+        {
+            RunSynchronously();
+        }
+    }
+
+    [Fact]
     public async Task Around_VoidAsyncMethod_HandlesSegmentCorrectly()
     {
         // Arrange
