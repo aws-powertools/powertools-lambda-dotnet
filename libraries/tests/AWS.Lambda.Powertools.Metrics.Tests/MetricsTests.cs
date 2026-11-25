@@ -273,6 +273,79 @@ public class MetricsTests : IDisposable
     }
 
     [Fact]
+    public void When_ColdStart_Captured_Multiple_Times_Should_Not_Throw_Or_Mutate_DefaultDimensions()
+    {
+        // Arrange
+        var options = new MetricsOptions
+        {
+            CaptureColdStart = true,
+            Namespace = "dotnet-powertools-test",
+            DefaultDimensions = new Dictionary<string, string>
+            {
+                { "Environment", "Test" }
+            }
+        };
+
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        var consoleWrapper = Substitute.For<IConsoleWrapper>();
+        IMetrics metrics = new Metrics(conf, consoleWrapper: consoleWrapper, options: options);
+
+        var context = new TestLambdaContext
+        {
+            FunctionName = "TestFunction"
+        };
+
+        // Act
+        metrics.CaptureColdStartMetric(context);
+        metrics.CaptureColdStartMetric(context);
+
+        // Assert
+        consoleWrapper.Received(2).WriteLine(
+            Arg.Is<string>(s =>
+                s.Contains("\"Name\":\"ColdStart\",\"Unit\":\"Count\"") &&
+                s.Contains("\"Environment\":\"Test\"") &&
+                s.Contains("\"FunctionName\":\"TestFunction\"") &&
+                s.Contains("\"ColdStart\":1"))
+        );
+        Assert.Equal(new Dictionary<string, string> { { "Environment", "Test" } }, options.DefaultDimensions);
+    }
+
+    [Fact]
+    public void When_ColdStart_And_DefaultDimensions_Contains_FunctionName_Should_Not_Throw()
+    {
+        // Arrange
+        var options = new MetricsOptions
+        {
+            CaptureColdStart = true,
+            Namespace = "dotnet-powertools-test",
+            DefaultDimensions = new Dictionary<string, string>
+            {
+                { "FunctionName", "ConfiguredName" }
+            }
+        };
+
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        var consoleWrapper = Substitute.For<IConsoleWrapper>();
+        IMetrics metrics = new Metrics(conf, consoleWrapper: consoleWrapper, options: options);
+
+        var context = new TestLambdaContext
+        {
+            FunctionName = "TestFunction"
+        };
+
+        // Act
+        metrics.CaptureColdStartMetric(context);
+
+        // Assert
+        consoleWrapper.Received(1).WriteLine(
+            Arg.Is<string>(s =>
+                s.Contains("\"Dimensions\":[[\"FunctionName\"]]") &&
+                s.Contains("\"FunctionName\":\"TestFunction\",\"ColdStart\":1"))
+        );
+        Assert.Equal(new Dictionary<string, string> { { "FunctionName", "ConfiguredName" } }, options.DefaultDimensions);
+    }
+
+    [Fact]
     public void When_ColdStart_And_DefaultDimensions_Is_Null_Should_Only_Add_Service_And_FunctionName()
     {
         // Arrange
