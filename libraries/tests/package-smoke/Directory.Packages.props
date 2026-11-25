@@ -1,0 +1,32 @@
+<Project>
+    <!--
+        Only here so that libraries/tests/Directory.Packages.props is not used.
+        The Powertools packages are pinned to $(PowertoolsPackageVersion), the version of the locally packed packages.
+    -->
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageVersion Include="AWS.Lambda.Powertools.BatchProcessing" Version="$(PowertoolsPackageVersion)" />
+        <PackageVersion Include="AWS.Lambda.Powertools.Idempotency" Version="$(PowertoolsPackageVersion)" />
+        <PackageVersion Include="AWS.Lambda.Powertools.Logging" Version="$(PowertoolsPackageVersion)" />
+        <PackageVersion Include="AWS.Lambda.Powertools.Metrics" Version="$(PowertoolsPackageVersion)" />
+        <PackageVersion Include="AWS.Lambda.Powertools.Metrics.AspNetCore" Version="$(PowertoolsPackageVersion)" />
+        <PackageVersion Include="AWS.Lambda.Powertools.Parameters" Version="$(PowertoolsPackageVersion)" />
+        <PackageVersion Include="AWS.Lambda.Powertools.Tracing" Version="$(PowertoolsPackageVersion)" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageVersion Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.2" />
+        <PackageVersion Include="Amazon.Lambda.Core" Version="2.8.0" />
+        <PackageVersion Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.1" />
+        <PackageVersion Include="Amazon.Lambda.KinesisEvents" Version="3.0.0" />
+        <PackageVersion Include="Amazon.Lambda.SQSEvents" Version="2.2.0" />
+        <PackageVersion Include="Amazon.Lambda.TestUtilities" Version="3.0.1" />
+        <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="8.0.13" Condition="'$(TargetFramework)' == 'net8.0'" />
+        <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.1" Condition="'$(TargetFramework)' == 'net10.0'" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+        <PackageVersion Include="NSubstitute" Version="5.3.0" />
+        <PackageVersion Include="xunit" Version="2.7.0" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" />
+    </ItemGroup>
+</Project>

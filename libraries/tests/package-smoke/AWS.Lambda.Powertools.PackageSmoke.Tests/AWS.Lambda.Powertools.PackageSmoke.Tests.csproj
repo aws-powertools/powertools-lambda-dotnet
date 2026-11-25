@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+        Smoke tests that consume Powertools as NuGet packages, the way users do. They catch packaging problems
+        (missing dependencies, embedded Common/JMESPath sources, build targets, aspect weaving) that the unit
+        tests can't see because those use ProjectReferences.
+
+        This project is deliberately not in AWS.Lambda.Powertools.sln and must never use ProjectReferences to
+        libraries/src. It runs in .github/workflows/publish-artifacts.yml against the freshly packed packages.
+
+        To run locally, pack the libraries into a folder the same way the workflow does, then run dotnet test on
+        this project with two properties:
+            -p:PowertoolsPackageVersion=<version of the packed packages, e.g. 1.0.0-local1>
+            -p:PowertoolsPackageSource=<folder with the packed .nupkg files>
+
+        Use a new version suffix for every pack: NuGet caches packages by version in ~/.nuget/packages.
+    -->
+    <PropertyGroup>
+        <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <!-- Outside the AWS.Lambda.Powertools namespace, like user code. -->
+        <RootNamespace>PackageSmoke.Tests</RootNamespace>
+        <!-- Optional extra feed with the packed packages, for local runs. CI registers it as a NuGet source instead. -->
+        <RestoreAdditionalProjectSources Condition="'$(PowertoolsPackageSource)' != ''">$(PowertoolsPackageSource)</RestoreAdditionalProjectSources>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AWS.Lambda.Powertools.BatchProcessing" />
+        <PackageReference Include="AWS.Lambda.Powertools.Idempotency" />
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" />
+        <PackageReference Include="AWS.Lambda.Powertools.Metrics" />
+        <PackageReference Include="AWS.Lambda.Powertools.Metrics.AspNetCore" />
+        <PackageReference Include="AWS.Lambda.Powertools.Parameters" />
+        <PackageReference Include="AWS.Lambda.Powertools.Tracing" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" />
+        <PackageReference Include="Amazon.Lambda.Core" />
+        <PackageReference Include="Amazon.Lambda.DynamoDBEvents" />
+        <PackageReference Include="Amazon.Lambda.KinesisEvents" />
+        <PackageReference Include="Amazon.Lambda.SQSEvents" />
+        <PackageReference Include="Amazon.Lambda.TestUtilities" />
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="NSubstitute" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <Target Name="RequirePowertoolsPackageVersion" BeforeTargets="CollectPackageReferences;Build">
+        <Error Condition="'$(PowertoolsPackageVersion)' == ''"
+               Text="Set -p:PowertoolsPackageVersion=&lt;version&gt; to the version of the packed Powertools packages." />
+    </Target>
+
+</Project>
