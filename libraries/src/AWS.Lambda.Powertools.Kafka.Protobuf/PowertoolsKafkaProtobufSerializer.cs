@@ -65,8 +65,6 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
     /// - UUID schema ID (16+ chars): Glue format - removes magic uint32
     /// - Short schema ID (≤10 chars): Confluent format - removes message indexes
     /// </summary>
-    [RequiresDynamicCode("Protobuf deserialization might require runtime code generation.")]
-    [RequiresUnreferencedCode("Protobuf deserialization might require types that cannot be statically analyzed.")]
     protected override object? DeserializeComplexTypeFormat(byte[] data,
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
                                     DynamicallyAccessedMemberTypes.PublicFields)]
@@ -160,7 +158,8 @@ public class PowertoolsKafkaProtobufSerializer : PowertoolsKafkaSerializerBase
     /// <summary>
     /// Gets the Protobuf parser for the specified type.
     /// </summary>
-    private MessageParser? GetProtobufParser(Type messageType)
+    private MessageParser? GetProtobufParser(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type messageType)
     {
         var parserProperty = messageType.GetProperty("Parser", BindingFlags.Public | BindingFlags.Static);
         return parserProperty?.GetValue(null) as MessageParser;

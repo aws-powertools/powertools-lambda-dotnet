@@ -63,10 +63,14 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
     /// Deserializes complex (non-primitive) types using Avro format.
     /// Requires types to have a public static _SCHEMA field.
     /// </summary>
-    [RequiresDynamicCode("Avro deserialization might require runtime code generation.")]
-    [RequiresUnreferencedCode("Avro deserialization might require types that cannot be statically analyzed.")]
+    /// <remarks>
+    /// The key and value types of <see cref="ConsumerRecords{TK,T}"/> are kept automatically under Native AOT.
+    /// Apache.Avro finds the classes of nested records by name and creates the collections of array and map fields
+    /// with reflection, so records with those need extra configuration; see the Native AOT section of the docs.
+    /// </remarks>
     protected override object? DeserializeComplexTypeFormat(byte[] data,
-        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)]
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties |
+                                    DynamicallyAccessedMemberTypes.PublicFields)]
         Type targetType, bool isKey, SchemaMetadata? schemaMetadata = null)
     {
         var schema = GetAvroSchema(targetType);
@@ -87,8 +91,6 @@ public class PowertoolsKafkaAvroSerializer : PowertoolsKafkaSerializerBase
     /// <summary>
     /// Gets the Avro schema for the specified type from its static _SCHEMA field.
     /// </summary>
-    [RequiresDynamicCode("Avro schema access requires reflection.")]
-    [RequiresUnreferencedCode("Avro schema access requires reflection.")]
     private Schema? GetAvroSchema(
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] Type payloadType)
     {
