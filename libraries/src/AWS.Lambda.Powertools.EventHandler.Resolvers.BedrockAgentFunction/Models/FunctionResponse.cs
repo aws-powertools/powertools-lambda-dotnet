@@ -22,7 +22,6 @@ public class FunctionResponse
     /// REPROMPT – The agent passes a response string to the model to reprompt it. Applies when the function execution fails because of invalid input.
     /// </summary>
     [JsonPropertyName("responseState")]
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ResponseState? ResponseState { get; set; }
 }
@@ -30,6 +29,7 @@ public class FunctionResponse
 /// <summary>
 /// Represents the response state of a function response.
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter<ResponseState>))]
 public enum ResponseState
 {
     FAILURE,

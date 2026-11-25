@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -75,13 +76,34 @@ internal class PowertoolsLoggingSerializer
     /// <exception cref="InvalidOperationException">Thrown when the input type is not known to the serializer.</exception>
     internal string Serialize(object value, Type inputType)
     {
-        if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
-        {
-            var jsonSerializerOptions = GetSerializerOptions();
-#pragma warning disable
-            return JsonSerializer.Serialize(value, jsonSerializerOptions);
-        }
+        // RuntimeFeatureWrapper lets tests force the source-generated path
+        return RuntimeFeatureWrapper.IsDynamicCodeSupported
+            ? SerializeWithReflection(value, inputType)
+            : SerializeWithTypeInfo(value, inputType);
+    }
 
+    /// <summary>
+    /// Serializes with reflection when reflection-based serialization is enabled.
+    /// </summary>
+    /// <remarks>
+    /// JsonSerializer.IsReflectionEnabledByDefault is a feature switch that is false in trimmed and Native AOT apps.
+    /// The trimmer and ILC know it's false there, so they don't report the guarded reflection-based call; it has to
+    /// be checked right here for that to work. Excluded from coverage because the switch is always true in the test
+    /// process; the false side is verified with Native AOT publishes.
+    /// </remarks>
+    [ExcludeFromCodeCoverage]
+    private string SerializeWithReflection(object value, Type inputType)
+    {
+        if (!JsonSerializer.IsReflectionEnabledByDefault)
+            return SerializeWithTypeInfo(value, inputType);
+
+#pragma warning disable IL2026, IL3050 // Guarded by JsonSerializer.IsReflectionEnabledByDefault (see above).
+        return JsonSerializer.Serialize(value, GetSerializerOptions());
+#pragma warning restore IL2026, IL3050
+    }
+
+    private string SerializeWithTypeInfo(object value, Type inputType)
+    {
         // Try to serialize using the configured TypeInfoResolver
         var typeInfo = GetTypeInfo(inputType);
         if (typeInfo == null)

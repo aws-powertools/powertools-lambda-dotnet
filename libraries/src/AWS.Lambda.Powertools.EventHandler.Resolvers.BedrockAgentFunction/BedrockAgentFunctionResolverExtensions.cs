@@ -1,5 +1,5 @@
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Helpers;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,6 +61,11 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// resolver.RegisterTool&lt;WeatherTools&gt;();
         /// </code>
         /// </example>
+        /// <remarks>
+        /// <typeparamref name="T"/> is annotated so that its public methods, and their parameter names, are kept in
+        /// trimmed and Native AOT apps. The tool methods are invoked with <see cref="MethodBase.Invoke(object, object[])"/>,
+        /// so this works under Native AOT.
+        /// </remarks>
         public static BedrockAgentFunctionResolver RegisterTool<
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] T>(
             this BedrockAgentFunctionResolver resolver)
@@ -78,29 +83,15 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
                 var attr = method.GetCustomAttribute<BedrockFunctionToolAttribute>();
                 if (attr == null) continue;
 
-                string toolName = attr.Name ?? method.Name;
-                string description = attr.Description ??
-                                     string.Empty;
+                var toolName = attr.Name ?? method.Name;
 
-                // Create delegate from the static method
-                var del = Delegate.CreateDelegate(
-                    GetDelegateType(method),
-                    method);
-
-                // Call the Tool method directly instead of using reflection
-                resolver.Tool(toolName, description, del);
+                // Invoke the method directly rather than creating a typed delegate for it: delegate types over value
+                // types, such as Func<string, int, string>, have no native code under Native AOT.
+                resolver.RegisterBoundTool(toolName, ParameterMapper.GetToolParameters(method),
+                    args => method.Invoke(null, args));
             }
 
             return resolver;
-        }
-
-        private static Type GetDelegateType(MethodInfo method)
-        {
-            var parameters = method.GetParameters();
-            var parameterTypes = parameters.Select(p => p.ParameterType).ToList();
-            parameterTypes.Add(method.ReturnType);
-
-            return Expression.GetDelegateType(parameterTypes.ToArray());
         }
     }
 }

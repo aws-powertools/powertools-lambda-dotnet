@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 #if KAFKA_JSON
 namespace AWS.Lambda.Powertools.Kafka.Json;
@@ -16,7 +18,14 @@ namespace AWS.Lambda.Powertools.Kafka;
 /// </summary>
 /// <typeparam name="T">The type of the record values from the event.</typeparam>
 /// <typeparam name="TK">The type of Key values from the event.</typeparam>
-public class ConsumerRecords<TK, T> : IEnumerable<ConsumerRecord<TK, T>>
+/// <remarks>
+/// The key and value types are annotated so that trimming and Native AOT keep the members the serializers read
+/// (the Avro <c>_SCHEMA</c> field, the Protobuf <c>Parser</c> property and the parameterless constructor).
+/// </remarks>
+public class ConsumerRecords<
+    [DynamicallyAccessedMembers(PowertoolsKafkaSerializerBase.DeserializedMemberTypes)] TK,
+    [DynamicallyAccessedMembers(PowertoolsKafkaSerializerBase.DeserializedMemberTypes)] T>
+    : IEnumerable<ConsumerRecord<TK, T>>, IPopulatableConsumerRecords
 {
     /// <summary>
     /// Gets the event source (typically "aws:kafka").
@@ -55,4 +64,23 @@ public class ConsumerRecords<TK, T> : IEnumerable<ConsumerRecord<TK, T>>
     {
         return GetEnumerator();
     }
+
+    /// <inheritdoc />
+    void IPopulatableConsumerRecords.Populate(JsonElement root, PowertoolsKafkaSerializerBase serializer)
+    {
+        // The key and value types are known statically here, so the records are built without reflection.
+        serializer.PopulateConsumerRecords(this, root);
+    }
+}
+
+/// <summary>
+/// Lets <see cref="PowertoolsKafkaSerializerBase"/> fill a <see cref="ConsumerRecords{TK,T}"/> whose key and value
+/// types it only knows as the generic argument of <c>Deserialize&lt;T&gt;</c>.
+/// </summary>
+internal interface IPopulatableConsumerRecords
+{
+    /// <summary>
+    /// Populates the instance from the Lambda Kafka event.
+    /// </summary>
+    void Populate(JsonElement root, PowertoolsKafkaSerializerBase serializer);
 }

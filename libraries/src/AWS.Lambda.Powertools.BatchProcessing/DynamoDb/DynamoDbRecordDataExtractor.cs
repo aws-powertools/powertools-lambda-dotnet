@@ -2,6 +2,7 @@
 
 using System.Text.Json;
 using Amazon.Lambda.DynamoDBEvents;
+using AWS.Lambda.Powertools.BatchProcessing.Internal;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.DynamoDb;
 
@@ -27,17 +28,17 @@ public class DynamoDbRecordDataExtractor : IRecordDataExtractor<DynamoDBEvent.Dy
             return string.Empty;
 
         // Create a simplified representation of the DynamoDB record for deserialization
-        var recordData = new
+        var recordData = new DynamoDbRecordData
         {
-            record.EventName,
-            record.Dynamodb.Keys,
-            record.Dynamodb.NewImage,
-            record.Dynamodb.OldImage,
-            record.Dynamodb.SequenceNumber,
-            record.Dynamodb.SizeBytes,
-            record.Dynamodb.StreamViewType
+            EventName = record.EventName,
+            Keys = record.Dynamodb.Keys,
+            NewImage = record.Dynamodb.NewImage,
+            OldImage = record.Dynamodb.OldImage,
+            SequenceNumber = record.Dynamodb.SequenceNumber,
+            SizeBytes = record.Dynamodb.SizeBytes,
+            StreamViewType = record.Dynamodb.StreamViewType
         };
 
-        return JsonSerializer.Serialize(recordData);
+        return JsonSerializer.Serialize(recordData, BatchProcessingSerializationContext.Default.DynamoDbRecordData);
     }
 }

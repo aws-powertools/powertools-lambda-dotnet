@@ -28,11 +28,16 @@
     </ItemGroup>
 
     <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Using Include="Xunit"/>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.csproj" />
+      <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore\AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.AspNetCore.csproj" />
       <ProjectReference Include="..\..\src\AWS.Lambda.Powertools.EventHandler\AWS.Lambda.Powertools.EventHandler.csproj" />
     </ItemGroup>
 

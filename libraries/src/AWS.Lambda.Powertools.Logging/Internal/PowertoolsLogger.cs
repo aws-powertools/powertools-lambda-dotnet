@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using AWS.Lambda.Powertools.Common;
+using AWS.Lambda.Powertools.Common.Utils;
 using AWS.Lambda.Powertools.Logging.Internal.Helpers;
 using Microsoft.Extensions.Logging;
 
@@ -59,7 +62,7 @@ internal sealed class PowertoolsLogger : ILogger
     /// <returns>System.IDisposable.</returns>
     public IDisposable BeginScope<TState>(TState state)
     {
-        CurrentScope = new PowertoolsLoggerScope(this, GetScopeKeys(state));
+        CurrentScope = new PowertoolsLoggerScope(this, GetScopeKeys(state, _currentConfig().LogOutput));
         return CurrentScope;
     }
 
@@ -179,7 +182,7 @@ internal sealed class PowertoolsLogger : ILogger
         var structuredParameters = ExtractStructuredParameters(state, out _);
 
         // Format the message
-        var message = CustomFormatter(state, exception, out var customMessage) && customMessage is not null
+        var message = CustomFormatter(state, exception, _currentConfig().LogOutput, out var customMessage) && customMessage is not null
             ? customMessage
             : formatter(state, exception);
 
@@ -412,7 +415,20 @@ internal sealed class PowertoolsLogger : ILogger
             if (logObject is null)
                 throw new LogFormatException($"{logFormatter.GetType().FullName} returned Null value.");
 
-            return PowertoolsLoggerHelpers.ObjectToDictionary(logObject);
+            // Under Native AOT, anonymous types (and other types without a namespace) can't be read, so the
+            // formatter's output would be logged as {}. Fall back to the standard log entry instead.
+            if (PowertoolsLoggerHelpers.NeedsPropertyReflection(logObject.GetType())
+                && !(JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported))
+            {
+                var warning =
+                    PowertoolsLoggerHelpers.FormatterReturnedNamespacelessTypeUnderAotWarning(logFormatter.GetType());
+                if (OneTimeWarnings.ShouldWrite(warning))
+                    config.LogOutput.WriteLine(warning);
+
+                return GetLogEntry(logLevel, timestamp, message, exception, structuredParameters);
+            }
+
+            return PowertoolsLoggerHelpers.ObjectToDictionary(logObject, config.LogOutput);
         }
         catch (Exception e)
         {
@@ -427,10 +443,12 @@ internal sealed class PowertoolsLogger : ILogger
     /// <typeparam name="TState">The type of the object to be formatted.</typeparam>
     /// <param name="state">The entry to be formatted. Can be also an object.</param>
     /// <param name="exception">The exception related to this entry.</param>
+    /// <param name="warningOutput">Where to write one-time warnings.</param>
     /// <param name="message">The formatted message</param>
     /// <returns>bool</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool CustomFormatter<TState>(TState state, Exception exception, out object message)
+    private static bool CustomFormatter<TState>(TState state, Exception exception, IConsoleWrapper warningOutput,
+        out object message)
     {
         message = null;
         if (exception is not null)
@@ -441,7 +459,7 @@ internal sealed class PowertoolsLogger : ILogger
         {
             foreach (var kvp in keyValuePairs)
             {
-                stateKeys[kvp.Key] = PowertoolsLoggerHelpers.ObjectToDictionary(kvp.Value);
+                stateKeys[kvp.Key] = PowertoolsLoggerHelpers.ObjectToDictionary(kvp.Value, warningOutput);
             }
         }
 
@@ -501,8 +519,9 @@ internal sealed class PowertoolsLogger : ILogger
     /// </summary>
     /// <typeparam name="TState">The type of the state.</typeparam>
     /// <param name="state">The state.</param>
+    /// <param name="warningOutput">Where to write one-time warnings.</param>
     /// <returns>Dictionary&lt;System.String, System.Object&gt;.</returns>
-    private static Dictionary<string, object> GetScopeKeys<TState>(TState state)
+    private static Dictionary<string, object> GetScopeKeys<TState>(TState state, IConsoleWrapper warningOutput)
     {
         var keys = new Dictionary<string, object>();
 
@@ -539,23 +558,41 @@ internal sealed class PowertoolsLogger : ILogger
                     break;
                 }
 
-                // For complex objects, use reflection to get properties
-                foreach (var property in state.GetType().GetProperties())
+                // JsonSerializer.IsReflectionEnabledByDefault is false in trimmed and Native AOT apps, where the
+                // property metadata of the state's type isn't available. The trimmer and ILC know it's false there,
+                // so they don't report the guarded [RequiresUnreferencedCode] call.
+                // RuntimeFeatureWrapper lets tests simulate Native AOT.
+                if (JsonSerializer.IsReflectionEnabledByDefault && RuntimeFeatureWrapper.IsDynamicCodeSupported)
                 {
-                    try
-                    {
-                        keys.TryAdd(property.Name, property.GetValue(state));
-                    }
-                    catch
-                    {
-                        // Safely ignore reflection exceptions
-                    }
+#pragma warning disable IL2026 // Guarded by JsonSerializer.IsReflectionEnabledByDefault; needed for the net8.0 analyzer.
+                    AddPropertiesAsKeys(state, keys);
+#pragma warning restore IL2026
+                }
+                else if (OneTimeWarnings.ShouldWrite(PowertoolsLoggerHelpers.ObjectScopeStateUnderAotWarning))
+                {
+                    warningOutput.WriteLine(PowertoolsLoggerHelpers.ObjectScopeStateUnderAotWarning);
                 }
 
                 break;
         }
 
         return keys;
+    }
+
+    [RequiresUnreferencedCode("Reads the properties of types that can't be statically analyzed.")]
+    private static void AddPropertiesAsKeys(object state, Dictionary<string, object> keys)
+    {
+        foreach (var property in state.GetType().GetProperties())
+        {
+            try
+            {
+                keys.TryAdd(property.Name, property.GetValue(state));
+            }
+            catch
+            {
+                // Safely ignore reflection exceptions
+            }
+        }
     }
 
     /// <summary>

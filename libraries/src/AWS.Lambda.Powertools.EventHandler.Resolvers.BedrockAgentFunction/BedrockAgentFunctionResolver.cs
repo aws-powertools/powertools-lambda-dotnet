@@ -1,4 +1,7 @@
-﻿using System.Text.Json.Serialization.Metadata;
+using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Internal;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using System.Text.Json.Serialization.Metadata;
 using Amazon.Lambda.Core;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.EventHandler.Resolvers.BedrockAgentFunction.Models;
@@ -179,6 +182,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <param name="name">The name of the tool function</param>
         /// <param name="handler">The delegate handler function</param>
         /// <returns>The resolver instance for method chaining</returns>
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public BedrockAgentFunctionResolver Tool(
             string name,
             Delegate handler)
@@ -193,6 +198,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <param name="description">Description of the tool function</param>
         /// <param name="handler">The delegate handler function</param>
         /// <returns>The resolver instance for method chaining</returns>
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public BedrockAgentFunctionResolver Tool(
             string name,
             string description,
@@ -208,6 +215,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <param name="name">The name of the tool function</param>
         /// <param name="handler">The delegate handler function</param>
         /// <returns>The resolver instance for method chaining</returns>
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public BedrockAgentFunctionResolver Tool<TResult>(
             string name,
             Delegate handler)
@@ -223,6 +232,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
         /// <param name="description">Description of the tool function</param>
         /// <param name="handler">The delegate handler function</param>
         /// <returns>The resolver instance for method chaining</returns>
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         public BedrockAgentFunctionResolver Tool<TResult>(
             string name,
             string description,
@@ -237,6 +248,57 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             return this;
         }
 
+        /// <summary>
+        /// Registers a tool from a description of its parameters and a function that invokes it with the mapped
+        /// arguments. Used by <see cref="BedrockResolverExtensions.RegisterTool{T}"/>.
+        /// </summary>
+        internal BedrockAgentFunctionResolver RegisterBoundTool(string name, ToolParameter[] parameters,
+            Func<object?[], object?> invoke)
+        {
+            if (!CanRegisterTool(name))
+                return this;
+
+            _handlers[name] = CreateBoundToolHandler(name, parameters, invoke);
+            return this;
+        }
+
+        /// <summary>
+        /// Creates a handler that maps the arguments for <paramref name="parameters"/> from the request, invokes the
+        /// tool and converts its result, the same way as for Delegate tools.
+        /// </summary>
+        internal Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse> CreateBoundToolHandler(
+            string functionName, ToolParameter[] parameters, Func<object?[], object?> invoke)
+        {
+            return (input, context) =>
+            {
+                try
+                {
+                    var serviceProvider = (this as DiBedrockAgentFunctionResolver)?.ServiceProvider;
+                    var args = _parameterMapper.MapParameters(parameters, input, context, serviceProvider);
+                    var result = invoke(args);
+                    return _resultConverter.ProcessResult<object>(result, input, functionName, context);
+                }
+                catch (Exception ex)
+                {
+                    context?.Logger.LogError(ex.ToString());
+                    // Unwrap the exceptions added by MethodInfo.Invoke and by blocking on a faulted task, so the
+                    // message is the tool's own, as it is for Delegate tools.
+                    var toolException = ex is TargetInvocationException or AggregateException
+                        ? ex.InnerException ?? ex
+                        : ex;
+                    return BedrockFunctionResponse.WithText(
+                        $"Error when invoking tool: {toolException.Message}",
+                        input.ActionGroup,
+                        functionName,
+                        input.SessionAttributes,
+                        input.PromptSessionAttributes,
+                        new Dictionary<string, string>());
+                }
+            };
+        }
+
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         private Func<BedrockFunctionRequest, ILambdaContext?, BedrockFunctionResponse> RegisterToolHandler<TResult>(
             Delegate handler, string functionName)
         {
@@ -266,6 +328,8 @@ namespace AWS.Lambda.Powertools.EventHandler.Resolvers
             };
         }
 
+        [RequiresUnreferencedCode(AotMessages.DelegateTool)]
+        [RequiresDynamicCode(AotMessages.DelegateTool)]
         private BedrockFunctionResponse ExecuteHandlerAndProcessResult<TResult>(
             Delegate handler, 
             object?[] args, 

@@ -1032,6 +1032,8 @@ Lambda events.
 To use a custom log formatter with AOT, pass an instance of `ILogFormatter` to `PowertoolsSourceGeneratorSerializer`
 instead of using the static `Logger.UseFormatter` in the Function constructor as you do in non-AOT Lambdas.
 
+Return a type declared in a namespace and add it to your `JsonSerializerContext`. Under AOT, if your formatter returns an anonymous type (or another type declared without a namespace), its properties can't be read, so Powertools writes the standard log output instead and a one-time warning.
+
 === "Function Main method"
 
     ```csharp hl_lines="5"
@@ -1046,11 +1048,19 @@ instead of using the static `Logger.UseFormatter` in the Function constructor as
 
 ### Anonymous types
 
-!!! note
+!!! warning "Anonymous types are not supported under Native AOT"
 
-    While we support anonymous type serialization by converting to a `Dictionary<string, object>`, this is **not** a best practice and is **not recommended** when using native AOT. 
-    
-    We recommend using concrete classes and adding them to your `JsonSerializerContext`.
+    Native AOT removes the property metadata of anonymous types, and of other types declared without a namespace, so Powertools can't read them. Under AOT:
+
+    * `Logger.AppendKey("key", new { ... })` and `Logger.LogInformation(new { ... })` log the object as `{}`.
+    * `BeginScope(new { ... })` doesn't add scope keys. This applies to any object, including classes declared in a namespace.
+    * A custom log formatter that returns an anonymous type falls back to the standard log output.
+
+    Powertools writes a warning the first time this happens in an execution environment.
+
+    Use a `Dictionary<string, object>`, or a class declared in a namespace and added to your `JsonSerializerContext`. For `BeginScope`, pass a `Dictionary<string, object>`.
+
+    Without AOT, anonymous types are converted to a `Dictionary<string, object>` and logged as before.
 
 ## Testing
 

@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+using System;
 using System.Text.Json.Serialization;
 
 namespace AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
@@ -20,8 +21,19 @@ namespace AWS.Lambda.Powertools.Idempotency.Internal.Serializers;
 /// <summary>
 /// The source generated JsonSerializerContext to be used to Serialize Idempotency types
 /// </summary>
+/// <remarks>
+/// Includes the value types that <c>[Idempotent]</c> methods can return under Native AOT, so their results can be
+/// stored and replayed without the user registering them in their own context.
+/// </remarks>
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(object))]
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(long))]
+[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(double))]
+[JsonSerializable(typeof(decimal))]
+[JsonSerializable(typeof(Guid))]
+[JsonSerializable(typeof(DateTime))]
 public partial class IdempotencySerializationContext : JsonSerializerContext
 {
     
