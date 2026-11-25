@@ -1,10 +1,9 @@
 
 
 using System;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using AWS.Lambda.Powertools.BatchProcessing.Exceptions;
+using AWS.Lambda.Powertools.Common.Utils;
 
 namespace AWS.Lambda.Powertools.BatchProcessing.Internal;
 
@@ -19,8 +18,9 @@ internal static class AotCompatibilityHelper
     /// <returns>True if running in AOT mode, false otherwise.</returns>
     public static bool IsAotMode()
     {
-        // In AOT mode, RuntimeFeature.IsDynamicCodeSupported returns false
-        return !RuntimeFeature.IsDynamicCodeSupported;
+        // In AOT mode, RuntimeFeature.IsDynamicCodeSupported returns false.
+        // RuntimeFeatureWrapper lets tests simulate Native AOT.
+        return !RuntimeFeatureWrapper.IsDynamicCodeSupported;
     }
 
     /// <summary>
@@ -67,28 +67,6 @@ internal static class AotCompatibilityHelper
             }
             return false;
         }
-    }
-
-    /// <summary>
-    /// Provides a fallback deserialization strategy when JsonSerializerContext is not available in AOT mode.
-    /// </summary>
-    /// <typeparam name="T">The type to deserialize.</typeparam>
-    /// <param name="data">The JSON data to deserialize.</param>
-    /// <param name="options">The deserialization options.</param>
-    /// <returns>The deserialized object.</returns>
-    /// <exception cref="AotCompatibilityException">Thrown when AOT mode requires JsonSerializerContext but none is provided.</exception>
-
-    public static T FallbackDeserialize<T>(string data, DeserializationOptions options)
-    {
-        if (IsAotMode() && options?.JsonSerializerContext == null)
-        {
-            throw new AotCompatibilityException(typeof(T), 
-                "AOT compilation detected but no JsonSerializerContext provided. " +
-                "For AOT compatibility, provide a JsonSerializerContext with type information using DeserializationOptions.");
-        }
-
-        // Use reflection-based deserialization as fallback
-        return JsonSerializer.Deserialize<T>(data, options?.JsonSerializerOptions);
     }
 
     /// <summary>
