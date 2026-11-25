@@ -1,5 +1,4 @@
 using Amazon.Lambda.Core;
-using AWS.Lambda.Powertools.Common;
 using Microsoft.AspNetCore.Http;
 
 namespace AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
@@ -20,6 +19,7 @@ internal class ColdStartTracker
     private readonly IMetrics _metrics;
     private static bool _coldStart = true;
     private static readonly object _lock = new();
+    private const string InitializationTypeEnv = "AWS_LAMBDA_INITIALIZATION_TYPE";
     private const string ProvisionedConcurrency = "provisioned-concurrency";
 
     /// <summary>
@@ -45,7 +45,9 @@ internal class ColdStartTracker
             // Mark as consumed first so a failing capture is not retried on every request
             _coldStart = false;
 
-            if (PowertoolsConfigurations.Instance.AwsInitializationType == ProvisionedConcurrency) return;
+            // Read the variable directly: Common types are compiled into each package in Release,
+            // so referencing them here is ambiguous when Common is also referenced
+            if (Environment.GetEnvironmentVariable(InitializationTypeEnv) == ProvisionedConcurrency) return;
 
             _metrics.CaptureColdStartMetric(context.Items["LambdaContext"] as ILambdaContext);
         }
