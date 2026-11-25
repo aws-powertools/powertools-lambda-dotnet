@@ -97,7 +97,7 @@ public static class BedrockMinimalApiExtensions
             string requestBody;
             using (var reader = new StreamReader(context.Request.Body))
             {
-                requestBody = await reader.ReadToEndAsync();
+                requestBody = await reader.ReadToEndAsync(context.RequestAborted);
             }
 
             // Use source-generated serialization for the request
