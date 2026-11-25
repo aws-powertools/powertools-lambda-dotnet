@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Amazon.Lambda.TestUtilities;
 using AWS.Lambda.Powertools.Common;
 using AWS.Lambda.Powertools.Metrics.AspNetCore.Http;
@@ -236,6 +237,59 @@ public class MetricsMiddlewareExtensionsTests : IDisposable
         {
             Environment.SetEnvironmentVariable("AWS_LAMBDA_INITIALIZATION_TYPE", previous);
         }
+    }
+
+    [Fact]
+    public async Task When_UseMetrics_And_Endpoint_Resumes_On_Another_Thread_Should_Flush_Metrics_Added_Before_The_Await()
+    {
+        // Arrange
+        Metrics.ResetForTest();
+        var conf = Substitute.For<IPowertoolsConfigurations>();
+        var consoleWrapper = Substitute.For<IConsoleWrapper>();
+        var metrics = new Metrics(conf, nameSpace: "TestNamespace", consoleWrapper: consoleWrapper);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.Services.AddSingleton<IMetrics>(metrics);
+        builder.WebHost.UseTestServer();
+
+        var app = builder.Build();
+        app.UseMetrics();
+        app.MapGet("/test", async (IMetrics m) =>
+        {
+            m.AddMetric("BeforeAwait", 1, MetricUnit.Count);
+            await new ResumeOnNewThread();
+            m.AddMetric("AfterAwait", 1, MetricUnit.Count);
+            m.Flush();
+            return Results.Ok();
+        });
+
+        await app.StartAsync();
+        var client = app.GetTestClient();
+
+        // Act
+        var response = await client.GetAsync("/test");
+
+        // Assert
+        Assert.Equal(200, (int)response.StatusCode);
+        consoleWrapper.Received(1).WriteLine(
+            Arg.Is<string>(s => s.Contains("\"BeforeAwait\":1") && s.Contains("\"AfterAwait\":1")));
+
+        await app.StopAsync();
+        Metrics.ResetForTest();
+    }
+
+    /// <summary>
+    /// Never completes synchronously and resumes on a brand-new thread, so the code after the
+    /// await always runs on a different thread than the code before it.
+    /// </summary>
+    private readonly struct ResumeOnNewThread : ICriticalNotifyCompletion
+    {
+        public ResumeOnNewThread GetAwaiter() => this;
+        public bool IsCompleted => false;
+        public void GetResult() { }
+        public void OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
+        public void UnsafeOnCompleted(Action continuation) =>
+            new Thread(() => continuation()) { IsBackground = true }.Start();
     }
 
     public void Dispose()

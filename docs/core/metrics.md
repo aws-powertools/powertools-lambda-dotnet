@@ -303,6 +303,11 @@ During metrics validation, if no metrics are provided then a warning will be log
     * Namespace is set
     * Metric units must be [supported by CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricDatum.html)
 
+!!! note "Async handlers, child tasks and concurrent invocations"
+    Metrics belong to the invocation, not to a thread. Metrics, dimensions and metadata added after an `await`, or from tasks the handler starts (`Task.Run`, `Task.WhenAll`, `Parallel.ForEachAsync`), are flushed with that invocation. When an execution environment runs several invocations at once, each invocation only flushes its own metrics.
+
+    If you flush manually without the **`MetricsAttribute`**, make the first metrics call in the method that calls **`Flush`** (or in code it calls synchronously), not inside an `async` method it awaits. Metrics first added inside an awaited `async` method aren't visible to its caller.
+
 !!! info "We do not emit 0 as a value for ColdStart metric for cost reasons. [Let us know](https://github.com/aws-powertools/powertools-lambda-dotnet/issues/new?assignees=&labels=feature-request%2Ctriage&template=feature_request.yml&title=Feature+request%3A+TITLE) if you'd prefer a flag to override it"
 
 ### Raising SchemaValidationException on empty metrics

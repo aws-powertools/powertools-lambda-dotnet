@@ -14,7 +14,7 @@ namespace AWS.Lambda.Powertools.ConcurrencyTests.Metrics;
 /// - Overflow flushes don't affect other invocations
 /// - PushSingleMetric works correctly under concurrent execution
 /// 
-/// The Metrics implementation uses per-thread context storage to ensure
+/// The Metrics implementation keeps one context per invocation (async flow) to ensure
 /// isolation between concurrent Lambda invocations.
 /// </summary>
 [Collection("Metrics Tests")]

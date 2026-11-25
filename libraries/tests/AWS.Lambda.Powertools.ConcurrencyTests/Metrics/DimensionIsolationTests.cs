@@ -11,7 +11,7 @@ namespace AWS.Lambda.Powertools.ConcurrencyTests.Metrics;
 /// These tests verify that when multiple Lambda invocations run concurrently,
 /// each invocation's dimensions remain isolated from other invocations.
 /// 
-/// The Metrics implementation uses per-thread context storage to ensure
+/// The Metrics implementation keeps one context per invocation (async flow) to ensure
 /// isolation between concurrent Lambda invocations.
 /// </summary>
 [Collection("Metrics Tests")]
