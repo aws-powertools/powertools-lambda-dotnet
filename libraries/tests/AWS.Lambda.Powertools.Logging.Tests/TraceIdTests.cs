@@ -61,6 +61,23 @@ public class TraceIdTests : IDisposable
     }
 
     [Fact]
+    public void LogBuffer_WhenThereIsATraceId_ReportsAndClearsEntriesForThatInvocation()
+    {
+        var configurations = Substitute.For<IPowertoolsConfigurations>();
+        configurations.XRayTraceId.Returns(TraceId);
+        var buffer = new LogBuffer(configurations);
+
+        buffer.Add("entry", maxBytes: 1024, size: 5);
+
+        Assert.True(buffer.HasEntries);
+        Assert.False(buffer.HasEvictions);
+
+        buffer.ClearCurrentInvocation();
+
+        Assert.False(buffer.HasEntries);
+    }
+
+    [Fact]
     public void ClearBuffer_WhenBufferingIsEnabledAndThereIsNoTraceId_DoesNotThrow()
     {
         Environment.SetEnvironmentVariable("_X_AMZN_TRACE_ID", null);
