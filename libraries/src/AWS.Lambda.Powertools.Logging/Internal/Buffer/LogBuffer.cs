@@ -99,6 +99,9 @@ internal class LogBuffer
     public void ClearCurrentInvocation()
     {
         var invocationId = CurrentInvocationId;
+        if (string.IsNullOrEmpty(invocationId))
+            return;
+
         _buffersByInvocation.TryRemove(invocationId, out _);
     }
     
@@ -110,7 +113,8 @@ internal class LogBuffer
         get
         {
             var invocationId = CurrentInvocationId;
-            return _buffersByInvocation.TryGetValue(invocationId, out var buffer) && buffer.HasEntries;
+            return !string.IsNullOrEmpty(invocationId) &&
+                   _buffersByInvocation.TryGetValue(invocationId, out var buffer) && buffer.HasEntries;
         }
     }
     
@@ -119,7 +123,8 @@ internal class LogBuffer
         get
         {
             var invocationId = CurrentInvocationId;
-            return _buffersByInvocation.TryGetValue(invocationId, out var buffer) && buffer.HasEvictions;
+            return !string.IsNullOrEmpty(invocationId) &&
+                   _buffersByInvocation.TryGetValue(invocationId, out var buffer) && buffer.HasEvictions;
         }
     }
 }

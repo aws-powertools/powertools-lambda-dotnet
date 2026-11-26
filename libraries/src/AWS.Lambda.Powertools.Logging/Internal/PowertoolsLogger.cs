@@ -234,10 +234,12 @@ internal sealed class PowertoolsLogger : ILogger
             AddLambdaContextKeys(logEntry);
         }
 
-        if (!string.IsNullOrWhiteSpace(_powertoolsConfigurations.XRayTraceId))
+        // Read once: the trace ID comes from LambdaTraceProvider or an environment variable on every access,
+        // so it can change between two reads
+        var traceId = _powertoolsConfigurations.XRayTraceId;
+        if (!string.IsNullOrWhiteSpace(traceId))
             logEntry.TryAdd(LoggingConstants.KeyXRayTraceId,
-                _powertoolsConfigurations.XRayTraceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0]
-                    .Replace("Root=", ""));
+                traceId.Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Replace("Root=", ""));
         logEntry.TryAdd(LoggingConstants.KeyLoggerName, _categoryName);
 
         if (config.SamplingRate > 0)
