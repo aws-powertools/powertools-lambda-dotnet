@@ -765,6 +765,8 @@ Full example:
 --8<-- "docs/snippets/idempotency/AdvancedConfiguration.cs:with_json_serialization_context_full_example"
 ```
 
+Under Native AOT, every payload and return type must be in the context. When the same code runs without Native AOT, for example in unit tests, types that aren't in the context are serialized with reflection.
+
 ## Testing your code
 
 The idempotency utility provides several routes to test your code.

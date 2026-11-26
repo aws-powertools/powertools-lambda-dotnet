@@ -61,6 +61,28 @@ internal static class IdempotencySerializer
     {
         BuildDefaultOptions();
         _jsonOptions.TypeInfoResolverChain.Add(context);
+
+        // RuntimeFeatureWrapper lets tests force the source-generated path
+        if (RuntimeFeatureWrapper.IsDynamicCodeSupported)
+        {
+            AddReflectionFallback();
+        }
+    }
+
+    /// <summary>
+    ///     Adds reflection-based metadata after the user's context. A non-empty resolver chain replaces the default
+    ///     reflection resolver, so without this, types missing from the user's context fail even under JIT.
+    /// </summary>
+    /// <remarks>Excluded from coverage: see <see cref="IsReflectionSerializationEnabled" />.</remarks>
+    [ExcludeFromCodeCoverage]
+    private static void AddReflectionFallback()
+    {
+        if (!JsonSerializer.IsReflectionEnabledByDefault)
+            return;
+
+#pragma warning disable IL2026, IL3050 // Guarded by JsonSerializer.IsReflectionEnabledByDefault.
+        _jsonOptions.TypeInfoResolverChain.Add(new DefaultJsonTypeInfoResolver());
+#pragma warning restore IL2026, IL3050
     }
 
     /// <summary>
